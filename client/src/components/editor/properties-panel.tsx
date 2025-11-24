@@ -3358,74 +3358,81 @@ export function PropertiesPanel({
                                   ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50/20 dark:bg-yellow-950/10'
                                   : 'border-purple-200/30 dark:border-purple-800/30'
                             }`}>
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center space-x-2">
-                                  <div className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                                    Правило #{index + 1}
-                                  </div>
-                                  {hasErrors && (
-                                    <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                                      <i className="fas fa-times text-white text-xs"></i>
+                              <div className="space-y-2 mb-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-sm font-semibold text-purple-700 dark:text-purple-300">
+                                      Правило #{index + 1}
                                     </div>
-                                  )}
-                                  {hasWarnings && !hasErrors && (
-                                    <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-                                      <i className="fas fa-exclamation text-white text-xs"></i>
-                                    </div>
-                                  )}
-                                  <div className="text-xs text-muted-foreground">
-                                    Приоритет: {condition.priority || 0}
+                                    {hasErrors && (
+                                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shadow-sm" title="Ошибка в правиле">
+                                        <i className="fas fa-times text-white text-xs"></i>
+                                      </div>
+                                    )}
+                                    {hasWarnings && !hasErrors && (
+                                      <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center shadow-sm" title="Предупреждение">
+                                        <i className="fas fa-exclamation text-white text-xs"></i>
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
-                                <div className="flex items-center gap-1.5 bg-muted/20 rounded-lg p-1.5 border border-border/30">
-                                  {/* Priority controls */}
-                                  <UIButton
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => {
-                                      const currentConditions = selectedNode.data.conditionalMessages || [];
-                                      const updatedConditions = currentConditions.map(c => 
-                                        c.id === condition.id 
-                                          ? { ...c, priority: (c.priority || 0) + 10 } 
-                                          : c
-                                      );
-                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                    }}
-                                    className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 h-auto px-2 py-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200"
-                                    title="Повысить приоритет"
-                                  >
-                                    <i className="fas fa-arrow-up text-xs"></i>
-                                  </UIButton>
-                                  <UIButton
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => {
-                                      const currentConditions = selectedNode.data.conditionalMessages || [];
-                                      const updatedConditions = currentConditions.map(c => 
-                                        c.id === condition.id 
-                                          ? { ...c, priority: Math.max(0, (c.priority || 0) - 10) } 
-                                          : c
-                                      );
-                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                    }}
-                                    className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 h-auto px-2 py-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200"
-                                    title="Понизить приоритет"
-                                  >
-                                    <i className="fas fa-arrow-down text-xs"></i>
-                                  </UIButton>
-                                  <div className="w-px h-4 bg-border/50"></div>
-                                  <UIButton
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => {
-                                      const currentConditions = selectedNode.data.conditionalMessages || [];
-                                      const newConditions = currentConditions.filter(c => c.id !== condition.id);
-                                      onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });
-                                    }}
-                                    className="text-muted-foreground hover:text-destructive h-auto px-2 py-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200"
-                                  >
-                                    <i className="fas fa-trash text-xs"></i>
-                                  </UIButton>
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1 bg-purple-100/50 dark:bg-purple-900/20 px-2.5 py-1.5 rounded-lg border border-purple-200/50 dark:border-purple-800/30">
+                                      <i className="fas fa-chart-bar text-purple-600 dark:text-purple-400 text-xs"></i>
+                                      <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                                        Приоритет: {condition.priority || 0}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-1 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-1 border border-blue-200/30 dark:border-blue-800/30">
+                                      <UIButton
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                                          const updatedConditions = currentConditions.map(c => 
+                                            c.id === condition.id 
+                                              ? { ...c, priority: (c.priority || 0) + 10 } 
+                                              : c
+                                          );
+                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                        }}
+                                        className="h-auto px-1.5 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-700/40 rounded transition-all duration-200"
+                                        title="Повысить приоритет (+10)"
+                                      >
+                                        <i className="fas fa-chevron-up text-xs"></i>
+                                      </UIButton>
+                                      <UIButton
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                                          const updatedConditions = currentConditions.map(c => 
+                                            c.id === condition.id 
+                                              ? { ...c, priority: Math.max(0, (c.priority || 0) - 10) } 
+                                              : c
+                                          );
+                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                        }}
+                                        className="h-auto px-1.5 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-700/40 rounded transition-all duration-200"
+                                        title="Понизить приоритет (-10)"
+                                      >
+                                        <i className="fas fa-chevron-down text-xs"></i>
+                                      </UIButton>
+                                      <div className="w-px h-4 bg-blue-200/50 dark:bg-blue-700/50"></div>
+                                      <UIButton
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                                          const newConditions = currentConditions.filter(c => c.id !== condition.id);
+                                          onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });
+                                        }}
+                                        className="h-auto px-1.5 py-1 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-700/40 rounded transition-all duration-200"
+                                        title="Удалить правило"
+                                      >
+                                        <i className="fas fa-trash text-xs"></i>
+                                      </UIButton>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
 

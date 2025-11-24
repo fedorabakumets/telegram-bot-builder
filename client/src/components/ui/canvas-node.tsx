@@ -572,10 +572,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                   case 'voice': return !!node.data.voiceUrl;
                   case 'location': return !!(node.data.latitude && node.data.longitude);
                   case 'contact': return !!(node.data.phoneNumber && node.data.firstName);
-                  case 'poll': return !!(node.data.question && node.data.options?.length);
                   case 'command': return !!node.data.command;
                   case 'admin_rights': return true;
-                  default: return !!node.data.messageText;
+                  default: return (node.type as any) === 'poll' ? !!(((node.data as any).question && (node.data as any).options?.length)) : !!node.data.messageText;
                 }
               })();
               
@@ -795,7 +794,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
               <div className="flex items-center justify-center space-x-1">
                 <i className="fas fa-crosshairs text-xs"></i>
                 <span className="font-mono text-xs">
-                  {parseFloat(node.data.latitude as string).toFixed(4)}, {parseFloat(node.data.longitude as string).toFixed(4)}
+                  {parseFloat(String(node.data.latitude)).toFixed(4)}, {parseFloat(String(node.data.longitude)).toFixed(4)}
                 </span>
               </div>
             )}
@@ -915,7 +914,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       )}
       
       {/* Poll preview */}
-      {node.type === 'poll' && (
+      {(node.type as any) === 'poll' && (
         <div className="bg-gradient-to-br from-violet-100/50 to-purple-100/50 dark:from-violet-900/30 dark:to-purple-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
           <div className="text-center space-y-2">
             <i className="fas fa-poll text-violet-400 dark:text-violet-300 text-3xl"></i>
@@ -936,7 +935,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       )}
       
       {/* Dice preview */}
-      {node.type === 'dice' && (
+      {(node.type as any) === 'dice' && (
         <div className="bg-gradient-to-br from-slate-100/50 to-gray-100/50 dark:from-slate-900/30 dark:to-gray-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
           <div className="text-center space-y-2">
             <i className="fas fa-dice text-slate-400 dark:text-slate-300 text-3xl"></i>
