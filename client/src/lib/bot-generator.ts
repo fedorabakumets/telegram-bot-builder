@@ -5851,6 +5851,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += `    user_id = message.from_user.id\n`;
       code += `    logging.info(f"📱 Получена reply кнопка: ${button.text} от {{user_id}}, переход к узлу ${button.target}")\n`;
       code += `    \n`;
+      code += `    # КРИТИЧНО: Удаляем reply сообщение бота с клавиатурой СРАЗУ\n`;
+      code += `    # Это нужно сделать ДО выполнения callback, чтобы избежать задержки\n`;
+      code += `    try:\n`;
+      code += `        if message.reply_to_message:\n`;
+      code += `            await message.reply_to_message.delete()\n`;
+      code += `            logging.info(f"🗑️ Исходное reply сообщение удалено")\n`;
+      code += `        # Также удаляем сообщение пользователя (нажатую кнопку)\n`;
+      code += `        await message.delete()\n`;
+      code += `    except Exception as e:\n`;
+      code += `        logging.debug(f"Ошибка при удалении reply сообщений: {e}")\n`;
+      code += `    \n`;
       code += `    # ИСПРАВЛЕНИЕ: Очищаем состояние ожидания ввода при нажатии на reply кнопку\n`;
       code += `    # Это важно для условных кнопок, которые пропускают узлы сбора данных\n`;
       code += `    if user_id in user_data:\n`;
@@ -5864,22 +5875,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += `            logging.info(f"🧹 Очищаем _has_conditional_keyboard при нажатии reply кнопки")\n`;
       code += `            del user_data[user_id]["_has_conditional_keyboard"]\n`;
       code += `    \n`;
-      
-      // Если кнопка должна скрываться после использования
-      if (button.hideAfterClick) {
-        code += `    # СКРЫТИЕ КНОПКИ: Удаляем сообщение бота с кнопкой после нажатия\n`;
-        code += `    try:\n`;
-        code += `        # reply_to_message содержит исходное сообщение бота с кнопкой\n`;
-        code += `        if message.reply_to_message:\n`;
-        code += `            await message.reply_to_message.delete()\n`;
-        code += `            logging.info(f"🗑️ Исходное сообщение с кнопкой удалено (hideAfterClick=true)")\n`;
-        code += `        # Также удаляем сообщение пользователя (сам текст кнопки)\n`;
-        code += `        await message.delete()\n`;
-        code += `        logging.info(f"🗑️ Сообщение пользователя удалено")\n`;
-        code += `    except Exception as e:\n`;
-        code += `        logging.debug(f"Ошибка при удалении сообщений: {e}")\n`;
-        code += `    \n`;
-      }
       
       const targetNode = nodes.find(n => n.id === button.target);
       if (targetNode) {
