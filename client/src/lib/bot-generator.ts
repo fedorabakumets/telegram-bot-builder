@@ -3877,7 +3877,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   } else if (targetNode.data.formatMode === 'html') {
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
-                  code += `    await callback_query.message.edit_text(text${parseModeTarget})\n`;
+                  code += `    await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseModeTarget})\n`;
                 }
               } // Закрываем else блок для обычного отображения (основной цикл)
             } // Закрываем else блок для обычных текстовых сообщений (основной цикл)
@@ -5244,7 +5244,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 }
                 code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
               } else {
-                code += '    await callback_query.message.edit_text(text)\n';
+                code += '    await safe_edit_or_send(callback_query, text, is_auto_transition=True)\n';
               }
               code += '    \n';
             } else {
@@ -5282,7 +5282,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 } else if (targetNode.data.formatMode === 'html') {
                   parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
-                code += `    await callback_query.message.edit_text(text${parseModeTarget})\n`;
+                code += `    await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseModeTarget})\n`;
               }
             } // Закрываем else блок для обычного отображения
           } // Закрываем else блок для regular message nodes
