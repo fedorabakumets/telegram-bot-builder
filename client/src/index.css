@@ -5,9 +5,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Disable transitions during page load to prevent flashing */
-:root:not(.transitions-enabled) * {
-  transition: none !important;
+/* CRITICAL: Disable ALL transitions and animations to prevent flickering */
+* {
+  transition: none !important !important;
+  animation: none !important !important;
+}
+
+/* Allow only essential transitions after page is ready */
+:root.transitions-enabled * {
+  transition: unset !important;
+  animation: unset !important;
 }
 
 :root {
