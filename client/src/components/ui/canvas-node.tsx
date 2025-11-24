@@ -1030,13 +1030,17 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                   }
                 };
 
-                const conditionNames: Record<string, string> = {
-                  'user_data_equals': 'Точное совпадение',
-                  'user_data_contains': 'Содержит текст',
-                  'user_data_exists': 'Имя введено ранее',
-                  'user_data_not_exists': 'Имя не введено'
+                const getConditionName = (cond: any) => {
+                  const varName = cond.variableName || 'переменная';
+                  const baseNames: Record<string, string> = {
+                    'user_data_equals': `{${varName}} был введен ранее`,
+                    'user_data_contains': `{${varName}} содержит текст`,
+                    'user_data_exists': `{${varName}} был введен ранее`,
+                    'user_data_not_exists': `{${varName}} не введен`
+                  };
+                  return baseNames[cond.condition] || 'Условие';
                 };
-                const conditionName = conditionNames[condition.condition] || 'Условие';
+                const conditionName = getConditionName(condition);
 
                 return (
                   <div key={condition.id || index} className="bg-white/60 dark:bg-slate-900/40 rounded-lg border border-purple-100 dark:border-purple-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
