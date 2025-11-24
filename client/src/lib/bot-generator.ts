@@ -1457,7 +1457,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (userDatabaseEnabled) {
   code += '# API configuration для сохранения сообщений\n';
   code += 'API_BASE_URL = os.getenv("REPLIT_DEV_DOMAIN", "http://localhost:5000")\n';
-  code += 'PROJECT_ID = os.getenv("PROJECT_ID", "1")  # ID проекта в системе\n\n';
+  code += 'PROJECT_ID = os.getenv("PROJECT_ID", "")  # ID проекта в системе\n\n';
   
   code += '# Функция для сохранения сообщений в базу данных через API\n';
   code += 'async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):\n';
