@@ -992,15 +992,6 @@ export function PropertiesPanel({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
-                  <SelectItem value="photo">🖼️ Фото с текстом</SelectItem>
-                  <SelectItem value="video">🎬 Видео сообщение</SelectItem>
-                  <SelectItem value="audio">🎵 Аудио сообщение</SelectItem>
-                  <SelectItem value="document">📄 Документ</SelectItem>
-                  <SelectItem value="sticker">😀 Стикер</SelectItem>
-                  <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
-                  <SelectItem value="animation">🎞️ GIF анимация</SelectItem>
-                  <SelectItem value="location">📍 Геолокация</SelectItem>
-                  <SelectItem value="contact">📞 Контакт</SelectItem>
                   <SelectItem value="keyboard">⌨️ Клавиатура</SelectItem>
                   <SelectItem value="start">▶️ /start команда</SelectItem>
                   <SelectItem value="command">🔧 Пользовательская команда</SelectItem>
@@ -1139,8 +1130,8 @@ export function PropertiesPanel({
               </div>
             )}
 
-            {/* Enhanced Media Settings */}
-            {selectedNode.type === 'photo' && (
+            {/* Content Management Configuration */}
+            {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message') && (
               <div className="space-y-6">
                 {/* Media URL Section */}
                 <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-4">
