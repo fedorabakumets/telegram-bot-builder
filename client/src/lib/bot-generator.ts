@@ -406,10 +406,42 @@ function calculateOptimalColumns(buttons: any[], nodeData?: any): number {
   }
 }
 
+// Функция для генерации reply клавиатуры
+function generateReplyKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any): string {
+  if (!buttons || buttons.length === 0) return '';
+  
+  let code = '';
+  code += `${indentLevel}builder = ReplyKeyboardBuilder()\n`;
+  
+  buttons.forEach((button, index) => {
+    if (button.action === "contact" && button.requestContact) {
+      code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
+    } else if (button.action === "location" && button.requestLocation) {
+      code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
+    } else {
+      code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+    }
+  });
+  
+  const resizeKeyboard = toPythonBoolean(nodeData?.resizeKeyboard !== false);
+  const oneTimeKeyboard = toPythonBoolean(nodeData?.oneTimeKeyboard === true);
+  code += `${indentLevel}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+  
+  return code;
+}
+
 // Функция для генерации inline клавиатуры с автоматической настройкой колонок
 function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any, allNodeIds?: string[]): string {
   if (!buttons || buttons.length === 0) return '';
   
+  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем keyboardType и делегируем на правильную функцию
+  const keyboardType = nodeData?.keyboardType || 'reply';
+  if (keyboardType === 'reply') {
+    // Для reply клавиатуры вызываем специальную функцию
+    return generateReplyKeyboardCode(buttons, indentLevel, nodeId, nodeData);
+  }
+  
+  // Продолжаем генерацию inline клавиатуры только если keyboardType === 'inline'
   let code = '';
   
   // Проверяем, есть ли кнопки выбора (selection) - если да, то это множественный выбор
@@ -420,7 +452,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   if (hasSelectionButtons && isMultipleSelection) {
     console.log(`🔧 ГЕНЕРАТОР: ИНИЦИАЛИЗИРУЕМ состояние множественного выбора для узла ${nodeId}`);
     const multiSelectVariable = nodeData?.multiSelectVariable || 'user_interests';
-    const multiSelectKeyboardType = nodeData?.keyboardType || 'inline';
+    const multiSelectKeyboardType = nodeData?.keyboardType || 'reply';
     
     code += `${indentLevel}# Инициализация состояния множественного выбора\n`;
     code += `${indentLevel}if user_id not in user_data:\n`;
@@ -2597,24 +2629,26 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    keyboard = None\n';
               }
               
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем множественный выбор ИЛИ обычные inline кнопки
-              const hasMultipleSelection = targetNode.data.allowMultipleSelection && targetNode.data.buttons && targetNode.data.buttons.length > 0;
-              const hasRegularInlineButtons = targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0;
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем тип клавиатуры и генерируем правильный код
+              const hasButtons = targetNode.data.buttons && targetNode.data.buttons.length > 0;
+              const keyboardType = targetNode.data.keyboardType;
               
-              console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} - allowMultipleSelection: ${targetNode.data.allowMultipleSelection}, кнопок: ${targetNode.data.buttons?.length}, keyboardType: ${targetNode.data.keyboardType}`);
+              console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} - кнопок: ${targetNode.data.buttons?.length}, keyboardType: ${keyboardType}`);
               
-              if (hasMultipleSelection || hasRegularInlineButtons) {
-                console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ клавиатуру для узла ${targetNode.id} (множественный выбор: ${hasMultipleSelection})`);
+              if (hasButtons) {
                 code += '    # Проверяем, есть ли условная клавиатура\n';
                 code += '    if keyboard is None:\n';
-                code += '        # ИСПРАВЛЕНИЕ: Используем универсальную функцию создания клавиатуры\n';
-                // ИСПРАВЛЕНИЕ: Используем универсальную функцию generateInlineKeyboardCode
-                const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
-                code += keyboardCode;
-              } else if (targetNode.data.keyboardType !== "inline") {
-                // Сохраняем keyboard = None только если это не inline клавиатура
-                code += '    if keyboard is None:\n';
-                code += '        keyboard = None\n';
+                if (keyboardType === "inline") {
+                  console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ INLINE клавиатуру для узла ${targetNode.id}`);
+                  code += '        # Создаем inline клавиатуру\n';
+                  const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
+                  code += keyboardCode;
+                } else if (keyboardType === "reply") {
+                  console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ REPLY клавиатуру для узла ${targetNode.id}`);
+                  code += '        # Создаем reply клавиатуру\n';
+                  const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+                  code += keyboardCode;
+                }
               }
               
               // Добавляем настройку ожидания текстового ввода для условных сообщений
@@ -3829,19 +3863,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    # Проверяем, есть ли условная клавиатура для этого узла\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # Создаем reply клавиатуру (+ сбор ввода включен)\n';
-                  code += '        builder = ReplyKeyboardBuilder()\n';
-                  targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                    if (btn.action === "contact" && btn.requestContact) {
-                      code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-                    } else if (btn.action === "location" && btn.requestLocation) {
-                      code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-                    } else {
-                      code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                    }
-                  });
-                  const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                  const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                  code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                  const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+                  code += keyboardCode;
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';
                   if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -3879,17 +3902,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # Создаем reply клавиатуру\n';
-                  code += '        builder = ReplyKeyboardBuilder()\n';
-                  targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                    code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                  });
-                  const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                  const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                  code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                  code += '    # Для reply клавиатуры отправляем новое сообщение и удаляем старое\n';
-                  code += '    try:\n';
-                  code += '    except:\n';
-                  code += '        pass  # Игнорируем ошибки удаления\n';
+                  const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+                  code += keyboardCode;
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';
                   if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -4303,7 +4317,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             
             // Добавляем логику инициализации множественного выбора
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
-            const multiSelectKeyboardType = targetNode.data.keyboardType || 'inline';
+            const multiSelectKeyboardType = targetNode.data.keyboardType || 'reply';
             
             code += '    # Инициализация состояния множественного выбора\n';
             code += '    if user_id not in user_data:\n';
@@ -5757,7 +5771,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         if (condition.buttons) {
           condition.buttons.forEach((button: Button) => {
             // Для conditional messages берем keyboardType из самой кнопки или condition
-            const keyboardType = condition.keyboardType || button.keyboardType || node.data.keyboardType || 'inline';
+            const keyboardType = condition.keyboardType || button.keyboardType || node.data.keyboardType || 'reply';
             if (button.action === 'goto' && button.target && keyboardType === 'reply') {
               console.log(`✅ НАЙДЕНА reply goto кнопка в conditional message: "${button.text}" -> ${button.target} в узле ${node.id}`);
               replyGotoButtons.push({
@@ -8629,7 +8643,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                if isinstance(var_data, str) and var_data.strip():\n`;
             code += `                    saved_selections = [sel.strip() for sel in var_data.split(",") if sel.strip()]\n`;
             code += `        \n`;
-            const multiSelectKeyboardType = targetNode.data.keyboardType || "inline";
+            const multiSelectKeyboardType = targetNode.data.keyboardType || "reply";
             code += `        # Инициализируем состояние с восстановленными значениями\n`;
             code += `        user_data[user_id]["multi_select_${targetNode.id}"] = saved_selections.copy()\n`;
             code += `        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
