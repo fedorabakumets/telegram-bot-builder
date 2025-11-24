@@ -4618,8 +4618,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           }
           
           // Для узлов с множественным выбором - НЕ делаем автоматический переход при первичном заходе в узел
-          const shouldRedirect = !(currentNode && currentNode.data.allowMultipleSelection);
-          console.log(`🔧 ГЕНЕРАТОР КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Узел ${nodeId} allowMultipleSelection: ${currentNode?.data.allowMultipleSelection}, shouldRedirect: ${shouldRedirect}`);
+          // ИСПРАВЛЕНИЕ: редирект только для узлов с кнопками, чтобы избежать дублирования сообщений при автопереходах
+          const hasButtons = currentNode && currentNode.data.buttons && currentNode.data.buttons.length > 0;
+          const shouldRedirect = hasButtons && !(currentNode && currentNode.data.allowMultipleSelection);
+          console.log(`🔧 ГЕНЕРАТОР КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Узел ${nodeId} hasButtons: ${hasButtons}, allowMultipleSelection: ${currentNode?.data.allowMultipleSelection}, shouldRedirect: ${shouldRedirect}`);
           
           let redirectTarget = nodeId; // По умолчанию остаемся в том же узле
           
@@ -4639,7 +4641,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
             }
           } else {
-            console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} с множественным выбором - НЕ делаем автоматическую переадресацию`);
+            console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} без кнопок или с множественным выбором - НЕ делаем автоматическую переадресацию`);
           }
           
           if (shouldRedirect && redirectTarget && redirectTarget !== nodeId) {
