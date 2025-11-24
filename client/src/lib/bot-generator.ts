@@ -5858,6 +5858,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += `        if "waiting_for_conditional_input" in user_data[user_id]:\n`;
       code += `            logging.info(f"🧹 Очищаем waiting_for_conditional_input при нажатии reply кнопки")\n`;
       code += `            del user_data[user_id]["waiting_for_conditional_input"]\n`;
+      code += `        if "_has_conditional_keyboard" in user_data[user_id]:\n`;
+      code += `            logging.info(f"🧹 Очищаем _has_conditional_keyboard при нажатии reply кнопки")\n`;
+      code += `            del user_data[user_id]["_has_conditional_keyboard"]\n`;
       code += `    \n`;
       
       const targetNode = nodes.find(n => n.id === button.target);
