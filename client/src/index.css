@@ -5,35 +5,60 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Disable ALL hover effects by overriding every possible CSS property */
-*:hover {
-  background-color: inherit !important;
-  background-image: none !important;
-  color: inherit !important;
-  border-color: inherit !important;
-  box-shadow: none !important;
-  opacity: 1 !important;
-  transform: none !important;
-  filter: none !important;
-  outline: none !important;
-  text-decoration: inherit !important;
-  text-shadow: none !important;
-  cursor: inherit !important;
-  font-size: inherit !important;
-  font-weight: inherit !important;
-  line-height: inherit !important;
-  letter-spacing: inherit !important;
-  word-spacing: inherit !important;
+/* GLOBAL: Disable pointer events on all elements by default */
+* {
+  pointer-events: none !important;
 }
 
-/* Also disable hover on pseudo-elements */
-*::before:hover,
-*::after:hover {
-  background-color: inherit !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  opacity: 1 !important;
-  transform: none !important;
+/* ONLY enable pointer events on CRITICAL interactive elements */
+button {
+  pointer-events: auto !important;
+}
+
+input {
+  pointer-events: auto !important;
+}
+
+textarea {
+  pointer-events: auto !important;
+}
+
+select {
+  pointer-events: auto !important;
+}
+
+a {
+  pointer-events: auto !important;
+}
+
+/* Canvas and drop zones */
+[data-canvas-drop-zone] {
+  pointer-events: auto !important;
+}
+
+.canvas {
+  pointer-events: auto !important;
+}
+
+/* Dialogs and menus need to be interactive */
+[role="dialog"] {
+  pointer-events: auto !important;
+}
+
+[role="menu"],
+[role="menuitem"] {
+  pointer-events: auto !important;
+}
+
+/* Form elements */
+form {
+  pointer-events: auto !important;
+}
+
+/* Resize handles and drag handles */
+[class*="handle"],
+[class*="resize"] {
+  pointer-events: auto !important;
 }
 
 :root {
