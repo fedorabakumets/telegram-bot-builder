@@ -109,6 +109,8 @@ export function Canvas({
   onNodeSizesChange
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const currentMouseRef = useRef({ x: 0, y: 0 });
   const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
   const [connectionStart, setConnectionStart] = useState<{
@@ -423,18 +425,37 @@ export function Canvas({
   }, [pan]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    // Skip during app loading to test if onMouseMove causes flickering
+    if ((window as any).appIsLoading) return;
+    
     if (isPanning) {
-      const deltaX = e.clientX - panStart.x;
-      const deltaY = e.clientY - panStart.y;
+      // Store current mouse position in ref
+      currentMouseRef.current = { x: e.clientX, y: e.clientY };
+      
+      // Cancel any pending animation frame
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+      
+      // Batch updates using requestAnimationFrame (60fps max instead of 50+/sec)
+      rafIdRef.current = requestAnimationFrame(() => {
+        const deltaX = currentMouseRef.current.x - panStart.x;
+        const deltaY = currentMouseRef.current.y - panStart.y;
 
-      setPan({
-        x: lastPanPosition.x + deltaX,
-        y: lastPanPosition.y + deltaY
+        setPan({
+          x: lastPanPosition.x + deltaX,
+          y: lastPanPosition.y + deltaY
+        });
       });
     }
   }, [isPanning, panStart, lastPanPosition]);
 
   const handleMouseUp = useCallback(() => {
+    // Clean up any pending animation frame
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
     setIsPanning(false);
   }, []);
 

@@ -5,7 +5,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* BLOCK ALL MOUSE EVENTS during page load to prevent hover-triggered re-renders */
+/* BLOCK mouse events AND animations during initial load to prevent flicker */
+/* We keep this class active for 5 seconds, then remove it */
 html.loading * {
   pointer-events: none !important;
   transition: none !important;
@@ -462,7 +463,8 @@ body {
   overflow: hidden;
 }
 
-.dark .bg-canvas-bg::before {
+/* Only animate after page is loaded to prevent flicker */
+html:not(.loading) .dark .bg-canvas-bg::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -588,7 +590,8 @@ body {
   transition: all 0.3s ease;
 }
 
-.dark .canvas-grid::before {
+/* Only animate after page is loaded to prevent flicker */
+html:not(.loading) .dark .canvas-grid::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -607,7 +610,8 @@ body {
   animation: grid-shimmer 15s ease-in-out infinite alternate;
 }
 
-.dark .canvas-grid::after {
+/* Only animate after page is loaded to prevent flicker */
+html:not(.loading) .dark .canvas-grid::after {
   content: '';
   position: absolute;
   inset: 0;
