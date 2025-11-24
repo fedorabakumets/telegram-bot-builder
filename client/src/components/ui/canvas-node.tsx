@@ -951,7 +951,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       )}
       
       {/* Auto Transition Indicator - для autoTransitionTo */}
-      {node.data.autoTransitionTo && !node.data.buttons?.length && (
+      {node.data.enableAutoTransition && node.data.autoTransitionTo && !node.data.buttons?.length && (
         <div className="bg-gradient-to-br from-emerald-50/70 to-green-50/70 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl p-3 mb-4 border border-emerald-200 dark:border-emerald-800/30">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">

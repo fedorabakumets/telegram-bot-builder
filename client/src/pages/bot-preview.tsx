@@ -281,7 +281,7 @@ export default function BotPreview() {
     }, 100);
 
     // Check for auto transition first
-    if (node.data.autoTransitionTo) {
+    if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
       console.log(`⚡ Автопереход от ${node.id} к ${node.data.autoTransitionTo}`);
       const autoTransitionNode = nodes.find(n => n.id === node.data.autoTransitionTo);
       if (autoTransitionNode) {

@@ -2618,7 +2618,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   keyboardStr,
                   targetNode.id,
                   '    ',
-                  targetNode.data.autoTransitionTo
+                  targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo ? targetNode.data.autoTransitionTo : undefined
                 );
                 
                 if (mediaCode) {
@@ -2630,7 +2630,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${parseMode})\n`;
                   
                   // АВТОПЕРЕХОД для fallback случая
-                  if (targetNode.data.autoTransitionTo) {
+                  if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                     const autoTargetId = targetNode.data.autoTransitionTo;
                     const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                     code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
@@ -2646,7 +2646,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 
                 // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
                 // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-                if (targetNode.data.autoTransitionTo) {
+                if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                   const autoTargetId = targetNode.data.autoTransitionTo;
                   const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                   code += '    \n';
@@ -2790,7 +2790,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
               // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-              if (targetNode.data.autoTransitionTo) {
+              if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                 const autoTargetId = targetNode.data.autoTransitionTo;
                 const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                 code += '    \n';
@@ -2907,7 +2907,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
               // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-              if (targetNode.data.autoTransitionTo) {
+              if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                 const autoTargetId = targetNode.data.autoTransitionTo;
                 const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                 code += '    \n';
@@ -3024,7 +3024,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
               // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-              if (targetNode.data.autoTransitionTo) {
+              if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                 const autoTargetId = targetNode.data.autoTransitionTo;
                 const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                 code += '    \n';
@@ -6635,7 +6635,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           }
           
           // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу вызываем callback обработчик
-          if (targetNode.data.autoTransitionTo) {
+          if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
             const autoTargetId = targetNode.data.autoTransitionTo;
             const autoSafeFunctionName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
             code += `${bodyIndent}\n`;
@@ -7132,7 +7132,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         }
         
         // Проверяем автопереход
-        if (targetNode.data.autoTransitionTo) {
+        if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
           code += `                \n`;
           code += `                # Автопереход к следующему узлу\n`;
           code += `                auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
