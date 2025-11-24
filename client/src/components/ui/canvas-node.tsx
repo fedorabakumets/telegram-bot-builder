@@ -1162,21 +1162,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         
         return (
           <div className="bg-gradient-to-br from-orange-50/90 to-amber-50/90 dark:from-orange-900/25 dark:to-amber-900/25 border border-orange-200/50 dark:border-orange-800/40 rounded-xl p-4 mb-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/60 flex items-center justify-center">
-                  <i className="fas fa-inbox text-orange-600 dark:text-orange-400 text-sm"></i>
-                </div>
-                <div className="text-sm font-semibold text-orange-800 dark:text-orange-200">
-                  Сбор ответов
-                </div>
-              </div>
-              <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/50 px-2 py-1 rounded-full font-medium">
-                <i className="fas fa-check-circle text-xs mr-1"></i>
-                {hasButtonResponses && inputVariable ? `Сохранить в: ${inputVariable}` : 'Включено'}
-              </div>
-            </div>
-            
             <div className="space-y-2">
               {/* Button Responses Info */}
               {hasButtonResponses && (
