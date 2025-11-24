@@ -1044,6 +1044,10 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
       // Сразу обновляем статус на фронтенде
       refetchBotStatus();
+      // Обновляем информацию о боте (имя, описание)
+      refetchBotInfo();
+      // Обновляем список токенов чтобы показать актуальное имя бота
+      refetch();
     },
     onError: (error: any) => {
       toast({ title: "Ошибка запуска", description: error.message || "Не удалось запустить бота.", variant: "destructive" });
