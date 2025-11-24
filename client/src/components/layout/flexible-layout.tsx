@@ -409,7 +409,10 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                     {getElementContent(leftEl.type)}
                   </div>
                 </ResizablePanel>
-                <ResizableHandle withHandle />
+                <ResizableHandle 
+                  withHandle 
+                  className="bg-transparent hover:bg-blue-500/20 dark:hover:bg-blue-500/20 transition-all duration-200 w-1 hover:w-1.5 active:bg-blue-500/30 cursor-col-resize"
+                />
               </>
             )}
             <ResizablePanel 
@@ -421,7 +424,10 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             </ResizablePanel>
             {rightElements.length > 0 && (
               <>
-                <ResizableHandle withHandle />
+                <ResizableHandle 
+                  withHandle 
+                  className="bg-transparent hover:bg-blue-500/20 dark:hover:bg-blue-500/20 transition-all duration-200 w-1 hover:w-1.5 active:bg-blue-500/30 cursor-col-resize"
+                />
                 <ResizablePanel 
                   defaultSize={totalRightSize} 
                   minSize={15} 
