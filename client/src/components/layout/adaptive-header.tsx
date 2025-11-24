@@ -24,7 +24,6 @@ interface AdaptiveHeaderProps {
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
   onLayoutSettings?: () => void;
-  onShowTelegramAuth?: () => void;
   // Кнопки управления макетом
   onToggleHeader?: () => void;
   onToggleSidebar?: () => void;
@@ -45,7 +44,6 @@ export function AdaptiveHeader({
   config,
   projectName,
   botInfo,
-  onShowTelegramAuth,
   currentTab, 
   onTabChange, 
   onExport, 
@@ -298,6 +296,19 @@ export function AdaptiveHeader({
         <Button 
           variant="outline"
           size="sm"
+          onClick={() => {
+            setShowTelegramAuth(true);
+            setIsMobileMenuOpen(false);
+          }}
+          className="flex items-center justify-center w-full"
+        >
+          <LogIn className="h-3.5 w-3.5 mr-2" />
+          Вход через Telegram
+        </Button>
+        
+        <Button 
+          variant="outline"
+          size="sm"
           asChild
           className="flex items-center justify-center"
         >
@@ -438,10 +449,10 @@ export function AdaptiveHeader({
         onClick={() => setShowTelegramAuth(true)}
         className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs`}
         title="Вход через Telegram"
-        data-testid="button-auth-header"
+        data-testid="button-telegram-login"
       >
         <LogIn className="h-3.5 w-3.5" />
-        <span className="max-sm:hidden ml-1">Вход</span>
+        <span className="max-sm:hidden ml-1">Telegram</span>
       </Button>
       
       <Button 
@@ -464,16 +475,6 @@ export function AdaptiveHeader({
       <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
         <ThemeToggle />
       </div>
-      
-      {showTelegramAuth && (
-        <TelegramAuth 
-          open={showTelegramAuth}
-          onOpenChange={setShowTelegramAuth}
-          onSuccess={() => {
-            setShowTelegramAuth(false);
-          }}
-        />
-      )}
     </div>
   );
 
@@ -558,6 +559,15 @@ export function AdaptiveHeader({
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Telegram Auth Dialog */}
+      <TelegramAuth 
+        open={showTelegramAuth}
+        onOpenChange={setShowTelegramAuth}
+        onSuccess={() => {
+          setShowTelegramAuth(false);
+        }}
+      />
     </header>
   );
 }

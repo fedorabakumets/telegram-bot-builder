@@ -8626,9 +8626,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   });
   
     code += '    \n';
-  code += '    # Если не множественный выбор, передаем дальше по цепочке обработчиков\n';
-  code += '    pass\n';
-  code += '\n';
+    code += '    # Если не множественный выбор, передаем дальше по цепочке обработчиков\n';
+    code += '    pass\n';
+    code += '\n';
+  }
 
   code += 'if __name__ == "__main__":\n';
   code += '    asyncio.run(main())\n';
@@ -12018,6 +12019,10 @@ function generateKeyboard(node: Node): string {
       // Без клавиатуры
       code += `${indent3}await message.answer(text${parseMode})\n`;
     }
+  }
+  
+  // Reset global logging flag before returning
+  globalLoggingEnabled = false;
   
   return code;
 }

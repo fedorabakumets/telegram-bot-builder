@@ -1329,7 +1329,6 @@ export default function Editor() {
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
-              onShowTelegramAuth={() => {}}
               onToggleHeader={handleToggleHeader}
               onToggleSidebar={handleToggleSidebar}
               onToggleProperties={handleToggleProperties}
@@ -1642,6 +1641,8 @@ export default function Editor() {
           }}
         />
       )}
+
+
 
       <SaveTemplateModal
         isOpen={showSaveTemplate}
