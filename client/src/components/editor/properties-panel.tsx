@@ -3378,7 +3378,7 @@ export function PropertiesPanel({
                                     Приоритет: {condition.priority || 0}
                                   </div>
                                 </div>
-                                <div className="flex items-center space-x-1">
+                                <div className="flex items-center gap-1.5 bg-muted/20 rounded-lg p-1.5 border border-border/30">
                                   {/* Priority controls */}
                                   <UIButton
                                     size="sm"
@@ -3392,7 +3392,7 @@ export function PropertiesPanel({
                                       );
                                       onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                     }}
-                                    className="text-muted-foreground hover:text-blue-600 h-auto p-1"
+                                    className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 h-auto px-2 py-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200"
                                     title="Повысить приоритет"
                                   >
                                     <i className="fas fa-arrow-up text-xs"></i>
@@ -3409,11 +3409,12 @@ export function PropertiesPanel({
                                       );
                                       onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                     }}
-                                    className="text-muted-foreground hover:text-blue-600 h-auto p-1"
+                                    className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 h-auto px-2 py-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200"
                                     title="Понизить приоритет"
                                   >
                                     <i className="fas fa-arrow-down text-xs"></i>
                                   </UIButton>
+                                  <div className="w-px h-4 bg-border/50"></div>
                                   <UIButton
                                     size="sm"
                                     variant="ghost"
@@ -3422,7 +3423,7 @@ export function PropertiesPanel({
                                       const newConditions = currentConditions.filter(c => c.id !== condition.id);
                                       onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });
                                     }}
-                                    className="text-muted-foreground hover:text-destructive h-auto p-1"
+                                    className="text-muted-foreground hover:text-destructive h-auto px-2 py-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200"
                                   >
                                     <i className="fas fa-trash text-xs"></i>
                                   </UIButton>
