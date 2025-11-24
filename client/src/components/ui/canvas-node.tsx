@@ -1332,13 +1332,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                 </div>
               )}
             </div>
-            
-            <div className="mt-3 pt-3 border-t border-orange-200/50 dark:border-orange-700/30">
-              <div className="flex items-center justify-center space-x-2 text-xs text-orange-600 dark:text-orange-400">
-                <i className="fas fa-info-circle"></i>
-                <span>Ответы сохраняются в переменных для дальнейшего использования</span>
-              </div>
-            </div>
           </div>
         );
       })()}
