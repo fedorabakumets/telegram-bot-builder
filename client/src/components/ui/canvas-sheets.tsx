@@ -279,11 +279,11 @@ export function CanvasSheets({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "p-0 rounded-md transition-all duration-200 hover:scale-110 active:scale-95",
+                    "p-0 rounded-md transition-colors duration-200",
                     "h-5 w-5",
                     activeSheetId === sheet.id
-                      ? "hover:bg-white/20 active:bg-white/30 text-white/80 hover:text-white"
-                      : "hover:bg-blue-500/20 active:bg-blue-500/30 text-blue-400 hover:text-blue-300 border border-blue-500/30"
+                      ? "hover:bg-white/20 active:bg-white/20 text-white/80 hover:text-white"
+                      : "hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/30"
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -299,11 +299,11 @@ export function CanvasSheets({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "p-0 rounded-md transition-all duration-200 hover:scale-110 active:scale-95",
+                      "p-0 rounded-md transition-colors duration-200",
                       "h-5 w-5",
                       activeSheetId === sheet.id
-                        ? "hover:bg-red-500/20 active:bg-red-500/30 text-red-200 hover:text-white"
-                        : "hover:bg-red-500/20 active:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30"
+                        ? "hover:bg-red-500/20 active:bg-red-500/20 text-red-200 hover:text-white"
+                        : "hover:bg-red-500/20 active:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30"
                     )}
                     onClick={(e) => {
                       e.stopPropagation();
