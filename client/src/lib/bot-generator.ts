@@ -4307,76 +4307,110 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")\n';
             code += '    \n';
             
-            // Создаем inline клавиатуру с кнопками выбора
-            code += '    # Создаем inline клавиатуру с поддержкой множественного выбора\n';
-            code += '    builder = InlineKeyboardBuilder()\n';
-            
-            // Разделяем кнопки на опции выбора и обычные кнопки
-            console.log(`🔧 ГЕНЕРАТОР: targetNode.data.buttons:`, targetNode.data.buttons);
-            
-            let buttonsToUse = targetNode.data.buttons || [];
-            
-            const selectionButtons = buttonsToUse.filter(button => button.action === 'selection');
-            const regularButtons = buttonsToUse.filter(button => button.action !== 'selection');
-            console.log(`🔧 ГЕНЕРАТОР: Найдено ${selectionButtons.length} кнопок выбора и ${regularButtons.length} обычных кнопок`);
-            
-            // Добавляем кнопки выбора с отметками о состоянии
-            console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
-            selectionButtons.forEach((button, index) => {
-              // Используем короткие callback_data
-              const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []); // Используем новую функцию
-              const shortTarget = (button.target || button.id || 'btn').slice(-8);
-              const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-              console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
-              code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
-              code += `    logging.info(f"🔘 Создаем кнопку: ${button.text} -> ${callbackData}")\n`;
-              code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
-              code += `    builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
-            });
-            
-            // Добавляем кнопку "Готово" для множественного выбора
-            console.log(`🔧 ГЕНЕРАТОР: НАЧИНАЕМ создание кнопки "Готово" для узла ${nodeId}`);
-            console.log(`🔧 ГЕНЕРАТОР: allowMultipleSelection = ${targetNode.data.allowMultipleSelection}`);
-            console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${targetNode.data.continueButtonTarget}`);
-            console.log(`🔧 ГЕНЕРАТОР: selectionButtons.length = ${selectionButtons.length}`);
-            
-            // ВСЕГДА добавляем кнопку "Готово" если есть кнопки выбора
-            if (selectionButtons.length > 0) {
-              console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "Готово" (есть ${selectionButtons.length} кнопок выбора)`);
-              code += '    # Кнопка "Готово" для множественного выбора\n';
-              const shortNodeIdDone = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
-              const doneCallbackData = `done_${shortNodeIdDone}`;
-              console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
-              console.log(`🔧 ГЕНЕРАТОР: ГЕНЕРИРУЕМ код кнопки "Готово"!`);
+            // ИСПРАВЛЕНИЕ: Проверяем тип клавиатуры и генерируем соответствующий код
+            if (multiSelectKeyboardType === 'reply') {
+              // Reply клавиатура для множественного выбора
+              code += '    # Создаем reply клавиатуру с поддержкой множественного выбора\n';
+              code += '    builder = ReplyKeyboardBuilder()\n';
               
-              code += `    logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
-              code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="${doneCallbackData}"))\n`;
+              // Разделяем кнопки на опции выбора и обычные кнопки
+              let buttonsToUse = targetNode.data.buttons || [];
+              const selectionButtons = buttonsToUse.filter(button => button.action === 'selection');
+              const regularButtons = buttonsToUse.filter(button => button.action !== 'selection');
               
-              console.log(`🔧 ГЕНЕРАТОР: ✅ УСПЕШНО добавили кнопку "Готово" в код генерации`);
-            } else {
-              console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем кнопку "Готово" - нет кнопок выбора`);
-            }  
-            
-            // Добавляем обычные кнопки (navigation и другие)
-            regularButtons.forEach((btn: Button, index: number) => {
-              if (btn.action === "goto" && btn.target) {
-                const btnCallbackData = `${btn.target}_btn_${index}`;
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
-              } else if (btn.action === "url") {
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-              } else if (btn.action === "command" && btn.target) {
-                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
+              // Добавляем кнопки выбора с отметками о состоянии
+              selectionButtons.forEach((button, index) => {
+                code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
+                code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
+                code += `    builder.add(KeyboardButton(text=f"{selected_mark}${button.text}"))\n`;
+              });
+              
+              // Добавляем кнопку "Готово"
+              if (selectionButtons.length > 0) {
+                const continueText = targetNode.data.continueButtonText || 'Готово';
+                code += `    builder.add(KeyboardButton(text="${continueText}"))\n`;
               }
-            });
-            
-            // Автоматическое распределение колонок для множественного выбора
-            const totalButtons = selectionButtons.length + (targetNode.data.continueButtonTarget ? 1 : 0) + regularButtons.length;
-            // Для множественного выбора всегда используем nodeData с включенным флагом
-            const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
-            const columns = calculateOptimalColumns(selectionButtons, multiSelectNodeData);
-            code += `    builder.adjust(${columns})\n`;
-            code += '    keyboard = builder.as_markup()\n';
+              
+              // Добавляем обычные кнопки
+              regularButtons.forEach((btn: Button) => {
+                code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+              });
+              
+              const resizeKeyboard = targetNode.data.resizeKeyboard !== false;
+              const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true;
+              code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+            } else {
+              // Inline клавиатура для множественного выбора
+              code += '    # Создаем inline клавиатуру с поддержкой множественного выбора\n';
+              code += '    builder = InlineKeyboardBuilder()\n';
+              
+              // Разделяем кнопки на опции выбора и обычные кнопки
+              console.log(`🔧 ГЕНЕРАТОР: targetNode.data.buttons:`, targetNode.data.buttons);
+              
+              let buttonsToUse = targetNode.data.buttons || [];
+              
+              const selectionButtons = buttonsToUse.filter(button => button.action === 'selection');
+              const regularButtons = buttonsToUse.filter(button => button.action !== 'selection');
+              console.log(`🔧 ГЕНЕРАТОР: Найдено ${selectionButtons.length} кнопок выбора и ${regularButtons.length} обычных кнопок`);
+              
+              // Добавляем кнопки выбора с отметками о состоянии
+              console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
+              selectionButtons.forEach((button, index) => {
+                // Используем короткие callback_data
+                const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []); // Используем новую функцию
+                const shortTarget = (button.target || button.id || 'btn').slice(-8);
+                const callbackData = `ms_${shortNodeId}_${shortTarget}`;
+                console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
+                code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
+                code += `    logging.info(f"🔘 Создаем кнопку: ${button.text} -> ${callbackData}")\n`;
+                code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
+                code += `    builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
+              });
+              
+              // Добавляем кнопку "Готово" для множественного выбора
+              console.log(`🔧 ГЕНЕРАТОР: НАЧИНАЕМ создание кнопки "Готово" для узла ${nodeId}`);
+              console.log(`🔧 ГЕНЕРАТОР: allowMultipleSelection = ${targetNode.data.allowMultipleSelection}`);
+              console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${targetNode.data.continueButtonTarget}`);
+              console.log(`🔧 ГЕНЕРАТОР: selectionButtons.length = ${selectionButtons.length}`);
+              
+              // ВСЕГДА добавляем кнопку "Готово" если есть кнопки выбора
+              if (selectionButtons.length > 0) {
+                console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "Готово" (есть ${selectionButtons.length} кнопок выбора)`);
+                code += '    # Кнопка "Готово" для множественного выбора\n';
+                const shortNodeIdDone = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
+                const doneCallbackData = `done_${shortNodeIdDone}`;
+                console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
+                console.log(`🔧 ГЕНЕРАТОР: ГЕНЕРИРУЕМ код кнопки "Готово"!`);
+                
+                code += `    logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
+                code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="${doneCallbackData}"))\n`;
+                
+                console.log(`🔧 ГЕНЕРАТОР: ✅ УСПЕШНО добавили кнопку "Готово" в код генерации`);
+              } else {
+                console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем кнопку "Готово" - нет кнопок выбора`);
+              }  
+              
+              // Добавляем обычные кнопки (navigation и другие)
+              regularButtons.forEach((btn: Button, index: number) => {
+                if (btn.action === "goto" && btn.target) {
+                  const btnCallbackData = `${btn.target}_btn_${index}`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
+                } else if (btn.action === "url") {
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
+                } else if (btn.action === "command" && btn.target) {
+                  const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
+                }
+              });
+              
+              // Автоматическое распределение колонок для множественного выбора
+              const totalButtons = selectionButtons.length + (targetNode.data.continueButtonTarget ? 1 : 0) + regularButtons.length;
+              // Для множественного выбора всегда используем nodeData с включенным флагом
+              const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
+              const columns = calculateOptimalColumns(selectionButtons, multiSelectNodeData);
+              code += `    builder.adjust(${columns})\n`;
+              code += '    keyboard = builder.as_markup()\n';
+            }
             
           } else if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             // Обычные кнопки без множественного выбора
@@ -8576,26 +8610,54 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `        user_data[user_id]["multi_select_type"] = "${multiSelectKeyboardType}"\n`;
             code += `        user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
             code += `        \n`;
-            code += `        builder = InlineKeyboardBuilder()\n`;
             
-            // Добавляем кнопки выбора с учетом ранее сохраненных значений
-            targetNode.data.buttons.forEach((button, index) => {
-              if (button.action === 'selection') {
-                const cleanText = button.text.replace(/"/g, '\\"');
-                const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
-                code += `        # Кнопка с галочкой: ${cleanText}\n`;
-                code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
-                code += `        button_text = f"{selected_mark}${cleanText}"\n`;
-                code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
-              }
-            });
-            
-            // Добавляем кнопку "Готово"
-            code += `        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${targetNode.id}"))\n`;
-            code += `        builder.adjust(2)\n`;
-            code += `        keyboard = builder.as_markup()\n`;
-            code += `        \n`;
-            code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+            // ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в зависимости от keyboardType
+            if (multiSelectKeyboardType === 'reply') {
+              // Reply клавиатура для множественного выбора
+              code += `        builder = ReplyKeyboardBuilder()\n`;
+              
+              // Добавляем кнопки выбора с учетом ранее сохраненных значений
+              targetNode.data.buttons.forEach((button, index) => {
+                if (button.action === 'selection') {
+                  const cleanText = button.text.replace(/"/g, '\\"');
+                  code += `        # Кнопка выбора: ${cleanText}\n`;
+                  code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
+                  code += `        button_text = f"{selected_mark}${cleanText}"\n`;
+                  code += `        builder.add(KeyboardButton(text=button_text))\n`;
+                }
+              });
+              
+              // Добавляем кнопку "Готово"
+              const continueText = targetNode.data.continueButtonText || 'Готово';
+              code += `        builder.add(KeyboardButton(text="${continueText}"))\n`;
+              const resizeKeyboard = targetNode.data.resizeKeyboard !== false;
+              const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true;
+              code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              code += `        \n`;
+              code += `        await bot.send_message(user_id, text, reply_markup=keyboard)\n`;
+            } else {
+              // Inline клавиатура для множественного выбора
+              code += `        builder = InlineKeyboardBuilder()\n`;
+              
+              // Добавляем кнопки выбора с учетом ранее сохраненных значений
+              targetNode.data.buttons.forEach((button, index) => {
+                if (button.action === 'selection') {
+                  const cleanText = button.text.replace(/"/g, '\\"');
+                  const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
+                  code += `        # Кнопка с галочкой: ${cleanText}\n`;
+                  code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
+                  code += `        button_text = f"{selected_mark}${cleanText}"\n`;
+                  code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
+                }
+              });
+              
+              // Добавляем кнопку "Готово"
+              code += `        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${targetNode.id}"))\n`;
+              code += `        builder.adjust(2)\n`;
+              code += `        keyboard = builder.as_markup()\n`;
+              code += `        \n`;
+              code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+            }
             code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено, ЗАВЕРШАЕМ функцию")\n`;
             code += `        return\n`;
           } else {
