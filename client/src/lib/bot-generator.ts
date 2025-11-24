@@ -2660,7 +2660,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 } else {
                   // Fallback если не удалось сгенерировать код медиа
                   code += '    # Отправляем сообщение (обычное)\n';
-                  code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${parseMode})\n`;
+                  const autoFlag1 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
+                  code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${autoFlag1}${parseMode})\n`;
                   
                   // АВТОПЕРЕХОД для fallback случая
                   if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
@@ -2675,7 +2676,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else {
                 // Обычное сообщение без медиа
                 code += '    # Отправляем сообщение\n';
-                code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${parseMode})\n`;
+                const autoFlag2 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
+                code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${autoFlag2}${parseMode})\n`;
                 
                 // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
                 // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
