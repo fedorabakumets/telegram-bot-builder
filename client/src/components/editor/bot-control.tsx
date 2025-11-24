@@ -1073,30 +1073,6 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         </Button>
       </div>
 
-      {/* Database Toggle */}
-      <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
-        isDatabaseEnabled 
-          ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
-          : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
-      }`} data-testid="database-toggle-container-bot-page">
-        <Database className={`w-5 h-5 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
-        <Label htmlFor="db-toggle-bot-page" className={`text-sm font-bold cursor-pointer flex-1 ${
-          isDatabaseEnabled 
-            ? 'text-green-700 dark:text-green-300' 
-            : 'text-red-700 dark:text-red-300'
-        }`}>
-          {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
-        </Label>
-        <Switch
-          id="db-toggle-bot-page"
-          data-testid="switch-database-toggle-bot-page"
-          checked={isDatabaseEnabled}
-          onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
-          disabled={toggleDatabaseMutation.isPending}
-          className="scale-110"
-        />
-      </div>
-
       {isLoading ? (
         <div className="grid gap-4">
           {[1, 2].map((i) => (
@@ -1131,7 +1107,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         <div className="grid gap-4">
           {tokens.map((token) => (
             <Card key={token.id} className="transition-all hover:shadow-md">
-              <CardContent className="p-6">
+              <CardContent className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <BotAvatar 
@@ -1300,6 +1276,30 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
+                </div>
+                
+                {/* Database Toggle for each bot */}
+                <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+                  isDatabaseEnabled 
+                    ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
+                    : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
+                }`} data-testid="database-toggle-container-bot-card">
+                  <Database className={`w-4 h-4 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
+                  <Label htmlFor={`db-toggle-bot-${token.id}`} className={`text-sm font-bold cursor-pointer flex-1 ${
+                    isDatabaseEnabled 
+                      ? 'text-green-700 dark:text-green-300' 
+                      : 'text-red-700 dark:text-red-300'
+                  }`}>
+                    {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
+                  </Label>
+                  <Switch
+                    id={`db-toggle-bot-${token.id}`}
+                    data-testid="switch-database-toggle-bot-card"
+                    checked={isDatabaseEnabled}
+                    onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
+                    disabled={toggleDatabaseMutation.isPending}
+                    className="scale-100"
+                  />
                 </div>
               </CardContent>
             </Card>
