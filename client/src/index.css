@@ -5,10 +5,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* DISABLE ALL pointer events everywhere - this completely prevents hover-triggered re-renders */
+/* SOLUTION: Keep pointer-events disabled everywhere to prevent hover re-renders */
 * {
   pointer-events: none !important;
 }
+
+/* BUT: Use JavaScript-based interaction instead via click handler delegation */
+/* This is set up in JavaScript to handle clicks without relying on pointer-events */
 
 :root {
   --background: hsl(0, 0%, 100%);
