@@ -73,15 +73,16 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
         });
 
         if (response.ok) {
+          const data = await response.json();
           const userData: TelegramUser = {
-            id: telegramUser.id,
-            first_name: telegramUser.first_name,
-            last_name: telegramUser.last_name,
-            username: telegramUser.username,
-            photo_url: telegramUser.photo_url,
+            id: data.user.id,
+            firstName: data.user.firstName || telegramUser.first_name,
+            lastName: data.user.lastName || telegramUser.last_name,
+            username: data.user.username || telegramUser.username,
+            photoUrl: data.user.photoUrl || telegramUser.photo_url,
           };
           
-          // Сохраняем в localStorage
+          // Сохраняем в локальном состоянии (БД уже сохранила)
           login(userData);
           
           toast({

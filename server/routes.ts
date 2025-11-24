@@ -5999,10 +5999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         authDate: auth_date ? parseInt(auth_date.toString()) : undefined
       });
 
-      console.log(`✅ Telegram auth successful for user: ${first_name} (@${username}) - saved to DB`);
-
-      // Сохраняем ID пользователя в сессию (для других запросов)
-      (req.session as any).telegramUserId = id;
+      console.log(`✅ Telegram auth successful for user: ${first_name} (@${username}) - saved to DB with ID: ${userData.id}`);
 
       res.json({
         success: true,
@@ -6018,19 +6015,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Получить информацию о текущем авторизованном пользователе
-  app.get("/api/auth/telegram/me", async (req, res) => {
+  // Получить информацию о пользователе по ID
+  app.get("/api/auth/telegram/user/:id", async (req, res) => {
     try {
-      const telegramUserId = (req.session as any)?.telegramUserId;
+      const userId = parseInt(req.params.id);
       
-      if (!telegramUserId) {
-        return res.status(401).json({
+      if (!userId) {
+        return res.status(400).json({
           success: false,
-          error: "Not authenticated"
+          error: "User ID required"
         });
       }
 
-      const user = await storage.getTelegramUser(telegramUserId);
+      const user = await storage.getTelegramUser(userId);
       
       if (!user) {
         return res.status(404).json({
@@ -6048,23 +6045,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: "Error getting user"
-      });
-    }
-  });
-
-  // Выход (очистка сессии)
-  app.post("/api/auth/telegram/logout", async (req, res) => {
-    try {
-      (req.session as any).telegramUserId = null;
-      res.json({
-        success: true,
-        message: "Logged out successfully"
-      });
-    } catch (error: any) {
-      console.error("Logout error:", error);
-      res.status(500).json({
-        success: false,
-        error: "Logout failed"
       });
     }
   });

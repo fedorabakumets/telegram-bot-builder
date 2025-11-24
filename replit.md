@@ -17,11 +17,12 @@ This application provides a **no-code visual Telegram bot builder** that enables
 Preferred communication style: Simple, everyday language. No-code platform for non-technical users.
 
 ## Recent Changes (Current Session)
-- **✅ Telegram Login Widget - Complete Database Integration** (telegram-login-widget.tsx + use-telegram-auth.ts + schema.ts + storage.ts + routes.ts):
+- **✅ Telegram Login Widget - Complete Database Integration (FIXED)** (telegram-login-widget.tsx + use-telegram-auth.ts + schema.ts + storage.ts + routes.ts):
   - Fixed "LogIn is not defined" error - removed old button references
   - Fixed authorization error - removed undefined session middleware dependency
   - **🔴 → ✅ Fixed widget flashing/pulsing** - optimized useEffect dependencies
-  - **🔴 → ✅ Added database persistence** - users now saved to `telegram_users` table in PostgreSQL
+  - **🔴 → ✅ Fixed authorization error** - removed session assignment (no session middleware)
+  - **✅ Added database persistence** - users now saved to `telegram_users` table in PostgreSQL
   
   **Database Schema (telegram_users):**
   - id (BIGINT PRIMARY KEY) - Telegram user ID
@@ -37,21 +38,24 @@ Preferred communication style: Simple, everyday language. No-code platform for n
   - Automatically strips @ from username (e.g., @blogspotbotbotbot → blogspotbotbotbot)
   - After successful auth, shows user profile with name instead of login button
   - Users can logout with X button
-  - Backend endpoints:
-    - POST `/api/auth/telegram` - saves/updates user in database
-    - GET `/api/auth/telegram/me` - gets current user from session (TODO: implement)
-    - POST `/api/auth/telegram/logout` - clears session
-  - Session-based authentication using Express sessions
-  - All user data persisted in PostgreSQL database
+  
+  **Backend API Endpoints:**
+  - **POST `/api/auth/telegram`** - receives Telegram OAuth data, saves/updates user in DB, returns saved user object ✅
+  - **GET `/api/auth/telegram/user/:id`** - retrieves user data by ID from database
+  - Users data persisted in PostgreSQL database table `telegram_users`
   
   **Storage Methods Added:**
   - `getTelegramUser(id)` - fetch user from DB
-  - `getTelegramUserOrCreate(userData)` - upsert user
+  - `getTelegramUserOrCreate(userData)` - upsert user (creates or updates)
   - `deleteTelegramUser(id)` - delete user
+  
+  **Testing Result:**
+  - ✅ User "ХРАЗ" (@Xraz_official) successfully saved to database
+  - ✅ Avoids all session errors - direct database persistence
   
   **Note**: Widget requires HTTPS to display (Telegram requirement). On production/HTTPS it will show Telegram login button
   - On localhost HTTP, widget loads but doesn't render (use Replit production domain to test)
-  - **Status**: ✅ Ready for production deployment with full database persistence
+  - **Status**: ✅ FULLY OPERATIONAL - Ready for production deployment
   
 - **✨ Telegram Login Widget setup** (telegram-login-widget.tsx + routes.ts + adaptive-header.tsx):
   - Official Telegram Login Widget - standard OAuth-style authorization from Telegram
