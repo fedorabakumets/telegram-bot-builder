@@ -420,6 +420,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   if (hasSelectionButtons && isMultipleSelection) {
     console.log(`🔧 ГЕНЕРАТОР: ИНИЦИАЛИЗИРУЕМ состояние множественного выбора для узла ${nodeId}`);
     const multiSelectVariable = nodeData?.multiSelectVariable || 'user_interests';
+    const multiSelectKeyboardType = nodeData?.keyboardType || 'inline';
     
     code += `${indentLevel}# Инициализация состояния множественного выбора\n`;
     code += `${indentLevel}if user_id not in user_data:\n`;
@@ -444,7 +445,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
     code += `${indentLevel}if "multi_select_${nodeId}" not in user_data[user_id]:\n`;
     code += `${indentLevel}    user_data[user_id]["multi_select_${nodeId}"] = saved_selections.copy()\n`;
     code += `${indentLevel}user_data[user_id]["multi_select_node"] = "${nodeId}"\n`;
-    code += `${indentLevel}user_data[user_id]["multi_select_type"] = "inline"\n`;
+    code += `${indentLevel}user_data[user_id]["multi_select_type"] = "${multiSelectKeyboardType}"\n`;
     code += `${indentLevel}user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
     code += `${indentLevel}logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")\n`;
     code += `${indentLevel}\n`;
@@ -4276,6 +4277,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             
             // Добавляем логику инициализации множественного выбора
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
+            const multiSelectKeyboardType = targetNode.data.keyboardType || 'inline';
             
             code += '    # Инициализация состояния множественного выбора\n';
             code += '    if user_id not in user_data:\n';
@@ -4300,7 +4302,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `    if "multi_select_${nodeId}" not in user_data[user_id]:\n`;
             code += `        user_data[user_id]["multi_select_${nodeId}"] = saved_selections.copy()\n`;
             code += `    user_data[user_id]["multi_select_node"] = "${nodeId}"\n`;
-            code += `    user_data[user_id]["multi_select_type"] = "inline"\n`;
+            code += `    user_data[user_id]["multi_select_type"] = "${multiSelectKeyboardType}"\n`;
             code += `    user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
             code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")\n';
             code += '    \n';
@@ -8513,13 +8515,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         
         // Специальная обработка для узлов с множественным выбором
         if (targetNode.data.allowMultipleSelection) {
+          const multiSelectKeyboardType = targetNode.data.keyboardType || "inline";
           code += `        # Узел ${continueButtonTarget} поддерживает множественный выбор - сохраняем состояние\n`;
           code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Инициализируем множественный выбор для узла ${targetNode.id}")\n`;
           code += `        if user_id not in user_data:\n`;
           code += `            user_data[user_id] = {}\n`;
           code += `        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
           code += `        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
-          code += `        user_data[user_id]["multi_select_type"] = "inline"\n`;
+          code += `        user_data[user_id]["multi_select_type"] = "${multiSelectKeyboardType}"\n`;
           code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Состояние множественного выбора установлено для узла ${targetNode.id}")\n`;
         }
         
@@ -8566,10 +8569,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                if isinstance(var_data, str) and var_data.strip():\n`;
             code += `                    saved_selections = [sel.strip() for sel in var_data.split(",") if sel.strip()]\n`;
             code += `        \n`;
+            const multiSelectKeyboardType = targetNode.data.keyboardType || "inline";
             code += `        # Инициализируем состояние с восстановленными значениями\n`;
             code += `        user_data[user_id]["multi_select_${targetNode.id}"] = saved_selections.copy()\n`;
             code += `        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
-            code += `        user_data[user_id]["multi_select_type"] = "inline"\n`;
+            code += `        user_data[user_id]["multi_select_type"] = "${multiSelectKeyboardType}"\n`;
             code += `        user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
             code += `        \n`;
             code += `        builder = InlineKeyboardBuilder()\n`;
