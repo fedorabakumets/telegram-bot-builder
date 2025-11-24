@@ -2688,7 +2688,7 @@ export function PropertiesPanel({
                       {/* Text input and variables button */}
                       <div className="space-y-2 mb-3">
                         <Label className="text-xs font-medium text-muted-foreground">Текст кнопки</Label>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <Input
                             value={button.text}
                             onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { text: e.target.value })}
@@ -2700,11 +2700,10 @@ export function PropertiesPanel({
                               <UIButton
                                 size="sm"
                                 variant="outline"
-                                className="px-2 py-1 h-8 text-xs shrink-0 gap-1"
+                                className="h-9 w-9 p-0 flex-shrink-0"
                                 title="Вставить переменную"
                               >
-                                <Plus className="h-3 w-3" />
-                                <span>Переменная</span>
+                                <Plus className="h-4 w-4" />
                               </UIButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
