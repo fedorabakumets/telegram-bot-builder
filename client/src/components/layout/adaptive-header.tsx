@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github, LogOut } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github, LogOut, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { LoginModal } from '@/components/login-modal';
@@ -484,11 +484,11 @@ export function AdaptiveHeader({
         <Button
           onClick={() => setIsLoginModalOpen(true)}
           size="sm"
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs`}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5"
           title="Войти через Telegram"
         >
-          <User className="h-3.5 w-3.5" />
-          <span className="max-sm:hidden ml-1">Войти</span>
+          <MessageCircle className="h-3.5 w-3.5" />
+          <span>Войти через Telegram</span>
         </Button>
       )}
       
