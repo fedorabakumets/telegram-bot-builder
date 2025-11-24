@@ -484,10 +484,66 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
   try {
     const processKey = `${projectId}_${tokenId}`;
     
-    // Проверяем, не запущен ли уже этот конкретный бот
+    // КРИТИЧЕСКИ ВАЖНО: Сначала убиваем ВСЕ старые процессы с этим токеном
+    console.log(`🔍 Проверяем наличие старых процессов для бота ${projectId} (токен ${tokenId})...`);
+    try {
+      const { execSync } = require('child_process');
+      const botFileName = `bot_${projectId}_${tokenId}.py`;
+      
+      // Находим все Python процессы с этим файлом
+      try {
+        const allPythonProcesses = execSync(`ps aux | grep python | grep "${botFileName}" | grep -v grep`, { encoding: 'utf8' }).trim();
+        
+        if (allPythonProcesses) {
+          const lines = allPythonProcesses.split('\n').filter((line: string) => line.trim());
+          console.log(`⚠️ Найдено ${lines.length} старых процессов для токена ${tokenId}. Останавливаем...`);
+          
+          for (const line of lines) {
+            const parts = line.trim().split(/\s+/);
+            const pid = parseInt(parts[1]);
+            if (pid && !isNaN(pid)) {
+              try {
+                console.log(`💀 Убиваем старый процесс ${pid} для токена ${tokenId}`);
+                execSync(`kill -9 ${pid}`, { encoding: 'utf8' });
+                await new Promise(resolve => setTimeout(resolve, 100)); // Даем время процессу завершиться
+              } catch (killError) {
+                console.log(`Процесс ${pid} уже завершен`);
+              }
+            }
+          }
+          
+          // Ждем немного чтобы процессы точно завершились
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          console.log(`✅ Старых процессов для токена ${tokenId} не найдено`);
+        }
+      } catch (grepError) {
+        // Процессы не найдены - это хорошо
+        console.log(`✅ Старых процессов для токена ${tokenId} не найдено`);
+      }
+    } catch (error) {
+      console.log(`Ошибка при поиске старых процессов:`, error);
+    }
+    
+    // Удаляем процесс из памяти если он там есть
     if (botProcesses.has(processKey)) {
-      console.log(`Бот с токеном ${tokenId} для проекта ${projectId} уже запущен`);
-      return { success: false, error: "Этот бот уже запущен" };
+      const oldProcess = botProcesses.get(processKey);
+      try {
+        oldProcess?.kill('SIGKILL');
+      } catch (e) {
+        // Игнорируем ошибки
+      }
+      botProcesses.delete(processKey);
+      console.log(`🗑️ Удалили старый процесс из памяти для токена ${tokenId}`);
+    }
+    
+    // Сбрасываем webhook в Telegram чтобы избежать конфликтов
+    try {
+      const webhookUrl = `https://api.telegram.org/bot${token}/deleteWebhook?drop_pending_updates=true`;
+      await fetch(webhookUrl);
+      console.log(`🧹 Webhook сброшен для токена ${tokenId}`);
+    } catch (webhookError) {
+      console.log(`Не удалось сбросить webhook:`, webhookError);
     }
 
     const project = await storage.getBotProject(projectId);
