@@ -76,7 +76,7 @@ export function AdaptiveHeader({
   // Классы для контейнера с адаптивной высотой для мобильных устройств
   const containerClasses = [
     'bg-background border-border relative z-50',
-    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-10' : 'h-12'} flex items-center justify-between md:h-auto md:flex-wrap md:justify-start md:gap-2 lg:h-12 lg:flex-nowrap lg:justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
+    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-10' : 'h-12'} flex items-center justify-between md:min-h-20 md:flex-wrap md:justify-start md:gap-2 lg:h-12 lg:flex-nowrap lg:justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
     isCompact ? 'text-sm' : ''
   ].join(' ');
 
