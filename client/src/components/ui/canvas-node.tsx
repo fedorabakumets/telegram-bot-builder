@@ -1401,25 +1401,16 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                       /* Regular inline buttons */
                       <div className="grid grid-cols-2 gap-2">
                         {node.data.buttons.map((button: any) => {
-                          const getButtonTarget = () => {
-                            if (button.action === 'goto' && button.target) {
-                              const targetNode = allNodes?.find(n => n.id === button.target);
-                              return targetNode?.data?.title || 'Неизвестный узел';
-                            } else if (button.action === 'url' && button.url) {
-                              return button.url;
-                            }
-                            return '';
-                          };
-                          const targetInfo = getButtonTarget();
+                          const targetNode = button.action === 'goto' && button.target ? allNodes?.find(n => n.id === button.target) : null;
+                          const targetNodeName = targetNode?.data?.title || (button.action === 'goto' ? 'Неизвестный узел' : '');
+                          const targetPreview = targetNode?.data?.messageText ? (targetNode.data.messageText.length > 30 ? targetNode.data.messageText.slice(0, 30) + '...' : targetNode.data.messageText) : '';
+                          
                           return (
                             <div key={button.id} className="group relative">
-                              <div 
-                                className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200 shadow-sm"
-                                title={targetInfo ? (button.action === 'goto' ? `Переход к: ${targetInfo}` : `Ссылка: ${targetInfo}`) : ''}
-                              >
-                                <div className="flex flex-col items-center justify-center space-y-0.5">
+                              <div className="p-2 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200 shadow-sm">
+                                <div className="flex flex-col space-y-1">
                                   <div className="flex items-center justify-center space-x-1">
-                                    <span className="truncate">{button.text}</span>
+                                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300 truncate">{button.text}</span>
                                     {button.action === 'command' && (
                                       <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
                                     )}
@@ -1427,18 +1418,20 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                                       <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title={`Ссылка: ${button.url}`}></i>
                                     )}
                                     {button.action === 'goto' && (
-                                      <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title={`Переход к: ${allNodes?.find(n => n.id === button.target)?.data?.title || 'Неизвестный узел'}`}></i>
+                                      <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title={`Переход к: ${targetNodeName}`}></i>
                                     )}
                                     {button.action === 'selection' && (
                                       <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
                                     )}
                                   </div>
-                                  {targetInfo && (
-                                    <span className="text-[10px] text-blue-600 dark:text-blue-300 truncate w-full opacity-75">
-                                      {button.action === 'goto' && '→'}
-                                      {button.action === 'url' && '🔗'}
-                                      {' ' + targetInfo}
-                                    </span>
+                                  {button.action === 'goto' && targetNode && (
+                                    <div className="text-[10px] text-blue-600 dark:text-blue-300 space-y-0.5">
+                                      <div className="truncate">→ {targetNodeName}</div>
+                                      {targetPreview && <div className="text-[9px] text-blue-500 dark:text-blue-400 truncate italic opacity-75">{targetPreview}</div>}
+                                    </div>
+                                  )}
+                                  {button.action === 'url' && (
+                                    <div className="text-[10px] text-purple-600 dark:text-purple-300 truncate">🔗 {button.url}</div>
                                   )}
                                 </div>
                               </div>
@@ -1452,45 +1445,45 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                   /* Reply keyboard buttons */
                   <div className="space-y-2">
                     {node.data.buttons.map((button: any) => {
-                      const getButtonTarget = () => {
-                        if (button.action === 'goto' && button.target) {
-                          const targetNode = allNodes?.find(n => n.id === button.target);
-                          return targetNode?.data?.title || 'Неизвестный узел';
-                        } else if (button.action === 'url' && button.url) {
-                          return button.url;
-                        } else if (button.action === 'command') {
-                          return 'Команда';
-                        } else if (button.action === 'selection') {
-                          return 'Выбор';
-                        }
-                        return '';
-                      };
-                      const targetInfo = getButtonTarget();
+                      const targetNode = button.action === 'goto' && button.target ? allNodes?.find(n => n.id === button.target) : null;
+                      const targetNodeName = targetNode?.data?.title || (button.action === 'goto' ? 'Неизвестный узел' : '');
+                      const targetPreview = targetNode?.data?.messageText ? (targetNode.data.messageText.length > 50 ? targetNode.data.messageText.slice(0, 50) + '...' : targetNode.data.messageText) : '';
+                      
                       return (
-                        <div key={button.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
-                            {targetInfo && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                {button.action === 'goto' && '→ '}
-                                {button.action === 'url' && '🔗 '}
-                                {targetInfo}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
-                            {button.action === 'command' && (
-                              <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
-                            )}
-                            {button.action === 'url' && (
-                              <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title={`Ссылка: ${button.url}`}></i>
-                            )}
-                            {button.action === 'goto' && (
-                              <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title={`Переход к: ${allNodes?.find(n => n.id === button.target)?.data?.title || 'Неизвестный узел'}`}></i>
-                            )}
-                            {button.action === 'selection' && (
-                              <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
-                            )}
+                        <div key={button.id} className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition-colors p-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</div>
+                              {button.action === 'goto' && targetNode && (
+                                <div className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400 space-y-0.5">
+                                  <div className="truncate">→ К узлу: <span className="font-semibold">{targetNodeName}</span></div>
+                                  {targetPreview && <div className="text-[11px] text-emerald-500 dark:text-emerald-300 truncate italic opacity-75">{targetPreview}</div>}
+                                </div>
+                              )}
+                              {button.action === 'url' && (
+                                <div className="mt-1.5 text-xs text-purple-600 dark:text-purple-300 truncate">🔗 {button.url}</div>
+                              )}
+                              {button.action === 'command' && (
+                                <div className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400">Команда</div>
+                              )}
+                              {button.action === 'selection' && (
+                                <div className="mt-1.5 text-xs text-purple-600 dark:text-purple-400">Выбор</div>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
+                              {button.action === 'command' && (
+                                <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
+                              )}
+                              {button.action === 'url' && (
+                                <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title={`Ссылка: ${button.url}`}></i>
+                              )}
+                              {button.action === 'goto' && (
+                                <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title={`Переход к: ${targetNodeName}`}></i>
+                              )}
+                              {button.action === 'selection' && (
+                                <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
