@@ -5,16 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CRITICAL: Disable ALL transitions and animations to prevent flickering */
-* {
-  transition: none !important !important;
-  animation: none !important !important;
-}
-
-/* Allow only essential transitions after page is ready */
-:root.transitions-enabled * {
-  transition: unset !important;
-  animation: unset !important;
+/* Disable pointer events during page load to prevent flickering */
+:root:not(.page-ready) * {
+  pointer-events: none !important;
 }
 
 :root {

@@ -5,9 +5,9 @@ import "./index.css";
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
 
-// Enable transitions after React has finished rendering
-// This prevents flickering during initial load
+// Disable hover interactions during page load to prevent flickering
+// Enable them after 10 seconds
 setTimeout(() => {
-  document.documentElement.classList.add('transitions-enabled');
-  console.log('✅ Transitions enabled');
-}, 100);
+  document.documentElement.classList.add('page-ready');
+  console.log('✅ Page is ready - hover effects enabled');
+}, 10000);
