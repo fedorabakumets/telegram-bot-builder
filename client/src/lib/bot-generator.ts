@@ -3825,6 +3825,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
                   code += `    await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
+                } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+                  code += '    # Проверяем, есть ли условная клавиатура для этого узла\n';
+                  code += '    if "keyboard" not in locals() or keyboard is None:\n';
+                  code += '        # Создаем reply клавиатуру (+ сбор ввода включен)\n';
+                  code += '        builder = ReplyKeyboardBuilder()\n';
+                  targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                    if (btn.action === "contact" && btn.requestContact) {
+                      code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
+                    } else if (btn.action === "location" && btn.requestLocation) {
+                      code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
+                    } else {
+                      code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                    }
+                  });
+                  const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+                  const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+                  code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                  // Определяем режим форматирования для целевого узла
+                  let parseModeTarget = '';
+                  if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                    parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                  } else if (targetNode.data.formatMode === 'html') {
+                    parseModeTarget = ', parse_mode=ParseMode.HTML';
+                  }
+                  code += '    # Для reply клавиатуры отправляем новое сообщение\n';
+                  code += `    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})\n`;
                 }
                 code += '    \n';
               } else {
