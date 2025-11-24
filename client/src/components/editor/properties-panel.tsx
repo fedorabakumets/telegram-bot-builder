@@ -3293,48 +3293,6 @@ export function PropertiesPanel({
                     </div>
                   </div>
 
-                  {/* Rule Conflicts and Validation */}
-                  {detectRuleConflicts.length > 0 && (
-                    <div className="bg-red-50/50 dark:bg-red-950/20 border border-red-200/40 dark:border-red-800/40 rounded-lg p-3 mb-4">
-                      <div className="flex items-start space-x-2">
-                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <i className="fas fa-exclamation text-white text-xs"></i>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-xs font-medium text-red-700 dark:text-red-300 mb-2">
-                            Обнаружены проблемы с правилами ({detectRuleConflicts.length}):
-                          </div>
-                          <div className="space-y-1">
-                            {detectRuleConflicts.map((conflict, idx) => (
-                              <div key={idx} className={`text-xs p-2 rounded ${
-                                conflict.severity === 'error' 
-                                  ? 'bg-red-100/50 dark:bg-red-900/20 text-red-700 dark:text-red-300' 
-                                  : 'bg-yellow-100/50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300'
-                              }`}>
-                                <div className="font-medium flex items-center space-x-1">
-                                  <i className={`fas ${conflict.severity === 'error' ? 'fa-times-circle' : 'fa-exclamation-triangle'} text-xs`}></i>
-                                  <span>{conflict.description}</span>
-                                </div>
-                                <div className="text-xs opacity-75 mt-1">{conflict.suggestion}</div>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="flex space-x-2 mt-3">
-                            <UIButton
-                              size="sm"
-                              variant="ghost"
-                              onClick={autoFixPriorities}
-                              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                            >
-                              <i className="fas fa-magic mr-1"></i>
-                              Автоисправление приоритетов
-                            </UIButton>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Conditional Messages List */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
