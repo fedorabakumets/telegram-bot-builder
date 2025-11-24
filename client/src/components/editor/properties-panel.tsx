@@ -2628,6 +2628,7 @@ export function PropertiesPanel({
         )}
 
         {/* Keyboard Settings */}
+        {selectedNode.type !== 'content_management' && selectedNode.type !== 'user_management' && (
         <div className="bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-lg p-4">
           <h3 className="text-sm font-medium text-foreground mb-3">⌨️ Клавиатура</h3>
           <div className="flex items-center gap-3 mb-4">
