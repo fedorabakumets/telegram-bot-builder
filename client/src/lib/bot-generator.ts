@@ -625,7 +625,8 @@ function generateAttachedMediaSendCode(
       break;
     default:
       code += `${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение\n`;
-      code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${parseMode})\n`;
+      const autoTransitionFlagDefault = autoTransitionTo ? ', is_auto_transition=True' : '';
+      code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseMode})\n`;
   }
   
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
@@ -2661,7 +2662,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   // Fallback если не удалось сгенерировать код медиа
                   code += '    # Отправляем сообщение (обычное)\n';
                   const autoFlag1 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
-                  code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${autoFlag1}${parseMode})\n`;
+                  code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag1}${parseMode})\n`;
                   
                   // АВТОПЕРЕХОД для fallback случая
                   if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
@@ -2677,7 +2678,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 // Обычное сообщение без медиа
                 code += '    # Отправляем сообщение\n';
                 const autoFlag2 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
-                code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${autoFlag2}${parseMode})\n`;
+                code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag2}${parseMode})\n`;
                 
                 // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
                 // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
