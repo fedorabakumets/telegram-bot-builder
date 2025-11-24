@@ -3777,11 +3777,10 @@ export function PropertiesPanel({
                                           {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
                                             const nodeContent = 
                                               node.type === 'command' ? node.data.command :
-                                              node.type === 'message' ? (node.data.messageText || '').slice(0, 50) :
-                                              node.type === 'photo' ? (node.data.photoCaption || '').slice(0, 50) :
-                                              node.type === 'keyboard' ? (node.data.keyboardText || '').slice(0, 50) :
-                                              node.type === 'condition' ? (node.data.conditionText || '').slice(0, 50) :
-                                              (node.data.label || '').slice(0, 50);
+                                              node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
+                                              node.type === 'photo' ? ((node.data as any).photoCaption || '').slice(0, 50) :
+                                              node.type === 'keyboard' ? ((node.data as any).keyboardText || '').slice(0, 50) :
+                                              ((node.data as any).label || '').slice(0, 50);
                                             return (
                                               <SelectItem key={node.id} value={node.id}>
                                                 <div className="flex items-center gap-2">
@@ -3831,11 +3830,11 @@ export function PropertiesPanel({
                                   <div className="flex items-center gap-2">
                                     <Label className="text-xs text-purple-600 dark:text-purple-400">Inline</Label>
                                     <Switch
-                                      checked={condition.keyboardType === 'inline'}
+                                      checked={(condition as any).keyboardType === 'inline'}
                                       onCheckedChange={(checked) => {
                                         const currentConditions = selectedNode.data.conditionalMessages || [];
                                         const updatedConditions = currentConditions.map(c => 
-                                          c.id === condition.id ? { ...c, keyboardType: checked ? 'inline' : 'none' } : c
+                                          c.id === condition.id ? { ...c, keyboardType: checked ? 'inline' : 'none' } as any : c
                                         );
                                         onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                       }}
@@ -3844,11 +3843,11 @@ export function PropertiesPanel({
                                   <div className="flex items-center gap-2">
                                     <Label className="text-xs text-purple-600 dark:text-purple-400">Reply</Label>
                                     <Switch
-                                      checked={condition.keyboardType === 'reply'}
+                                      checked={(condition as any).keyboardType === 'reply'}
                                       onCheckedChange={(checked) => {
                                         const currentConditions = selectedNode.data.conditionalMessages || [];
                                         const updatedConditions = currentConditions.map(c => 
-                                          c.id === condition.id ? { ...c, keyboardType: checked ? 'reply' : 'none' } : c
+                                          c.id === condition.id ? { ...c, keyboardType: checked ? 'reply' : 'none' } as any : c
                                         );
                                         onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                       }}
@@ -4193,7 +4192,7 @@ export function PropertiesPanel({
         )}
 
         {/* Universal User Input Collection */}
-        {selectedNode.type !== 'input' && (
+        {(selectedNode.type as any) !== 'input' && (
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-foreground">✨ Сбор ответов</h3>
@@ -4468,7 +4467,7 @@ export function PropertiesPanel({
                                 </Label>
                                 <Select
                                   value={option.action || 'goto'}
-                                  onValueChange={(value: 'goto' | 'command' | 'url' | 'selection') => {
+                                  onValueChange={(value: any) => {
                                     const updatedOptions = [...(selectedNode.data.responseOptions || [])];
                                     updatedOptions[index] = { ...option, action: value };
                                     onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
@@ -4548,8 +4547,6 @@ export function PropertiesPanel({
                                             node.type === 'audio' ? 'Аудио' :
                                             node.type === 'document' ? 'Документ' :
                                             node.type === 'keyboard' ? 'Клавиатура' :
-                                            node.type === 'condition' ? 'Условие' :
-                                            node.data?.collectUserInput ? 'Сбор данных' :
                                             node.data?.collectUserInput ? 'Сбор данных' :
                                             node.type === 'location' ? 'Геолокация' :
                                             node.type === 'contact' ? 'Контакт' :
@@ -4564,8 +4561,6 @@ export function PropertiesPanel({
                                             node.type === 'audio' ? 'fas fa-music text-orange-500' :
                                             node.type === 'document' ? 'fas fa-file text-gray-500' :
                                             node.type === 'keyboard' ? 'fas fa-keyboard text-yellow-500' :
-                                            node.type === 'condition' ? 'fas fa-code-branch text-purple-500' :
-                                            node.data?.collectUserInput ? 'fas fa-user-edit text-indigo-500' :
                                             node.data?.collectUserInput ? 'fas fa-user-edit text-indigo-500' :
                                             node.type === 'location' ? 'fas fa-map-marker-alt text-pink-500' :
                                             node.type === 'contact' ? 'fas fa-address-book text-teal-500' :
@@ -4680,11 +4675,10 @@ export function PropertiesPanel({
                           {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
                             const nodeContent = 
                               node.type === 'command' ? node.data.command :
-                              node.type === 'message' ? (node.data.messageText || '').slice(0, 50) :
-                              node.type === 'photo' ? (node.data.photoCaption || '').slice(0, 50) :
-                              node.type === 'keyboard' ? (node.data.keyboardText || '').slice(0, 50) :
-                              node.type === 'condition' ? (node.data.conditionText || '').slice(0, 50) :
-                              (node.data.label || '').slice(0, 50);
+                              node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
+                              node.type === 'photo' ? ((node.data as any).photoCaption || '').slice(0, 50) :
+                              node.type === 'keyboard' ? ((node.data as any).keyboardText || '').slice(0, 50) :
+                              ((node.data as any).label || '').slice(0, 50);
                             return (
                               <SelectItem key={node.id} value={node.id}>
                                 <div className="flex items-center gap-2">
