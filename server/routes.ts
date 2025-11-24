@@ -487,7 +487,7 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     // КРИТИЧЕСКИ ВАЖНО: Сначала убиваем ВСЕ старые процессы с этим токеном
     console.log(`🔍 Проверяем наличие старых процессов для бота ${projectId} (токен ${tokenId})...`);
     try {
-      const { execSync } = require('child_process');
+      const { execSync } = await import('child_process');
       const botFileName = `bot_${projectId}_${tokenId}.py`;
       
       // Находим все Python процессы с этим файлом
