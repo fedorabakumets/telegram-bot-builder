@@ -600,7 +600,12 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     // Запускаем бота
     const process = spawn('python', [filePath], {
       stdio: ['pipe', 'pipe', 'pipe'],
-      detached: false
+      detached: false,
+      env: {
+        ...process.env,
+        PROJECT_ID: projectId.toString(),
+        BOT_TOKEN: token
+      }
     });
 
     // Логируем вывод процесса
