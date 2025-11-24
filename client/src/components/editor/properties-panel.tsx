@@ -3255,6 +3255,7 @@ export function PropertiesPanel({
             )}
           </div>
         </div>
+        )}
 
         {/* Conditional Messages */}
         {(selectedNode.type === 'start' || selectedNode.type === 'command' || selectedNode.type === 'message' || selectedNode.type === 'keyboard') && (
