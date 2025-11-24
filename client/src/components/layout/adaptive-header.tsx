@@ -5,7 +5,6 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/co
 import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LayoutConfig } from './layout-manager';
-import { TelegramLoginWidget } from '@/components/telegram-login-widget';
 
 interface BotInfo {
   first_name: string;
@@ -428,10 +427,6 @@ export function AdaptiveHeader({
       {isVertical && (
         <div className="h-px w-full bg-border my-2"></div>
       )}
-      
-      <div className={`${isVertical ? 'w-full flex justify-center' : ''}`}>
-        <TelegramLoginWidget botInfo={botInfo} />
-      </div>
       
       <Button 
         variant="outline" 
