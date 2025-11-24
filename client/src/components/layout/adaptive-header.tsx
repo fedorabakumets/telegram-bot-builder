@@ -275,7 +275,7 @@ export function AdaptiveHeader({
             className="flex items-center justify-center"
           >
             <Bookmark className="h-3 w-3 mr-2" />
-            Сохранить как шаблон
+            Сохранить
           </Button>
         )}
         
@@ -409,7 +409,7 @@ export function AdaptiveHeader({
           className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
         >
           <Bookmark className="h-2.5 w-2.5 max-sm:mx-auto" />
-          <span className="max-sm:hidden ml-1">Создать шаблон</span>
+          <span className="max-sm:hidden ml-1">Сохранить</span>
         </Button>
       )}
       
