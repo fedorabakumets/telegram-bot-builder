@@ -5,13 +5,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* SOLUTION: Keep pointer-events disabled everywhere to prevent hover re-renders */
+/* Enable pointer events normally on interactive elements */
+button,
+input,
+textarea,
+select,
+a,
+[role="button"],
+[role="menuitem"],
+[role="menu"],
+[role="dialog"],
+[data-canvas-drop-zone],
+canvas,
+svg {
+  pointer-events: auto !important;
+}
+
+/* Global: Disable pointer events on everything else */
 * {
   pointer-events: none !important;
 }
 
-/* BUT: Use JavaScript-based interaction instead via click handler delegation */
-/* This is set up in JavaScript to handle clicks without relying on pointer-events */
+/* But re-enable for containers that need to be interactive */
+form,
+[role="listbox"],
+[role="option"],
+[role="tab"] {
+  pointer-events: auto !important;
+}
 
 :root {
   --background: hsl(0, 0%, 100%);
