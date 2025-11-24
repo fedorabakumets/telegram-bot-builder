@@ -85,6 +85,11 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
           // Сохраняем в локальном состоянии (БД уже сохранила)
           login(userData);
           
+          // Отправляем custom event чтобы другие компоненты узнали об авторизации
+          window.dispatchEvent(new CustomEvent('telegram-auth-change', {
+            detail: { user: userData }
+          }));
+          
           toast({
             title: "Авторизация успешна",
             description: `Добро пожаловать, ${telegramUser.first_name}!`,

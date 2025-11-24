@@ -9,6 +9,7 @@ export interface TelegramUser {
 }
 
 const STORAGE_KEY = 'telegramUser';
+const AUTH_EVENT = 'telegram-auth-change';
 
 export function useTelegramAuth() {
   const [user, setUser] = useState<TelegramUser | null>(null);
@@ -16,16 +17,58 @@ export function useTelegramAuth() {
 
   // Загружаем пользователя из localStorage при монтировании
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem(STORAGE_KEY);
-      if (savedUser) {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
+    const loadUser = () => {
+      try {
+        const savedUser = localStorage.getItem(STORAGE_KEY);
+        if (savedUser) {
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
+        } else {
+          setUser(null);
+        }
+      } catch (e) {
+        console.error('Error loading user from localStorage:', e);
       }
-    } catch (e) {
-      console.error('Error loading user from localStorage:', e);
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    loadUser();
+
+    // Слушаем custom event от TelegramLoginWidget
+    const handleAuthChange = (e: any) => {
+      try {
+        if (e.detail.user) {
+          setUser(e.detail.user);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Error in auth change handler:', err);
+      }
+    };
+
+    // Слушаем изменения в localStorage от других вкладок
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        try {
+          if (e.newValue) {
+            const parsedUser = JSON.parse(e.newValue);
+            setUser(parsedUser);
+          } else {
+            setUser(null);
+          }
+        } catch (err) {
+          console.error('Error parsing user from storage event:', err);
+        }
+      }
+    };
+
+    window.addEventListener(AUTH_EVENT, handleAuthChange);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener(AUTH_EVENT, handleAuthChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const login = (userData: TelegramUser) => {
