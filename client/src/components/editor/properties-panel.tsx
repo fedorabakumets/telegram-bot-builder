@@ -4703,6 +4703,62 @@ export function PropertiesPanel({
                     </div>
                   </div>
 
+                  {/* Target Node After Text Input */}
+                  <div>
+                    <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                      <i className="fas fa-arrow-right mr-1"></i>
+                      Куда перейти после получения ответа
+                    </Label>
+                    <div className="space-y-2">
+                      <Select
+                        value={selectedNode.data.inputTargetNodeId || 'no-transition'}
+                        onValueChange={(value) => {
+                          onNodeUpdate(selectedNode.id, { inputTargetNodeId: value === 'no-transition' ? undefined : value });
+                        }}
+                      >
+                        <SelectTrigger className="text-xs h-8">
+                          <SelectValue placeholder="Выберите следующий шаг" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="no-transition">Не переходить</SelectItem>
+                          {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
+                            const nodeContent = 
+                              node.type === 'command' ? node.data.command :
+                              node.type === 'message' ? (node.data.messageText || '').slice(0, 50) :
+                              node.type === 'photo' ? (node.data.photoCaption || '').slice(0, 50) :
+                              node.type === 'keyboard' ? (node.data.keyboardText || '').slice(0, 50) :
+                              node.type === 'condition' ? (node.data.conditionText || '').slice(0, 50) :
+                              (node.data.label || '').slice(0, 50);
+                            return (
+                              <SelectItem key={node.id} value={node.id}>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">{node.type}</span>
+                                  <span className="text-xs font-mono text-muted-foreground">{node.id}</span>
+                                  <span>{nodeContent}</span>
+                                  <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      
+                      <div className="text-xs text-muted-foreground mb-1">
+                        Или введите ID узла вручную (например: ylObKToWFsIl-opIcowPZ)
+                      </div>
+                      <Input
+                        value={selectedNode.data.inputTargetNodeId && selectedNode.data.inputTargetNodeId !== 'no-transition' ? selectedNode.data.inputTargetNodeId : ''}
+                        onChange={(e) => {
+                          onNodeUpdate(selectedNode.id, { inputTargetNodeId: e.target.value || undefined });
+                        }}
+                        className="text-xs h-8"
+                        placeholder="Введите ID узла вручную"
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2">
+                      Узел, к которому перейти после получения ответа пользователя
+                    </div>
+                  </div>
 
                 </div>
               )}
