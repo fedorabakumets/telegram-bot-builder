@@ -199,23 +199,9 @@ function BotProfileEditor({
         console.warn('Не удалось перезапустить бота:', error);
       }
       
-      // Принудительно обновляем данные бота с задержкой
+      // Инвалидируем кэш и сразу перезагружаем данные
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      
-      // Ждем, чтобы изменения применились в Telegram API и бот перезапустился
-      setTimeout(async () => {
-        // Принудительно запрашиваем свежие данные, обходя кэш
-        try {
-          const freshBotInfo = await apiRequest('GET', `/api/projects/${projectId}/bot/info?_t=${Date.now()}`);
-          // Обновляем кэш вручную с новыми данными
-          queryClient.setQueryData([`/api/projects/${projectId}/bot/info`], freshBotInfo);
-        } catch (error) {
-          console.warn('Не удалось получить свежие данные бота:', error);
-        }
-        
-        queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-        onProfileUpdated();
-      }, 3000);
+      onProfileUpdated();
     },
     onError: (error: any) => {
       toast({
@@ -237,9 +223,8 @@ function BotProfileEditor({
         title: "Успешно",
         description: "Описание бота обновлено",
       });
-      // Принудительно обновляем данные бота
+      // Инвалидируем кэш и сразу перезагружаем данные
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       onProfileUpdated();
     },
     onError: (error: any) => {
@@ -262,9 +247,8 @@ function BotProfileEditor({
         title: "Успешно",
         description: "Краткое описание бота обновлено",
       });
-      // Принудительно обновляем данные бота
+      // Инвалидируем кэш и сразу перезагружаем данные
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       onProfileUpdated();
     },
     onError: (error: any) => {
@@ -776,6 +760,8 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+      // Инвалидируем bot/info cache чтобы загрузить свежие данные нового токена
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       toast({ 
         title: 'Бот успешно добавлен',
         description: 'Информация о боте автоматически получена из Telegram'
@@ -795,6 +781,8 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+      // Инвалидируем bot/info cache т.к. может измениться токен по умолчанию
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       toast({ title: 'Бот удален' });
     },
     onError: (error: any) => {
