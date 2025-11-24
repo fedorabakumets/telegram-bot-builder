@@ -3426,7 +3426,7 @@ export function PropertiesPanel({
                           className="text-xs bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 transition-all duration-200"
                         >
                           <i className="fas fa-plus mr-1.5"></i>
-                          Добавить правило
+                          Добавить условие
                         </UIButton>
                       </div>
                     </div>
@@ -3453,10 +3453,10 @@ export function PropertiesPanel({
                                 <div className="flex items-center justify-between gap-3">
                                   <div className="flex items-center gap-2 flex-1">
                                     <div className="text-sm font-bold text-purple-700 dark:text-purple-300 flex-shrink-0">
-                                      ⚙️ Правило #{index + 1}
+                                      ⚙️ Условие #{index + 1}
                                     </div>
                                     {hasErrors && (
-                                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0" title="Ошибка в правиле">
+                                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0" title="Ошибка в условии">
                                         <i className="fas fa-times text-white text-xs"></i>
                                       </div>
                                     )}
