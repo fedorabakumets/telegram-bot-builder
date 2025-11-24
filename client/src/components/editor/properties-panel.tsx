@@ -3215,10 +3215,9 @@ export function PropertiesPanel({
                                   const nodeContent = 
                                     node.type === 'start' ? node.data.command :
                                     node.type === 'command' ? node.data.command :
-                                    node.type === 'message' ? (node.data.messageText || '').slice(0, 50) :
-                                    node.type === 'photo' ? (node.data.photoCaption || '').slice(0, 50) :
-                                    node.type === 'keyboard' ? (node.data.keyboardText || '').slice(0, 50) :
-                                    node.type === 'condition' ? (node.data.conditionText || '').slice(0, 50) :
+                                    node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
+                                    node.type === 'photo' ? ((node.data as any).photoCaption || '').slice(0, 50) :
+                                    node.type === 'keyboard' ? ((node.data as any).keyboardText || '').slice(0, 50) :
                                     '';
                                   
                                   return (
@@ -3671,17 +3670,17 @@ export function PropertiesPanel({
                                   Что показать пользователю, если условие выполнится?
                                 </Label>
                                 <Switch
-                                  checked={condition.showCustomMessage ?? false}
+                                  checked={(condition as any).showCustomMessage ?? false}
                                   onCheckedChange={(checked) => {
                                     const currentConditions = selectedNode.data.conditionalMessages || [];
                                     const updatedConditions = currentConditions.map(c => 
-                                      c.id === condition.id ? { ...c, showCustomMessage: checked } : c
+                                      c.id === condition.id ? { ...c, showCustomMessage: checked } as any : c
                                     );
                                     onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                   }}
                                 />
                               </div>
-                              {condition.showCustomMessage && (
+                              {(condition as any).showCustomMessage && (
                                 <div className="space-y-2">
                                   {/* Rich Text Editor for conditional message */}
                                   <InlineRichEditor
