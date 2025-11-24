@@ -1161,8 +1161,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         const hasButtonResponses = node.data.buttons && node.data.buttons.length > 0 && collectUserInput;
         
         return (
-          <div className="bg-gradient-to-br from-orange-50/90 to-amber-50/90 dark:from-orange-900/25 dark:to-amber-900/25 border border-orange-200/50 dark:border-orange-800/40 rounded-xl p-4 mb-4 shadow-sm">
-            <div className="space-y-2">
+          <div className="space-y-2">
               {/* Button Responses Info */}
               {hasButtonResponses && (
                 <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
@@ -1295,7 +1294,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                 </div>
               )}
             </div>
-          </div>
         );
       })()}
       
