@@ -1071,16 +1071,27 @@ export function PropertiesPanel({
                     Используется для меню команд в @BotFather
                   </div>
                 </div>
+              </>
+            )}
+
+            {/* Synonyms for start and command nodes */}
+            {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
+              <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                    <i className="fas fa-tags text-green-600 dark:text-green-400 text-xs"></i>
+                  </div>
+                  <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Синонимы команды</Label>
+                </div>
                 
-                {/* Синонимы команд */}
                 <SynonymEditor
                   synonyms={selectedNode.data.synonyms || []}
                   onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
-                  title="Синонимы команды"
+                  title="Альтернативные команды"
                   description="Текстовые сообщения, которые будут вызывать эту команду. Например: старт вместо /start"
                   placeholder="Например: старт, привет, начать"
                 />
-              </>
+              </div>
             )}
 
             {/* Command for Content Management and User Management */}
