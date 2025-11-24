@@ -876,7 +876,8 @@ export function PropertiesPanel({
       action: 'goto',
       target: '',
       buttonType: 'normal',
-      skipDataCollection: false
+      skipDataCollection: false,
+      hideAfterClick: false
     };
     onButtonAdd(selectedNode.id, newButton);
   };
@@ -3042,6 +3043,28 @@ export function PropertiesPanel({
                               checked={button.skipDataCollection ?? false}
                               onCheckedChange={(checked) => 
                                 onButtonUpdate(selectedNode.id, button.id, { skipDataCollection: checked })
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Hide After Click Toggle - For reply buttons */}
+                      {selectedNode.data.keyboardType === 'reply' && (
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 mt-3">
+                          <div className="flex-1">
+                            <Label className="text-xs font-medium text-foreground">
+                              Скрыть после использования
+                            </Label>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Сообщение с кнопкой будет удалено после нажатия
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <Switch
+                              checked={button.hideAfterClick ?? false}
+                              onCheckedChange={(checked) => 
+                                onButtonUpdate(selectedNode.id, button.id, { hideAfterClick: checked })
                               }
                             />
                           </div>
