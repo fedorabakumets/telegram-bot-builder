@@ -1053,18 +1053,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                           <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                             {conditionName}
                           </div>
-                          {(condition as any).variableName && (
-                            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
-                              <i className="fas fa-tag text-xs"></i>
-                              <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-xs">{(condition as any).variableName}</code>
-                              {(condition as any).value && (
-                                <>
-                                  <span>=</span>
-                                  <span className="truncate max-w-[60px]">"{(condition as any).value}"</span>
-                                </>
-                              )}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
