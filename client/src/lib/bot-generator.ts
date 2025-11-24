@@ -8626,10 +8626,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   });
   
     code += '    \n';
-    code += '    # Если не множественный выбор, передаем дальше по цепочке обработчиков\n';
-    code += '    pass\n';
-    code += '\n';
-  }
+  code += '    # Если не множественный выбор, передаем дальше по цепочке обработчиков\n';
+  code += '    pass\n';
+  code += '\n';
 
   code += 'if __name__ == "__main__":\n';
   code += '    asyncio.run(main())\n';
