@@ -12765,7 +12765,8 @@ function generateKeyboard(node: Node): string {
             text: node.data.continueButtonText || 'Готово',
             action: 'goto',
             buttonType: 'complete',
-            skipDataCollection: false
+            skipDataCollection: false,
+            hideAfterClick: false
           });
         }
         const columns = calculateOptimalColumns(allButtons, node.data);

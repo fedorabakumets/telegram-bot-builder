@@ -215,7 +215,8 @@ export function PropertiesPanel({
             action: 'command',
             target: 'toggle_change_info',
             buttonType: 'option',
-            skipDataCollection: false
+            skipDataCollection: false,
+            hideAfterClick: false
           },
           {
             id: 'perm_delete_messages',
@@ -223,7 +224,8 @@ export function PropertiesPanel({
             action: 'command',
             target: 'toggle_delete_messages',
             buttonType: 'option',
-            skipDataCollection: false
+            skipDataCollection: false,
+            hideAfterClick: false
           },
           {
             id: 'perm_restrict_members',
@@ -231,7 +233,8 @@ export function PropertiesPanel({
             action: 'command',
             target: 'toggle_restrict_members',
             buttonType: 'option',
-            skipDataCollection: false
+            skipDataCollection: false,
+            hideAfterClick: false
           },
           {
             id: 'perm_invite_users',
@@ -239,7 +242,8 @@ export function PropertiesPanel({
             action: 'command',
             target: 'toggle_invite_users',
             buttonType: 'option',
-            skipDataCollection: false
+            skipDataCollection: false,
+            hideAfterClick: false
           },
           {
             id: 'perm_pin_messages',
@@ -247,7 +251,8 @@ export function PropertiesPanel({
             action: 'command',
             target: 'toggle_pin_messages',
             buttonType: 'option',
-            skipDataCollection: false
+            skipDataCollection: false,
+            hideAfterClick: false
           },
           {
             id: 'perm_manage_video_chats',
@@ -255,7 +260,8 @@ export function PropertiesPanel({
             action: 'command',
             target: 'toggle_manage_video_chats',
             buttonType: 'option',
-            skipDataCollection: false
+            skipDataCollection: false,
+            hideAfterClick: false
           },
           {
             id: 'perm_anonymous',
@@ -263,7 +269,8 @@ export function PropertiesPanel({
             action: 'command',
             target: 'toggle_anonymous',
             buttonType: 'option',
-            skipDataCollection: false
+            skipDataCollection: false,
+            hideAfterClick: false
           },
           {
             id: 'perm_promote_members',
@@ -271,7 +278,8 @@ export function PropertiesPanel({
             action: 'command',
             target: 'toggle_promote_members',
             buttonType: 'option',
-            skipDataCollection: false
+            skipDataCollection: false,
+            hideAfterClick: false
           }
         ],
         // Права администратора согласно Telegram Bot API
