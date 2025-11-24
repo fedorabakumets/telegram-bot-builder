@@ -994,7 +994,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
               </div>
             </div>
             <div className="text-xs text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded-full font-medium">
-              {node.data.conditionalMessages.length} правил{node.data.conditionalMessages.length === 1 ? 'о' : node.data.conditionalMessages.length < 5 ? 'а' : ''}
+              {node.data.conditionalMessages.length} услови{node.data.conditionalMessages.length === 1 ? 'е' : node.data.conditionalMessages.length < 5 ? 'я' : 'й'}
             </div>
           </div>
           
