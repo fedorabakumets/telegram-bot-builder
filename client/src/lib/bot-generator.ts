@@ -2254,8 +2254,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   });
   console.log(`🎯 ГЕНЕРАТОР: Финальный allReferencedNodeIds: ${Array.from(allReferencedNodeIds).join(', ')}`);
 
+  // Генерируем обработчики только если есть inline кнопки или условные кнопки
   if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
-    code += '\n# Обработчики inline кнопок\n';
+    // Комментарий "Обработчики inline кнопок" только если действительно есть inline кнопки
+    if (inlineNodes.length > 0 || allConditionalButtons.size > 0) {
+      code += '\n# Обработчики inline кнопок\n';
+    } else {
+      // Для автопереходов используем специальный комментарий
+      code += '\n# Обработчики автопереходов\n';
+    }
     const processedCallbacks = new Set<string>();
     
     // Skip conditional placeholder handlers - they conflict with main handlers
