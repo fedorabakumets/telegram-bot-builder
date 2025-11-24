@@ -23,6 +23,11 @@ Preferred communication style: Simple, everyday language. No-code platform for n
 - GitHub integration added to both desktop and mobile navigation
 - Updated README.md on GitHub repository with complete documentation
 - Synced changes to GitHub via API integration
+- **Responsive header layout optimization**:
+  - Desktop (lg+): All navigation and actions in single row as before
+  - Tablets (md): Adaptive two-row layout with navigation row and action buttons below
+  - Mobile (sm): Compact hamburger menu layout
+  - Renamed button label from "Создать" to "Сохранить" for clarity
 
 ## Previous Session: Major Refactoring
 - Removed standalone node types: photo, video, audio, document, keyboard

@@ -76,7 +76,7 @@ export function AdaptiveHeader({
   // Классы для контейнера с адаптивной высотой для мобильных устройств
   const containerClasses = [
     'bg-background border-border relative z-50',
-    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-10' : 'h-12'} flex items-center justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
+    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-10' : 'h-12'} flex items-center justify-between md:h-auto md:flex-wrap md:justify-start md:gap-2 lg:h-12 lg:flex-nowrap lg:justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
     isCompact ? 'text-sm' : ''
   ].join(' ');
 
@@ -102,7 +102,7 @@ export function AdaptiveHeader({
 
   // Компонент навигации
   const Navigation = () => (
-    <nav className={`${isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden lg:flex flex-wrap items-center gap-1'}`}>
+    <nav className={`${isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden md:flex flex-wrap items-center gap-1'}`}>
       {[
         { key: 'editor', label: 'Редактор' },
         { key: 'export', label: 'Экспорт' },
@@ -317,7 +317,7 @@ export function AdaptiveHeader({
 
   // Компонент действий
   const Actions = () => (
-    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-2'}`}>
+    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden md:flex flex-wrap items-center gap-2 md:w-full md:order-last lg:w-auto lg:order-none lg:ml-auto'}`}>
       
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
@@ -472,7 +472,7 @@ export function AdaptiveHeader({
 
   return (
     <header className={containerClasses}>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4 md:order-first">
         <BrandSection />
         <Separator />
         {/* Мобильные кнопки компонентов и свойств после разделителя */}
@@ -500,10 +500,11 @@ export function AdaptiveHeader({
             )}
           </div>
         )}
-        <Navigation />
       </div>
       
-      {/* Десктопные действия */}
+      <Navigation />
+      
+      {/* Десктопные/Планшетные действия */}
       <Actions />
       
       {/* Мобильная кнопка меню */}
