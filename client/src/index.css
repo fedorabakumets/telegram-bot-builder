@@ -5,10 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Disable ALL transitions and animations to prevent flickering on hover */
-* {
-  transition: none !important;
-  animation: none !important;
+/* Disable pointer events during page load to prevent flickering on hover */
+:root:not(.page-loaded) {
+  pointer-events: none !important;
 }
 
 :root {
