@@ -5,60 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* GLOBAL: Disable pointer events on all elements by default */
+/* DISABLE ALL pointer events everywhere - this completely prevents hover-triggered re-renders */
 * {
   pointer-events: none !important;
-}
-
-/* ONLY enable pointer events on CRITICAL interactive elements */
-button {
-  pointer-events: auto !important;
-}
-
-input {
-  pointer-events: auto !important;
-}
-
-textarea {
-  pointer-events: auto !important;
-}
-
-select {
-  pointer-events: auto !important;
-}
-
-a {
-  pointer-events: auto !important;
-}
-
-/* Canvas and drop zones */
-[data-canvas-drop-zone] {
-  pointer-events: auto !important;
-}
-
-.canvas {
-  pointer-events: auto !important;
-}
-
-/* Dialogs and menus need to be interactive */
-[role="dialog"] {
-  pointer-events: auto !important;
-}
-
-[role="menu"],
-[role="menuitem"] {
-  pointer-events: auto !important;
-}
-
-/* Form elements */
-form {
-  pointer-events: auto !important;
-}
-
-/* Resize handles and drag handles */
-[class*="handle"],
-[class*="resize"] {
-  pointer-events: auto !important;
 }
 
 :root {
