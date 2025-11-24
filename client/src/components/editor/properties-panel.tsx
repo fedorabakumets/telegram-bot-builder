@@ -4160,7 +4160,7 @@ export function PropertiesPanel({
         )}
 
         {/* Universal User Input Collection */}
-        {(
+        {selectedNode.type !== 'content_management' && selectedNode.type !== 'user_management' && (
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-foreground">✨ Сбор ответов</h3>
@@ -4685,7 +4685,8 @@ export function PropertiesPanel({
         )}
 
         {/* Auto Transition Section - показывать только когда нет кнопок и нет сбора данных */}
-        {(!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
+        {selectedNode.type !== 'content_management' && selectedNode.type !== 'user_management' &&
+         (!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
          (selectedNode.data.keyboardType === 'none' || selectedNode.data.keyboardType === 'reply') && (
           <div>
             <div className="flex items-center justify-between mb-3">
