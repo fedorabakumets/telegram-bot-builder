@@ -23,7 +23,9 @@ interface AuthStatus {
 }
 
 export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProps) {
-  const [step, setStep] = useState<'phone' | 'code' | 'password'>('phone');
+  const [step, setStep] = useState<'credentials' | 'phone' | 'code' | 'password'>('credentials');
+  const [apiId, setApiId] = useState('');
+  const [apiHash, setApiHash] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneCode, setPhoneCode] = useState('');
   const [phoneCodeHash, setPhoneCodeHash] = useState('');
@@ -52,12 +54,56 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
         });
         onSuccess();
         onOpenChange(false);
-      } else {
-        // Всегда начинаем с phone шага (credentials на бэке)
+      } else if (status.hasCredentials) {
+        // Если credentials есть, переходим к телефону
         setStep('phone');
+      } else {
+        // Если credentials нет, остаемся на шаге ввода credentials
+        setStep('credentials');
       }
     } catch (error) {
       console.error('Ошибка проверки статуса:', error);
+    }
+  };
+
+  const saveCredentials = async () => {
+    if (!apiId.trim() || !apiHash.trim()) {
+      toast({
+        title: "Ошибка",
+        description: "Введите API ID и API Hash",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await apiRequest('POST', '/api/telegram-auth/save-credentials', { 
+        apiId: apiId.trim(), 
+        apiHash: apiHash.trim() 
+      });
+
+      if (response.success) {
+        setStep('phone');
+        toast({
+          title: "Credentials сохранены",
+          description: "Теперь введите номер телефона",
+        });
+      } else {
+        toast({
+          title: "Ошибка сохранения",
+          description: response.error || "Неизвестная ошибка",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось сохранить credentials",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
