@@ -34,16 +34,30 @@ interface SynonymEditorProps {
   placeholder?: string;
   title?: string;
   description?: string;
+  allNodes?: Node[];
+  currentNodeId?: string;
 }
 
-const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: старт, привет, начать", title = "Синонимы", description }: SynonymEditorProps) => {
-  // Функция для проверки дубликатов
+const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: старт, привет, начать", title = "Синонимы", description, allNodes = [], currentNodeId }: SynonymEditorProps) => {
+  // Функция для проверки дубликатов включая все узлы
   const checkDuplicate = (value: string, currentIndex: number): boolean => {
     if (!value.trim()) return false;
     const normalizedValue = value.trim().toLowerCase();
-    return synonyms.some((syn, idx) => 
+    
+    // Проверка в пределах текущих синонимов
+    const inCurrentNode = synonyms.some((syn, idx) => 
       idx !== currentIndex && syn.trim().toLowerCase() === normalizedValue
     );
+    if (inCurrentNode) return true;
+    
+    // Проверка во всех других узлах
+    const inOtherNodes = allNodes.some(node => 
+      node.id !== currentNodeId && 
+      (node.data.synonyms || []).some((syn: string) => 
+        syn.trim().toLowerCase() === normalizedValue
+      )
+    );
+    return inOtherNodes;
   };
 
   return (
@@ -2677,6 +2691,8 @@ export function PropertiesPanel({
                 title="Альтернативные фразы"
                 description="Добавьте слова или фразы, при написании которых будет срабатывать этот узел"
                 placeholder="имя, профиль, анкета..."
+                allNodes={allNodes}
+                currentNodeId={selectedNode.id}
               />
             </div>
           </div>
