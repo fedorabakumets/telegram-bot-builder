@@ -5,33 +5,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Disable CSS hover effects on common interactive elements to prevent re-renders on hover */
-button:hover,
-a:hover,
-input:hover,
-textarea:hover,
-select:hover,
-[role="button"]:hover,
-[role="menuitem"]:hover {
-  /* Override any hover styles */
+/* AGGRESSIVE: Disable ALL transitions and hover effects globally to prevent flickering */
+* {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Override ALL hover pseudo-classes */
+*:hover {
   background-color: inherit !important;
+  background-image: inherit !important;
   color: inherit !important;
   border-color: inherit !important;
+  border-width: inherit !important;
   box-shadow: none !important;
   opacity: 1 !important;
   transform: none !important;
+  filter: none !important;
+  text-decoration: inherit !important;
+  text-shadow: none !important;
 }
 
-/* Disable CSS hover on container elements */
-div:hover,
-span:hover,
-p:hover,
-li:hover,
-ul:hover {
-  /* Override any hover styles */
-  background-color: inherit !important;
-  color: inherit !important;
-  box-shadow: none !important;
+/* Disable transitions on everything including delay */
+* {
+  transition-delay: 0s !important;
+  transition-duration: 0s !important;
 }
 
 :root {
