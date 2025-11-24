@@ -4460,20 +4460,46 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             if (targetNode.data.keyboardType === 'reply') {
               // Генерируем reply клавиатуру
               code += '    # Create reply keyboard\n';
-              code += '    # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
-              code += '    builder = ReplyKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn: Button) => {
-                if (btn.action === "contact" && btn.requestContact) {
-                  code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-                } else if (btn.action === "location" && btn.requestLocation) {
-                  code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-                } else {
-                  code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                }
-              });
-              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-              code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли уже создана условная клавиатура
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    # Проверяем, есть ли условная клавиатура\n';
+                code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+                code += '        keyboard = conditional_keyboard\n';
+                code += '        logging.info("✅ Используем условную reply клавиатуру")\n';
+                code += '    else:\n';
+                code += '        # Условная клавиатура не создана, используем обычную\n';
+                code += '        builder = ReplyKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach((btn: Button) => {
+                  if (btn.action === "contact" && btn.requestContact) {
+                    code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
+                  } else if (btn.action === "location" && btn.requestLocation) {
+                    code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
+                  } else {
+                    code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                  }
+                });
+                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+                code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                code += '        logging.info("✅ Используем обычную reply клавиатуру")\n';
+              } else {
+                // Нет условных сообщений, просто создаем обычную клавиатуру
+                code += '    # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
+                code += '    builder = ReplyKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach((btn: Button) => {
+                  if (btn.action === "contact" && btn.requestContact) {
+                    code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
+                  } else if (btn.action === "location" && btn.requestLocation) {
+                    code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
+                  } else {
+                    code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                  }
+                });
+                const resizeKeyboard2 = toPythonBoolean(targetNode.data.resizeKeyboard);
+                const oneTimeKeyboard2 = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+                code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard2}, one_time_keyboard=${oneTimeKeyboard2})\n`;
+              }
               code += '    # Для reply клавиатуры нужно отправить новое сообщение\n';
               code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
               
