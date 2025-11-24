@@ -2651,14 +2651,49 @@ export function PropertiesPanel({
                   )}
                   
                   {(selectedNode.data.buttons || []).map((button) => (
-                    <div key={button.id} className="bg-muted/50 rounded-lg p-3">
-                      <div className="mb-2">
-                        <div className="flex items-center gap-2 mb-1">
+                    <div key={button.id} className="bg-muted/50 rounded-lg p-4 border border-border/30 hover:border-primary/20 transition-colors">
+                      {/* Header with title and delete button */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                          <span className="text-xs font-semibold text-foreground">Кнопка</span>
+                          {selectedNode.data.allowMultipleSelection && button.buttonType && (
+                            <Badge variant="outline" className="text-xs h-5">
+                              {button.buttonType === 'option' && '🟢 Опция'}
+                              {button.buttonType === 'complete' && '🟣 Завершение'}
+                              {button.buttonType === 'normal' && '🔵 Обычная'}
+                            </Badge>
+                          )}
+                        </div>
+                        <UIButton
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onButtonDelete(selectedNode.id, button.id)}
+                          className="text-muted-foreground hover:text-destructive dark:text-muted-foreground dark:hover:text-destructive h-auto p-1 transition-colors duration-200"
+                          title="Удалить кнопку"
+                        >
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </UIButton>
+                      </div>
+
+                      {/* Info hint about variables */}
+                      <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/30 dark:border-blue-800/30 rounded px-2.5 py-1.5 mb-3">
+                        <div className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                          💡 Переменные: <code className="bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 rounded text-blue-700 dark:text-blue-300 font-mono text-xs">{'{переменная}'}</code> → значение
+                        </div>
+                      </div>
+
+                      {/* Text input and variables button */}
+                      <div className="space-y-2 mb-3">
+                        <Label className="text-xs font-medium text-muted-foreground">Текст кнопки</Label>
+                        <div className="flex items-center gap-2">
                           <Input
                             value={button.text}
                             onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { text: e.target.value })}
-                            className="flex-1 text-sm font-medium"
-                            placeholder="Текст кнопки"
+                            className="flex-1 text-sm"
+                            placeholder="Введите текст кнопки"
                           />
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -2725,43 +2760,11 @@ export function PropertiesPanel({
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        <div className="flex items-center justify-end gap-2">
-                          {/* Button Type Indicator */}
-                          {selectedNode.data.allowMultipleSelection && (
-                            <>
-                              {button.buttonType === 'option' && (
-                                <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded text-xs font-medium">
-                                  Опция
-                                </div>
-                              )}
-                              {button.buttonType === 'complete' && (
-                                <div className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded text-xs font-medium">
-                                  Завершение
-                                </div>
-                              )}
-                              {button.buttonType === 'normal' && (
-                                <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs font-medium">
-                                  Обычная
-                                </div>
-                              )}
-                            </>
-                          )}
-                          <UIButton
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => onButtonDelete(selectedNode.id, button.id)}
-                            className="text-muted-foreground hover:text-destructive dark:text-muted-foreground dark:hover:text-destructive h-auto p-1 transition-colors duration-200"
-                          >
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </UIButton>
-                        </div>
-                        <div className="text-xs text-muted-foreground px-1 mt-1">
-                          Переменные в тексте заменятся на значения: {'{возраст}'} → "25"
-                        </div>
                       </div>
                       
+                      {/* Divider */}
+                      <div className="border-t border-border/20 my-3"></div>
+
                       {/* Button Type Selection - Show for Multiple Selection Mode */}
                       {selectedNode.data.allowMultipleSelection && (
                         <div className="mb-3">
@@ -2818,22 +2821,25 @@ export function PropertiesPanel({
                       )}
                       {/* Action Selection - Show for normal buttons or non-multiple-selection modes */}
                       {(!selectedNode.data.allowMultipleSelection || (button.buttonType !== 'option' && button.buttonType !== 'complete')) && (
-                        <Select
-                          value={button.action}
-                          onValueChange={(value: 'goto' | 'command' | 'url' | 'selection') =>
-                            onButtonUpdate(selectedNode.id, button.id, { action: value })
-                          }
-                        >
-                          <SelectTrigger className="w-full text-xs">
-                            <SelectValue placeholder="Выберите действие" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="goto">Перейти к экрану</SelectItem>
-                            <SelectItem value="command">Выполнить команду</SelectItem>
-                            <SelectItem value="url">Открыть ссылку</SelectItem>
-                            <SelectItem value="selection">Выбор опции</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="mb-3">
+                          <Label className="text-xs font-medium text-muted-foreground mb-2 block">Действие</Label>
+                          <Select
+                            value={button.action}
+                            onValueChange={(value: 'goto' | 'command' | 'url' | 'selection') =>
+                              onButtonUpdate(selectedNode.id, button.id, { action: value })
+                            }
+                          >
+                            <SelectTrigger className="w-full text-xs">
+                              <SelectValue placeholder="Выберите действие" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="goto">Перейти к экрану</SelectItem>
+                              <SelectItem value="command">Выполнить команду</SelectItem>
+                              <SelectItem value="url">Открыть ссылку</SelectItem>
+                              <SelectItem value="selection">Выбор опции</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       )}
 
                       {/* Skip Data Collection Toggle - Only show when collectUserInput is enabled */}
