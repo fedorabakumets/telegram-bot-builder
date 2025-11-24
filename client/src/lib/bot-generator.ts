@@ -12018,7 +12018,7 @@ function generateKeyboard(node: Node): string {
       // Без клавиатуры
       code += `${indent3}await message.answer(text${parseMode})\n`;
     }
-  }
+  });
   
   // Reset global logging flag before returning
   globalLoggingEnabled = false;
