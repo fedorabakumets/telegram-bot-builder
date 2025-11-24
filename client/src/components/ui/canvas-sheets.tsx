@@ -198,7 +198,7 @@ export function CanvasSheets({
           variant="ghost"
           size="sm"
           onClick={isMobile ? switchToPrevSheet : scrollLeft}
-          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
+          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 disabled:opacity-30"
           disabled={isMobile ? (activeSheetId ? sheets.findIndex(s => s.id === activeSheetId) === 0 : true) : false}
         >
           <ChevronLeft className="h-5 w-5 text-slate-700 dark:text-slate-300" />
@@ -325,7 +325,7 @@ export function CanvasSheets({
           variant="ghost"
           size="sm"
           onClick={isMobile ? switchToNextSheet : scrollRight}
-          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
+          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 disabled:opacity-30"
           disabled={isMobile ? (activeSheetId ? sheets.findIndex(s => s.id === activeSheetId) === sheets.length - 1 : true) : false}
         >
           <ChevronRight className="h-5 w-5 text-slate-700 dark:text-slate-300" />
@@ -336,7 +336,7 @@ export function CanvasSheets({
         variant="ghost"
         size="sm"
         onClick={addNewSheet}
-        className="flex-shrink-0 p-0 h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-600/20 hover:from-emerald-500/30 hover:to-green-600/30 active:from-emerald-500/40 active:to-green-600/40 transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-emerald-500/30 border border-emerald-500/30 hover:border-emerald-400/50"
+        className="flex-shrink-0 p-0 h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-600/20 hover:from-emerald-500/30 hover:to-green-600/30 active:from-emerald-500/40 active:to-green-600/40 transition-colors duration-200 hover:shadow-lg hover:shadow-emerald-500/30 border border-emerald-500/30 hover:border-emerald-400/50"
         title="Добавить новый лист"
       >
         <Plus className="h-4 w-4 text-emerald-400 drop-shadow-sm" />
