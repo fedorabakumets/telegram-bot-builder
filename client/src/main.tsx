@@ -5,15 +5,17 @@ import "./index.css";
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
 
-// Block hover-related mouse events to prevent React re-renders
-// These are: mouseenter, mouseover, mouseleave, mouseout
-// But allow click, mousedown, mouseup for actual interactions
-const hooverEvents = ['mouseenter', 'mouseover', 'mouseleave', 'mouseout'];
-
-hooverEvents.forEach(eventType => {
-  document.addEventListener(eventType, (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  }, { capture: true, passive: false });
-});
+// Handle clicks even with pointer-events: none on all elements
+// This is necessary because pointer-events: none prevents mouse events
+document.addEventListener('click', (e: any) => {
+  const target = e.target as HTMLElement;
+  
+  // Find the closest clickable element
+  const clickableElement = target.closest('button, input, textarea, select, a, [role="button"], [role="menuitem"]');
+  
+  if (clickableElement && typeof (clickableElement as any).click === 'function') {
+    // Re-trigger click on the element - this works even with pointer-events: none
+    (clickableElement as any).click();
+  }
+}, { capture: true, passive: false });
 

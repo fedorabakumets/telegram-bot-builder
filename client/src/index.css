@@ -5,33 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Enable pointer events normally on interactive elements */
-button,
-input,
-textarea,
-select,
-a,
-[role="button"],
-[role="menuitem"],
-[role="menu"],
-[role="dialog"],
-[data-canvas-drop-zone],
-canvas,
-svg {
-  pointer-events: auto !important;
-}
-
-/* Global: Disable pointer events on everything else */
+/* FINAL SOLUTION: Disable ALL pointer events to prevent hover-triggered re-renders */
 * {
   pointer-events: none !important;
-}
-
-/* But re-enable for containers that need to be interactive */
-form,
-[role="listbox"],
-[role="option"],
-[role="tab"] {
-  pointer-events: auto !important;
 }
 
 :root {
