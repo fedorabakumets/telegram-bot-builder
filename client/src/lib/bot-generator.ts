@@ -3811,13 +3811,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `    except Exception as e:\n`;
                   code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
                   code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
-                } else {
-                  code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-                  code += `    try:\n`;
-                  code += `        await callback_query.message.edit_text(text)\n`;
-                  code += `    except Exception as e:\n`;
-                  code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-                  code += `        await callback_query.message.answer(text)\n`;
                 }
                 code += '    \n';
               } else {
