@@ -4529,6 +4529,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Для узлов с множественным выбором НЕ делаем автоматической переадресации
           const currentNode = nodes.find(n => n.id === nodeId);
           
+          // ИСПРАВЛЕНИЕ: Проверяем автопереход для текущего узла ПЕРЕД обычной переадресацией
+          if (currentNode && currentNode.data.enableAutoTransition && currentNode.data.autoTransitionTo) {
+            const autoTransitionTarget = currentNode.data.autoTransitionTo;
+            const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
+            code += '    # Проверяем, не ждем ли мы ввод перед автопереходом\n';
+            code += '    user_id = callback_query.from_user.id\n';
+            code += '    if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
+            code += `        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${nodeId}")\n`;
+            code += '    else:\n';
+            code += `        # ⚡ Автопереход к узлу ${autoTransitionTarget}\n`;
+            code += `        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTarget}")\n`;
+            code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
+            code += `        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTarget}")\n`;
+            code += `        return\n`;
+            code += '    \n';
+          }
+          
           // Для узлов с множественным выбором - НЕ делаем автоматический переход при первичном заходе в узел
           const shouldRedirect = !(currentNode && currentNode.data.allowMultipleSelection);
           console.log(`🔧 ГЕНЕРАТОР КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Узел ${nodeId} allowMultipleSelection: ${currentNode?.data.allowMultipleSelection}, shouldRedirect: ${shouldRedirect}`);
