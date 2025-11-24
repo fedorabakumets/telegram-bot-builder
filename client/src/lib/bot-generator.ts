@@ -4483,11 +4483,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '    \n';
           }
           
-          // Сохраняем нажатие кнопки в базу данных
-          code += '    # Сохраняем нажатие кнопки в базу данных\n';
+          // Сохраняем нажатие кнопки в базу данных ТОЛЬКО если это реальная кнопка
           code += '    user_id = callback_query.from_user.id\n';
           code += '    \n';
-          code += '    # Ищем текст кнопки по callback_data\n';
+          
           // Генерируем код для поиска текста кнопки
           const sourceNode = nodes.find(n => 
             n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
@@ -4499,95 +4498,102 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             buttonsToTargetNode = sourceNode.data.buttons.filter(btn => btn.target === nodeId);
           }
           
-          if (buttonsToTargetNode.length > 1) {
-            // Несколько кнопок ведут к одному узлу - создаем логику определения по callback_data
-            code += `    # Определяем текст кнопки по callback_data\n`;
-            code += `    button_display_text = "Неизвестная кнопка"\n`;
-            buttonsToTargetNode.forEach((button, index) => {
-              // Проверяем по суффиксу _btn_index в callback_data
-              code += `    if callback_query.data.endswith("_btn_${index}"):\n`;
-              code += `        button_display_text = "${button.text}"\n`;
-            });
+          // Сохраняем button_click ТОЛЬКО если есть sourceNode (реальная кнопка, а не автопереход)
+          if (sourceNode) {
+            code += '    # Сохраняем нажатие кнопки в базу данных\n';
+            code += '    # Ищем текст кнопки по callback_data\n';
             
-            // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ищем кнопку по точному соответствию callback_data с nodeId
-            code += `    # Дополнительная проверка по точному соответствию callback_data\n`;
-            buttonsToTargetNode.forEach((button) => {
-              code += `    if callback_query.data == "${nodeId}":\n`;
-              // Для случая когда несколько кнопок ведут к одному узлу, используем первую найденную
-              code += `        button_display_text = "${button.text}"\n`;
-            });
-          } else if (sourceNode) {
-            const button = sourceNode.data.buttons.find(btn => btn.target === nodeId);
-            if (button) {
-              code += `    button_display_text = "${button.text}"\n`;
+            if (buttonsToTargetNode.length > 1) {
+              // Несколько кнопок ведут к одному узлу - создаем логику определения по callback_data
+              code += `    # Определяем текст кнопки по callback_data\n`;
+              code += `    button_display_text = "Неизвестная кнопка"\n`;
+              buttonsToTargetNode.forEach((button, index) => {
+                // Проверяем по суффиксу _btn_index в callback_data
+                code += `    if callback_query.data.endswith("_btn_${index}"):\n`;
+                code += `        button_display_text = "${button.text}"\n`;
+              });
+              
+              // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ищем кнопку по точному соответствию callback_data с nodeId
+              code += `    # Дополнительная проверка по точному соответствию callback_data\n`;
+              buttonsToTargetNode.forEach((button) => {
+                code += `    if callback_query.data == "${nodeId}":\n`;
+                // Для случая когда несколько кнопок ведут к одному узлу, используем первую найденную
+                code += `        button_display_text = "${button.text}"\n`;
+              });
             } else {
-              code += `    button_display_text = "Кнопка ${nodeId}"\n`;
-            }
-          } else {
-            code += `    button_display_text = "Кнопка ${nodeId}"\n`;
-          }
-          code += '    \n';
-          code += '    # Сохраняем ответ в базу данных\n';
-
-          code += '    timestamp = get_moscow_time()\n';
-          code += '    \n';
-          code += '    response_data = button_display_text  # Простое значение\n';
-          code += '    \n';
-          code += '    # Сохраняем в пользовательские данные\n';
-          code += '    if user_id not in user_data:\n';
-          code += '        user_data[user_id] = {}\n';
-          code += '    user_data[user_id]["button_click"] = button_display_text\n';
-          code += '    \n';
-          // Определяем переменную для сохранения на основе кнопки
-          const parentNode = nodes.find(n => 
-            n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
-          );
-          
-          let variableName = 'button_click';
-          let variableValue = 'button_display_text';
-          
-          // КРИТИЧЕСКИ ВАЖНО: специальная логика для шаблона "Федя"
-          if (nodeId === 'source_search') {
-            variableName = 'источник';
-            variableValue = '"🔍 Поиск в интернете"';
-          } else if (nodeId === 'source_friends') {
-            variableName = 'источник';
-            variableValue = '"👥 Друзья"';
-          } else if (nodeId === 'source_ads') {
-            variableName = 'источник';
-            variableValue = '"📱 Реклама"';
-          } else if (parentNode && parentNode.data.inputVariable) {
-            variableName = parentNode.data.inputVariable;
-            
-            // Ищем конкретную кнопку и её значение
-            const button = parentNode.data.buttons.find(btn => btn.target === nodeId);
-            if (button) {
-              // Определяем значение переменной в зависимости от кнопки
-              if (button.id === 'btn_search' || nodeId === 'source_search') {
-                variableValue = '"из инета"';
-              } else if (button.id === 'btn_friends' || nodeId === 'source_friends') {
-                variableValue = '"friends"';
-              } else if (button.id === 'btn_ads' || nodeId === 'source_ads') {
-                variableValue = '"ads"';
-              } else if (variableName === 'пол') {
-                // Специальная логика для переменной "пол"
-                if (button.text === 'Мужчина' || button.text === '👨 Мужчина') {
-                  variableValue = '"Мужчина"';
-                } else if (button.text === 'Женщина' || button.text === '👩 Женщина') {
-                  variableValue = '"Женщина"';
-                } else {
-                  variableValue = `"${button.text}"`;
-                }
+              const button = sourceNode.data.buttons.find(btn => btn.target === nodeId);
+              if (button) {
+                code += `    button_display_text = "${button.text}"\n`;
               } else {
-                variableValue = 'button_display_text';
+                code += `    button_display_text = "Кнопка ${nodeId}"\n`;
               }
             }
+            code += '    \n';
+            code += '    # Сохраняем ответ в базу данных\n';
+
+            code += '    timestamp = get_moscow_time()\n';
+            code += '    \n';
+            code += '    response_data = button_display_text  # Простое значение\n';
+            code += '    \n';
+            code += '    # Сохраняем в пользовательские данные\n';
+            code += '    if user_id not in user_data:\n';
+            code += '        user_data[user_id] = {}\n';
+            code += '    user_data[user_id]["button_click"] = button_display_text\n';
           }
           
-          code += '    # Сохраняем в базу данных с правильным именем переменной\n';
-          code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-          code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
-          code += '    \n';
+          // Определяем переменную для сохранения на основе кнопки (ТОЛЬКО если есть sourceNode)
+          if (sourceNode) {
+            code += '    \n';
+            const parentNode = nodes.find(n => 
+              n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
+            );
+            
+            let variableName = 'button_click';
+            let variableValue = 'button_display_text';
+            
+            // КРИТИЧЕСКИ ВАЖНО: специальная логика для шаблона "Федя"
+            if (nodeId === 'source_search') {
+              variableName = 'источник';
+              variableValue = '"🔍 Поиск в интернете"';
+            } else if (nodeId === 'source_friends') {
+              variableName = 'источник';
+              variableValue = '"👥 Друзья"';
+            } else if (nodeId === 'source_ads') {
+              variableName = 'источник';
+              variableValue = '"📱 Реклама"';
+            } else if (parentNode && parentNode.data.inputVariable) {
+              variableName = parentNode.data.inputVariable;
+              
+              // Ищем конкретную кнопку и её значение
+              const button = parentNode.data.buttons.find(btn => btn.target === nodeId);
+              if (button) {
+                // Определяем значение переменной в зависимости от кнопки
+                if (button.id === 'btn_search' || nodeId === 'source_search') {
+                  variableValue = '"из инета"';
+                } else if (button.id === 'btn_friends' || nodeId === 'source_friends') {
+                  variableValue = '"friends"';
+                } else if (button.id === 'btn_ads' || nodeId === 'source_ads') {
+                  variableValue = '"ads"';
+                } else if (variableName === 'пол') {
+                  // Специальная логика для переменной "пол"
+                  if (button.text === 'Мужчина' || button.text === '👨 Мужчина') {
+                    variableValue = '"Мужчина"';
+                  } else if (button.text === 'Женщина' || button.text === '👩 Женщина') {
+                    variableValue = '"Женщина"';
+                  } else {
+                    variableValue = `"${button.text}"`;
+                  }
+                } else {
+                  variableValue = 'button_display_text';
+                }
+              }
+            }
+            
+            code += '    # Сохраняем в базу данных с правильным именем переменной\n';
+            code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
+            code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
+            code += '    \n';
+          }
           
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Для узлов с множественным выбором НЕ делаем автоматической переадресации
           const currentNode = nodes.find(n => n.id === nodeId);
