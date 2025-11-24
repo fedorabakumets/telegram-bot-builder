@@ -38,7 +38,7 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
   });
 
   // Используем общий генератор кода
-  const { codeContent, isLoading, loadContent, generateContent } = useCodeGenerator(botData, projectName, groups, userDatabaseEnabled);
+  const { codeContent, isLoading, loadContent, generateContent } = useCodeGenerator(botData, projectName, groups, userDatabaseEnabled, projectId);
 
   // Определяем тему из DOM
   useEffect(() => {
