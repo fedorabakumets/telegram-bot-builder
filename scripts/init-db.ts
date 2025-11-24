@@ -166,6 +166,20 @@ async function initDatabase() {
     `);
 
     await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS telegram_users (
+        id BIGINT PRIMARY KEY,
+        first_name TEXT NOT NULL,
+        last_name TEXT,
+        username TEXT,
+        photo_url TEXT,
+        auth_date BIGINT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log("✅ Создание таблицы telegram_users - успешно");
+
+    await db.execute(sql`
       CREATE TABLE IF NOT EXISTS bot_users (
         user_id BIGINT PRIMARY KEY,
         username TEXT,

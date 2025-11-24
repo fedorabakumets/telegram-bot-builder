@@ -872,3 +872,19 @@ export const sendMessageSchema = z.object({
 });
 
 export type SendMessage = z.infer<typeof sendMessageSchema>;
+
+// Telegram authenticated users table
+export const telegramUsers = pgTable("telegram_users", {
+  id: bigint("id", { mode: "number" }).primaryKey(), // Telegram user ID
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name"),
+  username: text("username"),
+  photoUrl: text("photo_url"),
+  authDate: bigint("auth_date", { mode: "number" }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type TelegramUserDB = typeof telegramUsers.$inferSelect;
+export const insertTelegramUserSchema = createInsertSchema(telegramUsers).omit({ createdAt: true, updatedAt: true });
+export type InsertTelegramUser = z.infer<typeof insertTelegramUserSchema>;

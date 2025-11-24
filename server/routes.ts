@@ -5987,26 +5987,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // TODO: Verify hash signature using bot token for security
-      // For now, just return success - authentication is handled by Telegram widget
+      // For now, just save to database - authentication is handled by Telegram widget
       
-      console.log(`✅ Telegram auth successful for user: ${first_name} (@${username})`);
+      // Сохраняем или обновляем пользователя в БД
+      const userData = await storage.getTelegramUserOrCreate({
+        id,
+        firstName: first_name,
+        lastName: last_name,
+        username,
+        photoUrl: photo_url,
+        authDate: auth_date ? parseInt(auth_date.toString()) : undefined
+      });
+
+      console.log(`✅ Telegram auth successful for user: ${first_name} (@${username}) - saved to DB`);
+
+      // Сохраняем ID пользователя в сессию (для других запросов)
+      (req.session as any).telegramUserId = id;
 
       res.json({
         success: true,
         message: "Авторизация успешна",
-        user: {
-          id,
-          first_name,
-          last_name,
-          username,
-          photo_url
-        }
+        user: userData
       });
     } catch (error: any) {
       console.error("Telegram auth error:", error);
       res.status(500).json({
         success: false,
         error: "Ошибка авторизации"
+      });
+    }
+  });
+
+  // Получить информацию о текущем авторизованном пользователе
+  app.get("/api/auth/telegram/me", async (req, res) => {
+    try {
+      const telegramUserId = (req.session as any)?.telegramUserId;
+      
+      if (!telegramUserId) {
+        return res.status(401).json({
+          success: false,
+          error: "Not authenticated"
+        });
+      }
+
+      const user = await storage.getTelegramUser(telegramUserId);
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        user
+      });
+    } catch (error: any) {
+      console.error("Get telegram user error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error getting user"
+      });
+    }
+  });
+
+  // Выход (очистка сессии)
+  app.post("/api/auth/telegram/logout", async (req, res) => {
+    try {
+      (req.session as any).telegramUserId = null;
+      res.json({
+        success: true,
+        message: "Logged out successfully"
+      });
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Logout failed"
       });
     }
   });

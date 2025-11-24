@@ -2,39 +2,38 @@ import { useState, useEffect } from 'react';
 
 export interface TelegramUser {
   id: number;
-  first_name: string;
-  last_name?: string;
+  firstName: string;
+  lastName?: string;
   username?: string;
-  photo_url?: string;
+  photoUrl?: string;
 }
-
-const STORAGE_KEY = 'telegram_user';
 
 export function useTelegramAuth() {
   const [user, setUser] = useState<TelegramUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Загружаем пользователя из localStorage при монтировании
+  // Загружаем пользователя с сервера при монтировании (опционально)
+  // TODO: реализовать загрузку из БД через эндпоинт GET /api/auth/telegram/me после проверки сессии
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse stored user:', e);
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
     setIsLoading(false);
   }, []);
 
   const login = (userData: TelegramUser) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/telegram/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
     setUser(null);
   };
 

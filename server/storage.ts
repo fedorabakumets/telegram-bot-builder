@@ -10,6 +10,7 @@ import {
   botUsers,
   botMessages,
   botMessageMedia,
+  telegramUsers,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
@@ -30,7 +31,9 @@ import {
   type BotMessage,
   type InsertBotMessage,
   type BotMessageMedia,
-  type InsertBotMessageMedia
+  type InsertBotMessageMedia,
+  type TelegramUserDB,
+  type InsertTelegramUser
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, like, or, ilike, sql } from "drizzle-orm";
@@ -136,6 +139,11 @@ export interface IStorage {
   // Bot message media
   createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia>;
   getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>>;
+
+  // Telegram users
+  getTelegramUser(id: number): Promise<TelegramUserDB | undefined>;
+  getTelegramUserOrCreate(userData: InsertTelegramUser): Promise<TelegramUserDB>;
+  deleteTelegramUser(id: number): Promise<boolean>;
 }
 
 // Legacy Memory Storage - kept for reference
@@ -2163,6 +2171,43 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
       }));
 
     return messagesArray;
+  }
+
+  // Telegram users
+  async getTelegramUser(id: number): Promise<TelegramUserDB | undefined> {
+    const [user] = await this.db.select().from(telegramUsers).where(eq(telegramUsers.id, id));
+    return user || undefined;
+  }
+
+  async getTelegramUserOrCreate(userData: InsertTelegramUser): Promise<TelegramUserDB> {
+    // Проверяем есть ли пользователь
+    const existing = await this.getTelegramUser(userData.id);
+    if (existing) {
+      // Обновляем если нужно
+      const [updated] = await this.db
+        .update(telegramUsers)
+        .set({
+          ...userData,
+          updatedAt: new Date()
+        })
+        .where(eq(telegramUsers.id, userData.id))
+        .returning();
+      return updated;
+    }
+    
+    // Создаем нового пользователя
+    const [newUser] = await this.db
+      .insert(telegramUsers)
+      .values(userData)
+      .returning();
+    return newUser;
+  }
+
+  async deleteTelegramUser(id: number): Promise<boolean> {
+    const result = await this.db
+      .delete(telegramUsers)
+      .where(eq(telegramUsers.id, id));
+    return true;
   }
 }
 
