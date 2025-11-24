@@ -113,6 +113,8 @@ class TelegramClientManager {
       const stringSession = new StringSession(sessionString);
       const client = new TelegramClient(stringSession, parseInt(apiId), apiHash, {
         connectionRetries: 5,
+        useWSS: false,
+        autoReconnect: true,
       });
 
       await client.connect();
@@ -155,6 +157,8 @@ class TelegramClientManager {
       const stringSession = new StringSession('');
       const client = new TelegramClient(stringSession, parseInt(apiId), apiHash, {
         connectionRetries: 5,
+        useWSS: false,
+        autoReconnect: true,
       });
 
       await client.connect();
@@ -374,6 +378,8 @@ class TelegramClientManager {
     const stringSession = new StringSession(session || '');
     const client = new TelegramClient(stringSession, parseInt(apiId), apiHash, {
       connectionRetries: 5,
+      useWSS: false,
+      autoReconnect: true,
     });
 
     try {
