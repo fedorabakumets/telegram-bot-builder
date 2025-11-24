@@ -2627,8 +2627,18 @@ export function PropertiesPanel({
           </div>
         )}
 
-        {/* Keyboard Settings */}
-        {!selectedNode.type.includes('management') && (
+        {/* Keyboard Settings - скрыто для узлов управления */}
+        {selectedNode.type !== 'pin_message' && 
+         selectedNode.type !== 'unpin_message' && 
+         selectedNode.type !== 'delete_message' &&
+         selectedNode.type !== 'ban_user' && 
+         selectedNode.type !== 'unban_user' && 
+         selectedNode.type !== 'mute_user' && 
+         selectedNode.type !== 'unmute_user' && 
+         selectedNode.type !== 'kick_user' && 
+         selectedNode.type !== 'promote_user' && 
+         selectedNode.type !== 'demote_user' && 
+         selectedNode.type !== 'admin_rights' && (
         <div className="bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-lg p-4">
           <h3 className="text-sm font-medium text-foreground mb-3">⌨️ Клавиатура</h3>
           <div className="flex items-center gap-3 mb-4">
@@ -3257,8 +3267,19 @@ export function PropertiesPanel({
         </div>
         )}
 
-        {/* Conditional Messages */}
-        {(selectedNode.type === 'start' || selectedNode.type === 'command' || selectedNode.type === 'message' || selectedNode.type === 'keyboard') && (
+        {/* Conditional Messages - скрыто для узлов управления */}
+        {(selectedNode.type === 'start' || selectedNode.type === 'command' || selectedNode.type === 'message' || selectedNode.type === 'keyboard') && 
+         selectedNode.type !== 'pin_message' && 
+         selectedNode.type !== 'unpin_message' && 
+         selectedNode.type !== 'delete_message' &&
+         selectedNode.type !== 'ban_user' && 
+         selectedNode.type !== 'unban_user' && 
+         selectedNode.type !== 'mute_user' && 
+         selectedNode.type !== 'unmute_user' && 
+         selectedNode.type !== 'kick_user' && 
+         selectedNode.type !== 'promote_user' && 
+         selectedNode.type !== 'demote_user' && 
+         selectedNode.type !== 'admin_rights' && (
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-foreground">🔄 Условные сообщения</h3>
