@@ -3651,10 +3651,10 @@ export function PropertiesPanel({
                                 <div className="space-y-4">
                                   <div className="border-t border-purple-200/20 dark:border-purple-800/20 pt-4"></div>
                                   
-                                  <div className="flex items-center justify-between gap-3">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
-                                      <span className="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0"></div>
+                                      <span className="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide truncate">
                                         Кнопки ({(condition.buttons || []).length})
                                       </span>
                                     </div>
@@ -3681,10 +3681,11 @@ export function PropertiesPanel({
                                         );
                                         onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                       }}
-                                      className="text-xs bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 transition-all duration-200 h-8"
+                                      title="Добавить кнопку"
+                                      className="text-xs bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 transition-all duration-200 h-8 flex-shrink-0"
                                     >
-                                      <i className="fas fa-plus mr-1.5"></i>
-                                      Добавить кнопку
+                                      <i className="fas fa-plus"></i>
+                                      <span className="hidden sm:inline ml-1.5">Добавить кнопку</span>
                                     </UIButton>
                                   </div>
 
