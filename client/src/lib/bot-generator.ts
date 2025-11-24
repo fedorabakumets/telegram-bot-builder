@@ -3820,12 +3820,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   } else if (targetNode.data.formatMode === 'html') {
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
-                  code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-                  code += `    try:\n`;
-                  code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
-                  code += `    except Exception as e:\n`;
-                  code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-                  code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+                  code += `    await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
                 }
                 code += '    \n';
               } else {
@@ -3849,12 +3844,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   } else if (targetNode.data.formatMode === 'html') {
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
-                  code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-                  code += `    try:\n`;
-                  code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
-                  code += `    except Exception as e:\n`;
-                  code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-                  code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+                  code += `    await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
                 } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
                   code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
@@ -3887,12 +3877,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   } else if (targetNode.data.formatMode === 'html') {
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
-                  code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-                  code += `    try:\n`;
-                  code += `        await callback_query.message.edit_text(text${parseModeTarget})\n`;
-                  code += `    except Exception as e:\n`;
-                  code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-                  code += `        await callback_query.message.answer(text${parseModeTarget})\n`;
+                  code += `    await callback_query.message.edit_text(text${parseModeTarget})\n`;
                 }
               } // Закрываем else блок для обычного отображения (основной цикл)
             } // Закрываем else блок для обычных текстовых сообщений (основной цикл)
@@ -5257,19 +5242,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 } else if (targetNode.data.formatMode === 'html') {
                   parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
-                code += '    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n';
-                code += '    try:\n';
                 code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
-                code += '    except Exception as e:\n';
-                code += '        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n';
-                code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
               } else {
-                code += '    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n';
-                code += '    try:\n';
-                code += '        await callback_query.message.edit_text(text)\n';
-                code += '    except Exception as e:\n';
-                code += '        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n';
-                code += '        await callback_query.message.answer(text)\n';
+                code += '    await callback_query.message.edit_text(text)\n';
               }
               code += '    \n';
             } else {
@@ -5299,12 +5274,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 } else if (targetNode.data.formatMode === 'html') {
                   parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
-                code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-                code += `    try:\n`;
-                code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
-                code += `    except Exception as e:\n`;
-                code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-                code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+                code += `    await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
               } else {
                 let parseModeTarget = '';
                 if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -5312,12 +5282,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 } else if (targetNode.data.formatMode === 'html') {
                   parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
-                code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-                code += `    try:\n`;
-                code += `        await callback_query.message.edit_text(text${parseModeTarget})\n`;
-                code += `    except Exception as e:\n`;
-                code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-                code += `        await callback_query.message.answer(text${parseModeTarget})\n`;
+                code += `    await callback_query.message.edit_text(text${parseModeTarget})\n`;
               }
             } // Закрываем else блок для обычного отображения
           } // Закрываем else блок для regular message nodes
