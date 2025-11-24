@@ -37,6 +37,15 @@ interface SynonymEditorProps {
 }
 
 const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: старт, привет, начать", title = "Синонимы", description }: SynonymEditorProps) => {
+  // Функция для проверки дубликатов
+  const checkDuplicate = (value: string, currentIndex: number): boolean => {
+    if (!value.trim()) return false;
+    const normalizedValue = value.trim().toLowerCase();
+    return synonyms.some((syn, idx) => 
+      idx !== currentIndex && syn.trim().toLowerCase() === normalizedValue
+    );
+  };
+
   return (
     <div>
       <Label className="text-xs font-medium text-muted-foreground">{title}</Label>
@@ -46,32 +55,43 @@ const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: с
         </div>
       )}
       <div className="mt-2 space-y-2">
-        {synonyms.map((synonym, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <Input
-              value={synonym}
-              onChange={(e) => {
-                const newSynonyms = [...synonyms];
-                newSynonyms[index] = e.target.value;
-                onUpdate(newSynonyms);
-              }}
-              placeholder={placeholder}
-              className="flex-1 text-xs"
-            />
-            <UIButton
-              onClick={() => {
-                const newSynonyms = [...synonyms];
-                newSynonyms.splice(index, 1);
-                onUpdate(newSynonyms);
-              }}
-              variant="outline"
-              size="sm"
-              className="px-2 py-1 h-8"
-            >
-              <i className="fas fa-trash text-xs"></i>
-            </UIButton>
-          </div>
-        ))}
+        {synonyms.map((synonym, index) => {
+          const isDuplicate = checkDuplicate(synonym, index);
+          return (
+            <div key={index} className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={synonym}
+                  onChange={(e) => {
+                    const newSynonyms = [...synonyms];
+                    newSynonyms[index] = e.target.value;
+                    onUpdate(newSynonyms);
+                  }}
+                  placeholder={placeholder}
+                  className={`flex-1 text-xs ${isDuplicate ? 'border-red-500 focus:ring-red-500' : ''}`}
+                />
+                <UIButton
+                  onClick={() => {
+                    const newSynonyms = [...synonyms];
+                    newSynonyms.splice(index, 1);
+                    onUpdate(newSynonyms);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="px-2 py-1 h-8"
+                >
+                  <i className="fas fa-trash text-xs"></i>
+                </UIButton>
+              </div>
+              {isDuplicate && (
+                <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                  <i className="fas fa-exclamation-triangle"></i>
+                  <span>Такой синоним уже существует</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
         <UIButton
           onClick={() => {
             const newSynonyms = [...synonyms, ''];
