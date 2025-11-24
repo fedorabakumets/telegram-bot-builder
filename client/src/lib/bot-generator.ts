@@ -8229,7 +8229,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (userDatabaseEnabled) {
   code += '        # Регистрация middleware для сохранения сообщений\n';
   code += '        dp.message.middleware(message_logging_middleware)\n';
-  code += '        dp.callback_query.middleware(callback_query_logging_middleware)\n';
+  // Регистрируем callback_query middleware только если в боте есть inline кнопки
+  if (hasInlineButtons(nodes || [])) {
+    code += '        dp.callback_query.middleware(callback_query_logging_middleware)\n';
+  }
   code += '        \n';
   }
   code += '        print("🤖 Бот запущен и готов к работе!")\n';
