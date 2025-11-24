@@ -5809,8 +5809,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       node.data.conditionalMessages.forEach((condition: any) => {
         if (condition.buttons) {
           condition.buttons.forEach((button: Button) => {
-            // Для conditional messages берем keyboardType из самой кнопки или condition
-            const keyboardType = condition.keyboardType || button.keyboardType || node.data.keyboardType || 'reply';
+            // Для conditional messages берем keyboardType из condition или node
+            const keyboardType = condition.keyboardType || node.data.keyboardType || 'reply';
             if (button.action === 'goto' && button.target && keyboardType === 'reply') {
               console.log(`✅ НАЙДЕНА reply goto кнопка в conditional message: "${button.text}" -> ${button.target} в узле ${node.id}`);
               replyGotoButtons.push({

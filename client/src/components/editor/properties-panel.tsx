@@ -2720,7 +2720,8 @@ export function PropertiesPanel({
                               action: 'selection' as const,
                               target: '',
                               buttonType: 'option' as const,
-                              skipDataCollection: false
+                              skipDataCollection: false,
+                              hideAfterClick: false
                             };
                             
                             const currentButtons = selectedNode.data.buttons || [];
@@ -2741,7 +2742,8 @@ export function PropertiesPanel({
                               action: 'goto' as const,
                               target: '',
                               buttonType: 'complete' as const,
-                              skipDataCollection: false
+                              skipDataCollection: false,
+                              hideAfterClick: false
                             };
                             
                             const currentButtons = selectedNode.data.buttons || [];
@@ -3909,7 +3911,8 @@ export function PropertiesPanel({
                                           target: '',
                                           url: '',
                                           buttonType: 'normal' as const,
-                                          skipDataCollection: false
+                                          skipDataCollection: false,
+                                          hideAfterClick: false
                                         };
                                         const currentConditions = selectedNode.data.conditionalMessages || [];
                                         const updatedConditions = currentConditions.map(c => 
