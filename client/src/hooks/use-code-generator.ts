@@ -40,7 +40,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
 
       switch (format) {
         case 'python':
-          return botGenerator.generatePythonCode(botData, projectName, groups, userDatabaseEnabled, projectId);
+          return botGenerator.generatePythonCode(botData, projectName, groups, userDatabaseEnabled, projectId, isLoggingEnabled());
         case 'json':
           return JSON.stringify(botData, null, 2);
         case 'requirements':

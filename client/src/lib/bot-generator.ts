@@ -1328,7 +1328,10 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
   return { nodes, connections };
 }
 
-export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null): string {
+export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false): string {
+  // Переопределяем локальную функцию логирования для использования параметра
+  const isLoggingEnabled = () => enableLogging;
+  
   const { nodes, connections } = extractNodesAndConnections(botData);
   
   // Собираем все ID узлов для генерации уникальных коротких ID
@@ -12365,8 +12368,11 @@ export function removeCodeMarkers(code: string): string {
 export function generatePythonCodeWithMap(
   botData: BotData, 
   botName: string = "MyBot", 
-  groups: BotGroup[] = []
+  groups: BotGroup[] = [],
+  userDatabaseEnabled: boolean = false,
+  projectId: number | null = null,
+  enableLogging: boolean = false
 ): CodeWithMap {
-  const code = generatePythonCode(botData, botName, groups);
+  const code = generatePythonCode(botData, botName, groups, userDatabaseEnabled, projectId, enableLogging);
   return parseCodeMap(code);
 }
