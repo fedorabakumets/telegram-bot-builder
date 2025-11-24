@@ -2483,7 +2483,18 @@ export function PropertiesPanel({
           </div>
         </div>
 
-        {/* Message Content */}
+        {/* Message Content - скрыто для узлов управления */}
+        {selectedNode.type !== 'pin_message' && 
+         selectedNode.type !== 'unpin_message' && 
+         selectedNode.type !== 'delete_message' &&
+         selectedNode.type !== 'ban_user' && 
+         selectedNode.type !== 'unban_user' && 
+         selectedNode.type !== 'mute_user' && 
+         selectedNode.type !== 'unmute_user' && 
+         selectedNode.type !== 'kick_user' && 
+         selectedNode.type !== 'promote_user' && 
+         selectedNode.type !== 'demote_user' && 
+         selectedNode.type !== 'admin_rights' && (
         <div>
           <div className="space-y-4">
             {/* Media Variables Section */}
@@ -2618,6 +2629,7 @@ export function PropertiesPanel({
             </div>
           </div>
         </div>
+        )}
 
         {/* Synonyms - только для узлов кроме команд, управления контентом и управления пользователями */}
         {selectedNode.type !== 'start' && selectedNode.type !== 'command' && 
