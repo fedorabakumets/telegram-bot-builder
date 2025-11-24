@@ -23,9 +23,7 @@ interface AuthStatus {
 }
 
 export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProps) {
-  const [step, setStep] = useState<'credentials' | 'phone' | 'code' | 'password'>('credentials');
-  const [apiId, setApiId] = useState('');
-  const [apiHash, setApiHash] = useState('');
+  const [step, setStep] = useState<'phone' | 'code' | 'password'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneCode, setPhoneCode] = useState('');
   const [phoneCodeHash, setPhoneCodeHash] = useState('');
@@ -54,56 +52,12 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
         });
         onSuccess();
         onOpenChange(false);
-      } else if (status.hasCredentials) {
-        // Если credentials есть, переходим к телефону
-        setStep('phone');
       } else {
-        // Если credentials нет, остаемся на шаге ввода credentials
-        setStep('credentials');
+        // Всегда начинаем с phone шага (credentials на бэке)
+        setStep('phone');
       }
     } catch (error) {
       console.error('Ошибка проверки статуса:', error);
-    }
-  };
-
-  const saveCredentials = async () => {
-    if (!apiId.trim() || !apiHash.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите API ID и API Hash",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await apiRequest('POST', '/api/telegram-auth/save-credentials', { 
-        apiId: apiId.trim(), 
-        apiHash: apiHash.trim() 
-      });
-
-      if (response.success) {
-        setStep('phone');
-        toast({
-          title: "Credentials сохранены",
-          description: "Теперь введите номер телефона",
-        });
-      } else {
-        toast({
-          title: "Ошибка сохранения",
-          description: response.error || "Неизвестная ошибка",
-          variant: "destructive"
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось сохранить credentials",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -256,63 +210,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
         </DialogHeader>
 
         <div className="space-y-4">
-          {step === 'credentials' ? (
-            <>
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <Shield className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Введите API credentials для подключения к Telegram
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="apiId">API ID</Label>
-                  <Input
-                    id="apiId"
-                    placeholder="12345678"
-                    value={apiId}
-                    onChange={(e) => setApiId(e.target.value)}
-                    onKeyPress={(e) => handleKeyPress(e, saveCredentials)}
-                    disabled={isLoading}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Получите на my.telegram.org в разделе API Development Tools
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="apiHash">API Hash</Label>
-                  <Input
-                    id="apiHash"
-                    placeholder="abcdef1234567890abcdef1234567890"
-                    value={apiHash}
-                    onChange={(e) => setApiHash(e.target.value)}
-                    onKeyPress={(e) => handleKeyPress(e, saveCredentials)}
-                    disabled={isLoading}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    32-символьная строка из my.telegram.org
-                  </p>
-                </div>
-              </div>
-
-              <Button 
-                onClick={saveCredentials} 
-                disabled={isLoading || !apiId.trim() || !apiHash.trim()}
-                className="w-full"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Сохраняем...
-                  </>
-                ) : (
-                  'Сохранить credentials'
-                )}
-              </Button>
-            </>
-          ) : step === 'phone' ? (
+          {step === 'phone' ? (
             <>
               <div className="space-y-2">
                 <Label htmlFor="phone">Номер телефона</Label>
@@ -347,7 +245,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
                 )}
               </Button>
             </>
-          ) : step === 'code' ? (
+          ) : (
             <>
               <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <CheckCircle2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
@@ -390,59 +288,6 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Проверяем...
-                    </>
-                  ) : (
-                    'Подтвердить'
-                  )}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <Lock className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Требуется пароль двухфакторной аутентификации
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Пароль 2FA</Label>
-                <div className="flex items-center space-x-2">
-                  <Lock className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Введите пароль"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyPress={(e) => handleKeyPress(e, verifyPassword)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Введите пароль, установленный в настройках безопасности Telegram
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setStep('code')}
-                  disabled={isLoading}
-                  className="flex-1"
-                >
-                  Назад
-                </Button>
-                <Button 
-                  onClick={verifyPassword} 
-                  disabled={isLoading || !password.trim()}
-                  className="flex-1"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Авторизуемся...
                     </>
                   ) : (
                     'Подтвердить'

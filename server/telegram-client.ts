@@ -98,17 +98,22 @@ class TelegramClientManager {
         return false;
       }
 
-      // Получаем credentials из базы данных
+      // Получаем credentials из env vars или БД
+      let apiId = process.env.TELEGRAM_API_ID;
+      let apiHash = process.env.TELEGRAM_API_HASH;
 
-      const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
-      
-      if (result.length === 0 || !result[0].apiId || !result[0].apiHash) {
-        console.log(`❌ API credentials не найдены для пользователя ${userId}`);
-        return false;
+      // Если нет в env vars, пробуем из БД
+      if (!apiId || !apiHash) {
+        const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
+        
+        if (result.length > 0 && result[0].apiId && result[0].apiHash) {
+          apiId = result[0].apiId;
+          apiHash = result[0].apiHash;
+        } else {
+          console.log(`❌ API credentials не найдены для пользователя ${userId}`);
+          return false;
+        }
       }
-      
-      const apiId = result[0].apiId;
-      const apiHash = result[0].apiHash;
 
       const stringSession = new StringSession(sessionString);
       const client = new TelegramClient(stringSession, parseInt(apiId), apiHash, {
@@ -143,16 +148,21 @@ class TelegramClientManager {
 
   async sendCode(userId: string, phoneNumber: string): Promise<{ success: boolean; phoneCodeHash?: string; error?: string }> {
     try {
-      // Получаем credentials из базы данных
+      // Получаем credentials из env vars или БД
+      let apiId = process.env.TELEGRAM_API_ID;
+      let apiHash = process.env.TELEGRAM_API_HASH;
 
-      const credentialsResult = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
-      
-      if (credentialsResult.length === 0 || !credentialsResult[0].apiId || !credentialsResult[0].apiHash) {
-        throw new Error('Telegram API credentials not configured');
+      // Если нет в env vars, пробуем из БД (для backward compatibility)
+      if (!apiId || !apiHash) {
+        const credentialsResult = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
+        
+        if (credentialsResult.length > 0 && credentialsResult[0].apiId && credentialsResult[0].apiHash) {
+          apiId = credentialsResult[0].apiId;
+          apiHash = credentialsResult[0].apiHash;
+        } else {
+          throw new Error('Telegram API credentials not configured. Set TELEGRAM_API_ID and TELEGRAM_API_HASH environment variables.');
+        }
       }
-      
-      const apiId = credentialsResult[0].apiId;
-      const apiHash = credentialsResult[0].apiHash;
 
       const stringSession = new StringSession('');
       const client = new TelegramClient(stringSession, parseInt(apiId), apiHash, {
