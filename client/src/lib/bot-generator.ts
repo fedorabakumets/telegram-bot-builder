@@ -4674,6 +4674,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         code += '            else:\n';
                         code += `                logging.info(f"⏭️ Переменная ${inputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
                       }
+                      
+                      // АВТОПЕРЕХОД: Если у узла есть enableAutoTransition, переходим к следующему узлу
+                      if (navTargetNode.data.enableAutoTransition && navTargetNode.data.autoTransitionTo) {
+                        const autoTargetId = navTargetNode.data.autoTransitionTo;
+                        const safeAutoTargetId = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
+                        code += '            \n';
+                        code += '            # Проверяем, не ждем ли мы ввод перед автопереходом\n';
+                        code += '            if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
+                        code += `                logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${navTargetNode.id}")\n`;
+                        code += '            else:\n';
+                        code += `                # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                        code += `                logging.info(f"⚡ Автопереход от узла ${navTargetNode.id} к узлу ${autoTargetId}")\n`;
+                        code += `                await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+                        code += `                logging.info(f"✅ Автопереход выполнен: ${navTargetNode.id} -> ${autoTargetId}")\n`;
+                        code += '                return\n';
+                      }
                     }
                   }
                 } else if (navTargetNode.type === 'command') {
