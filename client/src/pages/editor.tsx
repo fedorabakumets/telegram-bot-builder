@@ -19,7 +19,6 @@ import { UserDatabasePanel } from '@/components/editor/user-database-panel';
 import { GroupsPanel } from '@/components/editor/groups-panel';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
-import { AuthBar } from '@/components/layout/auth-bar';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
 import { LayoutCustomizer } from '@/components/layout/layout-customizer';
 import { SimpleLayoutCustomizer, SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
@@ -1295,7 +1294,6 @@ export default function Editor() {
           config={flexibleLayoutConfig}
           onConfigChange={setFlexibleLayoutConfig}
         >
-          <AuthBar />
           <FlexibleLayout
             config={flexibleLayoutConfig}
             headerContent={headerContent}
@@ -1331,6 +1329,7 @@ export default function Editor() {
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
+              onShowTelegramAuth={() => {}}
               onToggleHeader={handleToggleHeader}
               onToggleSidebar={handleToggleSidebar}
               onToggleProperties={handleToggleProperties}
