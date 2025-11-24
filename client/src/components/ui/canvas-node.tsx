@@ -1063,11 +1063,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2 ml-2">
-                        <div className="text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded">
-                          #{condition.priority || 0}
-                        </div>
-                      </div>
                     </div>
                     
                     <div className="bg-slate-50/70 dark:bg-slate-800/50 rounded p-2 border border-slate-200/50 dark:border-slate-700/50">
