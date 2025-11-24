@@ -4,8 +4,15 @@ import { z } from 'zod';
 
 type Button = z.infer<typeof buttonSchema>;
 
+// Global variable for logging state (can be overridden by parameter)
+let globalLoggingEnabled = false;
+
 // Utility function to check if debug logging is enabled
 const isLoggingEnabled = (): boolean => {
+  // First check if global logging was explicitly set (from enableLogging parameter)
+  if (globalLoggingEnabled) return true;
+  
+  // Otherwise check localStorage
   if (typeof window !== 'undefined') {
     return localStorage.getItem('botcraft-generator-logs') === 'true';
   }
@@ -1329,10 +1336,11 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
 }
 
 export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false): string {
-  // Переопределяем локальную функцию логирования для использования параметра
-  const isLoggingEnabled = () => enableLogging;
+  // Set global logging flag for this generation run
+  globalLoggingEnabled = enableLogging;
   
-  const { nodes, connections } = extractNodesAndConnections(botData);
+  try {
+    const { nodes, connections } = extractNodesAndConnections(botData);
   
   // Собираем все ID узлов для генерации уникальных коротких ID
   const allNodeIds = nodes ? nodes.map(node => node.id) : [];
@@ -12014,7 +12022,14 @@ function generateKeyboard(node: Node): string {
     }
   }
   
+  // Reset global logging flag before returning
+  globalLoggingEnabled = false;
+  
   return code;
+  } finally {
+    // Make sure we always reset the flag
+    globalLoggingEnabled = false;
+  }
 }
 
 export function validateBotStructure(botData: BotData): { isValid: boolean; errors: string[] } {
