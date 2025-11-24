@@ -429,10 +429,6 @@ export function AdaptiveHeader({
         <div className="h-px w-full bg-border my-2"></div>
       )}
       
-      <div className={`${isVertical ? 'w-full flex justify-center' : ''}`}>
-        <TelegramLoginWidget botInfo={botInfo} />
-      </div>
-      
       <Button 
         variant="outline" 
         size="sm"

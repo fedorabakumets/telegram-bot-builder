@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Bot, Edit, Trash2, Calendar, User, Download } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { TelegramLoginWidget } from '@/components/telegram-login-widget';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import type { BotProject } from '@shared/schema';
@@ -191,6 +192,7 @@ export default function Home() {
                 Шаблоны
               </Button>
             </Link>
+            <TelegramLoginWidget />
             <ThemeToggle />
           </div>
         </div>

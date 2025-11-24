@@ -22,8 +22,13 @@ declare global {
 export function TelegramLoginWidget({ botInfo, onAuth }: TelegramLoginWidgetProps) {
   const { toast } = useToast();
   
-  // Используем username бота или fallback
-  const botUsername = botInfo?.username || 'botcraft_studio_bot';
+  // Используем username бота из env или botInfo
+  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || botInfo?.username;
+  
+  // Если нет username, не показываем виджет
+  if (!botUsername) {
+    return null;
+  }
 
   useEffect(() => {
     // Определяем глобальную функцию обратного вызова
