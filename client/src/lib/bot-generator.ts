@@ -7072,7 +7072,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Вызываем callback-обработчик вместо инлайн-отправки
           const autoTargetNode = nodes.find(n => n.id === targetNode.data.autoTransitionTo);
           if (autoTargetNode) {
-            const safeFuncName = createSafeFunctionName(autoTargetNode.id);
+            const safeFuncName = autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
             code += `                await handle_callback_${safeFuncName}(fake_callback)\n`;
           }
           code += `                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")\n`;
@@ -11946,7 +11946,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
     code += `        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")\n`;
   } else if (node.type === 'admin_rights') {
     // Для admin_rights узлов перенаправляем к callback обработчику
-    const safeFunctionName = createSafeFunctionName(node.id);
+    const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
     code += `        # Создаем Mock callback для эмуляции inline кнопки admin_rights\n`;
     code += `        class MockCallback:\n`;
     code += `            def __init__(self, data, user, msg):\n`;
