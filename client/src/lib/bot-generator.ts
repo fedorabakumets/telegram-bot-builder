@@ -618,11 +618,12 @@ function generateAttachedMediaSendCode(
   
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
   if (autoTransitionTo) {
-    const safeAutoTargetId = autoTransitionTo.replace(/-/g, '_');
+    const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
     code += `${indentLevel}        \n`;
     code += `${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
     code += `${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
-    code += `${indentLevel}        await handle_node_${safeAutoTargetId}(callback_query)\n`;
+    code += `${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+    code += `${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
     code += `${indentLevel}        return\n`;
   }
   
@@ -637,11 +638,12 @@ function generateAttachedMediaSendCode(
   
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход и для случая без медиа
   if (autoTransitionTo) {
-    const safeAutoTargetId = autoTransitionTo.replace(/-/g, '_');
+    const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
     code += `${indentLevel}    \n`;
     code += `${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
     code += `${indentLevel}    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
-    code += `${indentLevel}    await handle_node_${safeAutoTargetId}(callback_query)\n`;
+    code += `${indentLevel}    await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+    code += `${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
     code += `${indentLevel}    return\n`;
   }
   
