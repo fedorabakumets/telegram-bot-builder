@@ -4456,21 +4456,64 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '        logging.info("✅ Используем условную клавиатуру для навигации")\n';
           code += '    \n';
           
-          // Send message with keyboard
-          code += '    # Отправляем сообщение\n';
-          code += '    try:\n';
-          code += '        if keyboard:\n';
-          code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
-          code += '        else:\n';
-          code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
-          code += '            await callback_query.message.answer(text)\n';
-          code += '    except Exception as e:\n';
-          code += '        logging.debug(f"Ошибка отправки сообщения: {e}")\n';
-          code += '        if keyboard:\n';
-          code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
-          code += '        else:\n';
-          code += '            await callback_query.message.answer(text)\n';
-          code += '    \n';
+          // ИСПРАВЛЕНИЕ: Проверяем наличие прикрепленных медиа перед отправкой
+          const attachedMedia = targetNode.data.attachedMedia || [];
+          
+          if (attachedMedia.length > 0) {
+            console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} имеет attachedMedia:`, attachedMedia);
+            // Генерируем код отправки с медиа
+            const parseModeStr = targetNode.data.formatMode || '';
+            const keyboardStr = 'keyboard if keyboard is not None else None';
+            const mediaCode = generateAttachedMediaSendCode(
+              attachedMedia,
+              mediaVariablesMap,
+              'text',
+              parseModeStr,
+              keyboardStr,
+              nodeId,
+              '    ',
+              undefined // автопереход обрабатывается отдельно ниже
+            );
+            
+            if (mediaCode) {
+              code += '    # Отправляем сообщение (с проверкой прикрепленного медиа)\n';
+              code += mediaCode;
+            } else {
+              // Fallback если не удалось сгенерировать код медиа
+              console.log(`⚠️ ГЕНЕРАТОР: Не удалось сгенерировать код медиа для узла ${nodeId}, используем обычную отправку`);
+              code += '    # Отправляем сообщение\n';
+              code += '    try:\n';
+              code += '        if keyboard:\n';
+              code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
+              code += '        else:\n';
+              code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
+              code += '            await callback_query.message.answer(text)\n';
+              code += '    except Exception as e:\n';
+              code += '        logging.debug(f"Ошибка отправки сообщения: {e}")\n';
+              code += '        if keyboard:\n';
+              code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
+              code += '        else:\n';
+              code += '            await callback_query.message.answer(text)\n';
+              code += '    \n';
+            }
+          } else {
+            // Обычное сообщение без медиа
+            // Send message with keyboard
+            code += '    # Отправляем сообщение\n';
+            code += '    try:\n';
+            code += '        if keyboard:\n';
+            code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
+            code += '        else:\n';
+            code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
+            code += '            await callback_query.message.answer(text)\n';
+            code += '    except Exception as e:\n';
+            code += '        logging.debug(f"Ошибка отправки сообщения: {e}")\n';
+            code += '        if keyboard:\n';
+            code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
+            code += '        else:\n';
+            code += '            await callback_query.message.answer(text)\n';
+            code += '    \n';
+          }
           
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем автопереход сразу после отправки сообщения
           const currentNodeForAutoTransition = nodes.find(n => n.id === nodeId);
