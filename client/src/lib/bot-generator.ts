@@ -6168,16 +6168,56 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += `                            logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (условное сообщение, узел ${targetNode.id})")\n`;
                   }
                 } else {
-                  // Автоматически переходим к следующему узлу только если НЕ ждем ввода
-                  const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
-                  if (nextNodeAfterCondition) {
-                    code += `                            # Переменная уже существует, автоматически переходим к узлу: ${nextNodeAfterCondition}\n`;
-                    code += `                            logging.info(f"✅ Условие выполнено: переменная существует, автоматически переходим к следующему узлу")\n`;
-                    code += `                            # Рекурсивно обрабатываем следующий узел через ту же систему навигации\n`;
-                    code += `                            next_node_id_auto = "${nextNodeAfterCondition}"\n`;
-                    code += `                            logging.info(f"🔄 Автоматический переход к узлу: {next_node_id_auto}")\n`;
+                  // ИСПРАВЛЕНИЕ: Проверяем, есть ли кнопки в условном сообщении
+                  const hasConditionalButtons = condition.buttons && condition.buttons.length > 0;
+                  
+                  if (hasConditionalButtons) {
+                    // Если есть условные кнопки - показываем их и НЕ делаем автопереход
+                    // Кнопки сами ведут к целевым узлам
+                    code += `                            # Условное сообщение с кнопками: показываем клавиатуру\n`;
+                    code += `                            builder = ReplyKeyboardBuilder()\n`;
+                    
+                    for (const button of condition.buttons) {
+                      let buttonText = button.text || 'Кнопка';
+                      const safeButtonId = button.id.replace(/[^a-zA-Z0-9]/g, '_');
+                      
+                      // Заменяем переменные в тексте кнопки
+                      let hasVariable = false;
+                      for (const varName of variableNames) {
+                        if (buttonText.includes(`{${varName}}`)) {
+                          code += `                            btn_text_${safeButtonId} = "${buttonText}"\n`;
+                          code += `                            _, btn_var_value = check_user_variable_inline("${varName}", user_data_dict)\n`;
+                          code += `                            if btn_var_value is not None:\n`;
+                          code += `                                btn_text_${safeButtonId} = btn_text_${safeButtonId}.replace("{${varName}}", btn_var_value)\n`;
+                          buttonText = `btn_text_${safeButtonId}`;
+                          hasVariable = true;
+                          break;
+                        }
+                      }
+                      
+                      if (!hasVariable) {
+                        buttonText = `"${buttonText}"`;
+                      }
+                      
+                      code += `                            builder.add(KeyboardButton(text=${buttonText}))\n`;
+                    }
+                    
+                    code += `                            builder.adjust(1)\n`;
+                    code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)\n`;
+                    code += `                            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, node_id="${targetNode.id}")\n`;
+                    code += `                            logging.info(f"✅ Показана условная клавиатура (кнопки ведут напрямую, автопереход НЕ выполняется)")\n`;
                   } else {
-                    code += `                            # Переменная существует, но следующий узел не указан - завершаем обработку\n`;
+                    // Нет кнопок - автоматически переходим к следующему узлу
+                    const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
+                    if (nextNodeAfterCondition) {
+                      code += `                            # Переменная уже существует, автоматически переходим к узлу: ${nextNodeAfterCondition}\n`;
+                      code += `                            logging.info(f"✅ Условие выполнено: переменная существует, автоматически переходим к следующему узлу")\n`;
+                      code += `                            # Рекурсивно обрабатываем следующий узел через ту же систему навигации\n`;
+                      code += `                            next_node_id_auto = "${nextNodeAfterCondition}"\n`;
+                      code += `                            logging.info(f"🔄 Автоматический переход к узлу: {next_node_id_auto}")\n`;
+                    } else {
+                      code += `                            # Переменная существует, но следующий узел не указан - завершаем обработку\n`;
+                    }
                   }
                 }
               }
