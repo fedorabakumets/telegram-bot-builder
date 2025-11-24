@@ -2678,13 +2678,6 @@ export function PropertiesPanel({
                         </UIButton>
                       </div>
 
-                      {/* Info hint about variables */}
-                      <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/30 dark:border-blue-800/30 rounded px-2.5 py-1.5 mb-3">
-                        <div className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                          💡 Переменные: <code className="bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 rounded text-blue-700 dark:text-blue-300 font-mono text-xs">{'{переменная}'}</code> → значение
-                        </div>
-                      </div>
-
                       {/* Text input and variables button */}
                       <div className="space-y-2 mb-3">
                         <Label className="text-xs font-medium text-muted-foreground">Текст кнопки</Label>
