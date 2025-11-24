@@ -955,6 +955,7 @@ export function Canvas({
               <CanvasNode
                 key={node.id}
                 node={node}
+                allNodes={nodes}
                 isSelected={selectedNodeId === node.id}
                 onClick={() => onNodeSelect(node.id)}
                 onDelete={() => onNodeDelete(node.id)}

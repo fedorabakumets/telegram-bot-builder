@@ -161,6 +161,7 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
 
 interface CanvasNodeProps {
   node: Node;
+  allNodes?: Node[];
   isSelected?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
@@ -231,7 +232,7 @@ const nodeColors = {
   admin_rights: 'bg-gradient-to-br from-violet-100 to-purple-200 dark:from-violet-900/40 dark:to-purple-800/40 text-violet-800 dark:text-violet-200 border-2 border-violet-300 dark:border-violet-700/50 shadow-xl shadow-violet-500/25 ring-1 ring-violet-400/30 dark:ring-violet-600/30'
 };
 
-export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -951,23 +952,35 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       )}
       
       {/* Auto Transition Indicator - для autoTransitionTo */}
-      {node.data.enableAutoTransition && node.data.autoTransitionTo && !node.data.buttons?.length && (
-        <div className="bg-gradient-to-br from-emerald-50/70 to-green-50/70 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl p-3 mb-4 border border-emerald-200 dark:border-emerald-800/30">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-              <i className="fas fa-arrow-right text-emerald-600 dark:text-emerald-400 text-sm"></i>
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-1">
-                Автопереход
+      {node.data.enableAutoTransition && node.data.autoTransitionTo && !node.data.buttons?.length && (() => {
+        const targetNode = allNodes?.find(n => n.id === node.data.autoTransitionTo);
+        const targetNodeName = targetNode?.data.messageText?.slice(0, 30) || targetNode?.data.command || targetNode?.id.slice(0, 8);
+        
+        return (
+          <div className="bg-gradient-to-br from-emerald-50/70 to-green-50/70 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl p-3 mb-4 border border-emerald-200 dark:border-emerald-800/30">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                <i className="fas fa-arrow-right text-emerald-600 dark:text-emerald-400 text-sm"></i>
               </div>
-              <div className="text-xs text-emerald-600 dark:text-emerald-400">
-                Автоматически переходит к следующему узлу
+              <div className="flex-1">
+                <div className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-1">
+                  Автопереход
+                </div>
+                <div className="text-xs text-emerald-600 dark:text-emerald-400">
+                  {targetNode ? (
+                    <>
+                      К узлу: <span className="font-semibold">{targetNodeName}</span>
+                      {targetNode.data.messageText && targetNode.data.messageText.length > 30 && '...'}
+                    </>
+                  ) : (
+                    `К узлу: ${node.data.autoTransitionTo.slice(0, 8)}...`
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
       
       {/* Conditional Messages Indicator */}
       {node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0 && (
