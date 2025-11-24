@@ -4555,9 +4555,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем условную клавиатуру и используем её если есть
           code += '    \n';
           code += '    # Проверяем, есть ли условная клавиатура для использования\n';
+          code += '    user_id = callback_query.from_user.id\n';
+          code += '    if user_id not in user_data:\n';
+          code += '        user_data[user_id] = {}\n';
           code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
           code += '        keyboard = conditional_keyboard\n';
+          code += '        user_data[user_id]["_has_conditional_keyboard"] = True\n';
           code += '        logging.info("✅ Используем условную клавиатуру для навигации")\n';
+          code += '    else:\n';
+          code += '        user_data[user_id]["_has_conditional_keyboard"] = False\n';
           code += '    \n';
           
           // ИСПРАВЛЕНИЕ: Проверяем наличие прикрепленных медиа перед отправкой
@@ -4646,7 +4652,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла\n';
             code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура\n';
             code += '    user_id = callback_query.from_user.id\n';
-            code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+            code += '    has_conditional_keyboard = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)\n';
+            code += '    if has_conditional_keyboard:\n';
             code += '        logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")\n';
             code += '    elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
             code += `        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${nodeId}")\n`;
