@@ -123,11 +123,6 @@ export function ExportModal({ isOpen, onClose, botData, projectName, projectId }
     ).length
   };
 
-  // Получение текущего контента из hook
-  const getCurrentContent = () => {
-    return codeContent[selectedFormat] || '';
-  };
-
   // Получение свежих данных проекта с нормализацией при открытии
   const [freshBotData, setFreshBotData] = useState<BotData | null>(null);
   
@@ -253,8 +248,10 @@ export function ExportModal({ isOpen, onClose, botData, projectName, projectId }
 
   const downloadFile = async (format?: ExportFormat) => {
     const formatToDownload = format || selectedFormat;
-    const content = formatToDownload === selectedFormat ? getCurrentContent() : 
-      (generateExportContent[formatToDownload] ? await generateExportContent[formatToDownload]() : '');
+    if (formatToDownload !== selectedFormat) {
+      await loadContent(formatToDownload);
+    }
+    const content = codeContent[formatToDownload] || '';
     const fileName = getFileName(formatToDownload);
     
     const blob = new Blob([content], { type: 'text/plain' });
@@ -576,7 +573,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName, projectId }
                   <CardDescription>Готовый к использованию код для aiogram 3.x</CardDescription>
                 </div>
                 <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'space-x-2'}`}>
-                  <Button onClick={() => copyToClipboard(exportContent.python)} variant="outline" size="sm" className={`${isMobile ? 'w-full' : ''}`}>
+                  <Button onClick={() => copyToClipboard(codeContent.python)} variant="outline" size="sm" className={`${isMobile ? 'w-full' : ''}`}>
                     <i className="fas fa-copy mr-2"></i>
                     Копировать
                   </Button>
@@ -589,7 +586,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName, projectId }
               <CardContent>
                 {validationResult.isValid ? (
                   <Textarea
-                    value={exportContent.python}
+                    value={codeContent.python}
                     readOnly
                     className={`${isMobile ? 'min-h-[300px] max-h-[400px]' : 'min-h-[400px] max-h-[600px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-muted/50 dark:bg-muted/20 border-muted dark:border-muted/40 resize-none`}
                     placeholder="Генерация кода..."
