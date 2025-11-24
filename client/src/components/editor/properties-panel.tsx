@@ -2430,83 +2430,94 @@ export function PropertiesPanel({
          selectedNode.type !== 'demote_user' && 
          selectedNode.type !== 'admin_rights' && (
         <div className="bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-foreground mb-3">⌨️ Клавиатура</h3>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 flex-1">
-              <Label className="text-xs font-medium text-foreground cursor-pointer flex-1">Inline кнопки</Label>
-              <Switch
-                checked={selectedNode.data.keyboardType === 'inline'}
-                onCheckedChange={(checked) => {
-                  onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
-                }}
-              />
-            </div>
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 flex-1">
-              <Label className="text-xs font-medium text-foreground cursor-pointer flex-1">Reply кнопки</Label>
-              <Switch
-                checked={selectedNode.data.keyboardType === 'reply'}
-                onCheckedChange={(checked) => {
-                  onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
-                }}
-              />
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <span>⌨️ Клавиатура</span>
+            {selectedNode.data.keyboardType !== 'none' && (
+              <Badge variant="secondary" className="text-xs">
+                {selectedNode.data.keyboardType === 'inline' ? 'Inline' : 'Reply'}
+              </Badge>
+            )}
+          </h3>
+          
+          <div className="space-y-3 mb-5">
+            <Label className="text-xs font-medium text-muted-foreground block">Тип клавиатуры</Label>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 flex-1">
+                <Label className="text-xs font-medium text-foreground cursor-pointer flex-1">Inline</Label>
+                <Switch
+                  checked={selectedNode.data.keyboardType === 'inline'}
+                  onCheckedChange={(checked) => {
+                    onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 flex-1">
+                <Label className="text-xs font-medium text-foreground cursor-pointer flex-1">Reply</Label>
+                <Switch
+                  checked={selectedNode.data.keyboardType === 'reply'}
+                  onCheckedChange={(checked) => {
+                    onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
+                  }}
+                />
+              </div>
             </div>
           </div>
+
           <div className="space-y-4">
 
             {/* Multiple Selection Setting */}
             {selectedNode.data.keyboardType !== 'none' && (
-              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
-                <div className="flex-1">
-                  <Label className="text-xs font-medium text-foreground">
-                    Множественный выбор
-                  </Label>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {selectedNode.data.keyboardType === 'inline' 
-                      ? 'Кнопки не переходят к другому узлу, а отмечаются галочкой'
-                      : 'После каждого выбора показывается новое сообщение с обновленной клавиатурой'
-                    }
+              <>
+                <div className="border-t border-border/20 pt-4"></div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
+                  <div className="flex-1">
+                    <Label className="text-xs font-medium text-foreground">
+                      Множественный выбор
+                    </Label>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {selectedNode.data.keyboardType === 'inline' 
+                        ? 'Кнопки отмечаются галочкой без перехода'
+                        : 'Обновляется после каждого выбора'
+                      }
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <Switch
+                      checked={selectedNode.data.allowMultipleSelection ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { allowMultipleSelection: checked })}
+                    />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <Switch
-                    checked={selectedNode.data.allowMultipleSelection ?? false}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { allowMultipleSelection: checked })}
-                  />
-                </div>
-              </div>
-            )}
 
-            {/* Multiple Selection Settings */}
-            {selectedNode.data.keyboardType !== 'none' && selectedNode.data.allowMultipleSelection && (
-              <div className="space-y-4">
-                {/* Variable Name for Saving Multiple Selection */}
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Имя переменной для сохранения множественного выбора</Label>
-                  <Input
-                    value={selectedNode.data.multiSelectVariable || ''}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { multiSelectVariable: e.target.value })}
-                    className="text-xs"
-                    placeholder="выбранные_опции"
-                  />
-                  <div className="text-xs text-muted-foreground">
-                    Выбранные опции будут сохранены в эту переменную через запятую.
-                    <br />
-                    <span className="text-amber-600 dark:text-amber-400">⚠️ Убедитесь, что имя не совпадает с переменными из "✨ Сбор ответов"</span>
+                {/* Multiple Selection Settings */}
+                {selectedNode.data.allowMultipleSelection && (
+                  <div className="space-y-3 p-3 rounded-lg bg-blue-50/30 dark:bg-blue-950/20 border border-blue-200/30 dark:border-blue-800/30">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-muted-foreground">Переменная для сохранения</Label>
+                      <Input
+                        value={selectedNode.data.multiSelectVariable || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { multiSelectVariable: e.target.value })}
+                        className="text-xs"
+                        placeholder="выбранные_опции"
+                      />
+                      <div className="text-xs text-muted-foreground">
+                        Опции будут через запятую в переменную
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-
-              </div>
+                )}
+              </>
             )}
 
             {/* Buttons List */}
             {selectedNode.data.keyboardType !== 'none' && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label className="text-xs font-medium text-muted-foreground">
+              <div className="space-y-3">
+                <div className="border-t border-border/20 pt-4"></div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     Кнопки
                   </Label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 flex-wrap justify-end">
                     <UIButton
                       size="sm"
                       variant="ghost"
@@ -2566,10 +2577,10 @@ export function PropertiesPanel({
                   </div>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {/* Show Continue Button for Multiple Selection */}
                   {selectedNode.data.allowMultipleSelection && (
-                    <div className="bg-muted/50 rounded-lg p-3">
+                    <div className="bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
                         <Input
                           value={selectedNode.data.continueButtonText || 'Готово'}
