@@ -2368,13 +2368,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           }
           
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+          code += '    # Безопасное получение данных из callback_query\n';
+          code += '    try:\n';
+          code += '        user_id = callback_query.from_user.id\n';
+          code += '        callback_data = callback_query.data\n';
+          code += `        logging.info(f"🔵 Вызван callback handler: handle_callback_${safeFunctionName} для пользователя {user_id}")\n`;
+          code += '    except Exception as e:\n';
+          code += `        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_${safeFunctionName}: {e}")\n`;
+          code += '        return\n';
+          code += '    \n';
+          code += '    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)\n';
           code += '    try:\n';
           code += '        await callback_query.answer()\n';
           code += '    except Exception:\n';
           code += '        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)\n';
-          code += '    user_id = callback_query.from_user.id\n';
-          code += '    callback_data = callback_query.data\n';
-          code += `    logging.info(f"🔵 Вызван callback handler: handle_callback_${safeFunctionName} для пользователя {user_id}")\n`;
           code += '    \n';
           
           // Добавляем обработку кнопки "done_" для множественного выбора
@@ -4136,13 +4143,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           const shortNodeIdForDone = nodeId.slice(-10).replace(/^_+/, ''); // Такой же как в генерации кнопки
           code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startswith("${nodeId}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+          code += '    # Безопасное получение данных из callback_query\n';
+          code += '    try:\n';
+          code += '        user_id = callback_query.from_user.id\n';
+          code += '        callback_data = callback_query.data\n';
+          code += `        logging.info(f"🔵 Вызван callback handler: handle_callback_${safeFunctionName} для пользователя {user_id}")\n`;
+          code += '    except Exception as e:\n';
+          code += `        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_${safeFunctionName}: {e}")\n`;
+          code += '        return\n';
+          code += '    \n';
+          code += '    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)\n';
           code += '    try:\n';
           code += '        await callback_query.answer()\n';
           code += '    except Exception:\n';
           code += '        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)\n';
-          code += '    user_id = callback_query.from_user.id\n';
-          code += '    callback_data = callback_query.data\n';
-          code += `    logging.info(f"🔵 Вызван callback handler: handle_callback_${safeFunctionName} для пользователя {user_id}")\n`;
           code += '    \n';
           
           // Добавляем обработку кнопки "Готово" для множественного выбора
