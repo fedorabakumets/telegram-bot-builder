@@ -295,19 +295,6 @@ export function AdaptiveHeader({
         <Button 
           variant="outline"
           size="sm"
-          onClick={() => {
-            setShowTelegramAuth(true);
-            setIsMobileMenuOpen(false);
-          }}
-          className="flex items-center justify-center w-full"
-        >
-          <LogIn className="h-3.5 w-3.5 mr-2" />
-          Вход через Telegram
-        </Button>
-        
-        <Button 
-          variant="outline"
-          size="sm"
           asChild
           className="flex items-center justify-center"
         >
@@ -443,7 +430,7 @@ export function AdaptiveHeader({
       )}
       
       <div className={`${isVertical ? 'w-full flex justify-center' : ''}`}>
-        <TelegramLoginWidget botUsername="botcraft_studio_bot" />
+        <TelegramLoginWidget botInfo={botInfo} />
       </div>
       
       <Button 

@@ -1,8 +1,15 @@
 import React, { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
+interface BotInfo {
+  first_name: string;
+  username?: string;
+  description?: string;
+  short_description?: string;
+}
+
 interface TelegramLoginWidgetProps {
-  botUsername: string;
+  botInfo?: BotInfo | null;
   onAuth?: (user: any) => void;
 }
 
@@ -12,8 +19,11 @@ declare global {
   }
 }
 
-export function TelegramLoginWidget({ botUsername, onAuth }: TelegramLoginWidgetProps) {
+export function TelegramLoginWidget({ botInfo, onAuth }: TelegramLoginWidgetProps) {
   const { toast } = useToast();
+  
+  // Используем username бота или fallback
+  const botUsername = botInfo?.username || 'botcraft_studio_bot';
 
   useEffect(() => {
     // Определяем глобальную функцию обратного вызова

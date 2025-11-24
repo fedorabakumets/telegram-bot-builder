@@ -17,11 +17,17 @@ This application provides a **no-code visual Telegram bot builder** that enables
 Preferred communication style: Simple, everyday language. No-code platform for non-technical users.
 
 ## Recent Changes (Current Session)
+- **🐛 Fixed "LogIn is not defined" error** (adaptive-header.tsx + telegram-login-widget.tsx):
+  - Removed old TelegramAuth button from MobileActions that was using removed LogIn icon
+  - Added fallback bot username ('botcraft_studio_bot') to TelegramLoginWidget
+  - Widget now displays correctly even when botInfo.username is not available
+  - All LSP diagnostics cleared - app compiles cleanly
+  
 - **✨ Implemented Telegram Login Widget** (telegram-login-widget.tsx + routes.ts + adaptive-header.tsx):
   - Added official Telegram Login Widget - official authorization button from Telegram
   - User clicks button, signs in with their Telegram account, receives auth data
   - Simple authorization endpoint `/api/auth/telegram` that creates user session
-  - Replaces old Client API avторизация - now just standard login like other websites
+  - Replaces old Client API авторизация - now just standard login like other websites
   - Flow: Click Telegram button → User signs in with Telegram → Redirects back authenticated
   - No complex credentials needed - official Telegram widget handles everything
   
