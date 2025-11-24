@@ -1,5 +1,13 @@
 import { Node, Connection } from '@shared/schema';
 
+// Utility function to check if debug logging is enabled
+const isLoggingEnabled = (): boolean => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('botcraft-generator-logs') === 'true';
+  }
+  return false;
+};
+
 /**
  * Генерирует автоматические соединения для узлов с autoTransitionTo
  * @param nodes - Массив всех узлов
@@ -15,12 +23,12 @@ export function generateAutoTransitionConnections(
   
   const autoConnections: Connection[] = [];
 
-  console.log('🔍 Генерация автопереходов для', nodes.length, 'узлов');
+  if (isLoggingEnabled()) console.log('🔍 Генерация автопереходов для', nodes.length, 'узлов');
 
   for (const node of nodes) {
     // 1. Обрабатываем автопереходы (autoTransitionTo)
     if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
-      console.log(`📍 Узел ${node.id} имеет автопереход к ${node.data.autoTransitionTo}`);
+      if (isLoggingEnabled()) console.log(`📍 Узел ${node.id} имеет автопереход к ${node.data.autoTransitionTo}`);
       
       const targetNode = nodes.find(n => n.id === node.data.autoTransitionTo);
       
@@ -30,7 +38,7 @@ export function generateAutoTransitionConnections(
         const existingAuto = existingAutoConnections.find(c => c.id === autoConnectionId);
         
         if (existingAuto) {
-          console.log(`♻️ Переиспользуем существующий автопереход ${autoConnectionId}`);
+          if (isLoggingEnabled()) console.log(`♻️ Переиспользуем существующий автопереход ${autoConnectionId}`);
           autoConnections.push(existingAuto);
         } else {
           const hasManualConnection = manualConnections.some(
@@ -38,7 +46,7 @@ export function generateAutoTransitionConnections(
           );
           
           if (!hasManualConnection) {
-            console.log(`✨ Создаем новый автопереход ${autoConnectionId}`);
+            if (isLoggingEnabled()) console.log(`✨ Создаем новый автопереход ${autoConnectionId}`);
             autoConnections.push({
               id: autoConnectionId,
               source: node.id,
@@ -47,17 +55,17 @@ export function generateAutoTransitionConnections(
               isInterSheet: false,
             });
           } else {
-            console.log(`⚠️ Пропускаем автопереход ${autoConnectionId} - есть ручное соединение`);
+            if (isLoggingEnabled()) console.log(`⚠️ Пропускаем автопереход ${autoConnectionId} - есть ручное соединение`);
           }
         }
       } else {
-        console.log(`❌ Целевой узел ${node.data.autoTransitionTo} не найден`);
+        if (isLoggingEnabled()) console.log(`❌ Целевой узел ${node.data.autoTransitionTo} не найден`);
       }
     }
     
     // 2. Обрабатываем переходы после ввода (inputTargetNodeId)
     if (node.data.inputTargetNodeId) {
-      console.log(`📍 Узел ${node.id} имеет inputTargetNodeId: ${node.data.inputTargetNodeId}`);
+      if (isLoggingEnabled()) console.log(`📍 Узел ${node.id} имеет inputTargetNodeId: ${node.data.inputTargetNodeId}`);
       const targetId = node.data.inputTargetNodeId;
       const targetNode = nodes.find(n => n.id === targetId);
       
@@ -66,7 +74,7 @@ export function generateAutoTransitionConnections(
         const existingAuto = existingAutoConnections.find(c => c.id === autoConnectionId);
         
         if (existingAuto) {
-          console.log(`♻️ Переиспользуем существующий автопереход после ввода ${autoConnectionId}`);
+          if (isLoggingEnabled()) console.log(`♻️ Переиспользуем существующий автопереход после ввода ${autoConnectionId}`);
           autoConnections.push(existingAuto);
         } else {
           const hasManualConnection = manualConnections.some(
@@ -74,7 +82,7 @@ export function generateAutoTransitionConnections(
           );
           
           if (!hasManualConnection) {
-            console.log(`✨ Создаем новый автопереход после ввода ${autoConnectionId}`);
+            if (isLoggingEnabled()) console.log(`✨ Создаем новый автопереход после ввода ${autoConnectionId}`);
             autoConnections.push({
               id: autoConnectionId,
               source: node.id,
@@ -83,11 +91,11 @@ export function generateAutoTransitionConnections(
               isInterSheet: false,
             });
           } else {
-            console.log(`⚠️ Пропускаем автопереход после ввода ${autoConnectionId} - есть ручное соединение`);
+            if (isLoggingEnabled()) console.log(`⚠️ Пропускаем автопереход после ввода ${autoConnectionId} - есть ручное соединение`);
           }
         }
       } else {
-        console.log(`❌ Целевой узел ${targetId} для inputTargetNodeId не найден`);
+        if (isLoggingEnabled()) console.log(`❌ Целевой узел ${targetId} для inputTargetNodeId не найден`);
       }
     }
     
@@ -125,7 +133,7 @@ export function generateAutoTransitionConnections(
     }
   }
 
-  console.log(`📊 Итого соединений: ${manualConnections.length} ручных + ${autoConnections.length} автогенерированных`);
+  if (isLoggingEnabled()) console.log(`📊 Итого соединений: ${manualConnections.length} ручных + ${autoConnections.length} автогенерированных`);
   return [...manualConnections, ...autoConnections];
 }
 

@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotToken } from '@shared/schema';
-import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Camera, Upload, ExternalLink, Database, Zap } from 'lucide-react';
+import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Camera, Upload, ExternalLink, Database, Zap, Terminal } from 'lucide-react';
 
 interface BotControlProps {
   projectId: number;
@@ -795,6 +795,23 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   // Timer states for running bot
   const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState(0);
   
+  // Logger state - read from localStorage
+  const [generatorLogsEnabled, setGeneratorLogsEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('botcraft-generator-logs') === 'true';
+    }
+    return false;
+  });
+
+  const handleToggleGeneratorLogs = (enabled: boolean) => {
+    setGeneratorLogsEnabled(enabled);
+    localStorage.setItem('botcraft-generator-logs', String(enabled));
+    toast({
+      title: enabled ? 'Логи генератора включены' : 'Логи генератора отключены',
+      description: enabled ? 'Теперь вы видите логи генерации кода в консоли' : 'Логи генерации скрыты',
+    });
+  };
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -1345,6 +1362,29 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                       checked={isDatabaseEnabled}
                       onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
                       disabled={toggleDatabaseMutation.isPending}
+                      className="scale-100"
+                    />
+                  </div>
+
+                  {/* Generator Logs Toggle */}
+                  <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+                    generatorLogsEnabled
+                      ? 'bg-purple-50 dark:bg-purple-950 border-purple-500 dark:border-purple-600' 
+                      : 'bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600'
+                  }`} data-testid="generator-logs-toggle-container-bot-card">
+                    <Terminal className={`w-4 h-4 ${generatorLogsEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'}`} />
+                    <Label htmlFor="generator-logs-toggle" className={`text-sm font-bold cursor-pointer flex-1 ${
+                      generatorLogsEnabled
+                        ? 'text-purple-700 dark:text-purple-300' 
+                        : 'text-gray-700 dark:text-gray-300'
+                    }`}>
+                      📋 Логи генератора
+                    </Label>
+                    <Switch
+                      id="generator-logs-toggle"
+                      data-testid="switch-generator-logs-toggle"
+                      checked={generatorLogsEnabled}
+                      onCheckedChange={handleToggleGeneratorLogs}
                       className="scale-100"
                     />
                   </div>

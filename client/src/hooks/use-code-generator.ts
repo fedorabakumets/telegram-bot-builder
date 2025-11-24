@@ -7,6 +7,14 @@ export type CodeFormat = 'python' | 'json' | 'requirements' | 'readme' | 'docker
 
 type CodeGeneratorState = Record<CodeFormat, string>;
 
+// Utility function to check if debug logging is enabled
+const isLoggingEnabled = (): boolean => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('botcraft-generator-logs') === 'true';
+  }
+  return false;
+};
+
 export function useCodeGenerator(botData: BotData, projectName: string, groups: BotGroup[], userDatabaseEnabled: boolean = false, projectId: number | null = null) {
   const [codeContent, setCodeContent] = useState<CodeGeneratorState>({
     python: '',
@@ -47,7 +55,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
           return '';
       }
     } catch (error) {
-      console.error('Error generating content:', error);
+      if (isLoggingEnabled()) console.error('Error generating content:', error);
       return `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`;
     }
   }, [botData, projectName, groups, userDatabaseEnabled, projectId]);
@@ -63,7 +71,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
       prev.userDatabaseEnabled !== userDatabaseEnabled;
 
     if (dataChanged) {
-      console.log('🔄 useCodeGenerator: Данные изменились, сбрасываем весь кеш');
+      if (isLoggingEnabled()) console.log('🔄 useCodeGenerator: Данные изменились, сбрасываем весь кеш');
       setCodeContent({
         python: '',
         json: '',
@@ -85,20 +93,20 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
 
     // Если уже загружен, не генерируем снова
     if (loadedFormatsRef.current.has(selectedFormat) && codeContent[selectedFormat]) {
-      console.log('✅ useCodeGenerator: Контент уже загружен для', selectedFormat);
+      if (isLoggingEnabled()) console.log('✅ useCodeGenerator: Контент уже загружен для', selectedFormat);
       return;
     }
 
-    console.log('🔄 useCodeGenerator: Генерация контента для', selectedFormat);
+    if (isLoggingEnabled()) console.log('🔄 useCodeGenerator: Генерация контента для', selectedFormat);
     setIsLoading(true);
 
     try {
       const content = await generateContent(selectedFormat);
-      console.log('✅ useCodeGenerator: Контент загружен для', selectedFormat);
+      if (isLoggingEnabled()) console.log('✅ useCodeGenerator: Контент загружен для', selectedFormat);
       setCodeContent(prev => ({ ...prev, [selectedFormat]: content }));
       loadedFormatsRef.current.add(selectedFormat);
     } catch (error) {
-      console.error('❌ useCodeGenerator: Ошибка загрузки:', error);
+      if (isLoggingEnabled()) console.error('❌ useCodeGenerator: Ошибка загрузки:', error);
       setCodeContent(prev => ({
         ...prev,
         [selectedFormat]: `# Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`
