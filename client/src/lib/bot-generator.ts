@@ -5103,9 +5103,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    }\n';
               code += '    await bot.send_message(callback_query.from_user.id, text)\n';
             }
-          } else if (!shouldRedirect || !redirectTarget || redirectTarget === nodeId) {
-            // Handle regular message nodes - ТОЛЬКО если мы НЕ делаем переадресацию
-            console.log(`🔧 ГЕНЕРАТОР ИСПРАВЛЕНИЕ: Блок обычных сообщений для ${nodeId}, shouldRedirect=${shouldRedirect}, redirectTarget=${redirectTarget}`);
+          } else if ((!shouldRedirect || !redirectTarget || redirectTarget === nodeId) && !autoTransitionTarget) {
+            // Handle regular message nodes - ТОЛЬКО если мы НЕ делаем переадресацию И НЕ делаем автопереход
+            console.log(`🔧 ГЕНЕРАТОР ИСПРАВЛЕНИЕ: Блок обычных сообщений для ${nodeId}, shouldRedirect=${shouldRedirect}, redirectTarget=${redirectTarget}, autoTransitionTarget=${autoTransitionTarget}`);
             const targetText = targetNode.data.messageText || "Сообщение";
             const formattedTargetText = formatTextForPython(targetText);
             
