@@ -5,14 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CRITICAL: Disable all transitions during page load to prevent flashing */
+/* Disable transitions during page load to prevent flashing */
 :root:not(.transitions-enabled) * {
-  transition-duration: 0s !important;
-  animation-duration: 0s !important;
-  animation-delay: 0s !important;
-  transition-delay: 0s !important;
   transition: none !important;
-  animation: none !important;
 }
 
 :root {
@@ -260,7 +255,6 @@
 /* Enhanced resize handle cursor */
 [data-panel-resize-handle-enabled="true"] {
   cursor: col-resize;
-  transition: all 0.2s ease;
 }
 
 [data-panel-resize-handle-enabled="true"][data-panel-group-direction="vertical"] {
@@ -283,7 +277,6 @@
   position: absolute;
   inset: 0;
   background: transparent;
-  transition: background-color 0.15s ease;
   z-index: -1;
 }
 
@@ -293,25 +286,6 @@
 
 .dark [data-panel-resize-handle-enabled="true"]:hover::before {
   background: hsl(var(--primary) / 0.1);
-}
-
-[data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"]::before {
-  background: hsl(var(--primary) / 0.15);
-  animation: pulse-resize 0.6s ease-in-out infinite alternate;
-}
-
-.dark [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"]::before {
-  background: hsl(var(--primary) / 0.2);
-}
-
-/* Pulse animation for active resize handles */
-@keyframes pulse-resize {
-  from {
-    background: hsl(var(--primary) / 0.1);
-  }
-  to {
-    background: hsl(var(--primary) / 0.25);
-  }
 }
 
 /* Connection line animations */
