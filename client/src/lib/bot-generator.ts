@@ -174,10 +174,6 @@ function hasInputCollection(nodes: Node[]): boolean {
 function hasMediaNodes(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes.some(node => 
-    node.type === 'photo' || 
-    node.type === 'video' || 
-    node.type === 'audio' || 
-    node.type === 'document' ||
     node.type === 'animation'
   );
 }
@@ -2181,14 +2177,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += generateStartHandler(node, userDatabaseEnabled);
     } else if (node.type === "command") {
       code += generateCommandHandler(node, userDatabaseEnabled);
-    } else if (node.type === "photo") {
-      code += generatePhotoHandler(node);
-    } else if (node.type === "video") {
-      code += generateVideoHandler(node);
-    } else if (node.type === "audio") {
-      code += generateAudioHandler(node);
-    } else if (node.type === "document") {
-      code += generateDocumentHandler(node);
     } else if (node.type === "sticker") {
       code += generateStickerHandler(node);
     } else if (node.type === "voice") {
@@ -2798,409 +2786,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
             }
             // Handle different target node types
-            else if (targetNode.type === 'photo') {
-              const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📸 Фото";
-              const imageUrl = targetNode.data.imageUrl || "https://picsum.photos/800/600?random=1";
-              
-              code += `    # Отправляем фото для узла ${targetNode.id}\n`;
-              
-              if (caption.includes('\n')) {
-                code += `    caption = """${caption}"""\n`;
-              } else {
-                const escapedCaption = caption.replace(/"/g, '\\"');
-                code += `    caption = "${escapedCaption}"\n`;
-              }
-              
-              // Применяем универсальную замену переменных для подписи
-              code += '    \n';
-              code += generateUniversalVariableReplacement('    ');
-              code += '    caption = replace_variables_in_text(caption, user_vars)\n';
-              
-              // Добавляем поддержку условных сообщений для фото
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '    \n';
-                code += '    # Проверка условных сообщений для фото\n';
-                code += '    conditional_parse_mode = None\n';
-                code += '    conditional_keyboard = None\n';
-                code += '    user_record = await get_user_from_db(user_id)\n';
-                code += '    if not user_record:\n';
-                code += '        user_record = user_data.get(user_id, {})\n';
-                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-                code += '    \n';
-                
-                // Use conditional message if available, otherwise use default caption
-                code += '    # Используем условное сообщение как подпись если есть подходящее условие\n';
-                code += '    if "text" in locals():\n';
-                code += '        caption = text\n';
-                code += '    \n';
-                code += '    # Используем условную клавиатуру если есть\n';
-                code += '    conditional_keyboard_for_photo = conditional_keyboard\n';
-              }
-              
-              code += `    photo_url = "${imageUrl}"\n`;
-              code += '    photo_url = replace_variables_in_text(photo_url, user_vars)\n';
-              code += '    try:\n';
-              code += '        # Проверяем, является ли это локальным файлом\n';
-              code += '        if is_local_file(photo_url):\n';
-              code += '            # Отправляем локальный файл\n';
-              code += '            file_path = get_local_file_path(photo_url)\n';
-              code += '            if os.path.exists(file_path):\n';
-              code += '                photo_file = FSInputFile(file_path)\n';
-              code += '            else:\n';
-              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
-              code += '        else:\n';
-              code += '            # Используем URL для внешних файлов\n';
-              code += '            photo_file = photo_url\n';
-              code += '        \n';
-              
-              // Проверяем условную клавиатуру или обычную
-              code += '        # Определяем клавиатуру для фото\n';
-              code += '        keyboard = None\n';
-              
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '        if conditional_keyboard_for_photo is not None:\n';
-                code += '            keyboard = conditional_keyboard_for_photo\n';
-                code += '        elif '
-              } else {
-                code += '        if ';
-              }
-              
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-                code += 'True:  # У узла есть обычные кнопки\n';
-                code += '            builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                  if (btn.action === "url") {
-                    code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                  } else if (btn.action === 'goto') {
-                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                  } else if (btn.action === 'command') {
-                    // Для кнопок команд создаем специальную callback_data
-                    const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
-                    code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                  }
-                });
-                code += '            builder.adjust(2)  # Используем 2 колонки для консистентности\n';
-                code += '            keyboard = builder.as_markup()\n';
-              } else {
-                code += 'False:  # Нет кнопок\n';
-                code += '            pass\n';
-              }
-              
-              code += '        \n';
-              code += '        if keyboard is not None:\n';
-              code += '            await bot.send_photo(callback_query.from_user.id, photo_file, caption=caption, reply_markup=keyboard)\n';
-              code += '        else:\n';
-              code += '            await bot.send_photo(callback_query.from_user.id, photo_file, caption=caption)\n';
-              
-              code += '    except Exception as e:\n';
-              code += '        logging.error(f"Ошибка отправки фото: {e}")\n';
-              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить фото\\n{caption}")\n';
-              
-              // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
-              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-              if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-                const autoTargetId = targetNode.data.autoTransitionTo;
-                const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
-                code += '    \n';
-                code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
-                code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
-                code += '        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
-                code += '    else:\n';
-                code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
-                code += `        return\n`;
-              }
-              
-            } else if (targetNode.type === 'video') {
-              const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎥 Видео";
-              const videoUrl = targetNode.data.videoUrl || "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4";
-              
-              code += `    # Отправляем видео для узла ${targetNode.id}\n`;
-              
-              if (caption.includes('\n')) {
-                code += `    caption = """${caption}"""\n`;
-              } else {
-                const escapedCaption = caption.replace(/"/g, '\\"');
-                code += `    caption = "${escapedCaption}"\n`;
-              }
-              
-              // Применяем универсальную замену переменных для подписи
-              code += '    \n';
-              code += generateUniversalVariableReplacement('    ');
-              code += '    caption = replace_variables_in_text(caption, user_vars)\n';
-              
-              // Добавляем поддержку условных сообщений для видео
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '    \n';
-                code += '    # Проверка условных сообщений для видео\n';
-                code += '    conditional_parse_mode = None\n';
-                code += '    conditional_keyboard = None\n';
-                code += '    user_record = await get_user_from_db(user_id)\n';
-                code += '    if not user_record:\n';
-                code += '        user_record = user_data.get(user_id, {})\n';
-                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-                code += '    \n';
-                
-                // Use conditional message if available, otherwise use default caption
-                code += '    # Используем условное сообщение как подпись если есть подходящее условие\n';
-                code += '    if "text" in locals():\n';
-                code += '        caption = text\n';
-                code += '    \n';
-                code += '    # Используем условную клавиатуру если есть\n';
-                code += '    conditional_keyboard_for_video = conditional_keyboard\n';
-              }
-              
-              code += `    video_url = "${videoUrl}"\n`;
-              code += '    video_url = replace_variables_in_text(video_url, user_vars)\n';
-              code += '    try:\n';
-              code += '        # Проверяем, является ли это локальным файлом\n';
-              code += '        if is_local_file(video_url):\n';
-              code += '            # Отправляем локальный файл\n';
-              code += '            file_path = get_local_file_path(video_url)\n';
-              code += '            if os.path.exists(file_path):\n';
-              code += '                video_file = FSInputFile(file_path)\n';
-              code += '            else:\n';
-              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
-              code += '        else:\n';
-              code += '            # Используем URL для внешних файлов\n';
-              code += '            video_file = video_url\n';
-              code += '        \n';
-              
-              // Проверяем условную клавиатуру или обычную
-              code += '        # Определяем клавиатуру для видео\n';
-              code += '        keyboard = None\n';
-              
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '        if conditional_keyboard_for_video is not None:\n';
-                code += '            keyboard = conditional_keyboard_for_video\n';
-                code += '        elif '
-              } else {
-                code += '        if ';
-              }
-              
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-                code += 'True:  # У узла есть обычные кнопки\n';
-                code += '            builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                  if (btn.action === "url") {
-                    code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                  } else if (btn.action === 'goto') {
-                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                  } else if (btn.action === 'command') {
-                    // Для кнопок команд создаем специальную callback_data
-                    const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
-                    code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                  }
-                });
-                code += '            builder.adjust(2)  # Используем 2 колонки для консистентности\n';
-                code += '            keyboard = builder.as_markup()\n';
-              } else {
-                code += 'False:  # Нет кнопок\n';
-                code += '            pass\n';
-              }
-              
-              code += '        \n';
-              code += '        if keyboard is not None:\n';
-              code += '            await bot.send_video(callback_query.from_user.id, video_file, caption=caption, reply_markup=keyboard)\n';
-              code += '        else:\n';
-              code += '            await bot.send_video(callback_query.from_user.id, video_file, caption=caption)\n';
-              
-              code += '    except Exception as e:\n';
-              code += '        logging.error(f"Ошибка отправки видео: {e}")\n';
-              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить видео\\n{caption}")\n';
-              
-              // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
-              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-              if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-                const autoTargetId = targetNode.data.autoTransitionTo;
-                const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
-                code += '    \n';
-                code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
-                code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
-                code += '        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
-                code += '    else:\n';
-                code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
-                code += `        return\n`;
-              }
-              
-            } else if (targetNode.type === 'audio') {
-              const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎵 Аудио";
-              const audioUrl = targetNode.data.audioUrl || "https://www.soundjay.com/misc/beep-07a.wav";
-              
-              code += `    # Отправляем аудио для узла ${targetNode.id}\n`;
-              
-              if (caption.includes('\n')) {
-                code += `    caption = """${caption}"""\n`;
-              } else {
-                const escapedCaption = caption.replace(/"/g, '\\"');
-                code += `    caption = "${escapedCaption}"\n`;
-              }
-              
-              // Применяем универсальную замену переменных для подписи
-              code += '    \n';
-              code += generateUniversalVariableReplacement('    ');
-              code += '    caption = replace_variables_in_text(caption, user_vars)\n';
-              
-              // Добавляем поддержку условных сообщений для аудио
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '    \n';
-                code += '    # Проверка условных сообщений для аудио\n';
-                code += '    conditional_parse_mode = None\n';
-                code += '    conditional_keyboard = None\n';
-                code += '    user_record = await get_user_from_db(user_id)\n';
-                code += '    if not user_record:\n';
-                code += '        user_record = user_data.get(user_id, {})\n';
-                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-                code += '    \n';
-                
-                // Use conditional message if available, otherwise use default caption
-                code += '    # Используем условное сообщение как подпись если есть подходящее условие\n';
-                code += '    if "text" in locals():\n';
-                code += '        caption = text\n';
-                code += '    \n';
-                code += '    # Используем условную клавиатуру если есть\n';
-                code += '    conditional_keyboard_for_audio = conditional_keyboard\n';
-              }
-              
-              code += `    audio_url = "${audioUrl}"\n`;
-              code += '    audio_url = replace_variables_in_text(audio_url, user_vars)\n';
-              code += '    try:\n';
-              code += '        # Проверяем, является ли это локальным файлом\n';
-              code += '        if is_local_file(audio_url):\n';
-              code += '            # Отправляем локальный файл\n';
-              code += '            file_path = get_local_file_path(audio_url)\n';
-              code += '            if os.path.exists(file_path):\n';
-              code += '                audio_file = FSInputFile(file_path)\n';
-              code += '            else:\n';
-              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
-              code += '        else:\n';
-              code += '            # Используем URL для внешних файлов\n';
-              code += '            audio_file = audio_url\n';
-              code += '        \n';
-              
-              // Проверяем условную клавиатуру или обычную
-              code += '        # Определяем клавиатуру для аудио\n';
-              code += '        keyboard = None\n';
-              
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '        if conditional_keyboard_for_audio is not None:\n';
-                code += '            keyboard = conditional_keyboard_for_audio\n';
-                code += '        elif '
-              } else {
-                code += '        if ';
-              }
-              
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-                code += 'True:  # У узла есть обычные кнопки\n';
-                code += '            builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                  if (btn.action === "url") {
-                    code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                  } else if (btn.action === 'goto') {
-                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                  } else if (btn.action === 'command' && btn.target) {
-                    // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд для audio nodes
-                    const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                    code += `            # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
-                    code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                  }
-                });
-                code += '            keyboard = builder.as_markup()\n';
-              } else {
-                code += 'False:  # Нет кнопок\n';
-                code += '            pass\n';
-              }
-              
-              code += '        \n';
-              code += '        if keyboard is not None:\n';
-              code += '            await bot.send_audio(callback_query.from_user.id, audio_file, caption=caption, reply_markup=keyboard)\n';
-              code += '        else:\n';
-              code += '            await bot.send_audio(callback_query.from_user.id, audio_file, caption=caption)\n';
-              
-              code += '    except Exception as e:\n';
-              code += '        logging.error(f"Ошибка отправки аудио: {e}")\n';
-              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить аудио\\n{caption}")\n';
-              
-              // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
-              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-              if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-                const autoTargetId = targetNode.data.autoTransitionTo;
-                const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
-                code += '    \n';
-                code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
-                code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
-                code += '        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
-                code += '    else:\n';
-                code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
-                code += `        return\n`;
-              }
-              
-            } else if (targetNode.type === 'document') {
-              const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📄 Документ";
-              const documentUrl = targetNode.data.documentUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
-              
-              if (caption.includes('\n')) {
-                code += `    caption = """${caption}"""\n`;
-              } else {
-                const escapedCaption = caption.replace(/"/g, '\\"');
-                code += `    caption = "${escapedCaption}"\n`;
-              }
-              
-              code += `    document_url = "${documentUrl}"\n`;
-              code += '    document_url = replace_variables_in_text(document_url, user_vars)\n';
-              const documentName = targetNode.data.documentName || "document.pdf";
-              code += `    document_name = "${documentName}"\n`;
-              code += '    try:\n';
-              code += '        # Проверяем, является ли это локальным файлом\n';
-              code += '        if is_local_file(document_url):\n';
-              code += '            # Отправляем локальный файл\n';
-              code += '            file_path = get_local_file_path(document_url)\n';
-              code += '            if os.path.exists(file_path):\n';
-              code += '                document_file = FSInputFile(file_path, filename=document_name)\n';
-              code += '            else:\n';
-              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
-              code += '        else:\n';
-              code += '            # Используем URL для внешних файлов\n';
-              code += '            document_file = URLInputFile(document_url, filename=document_name)\n';
-              code += '        \n';
-              
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-                code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                  if (btn.action === "url") {
-                    code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                  } else if (btn.action === 'goto') {
-                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                  } else if (btn.action === 'command' && btn.target) {
-                    // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд для document nodes
-                    const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                    code += `        # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
-                    code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                  }
-                });
-                code += '        keyboard = builder.as_markup()\n';
-                code += '        await bot.send_document(callback_query.from_user.id, document_file, caption=caption, reply_markup=keyboard)\n';
-              } else {
-                code += '        await bot.send_document(callback_query.from_user.id, document_file, caption=caption)\n';
-              }
-              
-              code += '    except Exception as e:\n';
-              code += '        logging.error(f"Ошибка отправки документа: {e}")\n';
-              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить документ\\n{caption}")\n';
-              
-            } else if (targetNode.type === 'sticker') {
+            else if (targetNode.type === 'sticker') {
               const stickerUrl = targetNode.data.stickerUrl || "CAACAgIAAxkBAAICGGXm2KvQAAG2X8cxTmZHJkRnYwYlAAJGAANWnb0KmgiEKEZDKVQeBA";
               
               code += `    sticker_url = "${stickerUrl}"\n`;
@@ -3762,44 +3348,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
             } else {
-              // Universal handler for all other node types (message, photo, document, etc.)
+              // Universal handler for message and other text-based nodes
               code += `    # Обрабатываем узел типа ${targetNode.type}: ${targetNode.id}\n`;
               
-              if (targetNode.type === 'photo') {
-                // Handle photo nodes
-                const photoUrl = targetNode.data.photoUrl || targetNode.data.imageUrl || "";
-                const caption = targetNode.data.caption || targetNode.data.messageText || "";
-                const cleanedCaption = stripHtmlTags(caption);
-                const formattedCaption = formatTextForPython(cleanedCaption);
-                const parseMode = getParseMode(targetNode.data.formatMode);
-                
-                code += `    # Отправляем фото\n`;
-                code += `    photo_url = "${photoUrl}"\n`;
-                code += `    caption = ${formattedCaption}\n`;
-                
-                // Применяем универсальную замену переменных в подписи
-                code += generateUniversalVariableReplacement('    ');
-                code += '    photo_url = replace_variables_in_text(photo_url, user_vars)\n';
-                
-                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                  code += '    # Создаем inline клавиатуру для фото\n';
-                  code += '    builder = InlineKeyboardBuilder()\n';
-                  targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                    if (btn.action === "url") {
-                      code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                    } else if (btn.action === 'goto') {
-                      const baseCallbackData = btn.target || btn.id || 'no_action';
-                      const callbackData = `${baseCallbackData}_btn_${index}`;
-                      code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                    }
-                  });
-                  code += '    keyboard = builder.as_markup()\n';
-                  code += `    await bot.send_photo(callback_query.from_user.id, photo=photo_url, caption=caption, reply_markup=keyboard${parseMode})\n`;
-                } else {
-                  code += `    await bot.send_photo(callback_query.from_user.id, photo=photo_url, caption=caption${parseMode})\n`;
-                }
-                
-              } else {
+              if (targetNode.type === 'message') {
                 // Handle message and other text-based nodes
                 const targetText = targetNode.data.messageText || "Сообщение";
                 const cleanedText = stripHtmlTags(targetText);
@@ -4974,7 +4526,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '            fake_message.date = callback_query.message.date\n';
                   code += '            fake_message.answer = callback_query.message.answer\n';
                   code += `            await ${handlerName}(fake_message)\n`;
-                } else if (navTargetNode.type === 'keyboard' && (navTargetNode.data.enableTextInput || 
+                } else if (navTargetNode.type === 'message' && (navTargetNode.data.enableTextInput || 
                                                                   navTargetNode.data.enablePhotoInput || 
                                                                   navTargetNode.data.enableVideoInput || 
                                                                   navTargetNode.data.enableAudioInput || 
@@ -7068,8 +6620,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       // Найдем целевой узел для навигации
       const targetNode = nodes.find(n => n.id === node.data.inputTargetNodeId);
       if (targetNode) {
-        if (targetNode.type === 'keyboard' || targetNode.type === 'message') {
-          // Для keyboard и message узлов отправляем сообщение напрямую
+        if (targetNode.type === 'message') {
+          // Для message узлов отправляем сообщение напрямую
           const messageText = targetNode.data.messageText || 'Выберите действие';
           const formattedText = formatTextForPython(messageText);
           code += `                # Отправляем сообщение для узла ${targetNode.id}\n`;
@@ -7230,7 +6782,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем навигацию к целевому узлу
   nodes.forEach((targetNode) => {
     code += `            if input_target_node_id == "${targetNode.id}":\n`;
-    if (targetNode.type === 'keyboard' || targetNode.type === 'message') {
+    if (targetNode.type === 'message') {
       const messageText = targetNode.data.messageText || 'Сообщение';
       const formattedText = formatTextForPython(messageText);
       code += `                # Переход к узлу ${targetNode.id}\n`;
@@ -7817,32 +7369,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       const condition = index === 0 ? 'if' : 'elif';
       code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
       
-      if (targetNode.type === 'keyboard') {
-        // Обработка узлов клавиатуры
+      if (targetNode.type === 'message' && targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        // Обработка узлов сообщений с inline клавиатурой
         const messageText = targetNode.data.messageText || 'Сообщение';
         const formattedText = formatTextForPython(messageText);
         
-        if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-          code += `                text = ${formattedText}\n`;
-          code += '                builder = InlineKeyboardBuilder()\n';
-          targetNode.data.buttons.forEach((button: Button, buttonIndex: number) => {
-            if (button.action === "url") {
-              code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-            } else if (button.action === 'goto') {
-              const callbackData = button.target || button.id || 'no_action';
-              code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-            } else if (button.action === 'command') {
-              const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-              code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
-            } else {
-              const callbackData = button.target || button.id || 'no_action';
-              code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-            }
-          });
-          code += '                keyboard = builder.as_markup()\n';
-          code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
-        } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-          code += `                text = ${formattedText}\n`;
+        code += `                text = ${formattedText}\n`;
+        code += '                builder = InlineKeyboardBuilder()\n';
+        targetNode.data.buttons.forEach((button: Button, buttonIndex: number) => {
+          if (button.action === "url") {
+            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+          } else if (button.action === 'goto') {
+            const callbackData = button.target || button.id || 'no_action';
+            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+          } else if (button.action === 'command') {
+            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+          } else {
+            const callbackData = button.target || button.id || 'no_action';
+            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+          }
+        });
+        code += '                keyboard = builder.as_markup()\n';
+        code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
+      } else if (targetNode.type === 'message' && targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        
+        code += `                text = ${formattedText}\n`;
           code += '                builder = ReplyKeyboardBuilder()\n';
           targetNode.data.buttons.forEach((button: Button) => {
             if (button.action === "contact" && button.requestContact) {
@@ -8476,7 +8030,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           console.log(`🔧 ГЕНЕРАТОР: Тип целевого узла: ${targetNode.type}`);
           code += `            # Переход к узлу ${targetNode.id}\n`;
           code += `            logging.info(f"🔄 Переходим к узлу ${targetNode.id} (тип: ${targetNode.type})")\n`;
-          if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
+          if (targetNode.type === 'message') {
             console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик, отправляем сообщение`);
             const messageText = targetNode.data.messageText || "Продолжение...";
             const formattedText = formatTextForPython(messageText);
@@ -8533,7 +8087,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           if (targetNode) {
             console.log(`🔧 ГЕНЕРАТОР: Найден целевой узел ${targetNode.id} через соединение`);
             code += `            # Переход к узлу ${targetNode.id} через соединение\n`;
-            if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
+            if (targetNode.type === 'message') {
               console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик через соединение`);
               const messageText = targetNode.data.messageText || "Продолжение...";
               const formattedText = formatTextForPython(messageText);
@@ -8832,7 +8386,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         // Пользователь должен сам выбрать продолжение
         
         // Отправляем сообщение для следующего узла с ожиданием пользовательского ввода
-        if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
+        if (targetNode.type === 'message') {
           // Показываем сообщение следующего узла
           const messageText = targetNode.data.messageText || "Выберите опции:";
           const formattedText = formatTextForPython(messageText);
@@ -9001,7 +8555,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
       if (targetNode) {
         code += `            # Переход к следующему узлу\n`;
-        if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
+        if (targetNode.type === 'message') {
           console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик в reply mode`);
           const messageText = targetNode.data.messageText || "Продолжение...";
           const formattedText = formatTextForPython(messageText);
@@ -9418,376 +8972,8 @@ function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): strin
 }
 
 // generateMessageHandler removed - message nodes are handled via callback handlers only
-
-function generatePhotoHandler(node: Node): string {
-  let code = `\n# Обработчик фото для узла ${node.id}\n`;
-  
-  // Если у узла есть команда, добавляем её как триггер
-  if (node.data.command) {
-    const command = node.data.command.replace('/', '');
-    const functionName = `photo_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-    
-    code += `@dp.message(Command("${command}"))\n`;
-    code += `async def ${functionName}(message: types.Message):\n`;
-    
-    // Добавляем логирование
-    code += `    logging.info(f"Команда фото ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
-    
-    // Добавляем проверки безопасности
-    if (node.data.isPrivateOnly) {
-      code += '    if not await is_private_chat(message):\n';
-      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-      code += '        return\n';
-    }
-
-    if (node.data.adminOnly) {
-      code += '    if not await is_admin(message.from_user.id):\n';
-      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
-      code += '        return\n';
-    }
-
-    const imageUrl = node.data.imageUrl || "https://via.placeholder.com/400x300?text=Photo";
-    const caption = node.data.messageText || "📸 Фото";
-    
-    const formattedCaption = formatTextForPython(caption);
-    code += `    caption = ${formattedCaption}\n`;
-    
-    // Добавляем замену переменных в подписи к фото
-    code += '    \n';
-    code += generateUniversalVariableReplacement('    ');
-    code += '    # Обновляем caption с заменёнными переменными\n';
-    code += '    caption = text\n';
-    code += '    \n';
-    
-    code += `    photo_url = "${imageUrl}"\n`;
-    code += '    photo_url = replace_variables_in_text(photo_url, user_vars)\n';
-    code += '    \n';
-    code += '    try:\n';
-    code += '        # Проверяем, является ли это локальным файлом\n';
-    code += '        if is_local_file(photo_url):\n';
-    code += '            # Отправляем локальный файл\n';
-    code += '            file_path = get_local_file_path(photo_url)\n';
-    code += '            if os.path.exists(file_path):\n';
-    code += '                photo_file = FSInputFile(file_path)\n';
-    code += '            else:\n';
-    code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
-    code += '        else:\n';
-    code += '            # Используем URL для внешних файлов\n';
-    code += '            photo_file = photo_url\n';
-    code += '        \n';
-    
-    // Обрабатываем клавиатуру для фото
-    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-      // Используем универсальную функцию для создания inline клавиатуры
-      code += generateInlineKeyboardCode(node.data.buttons, '        ', node.id, node.data);
-      code += '        # Отправляем фото с подписью и inline кнопками\n';
-      code += '        await message.answer_photo(photo_file, caption=caption, reply_markup=keyboard)\n';
-    } else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
-      code += '        # Создаем reply клавиатуру\n';
-      code += '        builder = ReplyKeyboardBuilder()\n';
-      node.data.buttons.forEach(button => {
-        if (button.action === "contact" && button.requestContact) {
-          code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-        } else if (button.action === "location" && button.requestLocation) {
-          code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
-        } else {
-          code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
-        }
-      });
-      const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
-      const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
-      code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-      code += '        # Отправляем фото с подписью и reply клавиатурой\n';
-      code += '        await message.answer_photo(photo_file, caption=caption, reply_markup=keyboard)\n';
-    } else {
-      code += '        # Отправляем фото только с подписью\n';
-      code += '        await message.answer_photo(photo_file, caption=caption)\n';
-    }
-    
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"Ошибка отправки фото: {e}")\n';
-    code += '        await message.answer(f"❌ Не удалось загрузить фото\\n{caption}")\n';
-  }
-  
-  return code;
-}
-
-function generateVideoHandler(node: Node): string {
-  let code = `\n# Обработчик видео для узла ${node.id}\n`;
-  
-  if (node.data.command) {
-    const command = node.data.command.replace('/', '');
-    const functionName = `video_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-    
-    code += `@dp.message(Command("${command}"))\n`;
-    code += `async def ${functionName}(message: types.Message):\n`;
-    
-    code += `    logging.info(f"Команда видео ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
-    
-    if (node.data.isPrivateOnly) {
-      code += '    if not await is_private_chat(message):\n';
-      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-      code += '        return\n';
-    }
-
-    if (node.data.adminOnly) {
-      code += '    if not await is_admin(message.from_user.id):\n';
-      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
-      code += '        return\n';
-    }
-
-    const videoUrl = node.data.videoUrl || "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4";
-    const caption = node.data.mediaCaption || node.data.messageText || "🎥 Видео";
-    const duration = node.data.duration || 0;
-    const fileSize = node.data.fileSize || 0;
-    
-    if (caption.includes('\n')) {
-      code += `    caption = """${caption}"""\n`;
-    } else {
-      const escapedCaption = caption.replace(/"/g, '\\"');
-      code += `    caption = "${escapedCaption}"\n`;
-    }
-    
-    code += `    video_url = "${videoUrl}"\n`;
-    
-    // Добавляем замену переменных для видео URL
-    code += '    \n';
-    code += generateUniversalVariableReplacement('    ');
-    code += '    video_url = replace_variables_in_text(video_url, user_vars)\n';
-    
-    if (duration > 0) code += `    duration = ${duration}\n`;
-    if (fileSize > 0) code += `    file_size = ${fileSize * 1024 * 1024}\n`;  // Convert MB to bytes
-    code += '    \n';
-    code += '    try:\n';
-    code += '        # Проверяем, является ли это локальным файлом\n';
-    code += '        if is_local_file(video_url):\n';
-    code += '            # Отправляем локальный файл\n';
-    code += '            file_path = get_local_file_path(video_url)\n';
-    code += '            if os.path.exists(file_path):\n';
-    code += '                video_file = FSInputFile(file_path)\n';
-    code += '            else:\n';
-    code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
-    code += '        else:\n';
-    code += '            # Используем URL для внешних файлов\n';
-    code += '            video_file = video_url\n';
-    code += '        \n';
-    
-    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-      // Используем универсальную функцию для создания inline клавиатуры
-      code += generateInlineKeyboardCode(node.data.buttons, '        ', node.id, node.data);
-      code += '        await message.answer_video(\n';
-      code += '            video_file,\n';
-      code += '            caption=caption';
-      if (duration > 0) code += ',\n            duration=duration';
-      code += ',\n            reply_markup=keyboard\n';
-      code += '        )\n';
-    } else {
-      code += '        await message.answer_video(\n';
-      code += '            video_file,\n';
-      code += '            caption=caption';
-      if (duration > 0) code += ',\n            duration=duration';
-      code += '\n        )\n';
-    }
-    
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"Ошибка отправки видео: {e}")\n';
-    code += '        await message.answer(f"❌ Не удалось загрузить видео\\n{caption}")\n';
-  }
-  
-  return code;
-}
-
-function generateAudioHandler(node: Node): string {
-  let code = `\n# Обработчик аудио для узла ${node.id}\n`;
-  
-  if (node.data.command) {
-    const command = node.data.command.replace('/', '');
-    const functionName = `audio_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-    
-    code += `@dp.message(Command("${command}"))\n`;
-    code += `async def ${functionName}(message: types.Message):\n`;
-    
-    code += `    logging.info(f"Команда аудио ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
-    
-    if (node.data.isPrivateOnly) {
-      code += '    if not await is_private_chat(message):\n';
-      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-      code += '        return\n';
-    }
-
-    if (node.data.adminOnly) {
-      code += '    if not await is_admin(message.from_user.id):\n';
-      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
-      code += '        return\n';
-    }
-
-    const audioUrl = node.data.audioUrl || "https://www.soundjay.com/misc/beep-07a.wav";
-    const caption = node.data.mediaCaption || node.data.messageText || "🎵 Аудио";
-    const duration = node.data.duration || 0;
-    const performer = node.data.performer || "";
-    const title = node.data.title || "";
-    
-    if (caption.includes('\n')) {
-      code += `    caption = """${caption}"""\n`;
-    } else {
-      const escapedCaption = caption.replace(/"/g, '\\"');
-      code += `    caption = "${escapedCaption}"\n`;
-    }
-    
-    code += `    audio_url = "${audioUrl}"\n`;
-    
-    // Добавляем замену переменных для аудио URL
-    code += '    \n';
-    code += generateUniversalVariableReplacement('    ');
-    code += '    audio_url = replace_variables_in_text(audio_url, user_vars)\n';
-    
-    if (duration > 0) code += `    duration = ${duration}\n`;
-    if (performer) code += `    performer = "${performer}"\n`;
-    if (title) code += `    title = "${title}"\n`;
-    code += '    \n';
-    code += '    try:\n';
-    code += '        # Проверяем, является ли это локальным файлом\n';
-    code += '        if is_local_file(audio_url):\n';
-    code += '            # Отправляем локальный файл\n';
-    code += '            file_path = get_local_file_path(audio_url)\n';
-    code += '            if os.path.exists(file_path):\n';
-    code += '                audio_file = FSInputFile(file_path)\n';
-    code += '            else:\n';
-    code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
-    code += '        else:\n';
-    code += '            # Используем URL для внешних файлов\n';
-    code += '            audio_file = audio_url\n';
-    code += '        \n';
-    
-    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-      code += '        builder = InlineKeyboardBuilder()\n';
-      node.data.buttons.forEach(button => {
-        if (button.action === "url") {
-          code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-        } else if (button.action === 'goto') {
-          const callbackData = button.target || button.id || 'no_action';
-          code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-        }
-      });
-      code += '        keyboard = builder.as_markup()\n';
-      code += '        await message.answer_audio(\n';
-      code += '            audio_file,\n';
-      code += '            caption=caption';
-      if (duration > 0) code += ',\n            duration=duration';
-      if (performer) code += ',\n            performer=performer';
-      if (title) code += ',\n            title=title';
-      code += ',\n            reply_markup=keyboard\n';
-      code += '        )\n';
-    } else {
-      code += '        await message.answer_audio(\n';
-      code += '            audio_file,\n';
-      code += '            caption=caption';
-      if (duration > 0) code += ',\n            duration=duration';
-      if (performer) code += ',\n            performer=performer';
-      if (title) code += ',\n            title=title';
-      code += '\n        )\n';
-    }
-    
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"Ошибка отправки аудио: {e}")\n';
-    code += '        await message.answer(f"❌ Не удалось загрузить аудио\\n{caption}")\n';
-  }
-  
-  return code;
-}
-
-function generateDocumentHandler(node: Node): string {
-  let code = `\n# Обработчик документа для узла ${node.id}\n`;
-  
-  if (node.data.command) {
-    const command = node.data.command.replace('/', '');
-    const functionName = `document_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-    
-    code += `@dp.message(Command("${command}"))\n`;
-    code += `async def ${functionName}(message: types.Message):\n`;
-    
-    code += `    logging.info(f"Команда документа ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
-    
-    if (node.data.isPrivateOnly) {
-      code += '    if not await is_private_chat(message):\n';
-      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-      code += '        return\n';
-    }
-
-    if (node.data.adminOnly) {
-      code += '    if not await is_admin(message.from_user.id):\n';
-      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
-      code += '        return\n';
-    }
-
-    const documentUrl = node.data.documentUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
-    const documentName = node.data.documentName || "document.pdf";
-    const caption = node.data.mediaCaption || node.data.messageText || "📄 Документ";
-    const fileSize = node.data.fileSize || 0;
-    const mimeType = node.data.mimeType || "";
-    
-    if (caption.includes('\n')) {
-      code += `    caption = """${caption}"""\n`;
-    } else {
-      const escapedCaption = caption.replace(/"/g, '\\"');
-      code += `    caption = "${escapedCaption}"\n`;
-    }
-    
-    code += `    document_url = "${documentUrl}"\n`;
-    
-    // Добавляем замену переменных для document URL
-    code += '    \n';
-    code += generateUniversalVariableReplacement('    ');
-    code += '    document_url = replace_variables_in_text(document_url, user_vars)\n';
-    
-    code += `    document_name = "${documentName}"\n`;
-    if (fileSize > 0) code += `    file_size = ${fileSize * 1024 * 1024}\n`;  // Convert MB to bytes
-    if (mimeType) code += `    mime_type = "${mimeType}"\n`;
-    code += '    \n';
-    code += '    try:\n';
-    code += '        # Проверяем, является ли это локальным файлом\n';
-    code += '        if is_local_file(document_url):\n';
-    code += '            # Отправляем локальный файл\n';
-    code += '            file_path = get_local_file_path(document_url)\n';
-    code += '            if os.path.exists(file_path):\n';
-    code += '                document_file = FSInputFile(file_path, filename=document_name)\n';
-    code += '            else:\n';
-    code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
-    code += '        else:\n';
-    code += '            # Используем URL для внешних файлов\n';
-    code += '            document_file = URLInputFile(document_url, filename=document_name)\n';
-    code += '        \n';
-    
-    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-      code += '        builder = InlineKeyboardBuilder()\n';
-      node.data.buttons.forEach(button => {
-        if (button.action === "url") {
-          code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-        } else if (button.action === 'goto') {
-          const callbackData = button.target || button.id || 'no_action';
-          code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-        }
-      });
-      code += '        keyboard = builder.as_markup()\n';
-      code += '        await message.answer_document(\n';
-      code += '            document_file,\n';
-      code += '            caption=caption,\n';
-      code += '            reply_markup=keyboard\n';
-      code += '        )\n';
-    } else {
-      code += '        await message.answer_document(\n';
-      code += '            document_file,\n';
-      code += '            caption=caption\n';
-      code += '        )\n';
-    }
-    
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"Ошибка отправки документа: {e}")\n';
-    code += '        await message.answer(f"❌ Не удалось загрузить документ\\n{caption}")\n';
-  }
-  
-  return code;
-}
+// generatePhotoHandler, generateVideoHandler, generateAudioHandler, generateDocumentHandler removed
+// Media functionality is now handled as properties within message nodes
 
 function generateStickerHandler(node: Node): string {
   let code = `\n# Обработчик стикера для узла ${node.id}\n`;
@@ -13015,7 +12201,6 @@ export function generateReadme(botData: BotData, botName: string): string {
   readme += '- **Всего узлов**: ' + nodes.length + '\n';
   readme += '- **Команд**: ' + commandNodes.length + '\n';
   readme += '- **Сообщений**: ' + nodes.filter(n => n.type === 'message').length + '\n';
-  readme += '- **Фото**: ' + nodes.filter(n => n.type === 'photo').length + '\n';
   readme += '- **Кнопок**: ' + (nodes.reduce((sum: number, node: any) => sum + (node.data?.buttons?.length || 0), 0) as number) + '\n\n';
   
   readme += '### Безопасность\n\n';
