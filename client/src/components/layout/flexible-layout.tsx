@@ -411,8 +411,10 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 </ResizablePanel>
                 <ResizableHandle 
                   withHandle 
-                  className="bg-transparent hover:bg-blue-500/20 dark:hover:bg-blue-500/20 transition-all duration-200 w-1 hover:w-1.5 active:bg-blue-500/30 cursor-col-resize"
-                />
+                  className="bg-transparent hover:bg-blue-500/30 dark:hover:bg-blue-500/30 transition-all duration-200 w-0.5 hover:w-2 active:bg-blue-500/40 cursor-col-resize relative flex items-center justify-center group"
+                >
+                  <div className="absolute h-12 w-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none rounded-full"></div>
+                </ResizableHandle>
               </>
             )}
             <ResizablePanel 
@@ -426,8 +428,10 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               <>
                 <ResizableHandle 
                   withHandle 
-                  className="bg-transparent hover:bg-blue-500/20 dark:hover:bg-blue-500/20 transition-all duration-200 w-1 hover:w-1.5 active:bg-blue-500/30 cursor-col-resize"
-                />
+                  className="bg-transparent hover:bg-blue-500/30 dark:hover:bg-blue-500/30 transition-all duration-200 w-0.5 hover:w-2 active:bg-blue-500/40 cursor-col-resize relative flex items-center justify-center group"
+                >
+                  <div className="absolute h-12 w-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none rounded-full"></div>
+                </ResizableHandle>
                 <ResizablePanel 
                   defaultSize={totalRightSize} 
                   minSize={15} 
