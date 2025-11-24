@@ -5,12 +5,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* BLOCK mouse events AND animations during initial load to prevent flicker */
-/* We keep this class active for 5 seconds, then remove it */
+/* BLOCK ALL animations during initial load to prevent flicker */
+/* This includes CSS animations, transitions, AND Tailwind animations */
+html.loading {
+  animation: none !important;
+  /* Override Tailwind animations completely */
+  --tw-animate: unset !important;
+}
+
 html.loading * {
   pointer-events: none !important;
   transition: none !important;
   animation: none !important;
+  /* Block Tailwind animate classes */
+  --tw-animate: unset !important;
+}
+
+html.loading *::before,
+html.loading *::after {
+  animation: none !important;
+  transition: none !important;
+  --tw-animate: unset !important;
 }
 
 html.loading *:hover {
@@ -464,7 +479,7 @@ body {
 }
 
 /* Only animate after page is loaded to prevent flicker */
-html:not(.loading) .dark .bg-canvas-bg::before {
+.dark .bg-canvas-bg::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -591,7 +606,7 @@ html:not(.loading) .dark .bg-canvas-bg::before {
 }
 
 /* Only animate after page is loaded to prevent flicker */
-html:not(.loading) .dark .canvas-grid::before {
+.dark .canvas-grid::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -611,7 +626,7 @@ html:not(.loading) .dark .canvas-grid::before {
 }
 
 /* Only animate after page is loaded to prevent flicker */
-html:not(.loading) .dark .canvas-grid::after {
+.dark .canvas-grid::after {
   content: '';
   position: absolute;
   inset: 0;

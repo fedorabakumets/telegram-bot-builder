@@ -17,7 +17,7 @@ const TemplatesPage = lazy(() => import("@/pages/templates-wrapper"));
 const DatabaseManager = lazy(() => import("@/pages/DatabaseManager"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
-// Более красивый компонент загрузки
+// Простой компонент загрузки БЕЗ анимаций (все анимации заблокированы html.loading)
 function LoadingSpinner() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -25,7 +25,7 @@ function LoadingSpinner() {
         {/* Логотип или иконка */}
         <div className="relative">
           <div className="w-16 h-16 rounded-full border-4 border-primary/20"></div>
-          <Loader2 className="h-16 w-16 animate-spin text-primary absolute inset-0" />
+          <Loader2 className="h-16 w-16 text-primary absolute inset-0" />
         </div>
         
         {/* Текст загрузки */}
@@ -33,9 +33,9 @@ function LoadingSpinner() {
           <h3 className="text-lg font-medium text-foreground">Telegram Bot Builder</h3>
           <p className="text-sm text-muted-foreground">Загружаем интерфейс...</p>
           
-          {/* Индикатор прогресса */}
+          {/* Индикатор прогресса - БЕЗ анимации */}
           <div className="w-48 h-1 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full animate-pulse"></div>
+            <div className="h-full bg-primary rounded-full"></div>
           </div>
         </div>
       </div>
