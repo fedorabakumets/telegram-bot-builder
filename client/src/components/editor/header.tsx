@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { FolderOpen, Bookmark, Save, Download, User, Send } from 'lucide-react';
+import { FolderOpen, Bookmark, Save, Download, User, Send, Github } from 'lucide-react';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -101,6 +101,23 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
         </Button>
         
         <div className="h-6 w-px bg-border max-sm:hidden"></div>
+        
+        <a
+          href="https://github.com/fedorabakumets/telegram-bot-builder"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Открыть проект на GitHub"
+          className="flex items-center justify-center"
+        >
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="flex items-center justify-center px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0"
+          >
+            <Github className="h-4 w-4 max-sm:mx-auto text-muted-foreground hover:text-foreground transition-colors" />
+            <span className="max-sm:hidden ml-1">GitHub</span>
+          </Button>
+        </a>
         
         <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
           <ThemeToggle />

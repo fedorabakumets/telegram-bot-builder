@@ -692,18 +692,30 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       )}
       
       {/* Media attachment indicator for message nodes */}
-      {node.type === 'message' && (node.data.imageUrl || node.data.videoUrl || node.data.audioUrl || node.data.documentUrl) && (
+      {node.type === 'message' && node.data.imageUrl && (
+        <div className="mb-4 rounded-lg overflow-hidden border-2 border-amber-200 dark:border-amber-700/50">
+          <img 
+            src={node.data.imageUrl} 
+            alt="Attached" 
+            className="w-full h-auto max-h-48 object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23f5f5f5" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" font-family="Arial" font-size="12" fill="%23999"%3EОшибка%3C/text%3E%3C/svg%3E';
+            }}
+          />
+        </div>
+      )}
+      
+      {/* Media attachment indicator for non-image files */}
+      {node.type === 'message' && !node.data.imageUrl && (node.data.videoUrl || node.data.audioUrl || node.data.documentUrl) && (
         <div className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg bg-gradient-to-r from-amber-50/80 to-orange-50/80 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200 dark:border-amber-700/50">
           <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
             <i className={`fas fa-${
-              node.data.imageUrl ? 'image' :
               node.data.videoUrl ? 'video' :
               node.data.audioUrl ? 'music' :
               'file'
             } text-sm`}></i>
             <span>
-              {node.data.imageUrl ? 'Изображение прикреплено' :
-               node.data.videoUrl ? 'Видео прикреплено' :
+              {node.data.videoUrl ? 'Видео прикреплено' :
                node.data.audioUrl ? 'Аудио прикреплено' :
                'Документ прикреплен'}
             </span>
