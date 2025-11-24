@@ -4438,8 +4438,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '        if keyboard:\n';
           code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
           code += '        else:\n';
-          code += '            await callback_query.message.edit_text(text)\n';
-          code += '    except Exception:\n';
+          code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
+          code += '            await callback_query.message.answer(text)\n';
+          code += '    except Exception as e:\n';
+          code += '        logging.debug(f"Ошибка отправки сообщения: {e}")\n';
           code += '        if keyboard:\n';
           code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
           code += '        else:\n';
