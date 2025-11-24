@@ -114,6 +114,12 @@ function hasMultiSelectNodes(nodes: Node[]): boolean {
   return nodes.some(node => node.data.allowMultipleSelection);
 }
 
+// Функция для проверки наличия автопереходов
+function hasAutoTransitions(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => node.data.enableAutoTransition && node.data.autoTransitionTo);
+}
+
 // Функция для проверки наличия inline кнопок (callback)
 function hasInlineButtons(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
@@ -1359,8 +1365,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'import json\n';
   code += 'import aiohttp\n\n';
   
-  // Добавляем safe_edit_or_send только если есть inline кнопки
-  if (hasInlineButtons(nodes || [])) {
+  // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы
+  if (hasInlineButtons(nodes || []) || hasAutoTransitions(nodes || [])) {
     code += '# Safe helper for editing messages with fallback to new message\n';
     code += 'async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, **kwargs):\n';
     code += '    """\n';
