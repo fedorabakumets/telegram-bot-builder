@@ -2021,7 +2021,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(safeTokens);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch tokens" });
+      console.error("Failed to fetch tokens:", error);
+      res.status(500).json({ message: "Failed to fetch tokens", error: (error as any).message });
     }
   });
 

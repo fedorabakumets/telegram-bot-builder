@@ -314,6 +314,8 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   botCanReadAllGroupMessages: true,
   botSupportsInlineQueries: true,
   botHasMainWebApp: true,
+  trackExecutionTime: true,
+  totalExecutionSeconds: true,
 }).extend({
   name: z.string().min(1, "Имя токена обязательно"),
   token: z.string().min(1, "Токен обязателен"),
@@ -323,6 +325,8 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   botCanReadAllGroupMessages: z.number().min(0).max(1).optional(),
   botSupportsInlineQueries: z.number().min(0).max(1).optional(),
   botHasMainWebApp: z.number().min(0).max(1).optional(),
+  trackExecutionTime: z.number().min(0).max(1).default(0),
+  totalExecutionSeconds: z.number().min(0).default(0),
 });
 
 export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({
