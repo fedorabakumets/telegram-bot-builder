@@ -194,10 +194,14 @@ telegram-bot-builder/
 │   ├── storage.ts                   # Интерфейс для работы с БД
 │   ├── db.ts                        # Подключение к PostgreSQL
 │   ├── telegram-client.ts           # Управление Telegram ботами
-│   └── index.ts                     # Точка входа сервера
+│   ├── index.ts                     # Точка входа сервера
+│   ├── routes.ts.backup             # 📦 Архив старых API функций
+│   ├── db-backup.ts                 # 📦 Архив старых функций БД
+│   └── seed-templates-backup.ts     # 📦 Архив функций инициализации
 ├── shared/                          # Общие типы и схемы
 │   └── schema.ts                    # Drizzle ORM схемы для БД
 ├── bots/                            # Сгенерированные Python боты
+│   └── *.py.backup                  # 📦 Архив старых версий ботов
 └── uploads/                         # Загруженные пользователями файлы
 ```
 
