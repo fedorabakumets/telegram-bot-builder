@@ -1239,8 +1239,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let projects;
       
       if (ownerId !== null) {
-        // Authenticated user - return only their projects
-        projects = await storage.getUserBotProjects(ownerId);
+        // Authenticated user - return their projects + guest projects (ownerId=null)
+        const userProjects = await storage.getUserBotProjects(ownerId);
+        const guestProjects = await storage.getGuestBotProjects();
+        // Объединяем: свои проекты + гостевые проекты
+        projects = [...userProjects, ...guestProjects];
       } else {
         // Guest user - return all projects (for localStorage mode)
         projects = await getCachedOrExecute(
