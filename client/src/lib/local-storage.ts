@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   NEXT_TEMPLATE_ID: 'botcraft_next_template_id',
 } as const;
 
+// Stored types with ISO date strings
 type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string };
 type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null };
 type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null };
@@ -66,37 +67,12 @@ export class LocalStorageService {
     }
   }
 
-  private static normalizeDatesInPartial(data: any): any {
-    const normalized: any = {};
-    
-    for (const key in data) {
-      const value = data[key];
-      if (value instanceof Date) {
-        normalized[key] = value.toISOString();
-      } else {
-        normalized[key] = value;
-      }
-    }
-    
-    return normalized;
-  }
-
   private static updateNextIdCounter(items: { id: number }[], counterKey: string): void {
+    if (items.length === 0) return;
+    
     try {
-      const currentCounter = localStorage.getItem(counterKey);
-      const currentCounterValue = currentCounter ? parseInt(currentCounter) : 1;
-      
-      if (items.length === 0) {
-        try {
-          localStorage.setItem(counterKey, String(currentCounterValue));
-        } catch (setError) {
-          console.error(`Error persisting counter (${counterKey}):`, setError);
-        }
-        return;
-      }
-      
       const maxId = Math.max(...items.map(item => item.id));
-      const nextId = String(Math.max(currentCounterValue, maxId + 1));
+      const nextId = String(maxId + 1);
       
       try {
         localStorage.setItem(counterKey, nextId);
@@ -116,29 +92,36 @@ export class LocalStorageService {
     }
   }
 
-  private static reviveDates<T extends StoredProject>(item: T): BotProject;
-  private static reviveDates(item: StoredProject): BotProject {
+  private static reviveProject(stored: StoredProject): BotProject {
     return {
-      ...item,
-      createdAt: new Date(item.createdAt),
-      updatedAt: new Date(item.updatedAt),
-    } as BotProject;
+      ...stored,
+      createdAt: new Date(stored.createdAt),
+      updatedAt: new Date(stored.updatedAt),
+    };
   }
 
-  private static reviveDatesWithLastUsed<T extends StoredToken>(item: T): BotToken;
-  private static reviveDatesWithLastUsed<T extends StoredTemplate>(item: T): BotTemplate;
-  private static reviveDatesWithLastUsed(item: StoredToken | StoredTemplate): BotToken | BotTemplate {
+  private static reviveToken(stored: StoredToken): BotToken {
     return {
-      ...item,
-      createdAt: new Date(item.createdAt),
-      updatedAt: new Date(item.updatedAt),
-      lastUsedAt: item.lastUsedAt ? new Date(item.lastUsedAt) : null,
-    } as BotToken | BotTemplate;
+      ...stored,
+      createdAt: new Date(stored.createdAt),
+      updatedAt: new Date(stored.updatedAt),
+      lastUsedAt: stored.lastUsedAt ? new Date(stored.lastUsedAt) : null,
+    };
   }
 
+  private static reviveTemplate(stored: StoredTemplate): BotTemplate {
+    return {
+      ...stored,
+      createdAt: new Date(stored.createdAt),
+      updatedAt: new Date(stored.updatedAt),
+      lastUsedAt: stored.lastUsedAt ? new Date(stored.lastUsedAt) : null,
+    };
+  }
+
+  // Projects
   static getProjects(): BotProject[] {
     const stored = this.safeGetItem<StoredProject[]>(STORAGE_KEYS.PROJECTS, []);
-    return stored.map(p => this.reviveDates(p));
+    return stored.map(p => this.reviveProject(p));
   }
 
   static getProject(id: number): BotProject | undefined {
@@ -148,10 +131,9 @@ export class LocalStorageService {
 
   static saveProject(data: InsertBotProject): BotProject {
     const storedProjects = this.safeGetItem<StoredProject[]>(STORAGE_KEYS.PROJECTS, []);
-    const now = new Date();
-    const nowISO = now.toISOString();
+    const now = new Date().toISOString();
     
-    const newStoredProject: StoredProject = {
+    const stored: StoredProject = {
       id: this.getNextId(STORAGE_KEYS.NEXT_PROJECT_ID),
       ownerId: null,
       name: data.name,
@@ -159,13 +141,13 @@ export class LocalStorageService {
       data: data.data,
       botToken: data.botToken || null,
       userDatabaseEnabled: data.userDatabaseEnabled ?? 1,
-      createdAt: nowISO,
-      updatedAt: nowISO,
+      createdAt: now,
+      updatedAt: now,
     };
     
-    storedProjects.push(newStoredProject);
+    storedProjects.push(stored);
     this.safeSetItem(STORAGE_KEYS.PROJECTS, storedProjects);
-    return this.reviveDates(newStoredProject);
+    return this.reviveProject(stored);
   }
 
   static updateProject(id: number, data: Partial<InsertBotProject>): BotProject | undefined {
@@ -174,17 +156,15 @@ export class LocalStorageService {
     
     if (index === -1) return undefined;
     
-    const normalizedData = this.normalizeDatesInPartial(data);
-    
     const updated: StoredProject = {
       ...storedProjects[index],
-      ...normalizedData,
+      ...data,
       updatedAt: new Date().toISOString(),
     };
     
     storedProjects[index] = updated;
     this.safeSetItem(STORAGE_KEYS.PROJECTS, storedProjects);
-    return this.reviveDates(updated);
+    return this.reviveProject(updated);
   }
 
   static deleteProject(id: number): boolean {
@@ -200,9 +180,10 @@ export class LocalStorageService {
     return true;
   }
 
+  // Tokens
   static getTokens(projectId?: number): BotToken[] {
-    const storedTokens = this.safeGetItem<StoredToken[]>(STORAGE_KEYS.TOKENS, []);
-    const tokens = storedTokens.map(t => this.reviveDatesWithLastUsed(t));
+    const stored = this.safeGetItem<StoredToken[]>(STORAGE_KEYS.TOKENS, []);
+    const tokens = stored.map(t => this.reviveToken(t));
     return projectId ? tokens.filter(t => t.projectId === projectId) : tokens;
   }
 
@@ -213,9 +194,9 @@ export class LocalStorageService {
 
   static saveToken(data: InsertBotToken): BotToken {
     const storedTokens = this.safeGetItem<StoredToken[]>(STORAGE_KEYS.TOKENS, []);
-    const nowISO = new Date().toISOString();
+    const now = new Date().toISOString();
     
-    const newStoredToken: StoredToken = {
+    const stored: StoredToken = {
       id: this.getNextId(STORAGE_KEYS.NEXT_TOKEN_ID),
       projectId: data.projectId,
       ownerId: null,
@@ -236,13 +217,13 @@ export class LocalStorageService {
       lastUsedAt: null,
       trackExecutionTime: data.trackExecutionTime ?? 0,
       totalExecutionSeconds: data.totalExecutionSeconds ?? 0,
-      createdAt: nowISO,
-      updatedAt: nowISO,
+      createdAt: now,
+      updatedAt: now,
     };
     
-    storedTokens.push(newStoredToken);
+    storedTokens.push(stored);
     this.safeSetItem(STORAGE_KEYS.TOKENS, storedTokens);
-    return this.reviveDatesWithLastUsed(newStoredToken);
+    return this.reviveToken(stored);
   }
 
   static updateToken(id: number, data: Partial<InsertBotToken>): BotToken | undefined {
@@ -251,17 +232,15 @@ export class LocalStorageService {
     
     if (index === -1) return undefined;
     
-    const normalizedData = this.normalizeDatesInPartial(data);
-    
     const updated: StoredToken = {
       ...storedTokens[index],
-      ...normalizedData,
+      ...data,
       updatedAt: new Date().toISOString(),
     };
     
     storedTokens[index] = updated;
     this.safeSetItem(STORAGE_KEYS.TOKENS, storedTokens);
-    return this.reviveDatesWithLastUsed(updated);
+    return this.reviveToken(updated);
   }
 
   static deleteToken(id: number): boolean {
@@ -274,9 +253,10 @@ export class LocalStorageService {
     return true;
   }
 
+  // Templates
   static getTemplates(): BotTemplate[] {
-    const storedTemplates = this.safeGetItem<StoredTemplate[]>(STORAGE_KEYS.TEMPLATES, []);
-    return storedTemplates.map(t => this.reviveDatesWithLastUsed(t));
+    const stored = this.safeGetItem<StoredTemplate[]>(STORAGE_KEYS.TEMPLATES, []);
+    return stored.map(t => this.reviveTemplate(t));
   }
 
   static getTemplate(id: number): BotTemplate | undefined {
@@ -286,18 +266,18 @@ export class LocalStorageService {
 
   static saveTemplate(data: InsertBotTemplate): BotTemplate {
     const storedTemplates = this.safeGetItem<StoredTemplate[]>(STORAGE_KEYS.TEMPLATES, []);
-    const nowISO = new Date().toISOString();
+    const now = new Date().toISOString();
     
-    const newStoredTemplate: StoredTemplate = {
+    const stored: StoredTemplate = {
       id: this.getNextId(STORAGE_KEYS.NEXT_TEMPLATE_ID),
       ownerId: null,
       name: data.name,
       description: data.description || null,
       data: data.data,
-      category: data.category || "custom",
+      category: (data.category || "custom") as BotTemplate['category'],
       tags: data.tags || null,
       isPublic: data.isPublic ?? 0,
-      difficulty: data.difficulty || "easy",
+      difficulty: (data.difficulty || "easy") as BotTemplate['difficulty'],
       authorId: data.authorId || null,
       authorName: data.authorName || null,
       useCount: 0,
@@ -311,17 +291,17 @@ export class LocalStorageService {
       likeCount: 0,
       bookmarkCount: 0,
       viewCount: 0,
-      language: data.language || "ru",
+      language: (data.language || "ru") as BotTemplate['language'],
       requiresToken: data.requiresToken ?? 0,
       complexity: data.complexity ?? 1,
       estimatedTime: data.estimatedTime ?? 5,
-      createdAt: nowISO,
-      updatedAt: nowISO,
+      createdAt: now,
+      updatedAt: now,
     };
     
-    storedTemplates.push(newStoredTemplate);
+    storedTemplates.push(stored);
     this.safeSetItem(STORAGE_KEYS.TEMPLATES, storedTemplates);
-    return this.reviveDatesWithLastUsed(newStoredTemplate);
+    return this.reviveTemplate(stored);
   }
 
   static updateTemplate(id: number, data: Partial<InsertBotTemplate>): BotTemplate | undefined {
@@ -330,17 +310,15 @@ export class LocalStorageService {
     
     if (index === -1) return undefined;
     
-    const normalizedData = this.normalizeDatesInPartial(data);
-    
     const updated: StoredTemplate = {
       ...storedTemplates[index],
-      ...normalizedData,
+      ...data,
       updatedAt: new Date().toISOString(),
     };
     
     storedTemplates[index] = updated;
     this.safeSetItem(STORAGE_KEYS.TEMPLATES, storedTemplates);
-    return this.reviveDatesWithLastUsed(updated);
+    return this.reviveTemplate(updated);
   }
 
   static deleteTemplate(id: number): boolean {
@@ -353,6 +331,7 @@ export class LocalStorageService {
     return true;
   }
 
+  // Utilities
   static clearAll(): void {
     Object.values(STORAGE_KEYS).forEach(key => {
       this.safeRemoveItem(key);
@@ -360,58 +339,32 @@ export class LocalStorageService {
   }
 
   static exportData(): {
-    projects: BotProject[];
-    tokens: BotToken[];
-    templates: BotTemplate[];
+    projects: StoredProject[];
+    tokens: StoredToken[];
+    templates: StoredTemplate[];
   } {
     return {
-      projects: this.getProjects(),
-      tokens: this.getTokens(),
-      templates: this.getTemplates(),
+      projects: this.safeGetItem<StoredProject[]>(STORAGE_KEYS.PROJECTS, []),
+      tokens: this.safeGetItem<StoredToken[]>(STORAGE_KEYS.TOKENS, []),
+      templates: this.safeGetItem<StoredTemplate[]>(STORAGE_KEYS.TEMPLATES, []),
     };
   }
 
   static importData(data: {
-    projects?: BotProject[];
-    tokens?: BotToken[];
-    templates?: BotTemplate[];
+    projects?: StoredProject[];
+    tokens?: StoredToken[];
+    templates?: StoredTemplate[];
   }): void {
     if (data.projects) {
-      const storedProjects: StoredProject[] = data.projects.map(p => {
-        const normalized = this.normalizeDatesInPartial(p);
-        return {
-          ...normalized,
-          createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : (p.createdAt || new Date().toISOString()),
-          updatedAt: p.updatedAt instanceof Date ? p.updatedAt.toISOString() : (p.updatedAt || new Date().toISOString()),
-        };
-      });
-      this.safeSetItem(STORAGE_KEYS.PROJECTS, storedProjects);
+      this.safeSetItem(STORAGE_KEYS.PROJECTS, data.projects);
       this.updateNextIdCounter(data.projects, STORAGE_KEYS.NEXT_PROJECT_ID);
     }
     if (data.tokens) {
-      const storedTokens: StoredToken[] = data.tokens.map(t => {
-        const normalized = this.normalizeDatesInPartial(t);
-        return {
-          ...normalized,
-          createdAt: t.createdAt instanceof Date ? t.createdAt.toISOString() : (t.createdAt || new Date().toISOString()),
-          updatedAt: t.updatedAt instanceof Date ? t.updatedAt.toISOString() : (t.updatedAt || new Date().toISOString()),
-          lastUsedAt: t.lastUsedAt instanceof Date ? t.lastUsedAt.toISOString() : (t.lastUsedAt || null),
-        };
-      });
-      this.safeSetItem(STORAGE_KEYS.TOKENS, storedTokens);
+      this.safeSetItem(STORAGE_KEYS.TOKENS, data.tokens);
       this.updateNextIdCounter(data.tokens, STORAGE_KEYS.NEXT_TOKEN_ID);
     }
     if (data.templates) {
-      const storedTemplates: StoredTemplate[] = data.templates.map(t => {
-        const normalized = this.normalizeDatesInPartial(t);
-        return {
-          ...normalized,
-          createdAt: t.createdAt instanceof Date ? t.createdAt.toISOString() : (t.createdAt || new Date().toISOString()),
-          updatedAt: t.updatedAt instanceof Date ? t.updatedAt.toISOString() : (t.updatedAt || new Date().toISOString()),
-          lastUsedAt: t.lastUsedAt instanceof Date ? t.lastUsedAt.toISOString() : (t.lastUsedAt || null),
-        };
-      });
-      this.safeSetItem(STORAGE_KEYS.TEMPLATES, storedTemplates);
+      this.safeSetItem(STORAGE_KEYS.TEMPLATES, data.templates);
       this.updateNextIdCounter(data.templates, STORAGE_KEYS.NEXT_TEMPLATE_ID);
     }
   }
