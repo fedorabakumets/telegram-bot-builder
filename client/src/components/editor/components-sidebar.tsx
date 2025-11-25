@@ -1690,17 +1690,17 @@ export function ComponentsSidebar({
                     }`}
                     onClick={() => onProjectSelect && onProjectSelect(project.id)}
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center flex-1 min-w-0">
-                        <div className="cursor-grab active:cursor-grabbing mr-3 opacity-60 group-hover:opacity-100 transition-opacity flex hover:text-blue-500">
+                    <div className="flex items-start justify-between mb-4 gap-3">
+                      <div className="flex items-start flex-1">
+                        <div className="cursor-grab active:cursor-grabbing mr-3 opacity-60 group-hover:opacity-100 transition-opacity flex hover:text-blue-500 flex-shrink-0 mt-0.5">
                           <GripVertical className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2.5 mb-2">
-                            <h4 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-100 dark:to-slate-200 bg-clip-text text-transparent truncate">
+                        <div className="flex-1">
+                          <div className="flex items-start gap-2.5 mb-2 flex-wrap">
+                            <h4 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-100 dark:to-slate-200 bg-clip-text text-transparent">
                               {project.name}
                             </h4>
-                            <span className={`text-xs px-2.5 py-1 rounded-full whitespace-nowrap font-semibold backdrop-blur-sm ${
+                            <span className={`text-xs px-2.5 py-1 rounded-full whitespace-nowrap font-semibold backdrop-blur-sm flex-shrink-0 ${
                               project.ownerId === null 
                                 ? 'bg-blue-500/20 border border-blue-400/30 text-blue-700 dark:text-blue-300' 
                                 : 'bg-green-500/20 border border-green-400/30 text-green-700 dark:text-green-300'
