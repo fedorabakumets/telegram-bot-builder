@@ -106,12 +106,16 @@ export function AdaptiveHeader({
         }`}>
           {isVertical && !isCompact ? 'BotCraft' : (isMobile ? 'BotCraft' : 'BotCraft Studio')}
         </h1>
-        <p className={`text-muted-foreground/70 text-xs leading-tight truncate max-w-xs ${isMobile ? 'hidden' : ''}`}>
-          {(() => {
-            const displayName = botInfo?.first_name || projectName;
-            return isVertical ? (displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName) : displayName;
-          })()}
-        </p>
+        <div className={`flex items-center gap-1.5 ${isMobile ? 'hidden' : ''} ${isVertical ? 'justify-center' : ''}`}>
+          <div className="px-2 py-0.5 bg-gradient-to-r from-blue-50/60 to-cyan-50/40 dark:from-blue-950/40 dark:to-cyan-950/30 rounded-md border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm">
+            <p className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100 truncate max-w-xs">
+              {(() => {
+                const displayName = botInfo?.first_name || projectName;
+                return isVertical ? (displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName) : displayName;
+              })()}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
