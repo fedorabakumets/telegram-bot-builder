@@ -336,7 +336,7 @@ export function Canvas({
   // Zoom utility functions
   const zoomIn = useCallback(() => {
     setZoom(prev => {
-      const newZoom = Math.min(prev + 25, 200);
+      const newZoom = Math.min(prev * 1.05, 200);
       const zoomRatio = newZoom / prev;
       setPan(p => ({
         x: p.x * zoomRatio,
@@ -348,7 +348,7 @@ export function Canvas({
 
   const zoomOut = useCallback(() => {
     setZoom(prev => {
-      const newZoom = Math.max(prev - 25, 1);
+      const newZoom = Math.max(prev * 0.95, 1);
       const zoomRatio = newZoom / prev;
       setPan(p => ({
         x: p.x * zoomRatio,
