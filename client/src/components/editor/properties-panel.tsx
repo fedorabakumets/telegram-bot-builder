@@ -1031,12 +1031,6 @@ export function PropertiesPanel({
                   <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/50 dark:border-slate-800/40">
-                <i className="fas fa-circle-info text-slate-600 dark:text-slate-400 text-xs mt-0.5 flex-shrink-0"></i>
-                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                  Выберите тип элемента для настройки его специфических параметров
-                </p>
-              </div>
             </div>
 
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
