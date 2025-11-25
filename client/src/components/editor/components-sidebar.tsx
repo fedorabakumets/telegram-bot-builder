@@ -1803,7 +1803,7 @@ export function ComponentsSidebar({
                                         onDragEnd={(e) => {
                                           setDraggedSheet(null);
                                         }}
-                                        className={`text-xs px-2.5 py-1 h-6 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center justify-center text-center ${
+                                        className={`text-xs px-2.5 py-1 min-h-6 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center justify-center text-center ${
                                           isActive ? 'bg-primary text-primary-foreground shadow-sm font-semibold' : 'bg-muted/70 text-foreground hover:bg-muted'
                                         } ${
                                           draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
@@ -1826,7 +1826,7 @@ export function ComponentsSidebar({
                                         }}
                                         title={name}
                                       >
-                                        <span className="block truncate">{name || 'Без названия'}</span>
+                                        <span className="block">{name || 'Без названия'}</span>
                                       </div>
                                     )}
                                     
