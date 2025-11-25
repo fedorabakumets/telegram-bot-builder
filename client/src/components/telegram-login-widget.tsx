@@ -51,8 +51,19 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
     });
   };
 
+  const handleTelegramLogin = () => {
+    // Открываем окно входа Telegram в новой вкладке
+    const width = 600;
+    const height = 700;
+    const left = window.innerWidth / 2 - width / 2;
+    const top = window.innerHeight / 2 - height / 2;
+    
+    const authUrl = `https://telegram.me/${botUsername}`;
+    window.open(authUrl, 'telegram_login', `width=${width},height=${height},left=${left},top=${top}`);
+  };
+
   useEffect(() => {
-    // Определяем глобальную функцию обратного вызова
+    // Определяем глобальную функцию обратного вызова для обработки возврата с авторизации
     window.onTelegramAuth = async (telegramUser: any) => {
       try {
         // Отправляем данные пользователя на бэк
@@ -116,29 +127,17 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
       }
     };
 
-    // Загружаем скрипт виджета только один раз при монтировании компонента
-    // Но только если пользователь не авторизован
-    if (!user && botUsername) {
-      const script = document.createElement('script');
-      script.src = 'https://telegram.org/js/telegram-widget.js?22';
-      script.async = true;
-      script.dataset.telegramLogin = botUsername;
-      script.dataset.size = 'small';
-      script.dataset.onauth = 'onTelegramAuth(user)';
-      script.dataset.requestAccess = 'write';
-
-      const container = document.getElementById('telegram-login-widget');
-      if (container) {
-        container.appendChild(script);
+    // Слушаем на сообщения от окна авторизации с данными пользователя
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.source && event.data && event.data.type === 'telegram-auth') {
+        window.onTelegramAuth(event.data.user);
       }
+    };
 
-      return () => {
-        // Очищаем контейнер при размонтировании
-        if (container) {
-          container.innerHTML = '';
-        }
-      };
-    }
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, [user, login, toast, onAuth]);
 
   // Пока загружаем состояние авторизации
@@ -168,6 +167,14 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
     );
   }
 
-  // Если не авторизован, показываем виджет
-  return <div id="telegram-login-widget" />;
+  // Если не авторизован, показываем кнопку входа
+  return (
+    <Button 
+      onClick={handleTelegramLogin}
+      className="bg-[#0088cc] hover:bg-[#0077b3] text-white"
+      data-testid="button-telegram-login"
+    >
+      Вход через Telegram
+    </Button>
+  );
 }
