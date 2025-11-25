@@ -1868,7 +1868,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (ownerId !== null) {
         // Authenticated user - return only their templates + system templates
         const userTemplates = await storage.getUserBotTemplates(ownerId);
-        const systemTemplates = await storage.getSystemTemplates();
+        const allTemplates = await storage.getAllBotTemplates();
+        const systemTemplates = allTemplates.filter(t => t.ownerId === null);
         templates = [...userTemplates, ...systemTemplates];
       } else {
         // Guest user - return all templates (for localStorage mode)

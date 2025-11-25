@@ -40,7 +40,7 @@ export default function Home() {
   });
 
   // Загрузка списка проектов (только метаданные, без data)
-  const { data: projects = [], isLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
+  const { data: projects = [], isLoading } = useQuery<BotProject[]>({
     queryKey: ['/api/projects/list'],
     queryFn: async () => {
       // Для гостей: передаем список сохраненных IDs проектов
@@ -137,7 +137,7 @@ export default function Home() {
     });
   };
 
-  const getNodeCount = (project: BotProject) => {
+  const getNodeCount = (project: any) => {
     if (!project.data || typeof project.data !== 'object') return 0;
     
     // Проверяем, новый формат с листами или старый
@@ -150,7 +150,7 @@ export default function Home() {
     }
   };
 
-  const getSheetsInfo = (project: BotProject) => {
+  const getSheetsInfo = (project: any) => {
     if (!project.data || typeof project.data !== 'object') return { count: 0, names: [] };
     
     // Проверяем, новый формат с листами или старый
@@ -336,7 +336,7 @@ export default function Home() {
                               {sheetsInfo.count} {sheetsInfo.count === 1 ? 'лист' : sheetsInfo.count < 5 ? 'листа' : 'листов'}:
                             </div>
                             <div className="flex flex-wrap gap-1">
-                              {sheetsInfo.names.slice(0, 3).map((name, index) => (
+                              {sheetsInfo.names.slice(0, 3).map((name: string, index: number) => (
                                 <Badge key={index} variant="secondary" className="text-xs px-2 py-0.5">
                                   {name}
                                 </Badge>
