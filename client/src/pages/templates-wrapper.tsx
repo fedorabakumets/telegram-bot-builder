@@ -35,9 +35,12 @@ export default function TemplatesPageWrapper() {
   const { data: myTemplates = [], isLoading: isLoadingMy } = useQuery<BotTemplate[]>({
     queryKey: ['/api/templates/category/custom'],
     queryFn: async () => {
-      // Получаем IDs шаблонов гостя из localStorage
+      // Проверяем есть ли сохраненные шаблоны в localStorage для гостей
       const myTemplateIds = localStorage.getItem('myTemplateIds');
-      const idsParam = myTemplateIds ? `?ids=${myTemplateIds}` : '';
+      
+      // Только для гостей добавляем параметр ids
+      // Для авторизованных пользователей сервер автоматически вернет их шаблоны
+      const idsParam = myTemplateIds && myTemplateIds.length > 0 ? `?ids=${myTemplateIds}` : '';
       const response = await fetch(`/api/templates/category/custom${idsParam}`);
       return response.json();
     }
