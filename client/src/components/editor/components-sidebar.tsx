@@ -1427,9 +1427,9 @@ export function ComponentsSidebar({
   const SidebarContent = () => (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Sidebar Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-foreground">Компоненты</h2>
+      <div className="p-4 border-b border-border/30 bg-gradient-to-r from-slate-50/50 dark:from-slate-900/30 to-transparent">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">Компоненты</h2>
           {/* Кнопки макета отображаются когда только панель компонентов видна */}
           {showLayoutButtons && (
             <LayoutButtons
@@ -1444,23 +1444,23 @@ export function ComponentsSidebar({
             />
           )}
         </div>
-        <div className="flex space-x-1 bg-muted rounded-lg p-1">
+        <div className="flex space-x-1 bg-gradient-to-r from-slate-200/40 to-slate-100/20 dark:from-slate-800/40 dark:to-slate-700/20 rounded-lg p-1 backdrop-blur-sm border border-slate-300/20 dark:border-slate-600/20">
           <button 
             onClick={() => setCurrentTab('elements')}
-            className={`flex-1 px-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${
               currentTab === 'elements' 
-                ? 'bg-background text-foreground shadow-sm' 
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
             }`}
           >
             Элементы
           </button>
           <button 
             onClick={() => setCurrentTab('projects')}
-            className={`flex-1 px-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${
               currentTab === 'projects' 
-                ? 'bg-background text-foreground shadow-sm' 
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
             }`}
           >
             Проекты
@@ -1475,25 +1475,25 @@ export function ComponentsSidebar({
             {/* Заголовок и кнопки управления */}
             <div className="space-y-3 mb-4">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-foreground">
+                <h3 className="text-base font-bold bg-gradient-to-r from-slate-700 to-slate-600 dark:from-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
                   Проекты ({projects.length})
                 </h3>
                 <div className="flex items-center gap-2">
                   <Button 
                     size="default" 
                     variant="outline" 
-                    className="h-8 px-3 flex items-center gap-1"
+                    className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-green-500/10 to-green-400/5 hover:from-green-600/20 hover:to-green-500/15 border-green-400/30 dark:border-green-500/30 hover:border-green-500/50 dark:hover:border-green-400/50 text-green-700 dark:text-green-300 rounded-lg transition-all hover:shadow-md hover:shadow-green-500/20"
                     onClick={handleCreateProject}
                     disabled={createProjectMutation.isPending}
                     title="Создать новый проект"
                   >
                     <Plus className="h-4 w-4" />
-                    <span className="text-sm">Новый</span>
+                    <span>Новый</span>
                   </Button>
                   <Button 
                     size="default" 
                     variant="outline" 
-                    className="h-8 px-3 flex items-center gap-1"
+                    className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-blue-500/10 to-blue-400/5 hover:from-blue-600/20 hover:to-blue-500/15 border-blue-400/30 dark:border-blue-500/30 hover:border-blue-500/50 dark:hover:border-blue-400/50 text-blue-700 dark:text-blue-300 rounded-lg transition-all hover:shadow-md hover:shadow-blue-500/20"
                     onClick={() => {
                       setIsImportDialogOpen(true);
                       setImportJsonText('');
@@ -1501,8 +1501,8 @@ export function ComponentsSidebar({
                     }}
                     title="Импортировать проект из JSON"
                   >
-                    <i className="fas fa-upload text-sm" />
-                    <span className="text-sm">Импорт</span>
+                    <i className="fas fa-upload text-xs" />
+                    <span>Импорт</span>
                   </Button>
                 </div>
               </div>
