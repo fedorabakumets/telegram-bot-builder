@@ -2,8 +2,21 @@ import { pgTable, text, serial, integer, jsonb, timestamp, bigint } from "drizzl
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Telegram authenticated users table
+export const telegramUsers = pgTable("telegram_users", {
+  id: bigint("id", { mode: "number" }).primaryKey(), // Telegram user ID
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name"),
+  username: text("username"),
+  photoUrl: text("photo_url"),
+  authDate: bigint("auth_date", { mode: "number" }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const botProjects = pgTable("bot_projects", {
   id: serial("id").primaryKey(),
+  ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }), // Владелец проекта (null для неавторизованных)
   name: text("name").notNull(),
   description: text("description"),
   data: jsonb("data").notNull(),
@@ -31,6 +44,7 @@ export const botInstances = pgTable("bot_instances", {
 
 export const botTemplates = pgTable("bot_templates", {
   id: serial("id").primaryKey(),
+  ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }), // Владелец шаблона (null для официальных)
   name: text("name").notNull(),
   description: text("description"),
   data: jsonb("data").notNull(),
@@ -38,7 +52,7 @@ export const botTemplates = pgTable("bot_templates", {
   tags: text("tags").array(),
   isPublic: integer("is_public").default(0), // 0 = private, 1 = public
   difficulty: text("difficulty").default("easy"), // "easy", "medium", "hard"
-  authorId: text("author_id"), // ID автора шаблона
+  authorId: text("author_id"), // ID автора шаблона (deprecated, использовать ownerId)
   authorName: text("author_name"), // Имя автора
   useCount: integer("use_count").notNull().default(0), // Количество использований
   rating: integer("rating").notNull().default(0), // Рейтинг от 1 до 5
@@ -62,6 +76,7 @@ export const botTemplates = pgTable("bot_templates", {
 export const botTokens = pgTable("bot_tokens", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }), // Владелец токена (наследуется от проекта)
   name: text("name").notNull(), // Пользовательское имя для токена
   token: text("token").notNull(), // Сам токен
   isDefault: integer("is_default").default(0), // 0 = нет, 1 = да (токен по умолчанию)
@@ -251,12 +266,14 @@ export const botMessageMedia = pgTable("bot_message_media", {
 });
 
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
+  ownerId: true,
   name: true,
   description: true,
   data: true,
   botToken: true,
   userDatabaseEnabled: true,
 }).extend({
+  ownerId: z.number().nullable().optional(),
   botToken: z.string().nullish(),
   userDatabaseEnabled: z.number().min(0).max(1).default(1),
 });
@@ -273,6 +290,7 @@ export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
 });
 
 export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
+  ownerId: true,
   name: true,
   description: true,
   data: true,
@@ -290,6 +308,7 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   complexity: true,
   estimatedTime: true,
 }).extend({
+  ownerId: z.number().nullable().optional(),
   category: z.enum(["custom", "business", "entertainment", "education", "utility", "games", "official", "community"]).default("custom"),
   difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
   language: z.enum(["ru", "en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko"]).default("ru"),
@@ -300,6 +319,7 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
 
 export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   projectId: true,
+  ownerId: true,
   name: true,
   token: true,
   isDefault: true,
@@ -317,6 +337,7 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   trackExecutionTime: true,
   totalExecutionSeconds: true,
 }).extend({
+  ownerId: z.number().nullable().optional(),
   name: z.string().min(1, "Имя токена обязательно"),
   token: z.string().min(1, "Токен обязателен"),
   isDefault: z.number().min(0).max(1).default(0),
@@ -872,18 +893,6 @@ export const sendMessageSchema = z.object({
 });
 
 export type SendMessage = z.infer<typeof sendMessageSchema>;
-
-// Telegram authenticated users table
-export const telegramUsers = pgTable("telegram_users", {
-  id: bigint("id", { mode: "number" }).primaryKey(), // Telegram user ID
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name"),
-  username: text("username"),
-  photoUrl: text("photo_url"),
-  authDate: bigint("auth_date", { mode: "number" }),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
 
 export type TelegramUserDB = typeof telegramUsers.$inferSelect;
 export const insertTelegramUserSchema = createInsertSchema(telegramUsers).omit({ createdAt: true, updatedAt: true });
