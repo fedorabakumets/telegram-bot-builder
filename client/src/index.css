@@ -5,19 +5,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* BLOCK ALL animations during initial load to prevent flicker */
-/* This includes CSS animations, transitions, AND Tailwind animations */
+/* Block ALL state changes during initial page load */
 html.loading {
   animation: none !important;
-  /* Override Tailwind animations completely */
   --tw-animate: unset !important;
 }
 
 html.loading * {
   pointer-events: none !important;
+  cursor: not-allowed !important;
   transition: none !important;
   animation: none !important;
-  /* Block Tailwind animate classes */
   --tw-animate: unset !important;
 }
 
@@ -28,10 +26,47 @@ html.loading *::after {
   --tw-animate: unset !important;
 }
 
+/* CRITICAL: Block ALL pseudo-class states that might change visual appearance */
 html.loading *:hover {
   background-color: inherit !important;
   color: inherit !important;
-  box-shadow: none !important;
+  box-shadow: inherit !important;
+  border: inherit !important;
+  opacity: inherit !important;
+}
+
+html.loading *:focus {
+  background-color: inherit !important;
+  color: inherit !important;
+  box-shadow: inherit !important;
+  outline: none !important;
+}
+
+html.loading *:active {
+  background-color: inherit !important;
+  color: inherit !important;
+  transform: none !important;
+}
+
+/* Block transitions on duration and timing classes */
+html.loading [class*="transition-"] {
+  transition: none !important;
+}
+
+html.loading [class*="duration-"] {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Disable state variant transitions and opacity changes */
+html.loading [class*="group-hover:"],
+html.loading [class*="group-focus:"],
+html.loading [class*="hover:"],
+html.loading [class*="focus:"],
+html.loading [class*="active:"] {
+  opacity: inherit !important;
+  transition: none !important;
+  animation: none !important;
 }
 
 :root {

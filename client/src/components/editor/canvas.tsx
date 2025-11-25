@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState, useEffect } from 'react';
+import { useRef, useCallback, useState, useEffect, memo } from 'react';
 import { CanvasNode } from '@/components/ui/canvas-node';
 import { ConnectionsLayer } from '@/components/ui/connections-layer';
 import { TemporaryConnection } from '@/components/ui/temporary-connection';
@@ -69,7 +69,7 @@ interface CanvasProps {
   onNodeSizesChange?: (nodeSizes: Map<string, { width: number; height: number }>) => void;
 }
 
-export function Canvas({ 
+function CanvasComponent({ 
   botData,
   onBotDataUpdate,
   nodes, 
@@ -1387,3 +1387,30 @@ export function Canvas({
     </main>
   );
 }
+
+// ✅ MEMO Canvas чтобы избежать бесконечных пульсирований
+function canvasPropsAreEqual(prev: any, next: any) {
+  for (const key in next) {
+    const prevVal = prev[key];
+    const nextVal = next[key];
+    
+    // Игнорируем функции
+    if (typeof nextVal === 'function') continue;
+    
+    // Для массивов и объектов - сравниваем только по JSON
+    if (typeof nextVal === 'object' && nextVal !== null) {
+      if (JSON.stringify(prevVal) !== JSON.stringify(nextVal)) {
+        return false;
+      }
+      continue;
+    }
+    
+    if (prevVal !== nextVal) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Экспортируем memoized версию Canvas
+export const Canvas = memo(CanvasComponent, canvasPropsAreEqual);

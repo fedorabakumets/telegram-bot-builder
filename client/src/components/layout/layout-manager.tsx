@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -428,20 +428,21 @@ export function useLayoutManager() {
     return saved ? JSON.parse(saved) : DEFAULT_LAYOUT;
   });
 
-  const saveConfig = (newConfig: LayoutConfig) => {
+  // ✅ КРИТИЧНО: Обернуть все функции в useCallback чтобы избежать бесконечных re-renders!
+  const saveConfig = useCallback((newConfig: LayoutConfig) => {
     setConfig(newConfig);
     localStorage.setItem('telegram-bot-builder-layout', JSON.stringify(newConfig));
-  };
+  }, []);
 
-  const resetConfig = () => {
+  const resetConfig = useCallback(() => {
     setConfig(DEFAULT_LAYOUT);
     localStorage.removeItem('telegram-bot-builder-layout');
-  };
+  }, []);
 
-  const applyConfig = () => {
+  const applyConfig = useCallback(() => {
     // Дополнительная логика применения настроек
     console.log('Applying layout config:', config);
-  };
+  }, [config]);
 
   return {
     config,

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { FolderOpen, Bookmark, Save, Download, User, Send, Github } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 
 interface HeaderProps {
   projectName: string;
@@ -14,9 +14,41 @@ interface HeaderProps {
   isSaving?: boolean;
 }
 
-export function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSaveAsTemplate, onLoadTemplate, isSaving }: HeaderProps) {
+function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSaveAsTemplate, onLoadTemplate, isSaving }: HeaderProps) {
+  const headerRef = useRef<HTMLHeadElement>(null);
+  const renderCountRef = useRef(0);
+  renderCountRef.current++;
+  
+
+  // Логировать изменения стилей в header
+  useEffect(() => {
+    if (!headerRef.current) return;
+    
+    const headerElement = headerRef.current;
+    let styleChangeCount = 0;
+    
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes') {
+          if (mutation.attributeName === 'style' || mutation.attributeName === 'class') {
+            styleChangeCount++;
+          }
+        }
+      });
+    });
+    
+    observer.observe(headerElement, {
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+      subtree: true,
+      attributeOldValue: true
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <header className="bg-background border-b border-border h-16 flex items-center justify-between px-6 relative z-50">
+    <header ref={headerRef} data-testid="editor-header" className="bg-background border-b border-border h-16 flex items-center justify-between px-6 relative z-50">
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -126,3 +158,22 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
     </header>
   );
 }
+
+// ✅ MEMO с custom comparator - игнорируем функции которые всегда разные
+function propsAreEqual(prev: any, next: any) {
+  for (const key in next) {
+    const prevVal = prev[key];
+    const nextVal = next[key];
+    
+    // Игнорируем функции - они всегда разные references
+    if (typeof nextVal === 'function') continue;
+    
+    // Сравниваем остальное
+    if (prevVal !== nextVal) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export default memo(Header, propsAreEqual);
