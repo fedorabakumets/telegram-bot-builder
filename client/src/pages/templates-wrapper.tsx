@@ -50,17 +50,36 @@ export default function TemplatesPageWrapper() {
   const { data: myTemplates = [], isLoading: isLoadingMy } = useQuery<BotTemplate[]>({
     queryKey: ['/api/templates/category/custom', user?.id || 'guest'],
     queryFn: async () => {
-      // Проверяем есть ли сохраненные шаблоны в localStorage для гостей
-      const myTemplateIds = localStorage.getItem('myTemplateIds');
-      
-      // Только для гостей добавляем параметр ids
-      // Для авторизованных пользователей сервер автоматически вернет их шаблоны по сессии
-      const idsParam = (myTemplateIds && myTemplateIds.length > 0 && !user) ? `?ids=${myTemplateIds}` : '';
-      const response = await fetch(`/api/templates/category/custom${idsParam}`, {
-        credentials: 'include' // КРИТИЧНО: отправляем cookies для сессии!
-      });
-      return response.json();
-    }
+      try {
+        // Проверяем есть ли сохраненные шаблоны в localStorage для гостей
+        const myTemplateIds = localStorage.getItem('myTemplateIds');
+        
+        // Только для гостей добавляем параметр ids
+        // Для авторизованных пользователей сервер автоматически вернет их шаблоны по сессии
+        const idsParam = (myTemplateIds && myTemplateIds.length > 0 && !user) ? `?ids=${myTemplateIds}` : '';
+        console.log('📝 Fetching custom templates:', { user: user?.id, isGuest: !user, idsParam });
+        
+        const response = await fetch(`/api/templates/category/custom${idsParam}`, {
+          credentials: 'include', // КРИТИЧНО: отправляем cookies для сессии!
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (!response.ok) {
+          console.error('❌ Failed to fetch templates:', response.status, response.statusText);
+          throw new Error(`Failed to fetch: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ Custom templates loaded:', data?.length || 0);
+        return data;
+      } catch (error) {
+        console.error('❌ Error fetching custom templates:', error);
+        throw error;
+      }
+    },
   });
 
   const categories = [

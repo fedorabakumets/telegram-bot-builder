@@ -1936,12 +1936,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { ids } = req.query;
       const ownerId = getOwnerIdFromRequest(req);
       
+      console.log(`📋 Templates category: ${category}, ownerId: ${ownerId}, session: ${req.session?.telegramUser?.id || 'none'}`);
+      
       // Для категории "custom" - показываем только личные шаблоны
       if (category === 'custom') {
         if (ownerId !== null) {
           // Авторизованный пользователь - его шаблоны
+          console.log(`🔐 Getting custom templates for user: ${ownerId}`);
           const templates = await storage.getUserBotTemplates(ownerId);
-          res.json(templates.filter(t => t.category === 'custom'));
+          const filtered = templates.filter(t => t.category === 'custom');
+          console.log(`✅ Found ${filtered.length} custom templates for user ${ownerId}`);
+          res.json(filtered);
         } else {
           // Гость - шаблоны с owner_id = null, или указанные в query параметре ids
           let templates = await storage.getTemplatesByCategory(category);
