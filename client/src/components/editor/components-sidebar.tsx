@@ -1695,11 +1695,11 @@ export function ComponentsSidebar({
                         <GripVertical className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                       </div>
                       <div className="flex-1">
-                        <div className="mb-2">
-                          <div className="flex items-start gap-2 flex-wrap">
-                            <h4 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-100 dark:to-slate-200 bg-clip-text text-transparent break-words leading-snug">
-                              {project.name}
-                            </h4>
+                        <div className="mb-2 space-y-2">
+                          <h4 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-100 dark:to-slate-200 bg-clip-text text-transparent break-words leading-snug">
+                            {project.name}
+                          </h4>
+                          <div className="flex items-center gap-2">
                             <span className={`text-xs px-2.5 py-1 rounded-full whitespace-nowrap font-semibold backdrop-blur-sm flex-shrink-0 ${
                               project.ownerId === null 
                                 ? 'bg-blue-500/20 border border-blue-400/30 text-blue-700 dark:text-blue-300' 
@@ -1710,7 +1710,7 @@ export function ComponentsSidebar({
                           </div>
                         </div>
                         {project.description && (
-                          <p className="text-sm text-slate-600 dark:text-slate-400 truncate line-clamp-2">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 break-words line-clamp-3 leading-relaxed">
                             {project.description}
                           </p>
                         )}
