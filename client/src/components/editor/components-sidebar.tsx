@@ -1991,7 +1991,7 @@ export function ComponentsSidebar({
                         touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
                       }`}
                     >
-                      <div className={cn("w-8 h-8 rounded-md flex items-center justify-center mr-2.5 font-bold text-white text-sm", component.color)}>
+                      <div className={cn("w-7 h-7 rounded-md flex items-center justify-center mr-2.5 text-xs opacity-70", component.color)}>
                         <i className={`${component.icon} text-xs`}></i>
                       </div>
                       <div className="flex-1 min-w-0">
