@@ -34,6 +34,13 @@ export default function TemplatesPageWrapper() {
 
   const { data: myTemplates = [], isLoading: isLoadingMy } = useQuery<BotTemplate[]>({
     queryKey: ['/api/templates/category/custom'],
+    queryFn: async () => {
+      // Получаем IDs шаблонов гостя из localStorage
+      const myTemplateIds = localStorage.getItem('myTemplateIds');
+      const idsParam = myTemplateIds ? `?ids=${myTemplateIds}` : '';
+      const response = await fetch(`/api/templates/category/custom${idsParam}`);
+      return response.json();
+    }
   });
 
   const categories = [
@@ -105,6 +112,16 @@ export default function TemplatesPageWrapper() {
   const handleUseTemplate = (template: BotTemplate) => {
     useTemplateMutation.mutate(template.id);
     localStorage.setItem('selectedTemplate', JSON.stringify(template));
+    
+    // Сохраняем ID шаблона в список "моих" для гостей
+    const myTemplateIds = localStorage.getItem('myTemplateIds') || '';
+    const ids = new Set(myTemplateIds.split(',').filter(Boolean).map(Number));
+    ids.add(template.id);
+    localStorage.setItem('myTemplateIds', Array.from(ids).join(','));
+    
+    // Инвалидируем кеш "моих" шаблонов
+    queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+    
     setLocation('/');
     
     toast({
