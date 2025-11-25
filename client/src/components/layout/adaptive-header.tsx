@@ -585,6 +585,46 @@ export function AdaptiveHeader({
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Действия</h3>
                 <MobileActions />
               </div>
+              <div className="pt-4 border-t border-border">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Аккаунт</h3>
+                <div className="flex flex-col gap-2">
+                  {user ? (
+                    <>
+                      <div className="px-3 py-2 bg-muted rounded-md">
+                        <p className="text-sm font-medium text-foreground">{user.firstName}</p>
+                        {user.username && <p className="text-xs text-muted-foreground">@{user.username}</p>}
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          logout();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="w-full"
+                      >
+                        <LogOut className="w-3 h-3 mr-2" />
+                        Выход
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => {
+                          handleTelegramLogin();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="w-full"
+                      >
+                        <i className="fab fa-telegram-plane mr-2 text-sm" />
+                        Вход в Telegram
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
