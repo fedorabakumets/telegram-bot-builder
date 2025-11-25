@@ -471,7 +471,6 @@ export function AdaptiveHeader({
             title="Выход"
           >
             <LogOut className="h-3.5 w-3.5" />
-            <span className="max-sm:hidden ml-1">Выход</span>
           </Button>
         </>
       ) : (
