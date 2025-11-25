@@ -51,58 +51,10 @@ function ComponentsSidebar({
 }: ComponentsSidebarProps) {
   const isMobile = useIsMobile();
   const sidebarRef = useRef<HTMLElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const lastLogRef = useRef(0);
-  const mouseCountRef = useRef(0);
-  const renderCountRef = useRef(0);
-  const lastRenderLogRef = useRef(0);
+  const mousePosRef = useRef({ x: 0, y: 0 });
   
-  // 🔴 ЛОГИРОВАНИЕ РЕНДЕРОВ: Отслеживаем как часто sidebar рендерится
-  renderCountRef.current++;
-  useEffect(() => {
-    const now = performance.now();
-    if (now - lastRenderLogRef.current > 300) {
-      console.log(`🔴 SIDEBAR RENDER #${renderCountRef.current} at ${now.toFixed(0)}ms`);
-      lastRenderLogRef.current = now;
-    }
-  });
   
-  // 🖱️ УЛУЧШЕННОЕ ОТСЛЕЖИВАНИЕ МЫШКИ: Логируем движение в sidebar каждые 500ms
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const sidebarRect = sidebarRef.current?.getBoundingClientRect();
-      if (sidebarRect && e.clientX < sidebarRect.right) {
-        setMousePos({ x: e.clientX, y: e.clientY });
-        mouseCountRef.current++;
-        
-        const now = performance.now();
-        if (now - lastLogRef.current > 500) {
-          const elementUnderMouse = document.elementFromPoint(e.clientX, e.clientY);
-          console.log(`🖱️ SIDEBAR MOUSE: pos=(${e.clientX}, ${e.clientY}), element=${elementUnderMouse?.tagName}.${elementUnderMouse?.className?.split(' ')[0]}`);
-          lastLogRef.current = now;
-        }
-      }
-    };
-    
-    const handleMouseEnter = () => {
-      console.log(`➡️ MOUSE ENTER SIDEBAR`);
-    };
-    
-    const handleMouseLeave = () => {
-      console.log(`⬅️ MOUSE LEAVE SIDEBAR`);
-      mouseCountRef.current = 0;
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    sidebarRef.current?.addEventListener('mouseenter', handleMouseEnter);
-    sidebarRef.current?.addEventListener('mouseleave', handleMouseLeave);
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      sidebarRef.current?.removeEventListener('mouseenter', handleMouseEnter);
-      sidebarRef.current?.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
+  
 
   
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
@@ -248,7 +200,7 @@ function ComponentsSidebar({
         <div key={category} className="space-y-2">
           <button
             onClick={() => toggleCategory(category)}
-            className="w-full text-left font-semibold text-sm text-foreground hover:text-primary transition-colors flex items-center justify-between p-2 rounded hover:bg-muted"
+            className="w-full text-left font-semibold text-sm text-foreground hover:text-primary flex items-center justify-between p-2 rounded hover:opacity-70"
             data-testid={`button-toggle-category-${category.toLowerCase()}`}
           >
             <span>{category}</span>
@@ -266,7 +218,7 @@ function ComponentsSidebar({
                   onDragStart={(e) => handleDragStart(e, component)}
                   onClick={() => onComponentAdd && onComponentAdd(component)}
                   data-component={JSON.stringify(component)}
-                  className="p-3 bg-muted rounded border border-border hover:bg-muted/80 cursor-move transition-colors"
+                  className="p-3 bg-muted rounded border border-border hover:opacity-80 cursor-move"
                   data-testid={`card-component-${component.id}`}
                 >
                   <div className="text-2xl mb-1">{component.icon}</div>

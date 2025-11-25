@@ -16,85 +16,10 @@ interface HeaderProps {
 
 function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSaveAsTemplate, onLoadTemplate, isSaving }: HeaderProps) {
   const headerRef = useRef<HTMLHeadElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const lastLogRef = useRef(0);
-  const mouseCountRef = useRef(0);
-  const renderCountRef = useRef(0);
-  const lastRenderLogRef = useRef(0);
+  const mousePosRef = useRef({ x: 0, y: 0 });
   
-  // 🟡 ЛОГИРОВАНИЕ РЕНДЕРОВ: Отслеживаем как часто header рендерится
-  renderCountRef.current++;
-  useEffect(() => {
-    const now = performance.now();
-    if (now - lastRenderLogRef.current > 300) {
-      console.log(`🟡 HEADER RENDER #${renderCountRef.current} at ${now.toFixed(0)}ms`);
-      lastRenderLogRef.current = now;
-    }
-  });
   
-  // 🖱️ УЛУЧШЕННОЕ ОТСЛЕЖИВАНИЕ МЫШКИ: Логируем движение в header каждые 500ms
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const headerRect = headerRef.current?.getBoundingClientRect();
-      if (headerRect && e.clientY < headerRect.bottom) {
-        setMousePos({ x: e.clientX, y: e.clientY });
-        mouseCountRef.current++;
-        
-        const now = performance.now();
-        if (now - lastLogRef.current > 500) {
-          const elementUnderMouse = document.elementFromPoint(e.clientX, e.clientY);
-          console.log(`🖱️ HEADER MOUSE: pos=(${e.clientX}, ${e.clientY}), element=${elementUnderMouse?.tagName}.${elementUnderMouse?.className?.split(' ')[0]}`);
-          lastLogRef.current = now;
-        }
-      }
-    };
-    
-    const handleMouseEnter = () => {
-      console.log(`➡️ MOUSE ENTER HEADER`);
-    };
-    
-    const handleMouseLeave = () => {
-      console.log(`⬅️ MOUSE LEAVE HEADER`);
-      mouseCountRef.current = 0;
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    headerRef.current?.addEventListener('mouseenter', handleMouseEnter);
-    headerRef.current?.addEventListener('mouseleave', handleMouseLeave);
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      headerRef.current?.removeEventListener('mouseenter', handleMouseEnter);
-      headerRef.current?.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
 
-  // Логировать изменения стилей в header
-  useEffect(() => {
-    if (!headerRef.current) return;
-    
-    const headerElement = headerRef.current;
-    let styleChangeCount = 0;
-    
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes') {
-          if (mutation.attributeName === 'style' || mutation.attributeName === 'class') {
-            styleChangeCount++;
-          }
-        }
-      });
-    });
-    
-    observer.observe(headerElement, {
-      attributes: true,
-      attributeFilter: ['class', 'style'],
-      subtree: true,
-      attributeOldValue: true
-    });
-    
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <header ref={headerRef} data-testid="editor-header" className="bg-background border-b border-border h-16 flex items-center justify-between px-6 relative z-50">
@@ -121,10 +46,10 @@ function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSave
             <button 
               key={tab.key}
               onClick={() => onTabChange(tab.key as any)}
-              className={`px-3 py-1.5 text-sm max-sm:text-xs max-sm:px-2 max-sm:py-1 font-medium rounded-md transition-colors whitespace-nowrap ${
+              className={`px-3 py-1.5 text-sm max-sm:text-xs max-sm:px-2 max-sm:py-1 font-medium rounded-md whitespace-nowrap ${
                 currentTab === tab.key 
                   ? 'text-primary bg-primary/10' 
-                  : 'text-muted-foreground hover:bg-muted'
+                  : 'text-muted-foreground hover:opacity-70'
               }`}
             >
               {tab.label}

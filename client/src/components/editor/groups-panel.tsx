@@ -141,7 +141,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   // Load groups from database
   const { data: groups = [], isLoading, error, refetch } = useQuery({
     queryKey: ['/api/projects', projectId, 'groups'],
-    queryFn: () => fetch(`/api/projects/${projectId}/groups`).then(res => res.json()) as Promise<BotGroup[]>
+    queryFn: () => fetch(`/api/projects/${projectId}/groups`).then(res => res.json()) as Promise<BotGroup[]>,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchInterval: false,
+    refetchIntervalInBackground: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   // Ensure groups is always an array
