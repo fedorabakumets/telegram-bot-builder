@@ -2078,14 +2078,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: template.name,
           description: template.description,
           category: 'custom',
-          data: template.data,
+          data: template.data as any,
           ownerId: ownerId,
           rating: 0,
           viewCount: 0,
           downloadCount: 0,
           useCount: 0,
           tags: template.tags,
-          hierarchy: template.hierarchy,
           isFeatured: false
         });
         
