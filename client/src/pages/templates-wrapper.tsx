@@ -354,10 +354,10 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                   <CardDescription className="mt-1">{template.description}</CardDescription>
                 )}
               </div>
-              {template.rating && template.rating > 0 && (
-                <div className="flex items-center gap-1">
+              {(template.rating ?? 0) > 0 && (
+                <div className="flex items-center gap-1 ml-auto">
                   <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                  <span className="text-sm font-medium">{template.rating.toFixed(1)}</span>
+                  <span className="text-sm font-medium">{(template.rating ?? 0).toFixed(1)}</span>
                 </div>
               )}
             </div>
