@@ -373,7 +373,7 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                 <Eye className="h-4 w-4" />
                 <span>{template.viewCount || 0}</span>
                 <Download className="h-4 w-4 ml-2" />
-                <span>{template.downloadCount || 0}</span>
+                <span>{template.useCount || 0}</span>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" className="flex-1" onClick={() => onUse(template)}>
