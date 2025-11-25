@@ -110,6 +110,8 @@ export default function TemplatesPageWrapper() {
   });
 
   const handleUseTemplate = (template: BotTemplate) => {
+    // Для авторизованных пользователей это создаст копию шаблона
+    // Для гостей это просто инкрементирует счетчик
     useTemplateMutation.mutate(template.id);
     localStorage.setItem('selectedTemplate', JSON.stringify(template));
     
@@ -119,8 +121,9 @@ export default function TemplatesPageWrapper() {
     ids.add(template.id);
     localStorage.setItem('myTemplateIds', Array.from(ids).join(','));
     
-    // Инвалидируем кеш "моих" шаблонов
+    // Инвалидируем кеши - и для гостей, и для авторизованных пользователей
     queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
     
     setLocation('/');
     

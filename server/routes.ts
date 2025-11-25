@@ -2057,17 +2057,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Use template (increment use count)
+  // Use template (increment use count + create copy for authenticated user)
   app.post("/api/templates/:id/use", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await storage.incrementTemplateUseCount(id);
-      if (!success) {
+      const ownerId = getOwnerIdFromRequest(req);
+      
+      // Получаем исходный шаблон
+      const template = await storage.getBotTemplate(id);
+      if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
-      res.json({ message: "Template use count incremented" });
+      
+      // Увеличиваем счетчик использований
+      await storage.incrementTemplateUseCount(id);
+      
+      // Если пользователь авторизован, создаем копию шаблона с его ownerId
+      if (ownerId !== null) {
+        const copiedTemplate = await storage.createBotTemplate({
+          name: template.name,
+          description: template.description,
+          category: 'custom',
+          data: template.data,
+          ownerId: ownerId,
+          rating: 0,
+          viewCount: 0,
+          downloadCount: 0,
+          useCount: 0,
+          tags: template.tags,
+          hierarchy: template.hierarchy,
+          isFeatured: false
+        });
+        
+        res.json({ 
+          message: "Template copied to your collection", 
+          copiedTemplate 
+        });
+      } else {
+        // Для гостей - просто инкрементируем счетчик
+        res.json({ message: "Template use count incremented" });
+      }
     } catch (error) {
-      res.status(500).json({ message: "Failed to increment use count" });
+      console.error("Template use error:", error);
+      res.status(500).json({ message: "Failed to use template" });
     }
   });
 
