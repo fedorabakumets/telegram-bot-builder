@@ -410,9 +410,10 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 </ResizablePanel>
                 <ResizableHandle 
                   withHandle 
-                  className="bg-transparent hover:bg-blue-500/30 dark:hover:bg-blue-500/30 transition-all duration-200 w-0.5 hover:w-2 active:bg-blue-500/40 cursor-col-resize relative flex items-center justify-center group"
+                  className="bg-gradient-to-r from-transparent via-slate-300/0 to-transparent hover:from-blue-500/20 hover:via-blue-500/40 hover:to-blue-500/20 dark:hover:from-blue-600/20 dark:hover:via-blue-500/30 dark:hover:to-blue-600/20 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 active:bg-gradient-to-r active:from-blue-500/30 active:via-blue-600/50 active:to-blue-500/30 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md active:shadow-lg"
                 >
-                  <div className="absolute h-12 w-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none rounded-full"></div>
+                  <div className="absolute h-16 md:h-20 w-1.5 md:w-2 bg-gradient-to-b from-transparent via-blue-400 dark:via-blue-500 to-transparent opacity-0 group-hover:opacity-100 active:opacity-100 transition-all duration-200 pointer-events-none rounded-full blur-sm"></div>
+                  <div className="absolute h-8 w-0.5 md:w-1 bg-gradient-to-b from-blue-400 via-blue-500 to-blue-400 dark:from-blue-500 dark:via-blue-400 dark:to-blue-500 opacity-0 group-hover:opacity-60 active:opacity-100 transition-all duration-200 pointer-events-none rounded-full"></div>
                 </ResizableHandle>
               </>
             )}
@@ -427,9 +428,10 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               <>
                 <ResizableHandle 
                   withHandle 
-                  className="bg-transparent hover:bg-blue-500/30 dark:hover:bg-blue-500/30 transition-all duration-200 w-0.5 hover:w-2 active:bg-blue-500/40 cursor-col-resize relative flex items-center justify-center group"
+                  className="bg-gradient-to-r from-transparent via-slate-300/0 to-transparent hover:from-blue-500/20 hover:via-blue-500/40 hover:to-blue-500/20 dark:hover:from-blue-600/20 dark:hover:via-blue-500/30 dark:hover:to-blue-600/20 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 active:bg-gradient-to-r active:from-blue-500/30 active:via-blue-600/50 active:to-blue-500/30 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md active:shadow-lg"
                 >
-                  <div className="absolute h-12 w-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none rounded-full"></div>
+                  <div className="absolute h-16 md:h-20 w-1.5 md:w-2 bg-gradient-to-b from-transparent via-blue-400 dark:via-blue-500 to-transparent opacity-0 group-hover:opacity-100 active:opacity-100 transition-all duration-200 pointer-events-none rounded-full blur-sm"></div>
+                  <div className="absolute h-8 w-0.5 md:w-1 bg-gradient-to-b from-blue-400 via-blue-500 to-blue-400 dark:from-blue-500 dark:via-blue-400 dark:to-blue-500 opacity-0 group-hover:opacity-60 active:opacity-100 transition-all duration-200 pointer-events-none rounded-full"></div>
                 </ResizableHandle>
                 <ResizablePanel 
                   defaultSize={totalRightSize} 
@@ -438,7 +440,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 >
                   <ResizablePanelGroup direction="horizontal" className="h-full">
                     {rightElements.flatMap((rightEl, index) => [
-                      ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle />] : []),
+                      ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle className="bg-gradient-to-r from-transparent via-slate-200/0 to-transparent hover:from-purple-500/15 hover:via-purple-500/30 hover:to-purple-500/15 dark:hover:from-purple-600/15 dark:hover:via-purple-500/25 dark:hover:to-purple-600/15 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md" />] : []),
                       <ResizablePanel 
                         key={`panel-${rightEl.id}`}
                         defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
