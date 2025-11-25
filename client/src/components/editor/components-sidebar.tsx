@@ -1956,26 +1956,28 @@ export function ComponentsSidebar({
           const isCollapsed = collapsedCategories.has(category.title);
           
           return (
-            <div key={category.title}>
+            <div key={category.title} className="space-y-2 sm:space-y-3">
               <button
                 onClick={() => toggleCategory(category.title)}
-                className="w-full flex items-center justify-between text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 hover:text-foreground transition-colors group"
+                className="w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground hover:bg-muted/50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-200 group"
               >
-                <span>{category.title}</span>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs normal-case bg-muted/50 px-2 py-0.5 rounded-full">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="truncate">{category.title}</span>
+                  <span className="text-xs normal-case bg-muted/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-full font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
                     {category.components.length}
                   </span>
+                </div>
+                <div className="flex-shrink-0 p-1 rounded-md group-hover:bg-muted/50 transition-colors">
                   {isCollapsed ? (
-                    <ChevronRight className="h-3 w-3 group-hover:text-foreground transition-colors" />
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
                   ) : (
-                    <ChevronDown className="h-3 w-3 group-hover:text-foreground transition-colors" />
+                    <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
                   )}
                 </div>
               </button>
               
               {!isCollapsed && (
-                <div className="space-y-2 transition-all duration-200 ease-in-out">
+                <div className="space-y-1.5 sm:space-y-2 transition-all duration-200 ease-in-out">
                   {category.components.map((component) => (
                     <div
                       key={component.id}
@@ -1984,16 +1986,17 @@ export function ComponentsSidebar({
                       onTouchStart={(e) => handleTouchStart(e, component)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
-                      className={`component-item group flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors touch-action-none no-select ${
+                      className={`component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30 hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40 rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select border border-border/30 hover:border-primary/30 ${
                         touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
                       }`}
+                      data-testid={`component-${component.id}`}
                     >
-                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mr-3", component.color)}>
-                        <i className={`${component.icon} text-sm`}></i>
+                      <div className={cn("w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover/item:scale-110", component.color)}>
+                        <i className={`${component.icon} text-xs sm:text-sm`}></i>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{component.name}</p>
-                        <p className="text-xs text-muted-foreground">{component.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{component.name}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1">{component.description}</p>
                       </div>
                       {onComponentAdd && (
                         <button
@@ -2001,10 +2004,11 @@ export function ComponentsSidebar({
                             e.stopPropagation();
                             onComponentAdd(component);
                           }}
-                          className="ml-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 text-primary hidden group-hover:flex items-center justify-center"
+                          className="ml-1 flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:bg-primary/15 dark:hover:bg-primary/25 hidden group-hover/item:flex items-center justify-center transition-all duration-200 hover:shadow-md hover:shadow-primary/20"
                           title={`Добавить ${component.name} на холст`}
+                          data-testid={`button-add-${component.id}`}
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       )}
                     </div>
