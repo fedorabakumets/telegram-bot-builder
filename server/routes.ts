@@ -2089,7 +2089,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Use template (increment use count + create copy for authenticated user)
+  // Use template (increment use count + create project copy for authenticated user)
   app.post("/api/templates/:id/use", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -2104,24 +2104,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Увеличиваем счетчик использований
       await storage.incrementTemplateUseCount(id);
       
-      // Если пользователь авторизован, создаем копию шаблона с его ownerId
+      // Если пользователь авторизован, создаем проект на основе шаблона
       if (ownerId !== null) {
-        const copiedTemplate = await storage.createBotTemplate({
+        const newProject = await storage.createBotProject({
           name: template.name,
           description: template.description,
-          category: 'custom',
           data: template.data as any,
           ownerId: ownerId,
-          tags: template.tags,
-          difficulty: template.difficulty || 'easy',
-          language: template.language || 'ru',
-          complexity: template.complexity || 1,
-          estimatedTime: template.estimatedTime || 5
+          state: 'draft'
         });
         
         res.json({ 
-          message: "Template copied to your collection", 
-          copiedTemplate 
+          message: "Template copied to your projects", 
+          project: newProject
         });
       } else {
         // Для гостей - просто инкрементируем счетчик
