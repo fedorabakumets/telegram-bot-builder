@@ -6382,26 +6382,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         authDate: auth_date ? parseInt(auth_date.toString()) : undefined
       });
 
-      // Сохраняем пользователя в сессию для привязки проектов и токенов
+      // КРИТИЧНО: Регенерируем сессию и сохраняем в БД ПЕРЕД отправкой response
       if (req.session) {
-        req.session.telegramUser = userData;
-        // Явно сохраняем сессию в БД
-        req.session.save((err) => {
+        req.session.regenerate((err) => {
           if (err) {
-            console.error("❌ Session save error:", err);
-          } else {
-            console.log(`✅ Session saved for user ${userData.id}`);
+            console.error("❌ Session regenerate error:", err);
+            return res.status(500).json({
+              success: false,
+              error: "Ошибка создания сессии"
+            });
           }
+          
+          req.session!.telegramUser = userData;
+          
+          // Явно сохраняем сессию в БД - ЖДЕМ завершения перед response
+          req.session!.save((saveErr) => {
+            if (saveErr) {
+              console.error("❌ Session save error:", saveErr);
+              return res.status(500).json({
+                success: false,
+                error: "Ошибка сохранения сессии"
+              });
+            }
+            
+            console.log(`✅ Telegram auth successful for user: ${first_name} (@${username}) - Session SAVED with ID: ${userData.id}`);
+
+            res.json({
+              success: true,
+              message: "Авторизация успешна",
+              user: userData
+            });
+          });
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          error: "Сессия не инициализирована"
         });
       }
-
-      console.log(`✅ Telegram auth successful for user: ${first_name} (@${username}) - saved to DB with ID: ${userData.id}`);
-
-      res.json({
-        success: true,
-        message: "Авторизация успешна",
-        user: userData
-      });
     } catch (error: any) {
       console.error("Telegram auth error:", error);
       res.status(500).json({
