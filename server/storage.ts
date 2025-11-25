@@ -36,7 +36,7 @@ import {
   type InsertTelegramUser
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, like, or, ilike, sql } from "drizzle-orm";
+import { eq, desc, asc, and, like, or, ilike, sql, isNull } from "drizzle-orm";
 import { dbManager } from "./db-utils";
 import { cachedOps } from "./db-cache";
 
@@ -1135,7 +1135,7 @@ export class DatabaseStorage implements IStorage {
 
   async getGuestBotProjects(): Promise<BotProject[]> {
     return await this.db.select().from(botProjects)
-      .where(sql`${botProjects.ownerId} IS NULL`)
+      .where(isNull(botProjects.ownerId))
       .orderBy(desc(botProjects.createdAt));
   }
 
