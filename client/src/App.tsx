@@ -65,8 +65,16 @@ function App() {
     // Слушаем на событие авторизации из окна Telegram Login
     const handleAuthMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'telegram-auth' && event.data.user) {
-        // Перезагружаем страницу после успешной авторизации
-        window.location.reload();
+        // Сохраняем пользователя в localStorage для обновления hook'а
+        try {
+          localStorage.setItem('telegramUser', JSON.stringify(event.data.user));
+          // Отправляем custom event для обновления всех компонентов
+          window.dispatchEvent(new CustomEvent('telegram-auth-change', {
+            detail: { user: event.data.user }
+          }));
+        } catch (e) {
+          console.error('Error saving auth data:', e);
+        }
       }
     };
 
