@@ -498,7 +498,6 @@ export function AdaptiveHeader({
           rel="noopener noreferrer"
         >
           <Github className="h-3.5 w-3.5" />
-          <span className="max-sm:hidden ml-1">GitHub</span>
         </a>
       </Button>
       
