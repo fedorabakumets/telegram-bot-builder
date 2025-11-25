@@ -108,7 +108,8 @@ export default function TemplatesPageWrapper() {
       currentTemplates = currentTemplates.filter(template =>
         template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         template.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        template.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        template.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        template.authorName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
