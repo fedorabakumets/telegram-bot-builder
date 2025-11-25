@@ -1203,25 +1203,53 @@ export function Canvas({
                     </span>
                   </button>
                 </PopoverTrigger>
-                <PopoverContent side="bottom" className="w-40 p-2">
-                  <div className="space-y-1">
-                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400 px-2 py-1">Быстрый масштаб</div>
-                    {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200].map((level) => (
-                      <button
-                        key={level}
-                        onClick={() => setZoomLevel(level)}
-                        className={`w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                          Math.abs(zoom - level) < 1 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span>{level}%</span>
-                          {level === 100 && <span className="text-xs opacity-60">По умолчанию</span>}
-                          {level === 200 && <span className="text-xs opacity-60">Максимум</span>}
-                          {level === 1 && <span className="text-xs opacity-60">Минимум</span>}
+                <PopoverContent side="bottom" className="w-48 p-3">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 dark:text-gray-400 block mb-2">Точный масштаб</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range"
+                          min="1"
+                          max="200"
+                          value={Math.round(zoom)}
+                          onChange={(e) => setZoomLevel(parseInt(e.target.value))}
+                          className="flex-1 h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                        />
+                        <div className="w-12 text-right">
+                          <input
+                            type="number"
+                            min="1"
+                            max="200"
+                            value={Math.round(zoom)}
+                            onChange={(e) => setZoomLevel(Math.min(200, Math.max(1, parseInt(e.target.value) || 100)))}
+                            className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                          />
                         </div>
-                      </button>
-                    ))}
+                        <span className="text-xs text-gray-500 dark:text-gray-400">%</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-gray-600 dark:text-gray-400 px-2 py-1">Быстрый выбор</div>
+                      {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200].map((level) => (
+                        <button
+                          key={level}
+                          onClick={() => setZoomLevel(level)}
+                          className={`w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
+                            Math.abs(zoom - level) < 1 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>{level}%</span>
+                            {level === 100 && <span className="text-xs opacity-60">По умолчанию</span>}
+                            {level === 200 && <span className="text-xs opacity-60">Максимум</span>}
+                            {level === 1 && <span className="text-xs opacity-60">Минимум</span>}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
                     <div className="border-t border-gray-200 dark:border-slate-600 my-1"></div>
                     <button
                       onClick={resetZoom}
