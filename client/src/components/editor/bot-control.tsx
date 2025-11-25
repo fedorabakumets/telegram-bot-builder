@@ -1208,43 +1208,83 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       {/* Add Bot Dialog */}
       <Dialog open={showAddBot} onOpenChange={setShowAddBot}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Подключить бота</DialogTitle>
-            <DialogDescription>
-              Добавьте нового бота, используя токен от @BotFather
+          <DialogHeader className="space-y-3 mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/10 dark:from-blue-500/30 dark:to-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl sm:text-2xl">Подключить бота</DialogTitle>
+              </div>
+            </div>
+            <DialogDescription className="text-sm">
+              Добавьте нового бота, используя токен от <span className="font-semibold text-foreground">@BotFather</span>
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="bot-token">Токен бота</Label>
-              <Input
-                id="bot-token"
-                type="password"
-                placeholder="Вставьте токен от @BotFather"
-                value={newBotToken}
-                onChange={(e) => setNewBotToken(e.target.value)}
-                disabled={isParsingBot || createBotMutation.isPending}
-              />
-              <p className="text-xs text-muted-foreground">
-                Получите токен у @BotFather в Telegram: /newbot
+          
+          <div className="space-y-4 sm:space-y-5 py-2">
+            {/* Help box */}
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 space-y-2">
+              <p className="text-xs sm:text-sm text-blue-900 dark:text-blue-200 font-semibold flex items-center gap-2">
+                <span className="w-1 h-1 bg-blue-600 rounded-full flex-shrink-0" />
+                Как получить токен?
               </p>
+              <ol className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 space-y-1 ml-3">
+                <li>1. Откройте Telegram и найдите <span className="font-semibold">@BotFather</span></li>
+                <li>2. Отправьте команду <span className="font-mono bg-blue-900/20 dark:bg-blue-900/40 px-1.5 py-0.5 rounded">/newbot</span></li>
+                <li>3. Следуйте инструкциям и скопируйте токен</li>
+              </ol>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bot-token" className="text-sm sm:text-base font-semibold">
+                Токен бота
+              </Label>
+              <div className="relative">
+                <Input
+                  id="bot-token"
+                  type="password"
+                  placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+                  value={newBotToken}
+                  onChange={(e) => setNewBotToken(e.target.value)}
+                  disabled={isParsingBot || createBotMutation.isPending}
+                  className="text-xs sm:text-sm pr-10"
+                  data-testid="input-bot-token"
+                />
+                {newBotToken && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  </div>
+                )}
+              </div>
               {isParsingBot && (
-                <p className="text-xs text-blue-600 dark:text-blue-400">
-                  Получаем информацию о боте...
-                </p>
+                <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-200 dark:border-blue-800/50">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-spin" />
+                  <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 font-medium">
+                    Проверяем токен и получаем информацию о боте...
+                  </p>
+                </div>
               )}
             </div>
           </div>
           
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setShowAddBot(false)}>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end pt-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowAddBot(false)}
+              disabled={isParsingBot || createBotMutation.isPending}
+              className="text-sm sm:text-base"
+              data-testid="button-cancel-add-bot"
+            >
               Отмена
             </Button>
             <Button 
               onClick={handleAddBot}
               disabled={isParsingBot || createBotMutation.isPending || !newBotToken.trim()}
+              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 text-sm sm:text-base"
+              data-testid="button-add-bot"
             >
-              {isParsingBot ? 'Проверка токена...' : createBotMutation.isPending ? 'Добавление...' : 'Добавить бота'}
+              {isParsingBot ? 'Проверка...' : createBotMutation.isPending ? 'Добавление...' : 'Добавить бота'}
             </Button>
           </div>
         </DialogContent>
@@ -1253,43 +1293,65 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       {/* Edit Bot Token Dialog */}
       <Dialog open={!!editingToken} onOpenChange={() => setEditingToken(null)}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Редактировать токен</DialogTitle>
-            <DialogDescription>
-              Изменить настройки токена бота
+          <DialogHeader className="space-y-3 mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/10 dark:from-purple-500/30 dark:to-pink-500/20 flex items-center justify-center flex-shrink-0">
+                <Edit2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl sm:text-2xl">Редактировать токен</DialogTitle>
+              </div>
+            </div>
+            <DialogDescription className="text-sm">
+              Обновите параметры токена бота для лучшей организации
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          
+          <div className="space-y-4 sm:space-y-5 py-2">
             <div className="space-y-2">
-              <Label htmlFor="edit-bot-name">Имя токена</Label>
+              <Label htmlFor="edit-bot-name" className="text-sm sm:text-base font-semibold">
+                Имя токена
+              </Label>
               <Input
                 id="edit-bot-name"
-                placeholder="Имя для токена (например: Основной бот)"
+                placeholder="Например: Основной бот, Test бот"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 disabled={updateTokenMutation.isPending}
+                className="text-xs sm:text-sm"
                 data-testid="input-edit-bot-name"
               />
+              <p className="text-xs text-muted-foreground">
+                Это имя будет использоваться для идентификации токена в приложении
+              </p>
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="edit-bot-description">Описание</Label>
+              <Label htmlFor="edit-bot-description" className="text-sm sm:text-base font-semibold">
+                Описание
+              </Label>
               <Textarea
                 id="edit-bot-description"
-                placeholder="Описание бота (необязательно)"
+                placeholder="Описание назначения этого токена (необязательно)"
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
                 disabled={updateTokenMutation.isPending}
                 rows={3}
+                className="text-xs sm:text-sm resize-none"
                 data-testid="textarea-edit-bot-description"
               />
+              <p className="text-xs text-muted-foreground">
+                Добавьте описание для лучшей организации (максимум 500 символов)
+              </p>
             </div>
           </div>
           
-          <div className="flex gap-2 justify-end">
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end pt-2">
             <Button 
               variant="outline" 
               onClick={() => setEditingToken(null)}
               disabled={updateTokenMutation.isPending}
+              className="text-sm sm:text-base"
               data-testid="button-cancel-edit"
             >
               Отмена
@@ -1307,6 +1369,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                 }
               }}
               disabled={updateTokenMutation.isPending || !editName.trim()}
+              className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200 text-sm sm:text-base"
               data-testid="button-save-edit"
             >
               {updateTokenMutation.isPending ? 'Сохранение...' : 'Сохранить'}
