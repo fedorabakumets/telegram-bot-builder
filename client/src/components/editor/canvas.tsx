@@ -1216,17 +1216,7 @@ export function Canvas({
                           onChange={(e) => setZoomLevel(parseInt(e.target.value))}
                           className="flex-1 h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                         />
-                        <div className="w-12 text-right">
-                          <input
-                            type="number"
-                            min="1"
-                            max="200"
-                            value={Math.round(zoom)}
-                            onChange={(e) => setZoomLevel(Math.min(200, Math.max(1, parseInt(e.target.value) || 100)))}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">%</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 min-w-[40px] text-right">{Math.round(zoom)}%</span>
                       </div>
                     </div>
 
