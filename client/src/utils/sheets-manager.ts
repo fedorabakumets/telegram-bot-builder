@@ -34,7 +34,7 @@ export class SheetsManager {
 
     const defaultSheet: CanvasSheet = {
       id: nanoid(),
-      name: 'Основной поток',
+      name: 'Лист 1',
       nodes: nodes,
       connections: legacyData.connections || [],
       viewState: {

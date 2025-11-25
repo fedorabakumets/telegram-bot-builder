@@ -1411,14 +1411,14 @@ export function ComponentsSidebar({
         console.log(`[${project.name}] Старый формат - один основной лист`);
         return {
           count: 1,
-          names: ['Основной поток']
+          names: ['Лист 1']
         };
       }
     } catch (error) {
       console.error('Ошибка получения информации о листах:', error);
       return {
         count: 1,
-        names: ['Основной поток']
+        names: ['Лист 1']
       };
     }
   };
