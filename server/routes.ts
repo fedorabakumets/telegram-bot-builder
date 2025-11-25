@@ -6281,6 +6281,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Сохраняем пользователя в сессию для привязки проектов и токенов
       if (req.session) {
         req.session.telegramUser = userData;
+        // Явно сохраняем сессию в БД
+        req.session.save((err) => {
+          if (err) {
+            console.error("❌ Session save error:", err);
+          } else {
+            console.log(`✅ Session saved for user ${userData.id}`);
+          }
+        });
       }
 
       console.log(`✅ Telegram auth successful for user: ${first_name} (@${username}) - saved to DB with ID: ${userData.id}`);
