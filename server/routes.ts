@@ -78,6 +78,7 @@ function normalizeProjectData(projectData: any) {
 import { initializeDatabaseTables } from "./init-db";
 import { telegramClientManager, initializeTelegramManager } from "./telegram-client";
 import { serverCache, getCachedOrExecute } from "./cache";
+import { authMiddleware, getOwnerIdFromRequest } from "./auth-middleware";
 
 // Глобальное хранилище активных процессов ботов (ключ: `${projectId}_${tokenId}`)
 const botProcesses = new Map<string, ChildProcess>();
@@ -1124,6 +1125,10 @@ async function initializeComponents() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth middleware для всех API роутов (устанавливает req.user если пользователь авторизован)
+  // ВАЖНО: должен быть подключен ДО всех роутов
+  app.use("/api", authMiddleware);
+  
   // Запускаем инициализацию в фоне без блокировки сервера
   initializeComponents();
 
@@ -1168,16 +1173,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all bot projects (lightweight - without data field)
   app.get("/api/projects/list", requireDbReady, async (req, res) => {
     try {
-      const projects = await getCachedOrExecute(
-        'all-projects-list',
-        async () => {
-          const allProjects = await storage.getAllBotProjects();
-          // Возвращаем только метаданные, без поля data
-          return allProjects.map(({ data, ...metadata }) => metadata);
-        },
-        30000 // Кешируем на 30 секунд
-      );
-      res.json(projects);
+      const ownerId = getOwnerIdFromRequest(req);
+      let projects;
+      
+      if (ownerId !== null) {
+        // Authenticated user - return only their projects
+        projects = await storage.getUserBotProjects(ownerId);
+      } else {
+        // Guest user - return all projects
+        projects = await getCachedOrExecute(
+          'all-projects-list',
+          async () => await storage.getAllBotProjects(),
+          30000
+        );
+      }
+      
+      // Возвращаем только метаданные, без поля data
+      const projectsList = projects.map(({ data, ...metadata }) => metadata);
+      res.json(projectsList);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch projects list" });
     }
@@ -1186,11 +1199,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all bot projects (legacy - includes data field, used for compatibility)
   app.get("/api/projects", requireDbReady, async (req, res) => {
     try {
-      const projects = await getCachedOrExecute(
-        'all-projects',
-        () => storage.getAllBotProjects(),
-        30000 // Кешируем на 30 секунд
-      );
+      const ownerId = getOwnerIdFromRequest(req);
+      let projects;
+      
+      if (ownerId !== null) {
+        // Authenticated user - return only their projects
+        projects = await storage.getUserBotProjects(ownerId);
+      } else {
+        // Guest user - return all projects (for localStorage mode)
+        projects = await getCachedOrExecute(
+          'all-projects',
+          () => storage.getAllBotProjects(),
+          30000
+        );
+      }
+      
       res.json(projects);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch projects" });
@@ -1214,6 +1237,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
       
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null && project.ownerId !== ownerId) {
+        return res.status(403).json({ message: "You don't have permission to access this project" });
+      }
+      
       // Нормализуем данные проекта для добавления недостающих полей в узлы
       const normalizedProject = normalizeProjectData(project);
       
@@ -1226,8 +1255,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new bot project
   app.post("/api/projects", requireDbReady, async (req, res) => {
     try {
-      const validatedData = insertBotProjectSchema.parse(req.body);
-      const project = await storage.createBotProject(validatedData);
+      // Игнорируем ownerId из body, используем только из сессии
+      const { ownerId: _ignored, ...bodyData } = req.body;
+      const validatedData = insertBotProjectSchema.parse(bodyData);
+      // Автоматически устанавливаем ownerId из авторизованного пользователя
+      const projectData = {
+        ...validatedData,
+        ownerId: getOwnerIdFromRequest(req)
+      };
+      const project = await storage.createBotProject(projectData);
       res.status(201).json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1247,6 +1283,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: 'Invalid project ID', 
           error: 'Project ID must be a valid number' 
         });
+      }
+      
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const existingProject = await storage.getBotProject(projectId);
+        if (!existingProject) {
+          return res.status(404).json({ message: "Project not found" });
+        }
+        if (existingProject.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to modify this project" });
+        }
       }
       
       const validatedData = insertBotProjectSchema.partial().parse(req.body);
@@ -1286,6 +1334,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
       console.log(`✅ Проект ${id} найден: ${project.name}`);
+      
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null && project.ownerId !== ownerId) {
+        console.log(`❌ Пользователь ${ownerId} не имеет прав на удаление проекта ${id}`);
+        return res.status(403).json({ message: "You don't have permission to delete this project" });
+      }
 
       // Останавливаем бота, если он запущен
       try {
@@ -1794,7 +1849,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all templates
   app.get("/api/templates", requireDbReady, async (req, res) => {
     try {
-      const templates = await storage.getAllBotTemplates();
+      const ownerId = getOwnerIdFromRequest(req);
+      let templates;
+      
+      if (ownerId !== null) {
+        // Authenticated user - return only their templates + system templates
+        const userTemplates = await storage.getUserBotTemplates(ownerId);
+        const systemTemplates = await storage.getSystemTemplates();
+        templates = [...userTemplates, ...systemTemplates];
+      } else {
+        // Guest user - return all templates (for localStorage mode)
+        templates = await storage.getAllBotTemplates();
+      }
+      
       // Маппинг data -> flow_data для совместимости с фронтендом
       const mappedTemplates = templates.map(template => ({
         ...template,
@@ -1849,6 +1916,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
+      
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        // Allow access to own templates or system templates (ownerId=null)
+        if (template.ownerId !== ownerId && template.ownerId !== null) {
+          return res.status(403).json({ message: "You don't have permission to access this template" });
+        }
+      }
+      
       res.json(template);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch template" });
@@ -1858,8 +1935,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new template
   app.post("/api/templates", requireDbReady, async (req, res) => {
     try {
-      const validatedData = insertBotTemplateSchema.parse(req.body);
-      const template = await storage.createBotTemplate(validatedData);
+      // Игнорируем ownerId из body, используем только из сессии
+      const { ownerId: _ignored, ...bodyData } = req.body;
+      const validatedData = insertBotTemplateSchema.parse(bodyData);
+      // Автоматически устанавливаем ownerId из авторизованного пользователя
+      const templateData = {
+        ...validatedData,
+        ownerId: getOwnerIdFromRequest(req)
+      };
+      const template = await storage.createBotTemplate(templateData);
       res.status(201).json(template);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1873,6 +1957,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/templates/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const existingTemplate = await storage.getBotTemplate(id);
+        if (!existingTemplate) {
+          return res.status(404).json({ message: "Template not found" });
+        }
+        // System templates (ownerId=null) can't be modified by users
+        if (existingTemplate.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to modify this template" });
+        }
+      }
+      
       const validatedData = insertBotTemplateSchema.partial().parse(req.body);
       const template = await storage.updateBotTemplate(id, validatedData);
       if (!template) {
@@ -1891,6 +1989,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/templates/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const existingTemplate = await storage.getBotTemplate(id);
+        if (!existingTemplate) {
+          return res.status(404).json({ message: "Template not found" });
+        }
+        // System templates (ownerId=null) can't be deleted by users
+        if (existingTemplate.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to delete this template" });
+        }
+      }
+      
       const success = await storage.deleteBotTemplate(id);
       if (!success) {
         return res.status(404).json({ message: "Template not found" });
@@ -2011,6 +2123,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects/:id/tokens", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      
+      // Check project ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const project = await storage.getBotProject(projectId);
+        if (!project) {
+          return res.status(404).json({ message: "Project not found" });
+        }
+        if (project.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to view this project's tokens" });
+        }
+      }
+      
       const tokens = await storage.getBotTokensByProject(projectId);
       
       // Hide actual token values for security
@@ -2143,6 +2268,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Token not found" });
       }
       
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null && token.ownerId !== ownerId) {
+        return res.status(403).json({ message: "You don't have permission to modify this token" });
+      }
+      
       // Update bot information via Telegram API
       let telegramApiMethod;
       let requestBody: any = {};
@@ -2210,9 +2341,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:id/tokens", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      
+      // Check project ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const project = await storage.getBotProject(projectId);
+        if (!project) {
+          return res.status(404).json({ message: "Project not found" });
+        }
+        if (project.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to add tokens to this project" });
+        }
+      }
+      
+      // Игнорируем ownerId из body, используем только из сессии
+      const { ownerId: _ignored, ...bodyData } = req.body;
       const tokenData = insertBotTokenSchema.parse({
-        ...req.body,
-        projectId
+        ...bodyData,
+        projectId,
+        ownerId: getOwnerIdFromRequest(req)
       });
       
       const token = await storage.createBotToken(tokenData);
@@ -2236,6 +2383,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/tokens/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const existingToken = await storage.getBotToken(id);
+        if (!existingToken) {
+          return res.status(404).json({ message: "Token not found" });
+        }
+        if (existingToken.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to modify this token" });
+        }
+      }
+      
       const updateData = insertBotTokenSchema.partial().parse(req.body);
       
       const token = await storage.updateBotToken(id, updateData);
@@ -2262,6 +2422,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/tokens/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const existingToken = await storage.getBotToken(id);
+        if (!existingToken) {
+          return res.status(404).json({ message: "Token not found" });
+        }
+        if (existingToken.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to delete this token" });
+        }
+      }
+      
       const success = await storage.deleteBotToken(id);
       
       if (!success) {
@@ -2278,6 +2451,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/projects/:projectId/tokens/:tokenId", async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
+      
+      // Check ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const existingToken = await storage.getBotToken(tokenId);
+        if (!existingToken) {
+          return res.status(404).json({ message: "Token not found" });
+        }
+        if (existingToken.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to delete this token" });
+        }
+      }
+      
       const success = await storage.deleteBotToken(tokenId);
       
       if (!success) {

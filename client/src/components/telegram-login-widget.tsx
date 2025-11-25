@@ -152,7 +152,7 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-muted text-xs">
           <User className="w-3 h-3" />
-          <span className="truncate max-w-[120px]">{user.first_name}</span>
+          <span className="truncate max-w-[120px]">{user.firstName}</span>
         </div>
         <Button 
           variant="ghost" 

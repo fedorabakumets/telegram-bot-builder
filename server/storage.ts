@@ -84,6 +84,11 @@ export interface IStorage {
   setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean>;
   markTokenAsUsed(id: number): Promise<boolean>;
   
+  // Telegram Users (authenticated users)
+  getTelegramUser(id: number): Promise<TelegramUserDB | undefined>;
+  getTelegramUserOrCreate(user: InsertTelegramUser): Promise<TelegramUserDB>;
+  deleteTelegramUser(id: number): Promise<boolean>;
+  
   // User-specific methods (filtered by ownerId)
   getUserBotProjects(ownerId: number): Promise<BotProject[]>;
   getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]>;
@@ -144,11 +149,6 @@ export interface IStorage {
   // Bot message media
   createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia>;
   getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>>;
-
-  // Telegram users
-  getTelegramUser(id: number): Promise<TelegramUserDB | undefined>;
-  getTelegramUserOrCreate(userData: InsertTelegramUser): Promise<TelegramUserDB>;
-  deleteTelegramUser(id: number): Promise<boolean>;
 }
 
 // Legacy Memory Storage - kept for reference
@@ -171,6 +171,7 @@ class MemStorage implements IStorage {
     // Add a default project
     const defaultProject: BotProject = {
       id: 1,
+      ownerId: null,
       name: "Мой первый бот",
       description: "Пример бота для знакомства с конструктором",
       data: {
@@ -229,10 +230,12 @@ class MemStorage implements IStorage {
     const project: BotProject = {
       ...insertProject,
       id,
+      ownerId: insertProject.ownerId ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
       description: insertProject.description || null,
       botToken: insertProject.botToken ?? null,
+      userDatabaseEnabled: insertProject.userDatabaseEnabled ?? 1,
     };
     this.projects.set(id, project);
     return project;
@@ -345,6 +348,7 @@ class MemStorage implements IStorage {
     const template: BotTemplate = {
       ...insertTemplate,
       id,
+      ownerId: insertTemplate.ownerId ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
       category: insertTemplate.category || "custom",
@@ -522,8 +526,13 @@ class MemStorage implements IStorage {
     const token: BotToken = {
       ...insertToken,
       id: this.currentTemplateId++, // Reuse template ID counter
+      ownerId: insertToken.ownerId ?? null,
       description: insertToken.description || null,
       lastUsedAt: null,
+      isDefault: insertToken.isDefault ?? 0,
+      isActive: insertToken.isActive ?? 1,
+      trackExecutionTime: insertToken.trackExecutionTime ?? 0,
+      totalExecutionSeconds: insertToken.totalExecutionSeconds ?? 0,
       createdAt: new Date(),
       updatedAt: new Date(),
       // Добавляем значения по умолчанию для новых полей
@@ -560,22 +569,37 @@ class MemStorage implements IStorage {
     return false;
   }
 
+  // Telegram Users (Memory implementation - not fully supported)
+  async getTelegramUser(id: number): Promise<TelegramUserDB | undefined> {
+    return undefined;
+  }
+
+  async getTelegramUserOrCreate(user: InsertTelegramUser): Promise<TelegramUserDB> {
+    const telegramUser: TelegramUserDB = {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName ?? null,
+      username: user.username ?? null,
+      photoUrl: user.photoUrl ?? null,
+      authDate: user.authDate ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    return telegramUser;
+  }
+
+  async deleteTelegramUser(id: number): Promise<boolean> {
+    return false;
+  }
+
   // User-specific methods
   async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
     return Array.from(this.projects.values()).filter(p => p.ownerId === ownerId);
   }
 
   async getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]> {
-    let tokens = Array.from(this.tokens.values()).filter(t => {
-      const project = this.projects.get(t.projectId);
-      return project && project.ownerId === ownerId;
-    });
-    
-    if (projectId) {
-      tokens = tokens.filter(t => t.projectId === projectId);
-    }
-    
-    return tokens;
+    // MemStorage doesn't store tokens persistently, so return empty array
+    return [];
   }
 
   async getUserBotTemplates(ownerId: number): Promise<BotTemplate[]> {
@@ -1121,6 +1145,51 @@ export class DatabaseStorage implements IStorage {
     return await this.db.select().from(botTemplates)
       .where(eq(botTemplates.ownerId, ownerId))
       .orderBy(desc(botTemplates.createdAt));
+  }
+
+  // Telegram Users
+  async getTelegramUser(id: number): Promise<TelegramUserDB | undefined> {
+    const [user] = await this.db.select().from(telegramUsers).where(eq(telegramUsers.id, id));
+    return user || undefined;
+  }
+
+  async getTelegramUserOrCreate(userData: InsertTelegramUser): Promise<TelegramUserDB> {
+    // Попробуем найти существующего пользователя
+    const existingUser = await this.getTelegramUser(userData.id);
+    
+    if (existingUser) {
+      // Обновляем информацию о пользователе
+      const [updated] = await this.db.update(telegramUsers)
+        .set({
+          firstName: userData.firstName,
+          lastName: userData.lastName ?? null,
+          username: userData.username ?? null,
+          photoUrl: userData.photoUrl ?? null,
+          authDate: userData.authDate ?? null,
+          updatedAt: new Date(),
+        })
+        .where(eq(telegramUsers.id, userData.id))
+        .returning();
+      return updated;
+    }
+    
+    // Создаём нового пользователя
+    const [newUser] = await this.db.insert(telegramUsers)
+      .values({
+        id: userData.id,
+        firstName: userData.firstName,
+        lastName: userData.lastName ?? null,
+        username: userData.username ?? null,
+        photoUrl: userData.photoUrl ?? null,
+        authDate: userData.authDate ?? null,
+      })
+      .returning();
+    return newUser;
+  }
+
+  async deleteTelegramUser(id: number): Promise<boolean> {
+    const result = await this.db.delete(telegramUsers).where(eq(telegramUsers.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Media Files

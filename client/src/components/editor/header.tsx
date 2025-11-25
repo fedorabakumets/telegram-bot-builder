@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { TelegramLoginWidget } from '@/components/telegram-login-widget';
 import { FolderOpen, Bookmark, Save, Download, User, Send, Github } from 'lucide-react';
 import { useState } from 'react';
 
@@ -118,6 +119,10 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             <span className="max-sm:hidden ml-1">GitHub</span>
           </a>
         </Button>
+        
+        <div className="h-6 w-px bg-border max-sm:hidden"></div>
+        
+        <TelegramLoginWidget />
         
         <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
           <ThemeToggle />
