@@ -375,9 +375,13 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                         {getCategoryLabel(template.category || 'official')}
                       </Badge>
                     </>
+                  ) : template.authorName ? (
+                    <Badge variant="secondary" title={template.authorName}>
+                      От пользователя @{template.authorName}
+                    </Badge>
                   ) : (
-                    <Badge variant="secondary" title={template.authorName || undefined}>
-                      От пользователя {template.authorName ? `@${template.authorName}` : ''}
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                      🤝 Сохранено от сообщества
                     </Badge>
                   )}
                   {showDelete && (
