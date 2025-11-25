@@ -52,14 +52,13 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
   };
 
   const handleTelegramLogin = () => {
-    // Открываем окно входа Telegram в новой вкладке
-    const width = 600;
-    const height = 700;
+    // Открываем окно со встроенным Telegram Login Widget
+    const width = 500;
+    const height = 600;
     const left = window.innerWidth / 2 - width / 2;
     const top = window.innerHeight / 2 - height / 2;
     
-    const authUrl = `https://telegram.me/${botUsername}`;
-    window.open(authUrl, 'telegram_login', `width=${width},height=${height},left=${left},top=${top}`);
+    window.open('/api/auth/login', 'telegram_login', `width=${width},height=${height},left=${left},top=${top}`);
   };
 
   useEffect(() => {
