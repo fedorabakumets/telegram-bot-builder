@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, Eye, ArrowLeft, Star, Trash2 } from 'lucide-react';
+import { Loader2, Search, Download, ArrowLeft, Star, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -370,9 +370,7 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Eye className="h-4 w-4" />
-                <span>{template.viewCount || 0}</span>
-                <Download className="h-4 w-4 ml-2" />
+                <Download className="h-4 w-4" />
                 <span>{template.useCount || 0}</span>
               </div>
               <div className="flex gap-2">
