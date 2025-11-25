@@ -430,8 +430,16 @@ export function Canvas({
     if (canvasRef.current) {
       // Получаем размеры видимой области (родительского контейнера с overflow)
       const scrollContainer = canvasRef.current.parentElement;
-      const containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64; // -64 для padding
-      const containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
+      let containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64;
+      let containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
+
+      // Вычитаем высоту toolbar (вверху)
+      const toolbarHeight = 64; // ~64px для toolbar
+      containerHeight -= toolbarHeight;
+
+      // Вычитаем высоту панели листов (внизу) - примерно 60px
+      const sheetsHeight = botData?.sheets && botData.sheets.length > 0 ? 60 : 0;
+      containerHeight -= sheetsHeight;
 
       // Проверяем размеры контейнера
       if (containerWidth <= 0 || containerHeight <= 0) {
@@ -444,13 +452,14 @@ export function Canvas({
       const scale = Math.min(scaleX, scaleY, 1.5); // Ограничиваем max zoom до 150%
 
       // Ограничиваем zoom разумными пределами
-      const newZoom = Math.max(Math.min(scale * 100, 150), 50); // min 50%, max 150%
+      const newZoom = Math.max(Math.min(scale * 100, 200), 20); // min 20%, max 200%
 
       // Вычисляем центр контента
       const centerX = (nodeBounds.left + nodeBounds.right) / 2;
       const centerY = (nodeBounds.top + nodeBounds.bottom) / 2;
       const containerCenterX = containerWidth / 2;
-      const containerCenterY = containerHeight / 2;
+      // Смещаем центр вверх, чтобы учесть панель листов внизу
+      const containerCenterY = (containerHeight / 2) + (toolbarHeight / 2);
 
       // Вычисляем новые значения pan
       const newPanX = containerCenterX - centerX * (newZoom / 100);
@@ -468,7 +477,7 @@ export function Canvas({
         y: newPanY
       });
     }
-  }, [nodes]);
+  }, [nodes, botData]);
 
   // Handle wheel zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
