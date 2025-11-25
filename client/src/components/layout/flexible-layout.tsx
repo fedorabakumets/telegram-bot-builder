@@ -115,7 +115,6 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
       <div
         key={element.id}
         className={`
-          ${element.type === 'header' ? 'border-b' : ''}
           ${element.type === 'sidebar' ? 'border-r' : ''}
           ${element.type === 'properties' ? 'border-l' : ''}
           ${element.type === 'code' ? 'border-l' : ''}
@@ -314,14 +313,14 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
       const hideResizeHandle = isMobile && currentTab === 'bot';
       
       return (
-        <ResizablePanelGroup direction="vertical" className="h-full">
-          <ResizablePanel defaultSize={isMobile ? 7 : topEl.size} minSize={isMobile ? 7 : 15} maxSize={30}>
+        <ResizablePanelGroup direction="vertical" className="h-full gap-0">
+          <ResizablePanel defaultSize={isMobile ? 7 : topEl.size} minSize={isMobile ? 7 : 15} maxSize={30} className="p-0 m-0">
             <div className="h-full bg-background overflow-auto">
               {getElementContent(topEl.type)}
             </div>
           </ResizablePanel>
-          <ResizableHandle className="hidden" />
-          <ResizablePanel defaultSize={isMobile ? 93 : (100 - topEl.size)}>
+          <ResizableHandle className="!hidden" style={{ height: 0, margin: 0, padding: 0 }} />
+          <ResizablePanel defaultSize={isMobile ? 93 : (100 - topEl.size)} className="p-0 m-0">
             <div className="h-full bg-background overflow-auto">
               {centerEl ? getElementContent(centerEl.type) : (bottomEl ? getElementContent(bottomEl.type) : null)}
             </div>
