@@ -8,6 +8,7 @@ import { ServerStatus } from "@/components/server-status";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import React from "react";
+import type { TelegramUser } from "@/hooks/use-telegram-auth";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
@@ -86,15 +87,25 @@ function App() {
           });
 
           if (response.ok) {
+            console.log('✅ Auth POST successful - session created on server');
             // Сохраняем пользователя в localStorage для обновления hook'а
             localStorage.setItem('telegramUser', JSON.stringify(event.data.user));
-            // Отправляем custom event для обновления всех компонентов
-            window.dispatchEvent(new CustomEvent('telegram-auth-change', {
-              detail: { user: event.data.user }
-            }));
-            console.log('✅ Auth successful - session created');
+            // КРИТИЧНО: Явно инвалидируем ВСЕ кеши перед отправкой события
+            setTimeout(() => {
+              // Отправляем custom event для обновления всех компонентов
+              window.dispatchEvent(new CustomEvent('telegram-auth-change', {
+                detail: { user: event.data.user }
+              }));
+              // Явно рефрешим запросы к шаблонам и проектам
+              const { queryClient } = require('@/lib/queryClient');
+              queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+              queryClient.refetchQueries({ queryKey: ['/api/templates/category/custom'] });
+              queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+            }, 100);
           } else {
-            console.error('❌ Auth failed:', response.status);
+            console.error('❌ Auth POST failed:', response.status);
           }
         } catch (e) {
           console.error('Error in auth flow:', e);
