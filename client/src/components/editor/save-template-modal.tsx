@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { BotData } from '@/types/bot';
@@ -34,6 +35,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     isPublic: false,
   });
   const { toast } = useToast();
+  const { user } = useTelegramAuth();
   const queryClient = useQueryClient();
 
   // Функция для вычисления статистики с поддержкой многолистовых шаблонов
@@ -81,7 +83,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
         requiresToken: 1,
         complexity: 1,
         estimatedTime: 5,
-        authorName: 'Пользователь',
+        authorName: user?.username || 'Пользователь',
         featured: 0,
         data: botData,
       });
