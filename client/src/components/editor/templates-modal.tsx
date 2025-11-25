@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield } from 'lucide-react';
+import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield, Database, HardDrive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTelegramAuth } from '@/hooks/use-telegram-auth';
+import { useTemplates } from '@/hooks/use-user-data';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
@@ -30,15 +32,18 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'recent' | 'name'>('popular');
 
   const { toast } = useToast();
+  const { user } = useTelegramAuth();
+  const isAuthenticated = user !== null;
 
   // Отладка для проверки открытия модального окна
   if (isOpen) {
     console.log('Templates modal is open');
   }
 
-  const { data: templates = [], isLoading } = useQuery<BotTemplate[]>({
-    queryKey: ['/api/templates'],
-    enabled: isOpen,
+  // Используем новый hook для управления данными шаблонов с переключением источника
+  const { data: templates = [], isLoading } = useTemplates({
+    isAuthenticated,
+    userId: user?.id
   });
 
   const { data: featuredTemplates = [], isLoading: isLoadingFeatured } = useQuery<BotTemplate[]>({
@@ -398,6 +403,8 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     );
   };
 
+  const dataSource = isAuthenticated ? 'server' : 'local';
+
   interface TemplateGridProps {
     templates: BotTemplate[];
     isLoading: boolean;
@@ -408,6 +415,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     searchTerm: string;
     selectedCategory: string;
     showDeleteButton?: boolean;
+    dataSource?: 'local' | 'server';
   }
 
   const TemplateGrid = ({ 
@@ -419,7 +427,8 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     onDelete, 
     searchTerm, 
     selectedCategory, 
-    showDeleteButton = false 
+    showDeleteButton = false,
+    dataSource = 'local'
   }: TemplateGridProps) => {
     if (isLoading) {
       return (
@@ -756,6 +765,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   onRate={handleRateTemplate}
                   searchTerm={searchTerm}
                   selectedCategory={selectedCategory}
+                  dataSource={dataSource}
                 />
               </TabsContent>
               
@@ -768,6 +778,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   onRate={handleRateTemplate}
                   searchTerm={searchTerm}
                   selectedCategory={selectedCategory}
+                  dataSource={dataSource}
                 />
               </TabsContent>
               
@@ -780,6 +791,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   onRate={handleRateTemplate}
                   searchTerm={searchTerm}
                   selectedCategory={selectedCategory}
+                  dataSource={dataSource}
                 />
               </TabsContent>
               
@@ -794,6 +806,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   searchTerm={searchTerm}
                   selectedCategory={selectedCategory}
                   showDeleteButton={true}
+                  dataSource={dataSource}
                 />
               </TabsContent>
             </div>

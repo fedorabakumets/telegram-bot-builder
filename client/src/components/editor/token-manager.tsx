@@ -10,8 +10,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { useTelegramAuth } from '@/hooks/use-telegram-auth';
+import { useTokens, useCreateToken, useUpdateToken, useDeleteToken } from '@/hooks/use-user-data';
 import { apiRequest } from '@/lib/queryClient';
-import { Plus, MoreVertical, Star, StarOff, Edit, Trash2, Copy, Eye, EyeOff } from 'lucide-react';
+import { Plus, MoreVertical, Star, StarOff, Edit, Trash2, Copy, Eye, EyeOff, Database, HardDrive } from 'lucide-react';
 
 interface BotToken {
   id: number;
@@ -46,11 +48,14 @@ export function TokenManager({ projectId, onTokenSelect, selectedTokenId }: Toke
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useTelegramAuth();
+  const isAuthenticated = user !== null;
 
-  // Получаем все токены проекта
-  const { data: tokens = [], isLoading } = useQuery<BotToken[]>({
-    queryKey: [`/api/projects/${projectId}/tokens`],
-  });
+  // Получаем все токены проекта (с автоматическим переключением между localStorage и сервером)
+  const { data: tokens = [], isLoading } = useTokens({
+    isAuthenticated,
+    userId: user?.id
+  }, projectId);
 
   // Создание токена
   const createTokenMutation = useMutation({
@@ -194,6 +199,8 @@ export function TokenManager({ projectId, onTokenSelect, selectedTokenId }: Toke
     return <div className="p-4">Загрузка токенов...</div>;
   }
 
+  const dataSource = isAuthenticated ? 'server' : 'local';
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -202,6 +209,19 @@ export function TokenManager({ projectId, onTokenSelect, selectedTokenId }: Toke
           <p className="text-sm text-muted-foreground">
             Управляйте токенами Telegram ботов для этого проекта
           </p>
+          <div className="mt-2 flex items-center gap-2">
+            {dataSource === 'local' ? (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <HardDrive className="h-3 w-3" />
+                Локальное хранилище
+              </Badge>
+            ) : (
+              <Badge variant="default" className="flex items-center gap-1">
+                <Database className="h-3 w-3" />
+                Облачное хранилище
+              </Badge>
+            )}
+          </div>
         </div>
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
