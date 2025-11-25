@@ -1842,8 +1842,8 @@ export function ComponentsSidebar({
                                             <Share2 className="h-3 w-3" />
                                           </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-48 p-2" side="top" sideOffset={5}>
-                                          <div className="px-2 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Переместить</div>
+                                        <DropdownMenuContent align="end" className="w-44" side="top" sideOffset={5}>
+                                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Переместить в:</div>
                                           {projects.map((otherProject) => {
                                             if (otherProject.id === project.id) return null;
                                             return (
@@ -1889,9 +1889,8 @@ export function ComponentsSidebar({
                                                     });
                                                   }
                                                 }}
-                                                className="text-xs py-2 px-2 rounded-md hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer focus:bg-blue-500/10 dark:focus:bg-blue-600/10 text-slate-900 dark:text-slate-100"
                                               >
-                                                <span className="truncate">{otherProject.name}</span>
+                                                {otherProject.name}
                                               </DropdownMenuItem>
                                             );
                                           })}
