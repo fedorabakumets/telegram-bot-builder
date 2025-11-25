@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText, Copy, Share2, MoreHorizontal, ChevronDown, ChevronRight, Menu, X } from 'lucide-react';
+import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText, Copy, Share2, MoreHorizontal, ChevronDown, ChevronRight, Menu, X, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
@@ -1731,7 +1731,7 @@ export function ComponentsSidebar({
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center justify-between gap-3">
                         <span className="flex items-center bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-600/20 dark:to-cyan-600/15 px-3 py-1.5 rounded-lg border border-blue-400/20 dark:border-blue-500/20 font-semibold text-slate-700 dark:text-slate-300">
-                          <User className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
+                          <Zap className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
                           <span>{getNodeCount(project)}</span>
                           <span className="ml-1 text-slate-600 dark:text-slate-400">узлов</span>
                         </span>
