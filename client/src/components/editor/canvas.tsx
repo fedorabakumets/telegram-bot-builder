@@ -1073,7 +1073,7 @@ export function Canvas({
         right: isMobile ? '10px' : (propertiesVisible ? '150px' : '20px')
       }}>
         <div className="pt-0 w-full">
-          <div className={`pointer-events-auto flex items-center canvas-controls overflow-x-auto w-full ${
+          <div className={`pointer-events-auto flex items-center justify-between canvas-controls overflow-x-auto w-full ${
             isMobile ? 'space-x-1 text-sm' : 'space-x-2'
           }`}>
 
