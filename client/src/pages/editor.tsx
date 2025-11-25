@@ -38,8 +38,7 @@ import { nanoid } from 'nanoid';
 
 export default function Editor() {
   // Используем useLocation для получения текущего пути
-  const [location] = useLocation();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   
   // Парсим ID проекта из URL вручную вместо useRoute
   const projectId = (() => {
