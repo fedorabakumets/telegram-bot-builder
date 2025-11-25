@@ -1738,8 +1738,8 @@ export function ComponentsSidebar({
                           <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                           <span>{(() => { const info = getSheetsInfo(project); return info.count; })()}</span>
                         </span>
-                        <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                          <Calendar className="h-3.5 w-3.5 text-slate-500 dark:text-slate-500" />
+                        <span className="flex items-center gap-1.5 bg-slate-500/10 dark:bg-slate-600/15 px-2.5 py-1 rounded-lg border border-slate-400/20 dark:border-slate-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
+                          <Calendar className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
                           {formatDate(project.updatedAt)}
                         </span>
                       </div>
