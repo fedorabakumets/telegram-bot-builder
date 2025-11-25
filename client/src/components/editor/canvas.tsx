@@ -1046,180 +1046,9 @@ export function Canvas({
   }, [onConnectionDelete, addAction]);
 
   return (
-    <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
-      <div className="absolute inset-0 overflow-auto">
-
-        {/* Enhanced Canvas Grid */}
-        <div 
-          ref={canvasRef}
-          className="min-h-full relative canvas-grid-modern"
-          style={{
-            backgroundImage: `
-              radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)
-            `,
-            backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
-            backgroundPosition: `${pan.x}px ${pan.y}px`,
-            minHeight: '2000vh',
-            minWidth: '2000vw',
-            cursor: isPanning ? 'grabbing' : 'grab'
-          }}
-          data-drag-over={isDragOver}
-          data-canvas-drop-zone
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onClick={handleCanvasClick}
-          onWheel={handleWheel}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onContextMenu={handleContextMenu}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Transformable Canvas Content */}
-          <div 
-            className="relative origin-top-left transition-transform duration-200 ease-out"
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
-              transformOrigin: '0 0'
-            }}
-          >
-            {/* Connections Layer */}
-            <ConnectionsLayer
-              connections={connections}
-              nodes={nodes}
-              selectedConnectionId={selectedConnectionId}
-              onConnectionSelect={handleConnectionClick}
-              onConnectionDelete={handleDeleteConnection}
-            />
-
-            {/* Temporary connection preview */}
-            {connectionStart && (
-              <TemporaryConnection
-                startNode={nodes.find(n => n.id === connectionStart.nodeId)!}
-                endPosition={{
-                  x: (mousePosition.x - pan.x) / (zoom / 100),
-                  y: (mousePosition.y - pan.y) / (zoom / 100)
-                }}
-                handle={connectionStart.handle}
-              />
-            )}
-
-            {/* Nodes */}
-            {nodes.map((node) => (
-              <CanvasNode
-                key={node.id}
-                node={node}
-                allNodes={botData ? getAllNodesFromAllSheets() : nodes}
-                isSelected={selectedNodeId === node.id}
-                onClick={() => onNodeSelect(node.id)}
-                onDelete={() => onNodeDelete(node.id)}
-                onDuplicate={onNodeDuplicate ? () => onNodeDuplicate(node.id) : undefined}
-                onMove={(position) => {
-                  addAction('move', `Перемещен узел "${node.type}"`);
-                  onNodeMove(node.id, position);
-                }}
-                onConnectionStart={handleConnectionStart}
-                connectionStart={connectionStart}
-                zoom={zoom}
-                pan={pan}
-                setIsNodeBeingDragged={setIsNodeBeingDragged}
-                onSizeChange={handleNodeSizeChange}
-              />
-            ))}
-          </div>
-
-          {/* Drop Zone Hint */}
-          {nodes.length === 0 && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-6 sm:p-8 md:p-12 w-11/12 sm:w-96 text-center transition-all duration-500 hover:scale-105">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/20 dark:via-purple-400/20 dark:to-pink-400/20 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-8 border border-blue-200/50 dark:border-blue-600/30 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/20">
-                <i className="fas fa-plus text-blue-600 dark:text-blue-400 text-xl sm:text-2xl md:text-3xl drop-shadow-sm"></i>
-              </div>
-              <h3 className="text-gray-800 dark:text-gray-200 mb-2 sm:mb-3 md:mb-4 font-bold text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Перетащите элемент сюда</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm md:text-base leading-relaxed">Выберите компонент из панели и перетащите на холст для создания бота</p>
-            </div>
-          )}
-
-          {/* Smart Connection Tools */}
-          {nodes.length > 1 && (
-            <div className="absolute bottom-20 sm:bottom-24 right-2 sm:right-4 flex flex-col gap-1.5 sm:gap-2 z-20">
-              {/* Auto Connection Panel */}
-              <Popover open={showAutoPanel} onOpenChange={setShowAutoPanel}>
-                <PopoverTrigger asChild>
-                  <Button
-                    className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 flex items-center justify-center"
-                    title="Управление автосоединениями"
-                  >
-                    <i className="fas fa-magic text-white text-xs sm:text-sm" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent side="left" className="w-auto p-0">
-                  <AutoConnectionPanel
-                    nodes={nodes}
-                    connections={connections}
-                    onConnectionAdd={(connection) => onConnectionAdd?.(connection)}
-                    onNodesUpdate={(updatedNodes) => onNodesUpdate?.(updatedNodes)}
-                    autoButtonCreation={autoButtonCreation}
-                    onAutoButtonCreationChange={setAutoButtonCreation}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              {/* Auto-connect button */}
-              <Button
-                onClick={handleAutoConnect}
-                className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 flex items-center justify-center"
-                title="Быстрое автосоединение"
-              >
-                <i className="fas fa-bolt text-white text-xs sm:text-sm" />
-              </Button>
-
-              {/* Connection suggestions */}
-              <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm flex items-center justify-center"
-                    title="Рекомендации соединений"
-                  >
-                    <i className="fas fa-lightbulb text-yellow-500 text-xs sm:text-sm" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent side="left" className="w-80 p-0">
-                  <ConnectionSuggestions
-                    nodes={nodes}
-                    connections={connections}
-                    onCreateConnection={handleCreateSuggestedConnection}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              {/* Clear connections button */}
-              {connections.length > 0 && (
-                <Button
-                  onClick={() => {
-                    connections.forEach(conn => onConnectionDelete?.(conn.id));
-                  }}
-                  variant="outline"
-                  className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center"
-                  title="Очистить все соединения"
-                >
-                  <i className="fas fa-eraser text-red-500 text-xs sm:text-sm" />
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
-      </div>
-
-      {/* Панель инструментов - фиксированная панель вверху */}
-      <div className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{
-        left: 0,
-        right: 0
-      }}>
+    <>
+      {/* Toolbar - Separate from Canvas */}
+      <div className="fixed top-0 left-0 right-0 z-40 pointer-events-none w-full transition-all duration-300">
         <div className="flex items-center gap-2 sm:gap-2 md:gap-3 relative z-50 w-full px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
           <div className={`flex items-center canvas-controls overflow-x-auto w-full gap-1 sm:gap-1.5 md:gap-2`}>
 
@@ -1572,6 +1401,176 @@ export function Canvas({
         </div>
       </div>
 
+      {/* Canvas - Separate Container */}
+      <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900 pt-14 sm:pt-14 md:pt-16">
+        <div className="absolute inset-0 overflow-auto">
+
+          {/* Enhanced Canvas Grid */}
+          <div 
+          ref={canvasRef}
+          className="min-h-full relative canvas-grid-modern"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)
+            `,
+            backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
+            backgroundPosition: `${pan.x}px ${pan.y}px`,
+            minHeight: '2000vh',
+            minWidth: '2000vw',
+            cursor: isPanning ? 'grabbing' : 'grab'
+          }}
+          data-drag-over={isDragOver}
+          data-canvas-drop-zone
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={handleCanvasClick}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onContextMenu={handleContextMenu}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Transformable Canvas Content */}
+          <div 
+            className="relative origin-top-left transition-transform duration-200 ease-out"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
+              transformOrigin: '0 0'
+            }}
+          >
+            {/* Connections Layer */}
+            <ConnectionsLayer
+              connections={connections}
+              nodes={nodes}
+              selectedConnectionId={selectedConnectionId}
+              onConnectionSelect={handleConnectionClick}
+              onConnectionDelete={handleDeleteConnection}
+            />
+
+            {/* Temporary connection preview */}
+            {connectionStart && (
+              <TemporaryConnection
+                startNode={nodes.find(n => n.id === connectionStart.nodeId)!}
+                endPosition={{
+                  x: (mousePosition.x - pan.x) / (zoom / 100),
+                  y: (mousePosition.y - pan.y) / (zoom / 100)
+                }}
+                handle={connectionStart.handle}
+              />
+            )}
+
+            {/* Nodes */}
+            {nodes.map((node) => (
+              <CanvasNode
+                key={node.id}
+                node={node}
+                allNodes={botData ? getAllNodesFromAllSheets() : nodes}
+                isSelected={selectedNodeId === node.id}
+                onClick={() => onNodeSelect(node.id)}
+                onDelete={() => onNodeDelete(node.id)}
+                onDuplicate={onNodeDuplicate ? () => onNodeDuplicate(node.id) : undefined}
+                onMove={(position) => {
+                  addAction('move', `Перемещен узел "${node.type}"`);
+                  onNodeMove(node.id, position);
+                }}
+                onConnectionStart={handleConnectionStart}
+                connectionStart={connectionStart}
+                zoom={zoom}
+                pan={pan}
+                setIsNodeBeingDragged={setIsNodeBeingDragged}
+                onSizeChange={handleNodeSizeChange}
+              />
+            ))}
+          </div>
+
+          {/* Drop Zone Hint */}
+          {nodes.length === 0 && (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-6 sm:p-8 md:p-12 w-11/12 sm:w-96 text-center transition-all duration-500 hover:scale-105">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/20 dark:via-purple-400/20 dark:to-pink-400/20 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-8 border border-blue-200/50 dark:border-blue-600/30 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/20">
+                <i className="fas fa-plus text-blue-600 dark:text-blue-400 text-xl sm:text-2xl md:text-3xl drop-shadow-sm"></i>
+              </div>
+              <h3 className="text-gray-800 dark:text-gray-200 mb-2 sm:mb-3 md:mb-4 font-bold text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Перетащите элемент сюда</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm md:text-base leading-relaxed">Выберите компонент из панели и перетащите на холст для создания бота</p>
+            </div>
+          )}
+
+          {/* Smart Connection Tools */}
+          {nodes.length > 1 && (
+            <div className="absolute bottom-20 sm:bottom-24 right-2 sm:right-4 flex flex-col gap-1.5 sm:gap-2 z-20">
+              {/* Auto Connection Panel */}
+              <Popover open={showAutoPanel} onOpenChange={setShowAutoPanel}>
+                <PopoverTrigger asChild>
+                  <Button
+                    className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 flex items-center justify-center"
+                    title="Управление автосоединениями"
+                  >
+                    <i className="fas fa-magic text-white text-xs sm:text-sm" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="left" className="w-auto p-0">
+                  <AutoConnectionPanel
+                    nodes={nodes}
+                    connections={connections}
+                    onConnectionAdd={(connection) => onConnectionAdd?.(connection)}
+                    onNodesUpdate={(updatedNodes) => onNodesUpdate?.(updatedNodes)}
+                    autoButtonCreation={autoButtonCreation}
+                    onAutoButtonCreationChange={setAutoButtonCreation}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {/* Auto-connect button */}
+              <Button
+                onClick={handleAutoConnect}
+                className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 flex items-center justify-center"
+                title="Быстрое автосоединение"
+              >
+                <i className="fas fa-bolt text-white text-xs sm:text-sm" />
+              </Button>
+
+              {/* Connection suggestions */}
+              <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm flex items-center justify-center"
+                    title="Рекомендации соединений"
+                  >
+                    <i className="fas fa-lightbulb text-yellow-500 text-xs sm:text-sm" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="left" className="w-80 p-0">
+                  <ConnectionSuggestions
+                    nodes={nodes}
+                    connections={connections}
+                    onCreateConnection={handleCreateSuggestedConnection}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {/* Clear connections button */}
+              {connections.length > 0 && (
+                <Button
+                  onClick={() => {
+                    connections.forEach(conn => onConnectionDelete?.(conn.id));
+                  }}
+                  variant="outline"
+                  className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center"
+                  title="Очистить все соединения"
+                >
+                  <i className="fas fa-eraser text-red-500 text-xs sm:text-sm" />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+      </div>
+
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
         <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto">
@@ -1587,6 +1586,7 @@ export function Canvas({
           />
         </div>
       )}
-    </main>
+      </main>
+    </>
   );
 }
