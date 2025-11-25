@@ -1133,26 +1133,26 @@ export function Canvas({
 
           {/* Drop Zone Hint */}
           {nodes.length === 0 && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/20 dark:via-purple-400/20 dark:to-pink-400/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-blue-200/50 dark:border-blue-600/30 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/20">
-                <i className="fas fa-plus text-blue-600 dark:text-blue-400 text-3xl drop-shadow-sm"></i>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-6 sm:p-8 md:p-12 w-11/12 sm:w-96 text-center transition-all duration-500 hover:scale-105">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/20 dark:via-purple-400/20 dark:to-pink-400/20 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-8 border border-blue-200/50 dark:border-blue-600/30 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/20">
+                <i className="fas fa-plus text-blue-600 dark:text-blue-400 text-xl sm:text-2xl md:text-3xl drop-shadow-sm"></i>
               </div>
-              <h3 className="text-gray-800 dark:text-gray-200 mb-4 font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Перетащите элемент сюда</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Выберите компонент из левой панели и перетащите на холст для создания бота</p>
+              <h3 className="text-gray-800 dark:text-gray-200 mb-2 sm:mb-3 md:mb-4 font-bold text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Перетащите элемент сюда</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm md:text-base leading-relaxed">Выберите компонент из панели и перетащите на холст для создания бота</p>
             </div>
           )}
 
           {/* Smart Connection Tools */}
           {nodes.length > 1 && (
-            <div className="absolute bottom-24 right-4 flex flex-col space-y-2 z-20">
+            <div className="absolute bottom-20 sm:bottom-24 right-2 sm:right-4 flex flex-col gap-1.5 sm:gap-2 z-20">
               {/* Auto Connection Panel */}
               <Popover open={showAutoPanel} onOpenChange={setShowAutoPanel}>
                 <PopoverTrigger asChild>
                   <Button
-                    className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 flex items-center justify-center"
                     title="Управление автосоединениями"
                   >
-                    <i className="fas fa-magic text-white text-sm" />
+                    <i className="fas fa-magic text-white text-xs sm:text-sm" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent side="left" className="w-auto p-0">
@@ -1170,10 +1170,10 @@ export function Canvas({
               {/* Auto-connect button */}
               <Button
                 onClick={handleAutoConnect}
-                className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 flex items-center justify-center"
                 title="Быстрое автосоединение"
               >
-                <i className="fas fa-bolt text-white text-sm" />
+                <i className="fas fa-bolt text-white text-xs sm:text-sm" />
               </Button>
 
               {/* Connection suggestions */}
@@ -1181,10 +1181,10 @@ export function Canvas({
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm"
+                    className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm flex items-center justify-center"
                     title="Рекомендации соединений"
                   >
-                    <i className="fas fa-lightbulb text-yellow-500 text-sm" />
+                    <i className="fas fa-lightbulb text-yellow-500 text-xs sm:text-sm" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent side="left" className="w-80 p-0">
@@ -1203,10 +1203,10 @@ export function Canvas({
                     connections.forEach(conn => onConnectionDelete?.(conn.id));
                   }}
                   variant="outline"
-                  className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="rounded-lg sm:rounded-full w-9 h-9 sm:w-10 sm:h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center"
                   title="Очистить все соединения"
                 >
-                  <i className="fas fa-eraser text-red-500 text-sm" />
+                  <i className="fas fa-eraser text-red-500 text-xs sm:text-sm" />
                 </Button>
               )}
             </div>
@@ -1220,30 +1220,29 @@ export function Canvas({
         left: 0,
         right: 0
       }}>
-        <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
-          <div className={`flex items-center canvas-controls overflow-x-auto w-full gap-2 ${
-            isMobile ? 'text-sm' : 'text-sm'
-          }`}>
+        <div className="flex items-center gap-2 sm:gap-2 md:gap-3 relative z-50 w-full px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
+          <div className={`flex items-center canvas-controls overflow-x-auto w-full gap-1 sm:gap-1.5 md:gap-2`}>
 
-            <div className={`flex items-center flex-shrink-0 gap-2`}>
+            <div className={`flex items-center flex-shrink-0 gap-1 sm:gap-1.5`}>
               {/* Кнопки масштаба */}
               <button 
                 onClick={zoomOut}
                 disabled={zoom <= 1}
-                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed`}
+                className={`flex-shrink-0 p-0 h-8 sm:h-9 w-8 sm:w-9 rounded-lg sm:rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
                 title="Уменьшить масштаб (Ctrl + -)"
               >
-                <i className="fas fa-search-minus text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center justify-center"></i>
+                <i className="fas fa-search-minus text-slate-600 dark:text-slate-400 text-xs sm:text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
               <Popover>
                 <PopoverTrigger asChild>
                   <button
-                    className={`flex-shrink-0 px-2 py-0 h-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 text-slate-700 dark:text-slate-300 font-mono text-xs group flex items-center gap-1`}
+                    className={`flex-shrink-0 px-1.5 sm:px-2 py-0 h-8 sm:h-9 rounded-lg sm:rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 text-slate-700 dark:text-slate-300 font-mono text-xs group flex items-center gap-0.5 sm:gap-1`}
                     title="Выбрать масштаб"
                   >
-                    <span className="flex items-center justify-center space-x-1">
-                      <span>{Math.round(zoom)}%</span>
+                    <span className="flex items-center justify-center space-x-0.5 sm:space-x-1">
+                      <span className="hidden sm:inline">{Math.round(zoom)}%</span>
+                      <span className="sm:hidden text-xs">{Math.round(zoom)}</span>
                       <i className="fas fa-chevron-down text-xs opacity-50 group-hover:opacity-100 transition-opacity"></i>
                     </span>
                   </button>
@@ -1312,15 +1311,15 @@ export function Canvas({
               <button 
                 onClick={zoomIn}
                 disabled={zoom >= 200}
-                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
+                className={`flex-shrink-0 p-0 h-8 sm:h-9 w-8 sm:w-9 rounded-lg sm:rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
                 title="Увеличить масштаб (Ctrl + +)"
               >
-                <i className="fas fa-search-plus text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                <i className="fas fa-search-plus text-slate-600 dark:text-slate-400 text-xs sm:text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
               <button 
                 onClick={fitToContent}
                 disabled={nodes.length === 0}
-                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
+                className={`hidden sm:flex flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 group disabled:opacity-30 disabled:cursor-not-allowed items-center justify-center`}
                 title="Уместить в экран (Ctrl + 1)"
               >
                 <i className="fas fa-expand-arrows-alt text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
@@ -1329,25 +1328,25 @@ export function Canvas({
               <button 
                 onClick={() => { if (actionHistory.length > 0) onUndo?.(); }}
                 disabled={actionHistory.length === 0}
-                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-200/60 disabled:dark:hover:bg-slate-700/50 flex items-center justify-center`}
+                className={`flex-shrink-0 p-0 h-8 sm:h-9 w-8 sm:w-9 rounded-lg sm:rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-200/60 disabled:dark:hover:bg-slate-700/50 flex items-center justify-center`}
                 title="Отменить действие (Ctrl + Z)"
               >
-                <i className={`fas fa-undo text-sm transition-colors ${actionHistory.length > 0 ? 'text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}></i>
+                <i className={`fas fa-undo text-xs sm:text-sm transition-colors ${actionHistory.length > 0 ? 'text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}></i>
               </button>
 
               <button 
                 onClick={() => { if (canRedo) onRedo?.(); }}
                 disabled={!canRedo}
-                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-200/60 disabled:dark:hover:bg-slate-700/50 flex items-center justify-center`}
+                className={`flex-shrink-0 p-0 h-8 sm:h-9 w-8 sm:w-9 rounded-lg sm:rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-200/60 disabled:dark:hover:bg-slate-700/50 flex items-center justify-center`}
                 title="Повторить действие (Ctrl + Y)"
               >
-                <i className={`fas fa-redo text-sm transition-colors ${canRedo ? 'text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}></i>
+                <i className={`fas fa-redo text-xs sm:text-sm transition-colors ${canRedo ? 'text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}></i>
               </button>
 
               {/* История действий */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}
+                  <button className={`hidden sm:flex flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 group items-center justify-center`}
                     title="История действий"
                   >
                     <i className="fas fa-history text-slate-600 dark:text-slate-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
@@ -1428,7 +1427,7 @@ export function Canvas({
                 <button 
                   onClick={onSave}
                   disabled={isSaving}
-                  className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
+                  className={`hidden sm:flex flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 group disabled:opacity-30 disabled:cursor-not-allowed items-center justify-center`}
                   title="Сохранить проект (Ctrl + S)"
                 >
                   {isSaving ? (
@@ -1443,7 +1442,7 @@ export function Canvas({
               {onCopyToClipboard && selectedNodeId && (
                 <button 
                   onClick={() => onCopyToClipboard([selectedNodeId])}
-                  className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}
+                  className={`hidden sm:flex flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 group items-center justify-center`}
                   title="Копировать в буфер (Shift + Ctrl + C)"
                 >
                   <i className="fas fa-clipboard text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
@@ -1453,7 +1452,7 @@ export function Canvas({
               {onPasteFromClipboard && hasClipboardData && (
                 <button 
                   onClick={onPasteFromClipboard}
-                  className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}
+                  className={`hidden sm:flex flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 group items-center justify-center`}
                   title="Вставить из буфера (Shift + Ctrl + V)"
                 >
                   <i className="fas fa-paste text-slate-600 dark:text-slate-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
@@ -1461,7 +1460,7 @@ export function Canvas({
               )}
 
               {/* Разделитель */}
-              <div className="h-6 w-px bg-slate-300/50 dark:bg-slate-600/50"></div>
+              <div className="hidden sm:block h-6 w-px bg-slate-300/50 dark:bg-slate-600/50"></div>
 
               {/* Кнопки управления интерфейсом - показываем только когда шапка скрыта */}
               {headerVisible === false && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
