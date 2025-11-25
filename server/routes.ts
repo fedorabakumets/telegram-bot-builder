@@ -2089,7 +2089,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Use template (increment use count + create project copy for authenticated user)
+  // Use template (increment use count + create project AND template copy for authenticated user)
   app.post("/api/templates/:id/use", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -2104,18 +2104,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Увеличиваем счетчик использований
       await storage.incrementTemplateUseCount(id);
       
-      // Если пользователь авторизован, создаем проект на основе шаблона
+      // Если пользователь авторизован, создаем проект И копию шаблона
       if (ownerId !== null) {
+        // Создаем проект
         const newProject = await storage.createBotProject({
           name: template.name,
           description: template.description,
           data: template.data as any,
-          ownerId: ownerId
+          ownerId: ownerId,
+          userDatabaseEnabled: 1
+        });
+        
+        // Создаем копию шаблона
+        const copiedTemplate = await storage.createBotTemplate({
+          name: template.name,
+          description: template.description,
+          category: 'custom',
+          data: template.data as any,
+          ownerId: ownerId,
+          tags: template.tags,
+          difficulty: (template.difficulty || 'easy') as 'easy' | 'medium' | 'hard',
+          language: (template.language || 'ru') as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
+          complexity: template.complexity || 1,
+          estimatedTime: template.estimatedTime || 5
         });
         
         res.json({ 
-          message: "Template copied to your projects", 
-          project: newProject
+          message: "Template copied to your projects and collection", 
+          project: newProject,
+          copiedTemplate 
         });
       } else {
         // Для гостей - просто инкрементируем счетчик
