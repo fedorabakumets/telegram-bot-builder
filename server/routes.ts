@@ -1887,8 +1887,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/templates/category/:category", async (req, res) => {
     try {
       const { category } = req.params;
-      const templates = await storage.getTemplatesByCategory(category);
-      res.json(templates);
+      const ownerId = getOwnerIdFromRequest(req);
+      
+      // Для категории "custom" - показываем только личные шаблоны
+      if (category === 'custom') {
+        if (ownerId !== null) {
+          // Авторизованный пользователь - его шаблоны
+          const templates = await storage.getUserBotTemplates(ownerId);
+          res.json(templates.filter(t => t.category === 'custom'));
+        } else {
+          // Гость - системные шаблоны с owner_id = null
+          const templates = await storage.getTemplatesByCategory(category);
+          res.json(templates.filter(t => t.ownerId === null));
+        }
+      } else {
+        // Для остальных категорий - все шаблоны
+        const templates = await storage.getTemplatesByCategory(category);
+        res.json(templates);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch templates by category" });
     }
