@@ -930,16 +930,26 @@ export function PropertiesPanel({
       <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/40 dark:to-slate-900/30 border-b border-border/50 backdrop-blur-sm">
         <div className="p-3 sm:p-4 space-y-3">
           {/* Main Info Row */}
-          <div className="flex items-start gap-2.5 sm:gap-3 flex-wrap">
-            <div className={`w-9 sm:w-10 h-9 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${nodeColors[selectedNode.type]}`}>
-              <i className={`${nodeIcons[selectedNode.type]} text-sm sm:text-base`}></i>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h2 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight">
+          <div className="space-y-3 sm:space-y-3.5">
+            {/* Header with Icon and Title */}
+            <div className="flex items-center gap-3 sm:gap-3.5">
+              <div className={`w-10 sm:w-11 h-10 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm transition-all ${nodeColors[selectedNode.type]}`}>
+                <i className={`${nodeIcons[selectedNode.type]} text-base sm:text-lg`}></i>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Текущий элемент</p>
+                <h2 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight truncate">
                   {nodeTypeNames[selectedNode.type]}
                 </h2>
               </div>
+            </div>
+
+            {/* Type Selector */}
+            <div className="space-y-2">
+              <label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <i className="fas fa-exchange-alt text-slate-600 dark:text-slate-400 text-xs sm:text-sm"></i>
+                Изменить тип
+              </label>
               <Select
                 value={selectedNode.type}
                 onValueChange={(value) => {
@@ -958,10 +968,10 @@ export function PropertiesPanel({
                   }
                 }}
               >
-                <SelectTrigger className="w-full sm:w-auto text-xs sm:text-sm border-slate-200 dark:border-slate-700 focus:border-slate-500 focus:ring-slate-200/50 bg-white dark:bg-slate-950">
+                <SelectTrigger className="w-full text-xs sm:text-sm border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-200/50 dark:focus:ring-blue-900/50 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50">
                   <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
                   <SelectItem value="sticker">😀 Стикер</SelectItem>
                   <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
@@ -983,7 +993,12 @@ export function PropertiesPanel({
                   <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">Элемент: <span className="font-semibold text-foreground">{selectedNode.type}</span></p>
+            </div>
+
+            {/* Element Type Badge */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 w-fit">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">ID:</span>
+              <code className="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedNode.type}</code>
             </div>
           </div>
 
