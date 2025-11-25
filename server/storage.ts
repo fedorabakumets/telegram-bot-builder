@@ -1,3 +1,157 @@
+import { 
+  botProjects, 
+  botInstances,
+  botTemplates,
+  botTokens,
+  mediaFiles,
+  userBotData,
+  botGroups,
+  groupMembers,
+  botUsers,
+  botMessages,
+  botMessageMedia,
+  telegramUsers,
+  type BotProject, 
+  type InsertBotProject,
+  type BotInstance,
+  type InsertBotInstance,
+  type BotTemplate,
+  type InsertBotTemplate,
+  type BotToken,
+  type InsertBotToken,
+  type MediaFile,
+  type InsertMediaFile,
+  type UserBotData,
+  type InsertUserBotData,
+  type BotGroup,
+  type InsertBotGroup,
+  type GroupMember,
+  type InsertGroupMember,
+  type BotUser,
+  type BotMessage,
+  type InsertBotMessage,
+  type BotMessageMedia,
+  type InsertBotMessageMedia,
+  type TelegramUserDB,
+  type InsertTelegramUser
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, asc, and, like, or, ilike, sql } from "drizzle-orm";
+import { dbManager } from "./db-utils";
+import { cachedOps } from "./db-cache";
+
+export interface IStorage {
+  getBotProject(id: number): Promise<BotProject | undefined>;
+  getAllBotProjects(): Promise<BotProject[]>;
+  createBotProject(project: InsertBotProject): Promise<BotProject>;
+  updateBotProject(id: number, project: Partial<InsertBotProject>): Promise<BotProject | undefined>;
+  deleteBotProject(id: number): Promise<boolean>;
+  
+  // Bot instances
+  getBotInstance(projectId: number): Promise<BotInstance | undefined>;
+  getBotInstanceByToken(tokenId: number): Promise<BotInstance | undefined>;
+  getBotInstancesByProject(projectId: number): Promise<BotInstance[]>;
+  getAllBotInstances(): Promise<BotInstance[]>;
+  createBotInstance(instance: InsertBotInstance): Promise<BotInstance>;
+  updateBotInstance(id: number, instance: Partial<InsertBotInstance>): Promise<BotInstance | undefined>;
+  deleteBotInstance(id: number): Promise<boolean>;
+  stopBotInstance(projectId: number): Promise<boolean>;
+  stopBotInstanceByToken(tokenId: number): Promise<boolean>;
+  
+  // Bot templates
+  getBotTemplate(id: number): Promise<BotTemplate | undefined>;
+  getAllBotTemplates(): Promise<BotTemplate[]>;
+  createBotTemplate(template: InsertBotTemplate): Promise<BotTemplate>;
+  updateBotTemplate(id: number, template: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined>;
+  deleteBotTemplate(id: number): Promise<boolean>;
+  incrementTemplateUseCount(id: number): Promise<boolean>;
+  incrementTemplateViewCount(id: number): Promise<boolean>;
+  incrementTemplateDownloadCount(id: number): Promise<boolean>;
+  toggleTemplateLike(id: number, liked: boolean): Promise<boolean>;
+  toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean>;
+  rateTemplate(id: number, rating: number): Promise<boolean>;
+  getFeaturedTemplates(): Promise<BotTemplate[]>;
+  getTemplatesByCategory(category: string): Promise<BotTemplate[]>;
+  searchTemplates(query: string): Promise<BotTemplate[]>;
+  
+  // Bot tokens
+  getBotToken(id: number): Promise<BotToken | undefined>;
+  getBotTokensByProject(projectId: number): Promise<BotToken[]>;
+  getDefaultBotToken(projectId: number): Promise<BotToken | undefined>;
+  createBotToken(token: InsertBotToken): Promise<BotToken>;
+  updateBotToken(id: number, token: Partial<InsertBotToken>): Promise<BotToken | undefined>;
+  deleteBotToken(id: number): Promise<boolean>;
+  setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean>;
+  markTokenAsUsed(id: number): Promise<boolean>;
+  
+  // User-specific methods (filtered by ownerId)
+  getUserBotProjects(ownerId: number): Promise<BotProject[]>;
+  getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]>;
+  getUserBotTemplates(ownerId: number): Promise<BotTemplate[]>;
+  
+  // Media files
+  getMediaFile(id: number): Promise<MediaFile | undefined>;
+  getMediaFilesByProject(projectId: number): Promise<MediaFile[]>;
+  getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]>;
+  createMediaFile(file: InsertMediaFile): Promise<MediaFile>;
+  updateMediaFile(id: number, file: Partial<InsertMediaFile>): Promise<MediaFile | undefined>;
+  deleteMediaFile(id: number): Promise<boolean>;
+  incrementMediaFileUsage(id: number): Promise<boolean>;
+  searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]>;
+  
+  // User bot data
+  getUserBotData(id: number): Promise<UserBotData | undefined>;
+  getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined>;
+  getUserBotDataByProject(projectId: number): Promise<UserBotData[]>;
+  getAllUserBotData(): Promise<UserBotData[]>;
+  createUserBotData(userData: InsertUserBotData): Promise<UserBotData>;
+  updateUserBotData(id: number, userData: Partial<InsertUserBotData>): Promise<UserBotData | undefined>;
+  deleteUserBotData(id: number): Promise<boolean>;
+  deleteUserBotDataByProject(projectId: number): Promise<boolean>;
+  incrementUserInteraction(id: number): Promise<boolean>;
+  updateUserState(id: number, state: string): Promise<boolean>;
+  searchUserBotData(projectId: number, query: string): Promise<UserBotData[]>;
+  getUserBotDataStats(projectId: number): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    blockedUsers: number;
+    premiumUsers: number;
+    totalInteractions: number;
+    avgInteractionsPerUser: number;
+  }>;
+  
+  // Bot groups
+  getBotGroup(id: number): Promise<BotGroup | undefined>;
+  getBotGroupsByProject(projectId: number): Promise<BotGroup[]>;
+  getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined>;
+  createBotGroup(group: InsertBotGroup): Promise<BotGroup>;
+  updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined>;
+  deleteBotGroup(id: number): Promise<boolean>;
+  
+  // Group members
+  getGroupMembers(groupId: number): Promise<GroupMember[]>;
+  createGroupMember(member: InsertGroupMember): Promise<GroupMember>;
+  updateGroupMember(id: number, member: Partial<InsertGroupMember>): Promise<GroupMember | undefined>;
+  deleteGroupMember(id: number): Promise<boolean>;
+  
+  // Bot messages
+  createBotMessage(message: InsertBotMessage): Promise<BotMessage>;
+  getBotMessages(projectId: number, userId: string, limit?: number): Promise<BotMessage[]>;
+  getBotMessagesWithMedia(projectId: number, userId: string, limit?: number): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
+  deleteBotMessages(projectId: number, userId: string): Promise<boolean>;
+  deleteAllBotMessages(projectId: number): Promise<boolean>;
+  
+  // Bot message media
+  createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia>;
+  getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>>;
+
+  // Telegram users
+  getTelegramUser(id: number): Promise<TelegramUserDB | undefined>;
+  getTelegramUserOrCreate(userData: InsertTelegramUser): Promise<TelegramUserDB>;
+  deleteTelegramUser(id: number): Promise<boolean>;
+}
+
+// Legacy Memory Storage - kept for reference
 class MemStorage implements IStorage {
   private projects: Map<number, BotProject>;
   private instances: Map<number, BotInstance>;
@@ -828,67 +982,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(botTemplates.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
-  async getPublicTemplates(): Promise<BotTemplate[]> {
-    return await this.db.select().from(botTemplates)
-      .where(eq(botTemplates.isPublic, 1))
-      .orderBy(desc(botTemplates.rating), desc(botTemplates.useCount));
-  }
-
-  async toggleTemplatePublish(id: number, isPublic: boolean): Promise<BotTemplate | undefined> {
-    const [template] = await this.db
-      .update(botTemplates)
-      .set({ isPublic: isPublic ? 1 : 0, updatedAt: new Date() })
-      .where(eq(botTemplates.id, id))
-      .returning();
-    return template || undefined;
-  }
-    const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
-
-  async getPublicTemplates(): Promise<BotTemplate[]> {
-    return await this.db.select().from(botTemplates)
-      .where(eq(botTemplates.isPublic, 1))
-      .orderBy(desc(botTemplates.rating), desc(botTemplates.useCount));
-  }
-
-    if (!template) return false;
-
-
-    
-
-
-    const current = template.bookmarkCount || 0;
-
-
-    const newCount = bookmarked ? current + 1 : Math.max(0, current - 1);
-
-
-    
-
-
-    const result = await this.db
-
-
-      .update(botTemplates)
-
-
-      .set({ 
-
-
-        bookmarkCount: newCount
-
-
-      })
-
-
-      .where(eq(botTemplates.id, id));
-
-
-    return result.rowCount ? result.rowCount > 0 : false;
-
-
-  }
-
-
 
   async rateTemplate(id: number, rating: number): Promise<boolean> {
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
@@ -909,8 +1002,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(botTemplates.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
-
-
 
   async getFeaturedTemplates(): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).where(eq(botTemplates.featured, 1)).orderBy(desc(botTemplates.rating));
@@ -1586,17 +1677,9 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   }
 
   async toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean> {
-
-
     this.templateCache.delete(id);
-
-
     return true;
-
-
   }
-
-
 
   async rateTemplate(id: number, rating: number): Promise<boolean> {
     this.templateCache.delete(id);
