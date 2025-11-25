@@ -96,15 +96,17 @@ export function AdaptiveHeader({
 
   // Компонент логотипа и названия
   const BrandSection = () => (
-    <div className={`flex items-center ${isVertical ? 'flex-col space-y-2 p-4' : 'gap-1.5 sm:gap-2'} flex-shrink-0`}>
-      <div className={`bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9`}>
+    <div className={`flex items-center ${isVertical ? 'flex-col space-y-2 p-4' : 'gap-1.5 sm:gap-2'} flex-shrink-0 min-w-0`}>
+      <div className={`bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex-shrink-0`}>
         <i className={`fab fa-telegram-plane text-white text-xs sm:text-sm md:text-base`}></i>
       </div>
-      <div className={`hidden sm:block ${isVertical ? 'text-center' : ''}`}>
-        <h1 className={`font-bold bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent text-sm md:text-base lg:text-lg leading-tight`}>
-          {isVertical && !isCompact ? 'BotCraft' : 'BotCraft Studio'}
+      <div className={`${isVertical ? 'text-center' : ''} min-w-0`}>
+        <h1 className={`font-bold bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent leading-tight truncate ${
+          isMobile ? 'text-xs' : 'text-sm md:text-base lg:text-lg'
+        }`}>
+          {isVertical && !isCompact ? 'BotCraft' : (isMobile ? 'BotCraft' : 'BotCraft Studio')}
         </h1>
-        <p className={`text-muted-foreground/70 text-xs leading-tight truncate max-w-xs`}>
+        <p className={`text-muted-foreground/70 text-xs leading-tight truncate max-w-xs ${isMobile ? 'hidden' : ''}`}>
           {(() => {
             const displayName = botInfo?.first_name || projectName;
             return isVertical ? (displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName) : displayName;
