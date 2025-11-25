@@ -307,7 +307,7 @@ export function TokenManager({ projectId, onTokenSelect, selectedTokenId }: Toke
         </Card>
       ) : (
         <div className="space-y-3">
-          {tokens.map((token) => (
+          {tokens.map((token: BotToken) => (
             <Card 
               key={token.id} 
               className={`cursor-pointer transition-colors ${

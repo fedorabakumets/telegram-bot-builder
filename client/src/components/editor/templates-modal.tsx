@@ -218,11 +218,11 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
 
     // Дополнительная фильтрация для вкладки "Популярные"
     if (currentTab === 'popular') {
-      filtered = filtered.filter(t => (t.useCount || 0) > 0);
+      filtered = filtered.filter((t: BotTemplate) => (t.useCount || 0) > 0);
     }
 
     // Сортировка
-    filtered.sort((a, b) => {
+    filtered.sort((a: BotTemplate, b: BotTemplate) => {
       switch (sortBy) {
         case 'popular':
           return (b.useCount || 0) - (a.useCount || 0);
