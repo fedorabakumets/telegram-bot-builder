@@ -2108,7 +2108,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           category: 'custom',
           data: template.data as any,
           ownerId: ownerId,
-          tags: template.tags
+          tags: template.tags,
+          difficulty: template.difficulty || 'easy',
+          language: template.language || 'ru',
+          complexity: template.complexity || 1,
+          estimatedTime: template.estimatedTime || 5
         });
         
         res.json({ 

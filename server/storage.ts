@@ -91,6 +91,7 @@ export interface IStorage {
   
   // User-specific methods (filtered by ownerId)
   getUserBotProjects(ownerId: number): Promise<BotProject[]>;
+  getGuestBotProjects(): Promise<BotProject[]>;
   getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]>;
   getUserBotTemplates(ownerId: number): Promise<BotTemplate[]>;
   
@@ -595,6 +596,10 @@ class MemStorage implements IStorage {
   // User-specific methods
   async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
     return Array.from(this.projects.values()).filter(p => p.ownerId === ownerId);
+  }
+
+  async getGuestBotProjects(): Promise<BotProject[]> {
+    return Array.from(this.projects.values()).filter(p => p.ownerId === null);
   }
 
   async getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]> {
@@ -1125,6 +1130,12 @@ export class DatabaseStorage implements IStorage {
   async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
     return await this.db.select().from(botProjects)
       .where(eq(botProjects.ownerId, ownerId))
+      .orderBy(desc(botProjects.createdAt));
+  }
+
+  async getGuestBotProjects(): Promise<BotProject[]> {
+    return await this.db.select().from(botProjects)
+      .where(sql`${botProjects.ownerId} IS NULL`)
       .orderBy(desc(botProjects.createdAt));
   }
 
