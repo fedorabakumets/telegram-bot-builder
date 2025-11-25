@@ -1170,12 +1170,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const telegramUserId = req.query.userId ? parseInt(req.query.userId as string) : null;
       
+      // Требуем userId для фильтрации проектов
+      if (!telegramUserId) {
+        return res.json([]);
+      }
+      
       const projects = await getCachedOrExecute(
-        telegramUserId ? `projects-list-user-${telegramUserId}` : 'all-projects-list',
+        `projects-list-user-${telegramUserId}`,
         async () => {
-          const allProjects = telegramUserId 
-            ? await storage.getBotProjectsByUser(telegramUserId)
-            : await storage.getAllBotProjects();
+          const allProjects = await storage.getBotProjectsByUser(telegramUserId);
           // Возвращаем только метаданные, без поля data
           return allProjects.map(({ data, ...metadata }) => metadata);
         },
@@ -1192,11 +1195,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const telegramUserId = req.query.userId ? parseInt(req.query.userId as string) : null;
       
+      // Требуем userId для фильтрации проектов
+      if (!telegramUserId) {
+        return res.json([]);
+      }
+      
       const projects = await getCachedOrExecute(
-        telegramUserId ? `projects-user-${telegramUserId}` : 'all-projects',
-        () => telegramUserId 
-          ? storage.getBotProjectsByUser(telegramUserId)
-          : storage.getAllBotProjects(),
+        `projects-user-${telegramUserId}`,
+        () => storage.getBotProjectsByUser(telegramUserId),
         30000 // Кешируем на 30 секунд
       );
       res.json(projects);
