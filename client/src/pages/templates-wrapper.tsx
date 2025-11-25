@@ -104,26 +104,34 @@ export default function TemplatesPageWrapper() {
       return response.json();
     },
     onSuccess: () => {
-      // Инвалидируем кеш проектов, чтобы данные обновились на странице "Проекты"
+      // Инвалидируем кеш проектов и шаблонов
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      
+      toast({
+        title: "✅ Успешно!",
+        description: "Шаблон добавлен в ваши проекты и коллекцию",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "❌ Ошибка",
+        description: "Не удалось использовать шаблон",
+        variant: "destructive"
+      });
     }
   });
 
   const handleUseTemplate = (template: BotTemplate) => {
-    // Для авторизованных пользователей это создаст копию шаблона
-    // Для гостей это просто инкрементирует счетчик
     useTemplateMutation.mutate(template.id);
     localStorage.setItem('selectedTemplate', JSON.stringify(template));
     
-    // Сохраняем ID шаблона в список "моих" для гостей
+    // Сохраняем ID шаблона в список "моих" для гостей (для оффлайна)
     const myTemplateIds = localStorage.getItem('myTemplateIds') || '';
     const ids = new Set(myTemplateIds.split(',').filter(Boolean).map(Number));
     ids.add(template.id);
     localStorage.setItem('myTemplateIds', Array.from(ids).join(','));
-    
-    // Инвалидируем кеши - и для гостей, и для авторизованных пользователей
-    queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
     
     setLocation('/');
     
