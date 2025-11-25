@@ -1696,7 +1696,7 @@ export function ComponentsSidebar({
                       </div>
                       <div className="flex-1">
                         <div className="mb-2 space-y-2">
-                          <h4 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-100 dark:to-slate-200 bg-clip-text text-transparent break-words leading-snug">
+                          <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-snug">
                             {project.name}
                           </h4>
                           <div className="flex items-center gap-2">
