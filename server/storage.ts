@@ -84,6 +84,11 @@ export interface IStorage {
   setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean>;
   markTokenAsUsed(id: number): Promise<boolean>;
   
+  // User-specific methods (filtered by ownerId)
+  getUserBotProjects(ownerId: number): Promise<BotProject[]>;
+  getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]>;
+  getUserBotTemplates(ownerId: number): Promise<BotTemplate[]>;
+  
   // Media files
   getMediaFile(id: number): Promise<MediaFile | undefined>;
   getMediaFilesByProject(projectId: number): Promise<MediaFile[]>;
@@ -553,6 +558,28 @@ class MemStorage implements IStorage {
   async markTokenAsUsed(id: number): Promise<boolean> {
     // In memory implementation - not supported
     return false;
+  }
+
+  // User-specific methods
+  async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
+    return Array.from(this.projects.values()).filter(p => p.ownerId === ownerId);
+  }
+
+  async getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]> {
+    let tokens = Array.from(this.tokens.values()).filter(t => {
+      const project = this.projects.get(t.projectId);
+      return project && project.ownerId === ownerId;
+    });
+    
+    if (projectId) {
+      tokens = tokens.filter(t => t.projectId === projectId);
+    }
+    
+    return tokens;
+  }
+
+  async getUserBotTemplates(ownerId: number): Promise<BotTemplate[]> {
+    return Array.from(this.templates.values()).filter(t => t.ownerId === ownerId);
   }
 
   // Media Files (Memory implementation - not supported)
@@ -1068,6 +1095,32 @@ export class DatabaseStorage implements IStorage {
       .where(eq(botTokens.id, id));
     
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // User-specific methods (DbStorage)
+  async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
+    return await this.db.select().from(botProjects)
+      .where(eq(botProjects.ownerId, ownerId))
+      .orderBy(desc(botProjects.createdAt));
+  }
+
+  async getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]> {
+    let query = this.db.select().from(botTokens)
+      .innerJoin(botProjects, eq(botTokens.projectId, botProjects.id))
+      .where(eq(botProjects.ownerId, ownerId)) as any;
+    
+    if (projectId) {
+      query = query.where(eq(botTokens.projectId, projectId));
+    }
+    
+    const results = await query.orderBy(desc(botTokens.createdAt));
+    return results.map((r: any) => r.bot_tokens);
+  }
+
+  async getUserBotTemplates(ownerId: number): Promise<BotTemplate[]> {
+    return await this.db.select().from(botTemplates)
+      .where(eq(botTemplates.ownerId, ownerId))
+      .orderBy(desc(botTemplates.createdAt));
   }
 
   // Media Files
@@ -1993,6 +2046,18 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
       cachedOps.invalidateAllTemplates();
       return template;
     });
+  }
+
+  async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
+    return await super.getUserBotProjects(ownerId);
+  }
+
+  async getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]> {
+    return await super.getUserBotTokens(ownerId, projectId);
+  }
+
+  async getUserBotTemplates(ownerId: number): Promise<BotTemplate[]> {
+    return await super.getUserBotTemplates(ownerId);
   }
 
   async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {

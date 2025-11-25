@@ -6049,6 +6049,256 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User-specific endpoints
+  // Get user's projects
+  app.get("/api/user/projects", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const projects = await storage.getUserBotProjects(userId);
+      res.json(projects);
+    } catch (error: any) {
+      console.error("Get user projects error:", error);
+      res.status(500).json({ error: "Failed to fetch projects" });
+    }
+  });
+
+  // Create user's project
+  app.post("/api/user/projects", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const { name, description, data, botToken, userDatabaseEnabled } = req.body;
+      const project = await storage.createBotProject({
+        ownerId: userId,
+        name,
+        description,
+        data,
+        botToken,
+        userDatabaseEnabled
+      });
+      res.json(project);
+    } catch (error: any) {
+      console.error("Create project error:", error);
+      res.status(500).json({ error: "Failed to create project" });
+    }
+  });
+
+  // Update user's project
+  app.patch("/api/user/projects/:id", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      const projectId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const project = await storage.getBotProject(projectId);
+      if (!project || project.ownerId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const updated = await storage.updateBotProject(projectId, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Update project error:", error);
+      res.status(500).json({ error: "Failed to update project" });
+    }
+  });
+
+  // Delete user's project
+  app.delete("/api/user/projects/:id", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      const projectId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const project = await storage.getBotProject(projectId);
+      if (!project || project.ownerId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      await storage.deleteBotProject(projectId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Delete project error:", error);
+      res.status(500).json({ error: "Failed to delete project" });
+    }
+  });
+
+  // Get user's tokens
+  app.get("/api/user/tokens", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
+      const tokens = await storage.getUserBotTokens(userId, projectId);
+      res.json(tokens);
+    } catch (error: any) {
+      console.error("Get user tokens error:", error);
+      res.status(500).json({ error: "Failed to fetch tokens" });
+    }
+  });
+
+  // Create user's token
+  app.post("/api/user/tokens", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const token = await storage.createBotToken({
+        ...req.body,
+        ownerId: userId
+      });
+      res.json(token);
+    } catch (error: any) {
+      console.error("Create token error:", error);
+      res.status(500).json({ error: "Failed to create token" });
+    }
+  });
+
+  // Update user's token
+  app.patch("/api/user/tokens/:id", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      const tokenId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const token = await storage.getBotToken(tokenId);
+      if (!token || token.ownerId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Update token error:", error);
+      res.status(500).json({ error: "Failed to update token" });
+    }
+  });
+
+  // Delete user's token
+  app.delete("/api/user/tokens/:id", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      const tokenId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const token = await storage.getBotToken(tokenId);
+      if (!token || token.ownerId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      await storage.deleteBotToken(tokenId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Delete token error:", error);
+      res.status(500).json({ error: "Failed to delete token" });
+    }
+  });
+
+  // Get user's templates
+  app.get("/api/user/templates", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const templates = await storage.getUserBotTemplates(userId);
+      res.json(templates);
+    } catch (error: any) {
+      console.error("Get user templates error:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  // Create user's template
+  app.post("/api/user/templates", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const template = await storage.createBotTemplate({
+        ...req.body,
+        ownerId: userId
+      });
+      res.json(template);
+    } catch (error: any) {
+      console.error("Create template error:", error);
+      res.status(500).json({ error: "Failed to create template" });
+    }
+  });
+
+  // Update user's template
+  app.patch("/api/user/templates/:id", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      const templateId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const template = await storage.getBotTemplate(templateId);
+      if (!template || template.ownerId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const updated = await storage.updateBotTemplate(templateId, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Update template error:", error);
+      res.status(500).json({ error: "Failed to update template" });
+    }
+  });
+
+  // Delete user's template
+  app.delete("/api/user/templates/:id", async (req, res) => {
+    try {
+      const userId = (req as any).user?.id;
+      const templateId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const template = await storage.getBotTemplate(templateId);
+      if (!template || template.ownerId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      await storage.deleteBotTemplate(templateId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Delete template error:", error);
+      res.status(500).json({ error: "Failed to delete template" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
