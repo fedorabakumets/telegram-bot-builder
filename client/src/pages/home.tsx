@@ -39,32 +39,52 @@ export default function Home() {
     },
   });
 
+  // Get telegram user ID
+  const getUserIdFromStorage = () => {
+    try {
+      const userStr = localStorage.getItem('telegramUser');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.id;
+      }
+    } catch (e) {
+      console.error('Failed to get user ID from storage:', e);
+    }
+    return null;
+  };
+
+  const telegramUserId = getUserIdFromStorage();
+
   // Загрузка списка проектов (только метаданные, без data)
   const { data: projects = [], isLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
-    queryKey: ['/api/projects/list'],
+    queryKey: ['/api/projects/list', telegramUserId],
+    queryFn: () => apiRequest('GET', `/api/projects/list${telegramUserId ? `?userId=${telegramUserId}` : ''}`),
   });
 
   // Создание нового проекта
   const createProjectMutation = useMutation({
-    mutationFn: (data: CreateProjectForm) => apiRequest('POST', '/api/projects', {
-      ...data,
-      data: {
-        nodes: [{
-          id: 'start',
-          type: 'start',
-          position: { x: 100, y: 100 },
-          data: {
-            messageText: 'Привет! Я ваш новый бот.',
-            keyboardType: 'none',
-            buttons: [],
-          }
-        }],
-        connections: []
-      }
-    }),
+    mutationFn: (data: CreateProjectForm) => {
+      const endpoint = telegramUserId ? `/api/projects/user/${telegramUserId}` : '/api/projects';
+      return apiRequest('POST', endpoint, {
+        ...data,
+        data: {
+          nodes: [{
+            id: 'start',
+            type: 'start',
+            position: { x: 100, y: 100 },
+            data: {
+              messageText: 'Привет! Я ваш новый бот.',
+              keyboardType: 'none',
+              buttons: [],
+            }
+          }],
+          connections: []
+        }
+      });
+    },
     onSuccess: (newProject: BotProject) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects/list', telegramUserId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', telegramUserId] });
       toast({
         title: "Проект создан",
         description: `Проект "${newProject.name}" успешно создан`,

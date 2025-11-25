@@ -353,9 +353,26 @@ export default function Editor() {
     staleTime: 30000, // Кешируем на 30 секунд
   });
 
+  // Get telegram user ID from local storage
+  const getUserIdFromStorage = () => {
+    try {
+      const userStr = localStorage.getItem('telegramUser');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.id;
+      }
+    } catch (e) {
+      console.error('Failed to get user ID from storage:', e);
+    }
+    return null;
+  };
+
+  const telegramUserId = getUserIdFromStorage();
+
   // If no projectId in URL, load project list to get first project ID
   const { data: projectsList, isLoading: isListLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
-    queryKey: ['/api/projects/list'],
+    queryKey: ['/api/projects/list', telegramUserId],
+    queryFn: () => apiRequest('GET', `/api/projects/list${telegramUserId ? `?userId=${telegramUserId}` : ''}`),
     enabled: !projectId, // Загружаем список только если нет ID в URL
     staleTime: 30000,
   });

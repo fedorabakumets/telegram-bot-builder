@@ -17,6 +17,22 @@ This application provides a **no-code visual Telegram bot builder** that enables
 Preferred communication style: Simple, everyday language. No-code platform for non-technical users.
 
 ## Recent Changes (Current Session)
+- **✅ Пользовательские проекты реализованы - COMPLETE** (shared/schema.ts + server/storage.ts + routes.ts + фронтенд queries):
+  - **Когда пользователь входит через Telegram** → видит только СВОИ проекты (не всем проектам)
+  - **При создании проекта** → автоматически сохраняется `telegramUserId` в БД
+  - **Фильтрация по userId** → проекты загружаются с параметром `?userId={id}` 
+  - **Синхронизация всех компонентов** - editor.tsx, home.tsx, components-sidebar.tsx используют localStorage для получения userId
+  
+  **Архитектура:**
+  - **БД**: Добавлены колонки `telegram_user_id` в `bot_projects`, `bot_templates`, `bot_tokens`
+  - **Бэкенд**: Новый метод `getBotProjectsByUser(telegramUserId)` для фильтрации
+  - **API Endpoints**:
+    - `GET /api/projects?userId={id}` - получить проекты пользователя
+    - `GET /api/projects/list?userId={id}` - получить список проектов
+    - `POST /api/projects/user/{userId}` - создать проект с автосохранением userId
+  - **Фронтенд**: Все queries и mutations получают `telegramUserId` из localStorage и отправляют его на бэкенд
+
+## Recent Changes (Previous Session)
 - **✅ Telegram Login Widget + Bot Editor - COMPLETE** (editor.tsx + routes.ts + storage.ts + use-telegram-auth.ts):
   - **🔴 → ✅ FIXED: Removed frontend auth check** - Editor now shows bot builder directly
   - **✅ Backend Telegram OAuth works perfectly** - Users save to PostgreSQL DB

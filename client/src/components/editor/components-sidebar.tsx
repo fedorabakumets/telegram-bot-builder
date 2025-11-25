@@ -729,10 +729,26 @@ export function ComponentsSidebar({
     };
   }, [isDragging, touchedComponent, touchStartElement]);
 
+  // Get telegram user ID
+  const getUserIdFromStorage = () => {
+    try {
+      const userStr = localStorage.getItem('telegramUser');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.id;
+      }
+    } catch (e) {
+      console.error('Failed to get user ID from storage:', e);
+    }
+    return null;
+  };
+
+  const telegramUserId = getUserIdFromStorage();
+
   // Загрузка списка проектов
   const { data: projects = [], isLoading } = useQuery<BotProject[]>({
-    queryKey: ['/api/projects'],
-    queryFn: () => apiRequest('GET', '/api/projects'),
+    queryKey: ['/api/projects', telegramUserId],
+    queryFn: () => apiRequest('GET', `/api/projects${telegramUserId ? `?userId=${telegramUserId}` : ''}`),
     staleTime: 0, // Данные всегда считаются устаревшими для немедленного обновления при рефетче
   });
 
@@ -740,7 +756,8 @@ export function ComponentsSidebar({
   const createProjectMutation = useMutation({
     mutationFn: () => {
       const projectCount = projects.length;
-      return apiRequest('POST', '/api/projects', {
+      const endpoint = telegramUserId ? `/api/projects/user/${telegramUserId}` : '/api/projects';
+      return apiRequest('POST', endpoint, {
         name: `Новый бот ${projectCount + 1}`,
         description: '',
         data: {
@@ -766,13 +783,13 @@ export function ComponentsSidebar({
     },
     onSuccess: async (newProject: BotProject) => {
       // Immediately update the query cache with the new project
-      const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
-      queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
+      const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects', telegramUserId]) || [];
+      queryClient.setQueryData(['/api/projects', telegramUserId], [...currentProjects, newProject]);
       
       // Also update the list cache
-      const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
+      const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list', telegramUserId]) || [];
       const { data, ...projectWithoutData } = newProject;
-      queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
+      queryClient.setQueryData(['/api/projects/list', telegramUserId], [...currentList, projectWithoutData]);
       
       toast({
         title: "Проект создан",
@@ -797,7 +814,7 @@ export function ComponentsSidebar({
     mutationFn: (projectId: number) => apiRequest('DELETE', `/api/projects/${projectId}`),
     onMutate: async (projectId: number) => {
       // Отменяем текущие запросы для предотвращения race condition
-      await queryClient.cancelQueries({ queryKey: ['/api/projects'] });
+      await queryClient.cancelQueries({ queryKey: ['/api/projects', telegramUserId] });
       await queryClient.cancelQueries({ queryKey: ['/api/projects/list'] });
       await queryClient.cancelQueries({ queryKey: [`/api/projects/${projectId}`] });
       
@@ -1087,10 +1104,10 @@ export function ComponentsSidebar({
                 description: `Python бот загружен (${result.nodeCount} узлов)`,
                 variant: "default",
               });
-              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/projects', telegramUserId] });
               queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               setTimeout(() => {
-                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/projects', telegramUserId] });
               }, 300);
             }).catch((error: any) => {
               setImportError(error.message || 'Ошибка при импорте проекта');
@@ -1138,10 +1155,10 @@ export function ComponentsSidebar({
               setImportPythonText('');
               setImportJsonText('');
               setImportError('');
-              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/projects', telegramUserId] });
               queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               setTimeout(() => {
-                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/projects', telegramUserId] });
               }, 300);
             }).catch((error: any) => {
               setImportError(error.message || 'Ошибка при импорте проекта');

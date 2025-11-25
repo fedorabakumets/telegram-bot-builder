@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export const botProjects = pgTable("bot_projects", {
   id: serial("id").primaryKey(),
+  telegramUserId: bigint("telegram_user_id", { mode: "number" }), // ID пользователя Telegram, кому принадлежит проект
   name: text("name").notNull(),
   description: text("description"),
   data: jsonb("data").notNull(),
@@ -31,6 +32,7 @@ export const botInstances = pgTable("bot_instances", {
 
 export const botTemplates = pgTable("bot_templates", {
   id: serial("id").primaryKey(),
+  telegramUserId: bigint("telegram_user_id", { mode: "number" }), // ID пользователя Telegram, кому принадлежит шаблон
   name: text("name").notNull(),
   description: text("description"),
   data: jsonb("data").notNull(),
@@ -61,6 +63,7 @@ export const botTemplates = pgTable("bot_templates", {
 
 export const botTokens = pgTable("bot_tokens", {
   id: serial("id").primaryKey(),
+  telegramUserId: bigint("telegram_user_id", { mode: "number" }), // ID пользователя Telegram, кому принадлежит токен
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(), // Пользовательское имя для токена
   token: text("token").notNull(), // Сам токен
@@ -250,13 +253,31 @@ export const botMessageMedia = pgTable("bot_message_media", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Таблица для пользовательских коллекций/листов/папок
+export const userCollections = pgTable("user_collections", {
+  id: serial("id").primaryKey(),
+  telegramUserId: bigint("telegram_user_id", { mode: "number" }).notNull(), // ID пользователя Telegram
+  name: text("name").notNull(), // Название коллекции (например, "Мои шаблоны", "Рабочие проекты")
+  description: text("description"), // Описание коллекции
+  type: text("type").notNull().default("custom"), // "projects", "templates", "tokens", "custom"
+  icon: text("icon"), // Иконка коллекции
+  color: text("color"), // Цвет коллекции для UI
+  itemIds: text("item_ids").array().default([]), // IDs проектов/шаблонов/токенов в этой коллекции
+  isPublic: integer("is_public").default(0), // 0 = приватная, 1 = общедоступная
+  order: integer("order").default(0), // Порядок сортировки
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
+  telegramUserId: true,
   name: true,
   description: true,
   data: true,
   botToken: true,
   userDatabaseEnabled: true,
 }).extend({
+  telegramUserId: z.number().positive().optional(),
   botToken: z.string().nullish(),
   userDatabaseEnabled: z.number().min(0).max(1).default(1),
 });
@@ -273,6 +294,7 @@ export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
 });
 
 export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
+  telegramUserId: true,
   name: true,
   description: true,
   data: true,
@@ -290,6 +312,7 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   complexity: true,
   estimatedTime: true,
 }).extend({
+  telegramUserId: z.number().positive().optional(),
   category: z.enum(["custom", "business", "entertainment", "education", "utility", "games", "official", "community"]).default("custom"),
   difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
   language: z.enum(["ru", "en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko"]).default("ru"),
@@ -299,6 +322,7 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
 });
 
 export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
+  telegramUserId: true,
   projectId: true,
   name: true,
   token: true,
@@ -317,6 +341,7 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   trackExecutionTime: true,
   totalExecutionSeconds: true,
 }).extend({
+  telegramUserId: z.number().positive().optional(),
   name: z.string().min(1, "Имя токена обязательно"),
   token: z.string().min(1, "Токен обязателен"),
   isDefault: z.number().min(0).max(1).default(0),
@@ -524,6 +549,28 @@ export const insertBotMessageMediaSchema = createInsertSchema(botMessageMedia).p
   mediaFileId: z.number().positive("ID медиафайла должен быть положительным числом"),
   mediaKind: z.enum(["photo", "video", "audio", "document"]),
   orderIndex: z.number().min(0).default(0),
+});
+
+// Схема для коллекций пользователя
+export const insertUserCollectionSchema = createInsertSchema(userCollections).pick({
+  telegramUserId: true,
+  name: true,
+  description: true,
+  type: true,
+  icon: true,
+  color: true,
+  itemIds: true,
+  isPublic: true,
+  order: true,
+}).extend({
+  telegramUserId: z.number().positive("ID пользователя должен быть положительным числом"),
+  name: z.string().min(1, "Название коллекции обязательно"),
+  type: z.enum(["projects", "templates", "tokens", "custom"]).default("custom"),
+  icon: z.string().optional(),
+  color: z.string().optional(),
+  itemIds: z.array(z.string()).default([]),
+  isPublic: z.number().min(0).max(1).default(0),
+  order: z.number().min(0).default(0),
 });
 
 // Схема для оценки шаблона
