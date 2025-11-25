@@ -1281,16 +1281,6 @@ export function Canvas({
                 <i className="fas fa-expand-arrows-alt text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
-              {/* Кнопка автоматической раскладки */}
-              <button 
-                onClick={autoArrange}
-                disabled={nodes.length === 0}
-                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
-                title="Автоматическая раскладка (центрирует узлы между родителями)"
-              >
-                <i className="fas fa-magic text-slate-600 dark:text-slate-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
-              </button>
-
               <button 
                 onClick={() => { if (actionHistory.length > 0) onUndo?.(); }}
                 disabled={actionHistory.length === 0}
