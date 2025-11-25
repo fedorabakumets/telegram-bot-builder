@@ -345,8 +345,8 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                       Официальный
                     </Badge>
                   ) : (
-                    <Badge variant="secondary">
-                      От пользователя
+                    <Badge variant="secondary" title={template.authorName || undefined}>
+                      От {template.authorName || 'пользователя'}
                     </Badge>
                   )}
                 </div>
