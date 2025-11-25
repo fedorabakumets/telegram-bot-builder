@@ -90,17 +90,18 @@ function App() {
             console.log('✅ Auth POST successful - session created on server');
             // Сохраняем пользователя в localStorage для обновления hook'а
             localStorage.setItem('telegramUser', JSON.stringify(event.data.user));
-            // КРИТИЧНО: Явно инвалидируем ВСЕ кеши перед отправкой события
+            // КРИТИЧНО: Явно инвалидируем ВСЕ кеши и рефрешим запросы
             setTimeout(() => {
               // Отправляем custom event для обновления всех компонентов
               window.dispatchEvent(new CustomEvent('telegram-auth-change', {
                 detail: { user: event.data.user }
               }));
-              // Явно рефрешим запросы к шаблонам и проектам
-              const { queryClient } = require('@/lib/queryClient');
+              // Инвалидируем и рефрешим запросы
+              queryClient.removeQueries({ queryKey: ['/api/templates/category/custom', 'guest'] });
               queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
               queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
               queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+              // Явно рефрешим для немедленной загрузки
               queryClient.refetchQueries({ queryKey: ['/api/templates/category/custom'] });
               queryClient.refetchQueries({ queryKey: ['/api/projects'] });
             }, 100);
