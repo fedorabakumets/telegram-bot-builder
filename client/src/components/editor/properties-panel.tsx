@@ -1035,8 +1035,7 @@ export function PropertiesPanel({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-            
+
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
               <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
                 <div className="space-y-3 sm:space-y-4">
@@ -1164,9 +1163,11 @@ export function PropertiesPanel({
             )}
 
 
-            {/* Sticker Configuration */}
-            {selectedNode.type === 'sticker' && (
-              <div className="space-y-3 sm:space-y-4 md:space-y-5">
+          </div>
+
+          {/* Sticker Configuration */}
+          {selectedNode.type === 'sticker' && (
+            <div className="space-y-3 sm:space-y-4 md:space-y-5">
                 {/* Sticker URL Section */}
                 <div className="bg-gradient-to-br from-yellow-50/40 to-orange-50/20 dark:from-yellow-950/30 dark:to-orange-900/20 border border-yellow-200/40 dark:border-yellow-800/40 rounded-xl p-3 sm:p-4 md:p-5 backdrop-blur-sm">
                   <div className="flex items-center space-x-2 mb-3">
