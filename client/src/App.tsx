@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ServerStatus } from "@/components/server-status";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import React from "react";
 
@@ -61,6 +61,21 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    // Слушаем на событие авторизации из окна Telegram Login
+    const handleAuthMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'telegram-auth' && event.data.user) {
+        // Перезагружаем страницу после успешной авторизации
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('message', handleAuthMessage);
+    return () => {
+      window.removeEventListener('message', handleAuthMessage);
+    };
+  }, []);
+
   return (
     <ThemeProvider defaultTheme="system" storageKey="telegram-bot-builder-theme">
       <QueryClientProvider client={queryClient}>

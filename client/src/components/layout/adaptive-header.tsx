@@ -83,18 +83,6 @@ export function AdaptiveHeader({
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
   
-  // Слушаем на успешную авторизацию
-  useEffect(() => {
-    const handleAuthChange = () => {
-      setIsLoginModalOpen(false);
-    };
-
-    window.addEventListener('telegram-auth-change', handleAuthChange);
-    return () => {
-      window.removeEventListener('telegram-auth-change', handleAuthChange);
-    };
-  }, []);
-  
   // Определяем ориентацию заголовка
   const isVertical = config.headerPosition === 'left' || config.headerPosition === 'right';
   const isCompact = config.compactMode;
