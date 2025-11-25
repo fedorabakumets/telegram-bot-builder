@@ -354,6 +354,69 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при проверке/добавлении колонки owner_id в bot_templates:', error);
     }
 
+    // Миграция: добавление owner_id в bot_tokens если его нет
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'bot_tokens' 
+        AND column_name = 'owner_id';
+      `);
+      
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Добавляем колонку owner_id в таблицу bot_tokens...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_tokens 
+          ADD COLUMN owner_id BIGINT REFERENCES telegram_users(id) ON DELETE CASCADE;
+        `, "Миграция: добавление owner_id в bot_tokens");
+        console.log('✅ Колонка owner_id успешно добавлена в bot_tokens');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки owner_id в bot_tokens:', error);
+    }
+
+    // Миграция: добавление track_execution_time в bot_tokens если его нет
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'bot_tokens' 
+        AND column_name = 'track_execution_time';
+      `);
+      
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Добавляем колонку track_execution_time в таблицу bot_tokens...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_tokens 
+          ADD COLUMN track_execution_time INTEGER DEFAULT 0;
+        `, "Миграция: добавление track_execution_time в bot_tokens");
+        console.log('✅ Колонка track_execution_time успешно добавлена в bot_tokens');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки track_execution_time в bot_tokens:', error);
+    }
+
+    // Миграция: добавление total_execution_seconds в bot_tokens если его нет
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'bot_tokens' 
+        AND column_name = 'total_execution_seconds';
+      `);
+      
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Добавляем колонку total_execution_seconds в таблицу bot_tokens...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_tokens 
+          ADD COLUMN total_execution_seconds INTEGER DEFAULT 0;
+        `, "Миграция: добавление total_execution_seconds в bot_tokens");
+        console.log('✅ Колонка total_execution_seconds успешно добавлена в bot_tokens');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки total_execution_seconds в bot_tokens:', error);
+    }
+
     console.log('✅ Database tables initialized successfully!');
     return true;
   } catch (error) {
