@@ -1174,18 +1174,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects/list", requireDbReady, async (req, res) => {
     try {
       const ownerId = getOwnerIdFromRequest(req);
+      let projects;
       
       if (ownerId !== null) {
         // Authenticated user - return only their projects
-        const projects = await storage.getUserBotProjects(ownerId);
-        // Возвращаем только метаданные, без поля data
-        const projectsList = projects.map(({ data, ...metadata }) => metadata);
-        res.json(projectsList);
+        projects = await storage.getUserBotProjects(ownerId);
       } else {
-        // Guest user - should use localStorage, not server storage
-        // Return empty array to force client to use localStorage
-        res.json([]);
+        // Guest user - return all projects
+        projects = await getCachedOrExecute(
+          'all-projects-list',
+          async () => await storage.getAllBotProjects(),
+          30000
+        );
       }
+      
+      // Возвращаем только метаданные, без поля data
+      const projectsList = projects.map(({ data, ...metadata }) => metadata);
+      res.json(projectsList);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch projects list" });
     }
@@ -1195,16 +1200,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects", requireDbReady, async (req, res) => {
     try {
       const ownerId = getOwnerIdFromRequest(req);
+      let projects;
       
       if (ownerId !== null) {
         // Authenticated user - return only their projects
-        const projects = await storage.getUserBotProjects(ownerId);
-        res.json(projects);
+        projects = await storage.getUserBotProjects(ownerId);
       } else {
-        // Guest user - should use localStorage, not server storage
-        // Return empty array to force client to use localStorage
-        res.json([]);
+        // Guest user - return all projects (for localStorage mode)
+        projects = await getCachedOrExecute(
+          'all-projects',
+          () => storage.getAllBotProjects(),
+          30000
+        );
       }
+      
+      res.json(projects);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch projects" });
     }
@@ -1242,25 +1252,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new bot project (legacy endpoint - authenticated users only)
+  // Create new bot project
   app.post("/api/projects", requireDbReady, async (req, res) => {
     try {
-      const ownerId = getOwnerIdFromRequest(req);
-      
-      // Guests should use localStorage only, not server storage
-      if (ownerId === null) {
-        return res.status(401).json({ 
-          message: "Guest users should use local storage. Please sign in to save projects on the server." 
-        });
-      }
-      
       // Игнорируем ownerId из body, используем только из сессии
       const { ownerId: _ignored, ...bodyData } = req.body;
       const validatedData = insertBotProjectSchema.parse(bodyData);
       // Автоматически устанавливаем ownerId из авторизованного пользователя
       const projectData = {
         ...validatedData,
-        ownerId
+        ownerId: getOwnerIdFromRequest(req)
       };
       const project = await storage.createBotProject(projectData);
       res.status(201).json(project);
@@ -1272,7 +1273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update bot project (legacy endpoint - authenticated users only)
+  // Update bot project
   app.put("/api/projects/:id", requireDbReady, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
@@ -1284,22 +1285,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Check authentication and ownership
+      // Check ownership if user is authenticated
       const ownerId = getOwnerIdFromRequest(req);
-      
-      // Guests should use localStorage only
-      if (ownerId === null) {
-        return res.status(401).json({ 
-          message: "Guest users should use local storage. Please sign in to save projects on the server." 
-        });
-      }
-      
-      const existingProject = await storage.getBotProject(projectId);
-      if (!existingProject) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      if (existingProject.ownerId !== ownerId) {
-        return res.status(403).json({ message: "You don't have permission to modify this project" });
+      if (ownerId !== null) {
+        const existingProject = await storage.getBotProject(projectId);
+        if (!existingProject) {
+          return res.status(404).json({ message: "Project not found" });
+        }
+        if (existingProject.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to modify this project" });
+        }
       }
       
       const validatedData = insertBotProjectSchema.partial().parse(req.body);
@@ -1326,7 +1321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete bot project (legacy endpoint - authenticated users only)
+  // Delete bot project
   app.delete("/api/projects/:id", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1340,17 +1335,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.log(`✅ Проект ${id} найден: ${project.name}`);
       
-      // Check authentication and ownership
+      // Check ownership if user is authenticated
       const ownerId = getOwnerIdFromRequest(req);
-      
-      // Guests should use localStorage only
-      if (ownerId === null) {
-        return res.status(401).json({ 
-          message: "Guest users should use local storage. Please sign in to delete projects on the server." 
-        });
-      }
-      
-      if (project.ownerId !== ownerId) {
+      if (ownerId !== null && project.ownerId !== ownerId) {
         console.log(`❌ Пользователь ${ownerId} не имеет прав на удаление проекта ${id}`);
         return res.status(403).json({ message: "You don't have permission to delete this project" });
       }

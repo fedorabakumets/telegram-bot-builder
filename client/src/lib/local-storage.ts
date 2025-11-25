@@ -21,29 +21,8 @@ type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt'> & { createdAt: 
 type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null };
 type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null };
 
-/**
- * Check if we're in a browser environment
- */
-function isBrowser(): boolean {
-  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
-}
-
 export class LocalStorageService {
-  /**
-   * Get storage key (no session prefix for guests - shared storage)
-   * This allows all guest tabs to see the same projects
-   */
-  private static getKey(baseKey: string): string {
-    return baseKey;
-  }
-
-  private static getNextId(baseKey: string): number {
-    if (!isBrowser()) {
-      return Date.now();
-    }
-
-    const key = this.getKey(baseKey);
-    
+  private static getNextId(key: string): number {
     try {
       const current = localStorage.getItem(key);
       const nextId = current ? parseInt(current) : 1;
@@ -70,13 +49,7 @@ export class LocalStorageService {
     }
   }
 
-  private static safeGetItem<T>(baseKey: string, defaultValue: T): T {
-    if (!isBrowser()) {
-      return defaultValue;
-    }
-
-    const key = this.getKey(baseKey);
-    
+  private static safeGetItem<T>(key: string, defaultValue: T): T {
     try {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
@@ -86,13 +59,7 @@ export class LocalStorageService {
     }
   }
 
-  private static safeSetItem(baseKey: string, value: any): void {
-    if (!isBrowser()) {
-      return;
-    }
-
-    const key = this.getKey(baseKey);
-    
+  private static safeSetItem(key: string, value: any): void {
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (e) {
@@ -100,12 +67,8 @@ export class LocalStorageService {
     }
   }
 
-  private static updateNextIdCounter(items: { id: number }[], baseCounterKey: string): void {
-    if (!isBrowser() || items.length === 0) {
-      return;
-    }
-    
-    const counterKey = this.getKey(baseCounterKey);
+  private static updateNextIdCounter(items: { id: number }[], counterKey: string): void {
+    if (items.length === 0) return;
     
     try {
       const maxId = Math.max(...items.map(item => item.id));
@@ -121,13 +84,7 @@ export class LocalStorageService {
     }
   }
 
-  private static safeRemoveItem(baseKey: string): void {
-    if (!isBrowser()) {
-      return;
-    }
-
-    const key = this.getKey(baseKey);
-    
+  private static safeRemoveItem(key: string): void {
     try {
       localStorage.removeItem(key);
     } catch (e) {
