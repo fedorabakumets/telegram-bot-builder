@@ -927,30 +927,48 @@ export function PropertiesPanel({
   return (
     <aside className="w-full h-full bg-background border-l border-border flex flex-col">
       {/* Properties Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center mb-3">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${nodeColors[selectedNode.type]}`}>
-            <i className={`${nodeIcons[selectedNode.type]} text-sm`}></i>
-          </div>
-          <div className="flex-1">
-            <h2 className="text-sm font-semibold text-foreground">{nodeTypeNames[selectedNode.type]}</h2>
-            <div className="flex items-center mt-1">
-              <span className="text-xs text-muted-foreground">ID:</span>
-              <code className="ml-1 px-2 py-0.5 bg-muted rounded text-xs font-mono text-muted-foreground cursor-pointer hover:bg-muted/80 transition-colors"
-                    onClick={() => {
-                      navigator.clipboard.writeText(selectedNode.id);
-                      toast({
-                        title: "ID скопирован!",
-                        description: `ID "${selectedNode.id}" скопирован в буфер обмена`,
-                      });
-                    }}
-                    title="Нажмите, чтобы скопировать">
-                {selectedNode.id}
-              </code>
+      <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/40 dark:to-slate-900/30 border-b border-border/50 backdrop-blur-sm">
+        <div className="p-3 sm:p-4 space-y-3">
+          {/* Main Info Row */}
+          <div className="flex items-start gap-2.5 sm:gap-3">
+            <div className={`w-9 sm:w-10 h-9 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${nodeColors[selectedNode.type]}`}>
+              <i className={`${nodeIcons[selectedNode.type]} text-sm sm:text-base`}></i>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight">
+                {nodeTypeNames[selectedNode.type]}
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">Элемент: <span className="font-semibold text-foreground">{selectedNode.type}</span></p>
             </div>
           </div>
+
+          {/* ID Badge */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded-md bg-muted/40">ID:</span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(selectedNode.id);
+                toast({
+                  title: "✅ ID скопирован!",
+                  description: `"${selectedNode.id}" в буфер обмена`,
+                });
+              }}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-600/20 dark:to-cyan-600/15 hover:from-blue-500/25 hover:to-cyan-500/20 dark:hover:from-blue-600/30 dark:hover:to-cyan-600/25 border border-blue-300/40 dark:border-blue-600/40 hover:border-blue-400/60 dark:hover:border-blue-500/60 rounded-lg transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md"
+              title="Нажмите, чтобы скопировать ID"
+              data-testid="button-copy-node-id"
+            >
+              <code className="text-xs sm:text-sm font-mono font-semibold text-blue-700 dark:text-blue-300 truncate group-hover:text-blue-800 dark:group-hover:text-blue-200 transition-colors">
+                {selectedNode.id}
+              </code>
+              <i className="fas fa-copy text-blue-600 dark:text-blue-400 text-xs opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
+            </button>
+          </div>
+
+          {/* Description */}
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            Настройте параметры выбранного элемента ниже
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground">Настройте параметры выбранного элемента</p>
       </div>
 
       {/* Properties Content */}
