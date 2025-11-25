@@ -1211,19 +1211,19 @@ export function Canvas({
               <button 
                 onClick={onUndo}
                 disabled={!canUndo}
-                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
+                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-200/60 disabled:dark:hover:bg-slate-700/50 flex items-center justify-center`}
                 title="Отменить действие (Ctrl + Z)"
               >
-                <i className="fas fa-undo text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                <i className={`fas fa-undo text-sm transition-colors ${canUndo ? 'text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}></i>
               </button>
 
               <button 
                 onClick={onRedo}
                 disabled={!canRedo}
-                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
+                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-200/60 disabled:dark:hover:bg-slate-700/50 flex items-center justify-center`}
                 title="Повторить действие (Ctrl + Y)"
               >
-                <i className="fas fa-redo text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                <i className={`fas fa-redo text-sm transition-colors ${canRedo ? 'text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}></i>
               </button>
 
               {/* История действий */}
