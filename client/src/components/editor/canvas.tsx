@@ -1291,7 +1291,7 @@ export function Canvas({
             <div className="h-6 w-px bg-border"></div>
 
             {/* Zoom Info and Help */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-shrink-0">
               {zoom !== 100 && (
                 <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
                   <div className="flex items-center space-x-2">
