@@ -1038,82 +1038,87 @@ export function PropertiesPanel({
           </div>
             
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
-              <>
-                <div className="relative">
-                  <Label className="text-xs font-medium text-muted-foreground">Команда</Label>
+              <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="relative">
-                    <Input
-                      value={selectedNode.data.command || getDefaultDataForType(selectedNode.type).command || ''}
-                      onChange={(e) => {
-                        onNodeUpdate(selectedNode.id, { command: e.target.value });
-                        setCommandInput(e.target.value);
-                        setShowCommandSuggestions(e.target.value.length > 0);
-                      }}
-                      onFocus={() => setShowCommandSuggestions(true)}
-                      onBlur={() => setTimeout(() => setShowCommandSuggestions(false), 200)}
-                      className={`mt-2 ${!commandValidation.isValid ? 'border-red-500' : ''}`}
-                      placeholder="/start"
-                    />
+                    <Label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">Команда</Label>
+                    <div className="relative mt-2">
+                      <Input
+                        value={selectedNode.data.command || getDefaultDataForType(selectedNode.type).command || ''}
+                        onChange={(e) => {
+                          onNodeUpdate(selectedNode.id, { command: e.target.value });
+                          setCommandInput(e.target.value);
+                          setShowCommandSuggestions(e.target.value.length > 0);
+                        }}
+                        onFocus={() => setShowCommandSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowCommandSuggestions(false), 200)}
+                        className={`text-sm ${!commandValidation.isValid ? 'border-red-500 dark:border-red-500' : 'border-blue-200 dark:border-blue-700'}`}
+                        placeholder="/start"
+                        data-testid="input-command"
+                      />
+                      
+                      {/* Автодополнение команд */}
+                      {showCommandSuggestions && commandSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-blue-200 dark:border-blue-800 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                          {commandSuggestions.map((suggestion, index) => (
+                            <button
+                              key={index}
+                              className="w-full text-left px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-xs sm:text-sm border-b border-blue-100 dark:border-blue-900 last:border-b-0 transition-colors"
+                              onClick={() => {
+                                onNodeUpdate(selectedNode.id, { 
+                                  command: suggestion.command,
+                                  description: suggestion.description 
+                                });
+                                setShowCommandSuggestions(false);
+                              }}
+                              data-testid={`button-suggestion-${suggestion.command}`}
+                            >
+                              <div className="font-semibold text-foreground">{suggestion.command}</div>
+                              <div className="text-xs text-muted-foreground">{suggestion.description}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     
-                    {/* Автодополнение команд */}
-                    {showCommandSuggestions && commandSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-                        {commandSuggestions.map((suggestion, index) => (
-                          <button
-                            key={index}
-                            className="w-full text-left px-3 py-2 hover:bg-muted text-sm border-b border-border last:border-b-0"
-                            onClick={() => {
-                              onNodeUpdate(selectedNode.id, { 
-                                command: suggestion.command,
-                                description: suggestion.description 
-                              });
-                              setShowCommandSuggestions(false);
-                            }}
-                          >
-                            <div className="font-medium text-foreground">{suggestion.command}</div>
-                            <div className="text-xs text-muted-foreground">{suggestion.description}</div>
-                          </button>
+                    {/* Ошибки валидации */}
+                    {!commandValidation.isValid && commandValidation.errors.length > 0 && (
+                      <div className="mt-2 space-y-1 bg-red-50/60 dark:bg-red-950/20 rounded-lg p-2.5 sm:p-3 border border-red-200/50 dark:border-red-800/50">
+                        {commandValidation.errors.map((error, index) => (
+                          <div key={index} className="flex items-center text-xs sm:text-sm text-red-700 dark:text-red-400 gap-2">
+                            <i className="fas fa-exclamation-circle flex-shrink-0"></i>
+                            <span>{error}</span>
+                          </div>
                         ))}
                       </div>
                     )}
                   </div>
                   
-                  {/* Ошибки валидации */}
-                  {!commandValidation.isValid && commandValidation.errors.length > 0 && (
-                    <div className="mt-1 space-y-1">
-                      {commandValidation.errors.map((error, index) => (
-                        <div key={index} className="flex items-center text-xs text-red-600">
-                          <i className="fas fa-exclamation-circle mr-1"></i>
-                          {error}
-                        </div>
-                      ))}
+                  <div>
+                    <Label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">Описание</Label>
+                    <Input
+                      value={selectedNode.data.description || getDefaultDataForType(selectedNode.type).description || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { description: e.target.value })}
+                      placeholder="Описание команды"
+                      className="mt-2 text-xs sm:text-sm"
+                      data-testid="input-description"
+                    />
+                    <div className="text-xs text-muted-foreground mt-1.5 sm:mt-2">
+                      💡 Используется для меню команд в @BotFather
                     </div>
-                  )}
-                </div>
-                
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">Описание</Label>
-                  <Input
-                    value={selectedNode.data.description || getDefaultDataForType(selectedNode.type).description || ''}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { description: e.target.value })}
-                    placeholder="Описание команды"
-                    className="text-xs"
-                  />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Используется для меню команд в @BotFather
                   </div>
                 </div>
-              </>
+              </div>
             )}
 
             {/* Synonyms for start and command nodes */}
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
-              <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
-                <div className="flex items-center space-x-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                    <i className="fas fa-tags text-green-600 dark:text-green-400 text-xs"></i>
+              <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-green-50/20 dark:from-emerald-950/30 dark:to-green-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-tags text-emerald-600 dark:text-emerald-400 text-sm"></i>
                   </div>
-                  <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Синонимы команды</Label>
+                  <Label className="text-sm sm:text-base font-bold text-emerald-900 dark:text-emerald-100">Синонимы команды</Label>
                 </div>
                 
                 <SynonymEditor
@@ -1131,12 +1136,12 @@ export function PropertiesPanel({
               selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' || 
               selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' || 
               selectedNode.type === 'demote_user' || selectedNode.type === 'admin_rights') && (
-              <div>
-                <Label className="text-xs font-medium text-muted-foreground">Команда</Label>
+              <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-red-50/40 to-orange-50/20 dark:from-red-950/30 dark:to-orange-900/20 rounded-xl p-3 sm:p-4 border border-red-200/40 dark:border-red-800/40 backdrop-blur-sm">
+                <Label className="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-100">Команда действия</Label>
                 <Input
                   value={selectedNode.data.command || getDefaultDataForType(selectedNode.type).command || ''}
                   onChange={(e) => onNodeUpdate(selectedNode.id, { command: e.target.value })}
-                  className="mt-2"
+                  className="text-xs sm:text-sm border-red-200 dark:border-red-700 focus:border-red-500 focus:ring-red-200"
                   placeholder={
                     selectedNode.type === 'pin_message' ? '/pin_message' :
                     selectedNode.type === 'unpin_message' ? '/unpin_message' :
@@ -1150,9 +1155,10 @@ export function PropertiesPanel({
                     selectedNode.type === 'demote_user' ? '/demote_user' :
                     selectedNode.type === 'admin_rights' ? '/admin_rights' : '/command'
                   }
+                  data-testid="input-action-command"
                 />
-                <div className="text-xs text-muted-foreground mt-1">
-                  Основная команда для вызова этого действия
+                <div className="text-xs text-red-700 dark:text-red-400">
+                  ⚙️ Основная команда для вызова этого действия
                 </div>
               </div>
             )}
@@ -1160,9 +1166,9 @@ export function PropertiesPanel({
 
             {/* Sticker Configuration */}
             {selectedNode.type === 'sticker' && (
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-4 md:space-y-5">
                 {/* Sticker URL Section */}
-                <div className="bg-gradient-to-br from-yellow-50/50 to-orange-50/30 dark:from-yellow-950/20 dark:to-orange-950/10 border border-yellow-200/30 dark:border-yellow-800/30 rounded-lg p-4">
+                <div className="bg-gradient-to-br from-yellow-50/40 to-orange-50/20 dark:from-yellow-950/30 dark:to-orange-900/20 border border-yellow-200/40 dark:border-yellow-800/40 rounded-xl p-3 sm:p-4 md:p-5 backdrop-blur-sm">
                   <div className="flex items-center space-x-2 mb-3">
                     <div className="w-6 h-6 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
                       <i className="fas fa-smile text-yellow-600 dark:text-yellow-400 text-xs"></i>
