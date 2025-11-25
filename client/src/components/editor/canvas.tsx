@@ -446,13 +446,13 @@ export function Canvas({
         return;
       }
 
-      // Вычисляем масштаб с отступами (90% от доступного пространства)
+      // Вычисляем масштаб с отступами
       const scaleX = (containerWidth * 0.9) / contentWidth;
       const scaleY = (containerHeight * 0.9) / contentHeight;
-      const scale = Math.min(scaleX, scaleY); // Используем минимальный масштаб без ограничений сверху
+      const scale = Math.min(scaleX, scaleY, 1); // Ограничиваем максимум 100%
 
       // Ограничиваем zoom разумными пределами
-      const newZoom = Math.max(Math.min(scale * 100, 150), 10); // min 10%, max 150%
+      const newZoom = Math.max(Math.min(scale * 100, 100), 20); // min 20%, max 100%
 
       // Вычисляем центр контента
       const centerX = (nodeBounds.left + nodeBounds.right) / 2;
