@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github, LogOut, MessageCircle, Search, Plus, UploadCloud } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github, LogOut, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { LayoutConfig } from './layout-manager';
@@ -66,7 +66,6 @@ export function AdaptiveHeader({
   
   // Состояние для мобильного меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   
   // Проверка авторизации пользователя
   const { user, logout } = useTelegramAuth();
@@ -559,47 +558,6 @@ export function AdaptiveHeader({
       </div>
       
       <Navigation />
-      
-      {/* Поиск и быстрые действия */}
-      <div className="hidden md:flex items-center gap-1.5 lg:gap-2 flex-1 max-w-xs lg:max-w-md px-3">
-        <Search className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-        <input
-          type="text"
-          placeholder="Поиск..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-muted/50 dark:bg-slate-800/50 border border-border/50 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 text-foreground placeholder:text-muted-foreground"
-          data-testid="input-header-search"
-        />
-      </div>
-
-      {/* Быстрые действия */}
-      <div className="hidden md:flex items-center gap-1 lg:gap-1.5">
-        {onLoadTemplate && (
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={onLoadTemplate}
-            className="h-8 px-2 text-xs hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-lg"
-            title="Загрузить шаблон"
-            data-testid="button-quick-load-template"
-          >
-            <UploadCloud className="w-3.5 h-3.5" />
-          </Button>
-        )}
-        {onSaveAsTemplate && (
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={onSaveAsTemplate}
-            className="h-8 px-2 text-xs hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 rounded-lg"
-            title="Сохранить как шаблон"
-            data-testid="button-quick-save-template"
-          >
-            <Bookmark className="w-3.5 h-3.5" />
-          </Button>
-        )}
-      </div>
       
       {/* Десктопные/Планшетные действия */}
       <Actions />
