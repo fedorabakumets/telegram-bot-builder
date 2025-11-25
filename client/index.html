@@ -20,47 +20,10 @@
     <meta http-equiv="Cache-Control" content="public, max-age=31536000" />
     
     <title>Telegram Bot Builder</title>
-    
-    <!-- Inline скрипт для предотвращения мигания темы -->
-    <script>
-      (function() {
-        try {
-          const storageKey = 'telegram-bot-builder-theme';
-          const theme = localStorage.getItem(storageKey);
-          const root = document.documentElement;
-          
-          if (theme === 'dark') {
-            root.classList.add('dark');
-            root.classList.remove('light');
-          } else if (theme === 'light') {
-            root.classList.add('light');
-            root.classList.remove('dark');
-          } else {
-            // system mode
-            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (isDark) {
-              root.classList.add('dark');
-            } else {
-              root.classList.add('light');
-            }
-          }
-        } catch (e) {
-          // Fallback в случае ошибки
-        }
-      })();
-    </script>
   </head>
-  <body style="background-color: #ffffff !important; color: #0a0a0a !important; margin: 0 !important; padding: 0 !important;">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Показываем страницу после загрузки React -->
-    <script>
-      // Даем React время на инициализацию
-      setTimeout(() => {
-        document.documentElement.classList.add('ready');
-        console.log('✅ Страница готова к отображению');
-      }, 500);
-    </script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js" defer></script>
   </body>

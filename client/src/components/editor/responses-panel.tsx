@@ -64,13 +64,9 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
   // Fetch responses data
   const { data: responsesData = [], isLoading, refetch } = useQuery<ResponsesData[]>({
     queryKey: [`/api/projects/${projectId}/responses`],
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchInterval: false,
-    refetchIntervalInBackground: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    staleTime: 10000, // Кешируем данные на 10 секунд
+    refetchInterval: 30000, // Обновляем каждые 30 секунд вместо 5
+    refetchIntervalInBackground: false, // Не опрашиваем в фоне
   });
 
   // Debug logging

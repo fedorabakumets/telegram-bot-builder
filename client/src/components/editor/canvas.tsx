@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState, useEffect, memo } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { CanvasNode } from '@/components/ui/canvas-node';
 import { ConnectionsLayer } from '@/components/ui/connections-layer';
 import { TemporaryConnection } from '@/components/ui/temporary-connection';
@@ -69,7 +69,7 @@ interface CanvasProps {
   onNodeSizesChange?: (nodeSizes: Map<string, { width: number; height: number }>) => void;
 }
 
-function CanvasComponent({ 
+export function Canvas({ 
   botData,
   onBotDataUpdate,
   nodes, 
@@ -109,8 +109,6 @@ function CanvasComponent({
   onNodeSizesChange
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const rafIdRef = useRef<number | null>(null);
-  const currentMouseRef = useRef({ x: 0, y: 0 });
   const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
   const [connectionStart, setConnectionStart] = useState<{
@@ -425,37 +423,18 @@ function CanvasComponent({
   }, [pan]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    // Skip during app loading to test if onMouseMove causes flickering
-    if ((window as any).appIsLoading) return;
-    
     if (isPanning) {
-      // Store current mouse position in ref
-      currentMouseRef.current = { x: e.clientX, y: e.clientY };
-      
-      // Cancel any pending animation frame
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-      }
-      
-      // Batch updates using requestAnimationFrame (60fps max instead of 50+/sec)
-      rafIdRef.current = requestAnimationFrame(() => {
-        const deltaX = currentMouseRef.current.x - panStart.x;
-        const deltaY = currentMouseRef.current.y - panStart.y;
+      const deltaX = e.clientX - panStart.x;
+      const deltaY = e.clientY - panStart.y;
 
-        setPan({
-          x: lastPanPosition.x + deltaX,
-          y: lastPanPosition.y + deltaY
-        });
+      setPan({
+        x: lastPanPosition.x + deltaX,
+        y: lastPanPosition.y + deltaY
       });
     }
   }, [isPanning, panStart, lastPanPosition]);
 
   const handleMouseUp = useCallback(() => {
-    // Clean up any pending animation frame
-    if (rafIdRef.current) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
     setIsPanning(false);
   }, []);
 
@@ -1387,30 +1366,3 @@ function CanvasComponent({
     </main>
   );
 }
-
-// ✅ MEMO Canvas чтобы избежать бесконечных пульсирований
-function canvasPropsAreEqual(prev: any, next: any) {
-  for (const key in next) {
-    const prevVal = prev[key];
-    const nextVal = next[key];
-    
-    // Игнорируем функции
-    if (typeof nextVal === 'function') continue;
-    
-    // Для массивов и объектов - сравниваем только по JSON
-    if (typeof nextVal === 'object' && nextVal !== null) {
-      if (JSON.stringify(prevVal) !== JSON.stringify(nextVal)) {
-        return false;
-      }
-      continue;
-    }
-    
-    if (prevVal !== nextVal) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// Экспортируем memoized версию Canvas
-export const Canvas = memo(CanvasComponent, canvasPropsAreEqual);

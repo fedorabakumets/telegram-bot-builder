@@ -44,26 +44,10 @@ const ResizableHandle = ({
         isDragging && "bg-primary w-3 after:bg-primary/20",
         className
       )}
-      onMouseEnter={() => {
-        if (!(window as any).appIsLoading) {
-          setIsHovered(true);
-        }
-      }}
-      onMouseLeave={() => {
-        if (!(window as any).appIsLoading) {
-          setIsHovered(false);
-        }
-      }}
-      onMouseDown={() => {
-        if (!(window as any).appIsLoading) {
-          setIsDragging(true);
-        }
-      }}
-      onMouseUp={() => {
-        if (!(window as any).appIsLoading) {
-          setIsDragging(false);
-        }
-      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onMouseDown={() => setIsDragging(true)}
+      onMouseUp={() => setIsDragging(false)}
       {...props}
     >
       {withHandle && (

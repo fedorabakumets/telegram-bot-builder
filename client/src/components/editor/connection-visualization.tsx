@@ -325,16 +325,8 @@ export function ConnectionVisualization({
                         !metrics.isValid && "border-red-200 bg-red-50 dark:bg-red-900/10"
                       )}
                       onClick={() => interactive && onConnectionSelect?.(connection)}
-                      onMouseEnter={() => {
-                        if (!(window as any).appIsLoading) {
-                          setHoveredConnectionId(connection.id);
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        if (!(window as any).appIsLoading) {
-                          setHoveredConnectionId(null);
-                        }
-                      }}
+                      onMouseEnter={() => setHoveredConnectionId(connection.id)}
+                      onMouseLeave={() => setHoveredConnectionId(null)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">

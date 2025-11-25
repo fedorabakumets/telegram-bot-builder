@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useParams, useRoute } from 'wouter';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { TelegramLoginWidget } from '@/components/telegram-login-widget';
 import { Card, CardContent } from '@/components/ui/card';
-import Header from '@/components/editor/header';
-import ComponentsSidebar from '@/components/editor/components-sidebar';
+import { Header } from '@/components/editor/header';
+import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
 import { PropertiesPanel } from '@/components/editor/properties-panel';
 import { CodePanel } from '@/components/editor/code-panel';
@@ -37,10 +37,6 @@ import { SheetsManager } from '@/utils/sheets-manager';
 import { nanoid } from 'nanoid';
 
 export default function Editor() {
-  const renderCountRef = useRef(0);
-  const prevStateRef = useRef<any>(null);
-  renderCountRef.current++;
-  
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/editor/:id');
   const projectId = params?.id ? parseInt(params.id) : null;
@@ -51,7 +47,6 @@ export default function Editor() {
   
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
-  
 
   // Эффект для корректного восстановления мобильного интерфейса при навигации
   useEffect(() => {
@@ -175,21 +170,6 @@ export default function Editor() {
     setShowMobileProperties(true);
   }, []);
 
-  // ✅ FIX ПУЛЬСИРОВАНИЯ: Все callback'и должны быть в useCallback, не inline!
-  const handleShowFullLayout = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element => ({ ...element, visible: true }))
-    }));
-  }, []);
-
-  const handleOpenLayoutCustomizer = useCallback(() => {
-    setShowLayoutCustomizer(true);
-  }, []);
-
-  // ✅ FIX: Также нужно обернуть onLayoutChange
-  // (проверим после что это помогает с пульсированием)
-
   // Создаем динамическую конфигурацию макета
   const getFlexibleLayoutConfig = useCallback((): SimpleLayoutConfig => {
     // Используем компактный заголовок для всех устройств
@@ -245,6 +225,10 @@ export default function Editor() {
 
   const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>(getFlexibleLayoutConfig());
   
+  // Обновляем конфигурацию макета при изменении вкладки или размера экрана
+  useEffect(() => {
+    setFlexibleLayoutConfig(getFlexibleLayoutConfig());
+  }, [getFlexibleLayoutConfig]);
   
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
@@ -938,7 +922,7 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
     }, 1000);
-  }, [addNode, isLoadingTemplate, activeProject]);
+  }, [addNode, isLoadingTemplate, updateProjectMutation, activeProject]);
 
   const handleSaveAsTemplate = useCallback(() => {
     setShowSaveTemplate(true);
@@ -1275,7 +1259,8 @@ export default function Editor() {
         onComponentDrag={handleComponentDrag}
         onComponentAdd={handleComponentAdd}
         onLoadTemplate={handleLoadTemplate}
-        onOpenLayoutCustomizer={handleOpenLayoutCustomizer}
+        onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+        onLayoutChange={updateLayoutConfig}
         onGoToProjects={handleGoToProjects}
         onProjectSelect={handleProjectSelect}
         currentProjectId={activeProject?.id}
@@ -1287,7 +1272,12 @@ export default function Editor() {
         onToggleCanvas={handleToggleCanvas}
         onToggleHeader={handleToggleHeader}
         onToggleProperties={handleToggleProperties}
-        onShowFullLayout={handleShowFullLayout}
+        onShowFullLayout={() => {
+          setFlexibleLayoutConfig(prev => ({
+            ...prev,
+            elements: prev.elements.map(element => ({ ...element, visible: true }))
+          }))
+        }}
         canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
         propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
@@ -1370,7 +1360,12 @@ export default function Editor() {
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}
               onToggleProperties={handleToggleProperties}
-              onShowFullLayout={handleShowFullLayout}
+              onShowFullLayout={() => {
+                setFlexibleLayoutConfig(prev => ({
+                  ...prev,
+                  elements: prev.elements.map(element => ({ ...element, visible: true }))
+                }))
+              }}
               canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
               propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
@@ -1680,7 +1675,12 @@ export default function Editor() {
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}
               onToggleProperties={handleToggleProperties}
-              onShowFullLayout={handleShowFullLayout}
+              onShowFullLayout={() => {
+                setFlexibleLayoutConfig(prev => ({
+                  ...prev,
+                  elements: prev.elements.map(element => ({ ...element, visible: true }))
+                }))
+              }}
               canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
               propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}

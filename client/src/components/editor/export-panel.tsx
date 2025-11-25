@@ -61,7 +61,7 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
   // Загружаем контент для выбранного формата
   useEffect(() => {
     loadContent(selectedFormat);
-  }, [selectedFormat]);
+  }, [selectedFormat, loadContent]);
 
   // Функция для сворачивания/разворачивания всех функций
   const toggleAllFunctions = () => {

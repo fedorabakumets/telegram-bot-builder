@@ -116,9 +116,6 @@ export function useBotEditor(initialData?: BotData) {
 
   // Автоматически генерируем соединения для узлов с autoTransitionTo
   useEffect(() => {
-    // Skip auto-transitions during initial page loading to prevent flickering
-    if ((window as any).appIsLoading) return;
-    
     if (!isRedoUndoActionRef.current && nodes.length > 0) {
       setConnections(prevConnections => {
         const updatedConnections = generateAutoTransitionConnections(nodes, prevConnections);
@@ -303,13 +300,10 @@ export function useBotEditor(initialData?: BotData) {
     const normalizedNodes = (botData.nodes || []).map(normalizeNodeData);
     
     // ИСПРАВЛЕНИЕ: Генерируем автопереходы ДО применения layout
-    // Skip during initial page loading to prevent flickering
-    const connectionsWithAuto = (window as any).appIsLoading 
-      ? (botData.connections || [])
-      : generateAutoTransitionConnections(
-          normalizedNodes, 
-          botData.connections || []
-        );
+    const connectionsWithAuto = generateAutoTransitionConnections(
+      normalizedNodes, 
+      botData.connections || []
+    );
     
     // Применяем иерархическую компоновку только если не отключена
     const finalNodes = skipLayout 

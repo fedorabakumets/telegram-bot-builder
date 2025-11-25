@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useLayoutEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -30,28 +30,22 @@ export function ThemeProvider({
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   );
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const root = window.document.documentElement;
-    
-    // Determine target theme
-    let targetTheme = theme;
-    if (theme === "system") {
-      targetTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-    }
-    
-    // Only update if theme actually changed to prevent unnecessary repaints
-    const hasLight = root.classList.contains("light");
-    const hasDark = root.classList.contains("dark");
-    const currentTheme = hasLight ? "light" : hasDark ? "dark" : null;
-    
-    if (currentTheme === targetTheme) {
-      return; // Theme already applied, skip
-    }
 
     root.classList.remove("light", "dark");
-    root.classList.add(targetTheme);
+
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
+        ? "dark"
+        : "light";
+
+      root.classList.add(systemTheme);
+      return;
+    }
+
+    root.classList.add(theme);
   }, [theme]);
 
   const value = {
