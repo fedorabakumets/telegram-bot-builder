@@ -1696,8 +1696,8 @@ export function ComponentsSidebar({
                           <GripVertical className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                         </div>
                         <div className="flex-1">
-                          <div className="flex items-start gap-2.5 mb-2 flex-wrap">
-                            <h4 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-100 dark:to-slate-200 bg-clip-text text-transparent">
+                          <div className="mb-2 flex items-start justify-between gap-2">
+                            <h4 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-100 dark:to-slate-200 bg-clip-text text-transparent break-words leading-snug flex-1">
                               {project.name}
                             </h4>
                             <span className={`text-xs px-2.5 py-1 rounded-full whitespace-nowrap font-semibold backdrop-blur-sm flex-shrink-0 ${
