@@ -564,61 +564,81 @@ export function AdaptiveHeader({
       <div className="lg:hidden">
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="p-2">
+            <Button variant="outline" size="sm" className="p-1.5 sm:p-2 h-8 sm:h-9">
               <Menu className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-80">
-            <SheetHeader>
-              <SheetTitle className="text-left">Меню</SheetTitle>
-            </SheetHeader>
-            <div className="mt-6 space-y-6">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Навигация</h3>
-                <MobileNavigation />
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Действия</h3>
-                <MobileActions />
-              </div>
-              <div className="pt-4 border-t border-border">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Аккаунт</h3>
-                <div className="flex flex-col gap-2">
-                  {user ? (
-                    <>
-                      <div className="px-3 py-2 bg-muted rounded-md">
-                        <p className="text-sm font-medium text-foreground">{user.firstName}</p>
-                        {user.username && <p className="text-xs text-muted-foreground">@{user.username}</p>}
-                      </div>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          logout();
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="w-full"
-                      >
-                        <LogOut className="w-3 h-3 mr-2" />
-                        Выход
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => {
-                          handleTelegramLogin();
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="w-full"
-                      >
-                        <i className="fab fa-telegram-plane mr-2 text-sm" />
-                        Вход в Telegram
-                      </Button>
-                    </>
-                  )}
+          <SheetContent side="right" className="w-full sm:w-96 md:w-[420px] p-0 overflow-y-auto">
+            <div className="bg-gradient-to-b from-background via-background/95 to-background/90 dark:from-slate-950 dark:via-slate-950/95 dark:to-slate-900/90 min-h-full flex flex-col">
+              {/* Заголовок меню */}
+              <SheetHeader className="px-4 sm:px-6 py-4 border-b border-border/50 sticky top-0 bg-background/80 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg flex items-center justify-center">
+                    <i className="fab fa-telegram-plane text-white text-sm"></i>
+                  </div>
+                  <SheetTitle className="text-left text-lg font-bold">Меню</SheetTitle>
+                </div>
+              </SheetHeader>
+
+              <div className="flex-1 overflow-y-auto">
+                <div className="px-4 sm:px-6 py-4 space-y-4 sm:space-y-6">
+                  {/* Навигация */}
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Навигация</h3>
+                    <MobileNavigation />
+                  </div>
+
+                  {/* Действия */}
+                  <div className="border-t border-border/50 pt-4">
+                    <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Действия</h3>
+                    <MobileActions />
+                  </div>
+
+                  {/* Аккаунт */}
+                  <div className="border-t border-border/50 pt-4">
+                    <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Аккаунт</h3>
+                    <div className="flex flex-col gap-3">
+                      {user ? (
+                        <>
+                          <div className="px-4 py-3 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 dark:from-blue-700/20 dark:to-cyan-600/15 rounded-lg border border-blue-400/20 dark:border-blue-500/20">
+                            {user.photoUrl && (
+                              <img 
+                                src={user.photoUrl} 
+                                alt={user.firstName}
+                                className="w-10 h-10 rounded-full ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20 mb-2"
+                              />
+                            )}
+                            <p className="text-sm font-bold text-foreground">{user.firstName}</p>
+                            {user.username && (
+                              <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">@{user.username}</p>
+                            )}
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              logout();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full font-medium"
+                          >
+                            <LogOut className="w-4 h-4 mr-2" />
+                            Выход из аккаунта
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          onClick={handleTelegramLogin}
+                          size="sm"
+                          className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40"
+                          title="Войти через Telegram"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Вход в Telegram
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
