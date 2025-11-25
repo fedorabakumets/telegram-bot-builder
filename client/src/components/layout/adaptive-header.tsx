@@ -335,17 +335,17 @@ export function AdaptiveHeader({
       
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
-        <div className="flex items-center space-x-1 bg-slate-500/10 dark:bg-slate-700/20 backdrop-blur-md border border-slate-300/20 dark:border-slate-600/30 rounded-lg p-1 shadow-sm">
+        <div className="flex items-center space-x-0.5 bg-gradient-to-r from-slate-600/15 to-slate-500/10 dark:from-slate-700/40 dark:to-slate-600/30 backdrop-blur-lg border border-slate-400/20 dark:border-slate-500/40 rounded-xl p-1.5 shadow-lg shadow-slate-500/10 dark:shadow-slate-900/30">
           {onToggleHeader && (
             <Button
               variant={headerVisible ? "default" : "outline"}
               size="sm"
               onClick={onToggleHeader}
-              className="h-7 w-7 p-0"
+              className={`h-8 w-8 p-0 transition-all duration-200 ${headerVisible ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
               title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
               data-testid="button-toggle-header"
             >
-              <NavigationIcon className="w-3 h-3" />
+              <NavigationIcon className="w-3.5 h-3.5" />
             </Button>
           )}
           
@@ -354,11 +354,11 @@ export function AdaptiveHeader({
               variant={sidebarVisible ? "default" : "outline"}
               size="sm"
               onClick={onToggleSidebar}
-              className="h-7 w-7 p-0"
+              className={`h-8 w-8 p-0 transition-all duration-200 ${sidebarVisible ? 'bg-gradient-to-br from-purple-600 to-purple-500 text-white shadow-md shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
               title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
               data-testid="button-toggle-sidebar"
             >
-              <Sidebar className="w-3 h-3" />
+              <Sidebar className="w-3.5 h-3.5" />
             </Button>
           )}
           
@@ -367,11 +367,11 @@ export function AdaptiveHeader({
               variant={canvasVisible ? "default" : "outline"}
               size="sm"
               onClick={onToggleCanvas}
-              className="h-7 w-7 p-0"
+              className={`h-8 w-8 p-0 transition-all duration-200 ${canvasVisible ? 'bg-gradient-to-br from-cyan-600 to-cyan-500 text-white shadow-md shadow-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
               title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
               data-testid="button-toggle-canvas"
             >
-              <Monitor className="w-3 h-3" />
+              <Monitor className="w-3.5 h-3.5" />
             </Button>
           )}
           
@@ -380,11 +380,11 @@ export function AdaptiveHeader({
               variant={propertiesVisible ? "default" : "outline"}
               size="sm"
               onClick={onToggleProperties}
-              className="h-7 w-7 p-0"
+              className={`h-8 w-8 p-0 transition-all duration-200 ${propertiesVisible ? 'bg-gradient-to-br from-pink-600 to-pink-500 text-white shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
               title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
               data-testid="button-toggle-properties"
             >
-              <Sliders className="w-3 h-3" />
+              <Sliders className="w-3.5 h-3.5" />
             </Button>
           )}
           
@@ -393,11 +393,11 @@ export function AdaptiveHeader({
               variant={codeVisible ? "default" : "outline"}
               size="sm"
               onClick={onToggleCode}
-              className="h-7 w-7 p-0"
+              className={`h-8 w-8 p-0 transition-all duration-200 ${codeVisible ? 'bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
               title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
               data-testid="button-toggle-code"
             >
-              <Code className="w-3 h-3" />
+              <Code className="w-3.5 h-3.5" />
             </Button>
           )}
         </div>
@@ -408,9 +408,9 @@ export function AdaptiveHeader({
           variant="outline" 
           size="sm"
           onClick={onLoadTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-500/50 rounded-lg transition-all max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-indigo-500/10 to-indigo-400/5 hover:from-indigo-600/20 hover:to-indigo-500/15 border border-indigo-400/30 dark:border-indigo-500/30 hover:border-indigo-500/50 dark:hover:border-indigo-400/50 text-indigo-700 dark:text-indigo-300 rounded-lg transition-all shadow-sm hover:shadow-md hover:shadow-indigo-500/20 max-sm:px-2 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
         >
-          <FolderOpen className="h-3 w-3 max-sm:mx-auto" />
+          <FolderOpen className="h-3.5 w-3.5 max-sm:mx-auto" />
           <span className="max-sm:hidden ml-1">Шаблоны</span>
         </Button>
       )}
@@ -420,9 +420,9 @@ export function AdaptiveHeader({
           variant="outline" 
           size="sm"
           onClick={onSaveAsTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-500/50 rounded-lg transition-all max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-amber-500/10 to-amber-400/5 hover:from-amber-600/20 hover:to-amber-500/15 border border-amber-400/30 dark:border-amber-500/30 hover:border-amber-500/50 dark:hover:border-amber-400/50 text-amber-700 dark:text-amber-300 rounded-lg transition-all shadow-sm hover:shadow-md hover:shadow-amber-500/20 max-sm:px-2 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
         >
-          <Bookmark className="h-3 w-3 max-sm:mx-auto" />
+          <Bookmark className="h-3.5 w-3.5 max-sm:mx-auto" />
           <span className="max-sm:hidden ml-1">Сохранить</span>
         </Button>
       )}
@@ -432,10 +432,10 @@ export function AdaptiveHeader({
       <Button 
         size="sm"
         onClick={onExport}
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white px-2 py-1 text-xs shadow-md shadow-green-500/20 rounded-lg transition-all max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 text-white px-3 py-1.5 text-xs font-semibold shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 rounded-lg transition-all duration-200 max-sm:px-2 max-sm:py-1 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
       >
-        <i className="fas fa-download text-2xs max-sm:mx-auto"></i>
-        <span className="max-sm:hidden ml-1">Экспорт</span>
+        <i className="fas fa-download text-xs max-sm:mx-auto"></i>
+        <span className="max-sm:hidden ml-1.5">Экспорт</span>
       </Button>
       
       {isVertical && (
@@ -445,19 +445,19 @@ export function AdaptiveHeader({
       {/* Информация о пользователе и выход */}
       {user ? (
         <>
-          <div className={`flex items-center space-x-2 bg-slate-500/10 dark:bg-slate-700/20 px-3 py-1.5 rounded-lg backdrop-blur-sm ${isVertical ? 'w-full' : ''}`}>
+          <div className={`flex items-center space-x-2.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-700/25 dark:to-cyan-600/20 px-3 py-1.5 rounded-lg backdrop-blur-md border border-blue-400/20 dark:border-blue-500/30 shadow-md shadow-blue-500/10 ${isVertical ? 'w-full' : ''}`}>
             {user.photoUrl && (
               <img 
                 src={user.photoUrl} 
                 alt={user.firstName}
-                className="w-6 h-6 rounded-full ring-2 ring-blue-500/30"
+                className="w-7 h-7 rounded-full ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20"
               />
             )}
             {!isVertical && (
               <div className="text-right hidden sm:block">
-                <p className="text-xs font-semibold text-foreground">{user.firstName}</p>
+                <p className="text-xs font-bold text-foreground">{user.firstName}</p>
                 {user.username && (
-                  <p className="text-xs text-muted-foreground/70">@{user.username}</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-300">@{user.username}</p>
                 )}
               </div>
             )}
@@ -467,7 +467,7 @@ export function AdaptiveHeader({
             variant="ghost"
             size="sm"
             onClick={logout}
-            className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all`}
+            className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2.5 py-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-500/10 dark:hover:bg-red-500/20 rounded-lg transition-all font-semibold`}
             title="Выход"
           >
             <LogOut className="h-3.5 w-3.5" />
@@ -477,7 +477,7 @@ export function AdaptiveHeader({
         <Button
           onClick={handleTelegramLogin}
           size="sm"
-          className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all"
+          className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200"
           title="Войти через Telegram"
         >
           <MessageCircle className="h-3.5 w-3.5" />
