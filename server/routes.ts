@@ -1143,8 +1143,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
+      // КРИТИЧНО: sameSite: 'none' чтобы cookies передавались между popup и main window
+      // Даже в dev используем secure для кросс-окнового доступа
+      secure: true,
+      sameSite: 'none'
     }
   }));
   
