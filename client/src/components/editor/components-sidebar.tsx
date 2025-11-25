@@ -1696,9 +1696,18 @@ export function ComponentsSidebar({
                           <GripVertical className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-base font-semibold text-foreground truncate mb-1">
-                            {project.name}
-                          </h4>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-base font-semibold text-foreground truncate">
+                              {project.name}
+                            </h4>
+                            <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap font-medium ${
+                              project.ownerId === null 
+                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
+                                : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                            }`}>
+                              {project.ownerId === null ? '👥 Гостевой' : '👤 Мой'}
+                            </span>
+                          </div>
                           {project.description && (
                             <p className="text-sm text-muted-foreground truncate">
                               {project.description}
