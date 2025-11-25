@@ -1636,13 +1636,13 @@ export function ComponentsSidebar({
                 <p className="text-xs text-muted-foreground">Загрузка...</p>
               </div>
             ) : !isLoading && projects.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="bg-muted/30 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Home className="h-8 w-8 text-muted-foreground" />
+              <div className="text-center py-12 px-4 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 dark:from-blue-900/10 dark:to-cyan-900/10 rounded-2xl border border-blue-200/30 dark:border-blue-800/30">
+                <div className="bg-gradient-to-br from-blue-100/40 to-cyan-100/30 dark:from-blue-900/30 dark:to-cyan-900/20 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/10">
+                  <Home className="h-10 w-10 text-blue-600 dark:text-blue-300" />
                 </div>
-                <h4 className="text-sm font-medium text-foreground mb-2">Нет проектов</h4>
-                <p className="text-xs text-muted-foreground mb-4">Создайте первый проект для начала работы</p>
-                <Button size="default" onClick={handleCreateProject} disabled={createProjectMutation.isPending} className="h-10 px-6">
+                <h4 className="text-base font-bold bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300 bg-clip-text text-transparent mb-2">Нет проектов</h4>
+                <p className="text-xs text-muted-foreground mb-6">Создайте первый проект для начала работы</p>
+                <Button size="default" onClick={handleCreateProject} disabled={createProjectMutation.isPending} className="h-10 px-6 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-semibold shadow-lg shadow-blue-500/30">
                   <Plus className="h-4 w-4 mr-2" />
                   {createProjectMutation.isPending ? 'Создание...' : 'Создать проект'}
                 </Button>
@@ -1681,10 +1681,10 @@ export function ComponentsSidebar({
                     onDragEnd={handleProjectDragEnd}
                     className={`group p-4 rounded-xl cursor-pointer transition-all duration-200 border-2 hover:shadow-lg ${
                       currentProjectId === project.id 
-                        ? 'bg-primary/10 border-primary/30 shadow-md' 
-                        : 'bg-background border-border/50 hover:bg-muted/30 hover:border-border'
+                        ? 'bg-gradient-to-br from-blue-600/10 to-cyan-500/10 border-blue-400/50 shadow-lg shadow-blue-500/20' 
+                        : 'bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-800/50 dark:to-slate-700/30 border-slate-200/50 dark:border-slate-600/30 hover:border-slate-300 dark:hover:border-slate-500/50'
                     } ${
-                      dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-primary border-2 scale-105 shadow-lg' : ''
+                      dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 scale-105 shadow-lg shadow-blue-500/30' : ''
                     } ${
                       draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
                     }`}
@@ -1962,17 +1962,17 @@ export function ComponentsSidebar({
             <div key={category.title}>
               <button
                 onClick={() => toggleCategory(category.title)}
-                className="w-full flex items-center justify-between text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 hover:text-foreground transition-colors group"
+                className="w-full flex items-center justify-between text-xs font-bold uppercase tracking-wider mb-3 hover:text-foreground transition-colors group px-2 py-2 rounded-lg hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
               >
-                <span>{category.title}</span>
+                <span className="bg-gradient-to-r from-slate-700 to-slate-600 dark:from-slate-300 dark:to-slate-400 bg-clip-text text-transparent">{category.title}</span>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs normal-case bg-muted/50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs normal-case bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full font-bold border border-blue-300/30 dark:border-blue-500/30">
                     {category.components.length}
                   </span>
                   {isCollapsed ? (
-                    <ChevronRight className="h-3 w-3 group-hover:text-foreground transition-colors" />
+                    <ChevronRight className="h-4 w-4 group-hover:text-foreground transition-colors text-slate-500 dark:text-slate-400" />
                   ) : (
-                    <ChevronDown className="h-3 w-3 group-hover:text-foreground transition-colors" />
+                    <ChevronDown className="h-4 w-4 group-hover:text-foreground transition-colors text-slate-500 dark:text-slate-400" />
                   )}
                 </div>
               </button>
@@ -1987,16 +1987,16 @@ export function ComponentsSidebar({
                       onTouchStart={(e) => handleTouchStart(e, component)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
-                      className={`component-item group flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors touch-action-none no-select ${
+                      className={`component-item group flex items-center p-3 bg-gradient-to-r from-slate-100/60 to-slate-50/40 dark:from-slate-800/50 dark:to-slate-700/30 hover:from-blue-100/50 hover:to-cyan-50/40 dark:hover:from-blue-900/30 dark:hover:to-cyan-900/20 rounded-lg cursor-move transition-all hover:border hover:border-blue-300/50 dark:hover:border-blue-500/30 border border-slate-200/50 dark:border-slate-600/30 touch-action-none no-select hover:shadow-md hover:shadow-blue-500/10 ${
                         touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
                       }`}
                     >
-                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mr-3", component.color)}>
+                      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center mr-3 font-bold text-white shadow-md", component.color)}>
                         <i className={`${component.icon} text-sm`}></i>
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{component.name}</p>
-                        <p className="text-xs text-muted-foreground">{component.description}</p>
+                        <p className="text-sm font-semibold text-foreground">{component.name}</p>
+                        <p className="text-xs text-muted-foreground/80">{component.description}</p>
                       </div>
                       {onComponentAdd && (
                         <button
@@ -2004,10 +2004,10 @@ export function ComponentsSidebar({
                             e.stopPropagation();
                             onComponentAdd(component);
                           }}
-                          className="ml-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 text-primary hidden group-hover:flex items-center justify-center"
+                          className="ml-2 w-7 h-7 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 hover:from-blue-600/20 hover:to-cyan-600/20 text-blue-600 dark:text-blue-400 hidden group-hover:flex items-center justify-center border border-blue-300/30 dark:border-blue-500/30 hover:border-blue-400/50 dark:hover:border-blue-400/50 shadow-sm hover:shadow-md hover:shadow-blue-500/10 transition-all"
                           title={`Добавить ${component.name} на холст`}
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-3.5 w-3.5" />
                         </button>
                       )}
                     </div>
