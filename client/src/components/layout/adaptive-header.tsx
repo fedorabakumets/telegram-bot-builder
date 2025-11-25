@@ -173,125 +173,140 @@ export function AdaptiveHeader({
 
   // Мобильная версия действий
   const MobileActions = () => (
-    <div className="flex flex-col space-y-3">
+    <div className="flex flex-col gap-3 sm:gap-4">
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
           {onToggleHeader && (
             <Button
-              variant={headerVisible ? "default" : "outline"}
               size="sm"
               onClick={() => {
                 onToggleHeader();
                 setIsMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center"
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+                headerVisible 
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40' 
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
               title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
               data-testid="button-mobile-toggle-header"
             >
-              <NavigationIcon className="w-3 h-3 mr-1" />
-              Шапка
+              <NavigationIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+              <span className="hidden sm:inline">Шапка</span>
             </Button>
           )}
           
           {onToggleSidebar && (
             <Button
-              variant={sidebarVisible ? "default" : "outline"}
               size="sm"
               onClick={() => {
                 onToggleSidebar();
                 setIsMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center"
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+                sidebarVisible 
+                  ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/40' 
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
               title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
               data-testid="button-mobile-toggle-sidebar"
             >
-              <Sidebar className="w-3 h-3 mr-1" />
-              Панель
+              <Sidebar className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+              <span className="hidden sm:inline">Панель</span>
             </Button>
           )}
           
           {onToggleCanvas && (
             <Button
-              variant={canvasVisible ? "default" : "outline"}
               size="sm"
               onClick={() => {
                 onToggleCanvas();
                 setIsMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center"
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+                canvasVisible 
+                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/40' 
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
               title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
               data-testid="button-mobile-toggle-canvas"
             >
-              <Monitor className="w-3 h-3 mr-1" />
-              Холст
+              <Monitor className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+              <span className="hidden sm:inline">Холст</span>
             </Button>
           )}
           
           {onToggleProperties && (
             <Button
-              variant={propertiesVisible ? "default" : "outline"}
               size="sm"
               onClick={() => {
                 onToggleProperties();
                 setIsMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center"
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+                propertiesVisible 
+                  ? 'bg-pink-600 text-white shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/40' 
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
               title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
               data-testid="button-mobile-toggle-properties"
             >
-              <Sliders className="w-3 h-3 mr-1" />
-              Свойства
+              <Sliders className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+              <span className="hidden sm:inline">Св-ва</span>
             </Button>
           )}
           
           {onToggleCode && (
             <Button
-              variant={codeVisible ? "default" : "outline"}
               size="sm"
               onClick={() => {
                 onToggleCode();
                 setIsMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center"
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+                codeVisible 
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40' 
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
               title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
               data-testid="button-mobile-toggle-code"
             >
-              <Code className="w-3 h-3 mr-1" />
-              Код
+              <Code className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+              <span className="hidden sm:inline">Код</span>
             </Button>
           )}
         </div>
       )}
       
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
         {onLoadTemplate && (
           <Button 
-            variant="outline" 
             size="sm"
             onClick={() => {
               onLoadTemplate();
               setIsMobileMenuOpen(false);
             }}
-            className="flex items-center justify-center"
+            className="flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 rounded-lg font-medium text-xs sm:text-sm transition-all"
+            data-testid="button-mobile-load-template"
           >
-            <FolderOpen className="h-3 w-3 mr-2" />
-            Загрузить шаблон
+            <FolderOpen className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+            <span>Шаблоны</span>
           </Button>
         )}
         
         {onSaveAsTemplate && (
           <Button 
-            variant="outline" 
             size="sm"
             onClick={() => {
               onSaveAsTemplate();
               setIsMobileMenuOpen(false);
             }}
-            className="flex items-center justify-center"
+            className="flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50 rounded-lg font-medium text-xs sm:text-sm transition-all"
+            data-testid="button-mobile-save-template"
           >
-            <Bookmark className="h-3 w-3 mr-2" />
-            Сохранить
+            <Bookmark className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+            <span>Сохранить</span>
           </Button>
         )}
         
@@ -301,30 +316,32 @@ export function AdaptiveHeader({
             onExport();
             setIsMobileMenuOpen(false);
           }}
-          className="flex items-center justify-center"
+          className={`flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 text-white rounded-lg font-medium text-xs sm:text-sm shadow-md shadow-green-500/30 hover:shadow-lg hover:shadow-green-500/40 transition-all ${onSaveAsTemplate ? 'sm:col-span-1' : 'sm:col-span-2'}`}
+          data-testid="button-mobile-export"
         >
-          <i className="fas fa-download mr-2"></i>
-          Экспорт
+          <Download className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+          <span>Экспорт</span>
         </Button>
         
         <Button 
-          variant="outline"
           size="sm"
           asChild
-          className="flex items-center justify-center"
+          className={`flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg font-medium text-xs sm:text-sm transition-all ${onSaveAsTemplate ? '' : 'sm:col-span-2'}`}
+          data-testid="button-mobile-github"
         >
           <a
             href="https://github.com/fedorabakumets/telegram-bot-builder"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center justify-center gap-2 w-full"
           >
-            <Github className="h-3.5 w-3.5 mr-2" />
-            GitHub
+            <Github className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+            <span>GitHub</span>
           </a>
         </Button>
         
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center sm:col-span-2 pt-2">
           <ThemeToggle />
         </div>
       </div>
