@@ -1093,17 +1093,23 @@ export function PropertiesPanel({
                     )}
                   </div>
                   
-                  <div>
-                    <Label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">Описание</Label>
+                  <div className="space-y-2 sm:space-y-2.5">
+                    <Label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                      <i className="fas fa-align-left text-blue-600 dark:text-blue-400 text-xs sm:text-sm"></i>
+                      Описание
+                    </Label>
                     <Input
                       value={selectedNode.data.description || getDefaultDataForType(selectedNode.type).description || ''}
                       onChange={(e) => onNodeUpdate(selectedNode.id, { description: e.target.value })}
-                      placeholder="Описание команды"
-                      className="mt-2 text-xs sm:text-sm"
+                      placeholder="Например: Начать работу с ботом"
+                      className="mt-1.5 sm:mt-2 text-xs sm:text-sm border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200/50"
                       data-testid="input-description"
                     />
-                    <div className="text-xs text-muted-foreground mt-1.5 sm:mt-2">
-                      💡 Используется для меню команд в @BotFather
+                    <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/40">
+                      <i className="fas fa-lightbulb text-blue-600 dark:text-blue-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
+                      <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
+                        Используется для меню команд в @BotFather
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1136,28 +1142,36 @@ export function PropertiesPanel({
               selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' || 
               selectedNode.type === 'demote_user' || selectedNode.type === 'admin_rights') && (
               <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-red-50/40 to-orange-50/20 dark:from-red-950/30 dark:to-orange-900/20 rounded-xl p-3 sm:p-4 border border-red-200/40 dark:border-red-800/40 backdrop-blur-sm">
-                <Label className="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-100">Команда действия</Label>
-                <Input
-                  value={selectedNode.data.command || getDefaultDataForType(selectedNode.type).command || ''}
-                  onChange={(e) => onNodeUpdate(selectedNode.id, { command: e.target.value })}
-                  className="text-xs sm:text-sm border-red-200 dark:border-red-700 focus:border-red-500 focus:ring-red-200"
-                  placeholder={
-                    selectedNode.type === 'pin_message' ? '/pin_message' :
-                    selectedNode.type === 'unpin_message' ? '/unpin_message' :
-                    selectedNode.type === 'delete_message' ? '/delete_message' :
-                    selectedNode.type === 'ban_user' ? '/ban_user' :
-                    selectedNode.type === 'unban_user' ? '/unban_user' :
-                    selectedNode.type === 'mute_user' ? '/mute_user' :
-                    selectedNode.type === 'unmute_user' ? '/unmute_user' :
-                    selectedNode.type === 'kick_user' ? '/kick_user' :
-                    selectedNode.type === 'promote_user' ? '/promote_user' :
-                    selectedNode.type === 'demote_user' ? '/demote_user' :
-                    selectedNode.type === 'admin_rights' ? '/admin_rights' : '/command'
-                  }
-                  data-testid="input-action-command"
-                />
-                <div className="text-xs text-red-700 dark:text-red-400">
-                  ⚙️ Основная команда для вызова этого действия
+                <div className="space-y-2 sm:space-y-2.5">
+                  <Label className="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-100 flex items-center gap-2">
+                    <i className="fas fa-terminal text-red-600 dark:text-red-400 text-xs sm:text-sm"></i>
+                    Команда действия
+                  </Label>
+                  <Input
+                    value={selectedNode.data.command || getDefaultDataForType(selectedNode.type).command || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { command: e.target.value })}
+                    className="text-xs sm:text-sm border-red-200 dark:border-red-700 focus:border-red-500 focus:ring-red-200/50"
+                    placeholder={
+                      selectedNode.type === 'pin_message' ? '/pin_message' :
+                      selectedNode.type === 'unpin_message' ? '/unpin_message' :
+                      selectedNode.type === 'delete_message' ? '/delete_message' :
+                      selectedNode.type === 'ban_user' ? '/ban_user' :
+                      selectedNode.type === 'unban_user' ? '/unban_user' :
+                      selectedNode.type === 'mute_user' ? '/mute_user' :
+                      selectedNode.type === 'unmute_user' ? '/unmute_user' :
+                      selectedNode.type === 'kick_user' ? '/kick_user' :
+                      selectedNode.type === 'promote_user' ? '/promote_user' :
+                      selectedNode.type === 'demote_user' ? '/demote_user' :
+                      selectedNode.type === 'admin_rights' ? '/admin_rights' : '/command'
+                    }
+                    data-testid="input-action-command"
+                  />
+                  <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-red-50/50 dark:bg-red-950/30 border border-red-200/50 dark:border-red-800/40">
+                    <i className="fas fa-cog text-red-600 dark:text-red-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
+                    <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 leading-relaxed">
+                      Основная команда для вызова этого действия
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -1174,39 +1188,48 @@ export function PropertiesPanel({
                     <div className="w-6 h-6 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
                       <i className="fas fa-smile text-yellow-600 dark:text-yellow-400 text-xs"></i>
                     </div>
-                    <Label className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">Настройки стикера</Label>
+                    <Label className="text-xs sm:text-sm font-bold text-yellow-900 dark:text-yellow-100 flex items-center gap-2">
+                      <i className="fas fa-smile text-yellow-600 dark:text-yellow-400 text-sm"></i>
+                      Настройки стикера
+                    </Label>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <Label className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-2 block">
-                        <i className="fas fa-link mr-1"></i>
+                      <Label className="text-xs sm:text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2 sm:mb-2.5 block flex items-center gap-2">
+                        <i className="fas fa-link text-yellow-600 dark:text-yellow-400"></i>
                         URL стикера или file_id
                       </Label>
                       <Input
                         value={selectedNode.data.stickerUrl || selectedNode.data.stickerFileId || ''}
                         onChange={(e) => onNodeUpdate(selectedNode.id, { stickerUrl: e.target.value })}
-                        className="border-yellow-200 dark:border-yellow-700 focus:border-yellow-500 focus:ring-yellow-200"
-                        placeholder="CAACAgIAAxkBAAICGGXm2KvQAAG2X8cxTmZHJkRnYwYlAAJGAANWnb0KmgiEKEZDKVQeBA"
+                        className="text-xs sm:text-sm border-yellow-200 dark:border-yellow-700 focus:border-yellow-500 focus:ring-yellow-200/50"
+                        placeholder="CAACAgIAAxkBAAICGGXm2Kv..."
                       />
-                      <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                        Можно указать file_id стикера из Telegram или URL с прямой ссылкой
+                      <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-2.5 mt-2 rounded-lg bg-yellow-50/50 dark:bg-yellow-950/30 border border-yellow-200/50 dark:border-yellow-800/40">
+                        <i className="fas fa-circle-info text-yellow-600 dark:text-yellow-400 text-xs mt-0.5 flex-shrink-0"></i>
+                        <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300 leading-relaxed">
+                          Укажите file_id из Telegram или URL с прямой ссылкой
+                        </p>
                       </div>
                     </div>
 
                     <div>
-                      <Label className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-2 block">
-                        <i className="fas fa-tag mr-1"></i>
+                      <Label className="text-xs sm:text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2 sm:mb-2.5 block flex items-center gap-2">
+                        <i className="fas fa-tag text-yellow-600 dark:text-yellow-400"></i>
                         Набор стикеров
                       </Label>
                       <Input
                         value={selectedNode.data.stickerSetName || ''}
                         onChange={(e) => onNodeUpdate(selectedNode.id, { stickerSetName: e.target.value })}
-                        className="border-yellow-200 dark:border-yellow-700 focus:border-yellow-500 focus:ring-yellow-200"
+                        className="text-xs sm:text-sm border-yellow-200 dark:border-yellow-700 focus:border-yellow-500 focus:ring-yellow-200/50"
                         placeholder="mystickerpack_by_mybot"
                       />
-                      <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                        Название набора стикеров (опционально)
+                      <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-2.5 mt-2 rounded-lg bg-yellow-50/50 dark:bg-yellow-950/30 border border-yellow-200/50 dark:border-yellow-800/40">
+                        <i className="fas fa-circle-info text-yellow-600 dark:text-yellow-400 text-xs mt-0.5 flex-shrink-0"></i>
+                        <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300 leading-relaxed">
+                          Название набора стикеров (опционально)
+                        </p>
                       </div>
                     </div>
                   </div>
