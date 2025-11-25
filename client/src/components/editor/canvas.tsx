@@ -458,8 +458,8 @@ export function Canvas({
       const centerX = (nodeBounds.left + nodeBounds.right) / 2;
       const centerY = (nodeBounds.top + nodeBounds.bottom) / 2;
       const containerCenterX = containerWidth / 2;
-      // Смещаем центр вверх, чтобы учесть панель листов внизу
-      const containerCenterY = (containerHeight / 2) + (toolbarHeight / 2);
+      // Центрируем в доступном пространстве между toolbar и sheets panel
+      const containerCenterY = containerHeight / 2;
 
       // Вычисляем новые значения pan
       const newPanX = containerCenterX - centerX * (newZoom / 100);
