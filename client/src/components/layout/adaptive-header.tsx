@@ -90,21 +90,21 @@ export function AdaptiveHeader({
   // Классы для контейнера с адаптивной высотой для мобильных устройств
   const containerClasses = [
     'bg-gradient-to-r from-background via-background/95 to-background/90 dark:from-slate-950 dark:via-slate-950/95 dark:to-slate-900/90 backdrop-blur-sm border-border/50 relative z-50 shadow-sm',
-    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-11' : 'min-h-16'} flex items-center justify-between md:min-h-24 md:flex-wrap md:justify-start md:gap-2 lg:min-h-20 lg:flex-nowrap lg:justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
+    isVertical ? 'h-full w-full border-r flex flex-col' : `h-12 sm:h-14 md:h-16 lg:h-20 flex items-center justify-between md:flex-wrap md:justify-start md:gap-1.5 lg:gap-2 lg:flex-nowrap lg:justify-between px-2 sm:px-3 md:px-4 lg:px-6 border-b`,
     isCompact ? 'text-sm' : ''
   ].join(' ');
 
   // Компонент логотипа и названия
   const BrandSection = () => (
-    <div className={`flex items-center ${isVertical ? 'flex-col space-y-2 p-4' : (isMobile ? 'space-x-2' : 'space-x-3')}`}>
-      <div className={`bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 ${isCompact || isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}>
-        <i className={`fab fa-telegram-plane text-white ${isCompact || isMobile ? 'text-sm' : 'text-lg'}`}></i>
+    <div className={`flex items-center ${isVertical ? 'flex-col space-y-2 p-4' : 'gap-1.5 sm:gap-2'} flex-shrink-0`}>
+      <div className={`bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9`}>
+        <i className={`fab fa-telegram-plane text-white text-xs sm:text-sm md:text-base`}></i>
       </div>
-      <div className={isVertical ? 'text-center' : ''}>
-        <h1 className={`font-bold bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent ${isCompact || isMobile ? 'text-sm' : 'text-lg'}`}>
+      <div className={`hidden sm:block ${isVertical ? 'text-center' : ''}`}>
+        <h1 className={`font-bold bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent text-sm md:text-base lg:text-lg leading-tight`}>
           {isVertical && !isCompact ? 'BotCraft' : 'BotCraft Studio'}
         </h1>
-        <p className={`text-muted-foreground/70 ${isCompact || isMobile ? 'text-xs' : 'text-xs'}`}>
+        <p className={`text-muted-foreground/70 text-xs leading-tight truncate max-w-xs`}>
           {(() => {
             const displayName = botInfo?.first_name || projectName;
             return isVertical ? (displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName) : displayName;
@@ -116,7 +116,7 @@ export function AdaptiveHeader({
 
   // Компонент навигации
   const Navigation = () => (
-    <nav className={`${isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden md:flex flex-wrap items-center gap-1'}`}>
+    <nav className={`${isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden md:flex flex-wrap items-center gap-0.5 lg:gap-1'}`}>
       {[
         { key: 'editor', label: 'Редактор' },
         { key: 'export', label: 'Экспорт' },
@@ -127,11 +127,11 @@ export function AdaptiveHeader({
         <button 
           key={tab.key}
           onClick={() => onTabChange(tab.key as any)}
-          className={`${isCompact ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} font-semibold rounded-lg transition-all duration-200 ${
+          className={`px-2 md:px-2.5 lg:px-3 py-1 text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
             currentTab === tab.key 
               ? 'text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-md shadow-blue-500/20' 
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 dark:hover:bg-slate-800/50'
-          } ${isVertical ? 'w-full text-left' : 'whitespace-nowrap'} max-sm:text-xs max-sm:px-2 max-sm:py-1`}
+          } ${isVertical ? 'w-full text-left' : ''}`}
         >
           {isVertical && isCompact ? tab.label.substring(0, 3) : tab.label}
         </button>
@@ -331,7 +331,7 @@ export function AdaptiveHeader({
 
   // Компонент действий
   const Actions = () => (
-    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-2 lg:w-auto lg:order-none lg:ml-auto'}`}>
+    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none lg:ml-auto'}`}>
       
       {/* Кнопки управления макетом */}
       {onToggleHeader && (
@@ -505,7 +505,7 @@ export function AdaptiveHeader({
 
   // Разделитель
   const Separator = () => (
-    <div className={`${isVertical ? 'h-px w-full' : 'h-6 w-px'} bg-border`}></div>
+    <div className={`${isVertical ? 'h-px w-full' : 'h-4 sm:h-5 md:h-6 w-px'} bg-border/50 hidden sm:block`}></div>
   );
 
   if (isVertical) {
@@ -525,30 +525,30 @@ export function AdaptiveHeader({
   return (
     <>
       <header className={containerClasses}>
-      <div className="flex items-center space-x-4 md:order-first">
+      <div className="flex items-center gap-1 sm:gap-2 md:gap-1.5 md:order-first flex-shrink-0">
         <BrandSection />
         <Separator />
         {/* Мобильные кнопки компонентов и свойств после разделителя */}
         {isMobile && !isVertical && (
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center gap-1">
             {onOpenMobileSidebar && (
               <button
                 onClick={onOpenMobileSidebar}
-                className="group p-1.5 bg-blue-500/10 dark:bg-blue-400/15 rounded-md border border-blue-300/30 dark:border-blue-500/20 hover:bg-blue-500/20 dark:hover:bg-blue-400/25 hover:border-blue-400/50 dark:hover:border-blue-400/30 transition-all duration-200 hover:shadow-sm hover:shadow-blue-500/20"
+                className="group p-1 sm:p-1.5 bg-blue-500/10 dark:bg-blue-400/15 rounded-md border border-blue-300/30 dark:border-blue-500/20 hover:bg-blue-500/20 dark:hover:bg-blue-400/25 hover:border-blue-400/50 dark:hover:border-blue-400/30 transition-all duration-200 hover:shadow-sm hover:shadow-blue-500/20"
                 title="Открыть панель компонентов"
                 data-testid="button-mobile-components"
               >
-                <Menu className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200" />
+                <Menu className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200" />
               </button>
             )}
             {onOpenMobileProperties && (
               <button
                 onClick={onOpenMobileProperties}
-                className="group p-1.5 bg-purple-500/10 dark:bg-purple-400/15 rounded-md border border-purple-300/30 dark:border-purple-500/20 hover:bg-purple-500/20 dark:hover:bg-purple-400/25 hover:border-purple-400/50 dark:hover:border-purple-400/30 transition-all duration-200 hover:shadow-sm hover:shadow-purple-500/20"
+                className="group p-1 sm:p-1.5 bg-purple-500/10 dark:bg-purple-400/15 rounded-md border border-purple-300/30 dark:border-purple-500/20 hover:bg-purple-500/20 dark:hover:bg-purple-400/25 hover:border-purple-400/50 dark:hover:border-purple-400/30 transition-all duration-200 hover:shadow-sm hover:shadow-purple-500/20"
                 title="Открыть панель свойств"
                 data-testid="button-mobile-properties"
               >
-                <Sliders className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors duration-200" />
+                <Sliders className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors duration-200" />
               </button>
             )}
           </div>
