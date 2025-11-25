@@ -346,7 +346,7 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                     </Badge>
                   ) : (
                     <Badge variant="secondary">
-                      От сообщества
+                      От пользователя
                     </Badge>
                   )}
                 </div>
