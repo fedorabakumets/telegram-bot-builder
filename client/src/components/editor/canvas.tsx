@@ -1198,24 +1198,33 @@ export function Canvas({
                   </button>
                 </PopoverTrigger>
                 <PopoverContent side="bottom" className="w-64 p-3">
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm">История действий</h4>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex items-center justify-between p-2 rounded bg-slate-100 dark:bg-slate-800/50">
-                        <span className="text-slate-600 dark:text-slate-400">Отмена:</span>
-                        <span className={canUndo ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-slate-400 dark:text-slate-600 opacity-50'}>
-                          {canUndo ? 'Доступно' : 'Недоступно'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 rounded bg-slate-100 dark:bg-slate-800/50">
-                        <span className="text-slate-600 dark:text-slate-400">Повтор:</span>
-                        <span className={canRedo ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-slate-400 dark:text-slate-600 opacity-50'}>
-                          {canRedo ? 'Доступно' : 'Недоступно'}
-                        </span>
-                      </div>
-                      <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
-                        <p className="text-slate-500 dark:text-slate-400 opacity-70">Используйте Ctrl+Z и Ctrl+Y для быстрого доступа</p>
-                      </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm mb-1">Действия</h4>
+                    <div className="space-y-1 text-xs">
+                      {canUndo ? (
+                        <div className="flex items-center gap-2 p-2 rounded bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50">
+                          <i className="fas fa-check text-blue-600 dark:text-blue-400"></i>
+                          <span className="text-blue-600 dark:text-blue-400">Отменить доступно</span>
+                          <span className="text-blue-500/60 dark:text-blue-500/60 text-xs">(Ctrl+Z)</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 rounded bg-slate-100 dark:bg-slate-800/50 opacity-50">
+                          <i className="fas fa-times text-slate-400"></i>
+                          <span className="text-slate-500">Нет действий для отмены</span>
+                        </div>
+                      )}
+                      {canRedo ? (
+                        <div className="flex items-center gap-2 p-2 rounded bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50">
+                          <i className="fas fa-check text-blue-600 dark:text-blue-400"></i>
+                          <span className="text-blue-600 dark:text-blue-400">Повторить доступно</span>
+                          <span className="text-blue-500/60 dark:text-blue-500/60 text-xs">(Ctrl+Y)</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 rounded bg-slate-100 dark:bg-slate-800/50 opacity-50">
+                          <i className="fas fa-times text-slate-400"></i>
+                          <span className="text-slate-500">Нет действий для повтора</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </PopoverContent>
