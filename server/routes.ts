@@ -79,6 +79,8 @@ import { initializeDatabaseTables } from "./init-db";
 import { telegramClientManager, initializeTelegramManager } from "./telegram-client";
 import { serverCache, getCachedOrExecute } from "./cache";
 import { authMiddleware, getOwnerIdFromRequest } from "./auth-middleware";
+import session from "express-session";
+import PostgresStore from "connect-pg-simple";
 
 // Глобальное хранилище активных процессов ботов (ключ: `${projectId}_${tokenId}`)
 const botProcesses = new Map<string, ChildProcess>();
@@ -1125,8 +1127,28 @@ async function initializeComponents() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Инициализируем session middleware с PostgreSQL store
+  const pgPool = new (await import('pg')).Pool({
+    connectionString: process.env.DATABASE_URL
+  });
+  
+  const store = new (PostgresStore as any)({ pool: pgPool });
+  
+  app.use(session({
+    store: store,
+    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    }
+  }));
+  
   // Auth middleware для всех API роутов (устанавливает req.user если пользователь авторизован)
-  // ВАЖНО: должен быть подключен ДО всех роутов
+  // ВАЖНО: должен быть подключен ПОСЛЕ session middleware
   app.use("/api", authMiddleware);
   
   // Запускаем инициализацию в фоне без блокировки сервера
