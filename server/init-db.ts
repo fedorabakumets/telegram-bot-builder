@@ -35,9 +35,24 @@ export async function initializeDatabaseTables() {
     console.log('✅ Database connection successful!');
     
     // Создаем таблицы если их нет (с поддержкой IF NOT EXISTS)
+    // Сначала создаем telegram_users, так как на неё ссылаются другие таблицы
+    await executeWithRetry(db, sql`
+      CREATE TABLE IF NOT EXISTS telegram_users (
+        id BIGINT PRIMARY KEY,
+        first_name TEXT NOT NULL,
+        last_name TEXT,
+        username TEXT,
+        photo_url TEXT,
+        auth_date BIGINT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `, "Создание таблицы telegram_users");
+
     await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_projects (
         id SERIAL PRIMARY KEY,
+        owner_id BIGINT REFERENCES telegram_users(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         description TEXT,
         data JSONB NOT NULL,
@@ -89,6 +104,7 @@ export async function initializeDatabaseTables() {
     await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_templates (
         id SERIAL PRIMARY KEY,
+        owner_id BIGINT REFERENCES telegram_users(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         description TEXT,
         data JSONB NOT NULL,
@@ -294,6 +310,48 @@ export async function initializeDatabaseTables() {
       }
     } catch (error) {
       console.log('⚠️ Ошибка при проверке/добавлении колонки primary_media_id:', error);
+    }
+
+    // Миграция: добавление owner_id в bot_projects если его нет
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'bot_projects' 
+        AND column_name = 'owner_id';
+      `);
+      
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Добавляем колонку owner_id в таблицу bot_projects...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_projects 
+          ADD COLUMN owner_id BIGINT REFERENCES telegram_users(id) ON DELETE CASCADE;
+        `, "Миграция: добавление owner_id в bot_projects");
+        console.log('✅ Колонка owner_id успешно добавлена в bot_projects');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки owner_id в bot_projects:', error);
+    }
+
+    // Миграция: добавление owner_id в bot_templates если его нет
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'bot_templates' 
+        AND column_name = 'owner_id';
+      `);
+      
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Добавляем колонку owner_id в таблицу bot_templates...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_templates 
+          ADD COLUMN owner_id BIGINT REFERENCES telegram_users(id) ON DELETE CASCADE;
+        `, "Миграция: добавление owner_id в bot_templates");
+        console.log('✅ Колонка owner_id успешно добавлена в bot_templates');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки owner_id в bot_templates:', error);
     }
 
     console.log('✅ Database tables initialized successfully!');
