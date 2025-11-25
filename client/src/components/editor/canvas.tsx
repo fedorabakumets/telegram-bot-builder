@@ -1188,6 +1188,25 @@ export function Canvas({
                 <i className="fas fa-redo text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
+              {/* История действий */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}
+                    title="История действий"
+                  >
+                    <i className="fas fa-history text-slate-600 dark:text-slate-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" className="w-64 p-3">
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">История действий</h4>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">
+                      <p className="opacity-60">История действий недоступна</p>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               {onSave && (
                 <button 
                   onClick={onSave}
