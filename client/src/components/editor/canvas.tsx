@@ -1290,9 +1290,6 @@ export function Canvas({
 
             </div>
 
-            {/* Разделитель между группами кнопок */}
-            <div className="h-6 w-px bg-border"></div>
-
             {/* Zoom Info and Help */}
             <div className="flex items-center gap-2 flex-shrink-0">
               {zoom !== 100 && (
