@@ -1132,7 +1132,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     connectionString: process.env.DATABASE_URL
   });
   
-  const store = new (PostgresStore as any)({ pool: pgPool });
+  const PostgresStoreConstructor = (PostgresStore as any)(session);
+  const store = new PostgresStoreConstructor({ pool: pgPool });
   
   app.use(session({
     store: store,
