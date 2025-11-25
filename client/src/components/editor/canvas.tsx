@@ -145,6 +145,8 @@ export function Canvas({
   // Система истории действий - последние 50 действий
   const [actionHistory, setActionHistory] = useState<Action[]>([]);
   const [selectedActionsForUndo, setSelectedActionsForUndo] = useState<Set<string>>(new Set());
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<number | null>(null);
 
   // Функция для добавления действия в историю
   const addAction = useCallback((type: Action['type'], description: string) => {
@@ -183,6 +185,44 @@ export function Canvas({
       return newSet;
     });
   }, []);
+
+  // Выбор диапазона действий
+  const selectRange = useCallback((startIndex: number, endIndex: number) => {
+    const [min, max] = startIndex <= endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
+    const newSet = new Set<string>();
+    for (let i = min; i <= max; i++) {
+      if (actionHistory[i]) {
+        newSet.add(actionHistory[i].id);
+      }
+    }
+    setSelectedActionsForUndo(newSet);
+  }, [actionHistory]);
+
+  // Начало выделения
+  const handleMouseDownAction = useCallback((index: number) => {
+    setIsSelecting(true);
+    setSelectionStart(index);
+    toggleActionSelection(actionHistory[index].id);
+  }, [actionHistory, toggleActionSelection]);
+
+  // Во время выделения
+  const handleMouseOverAction = useCallback((index: number) => {
+    if (isSelecting && selectionStart !== null) {
+      selectRange(selectionStart, index);
+    }
+  }, [isSelecting, selectionStart, selectRange]);
+
+  // Конец выделения
+  useEffect(() => {
+    const handleMouseUp = () => {
+      setIsSelecting(false);
+    };
+
+    if (isSelecting) {
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => document.removeEventListener('mouseup', handleMouseUp);
+    }
+  }, [isSelecting]);
 
   // Обработчик изменения размеров узлов
   const handleNodeSizeChange = useCallback((nodeId: string, size: { width: number; height: number }) => {
@@ -1272,12 +1312,14 @@ export function Canvas({
                     </div>
                     {actionHistory.length > 0 ? (
                       <div className="space-y-2">
-                        <div className="space-y-1 text-xs max-h-64 overflow-y-auto">
-                          {actionHistory.map((action) => {
+                        <div className="space-y-1 text-xs max-h-64 overflow-y-auto select-none">
+                          {actionHistory.map((action, index) => {
                             const isSelected = selectedActionsForUndo.has(action.id);
                             return (
                               <div 
-                                key={action.id} 
+                                key={action.id}
+                                onMouseDown={() => handleMouseDownAction(index)}
+                                onMouseOver={() => handleMouseOverAction(index)}
                                 onClick={() => toggleActionSelection(action.id)}
                                 className={`flex items-start gap-2 p-2 rounded cursor-pointer transition-colors ${
                                   isSelected 
