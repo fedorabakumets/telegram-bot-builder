@@ -1281,7 +1281,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check ownership if user is authenticated
       const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null && project.ownerId !== ownerId) {
+      // Разрешаем доступ: если проект принадлежит пользователю ИЛИ это гостевой проект (ownerId=null)
+      if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
         return res.status(403).json({ message: "You don't have permission to access this project" });
       }
       
