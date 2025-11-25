@@ -1900,14 +1900,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let templates;
       
       if (ownerId !== null) {
-        // Authenticated user - return only their templates + system templates
+        // Authenticated user - return only their templates + public system templates + public other user templates
         const userTemplates = await storage.getUserBotTemplates(ownerId);
         const allTemplates = await storage.getAllBotTemplates();
         const systemTemplates = allTemplates.filter(t => t.ownerId === null);
-        templates = [...userTemplates, ...systemTemplates];
+        const publicOtherTemplates = allTemplates.filter(t => t.ownerId !== null && t.ownerId !== ownerId && t.isPublic === 1);
+        templates = [...userTemplates, ...systemTemplates, ...publicOtherTemplates];
       } else {
-        // Guest user - return all templates (for localStorage mode)
-        templates = await storage.getAllBotTemplates();
+        // Guest user - return all public templates (for localStorage mode)
+        const allTemplates = await storage.getAllBotTemplates();
+        templates = allTemplates.filter(t => t.isPublic === 1 || t.ownerId === null);
       }
       
       // Маппинг data -> flow_data для совместимости с фронтендом
@@ -1968,8 +1970,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.json(templates);
         }
       } else {
-        // Для остальных категорий - все шаблоны
-        const templates = await storage.getTemplatesByCategory(category);
+        // Для остальных категорий - только публичные шаблоны + системные
+        let templates = await storage.getTemplatesByCategory(category);
+        templates = templates.filter(t => t.isPublic === 1 || t.ownerId === null);
         res.json(templates);
       }
     } catch (error) {
