@@ -54,7 +54,9 @@ export default function TemplatesPageWrapper() {
       // Только для гостей добавляем параметр ids
       // Для авторизованных пользователей сервер автоматически вернет их шаблоны по сессии
       const idsParam = (myTemplateIds && myTemplateIds.length > 0 && !user) ? `?ids=${myTemplateIds}` : '';
-      const response = await fetch(`/api/templates/category/custom${idsParam}`);
+      const response = await fetch(`/api/templates/category/custom${idsParam}`, {
+        credentials: 'include' // КРИТИЧНО: отправляем cookies для сессии!
+      });
       return response.json();
     }
   });
