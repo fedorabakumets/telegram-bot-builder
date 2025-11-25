@@ -135,6 +135,29 @@ export function Canvas({
   // Состояние для хранения реальных размеров узлов
   const [nodeSizes, setNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
 
+  // Система истории действий - последние 50 действий
+  interface Action {
+    id: string;
+    type: 'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate';
+    description: string;
+    timestamp: number;
+  }
+  const [actionHistory, setActionHistory] = useState<Action[]>([]);
+
+  // Функция для добавления действия в историю
+  const addAction = useCallback((type: Action['type'], description: string) => {
+    setActionHistory(prev => {
+      const newAction: Action = {
+        id: nanoid(),
+        type,
+        description,
+        timestamp: Date.now()
+      };
+      // Храним только последние 50 действий
+      return [newAction, ...prev].slice(0, 50);
+    });
+  }, []);
+
   // Обработчик изменения размеров узлов
   const handleNodeSizeChange = useCallback((nodeId: string, size: { width: number; height: number }) => {
     setNodeSizes(prev => {
@@ -1197,35 +1220,36 @@ export function Canvas({
                     <i className="fas fa-history text-slate-600 dark:text-slate-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
                   </button>
                 </PopoverTrigger>
-                <PopoverContent side="bottom" className="w-64 p-3">
+                <PopoverContent side="bottom" className="w-80 p-3 max-h-96 overflow-y-auto">
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm mb-1">Действия</h4>
-                    <div className="space-y-1 text-xs">
-                      {canUndo ? (
-                        <div className="flex items-center gap-2 p-2 rounded bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50">
-                          <i className="fas fa-check text-blue-600 dark:text-blue-400"></i>
-                          <span className="text-blue-600 dark:text-blue-400">Отменить доступно</span>
-                          <span className="text-blue-500/60 dark:text-blue-500/60 text-xs">(Ctrl+Z)</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 p-2 rounded bg-slate-100 dark:bg-slate-800/50 opacity-50">
-                          <i className="fas fa-times text-slate-400"></i>
-                          <span className="text-slate-500">Нет действий для отмены</span>
-                        </div>
-                      )}
-                      {canRedo ? (
-                        <div className="flex items-center gap-2 p-2 rounded bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50">
-                          <i className="fas fa-check text-blue-600 dark:text-blue-400"></i>
-                          <span className="text-blue-600 dark:text-blue-400">Повторить доступно</span>
-                          <span className="text-blue-500/60 dark:text-blue-500/60 text-xs">(Ctrl+Y)</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 p-2 rounded bg-slate-100 dark:bg-slate-800/50 opacity-50">
-                          <i className="fas fa-times text-slate-400"></i>
-                          <span className="text-slate-500">Нет действий для повтора</span>
-                        </div>
-                      )}
-                    </div>
+                    <h4 className="font-medium text-sm mb-3">История действий</h4>
+                    {actionHistory.length > 0 ? (
+                      <div className="space-y-1 text-xs">
+                        {actionHistory.map((action) => (
+                          <div key={action.id} className="flex items-start gap-2 p-2 rounded bg-slate-100 dark:bg-slate-800/50">
+                            <i className={`fas fa-${
+                              action.type === 'add' ? 'plus text-green-600 dark:text-green-400' :
+                              action.type === 'delete' ? 'trash text-red-600 dark:text-red-400' :
+                              action.type === 'move' ? 'arrows text-blue-600 dark:text-blue-400' :
+                              action.type === 'update' ? 'edit text-purple-600 dark:text-purple-400' :
+                              action.type === 'connect' ? 'link text-cyan-600 dark:text-cyan-400' :
+                              action.type === 'disconnect' ? 'unlink text-orange-600 dark:text-orange-400' :
+                              'copy text-yellow-600 dark:text-yellow-400'
+                            }`}></i>
+                            <div className="flex-1">
+                              <p className="text-slate-600 dark:text-slate-300">{action.description}</p>
+                              <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
+                                {new Date(action.timestamp).toLocaleTimeString('ru-RU')}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-slate-400 dark:text-slate-500 text-xs opacity-70">Нет действий в истории</p>
+                      </div>
+                    )}
                   </div>
                 </PopoverContent>
               </Popover>
