@@ -6,45 +6,45 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --background: hsl(240, 30%, 97%);
+  --foreground: hsl(240, 10%, 20%);
+  --muted: hsl(240, 20%, 91%);
+  --muted-foreground: hsl(240, 12%, 45%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --popover-foreground: hsl(240, 10%, 20%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
+  --card-foreground: hsl(240, 10%, 20%);
+  --border: hsl(240, 15%, 88%);
+  --input: hsl(240, 20%, 92%);
   --primary: hsl(207, 90%, 54%);
   --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(60, 4.8%, 95.9%);
-  --secondary-foreground: hsl(24, 9.8%, 10%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
-  --destructive: hsl(0, 84.2%, 60.2%);
+  --secondary: hsl(240, 20%, 91%);
+  --secondary-foreground: hsl(240, 10%, 25%);
+  --accent: hsl(240, 20%, 91%);
+  --accent-foreground: hsl(240, 10%, 25%);
+  --destructive: hsl(0, 75%, 63%);
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
+  --ring: hsl(240, 10%, 20%);
   --radius: 0.5rem;
   
   /* Enhanced theme variables */
-  --success: hsl(142, 76%, 36%);
+  --success: hsl(142, 76%, 43%);
   --success-foreground: hsl(355, 7%, 97%);
-  --warning: hsl(38, 92%, 50%);
+  --warning: hsl(38, 92%, 55%);
   --warning-foreground: hsl(48, 96%, 89%);
-  --info: hsl(199, 89%, 48%);
+  --info: hsl(199, 89%, 52%);
   --info-foreground: hsl(210, 20%, 98%);
   
   /* Gradient colors */
   --gradient-primary-start: hsl(207, 90%, 54%);
   --gradient-primary-end: hsl(217, 100%, 64%);
-  --gradient-secondary-start: hsl(60, 4.8%, 95.9%);
-  --gradient-secondary-end: hsl(60, 4.8%, 88%);
+  --gradient-secondary-start: hsl(240, 20%, 91%);
+  --gradient-secondary-end: hsl(240, 20%, 85%);
   
   /* Shadow colors */
-  --shadow-light: hsl(20, 5.9%, 50% / 0.1);
-  --shadow-medium: hsl(20, 5.9%, 30% / 0.15);
-  --shadow-heavy: hsl(20, 5.9%, 10% / 0.2);
+  --shadow-light: hsl(240, 10%, 50% / 0.08);
+  --shadow-medium: hsl(240, 10%, 30% / 0.12);
+  --shadow-heavy: hsl(240, 10%, 10% / 0.15);
 }
 
 .dark {
