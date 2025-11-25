@@ -1174,23 +1174,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects/list", requireDbReady, async (req, res) => {
     try {
       const ownerId = getOwnerIdFromRequest(req);
-      let projects;
       
       if (ownerId !== null) {
         // Authenticated user - return only their projects
-        projects = await storage.getUserBotProjects(ownerId);
+        const projects = await storage.getUserBotProjects(ownerId);
+        // Возвращаем только метаданные, без поля data
+        const projectsList = projects.map(({ data, ...metadata }) => metadata);
+        res.json(projectsList);
       } else {
-        // Guest user - return all projects
-        projects = await getCachedOrExecute(
-          'all-projects-list',
-          async () => await storage.getAllBotProjects(),
-          30000
-        );
+        // Guest user - should use localStorage, not server storage
+        // Return empty array to force client to use localStorage
+        res.json([]);
       }
-      
-      // Возвращаем только метаданные, без поля data
-      const projectsList = projects.map(({ data, ...metadata }) => metadata);
-      res.json(projectsList);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch projects list" });
     }
@@ -1200,21 +1195,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects", requireDbReady, async (req, res) => {
     try {
       const ownerId = getOwnerIdFromRequest(req);
-      let projects;
       
       if (ownerId !== null) {
         // Authenticated user - return only their projects
-        projects = await storage.getUserBotProjects(ownerId);
+        const projects = await storage.getUserBotProjects(ownerId);
+        res.json(projects);
       } else {
-        // Guest user - return all projects (for localStorage mode)
-        projects = await getCachedOrExecute(
-          'all-projects',
-          () => storage.getAllBotProjects(),
-          30000
-        );
+        // Guest user - should use localStorage, not server storage
+        // Return empty array to force client to use localStorage
+        res.json([]);
       }
-      
-      res.json(projects);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch projects" });
     }

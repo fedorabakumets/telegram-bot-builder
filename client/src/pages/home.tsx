@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,9 +14,10 @@ import { z } from 'zod';
 import { Plus, Bot, Edit, Trash2, Calendar, User, Download, LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import type { BotProject } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
+import { useTelegramAuth } from '@/hooks/use-telegram-auth';
+import { useProjects, useCreateProject, useDeleteProject } from '@/hooks/use-user-data';
 
 const createProjectSchema = z.object({
   name: z.string().min(1, 'Название проекта обязательно'),
@@ -30,6 +31,7 @@ export default function Home() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useTelegramAuth();
 
   const form = useForm<CreateProjectForm>({
     resolver: zodResolver(createProjectSchema),
@@ -39,78 +41,83 @@ export default function Home() {
     },
   });
 
-  // Загрузка списка проектов (только метаданные, без data)
-  const { data: projects = [], isLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
-    queryKey: ['/api/projects/list'],
+  // Используем хуки которые автоматически выбирают localStorage или сервер
+  const { data: projects = [], isLoading: projectsLoading } = useProjects({
+    isAuthenticated: !!user,
+    userId: user?.id,
   });
 
-  // Создание нового проекта
-  const createProjectMutation = useMutation({
-    mutationFn: (data: CreateProjectForm) => apiRequest('POST', '/api/projects', {
-      ...data,
-      data: {
-        nodes: [{
-          id: 'start',
-          type: 'start',
-          position: { x: 100, y: 100 },
-          data: {
-            messageText: 'Привет! Я ваш новый бот.',
-            keyboardType: 'none',
-            buttons: [],
-          }
-        }],
-        connections: []
-      }
-    }),
-    onSuccess: (newProject: BotProject) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      toast({
-        title: "Проект создан",
-        description: `Проект "${newProject.name}" успешно создан`,
-      });
-      setIsCreateDialogOpen(false);
-      form.reset();
-      // Переходим в редактор нового проекта
-      setLocation(`/editor/${newProject.id}`);
-    },
-    onError: () => {
-      toast({
-        title: "Ошибка создания",
-        description: "Не удалось создать проект",
-        variant: "destructive",
-      });
-    }
+  const createProjectMutation = useCreateProject({
+    isAuthenticated: !!user,
+    userId: user?.id,
   });
 
-  // Удаление проекта
-  const deleteProjectMutation = useMutation({
-    mutationFn: (projectId: number) => apiRequest('DELETE', `/api/projects/${projectId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      toast({
-        title: "Проект удален",
-        description: "Проект успешно удален",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Ошибка удаления",
-        description: "Не удалось удалить проект",
-        variant: "destructive",
-      });
-    }
+  const deleteProjectMutation = useDeleteProject({
+    isAuthenticated: !!user,
+    userId: user?.id,
   });
 
   const handleCreateProject = (data: CreateProjectForm) => {
-    createProjectMutation.mutate(data);
+    createProjectMutation.mutate(
+      {
+        ...data,
+        userDatabaseEnabled: 1,
+        data: {
+          nodes: [{
+            id: 'start',
+            type: 'start',
+            position: { x: 100, y: 100 },
+            data: {
+              messageText: 'Привет! Я ваш новый бот.',
+              keyboardType: 'none',
+              buttons: [],
+            }
+          }],
+          connections: []
+        }
+      },
+      {
+        onSuccess: (newProject: BotProject) => {
+          toast({
+            title: "Проект создан",
+            description: `Проект "${newProject.name}" успешно создан`,
+          });
+          setIsCreateDialogOpen(false);
+          form.reset();
+          setLocation(`/editor/${newProject.id}`);
+        },
+        onError: () => {
+          toast({
+            title: "Ошибка создания",
+            description: "Не удалось создать проект",
+            variant: "destructive",
+          });
+        }
+      }
+    );
   };
 
   const handleDeleteProject = (project: BotProject) => {
     if (confirm(`Вы уверены, что хотите удалить проект "${project.name}"? Это действие нельзя отменить.`)) {
-      deleteProjectMutation.mutate(project.id);
+      deleteProjectMutation.mutate(project.id, {
+        onSuccess: () => {
+          toast({
+            title: "Проект удален",
+            description: "Проект успешно удален",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Ошибка удаления",
+            description: "Не удалось удалить проект",
+            variant: "destructive",
+          });
+        }
+      });
     }
   };
+
+  const isLoading = authLoading || projectsLoading;
 
   const formatDate = (dateString: string | Date | null) => {
     if (!dateString) return 'Неизвестно';
@@ -276,7 +283,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
+            {projects.map((project: BotProject) => (
               <Card key={project.id} className="group hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -323,7 +330,7 @@ export default function Home() {
                               {sheetsInfo.count} {sheetsInfo.count === 1 ? 'лист' : sheetsInfo.count < 5 ? 'листа' : 'листов'}:
                             </div>
                             <div className="flex flex-wrap gap-1">
-                              {sheetsInfo.names.slice(0, 3).map((name, index) => (
+                              {sheetsInfo.names.slice(0, 3).map((name: string, index: number) => (
                                 <Badge key={index} variant="secondary" className="text-xs px-2 py-0.5">
                                   {name}
                                 </Badge>
