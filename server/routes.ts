@@ -1887,6 +1887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/templates/category/:category", async (req, res) => {
     try {
       const { category } = req.params;
+      const { ids } = req.query;
       const ownerId = getOwnerIdFromRequest(req);
       
       // Для категории "custom" - показываем только личные шаблоны
@@ -1896,9 +1897,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const templates = await storage.getUserBotTemplates(ownerId);
           res.json(templates.filter(t => t.category === 'custom'));
         } else {
-          // Гость - системные шаблоны с owner_id = null
-          const templates = await storage.getTemplatesByCategory(category);
-          res.json(templates.filter(t => t.ownerId === null));
+          // Гость - шаблоны с owner_id = null, или указанные в query параметре ids
+          let templates = await storage.getTemplatesByCategory(category);
+          templates = templates.filter(t => t.ownerId === null);
+          
+          // Если гость передал IDs - дополняем список его сохраненными шаблонами
+          if (ids && typeof ids === 'string') {
+            const requestedIds = ids.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
+            if (requestedIds.length > 0) {
+              const allTemplates = await storage.getAllBotTemplates();
+              const userTemplates = allTemplates.filter(t => requestedIds.includes(t.id));
+              templates = [...templates, ...userTemplates];
+              // Удаляем дубликаты
+              templates = templates.filter((t, idx, arr) => arr.findIndex(item => item.id === t.id) === idx);
+            }
+          }
+          res.json(templates);
         }
       } else {
         // Для остальных категорий - все шаблоны
