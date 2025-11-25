@@ -972,27 +972,25 @@ export function PropertiesPanel({
       </div>
 
       {/* Properties Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5 md:space-y-6">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-5 space-y-5 sm:space-y-7 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
         
         {/* Basic Settings */}
-        <div className="space-y-3 sm:space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-5 w-0.5 bg-gradient-to-b from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-400 rounded-full"></div>
-            <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Основные настройки</h3>
+        <section className="space-y-3.5 sm:space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div className="h-1 w-1 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-400 dark:to-cyan-400"></div>
+            <h3 className="text-sm sm:text-base font-bold text-foreground">Основные настройки</h3>
           </div>
-          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm">
+          <div className="space-y-3 sm:space-y-4">
             {/* Node Type Selector */}
             <div>
-              <Label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                <i className="fas fa-cube text-blue-600 dark:text-blue-400"></i>
-                Тип элемента
-              </Label>
+              <Label className="text-xs font-medium text-muted-foreground">Тип элемента</Label>
               <Select
                 value={selectedNode.type}
                 onValueChange={(value) => {
                   if (onNodeTypeChange) {
+                    // Создаем новые данные для узла в зависимости от типа
                     const newData = getDefaultDataForType(value as Node['type']);
+                    // Сохраняем некоторые общие поля
                     const preservedData = {
                       messageText: selectedNode.data.messageText,
                       keyboardType: selectedNode.data.keyboardType,
@@ -1001,12 +999,16 @@ export function PropertiesPanel({
                       oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
                       resizeKeyboard: selectedNode.data.resizeKeyboard
                     };
+                    
+                    // Объединяем данные
                     const finalData = { ...newData, ...preservedData };
+                    
+                    // Вызываем функцию обновления типа
                     onNodeTypeChange(selectedNode.id, value as Node['type'], finalData);
                   }
                 }}
               >
-                <SelectTrigger className="mt-2 text-xs sm:text-sm">
+                <SelectTrigger className="mt-2">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1032,11 +1034,9 @@ export function PropertiesPanel({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-        </div>
             
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
-              <div className="space-y-3 sm:space-y-4">
+              <>
                 <div className="relative">
                   <Label className="text-xs font-medium text-muted-foreground">Команда</Label>
                   <div className="relative">
@@ -1097,30 +1097,30 @@ export function PropertiesPanel({
                     placeholder="Описание команды"
                     className="text-xs"
                   />
-                  <div className="text-xs text-muted-foreground mt-2 px-2.5 py-1.5 bg-blue-500/10 dark:bg-blue-600/10 border border-blue-200/30 dark:border-blue-700/30 rounded-md">
-                    <i className="fas fa-lightbulb text-blue-600 dark:text-blue-400 mr-1.5"></i>
+                  <div className="text-xs text-muted-foreground mt-1">
                     Используется для меню команд в @BotFather
                   </div>
                 </div>
-              </div>
+              </>
             )}
 
             {/* Synonyms for start and command nodes */}
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-0.5 bg-gradient-to-b from-green-400 to-green-600 dark:from-green-500 dark:to-green-400 rounded-full"></div>
-                  <h4 className="text-sm sm:text-base font-bold text-green-900 dark:text-green-100">Синонимы команды</h4>
+              <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                    <i className="fas fa-tags text-green-600 dark:text-green-400 text-xs"></i>
+                  </div>
+                  <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Синонимы команды</Label>
                 </div>
-                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-xl p-3 sm:p-4 backdrop-blur-sm">
-                  <SynonymEditor
-                    synonyms={selectedNode.data.synonyms || []}
-                    onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
-                    title="Альтернативные команды"
-                    description="Текстовые сообщения, которые будут вызывать эту команду. Например: старт вместо /start"
-                    placeholder="Например: старт, привет, начать"
-                  />
-                </div>
+                
+                <SynonymEditor
+                  synonyms={selectedNode.data.synonyms || []}
+                  onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+                  title="Альтернативные команды"
+                  description="Текстовые сообщения, которые будут вызывать эту команду. Например: старт вместо /start"
+                  placeholder="Например: старт, привет, начать"
+                />
               </div>
             )}
 
@@ -4786,7 +4786,6 @@ export function PropertiesPanel({
             </div>
           </div>
         )}
-        </div>
       </div>
 
       {/* Properties Footer */}
