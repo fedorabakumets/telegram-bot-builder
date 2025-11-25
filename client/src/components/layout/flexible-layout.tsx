@@ -392,7 +392,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     return (
       <div className="h-full flex flex-col">
         {topEl && (
-          <div className="border-b border-border bg-background" style={{ minHeight: `${topEl.size}rem` }}>
+          <div className="bg-background" style={{ minHeight: `${topEl.size}rem` }}>
             {getElementContent(topEl.type)}
           </div>
         )}
