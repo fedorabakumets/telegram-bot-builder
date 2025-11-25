@@ -63,17 +63,41 @@ function Router() {
 function App() {
   useEffect(() => {
     // Слушаем на событие авторизации из окна Telegram Login
-    const handleAuthMessage = (event: MessageEvent) => {
+    const handleAuthMessage = async (event: MessageEvent) => {
       if (event.data && event.data.type === 'telegram-auth' && event.data.user) {
-        // Сохраняем пользователя в localStorage для обновления hook'а
         try {
-          localStorage.setItem('telegramUser', JSON.stringify(event.data.user));
-          // Отправляем custom event для обновления всех компонентов
-          window.dispatchEvent(new CustomEvent('telegram-auth-change', {
-            detail: { user: event.data.user }
-          }));
+          // КРИТИЧНО: Отправляем POST запрос на бэк для создания сессии
+          const telegramUser = event.data.user;
+          const response = await fetch('/api/auth/telegram', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include', // КРИТИЧНО: отправляем cookies для сессии
+            body: JSON.stringify({
+              id: telegramUser.id,
+              first_name: telegramUser.first_name,
+              last_name: telegramUser.last_name,
+              username: telegramUser.username,
+              photo_url: telegramUser.photo_url,
+              auth_date: telegramUser.auth_date,
+              hash: telegramUser.hash,
+            }),
+          });
+
+          if (response.ok) {
+            // Сохраняем пользователя в localStorage для обновления hook'а
+            localStorage.setItem('telegramUser', JSON.stringify(event.data.user));
+            // Отправляем custom event для обновления всех компонентов
+            window.dispatchEvent(new CustomEvent('telegram-auth-change', {
+              detail: { user: event.data.user }
+            }));
+            console.log('✅ Auth successful - session created');
+          } else {
+            console.error('❌ Auth failed:', response.status);
+          }
         } catch (e) {
-          console.error('Error saving auth data:', e);
+          console.error('Error in auth flow:', e);
         }
       }
     };
