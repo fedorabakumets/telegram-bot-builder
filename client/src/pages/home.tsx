@@ -42,6 +42,13 @@ export default function Home() {
   // Загрузка списка проектов (только метаданные, без data)
   const { data: projects = [], isLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
     queryKey: ['/api/projects/list'],
+    queryFn: async () => {
+      // Для гостей: передаем список сохраненных IDs проектов
+      const myProjectIds = localStorage.getItem('myProjectIds');
+      const idsParam = myProjectIds ? `?ids=${myProjectIds}` : '';
+      const response = await fetch(`/api/projects/list${idsParam}`);
+      return response.json();
+    }
   });
 
   // Создание нового проекта
@@ -63,6 +70,12 @@ export default function Home() {
       }
     }),
     onSuccess: (newProject: BotProject) => {
+      // Сохраняем ID проекта в список "моих" для гостей
+      const myProjectIds = localStorage.getItem('myProjectIds') || '';
+      const ids = new Set(myProjectIds.split(',').filter(Boolean).map(Number));
+      ids.add(newProject.id);
+      localStorage.setItem('myProjectIds', Array.from(ids).join(','));
+      
       queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       toast({

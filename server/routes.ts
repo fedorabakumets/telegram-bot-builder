@@ -1173,6 +1173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all bot projects (lightweight - without data field)
   app.get("/api/projects/list", requireDbReady, async (req, res) => {
     try {
+      const { ids } = req.query;
       const ownerId = getOwnerIdFromRequest(req);
       let projects;
       
@@ -1180,12 +1181,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Authenticated user - return only their projects
         projects = await storage.getUserBotProjects(ownerId);
       } else {
-        // Guest user - return all projects
-        projects = await getCachedOrExecute(
+        // Guest user - return their projects or all if no ids provided
+        let allProjects = await getCachedOrExecute(
           'all-projects-list',
           async () => await storage.getAllBotProjects(),
           30000
         );
+        
+        // Если гость передал IDs - фильтруем по ним
+        if (ids && typeof ids === 'string') {
+          const requestedIds = ids.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
+          if (requestedIds.length > 0) {
+            projects = allProjects.filter(p => requestedIds.includes(p.id));
+          } else {
+            projects = allProjects;
+          }
+        } else {
+          projects = allProjects;
+        }
       }
       
       // Возвращаем только метаданные, без поля data
