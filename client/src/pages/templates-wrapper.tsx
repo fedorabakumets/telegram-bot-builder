@@ -113,7 +113,13 @@ export default function TemplatesPageWrapper() {
     }
 
     if (selectedCategory !== 'all') {
-      currentTemplates = currentTemplates.filter(template => template.category === selectedCategory);
+      if (selectedCategory === 'official') {
+        // Официальные шаблоны - это системные шаблоны (ownerId === null)
+        currentTemplates = currentTemplates.filter(template => template.ownerId === null);
+      } else {
+        // Остальные категории - фильтруем по полю category
+        currentTemplates = currentTemplates.filter(template => template.category === selectedCategory);
+      }
     }
 
     const sorted = [...currentTemplates].sort((a, b) => {
