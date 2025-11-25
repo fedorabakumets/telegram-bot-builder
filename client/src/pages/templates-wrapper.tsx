@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, Eye, ArrowLeft, Star } from 'lucide-react';
+import { Loader2, Search, Download, Eye, ArrowLeft, Star, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -162,6 +162,32 @@ export default function TemplatesPageWrapper() {
     }
   });
 
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (templateId: number) => {
+      const response = await fetch(`/api/user/templates/${templateId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to delete template');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      toast({
+        title: "✅ Шаблон удален",
+        description: "Ваш шаблон успешно удален",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "❌ Ошибка",
+        description: "Не удалось удалить шаблон",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleUseTemplate = (template: BotTemplate) => {
     useTemplateMutation.mutate(template.id);
     localStorage.setItem('selectedTemplate', JSON.stringify(template));
@@ -178,6 +204,12 @@ export default function TemplatesPageWrapper() {
       title: 'Шаблон загружен!',
       description: `Шаблон "${template.name}" будет применен к вашему проекту`,
     });
+  };
+
+  const handleDeleteTemplate = (template: BotTemplate) => {
+    if (window.confirm(`Вы уверены, что хотите удалить шаблон "${template.name}"? Это действие нельзя отменить.`)) {
+      deleteTemplateMutation.mutate(template.id);
+    }
   };
 
   return (
@@ -252,19 +284,19 @@ export default function TemplatesPageWrapper() {
 
                 {/* Контент вкладок */}
                 <TabsContent value="all" className="mt-4">
-                  <TemplateGrid templates={filteredAndSortedTemplates} isLoading={isLoading} onUse={handleUseTemplate} />
+                  <TemplateGrid templates={filteredAndSortedTemplates} isLoading={isLoading} onUse={handleUseTemplate} showDelete={false} onDelete={handleDeleteTemplate} />
                 </TabsContent>
                 
                 <TabsContent value="featured" className="mt-4">
-                  <TemplateGrid templates={filteredAndSortedTemplates} isLoading={isLoadingFeatured} onUse={handleUseTemplate} />
+                  <TemplateGrid templates={filteredAndSortedTemplates} isLoading={isLoadingFeatured} onUse={handleUseTemplate} showDelete={false} onDelete={handleDeleteTemplate} />
                 </TabsContent>
                 
                 <TabsContent value="popular" className="mt-4">
-                  <TemplateGrid templates={filteredAndSortedTemplates} isLoading={isLoading} onUse={handleUseTemplate} />
+                  <TemplateGrid templates={filteredAndSortedTemplates} isLoading={isLoading} onUse={handleUseTemplate} showDelete={false} onDelete={handleDeleteTemplate} />
                 </TabsContent>
                 
                 <TabsContent value="my" className="mt-4">
-                  <TemplateGrid templates={filteredAndSortedTemplates} isLoading={isLoadingMy} onUse={handleUseTemplate} />
+                  <TemplateGrid templates={filteredAndSortedTemplates} isLoading={isLoadingMy} onUse={handleUseTemplate} showDelete={true} onDelete={handleDeleteTemplate} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -276,10 +308,12 @@ export default function TemplatesPageWrapper() {
 }
 
 // Компонент для сетки шаблонов
-function TemplateGrid({ templates, isLoading, onUse }: { 
+function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: { 
   templates: BotTemplate[], 
   isLoading: boolean, 
-  onUse: (template: BotTemplate) => void 
+  onUse: (template: BotTemplate) => void,
+  showDelete: boolean,
+  onDelete: (template: BotTemplate) => void
 }) {
   if (isLoading) {
     return (
@@ -318,16 +352,28 @@ function TemplateGrid({ templates, isLoading, onUse }: {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Eye className="h-4 w-4" />
                 <span>{template.viewCount || 0}</span>
                 <Download className="h-4 w-4 ml-2" />
                 <span>{template.downloadCount || 0}</span>
               </div>
-              <Button size="sm" onClick={() => onUse(template)}>
-                Использовать
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" className="flex-1" onClick={() => onUse(template)}>
+                  Использовать
+                </Button>
+                {showDelete && (
+                  <Button 
+                    size="sm" 
+                    variant="destructive" 
+                    onClick={() => onDelete(template)}
+                    data-testid="button-delete-template"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
