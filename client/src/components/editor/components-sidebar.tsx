@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText, Copy, MoreHorizontal, ChevronDown, ChevronRight, Menu, X } from 'lucide-react';
+import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText, Copy, Share2, MoreHorizontal, ChevronDown, ChevronRight, Menu, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
@@ -1836,7 +1836,7 @@ export function ComponentsSidebar({
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="h-5 w-5 p-0 hover:bg-green-500/20 text-green-600 dark:text-green-400 text-sm leading-none"
+                                          className="h-7 w-7 p-0 hover:bg-green-500/20 text-green-600 dark:text-green-400 rounded-lg transition-all"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             if (SheetsManager.isNewFormat(projectData)) {
@@ -1848,7 +1848,7 @@ export function ComponentsSidebar({
                                           }}
                                           title="Дублировать лист"
                                         >
-                                          ➕
+                                          <Copy className="h-4 w-4" />
                                         </Button>
 
                                         {projects.length > 1 && (
@@ -1857,10 +1857,10 @@ export function ComponentsSidebar({
                                               <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-5 w-5 p-0 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-sm leading-none"
+                                                className="h-7 w-7 p-0 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-all"
                                                 title="Переместить в другой проект"
                                               >
-                                                ➡️
+                                                <Share2 className="h-4 w-4" />
                                               </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-44" side="top" sideOffset={5}>
@@ -1923,7 +1923,7 @@ export function ComponentsSidebar({
                                           <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-5 w-5 p-0 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-sm leading-none"
+                                            className="h-7 w-7 p-0 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-all"
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               if (sheetId && SheetsManager.isNewFormat(projectData)) {
@@ -1934,7 +1934,7 @@ export function ComponentsSidebar({
                                             }}
                                             title="Удалить лист"
                                           >
-                                            🗑️
+                                            <Trash2 className="h-4 w-4" />
                                           </Button>
                                         )}
                                       </div>
