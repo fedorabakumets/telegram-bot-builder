@@ -17,18 +17,56 @@ interface HeaderProps {
 function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSaveAsTemplate, onLoadTemplate, isSaving }: HeaderProps) {
   const headerRef = useRef<HTMLHeadElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const lastLogRef = useRef(0);
+  const mouseCountRef = useRef(0);
+  const renderCountRef = useRef(0);
+  const lastRenderLogRef = useRef(0);
   
-  // Отслеживание позиции мышки для диагностики
+  // 🟡 ЛОГИРОВАНИЕ РЕНДЕРОВ: Отслеживаем как часто header рендерится
+  renderCountRef.current++;
+  useEffect(() => {
+    const now = performance.now();
+    if (now - lastRenderLogRef.current > 300) {
+      console.log(`🟡 HEADER RENDER #${renderCountRef.current} at ${now.toFixed(0)}ms`);
+      lastRenderLogRef.current = now;
+    }
+  });
+  
+  // 🖱️ УЛУЧШЕННОЕ ОТСЛЕЖИВАНИЕ МЫШКИ: Логируем движение в header каждые 500ms
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const headerRect = headerRef.current?.getBoundingClientRect();
       if (headerRect && e.clientY < headerRect.bottom) {
         setMousePos({ x: e.clientX, y: e.clientY });
+        mouseCountRef.current++;
+        
+        const now = performance.now();
+        if (now - lastLogRef.current > 500) {
+          const elementUnderMouse = document.elementFromPoint(e.clientX, e.clientY);
+          console.log(`🖱️ HEADER MOUSE: pos=(${e.clientX}, ${e.clientY}), element=${elementUnderMouse?.tagName}.${elementUnderMouse?.className?.split(' ')[0]}`);
+          lastLogRef.current = now;
+        }
       }
     };
     
+    const handleMouseEnter = () => {
+      console.log(`➡️ MOUSE ENTER HEADER`);
+    };
+    
+    const handleMouseLeave = () => {
+      console.log(`⬅️ MOUSE LEAVE HEADER`);
+      mouseCountRef.current = 0;
+    };
+    
     document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
+    headerRef.current?.addEventListener('mouseenter', handleMouseEnter);
+    headerRef.current?.addEventListener('mouseleave', handleMouseLeave);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      headerRef.current?.removeEventListener('mouseenter', handleMouseEnter);
+      headerRef.current?.removeEventListener('mouseleave', handleMouseLeave);
+    };
   }, []);
 
   // Логировать изменения стилей в header
