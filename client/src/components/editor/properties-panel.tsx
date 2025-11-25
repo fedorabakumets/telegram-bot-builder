@@ -930,14 +930,59 @@ export function PropertiesPanel({
       <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/40 dark:to-slate-900/30 border-b border-border/50 backdrop-blur-sm">
         <div className="p-3 sm:p-4 space-y-3">
           {/* Main Info Row */}
-          <div className="flex items-start gap-2.5 sm:gap-3">
+          <div className="flex items-start gap-2.5 sm:gap-3 flex-wrap">
             <div className={`w-9 sm:w-10 h-9 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${nodeColors[selectedNode.type]}`}>
               <i className={`${nodeIcons[selectedNode.type]} text-sm sm:text-base`}></i>
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight">
-                {nodeTypeNames[selectedNode.type]}
-              </h2>
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h2 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight">
+                  {nodeTypeNames[selectedNode.type]}
+                </h2>
+              </div>
+              <Select
+                value={selectedNode.type}
+                onValueChange={(value) => {
+                  if (onNodeTypeChange) {
+                    const newData = getDefaultDataForType(value as Node['type']);
+                    const preservedData = {
+                      messageText: selectedNode.data.messageText,
+                      keyboardType: selectedNode.data.keyboardType,
+                      buttons: selectedNode.data.buttons,
+                      markdown: selectedNode.data.markdown,
+                      oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
+                      resizeKeyboard: selectedNode.data.resizeKeyboard
+                    };
+                    const finalData = { ...newData, ...preservedData };
+                    onNodeTypeChange(selectedNode.id, value as Node['type'], finalData);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-auto text-xs sm:text-sm border-slate-200 dark:border-slate-700 focus:border-slate-500 focus:ring-slate-200/50 bg-white dark:bg-slate-950">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
+                  <SelectItem value="sticker">😀 Стикер</SelectItem>
+                  <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
+                  <SelectItem value="animation">🎞️ GIF анимация</SelectItem>
+                  <SelectItem value="location">📍 Геолокация</SelectItem>
+                  <SelectItem value="contact">📞 Контакт</SelectItem>
+                  <SelectItem value="start">▶️ /start команда</SelectItem>
+                  <SelectItem value="command">🔧 Пользовательская команда</SelectItem>
+                  <SelectItem value="pin_message">📌 Закрепить сообщение</SelectItem>
+                  <SelectItem value="unpin_message">📌❌ Открепить сообщение</SelectItem>
+                  <SelectItem value="delete_message">🗑️ Удалить сообщение</SelectItem>
+                  <SelectItem value="ban_user">🚫 Заблокировать пользователя</SelectItem>
+                  <SelectItem value="unban_user">✅ Разблокировать пользователя</SelectItem>
+                  <SelectItem value="mute_user">🔇 Ограничить пользователя</SelectItem>
+                  <SelectItem value="unmute_user">🔊 Снять ограничения</SelectItem>
+                  <SelectItem value="kick_user">👢 Исключить пользователя</SelectItem>
+                  <SelectItem value="promote_user">👑 Назначить администратором</SelectItem>
+                  <SelectItem value="demote_user">👤 Снять с администратора</SelectItem>
+                  <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground mt-1">Элемент: <span className="font-semibold text-foreground">{selectedNode.type}</span></p>
             </div>
           </div>
@@ -982,56 +1027,6 @@ export function PropertiesPanel({
             <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Основные настройки</h3>
           </div>
           <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm">
-            {/* Node Type Selector */}
-            <div className="space-y-2 sm:space-y-2.5">
-              <Label className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <i className="fas fa-cube text-slate-600 dark:text-slate-400 text-xs sm:text-sm"></i>
-                Тип элемента
-              </Label>
-              <Select
-                value={selectedNode.type}
-                onValueChange={(value) => {
-                  if (onNodeTypeChange) {
-                    const newData = getDefaultDataForType(value as Node['type']);
-                    const preservedData = {
-                      messageText: selectedNode.data.messageText,
-                      keyboardType: selectedNode.data.keyboardType,
-                      buttons: selectedNode.data.buttons,
-                      markdown: selectedNode.data.markdown,
-                      oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
-                      resizeKeyboard: selectedNode.data.resizeKeyboard
-                    };
-                    const finalData = { ...newData, ...preservedData };
-                    onNodeTypeChange(selectedNode.id, value as Node['type'], finalData);
-                  }
-                }}
-              >
-                <SelectTrigger className="text-xs sm:text-sm border-slate-200 dark:border-slate-700 focus:border-slate-500 focus:ring-slate-200/50 bg-white dark:bg-slate-950">
-                  <SelectValue placeholder="Выберите тип элемента..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
-                  <SelectItem value="sticker">😀 Стикер</SelectItem>
-                  <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
-                  <SelectItem value="animation">🎞️ GIF анимация</SelectItem>
-                  <SelectItem value="location">📍 Геолокация</SelectItem>
-                  <SelectItem value="contact">📞 Контакт</SelectItem>
-                  <SelectItem value="start">▶️ /start команда</SelectItem>
-                  <SelectItem value="command">🔧 Пользовательская команда</SelectItem>
-                  <SelectItem value="pin_message">📌 Закрепить сообщение</SelectItem>
-                  <SelectItem value="unpin_message">📌❌ Открепить сообщение</SelectItem>
-                  <SelectItem value="delete_message">🗑️ Удалить сообщение</SelectItem>
-                  <SelectItem value="ban_user">🚫 Заблокировать пользователя</SelectItem>
-                  <SelectItem value="unban_user">✅ Разблокировать пользователя</SelectItem>
-                  <SelectItem value="mute_user">🔇 Ограничить пользователя</SelectItem>
-                  <SelectItem value="unmute_user">🔊 Снять ограничения</SelectItem>
-                  <SelectItem value="kick_user">👢 Исключить пользователя</SelectItem>
-                  <SelectItem value="promote_user">👑 Назначить администратором</SelectItem>
-                  <SelectItem value="demote_user">👤 Снять с администратора</SelectItem>
-                  <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
               <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
