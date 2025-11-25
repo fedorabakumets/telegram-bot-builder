@@ -314,6 +314,21 @@ export default function TemplatesPageWrapper() {
   );
 }
 
+// Функция преобразования категории в русское название
+function getCategoryLabel(category: string): string {
+  const categoryMap: Record<string, string> = {
+    'business': 'Бизнес',
+    'community': 'Сообщество',
+    'custom': 'Пользовательский',
+    'entertainment': 'Развлечения',
+    'education': 'Образование',
+    'utility': 'Утилиты',
+    'games': 'Игры',
+    'official': 'Официальный'
+  };
+  return categoryMap[category] || category;
+}
+
 // Компонент для сетки шаблонов
 function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: { 
   templates: BotTemplate[], 
@@ -349,7 +364,7 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                   <CardTitle className="text-lg">{template.name}</CardTitle>
                   {template.ownerId === null ? (
                     <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
-                      Официальный
+                      {getCategoryLabel(template.category || 'official')}
                     </Badge>
                   ) : (
                     <Badge variant="secondary" title={template.authorName || undefined}>
