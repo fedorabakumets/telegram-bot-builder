@@ -1154,8 +1154,6 @@ export function PropertiesPanel({
                 </div>
               </div>
             )}
-          </div>
-        </section>
 
 
             {/* Sticker Configuration */}
