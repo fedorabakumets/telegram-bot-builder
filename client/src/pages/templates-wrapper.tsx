@@ -85,6 +85,7 @@ export default function TemplatesPageWrapper() {
   const categories = [
     { value: 'all', label: 'Все категории' },
     { value: 'official', label: 'Официальные' },
+    { value: 'userTemplates', label: 'Пользовательские' },
     { value: 'community', label: 'Сообщество' },
     { value: 'business', label: 'Бизнес' },
     { value: 'entertainment', label: 'Развлечения' },
@@ -117,6 +118,9 @@ export default function TemplatesPageWrapper() {
       if (selectedCategory === 'official') {
         // Официальные шаблоны - это системные шаблоны (ownerId === null)
         currentTemplates = currentTemplates.filter(template => template.ownerId === null);
+      } else if (selectedCategory === 'userTemplates') {
+        // Пользовательские шаблоны - это все что не официальные (ownerId !== null)
+        currentTemplates = currentTemplates.filter(template => template.ownerId !== null);
       } else {
         // Остальные категории - фильтруем по полю category
         currentTemplates = currentTemplates.filter(template => template.category === selectedCategory);
@@ -363,9 +367,14 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <CardTitle className="text-lg">{template.name}</CardTitle>
                   {template.ownerId === null ? (
-                    <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
-                      {getCategoryLabel(template.category || 'official')}
-                    </Badge>
+                    <>
+                      <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
+                        Официальный
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {getCategoryLabel(template.category || 'official')}
+                      </Badge>
+                    </>
                   ) : (
                     <Badge variant="secondary" title={template.authorName || undefined}>
                       От пользователя {template.authorName ? `@${template.authorName}` : ''}
