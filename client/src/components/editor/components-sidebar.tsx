@@ -1843,10 +1843,12 @@ export function ComponentsSidebar({
                                                 <Share2 className="h-3 w-3" />
                                               </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-44" side="top" sideOffset={5}>
-                                              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Переместить в:</div>
+                                            <DropdownMenuContent align="end" className="w-56" side="top" sideOffset={5}>
+                                              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Переместить в</div>
                                               {projects.map((otherProject) => {
                                                 if (otherProject.id === project.id) return null;
+                                                const targetInfo = getSheetsInfo(otherProject);
+                                                const targetNodeCount = getNodeCount(otherProject);
                                                 return (
                                                   <DropdownMenuItem
                                                     key={otherProject.id}
@@ -1890,8 +1892,24 @@ export function ComponentsSidebar({
                                                         });
                                                       }
                                                     }}
+                                                    className="flex flex-col gap-1.5 cursor-pointer py-2.5"
                                                   >
-                                                    {otherProject.name}
+                                                    <div className="flex items-center justify-between gap-2">
+                                                      <span className="font-medium text-sm truncate">{otherProject.name}</span>
+                                                      {otherProject.ownerId === null && (
+                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300 font-medium flex-shrink-0">👥</span>
+                                                      )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                      <span className="text-xs bg-blue-500/10 dark:bg-blue-600/15 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                                        <Zap className="h-2.5 w-2.5" />
+                                                        {targetNodeCount}
+                                                      </span>
+                                                      <span className="text-xs bg-purple-500/10 dark:bg-purple-600/15 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                                        <FileText className="h-2.5 w-2.5" />
+                                                        {targetInfo.count}
+                                                      </span>
+                                                    </div>
                                                   </DropdownMenuItem>
                                                 );
                                               })}
