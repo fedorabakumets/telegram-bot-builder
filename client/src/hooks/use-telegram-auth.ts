@@ -90,8 +90,9 @@ export function useTelegramAuth() {
     setUser(userData);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-      // Инвалидируем кеш при входе
-      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+      // КРИТИЧНО: Удаляем старый кеш гостя и инвалидируем новый для авторизованного пользователя
+      queryClient.removeQueries({ queryKey: ['/api/templates/category/custom', 'guest'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom', userData.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
     } catch (e) {

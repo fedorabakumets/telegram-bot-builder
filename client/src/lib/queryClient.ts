@@ -56,25 +56,31 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: async ({ queryKey }) => {
+        const queryFn = getQueryFn({ on401: "throw" });
+        return queryFn({ queryKey } as any);
+      },
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 10 * 60 * 1000, // 10 минут кеш для всех данных (увеличено для лучшей производительности)
+      staleTime: (query) => {
+        // Шаблоны и проекты имеют короче время жизни кеша для динамичности
+        const key = query.queryKey[0];
+        if (typeof key === 'string' && (key.includes('/api/templates') || key.includes('/api/projects'))) {
+          return 1 * 60 * 1000; // 1 минута для шаблонов и проектов
+        }
+        return 10 * 60 * 1000; // 10 минут для остального
+      },
       gcTime: 30 * 60 * 1000, // 30 минут в garbage collection
       retry: (failureCount, error: any) => {
-        // Для 503 ошибок (сервер загружается) - делаем больше попыток
         if (error?.message?.includes('503') || error?.message?.includes('загружается')) {
-          return failureCount < 5; // До 5 попыток при загрузке сервера
+          return failureCount < 5;
         }
-        // Для остальных ошибок - 1 попытка
         return failureCount < 1;
       },
       retryDelay: (attemptIndex, error: any) => {
-        // Для 503 ошибок - быстрые повторные попытки
         if (error?.message?.includes('503') || error?.message?.includes('загружается')) {
-          return Math.min(1000 * Math.pow(1.5, attemptIndex), 3000); // 1с, 1.5с, 2.25с, 3с
+          return Math.min(1000 * Math.pow(1.5, attemptIndex), 3000);
         }
-        // Для остальных - стандартная задержка
         return Math.min(1000 * Math.pow(2, attemptIndex), 30000);
       },
     },

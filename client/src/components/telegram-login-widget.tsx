@@ -96,8 +96,9 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
           // Сохраняем в локальном состоянии (БД уже сохранила)
           login(userData);
           
-          // Инвалидируем кеш для обновления данных
-          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+          // КРИТИЧНО: Удаляем кеш со старым ключом гостя и инвалидируем новый
+          queryClient.removeQueries({ queryKey: ['/api/templates/category/custom', 'guest'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom', userData.id] });
           queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
           queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
           
