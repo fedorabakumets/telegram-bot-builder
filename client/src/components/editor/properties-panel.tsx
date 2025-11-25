@@ -983,15 +983,16 @@ export function PropertiesPanel({
           </div>
           <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm">
             {/* Node Type Selector */}
-            <div>
-              <Label className="text-xs font-medium text-muted-foreground">Тип элемента</Label>
+            <div className="space-y-2 sm:space-y-2.5">
+              <Label className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <i className="fas fa-cube text-slate-600 dark:text-slate-400 text-xs sm:text-sm"></i>
+                Тип элемента
+              </Label>
               <Select
                 value={selectedNode.type}
                 onValueChange={(value) => {
                   if (onNodeTypeChange) {
-                    // Создаем новые данные для узла в зависимости от типа
                     const newData = getDefaultDataForType(value as Node['type']);
-                    // Сохраняем некоторые общие поля
                     const preservedData = {
                       messageText: selectedNode.data.messageText,
                       keyboardType: selectedNode.data.keyboardType,
@@ -1000,17 +1001,13 @@ export function PropertiesPanel({
                       oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
                       resizeKeyboard: selectedNode.data.resizeKeyboard
                     };
-                    
-                    // Объединяем данные
                     const finalData = { ...newData, ...preservedData };
-                    
-                    // Вызываем функцию обновления типа
                     onNodeTypeChange(selectedNode.id, value as Node['type'], finalData);
                   }
                 }}
               >
-                <SelectTrigger className="mt-2">
-                  <SelectValue />
+                <SelectTrigger className="text-xs sm:text-sm border-slate-200 dark:border-slate-700 focus:border-slate-500 focus:ring-slate-200/50 bg-white dark:bg-slate-950">
+                  <SelectValue placeholder="Выберите тип элемента..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
@@ -1034,6 +1031,12 @@ export function PropertiesPanel({
                   <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/50 dark:border-slate-800/40">
+                <i className="fas fa-circle-info text-slate-600 dark:text-slate-400 text-xs mt-0.5 flex-shrink-0"></i>
+                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                  Выберите тип элемента для настройки его специфических параметров
+                </p>
+              </div>
             </div>
 
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
