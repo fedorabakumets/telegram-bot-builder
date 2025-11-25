@@ -1728,15 +1728,18 @@ export function ComponentsSidebar({
                       </Button>
                     </div>
                     
-                    <div className="space-y-3 text-sm">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="flex items-center bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-600/20 dark:to-cyan-600/15 px-3 py-1.5 rounded-lg border border-blue-400/20 dark:border-blue-500/20 font-semibold text-slate-700 dark:text-slate-300">
-                          <Zap className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="flex items-center gap-1.5 bg-blue-500/10 dark:bg-blue-600/15 px-2.5 py-1 rounded-lg border border-blue-400/20 dark:border-blue-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
+                          <Zap className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                           <span>{getNodeCount(project)}</span>
-                          <span className="ml-1 text-slate-600 dark:text-slate-400">узлов</span>
                         </span>
-                        <span className="flex items-center text-xs text-slate-600 dark:text-slate-400 font-medium">
-                          <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-500 dark:text-slate-500" />
+                        <span className="flex items-center gap-1.5 bg-purple-500/10 dark:bg-purple-600/15 px-2.5 py-1 rounded-lg border border-purple-400/20 dark:border-purple-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
+                          <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                          <span>{(() => { const info = getSheetsInfo(project); return info.count; })()}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                          <Calendar className="h-3.5 w-3.5 text-slate-500 dark:text-slate-500" />
                           {formatDate(project.updatedAt)}
                         </span>
                       </div>
@@ -1745,32 +1748,9 @@ export function ComponentsSidebar({
                       {(() => {
                         const sheetsInfo = getSheetsInfo(project);
                         return (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center text-sm bg-gradient-to-r from-purple-500/15 to-pink-500/10 dark:from-purple-600/20 dark:to-pink-600/15 px-3 py-1.5 rounded-lg border border-purple-400/20 dark:border-purple-500/20 font-semibold text-slate-700 dark:text-slate-300">
-                                <FileText className="h-4 w-4 mr-2 text-purple-600 dark:text-purple-400" />
-                                <span>{sheetsInfo.count}</span>
-                                <span className="ml-1 text-slate-600 dark:text-slate-400">{sheetsInfo.count === 1 ? 'лист' : sheetsInfo.count < 5 ? 'листа' : 'листов'}</span>
-                              </div>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-7 w-7 p-0 hidden group-hover:flex hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg transition-all"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (currentProjectId === project.id && onSheetAdd) {
-                                    const sheetsInfo = getSheetsInfo(project);
-                                    const newSheetName = `Лист ${sheetsInfo.count + 1}`;
-                                    onSheetAdd(newSheetName);
-                                  }
-                                }}
-                                title="Добавить лист"
-                              >
-                                <Plus className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
+                          <div className="space-y-1.5">
                             {sheetsInfo.names.length > 0 && (
-                              <div className="space-y-1.5 mt-2">
+                              <div className="space-y-1">
                                 {sheetsInfo.names.map((name: string, index: number) => {
                                 const projectData = project.data as any;
                                 const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
@@ -1778,7 +1758,7 @@ export function ComponentsSidebar({
                                 const isEditing = editingSheetId !== null && sheetId !== null && editingSheetId === sheetId;
                                 
                                 return (
-                                  <div key={index} className="flex items-center gap-2.5 group/sheet px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors">
+                                  <div key={index} className="flex items-center gap-1.5 group/sheet px-2 py-1 rounded-md hover:bg-muted/50 transition-colors">
                                     {isEditing ? (
                                       <Input
                                         value={editingSheetName}
@@ -1803,8 +1783,8 @@ export function ComponentsSidebar({
                                         onDragEnd={(e) => {
                                           setDraggedSheet(null);
                                         }}
-                                        className={`text-xs px-2.5 py-1 min-h-6 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center justify-center text-center ${
-                                          isActive ? 'bg-primary text-primary-foreground shadow-sm font-semibold' : 'bg-muted/70 text-foreground hover:bg-muted'
+                                        className={`text-xs px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center ${
+                                          isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-foreground hover:bg-muted'
                                         } ${
                                           draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
                                         }`}
@@ -1826,17 +1806,17 @@ export function ComponentsSidebar({
                                         }}
                                         title={name}
                                       >
-                                        <span className="block">{name || 'Без названия'}</span>
+                                        <span className="truncate">{name || 'Без названия'}</span>
                                       </div>
                                     )}
                                     
                                     {/* Кнопки управления листом */}
                                     {currentProjectId === project.id && !isEditing && (
-                                      <div className="flex gap-1.5 opacity-70 group-hover/sheet:opacity-100 transition-opacity flex-shrink-0">
+                                      <div className="flex gap-1 opacity-0 group-hover/sheet:opacity-100 transition-opacity flex-shrink-0">
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="h-7 w-7 p-0 hover:bg-green-500/20 text-green-600 dark:text-green-400 rounded-lg transition-all"
+                                          className="h-6 w-6 p-0 hover:bg-green-500/20 text-green-600 dark:text-green-400 rounded transition-all"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             if (SheetsManager.isNewFormat(projectData)) {
@@ -1848,7 +1828,7 @@ export function ComponentsSidebar({
                                           }}
                                           title="Дублировать лист"
                                         >
-                                          <Copy className="h-4 w-4" />
+                                          <Copy className="h-3 w-3" />
                                         </Button>
 
                                         {projects.length > 1 && (
@@ -1857,10 +1837,10 @@ export function ComponentsSidebar({
                                               <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-7 w-7 p-0 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-all"
+                                                className="h-6 w-6 p-0 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded transition-all"
                                                 title="Переместить в другой проект"
                                               >
-                                                <Share2 className="h-4 w-4" />
+                                                <Share2 className="h-3 w-3" />
                                               </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-44" side="top" sideOffset={5}>
@@ -1923,7 +1903,7 @@ export function ComponentsSidebar({
                                           <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-7 w-7 p-0 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-all"
+                                            className="h-6 w-6 p-0 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded transition-all"
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               if (sheetId && SheetsManager.isNewFormat(projectData)) {
@@ -1934,7 +1914,7 @@ export function ComponentsSidebar({
                                             }}
                                             title="Удалить лист"
                                           >
-                                            <Trash2 className="h-4 w-4" />
+                                            <Trash2 className="h-3 w-3" />
                                           </Button>
                                         )}
                                       </div>
