@@ -1168,17 +1168,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all bot projects (lightweight - without data field)
   app.get("/api/projects/list", requireDbReady, async (req, res) => {
     try {
-      const telegramUserId = req.query.userId ? parseInt(req.query.userId as string) : null;
-      
-      // Требуем userId для фильтрации проектов
-      if (!telegramUserId) {
-        return res.json([]);
-      }
-      
       const projects = await getCachedOrExecute(
-        `projects-list-user-${telegramUserId}`,
+        'all-projects-list',
         async () => {
-          const allProjects = await storage.getBotProjectsByUser(telegramUserId);
+          const allProjects = await storage.getAllBotProjects();
           // Возвращаем только метаданные, без поля data
           return allProjects.map(({ data, ...metadata }) => metadata);
         },
@@ -1193,16 +1186,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all bot projects (legacy - includes data field, used for compatibility)
   app.get("/api/projects", requireDbReady, async (req, res) => {
     try {
-      const telegramUserId = req.query.userId ? parseInt(req.query.userId as string) : null;
-      
-      // Требуем userId для фильтрации проектов
-      if (!telegramUserId) {
-        return res.json([]);
-      }
-      
       const projects = await getCachedOrExecute(
-        `projects-user-${telegramUserId}`,
-        () => storage.getBotProjectsByUser(telegramUserId),
+        'all-projects',
+        () => storage.getAllBotProjects(),
         30000 // Кешируем на 30 секунд
       );
       res.json(projects);
@@ -1241,28 +1227,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", requireDbReady, async (req, res) => {
     try {
       const validatedData = insertBotProjectSchema.parse(req.body);
-      const project = await storage.createBotProject(validatedData);
-      res.status(201).json(project);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create project" });
-    }
-  });
-
-  // Create new bot project with telegram user
-  app.post("/api/projects/user/:userId", requireDbReady, async (req, res) => {
-    try {
-      const telegramUserId = parseInt(req.params.userId);
-      if (!telegramUserId || isNaN(telegramUserId)) {
-        return res.status(400).json({ message: "Invalid telegram user ID" });
-      }
-
-      const validatedData = insertBotProjectSchema.parse({
-        ...req.body,
-        telegramUserId
-      });
       const project = await storage.createBotProject(validatedData);
       res.status(201).json(project);
     } catch (error) {

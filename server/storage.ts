@@ -43,7 +43,6 @@ import { cachedOps } from "./db-cache";
 export interface IStorage {
   getBotProject(id: number): Promise<BotProject | undefined>;
   getAllBotProjects(): Promise<BotProject[]>;
-  getBotProjectsByUser(telegramUserId: number): Promise<BotProject[]>;
   createBotProject(project: InsertBotProject): Promise<BotProject>;
   updateBotProject(id: number, project: Partial<InsertBotProject>): Promise<BotProject | undefined>;
   deleteBotProject(id: number): Promise<boolean>;
@@ -218,10 +217,6 @@ class MemStorage implements IStorage {
 
   async getAllBotProjects(): Promise<BotProject[]> {
     return Array.from(this.projects.values());
-  }
-
-  async getBotProjectsByUser(telegramUserId: number): Promise<BotProject[]> {
-    return Array.from(this.projects.values()).filter(p => p.telegramUserId === telegramUserId);
   }
 
   async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
@@ -776,10 +771,6 @@ export class DatabaseStorage implements IStorage {
 
   async getAllBotProjects(): Promise<BotProject[]> {
     return await this.db.select().from(botProjects).orderBy(desc(botProjects.updatedAt));
-  }
-
-  async getBotProjectsByUser(telegramUserId: number): Promise<BotProject[]> {
-    return await this.db.select().from(botProjects).where(eq(botProjects.telegramUserId, telegramUserId)).orderBy(desc(botProjects.updatedAt));
   }
 
   async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {

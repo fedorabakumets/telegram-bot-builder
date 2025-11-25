@@ -353,27 +353,10 @@ export default function Editor() {
     staleTime: 30000, // Кешируем на 30 секунд
   });
 
-  // Get telegram user ID from local storage
-  const getUserIdFromStorage = () => {
-    try {
-      const userStr = localStorage.getItem('telegramUser');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        return user.id;
-      }
-    } catch (e) {
-      console.error('Failed to get user ID from storage:', e);
-    }
-    return null;
-  };
-
-  const telegramUserId = getUserIdFromStorage();
-
   // If no projectId in URL, load project list to get first project ID
   const { data: projectsList, isLoading: isListLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
-    queryKey: ['/api/projects/list', telegramUserId],
-    queryFn: () => apiRequest('GET', `/api/projects/list${telegramUserId ? `?userId=${telegramUserId}` : ''}`),
-    enabled: !projectId && !!telegramUserId, // Загружаем список только если нет ID в URL И есть userId
+    queryKey: ['/api/projects/list'],
+    enabled: !projectId, // Загружаем список только если нет ID в URL
     staleTime: 30000,
   });
 
@@ -383,7 +366,7 @@ export default function Editor() {
   // Load first project if no projectId in URL and we have the ID from list
   const { data: firstProject, isLoading: isFirstProjectLoading } = useQuery<BotProject>({
     queryKey: [`/api/projects/${effectiveProjectId}`],
-    enabled: !projectId && !!effectiveProjectId && typeof effectiveProjectId === 'number' && !!telegramUserId,
+    enabled: !projectId && !!effectiveProjectId && typeof effectiveProjectId === 'number', // Добавить проверку типа
     staleTime: 30000,
   });
 
@@ -391,15 +374,8 @@ export default function Editor() {
   // Use the appropriate project
   const activeProject = projectId ? currentProject : firstProject;
 
-  // Determine if we're still loading - more explicit logic
-  const isProjectLoaded = !!activeProject;
-  const isLoadingProject = !isProjectLoaded && (projectId ? isProjectLoading : (isListLoading || isFirstProjectLoading));
-  
-  // Check if user is not authenticated (no userId)
-  const isNotAuthenticated = !telegramUserId && !projectId;
-  
-  // Check if we have no projects for this user (only after list is loaded)
-  const hasNoProjects = !isListLoading && telegramUserId && !projectId && (!projectsList || projectsList.length === 0);
+  // Determine if we're still loading
+  const isLoadingProject = projectId ? isProjectLoading : (isListLoading || isFirstProjectLoading);
 
 
 
@@ -1338,58 +1314,6 @@ export default function Editor() {
 
     return null;
   };
-
-  // Handle not authenticated
-  if (isNotAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">Требуется вход</h1>
-          <p className="text-muted-foreground">
-            Пожалуйста, войдите через Telegram, чтобы создавать и редактировать ботов
-          </p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Перезагрузить страницу
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle no projects for authenticated user
-  if (hasNoProjects) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">Нет проектов</h1>
-          <p className="text-muted-foreground">
-            У вас еще нет проектов. Перейдите на главную страницу для создания нового проекта.
-          </p>
-          <button 
-            onClick={() => setLocation('/')}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            На главную
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle project loading
-  if (isLoadingProject || !activeProject) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="text-muted-foreground">Загрузка проекта...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
