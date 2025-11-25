@@ -334,73 +334,69 @@ export function AdaptiveHeader({
     <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-2 lg:w-auto lg:order-none lg:ml-auto'}`}>
       
       {/* Кнопки управления макетом */}
-      {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
-        <div className="flex items-center space-x-0.5 bg-gradient-to-r from-slate-600/15 to-slate-500/10 dark:from-slate-700/40 dark:to-slate-600/30 backdrop-blur-lg border border-slate-400/20 dark:border-slate-500/40 rounded-xl p-1.5 shadow-lg shadow-slate-500/10 dark:shadow-slate-900/30">
-          {onToggleHeader && (
-            <Button
-              variant={headerVisible ? "default" : "outline"}
-              size="sm"
-              onClick={onToggleHeader}
-              className={`h-8 w-8 p-0 transition-all duration-200 ${headerVisible ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
-              title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
-              data-testid="button-toggle-header"
-            >
-              <NavigationIcon className="w-3.5 h-3.5" />
-            </Button>
-          )}
-          
-          {onToggleSidebar && (
-            <Button
-              variant={sidebarVisible ? "default" : "outline"}
-              size="sm"
-              onClick={onToggleSidebar}
-              className={`h-8 w-8 p-0 transition-all duration-200 ${sidebarVisible ? 'bg-gradient-to-br from-purple-600 to-purple-500 text-white shadow-md shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
-              title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
-              data-testid="button-toggle-sidebar"
-            >
-              <Sidebar className="w-3.5 h-3.5" />
-            </Button>
-          )}
-          
-          {onToggleCanvas && (
-            <Button
-              variant={canvasVisible ? "default" : "outline"}
-              size="sm"
-              onClick={onToggleCanvas}
-              className={`h-8 w-8 p-0 transition-all duration-200 ${canvasVisible ? 'bg-gradient-to-br from-cyan-600 to-cyan-500 text-white shadow-md shadow-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
-              title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
-              data-testid="button-toggle-canvas"
-            >
-              <Monitor className="w-3.5 h-3.5" />
-            </Button>
-          )}
-          
-          {onToggleProperties && (
-            <Button
-              variant={propertiesVisible ? "default" : "outline"}
-              size="sm"
-              onClick={onToggleProperties}
-              className={`h-8 w-8 p-0 transition-all duration-200 ${propertiesVisible ? 'bg-gradient-to-br from-pink-600 to-pink-500 text-white shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
-              title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
-              data-testid="button-toggle-properties"
-            >
-              <Sliders className="w-3.5 h-3.5" />
-            </Button>
-          )}
-          
-          {onToggleCode && (
-            <Button
-              variant={codeVisible ? "default" : "outline"}
-              size="sm"
-              onClick={onToggleCode}
-              className={`h-8 w-8 p-0 transition-all duration-200 ${codeVisible ? 'bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40' : 'hover:bg-slate-300/40 dark:hover:bg-slate-600/50'}`}
-              title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
-              data-testid="button-toggle-code"
-            >
-              <Code className="w-3.5 h-3.5" />
-            </Button>
-          )}
-        </div>
+      {onToggleHeader && (
+        <Button
+          variant={headerVisible ? "default" : "outline"}
+          size="sm"
+          onClick={onToggleHeader}
+          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${headerVisible ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
+          title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
+          data-testid="button-toggle-header"
+        >
+          <NavigationIcon className="w-3.5 h-3.5" />
+        </Button>
+      )}
+      
+      {onToggleSidebar && (
+        <Button
+          variant={sidebarVisible ? "default" : "outline"}
+          size="sm"
+          onClick={onToggleSidebar}
+          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${sidebarVisible ? 'bg-gradient-to-br from-purple-600 to-purple-500 text-white shadow-md shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
+          title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
+          data-testid="button-toggle-sidebar"
+        >
+          <Sidebar className="w-3.5 h-3.5" />
+        </Button>
+      )}
+      
+      {onToggleCanvas && (
+        <Button
+          variant={canvasVisible ? "default" : "outline"}
+          size="sm"
+          onClick={onToggleCanvas}
+          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${canvasVisible ? 'bg-gradient-to-br from-cyan-600 to-cyan-500 text-white shadow-md shadow-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
+          title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
+          data-testid="button-toggle-canvas"
+        >
+          <Monitor className="w-3.5 h-3.5" />
+        </Button>
+      )}
+      
+      {onToggleProperties && (
+        <Button
+          variant={propertiesVisible ? "default" : "outline"}
+          size="sm"
+          onClick={onToggleProperties}
+          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${propertiesVisible ? 'bg-gradient-to-br from-pink-600 to-pink-500 text-white shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
+          title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
+          data-testid="button-toggle-properties"
+        >
+          <Sliders className="w-3.5 h-3.5" />
+        </Button>
+      )}
+      
+      {onToggleCode && (
+        <Button
+          variant={codeVisible ? "default" : "outline"}
+          size="sm"
+          onClick={onToggleCode}
+          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${codeVisible ? 'bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
+          title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
+          data-testid="button-toggle-code"
+        >
+          <Code className="w-3.5 h-3.5" />
+        </Button>
       )}
       
       {onLoadTemplate && (
