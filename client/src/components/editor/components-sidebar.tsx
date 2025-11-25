@@ -1658,7 +1658,6 @@ export function ComponentsSidebar({
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
                       handleProjectDragOver(e, project.id);
-                      // Также обрабатываем drop листов на проект
                       if (draggedSheet) {
                         console.log('🎯 Sheet over project:', project.id);
                         setDragOverSheet(`project-${project.id}`);
@@ -1670,47 +1669,45 @@ export function ComponentsSidebar({
                     }}
                     onDrop={(e) => {
                       console.log('🎯 Drop on project:', draggedSheet, draggedProject);
-                      // Если перетаскиваем лист - используем специальный обработчик
                       if (draggedSheet) {
                         handleSheetDropOnProject(e, project.id);
                       } else if (draggedProject) {
-                        // Иначе обрабатываем перемещение проекта
                         handleProjectDrop(e, project);
                       }
                     }}
                     onDragEnd={handleProjectDragEnd}
-                    className={`group p-5 rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm ${
+                    className={`group p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm ${
                       currentProjectId === project.id 
-                        ? 'bg-gradient-to-br from-blue-600/15 to-cyan-600/10 dark:from-blue-600/25 dark:to-cyan-600/15 border-blue-500/40 dark:border-blue-400/40 shadow-xl shadow-blue-500/20 scale-105' 
+                        ? 'bg-gradient-to-br from-blue-600/15 to-cyan-600/10 dark:from-blue-600/25 dark:to-cyan-600/15 border-blue-500/40 dark:border-blue-400/40 shadow-xl shadow-blue-500/20 scale-100 sm:scale-105' 
                         : 'bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-900/40 dark:to-slate-800/30 border-slate-300/30 dark:border-slate-700/30 hover:border-slate-400/50 dark:hover:border-slate-600/50 hover:bg-gradient-to-br hover:from-slate-100/70 hover:to-slate-100/40 dark:hover:from-slate-800/60 dark:hover:to-slate-700/40 hover:shadow-lg hover:shadow-slate-500/15'
                     } ${
-                      dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 scale-105 shadow-2xl shadow-blue-500/40 bg-gradient-to-br from-blue-600/20 to-cyan-600/15 dark:from-blue-600/35 dark:to-cyan-600/25' : ''
+                      dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 sm:scale-105 shadow-2xl shadow-blue-500/40 bg-gradient-to-br from-blue-600/20 to-cyan-600/15 dark:from-blue-600/35 dark:to-cyan-600/25' : ''
                     } ${
                       draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
                     }`}
                     onClick={() => onProjectSelect && onProjectSelect(project.id)}
                   >
-                    <div className="flex gap-3 mb-4">
-                      <div className="cursor-grab active:cursor-grabbing opacity-60 group-hover:opacity-100 transition-opacity flex hover:text-blue-500 flex-shrink-0 mt-1">
+                    <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <div className="hidden sm:flex cursor-grab active:cursor-grabbing opacity-60 group-hover:opacity-100 transition-opacity hover:text-blue-500 flex-shrink-0 mt-1">
                         <GripVertical className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                       </div>
-                      <div className="flex-1">
-                        <div className="mb-2 space-y-2">
-                          <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-snug">
+                      <div className="flex-1 min-w-0">
+                        <div className="mb-1.5 sm:mb-2 space-y-1 sm:space-y-2">
+                          <h4 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-snug line-clamp-2">
                             {project.name}
                           </h4>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs px-2.5 py-1 rounded-full whitespace-nowrap font-semibold backdrop-blur-sm flex-shrink-0 ${
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full whitespace-nowrap font-semibold backdrop-blur-sm flex-shrink-0 ${
                               project.ownerId === null 
                                 ? 'bg-blue-500/20 border border-blue-400/30 text-blue-700 dark:text-blue-300' 
                                 : 'bg-green-500/20 border border-green-400/30 text-green-700 dark:text-green-300'
                             }`}>
-                              {project.ownerId === null ? '👥 Гостевой' : '👤 Мой'}
+                              {project.ownerId === null ? '👥' : '👤'}
                             </span>
                           </div>
                         </div>
                         {project.description && (
-                          <p className="text-sm text-slate-600 dark:text-slate-400 break-words line-clamp-3 leading-relaxed">
+                          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 break-words line-clamp-2 sm:line-clamp-3 leading-relaxed">
                             {project.description}
                           </p>
                         )}
@@ -1722,25 +1719,27 @@ export function ComponentsSidebar({
                           e.stopPropagation();
                           handleDeleteProject(project.id);
                         }}
-                        className="h-8 w-8 p-0 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 opacity-60 group-hover:opacity-100 transition-all flex hover:bg-red-500/20 rounded-lg flex-shrink-0"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 opacity-60 group-hover:opacity-100 transition-all flex hover:bg-red-500/20 rounded-lg flex-shrink-0"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                       </Button>
                     </div>
                     
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="flex items-center gap-1.5 bg-blue-500/10 dark:bg-blue-600/15 px-2.5 py-1 rounded-lg border border-blue-400/20 dark:border-blue-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
-                          <Zap className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                          <span>{getNodeCount(project)}</span>
+                    <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span className="flex items-center gap-1 bg-blue-500/10 dark:bg-blue-600/15 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-blue-400/20 dark:border-blue-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
+                          <Zap className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-blue-600 dark:text-blue-400" />
+                          <span className="hidden sm:inline">{getNodeCount(project)}</span>
+                          <span className="sm:hidden">{getNodeCount(project)}</span>
                         </span>
-                        <span className="flex items-center gap-1.5 bg-purple-500/10 dark:bg-purple-600/15 px-2.5 py-1 rounded-lg border border-purple-400/20 dark:border-purple-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
-                          <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                        <span className="flex items-center gap-1 bg-purple-500/10 dark:bg-purple-600/15 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-purple-400/20 dark:border-purple-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
+                          <FileText className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-purple-600 dark:text-purple-400" />
                           <span>{(() => { const info = getSheetsInfo(project); return info.count; })()}</span>
                         </span>
-                        <span className="flex items-center gap-1.5 bg-slate-500/10 dark:bg-slate-600/15 px-2.5 py-1 rounded-lg border border-slate-400/20 dark:border-slate-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
-                          <Calendar className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
-                          {formatDate(project.updatedAt)}
+                        <span className="flex items-center gap-1 bg-slate-500/10 dark:bg-slate-600/15 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-slate-400/20 dark:border-slate-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
+                          <Calendar className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-slate-600 dark:text-slate-400" />
+                          <span className="hidden sm:inline">{formatDate(project.updatedAt)}</span>
+                          <span className="sm:hidden text-xs">{formatDate(project.updatedAt).split(',')[0]}</span>
                         </span>
                       </div>
                       
@@ -1748,9 +1747,9 @@ export function ComponentsSidebar({
                       {(() => {
                         const sheetsInfo = getSheetsInfo(project);
                         return (
-                          <div className="space-y-1.5">
+                          <div className="space-y-1">
                             {sheetsInfo.names.length > 0 && (
-                              <div className="space-y-1">
+                              <div className="space-y-0.5 sm:space-y-1">
                                 {sheetsInfo.names.map((name: string, index: number) => {
                                 const projectData = project.data as any;
                                 const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
@@ -1758,7 +1757,7 @@ export function ComponentsSidebar({
                                 const isEditing = editingSheetId !== null && sheetId !== null && editingSheetId === sheetId;
                                 
                                 return (
-                                  <div key={index} className="flex items-center gap-1.5 group/sheet px-2 py-1 rounded-md hover:bg-muted/50 transition-colors">
+                                  <div key={index} className="flex items-center gap-1 sm:gap-1.5 group/sheet px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md hover:bg-muted/50 transition-colors">
                                     {isEditing ? (
                                       <Input
                                         value={editingSheetName}
@@ -1772,7 +1771,7 @@ export function ComponentsSidebar({
                                         }}
                                         onBlur={handleSaveSheetName}
                                         autoFocus
-                                        className="text-xs px-2 py-1 h-6 flex-1 font-medium"
+                                        className="text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 h-5 sm:h-6 flex-1 font-medium"
                                       />
                                     ) : (
                                       <div
@@ -1783,7 +1782,7 @@ export function ComponentsSidebar({
                                         onDragEnd={(e) => {
                                           setDraggedSheet(null);
                                         }}
-                                        className={`text-xs px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center ${
+                                        className={`text-xs px-1.5 sm:px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center line-clamp-1 ${
                                           isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-foreground hover:bg-muted'
                                         } ${
                                           draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
@@ -1812,11 +1811,11 @@ export function ComponentsSidebar({
                                     
                                     {/* Кнопки управления листом */}
                                     {currentProjectId === project.id && !isEditing && (
-                                      <div className="flex gap-1 opacity-0 group-hover/sheet:opacity-100 transition-opacity flex-shrink-0">
+                                      <div className="flex gap-0.5 sm:gap-1 opacity-0 group-hover/sheet:opacity-100 transition-opacity flex-shrink-0">
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          className="h-6 w-6 p-0 hover:bg-green-500/20 text-green-600 dark:text-green-400 rounded transition-all"
+                                          className="h-5 sm:h-6 w-5 sm:w-6 p-0 hover:bg-green-500/20 text-green-600 dark:text-green-400 rounded transition-all"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             if (SheetsManager.isNewFormat(projectData)) {
@@ -1828,7 +1827,7 @@ export function ComponentsSidebar({
                                           }}
                                           title="Дублировать лист"
                                         >
-                                          <Copy className="h-3 w-3" />
+                                          <Copy className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
                                         </Button>
 
                                         {projects.length > 1 && (
@@ -1837,10 +1836,10 @@ export function ComponentsSidebar({
                                               <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-6 w-6 p-0 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded transition-all"
+                                                className="h-5 sm:h-6 w-5 sm:w-6 p-0 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded transition-all"
                                                 title="Переместить в другой проект"
                                               >
-                                                <Share2 className="h-3 w-3" />
+                                                <Share2 className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
                                               </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-56" side="top" sideOffset={5}>
@@ -1921,7 +1920,7 @@ export function ComponentsSidebar({
                                           <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-6 w-6 p-0 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded transition-all"
+                                            className="h-5 sm:h-6 w-5 sm:w-6 p-0 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded transition-all"
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               if (sheetId && SheetsManager.isNewFormat(projectData)) {
@@ -1932,7 +1931,7 @@ export function ComponentsSidebar({
                                             }}
                                             title="Удалить лист"
                                           >
-                                            <Trash2 className="h-3 w-3" />
+                                            <Trash2 className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
                                           </Button>
                                         )}
                                       </div>
