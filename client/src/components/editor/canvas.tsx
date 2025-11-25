@@ -333,30 +333,49 @@ export function Canvas({
     }
   }, [botData, onBotDataUpdate, nodes, connections]);
 
-  // Zoom utility functions
-  const zoomIn = useCallback(() => {
-    setZoom(prev => {
-      const newZoom = Math.min(prev * 1.05, 200);
-      const zoomRatio = newZoom / prev;
-      setPan(p => ({
-        x: p.x * zoomRatio,
-        y: p.y * zoomRatio
-      }));
-      return newZoom;
-    });
+  // Получить размеры контейнера
+  const getContainerDimensions = useCallback(() => {
+    if (canvasRef.current?.parentElement) {
+      const rect = canvasRef.current.parentElement.getBoundingClientRect();
+      return { width: rect.width - 64, height: rect.height - 64 };
+    }
+    return { width: window.innerWidth - 64, height: window.innerHeight - 64 };
   }, []);
 
-  const zoomOut = useCallback(() => {
-    setZoom(prev => {
-      const newZoom = Math.max(prev * 0.95, 1);
-      const zoomRatio = newZoom / prev;
-      setPan(p => ({
-        x: p.x * zoomRatio,
-        y: p.y * zoomRatio
-      }));
-      return newZoom;
+  // Масштабирование от центра
+  const zoomFromCenter = useCallback((newZoom: number) => {
+    const { width, height } = getContainerDimensions();
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    setPan(prevPan => {
+      const prevZoomPercent = zoom / 100;
+      const newZoomPercent = newZoom / 100;
+      
+      // Вычисляем координаты центра в canvas координатах
+      const centerCanvasX = (centerX - prevPan.x) / prevZoomPercent;
+      const centerCanvasY = (centerY - prevPan.y) / prevZoomPercent;
+      
+      // Вычисляем новый pan, чтобы центр остался на месте
+      return {
+        x: centerX - centerCanvasX * newZoomPercent,
+        y: centerY - centerCanvasY * newZoomPercent
+      };
     });
-  }, []);
+
+    setZoom(newZoom);
+  }, [zoom, getContainerDimensions]);
+
+  // Zoom utility functions
+  const zoomIn = useCallback(() => {
+    const newZoom = Math.min(zoom * 1.05, 200);
+    zoomFromCenter(newZoom);
+  }, [zoom, zoomFromCenter]);
+
+  const zoomOut = useCallback(() => {
+    const newZoom = Math.max(zoom * 0.95, 1);
+    zoomFromCenter(newZoom);
+  }, [zoom, zoomFromCenter]);
 
   const resetZoom = useCallback(() => {
     setZoom(100);
@@ -364,8 +383,9 @@ export function Canvas({
   }, []);
 
   const setZoomLevel = useCallback((level: number) => {
-    setZoom(Math.max(Math.min(level, 200), 1));
-  }, []);
+    const constrainedZoom = Math.max(Math.min(level, 200), 1);
+    zoomFromCenter(constrainedZoom);
+  }, [zoomFromCenter]);
 
   // Функция для получения центральной позиции видимой области canvas
   const getCenterPosition = useCallback(() => {
