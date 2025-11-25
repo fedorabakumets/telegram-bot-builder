@@ -68,7 +68,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName, projectId }
   // Загружаем контент для выбранного формата
   useEffect(() => {
     loadContent(selectedFormat);
-  }, [selectedFormat, loadContent]);
+  }, [selectedFormat]);
 
   // Функция для сворачивания/разворачивания всех функций
   const toggleAllFunctions = () => {

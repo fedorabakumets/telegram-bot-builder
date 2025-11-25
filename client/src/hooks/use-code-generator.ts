@@ -115,7 +115,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
     } finally {
       setIsLoading(false);
     }
-  }, [botData, projectName, groups, userDatabaseEnabled, generateContent, codeContent]);
+  }, [botData, projectName, groups, userDatabaseEnabled, generateContent]);
 
   return {
     codeContent,

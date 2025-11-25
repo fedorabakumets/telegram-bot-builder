@@ -55,7 +55,7 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
   // Загружаем контент для выбранного формата
   useEffect(() => {
     loadContent(selectedFormat);
-  }, [selectedFormat, loadContent]);
+  }, [selectedFormat]);
 
   // Функция для сворачивания/разворачивания всех функций
   const toggleAllFunctions = () => {

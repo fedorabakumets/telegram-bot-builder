@@ -50,10 +50,21 @@ function ComponentsSidebar({
   isMobile: isMobileProp
 }: ComponentsSidebarProps) {
   const isMobile = useIsMobile();
-  const renderCountRef = useRef(0);
-  renderCountRef.current++;
-  
   const sidebarRef = useRef<HTMLElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  
+  // Отслеживание позиции мышки для диагностики пульсирования
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const sidebarRect = sidebarRef.current?.getBoundingClientRect();
+      if (sidebarRect && e.clientX < sidebarRect.right) {
+        setMousePos({ x: e.clientX, y: e.clientY });
+      }
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());

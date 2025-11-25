@@ -16,9 +16,20 @@ interface HeaderProps {
 
 function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSaveAsTemplate, onLoadTemplate, isSaving }: HeaderProps) {
   const headerRef = useRef<HTMLHeadElement>(null);
-  const renderCountRef = useRef(0);
-  renderCountRef.current++;
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   
+  // Отслеживание позиции мышки для диагностики
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const headerRect = headerRef.current?.getBoundingClientRect();
+      if (headerRect && e.clientY < headerRect.bottom) {
+        setMousePos({ x: e.clientX, y: e.clientY });
+      }
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Логировать изменения стилей в header
   useEffect(() => {

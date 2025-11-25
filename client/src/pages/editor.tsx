@@ -38,7 +38,7 @@ import { nanoid } from 'nanoid';
 
 export default function Editor() {
   const renderCountRef = useRef(0);
-  const prevStateRef = useRef<any>({});
+  const prevStateRef = useRef<any>(null);
   renderCountRef.current++;
   
   const [, setLocation] = useLocation();
