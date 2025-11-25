@@ -888,21 +888,29 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Bot className="w-6 h-6" />
-            Боты
-          </h2>
-          <p className="text-muted-foreground">
-            Управление ботами проекта {projectName}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/10 dark:from-blue-500/30 dark:to-indigo-500/20 flex items-center justify-center flex-shrink-0">
+              <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+              Боты
+            </h2>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground pl-10 sm:pl-12 -mt-1">
+            Управление ботами проекта <span className="font-semibold text-foreground">{projectName}</span>
           </p>
         </div>
-        <Button onClick={() => setShowAddBot(true)} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Подключить бот
+        <Button 
+          onClick={() => setShowAddBot(true)} 
+          className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 h-10 sm:h-auto px-3 sm:px-4 py-2 sm:py-2 text-sm sm:text-base"
+          data-testid="button-connect-bot"
+        >
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>Подключить бот</span>
         </Button>
       </div>
 
@@ -923,16 +931,23 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
           ))}
         </div>
       ) : tokens.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Bot className="w-12 h-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Нет подключенных ботов</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              Подключите первого бота, чтобы начать создание Telegram-ботов
+        <Card className="border-2 border-dashed border-border/50 bg-gradient-to-br from-muted/30 to-muted/10 dark:from-slate-800/30 dark:to-slate-900/20">
+          <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 sm:px-6">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 dark:from-blue-500/30 dark:to-indigo-500/20 flex items-center justify-center mb-4 sm:mb-6">
+              <Bot className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-2">Нет подключенных ботов</h3>
+            <p className="text-sm sm:text-base text-muted-foreground text-center mb-6 max-w-md">
+              Подключите первого бота, чтобы начать создание и управление Telegram-ботами прямо из визуального редактора
             </p>
-            <Button onClick={() => setShowAddBot(true)} className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Подключить бота
+            <Button 
+              onClick={() => setShowAddBot(true)} 
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200"
+              size="lg"
+              data-testid="button-connect-first-bot"
+            >
+              <Plus className="w-5 h-5" />
+              Подключить первого бота
             </Button>
           </CardContent>
         </Card>
