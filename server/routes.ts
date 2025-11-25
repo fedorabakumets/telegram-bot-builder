@@ -2122,13 +2122,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userDatabaseEnabled: 1
         });
         
-        // Создаем копию шаблона
+        // Создаем копию шаблона, сохраняя оригинального владельца
+        // Если это официальный шаблон (ownerId=null), он останется официальным
+        // Если это шаблон пользователя, остается приписан его автору
         const copiedTemplate = await storage.createBotTemplate({
           name: template.name,
           description: template.description,
           category: 'custom',
           data: template.data as any,
-          ownerId: ownerId,
+          ownerId: template.ownerId, // Сохраняем оригинального владельца шаблона!
           tags: template.tags,
           difficulty: (template.difficulty || 'easy') as 'easy' | 'medium' | 'hard',
           language: (template.language || 'ru') as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
