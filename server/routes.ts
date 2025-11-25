@@ -2128,6 +2128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Создаем копию шаблона, сохраняя оригинального владельца
         // Если это официальный шаблон (ownerId=null), он останется официальным
         // Если это шаблон пользователя, остается приписан его автору
+        // ВАЖНО: новый шаблон всегда создаётся как приватный (isPublic: 0)
         const copiedTemplate = await storage.createBotTemplate({
           name: template.name,
           description: template.description,
@@ -2135,6 +2136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           data: template.data as any,
           ownerId: template.ownerId, // Сохраняем оригинального владельца шаблона!
           tags: template.tags,
+          isPublic: 0, // Новые шаблоны всегда приватные
           difficulty: (template.difficulty || 'easy') as 'easy' | 'medium' | 'hard',
           language: (template.language || 'ru') as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
           complexity: template.complexity || 1,
