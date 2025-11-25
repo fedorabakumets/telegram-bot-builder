@@ -89,22 +89,22 @@ export function AdaptiveHeader({
   
   // Классы для контейнера с адаптивной высотой для мобильных устройств
   const containerClasses = [
-    'bg-background border-border relative z-50',
-    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-10' : 'min-h-16'} flex items-center justify-between md:min-h-24 md:flex-wrap md:justify-start md:gap-2 lg:min-h-20 lg:flex-nowrap lg:justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
+    'bg-gradient-to-r from-background via-background/95 to-background/90 dark:from-slate-950 dark:via-slate-950/95 dark:to-slate-900/90 backdrop-blur-sm border-border/50 relative z-50 shadow-sm',
+    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-11' : 'min-h-16'} flex items-center justify-between md:min-h-24 md:flex-wrap md:justify-start md:gap-2 lg:min-h-20 lg:flex-nowrap lg:justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
     isCompact ? 'text-sm' : ''
   ].join(' ');
 
   // Компонент логотипа и названия
   const BrandSection = () => (
     <div className={`flex items-center ${isVertical ? 'flex-col space-y-2 p-4' : (isMobile ? 'space-x-2' : 'space-x-3')}`}>
-      <div className={`bg-primary rounded-lg flex items-center justify-center ${isCompact || isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}>
-        <i className={`fab fa-telegram-plane text-primary-foreground ${isCompact || isMobile ? 'text-sm' : 'text-lg'}`}></i>
+      <div className={`bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 ${isCompact || isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}>
+        <i className={`fab fa-telegram-plane text-white ${isCompact || isMobile ? 'text-sm' : 'text-lg'}`}></i>
       </div>
       <div className={isVertical ? 'text-center' : ''}>
-        <h1 className={`font-semibold text-foreground ${isCompact || isMobile ? 'text-sm' : 'text-lg'}`}>
+        <h1 className={`font-bold bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent ${isCompact || isMobile ? 'text-sm' : 'text-lg'}`}>
           {isVertical && !isCompact ? 'BotCraft' : 'BotCraft Studio'}
         </h1>
-        <p className={`text-muted-foreground ${isCompact || isMobile ? 'text-xs' : 'text-xs'}`}>
+        <p className={`text-muted-foreground/70 ${isCompact || isMobile ? 'text-xs' : 'text-xs'}`}>
           {(() => {
             const displayName = botInfo?.first_name || projectName;
             return isVertical ? (displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName) : displayName;
@@ -127,10 +127,10 @@ export function AdaptiveHeader({
         <button 
           key={tab.key}
           onClick={() => onTabChange(tab.key as any)}
-          className={`${isCompact ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} font-medium rounded-md transition-colors ${
+          className={`${isCompact ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} font-semibold rounded-lg transition-all duration-200 ${
             currentTab === tab.key 
-              ? 'text-primary bg-primary/10' 
-              : 'text-muted-foreground hover:bg-muted'
+              ? 'text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-md shadow-blue-500/20' 
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 dark:hover:bg-slate-800/50'
           } ${isVertical ? 'w-full text-left' : 'whitespace-nowrap'} max-sm:text-xs max-sm:px-2 max-sm:py-1`}
         >
           {isVertical && isCompact ? tab.label.substring(0, 3) : tab.label}
@@ -335,7 +335,7 @@ export function AdaptiveHeader({
       
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
-        <div className="flex items-center space-x-1 bg-background/80 backdrop-blur-sm border border-border rounded-md p-1">
+        <div className="flex items-center space-x-1 bg-slate-500/10 dark:bg-slate-700/20 backdrop-blur-md border border-slate-300/20 dark:border-slate-600/30 rounded-lg p-1 shadow-sm">
           {onToggleHeader && (
             <Button
               variant={headerVisible ? "default" : "outline"}
@@ -408,9 +408,9 @@ export function AdaptiveHeader({
           variant="outline" 
           size="sm"
           onClick={onLoadTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-500/50 rounded-lg transition-all max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
         >
-          <FolderOpen className="h-2.5 w-2.5 max-sm:mx-auto" />
+          <FolderOpen className="h-3 w-3 max-sm:mx-auto" />
           <span className="max-sm:hidden ml-1">Шаблоны</span>
         </Button>
       )}
@@ -420,9 +420,9 @@ export function AdaptiveHeader({
           variant="outline" 
           size="sm"
           onClick={onSaveAsTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-500/50 rounded-lg transition-all max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
         >
-          <Bookmark className="h-2.5 w-2.5 max-sm:mx-auto" />
+          <Bookmark className="h-3 w-3 max-sm:mx-auto" />
           <span className="max-sm:hidden ml-1">Сохранить</span>
         </Button>
       )}
@@ -432,7 +432,7 @@ export function AdaptiveHeader({
       <Button 
         size="sm"
         onClick={onExport}
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white px-2 py-1 text-xs shadow-md shadow-green-500/20 rounded-lg transition-all max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
       >
         <i className="fas fa-download text-2xs max-sm:mx-auto"></i>
         <span className="max-sm:hidden ml-1">Экспорт</span>
@@ -445,19 +445,19 @@ export function AdaptiveHeader({
       {/* Информация о пользователе и выход */}
       {user ? (
         <>
-          <div className={`flex items-center space-x-2 ${isVertical ? 'w-full px-2 py-2' : 'px-2'}`}>
+          <div className={`flex items-center space-x-2 bg-slate-500/10 dark:bg-slate-700/20 px-3 py-1.5 rounded-lg backdrop-blur-sm ${isVertical ? 'w-full' : ''}`}>
             {user.photoUrl && (
               <img 
                 src={user.photoUrl} 
                 alt={user.firstName}
-                className="w-6 h-6 rounded-full"
+                className="w-6 h-6 rounded-full ring-2 ring-blue-500/30"
               />
             )}
             {!isVertical && (
               <div className="text-right hidden sm:block">
-                <p className="text-xs font-medium text-foreground">{user.firstName}</p>
+                <p className="text-xs font-semibold text-foreground">{user.firstName}</p>
                 {user.username && (
-                  <p className="text-xs text-muted-foreground">@{user.username}</p>
+                  <p className="text-xs text-muted-foreground/70">@{user.username}</p>
                 )}
               </div>
             )}
@@ -467,7 +467,7 @@ export function AdaptiveHeader({
             variant="ghost"
             size="sm"
             onClick={logout}
-            className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs text-destructive hover:text-destructive`}
+            className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all`}
             title="Выход"
           >
             <LogOut className="h-3.5 w-3.5" />
@@ -477,11 +477,11 @@ export function AdaptiveHeader({
         <Button
           onClick={handleTelegramLogin}
           size="sm"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5"
+          className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all"
           title="Войти через Telegram"
         >
           <MessageCircle className="h-3.5 w-3.5" />
-          <span>Войти через Telegram</span>
+          <span>Вход</span>
         </Button>
       )}
       
@@ -489,7 +489,7 @@ export function AdaptiveHeader({
         variant="outline" 
         size="sm"
         asChild
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs`}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-500/50 rounded-lg transition-all`}
         title="Открыть проект на GitHub"
       >
         <a
