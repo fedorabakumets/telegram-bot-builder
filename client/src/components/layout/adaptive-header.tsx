@@ -549,25 +549,25 @@ export function AdaptiveHeader({
         <Separator />
         {/* Мобильные кнопки компонентов и свойств после разделителя */}
         {isMobile && !isVertical && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2 sm:gap-2">
             {onOpenMobileSidebar && (
               <button
                 onClick={onOpenMobileSidebar}
-                className="group p-1 sm:p-1.5 bg-blue-500/10 dark:bg-blue-400/15 rounded-md border border-blue-300/30 dark:border-blue-500/20 hover:bg-blue-500/20 dark:hover:bg-blue-400/25 hover:border-blue-400/50 dark:hover:border-blue-400/30 transition-all duration-200 hover:shadow-sm hover:shadow-blue-500/20"
+                className="group p-2 sm:p-2 bg-blue-500/10 dark:bg-blue-400/15 rounded-lg border border-blue-300/30 dark:border-blue-500/20 hover:bg-blue-500/20 dark:hover:bg-blue-400/25 hover:border-blue-400/50 dark:hover:border-blue-400/30 transition-all duration-200 hover:shadow-md hover:shadow-blue-500/25"
                 title="Открыть панель компонентов"
                 data-testid="button-mobile-components"
               >
-                <Menu className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200" />
+                <Menu className="w-4 h-4 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200" />
               </button>
             )}
             {onOpenMobileProperties && (
               <button
                 onClick={onOpenMobileProperties}
-                className="group p-1 sm:p-1.5 bg-purple-500/10 dark:bg-purple-400/15 rounded-md border border-purple-300/30 dark:border-purple-500/20 hover:bg-purple-500/20 dark:hover:bg-purple-400/25 hover:border-purple-400/50 dark:hover:border-purple-400/30 transition-all duration-200 hover:shadow-sm hover:shadow-purple-500/20"
+                className="group p-2 sm:p-2 bg-purple-500/10 dark:bg-purple-400/15 rounded-lg border border-purple-300/30 dark:border-purple-500/20 hover:bg-purple-500/20 dark:hover:bg-purple-400/25 hover:border-purple-400/50 dark:hover:border-purple-400/30 transition-all duration-200 hover:shadow-md hover:shadow-purple-500/25"
                 title="Открыть панель свойств"
                 data-testid="button-mobile-properties"
               >
-                <Sliders className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors duration-200" />
+                <Sliders className="w-4 h-4 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors duration-200" />
               </button>
             )}
           </div>
