@@ -1328,7 +1328,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!existingProject) {
           return res.status(404).json({ message: "Project not found" });
         }
-        if (existingProject.ownerId !== ownerId) {
+        // Разрешаем редактирование: если проект принадлежит пользователю ИЛИ это гостевой проект (ownerId=null)
+        if (existingProject.ownerId !== null && existingProject.ownerId !== ownerId) {
           return res.status(403).json({ message: "You don't have permission to modify this project" });
         }
       }
@@ -1373,7 +1374,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check ownership if user is authenticated
       const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null && project.ownerId !== ownerId) {
+      // Разрешаем удаление: если проект принадлежит пользователю ИЛИ это гостевой проект (ownerId=null)
+      if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
         console.log(`❌ Пользователь ${ownerId} не имеет прав на удаление проекта ${id}`);
         return res.status(403).json({ message: "You don't have permission to delete this project" });
       }
