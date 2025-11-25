@@ -337,8 +337,19 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
         <Card key={template.id} className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-lg">{template.name}</CardTitle>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <CardTitle className="text-lg">{template.name}</CardTitle>
+                  {template.ownerId === null ? (
+                    <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      Официальный
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">
+                      От сообщества
+                    </Badge>
+                  )}
+                </div>
                 {template.description && (
                   <CardDescription className="mt-1">{template.description}</CardDescription>
                 )}
