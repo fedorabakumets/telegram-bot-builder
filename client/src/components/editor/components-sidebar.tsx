@@ -1076,22 +1076,22 @@ export function ComponentsSidebar({
                 name: projectName,
                 description: projectDescription,
                 data: result.data
-              });
-            }).then(() => {
-              setIsImportDialogOpen(false);
-              setImportPythonText('');
-              setImportJsonText('');
-              setImportError('');
-              toast({
-                title: "✅ Успешно импортировано!",
-                description: `Python бот загружен (${result.nodeCount} узлов)`,
-                variant: "default",
-              });
-              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
-              setTimeout(() => {
+              }).then(() => {
+                setIsImportDialogOpen(false);
+                setImportPythonText('');
+                setImportJsonText('');
+                setImportError('');
+                toast({
+                  title: "✅ Успешно импортировано!",
+                  description: `Python бот загружен (${result.nodeCount} узлов)`,
+                  variant: "default",
+                });
                 queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-              }, 300);
+                queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
+                setTimeout(() => {
+                  queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+                }, 300);
+              });
             }).catch((error: any) => {
               setImportError(error.message || 'Ошибка при импорте проекта');
               toast({
@@ -1798,7 +1798,7 @@ export function ComponentsSidebar({
                                       <div
                                         draggable
                                         onDragStart={(e) => {
-                                          handleSheetDragStart(e, sheetId, project.id);
+                                          if (sheetId) handleSheetDragStart(e, sheetId, project.id);
                                         }}
                                         onDragEnd={(e) => {
                                           setDraggedSheet(null);
@@ -1926,7 +1926,7 @@ export function ComponentsSidebar({
                                             className="h-5 w-5 p-0 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-sm leading-none"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              if (SheetsManager.isNewFormat(projectData)) {
+                                              if (sheetId && SheetsManager.isNewFormat(projectData)) {
                                                 if (onSheetDelete) {
                                                   onSheetDelete(sheetId);
                                                 }

@@ -2110,8 +2110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: template.name,
           description: template.description,
           data: template.data as any,
-          ownerId: ownerId,
-          state: 'draft'
+          ownerId: ownerId
         });
         
         res.json({ 
