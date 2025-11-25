@@ -27,6 +27,48 @@ export function useProjects(options: UseUserDataOptions) {
   });
 }
 
+// Hook для загрузки одного проекта по ID
+export function useProject(id: number | null, options: UseUserDataOptions) {
+  const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
+  
+  return useQuery({
+    queryKey: ['/api/projects', id, mode],
+    queryFn: async () => {
+      if (!id) throw new Error('Project ID is required');
+      
+      console.log(`[useProject] Loading project ${id} in ${mode} mode`);
+      
+      if (mode === 'local') {
+        const projects = LocalStorageService.getProjects();
+        console.log(`[useProject] Found ${projects.length} projects in localStorage`);
+        const project = projects.find(p => p.id === id);
+        if (!project) {
+          console.error(`[useProject] Project ${id} not found in localStorage`);
+          throw new Error('Project not found in localStorage');
+        }
+        console.log(`[useProject] Successfully loaded project ${id} from localStorage`);
+        return project;
+      }
+      
+      console.log(`[useProject] Fetching project ${id} from server`);
+      const res = await fetch(`/api/user/projects/${id}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          console.error(`[useProject] Project ${id} not found on server (404)`);
+          throw new Error('Project not found on server');
+        }
+        console.error(`[useProject] Failed to fetch project ${id} from server`);
+        throw new Error('Failed to fetch project');
+      }
+      const data = await res.json();
+      console.log(`[useProject] Successfully loaded project ${id} from server`);
+      return data;
+    },
+    enabled: !!id,
+    retry: false,
+  });
+}
+
 // Hook для управления токенами (localStorage vs сервер)
 export function useTokens(options: UseUserDataOptions, projectId?: number) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';

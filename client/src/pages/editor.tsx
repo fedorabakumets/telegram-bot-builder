@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useParams, useRoute } from 'wouter';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
+import { useProject, useProjects, useCreateProject } from '@/hooks/use-user-data';
 import { TelegramLoginWidget } from '@/components/telegram-login-widget';
 import { Card, CardContent } from '@/components/ui/card';
 import { Header } from '@/components/editor/header';
@@ -47,6 +48,14 @@ export default function Editor() {
   
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
+  
+  // Проверяем аутентификацию
+  const { user, isLoading: authLoading } = useTelegramAuth();
+  
+  // Debug: логируем состояние аутентификации
+  useEffect(() => {
+    console.log('[Editor] Auth state:', { user: user?.id, authLoading, projectId });
+  }, [user, authLoading, projectId]);
 
   // Эффект для корректного восстановления мобильного интерфейса при навигации
   useEffect(() => {
@@ -346,36 +355,78 @@ export default function Editor() {
     }
   });
 
-  // Load current project directly by ID (much faster than loading all projects)
-  const { data: currentProject, isLoading: isProjectLoading } = useQuery<BotProject>({
-    queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId, // Всегда загружаем если есть ID в URL
-    staleTime: 30000, // Кешируем на 30 секунд
+  // Используем хуки которые автоматически выбирают localStorage или сервер
+  const { data: currentProject, isLoading: isProjectLoading, error: currentProjectError } = useProject(projectId, {
+    isAuthenticated: !!user,
+    userId: user?.id,
   });
 
   // If no projectId in URL, load project list to get first project ID
-  const { data: projectsList, isLoading: isListLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
-    queryKey: ['/api/projects/list'],
-    enabled: !projectId, // Загружаем список только если нет ID в URL
-    staleTime: 30000,
+  const { data: projectsList, isLoading: isListLoading } = useProjects({
+    isAuthenticated: !!user,
+    userId: user?.id,
   });
+
+  const createProjectMutation = useCreateProject({
+    isAuthenticated: !!user,
+    userId: user?.id,
+  });
+
+  // Автоматически создаём проект если список пустой
+  useEffect(() => {
+    if (!projectId && !isListLoading && projectsList && projectsList.length === 0 && !createProjectMutation.isPending) {
+      console.log('[Editor] No projects found, creating default project');
+      createProjectMutation.mutate({
+        name: 'Мой первый бот',
+        description: 'Автоматически созданный проект',
+        userDatabaseEnabled: 1,
+        data: {
+          nodes: [{
+            id: 'start',
+            type: 'start',
+            position: { x: 100, y: 100 },
+            data: {
+              messageText: 'Привет! Я ваш новый бот.',
+              keyboardType: 'none',
+              buttons: [],
+            }
+          }],
+          connections: []
+        }
+      });
+    }
+  }, [projectId, isListLoading, projectsList, createProjectMutation]);
 
   // Get effective project ID (from URL or first in list)
   const effectiveProjectId = projectId || projectsList?.[0]?.id;
 
   // Load first project if no projectId in URL and we have the ID from list
-  const { data: firstProject, isLoading: isFirstProjectLoading } = useQuery<BotProject>({
-    queryKey: [`/api/projects/${effectiveProjectId}`],
-    enabled: !projectId && !!effectiveProjectId && typeof effectiveProjectId === 'number', // Добавить проверку типа
-    staleTime: 30000,
-  });
+  const { data: firstProject, isLoading: isFirstProjectLoading, error: firstProjectError } = useProject(
+    !projectId && effectiveProjectId ? effectiveProjectId : null,
+    {
+      isAuthenticated: !!user,
+      userId: user?.id,
+    }
+  );
 
+  // Если проект не найден, перенаправляем на главную
+  useEffect(() => {
+    if (currentProjectError) {
+      console.error('Project not found, redirecting to root');
+      toast({
+        title: "Проект не найден",
+        description: "Перенаправление...",
+        variant: "destructive",
+      });
+      setTimeout(() => setLocation('/'), 1500);
+    }
+  }, [currentProjectError, setLocation, toast]);
 
   // Use the appropriate project
   const activeProject = projectId ? currentProject : firstProject;
 
   // Determine if we're still loading
-  const isLoadingProject = projectId ? isProjectLoading : (isListLoading || isFirstProjectLoading);
+  const isLoadingProject = projectId ? isProjectLoading : (isListLoading || isFirstProjectLoading || createProjectMutation.isPending);
 
 
 

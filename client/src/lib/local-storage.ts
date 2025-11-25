@@ -6,7 +6,6 @@ import type {
   InsertBotToken,
   InsertBotTemplate 
 } from "@shared/schema";
-import { SessionManager } from "./session-manager";
 
 const STORAGE_KEYS = {
   PROJECTS: 'botcraft_projects',
@@ -30,30 +29,12 @@ function isBrowser(): boolean {
 }
 
 export class LocalStorageService {
-  private static initialized = false;
-
   /**
-   * Initialize the service and migrate legacy data if needed
-   * This runs automatically before any storage operations
-   */
-  private static initialize(): void {
-    if (this.initialized) return;
-    
-    const migrated = SessionManager.migrateLegacyData();
-    if (migrated) {
-      console.log('Legacy localStorage data migrated to session-isolated storage');
-    }
-    
-    this.initialized = true;
-  }
-
-  /**
-   * Get session-prefixed key
-   * Ensures initialization happens before any storage operation
+   * Get storage key (no session prefix for guests - shared storage)
+   * This allows all guest tabs to see the same projects
    */
   private static getKey(baseKey: string): string {
-    this.initialize();
-    return SessionManager.createKey(baseKey);
+    return baseKey;
   }
 
   private static getNextId(baseKey: string): number {

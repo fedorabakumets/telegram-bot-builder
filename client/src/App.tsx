@@ -8,7 +8,6 @@ import { ServerStatus } from "@/components/server-status";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import React from "react";
-import "@/lib/debug-session";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
