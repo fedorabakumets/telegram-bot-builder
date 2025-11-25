@@ -972,15 +972,16 @@ export function PropertiesPanel({
       </div>
 
       {/* Properties Content */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-5 space-y-5 sm:space-y-7 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5 md:space-y-6">
         
         {/* Basic Settings */}
-        <section className="space-y-3.5 sm:space-y-4">
-          <div className="flex items-center gap-2.5">
-            <div className="h-1 w-1 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-400 dark:to-cyan-400"></div>
-            <h3 className="text-sm sm:text-base font-bold text-foreground">Основные настройки</h3>
+        <div className="space-y-3 sm:space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-0.5 bg-gradient-to-b from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-400 rounded-full"></div>
+            <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Основные настройки</h3>
           </div>
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm">
             {/* Node Type Selector */}
             <div>
               <Label className="text-xs font-medium text-muted-foreground">Тип элемента</Label>
@@ -1034,6 +1035,7 @@ export function PropertiesPanel({
                 </SelectContent>
               </Select>
             </div>
+          </div>
             
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
               <>
