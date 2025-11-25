@@ -2005,6 +2005,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Toggle template publish
+  app.post("/api/templates/:id/publish", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isPublic } = req.body;
+      
+      if (typeof isPublic !== 'boolean') {
+        return res.status(400).json({ message: "isPublic must be a boolean" });
+      }
+      
+      const template = await (storage as any).toggleTemplatePublish(id, isPublic);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      res.json({ message: isPublic ? "Template published" : "Template unpublished", template });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to toggle publish" });
+    }
+  });
+
+  // Get public templates
+  app.get("/api/templates/public", async (req, res) => {
+    try {
+      const templates = await (storage as any).getPublicTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch public templates" });
+    }
+  });
+
   // Token management endpoints
   
   // Get all tokens for a project
