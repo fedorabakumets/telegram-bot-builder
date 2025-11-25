@@ -121,7 +121,7 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="telegram-bot-builder-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="telegram-bot-builder-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <ServerStatus />
