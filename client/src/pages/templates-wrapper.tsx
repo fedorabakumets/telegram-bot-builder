@@ -338,7 +338,7 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <CardTitle className="text-lg">{template.name}</CardTitle>
                   {template.ownerId === null ? (
                     <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -347,6 +347,11 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                   ) : (
                     <Badge variant="secondary" title={template.authorName || undefined}>
                       От пользователя {template.authorName ? `@${template.authorName}` : ''}
+                    </Badge>
+                  )}
+                  {showDelete && (
+                    <Badge variant={template.isPublic === 1 ? "outline" : "secondary"} className={template.isPublic === 1 ? "border-green-500 text-green-600 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"}>
+                      {template.isPublic === 1 ? '🌍 Публичный' : '🔒 Приватный'}
                     </Badge>
                   )}
                 </div>
