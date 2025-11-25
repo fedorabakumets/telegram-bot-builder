@@ -1501,22 +1501,8 @@ export function Canvas({
 
             </div>
 
-            {/* Zoom Info and Help */}
+            {/* Zoom Help */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              {zoom !== 100 && (
-                <div className="bg-slate-200/60 dark:bg-slate-700/50 backdrop-blur-md rounded-xl border border-slate-300/50 dark:border-slate-600/50 px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                  <div className="flex items-center gap-2">
-                    <i className="fas fa-info-circle text-blue-500"></i>
-                    <span>
-                      {zoom > 100 ? 'Увеличено' : 'Уменьшено'} до {Math.round(zoom)}%
-                    </span>
-                    <span className="text-slate-400 dark:text-slate-500">•</span>
-                    <span>Ctrl+0 для сброса</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Zoom Help */}
               <Popover>
                 <PopoverTrigger asChild>
                   <button className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}>
