@@ -1896,21 +1896,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all templates
   app.get("/api/templates", requireDbReady, async (req, res) => {
     try {
-      const ownerId = getOwnerIdFromRequest(req);
-      let templates;
-      
-      if (ownerId !== null) {
-        // Authenticated user - return only their templates + public system templates + public other user templates
-        const userTemplates = await storage.getUserBotTemplates(ownerId);
-        const allTemplates = await storage.getAllBotTemplates();
-        const systemTemplates = allTemplates.filter(t => t.ownerId === null);
-        const publicOtherTemplates = allTemplates.filter(t => t.ownerId !== null && t.ownerId !== ownerId && t.isPublic === 1);
-        templates = [...userTemplates, ...systemTemplates, ...publicOtherTemplates];
-      } else {
-        // Guest user - return all public templates (for localStorage mode)
-        const allTemplates = await storage.getAllBotTemplates();
-        templates = allTemplates.filter(t => t.isPublic === 1 || t.ownerId === null);
-      }
+      const allTemplates = await storage.getAllBotTemplates();
+      // Показываем только: системные шаблоны + публичные шаблоны (других пользователей)
+      // НЕ показываем личные шаблоны пользователя - они только в "Мои" вкладке
+      let templates = allTemplates.filter(t => t.ownerId === null || t.isPublic === 1);
       
       // Маппинг data -> flow_data для совместимости с фронтендом
       const mappedTemplates = templates.map(template => ({
@@ -1950,11 +1939,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Для категории "custom" - показываем только личные шаблоны
       if (category === 'custom') {
         if (ownerId !== null) {
-          // Авторизованный пользователь - его шаблоны
+          // Авторизованный пользователь - его шаблоны (ВСЕ, включая приватные)
           console.log(`🔐 Getting custom templates for user: ${ownerId}`);
           const templates = await storage.getUserBotTemplates(ownerId);
           const filtered = templates.filter(t => t.category === 'custom');
-          console.log(`✅ Found ${filtered.length} custom templates for user ${ownerId}`);
+          console.log(`✅ Found ${filtered.length} custom templates for user ${ownerId}:`, filtered.map(t => ({ id: t.id, name: t.name, isPublic: t.isPublic })));
           res.json(filtered);
         } else {
           // Гость - шаблоны с owner_id = null, или указанные в query параметре ids
@@ -2033,13 +2022,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Игнорируем ownerId из body, используем только из сессии
       const { ownerId: _ignored, ...bodyData } = req.body;
+      console.log('📝 Создание шаблона, isPublic из body:', bodyData.isPublic, 'тип:', typeof bodyData.isPublic);
       const validatedData = insertBotTemplateSchema.parse(bodyData);
       // Автоматически устанавливаем ownerId из авторизованного пользователя
       const templateData = {
         ...validatedData,
-        ownerId: getOwnerIdFromRequest(req)
+        ownerId: getOwnerIdFromRequest(req),
+        isPublic: validatedData.isPublic || 0 // Убеждаемся что isPublic имеет значение
       };
+      console.log('✅ Финальный templateData.isPublic:', templateData.isPublic);
       const template = await storage.createBotTemplate(templateData);
+      console.log('✅ Шаблон создан с isPublic:', template.isPublic);
       res.status(201).json(template);
     } catch (error) {
       if (error instanceof z.ZodError) {
