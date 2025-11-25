@@ -5,7 +5,6 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/co
 import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github, LogOut, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
-import { LoginModal } from '@/components/login-modal';
 import { LayoutConfig } from './layout-manager';
 
 interface BotInfo {
@@ -68,11 +67,18 @@ export function AdaptiveHeader({
   // Состояние для мобильного меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  // Состояние модального окна входа
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  
   // Проверка авторизации пользователя
   const { user, logout } = useTelegramAuth();
+  
+  // Функция для открытия окна авторизации Telegram
+  const handleTelegramLogin = () => {
+    const width = 500;
+    const height = 600;
+    const left = window.innerWidth / 2 - width / 2;
+    const top = window.innerHeight / 2 - height / 2;
+    
+    window.open('/api/auth/login', 'telegram_login', `width=${width},height=${height},left=${left},top=${top}`);
+  };
   
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
@@ -482,7 +488,7 @@ export function AdaptiveHeader({
         </>
       ) : (
         <Button
-          onClick={() => setIsLoginModalOpen(true)}
+          onClick={handleTelegramLogin}
           size="sm"
           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5"
           title="Войти через Telegram"
@@ -522,18 +528,15 @@ export function AdaptiveHeader({
 
   if (isVertical) {
     return (
-      <>
-        <header className={containerClasses}>
-          <BrandSection />
-          <Separator />
-          <div className="flex-1 overflow-y-auto">
-            <Navigation />
-          </div>
-          <Separator />
-          <Actions />
-        </header>
-        <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
-      </>
+      <header className={containerClasses}>
+        <BrandSection />
+        <Separator />
+        <div className="flex-1 overflow-y-auto">
+          <Navigation />
+        </div>
+        <Separator />
+        <Actions />
+      </header>
     );
   }
 
@@ -602,7 +605,6 @@ export function AdaptiveHeader({
       </div>
 
     </header>
-    <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
     </>
   );
 }
