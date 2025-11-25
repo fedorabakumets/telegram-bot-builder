@@ -1926,7 +1926,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get featured templates (must be before /api/templates/:id)
   app.get("/api/templates/featured", async (req, res) => {
     try {
-      const templates = await storage.getFeaturedTemplates();
+      const ownerId = getOwnerIdFromRequest(req);
+      let templates = await storage.getFeaturedTemplates();
+      // Фильтруем приватные шаблоны - показываем только публичные + системные + свои
+      templates = templates.filter(t => 
+        t.isPublic === 1 || t.ownerId === null || (ownerId !== null && t.ownerId === ownerId)
+      );
       res.json(templates);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch featured templates" });
@@ -1987,7 +1992,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!q || typeof q !== 'string') {
         return res.status(400).json({ message: "Search query is required" });
       }
-      const templates = await storage.searchTemplates(q);
+      const ownerId = getOwnerIdFromRequest(req);
+      let templates = await storage.searchTemplates(q);
+      // Фильтруем приватные шаблоны - показываем только публичные + системные + свои
+      templates = templates.filter(t => 
+        t.isPublic === 1 || t.ownerId === null || (ownerId !== null && t.ownerId === ownerId)
+      );
       res.json(templates);
     } catch (error) {
       res.status(500).json({ message: "Failed to search templates" });
