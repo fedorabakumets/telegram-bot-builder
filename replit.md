@@ -1,178 +1,160 @@
-# Telegram Bot Builder - NO-CODE Platform
+# Telegram Bot Builder Platform - Dual Mode Authentication
 
-## Overview
-This application provides a **no-code visual Telegram bot builder** that enables users to create sophisticated bots via a drag-and-drop interface without any programming knowledge. It's a full-stack web application with a React frontend and Express.js backend, offering real-time bot preview and Python code generation. The business vision is to democratize bot creation, allowing individuals and small businesses to rapidly deploy Telegram bots without coding expertise, tapping into the growing demand for automated communication solutions.
+## Project Overview
+A web-based Telegram bot builder where:
+- **Unauthenticated users** work with localStorage (temporary browser storage)
+- **Telegram-authenticated users** get persistent PostgreSQL storage accessible across devices
+- Both user types can create and manage bot projects, tokens, and templates
 
-## Key Features
-- **Visual drag-and-drop editor** - No coding required
-- **Real-time bot preview** - Test immediately
-- **Automatic code generation** - Generates Python code for aiogram
-- **Database integration** - Automatically collects user data
-- **Templates library** - Start from pre-built examples
-- **User analytics** - Track bot usage and statistics
-- **Media support** - Photos, videos, audio, documents
-- **User data collection** - Forms and input validation
+## Current Status (Session: Dual-Mode System Implementation)
+
+### ✅ Completed Tasks
+
+#### Task 1: Database Schema Updates
+- Added `ownerId` foreign key fields to:
+  - `bot_projects` table (references `telegram_users.id`)
+  - `bot_tokens` table (references `telegram_users.id`)
+  - `bot_templates` table (references `telegram_users.id`)
+- Created `telegram_users` table for storing Telegram user profiles
+- Migration executed successfully
+
+#### Task 2: LocalStorageService Implementation
+- **File**: `client/src/lib/local-storage.ts`
+- Safe error handling for restricted storage (Safari private mode, etc.)
+- Type-safe with ISO string date persistence and Date object revival
+- Methods implemented:
+  - Projects: `getProjects()`, `getProject()`, `saveProject()`, `updateProject()`, `deleteProject()`
+  - Tokens: `getTokens()`, `getToken()`, `saveToken()`, `updateToken()`, `deleteToken()`
+  - Templates: `getTemplates()`, `getTemplate()`, `saveTemplate()`, `updateTemplate()`, `deleteTemplate()`
+  - Utilities: `clearAll()`, `exportData()`, `importData()`
+- All operations wrapped with safe error handling (`safeGetItem`, `safeSetItem`, `safeRemoveItem`)
+
+#### Task 3: API Endpoints for User-Specific Data
+- **File**: `server/routes.ts` (lines 6055-6303)
+- Implemented endpoints:
+  - `GET/POST/PATCH/DELETE /api/user/projects`
+  - `GET/POST/PATCH/DELETE /api/user/tokens`
+  - `GET/POST/PATCH/DELETE /api/user/templates`
+- Authentication check: Returns 401 if `req.user.id` missing
+- Authorization check: Returns 403 if resource doesn't belong to user (ownership verification)
+
+#### Task 4: Storage Layer Enhancement
+- **File**: `server/storage.ts`
+- Added interface methods:
+  - `getUserBotProjects(ownerId: number): Promise<BotProject[]>`
+  - `getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]>`
+  - `getUserBotTemplates(ownerId: number): Promise<BotTemplate[]>`
+- Implementations:
+  - **MemStorage**: Basic array filtering
+  - **DatabaseStorage (DbStorage)**: SQL queries with `WHERE` clause filtering
+  - **EnhancedDatabaseStorage (CachedStorage)**: Delegation to parent class
+
+#### Task 5: Frontend Hook for Data Management
+- **File**: `client/src/hooks/use-user-data.ts`
+- `useUserData` hook family:
+  - `useProjects()`, `useTokens()`, `useTemplates()` - Query hooks
+  - `useCreateProject()`, `useUpdateProject()`, `useDeleteProject()`
+  - `useCreateToken()`, `useUpdateToken()`, `useDeleteToken()`
+  - `useCreateTemplate()`, `useUpdateTemplate()`, `useDeleteTemplate()`
+- Auto-switches data source based on authentication:
+  - Mode `'local'`: Uses `LocalStorageService` for unauthenticated users
+  - Mode `'server'`: Uses `/api/user/*` endpoints for authenticated users
+- Proper cache invalidation on mutations
+
+### 🔄 Remaining Tasks (Pending Implementation)
+
+#### Task 7: Component List Modifications
+- Modify project/token/template list components to:
+  - Show local data when unauthenticated
+  - Switch to server data when authenticated
+  - Display data source indicator (badge/icon)
+  - Handle loading states during data migration
+
+#### Task 8: Public Templates System
+- Add `isPublic` flag filtering in UI
+- Create public template browsing page
+- Implement template sharing and discovery features
+- Add rating/download/like functionality for public templates
+
+#### Task 9: Export/Import Functionality
+- Implement JSON export of projects with nested data
+- File-based import with conflict resolution
+- Backup/restore capability for data portability
+
+#### Task 10: Full System Testing
+- Test local → authenticated migration flow
+- Verify data persistence across sessions
+- Test authorization checks
+- Edge cases: Safari private mode, network failures
+
+## Project Architecture
+
+### Frontend Structure
+```
+client/src/
+├── lib/
+│   ├── local-storage.ts (localStorage service)
+│   └── queryClient.ts
+├── hooks/
+│   └── use-user-data.ts (dual-mode data management)
+├── pages/
+├── components/
+└── App.tsx
+```
+
+### Backend Structure
+```
+server/
+├── storage.ts (IStorage interface + implementations)
+├── routes.ts (API endpoints including /api/user/*)
+├── db.ts (database connection)
+└── db-utils.ts
+```
+
+### Key Files Modified
+- `shared/schema.ts` - Types & database schema with `ownerId` fields
+- `client/src/lib/local-storage.ts` - NEW: localStorage service
+- `client/src/hooks/use-user-data.ts` - NEW: dual-mode hook
+- `server/routes.ts` - NEW: /api/user/* endpoints (250+ lines added)
+- `server/storage.ts` - NEW: getUserBot* methods + implementations
+
+## Technical Decisions
+
+### Date Handling in localStorage
+- **Problem**: JSON can't serialize Date objects directly
+- **Solution**: 
+  - Store as ISO strings (`createdAt: "2024-11-25T..."`")
+  - Revive to Date objects on read via `reviveDates()` helper
+  - Type safety with `StoredProject` vs `BotProject` types
+
+### Authentication Model
+- Frontend: `isAuthenticated` flag determines data source
+- Backend: `(req as any).user?.id` for authenticated requests
+- Future: Should integrate proper authentication middleware (Passport.js)
+
+### Data Migration Path
+1. User works offline with localStorage
+2. User authorizes via Telegram
+3. LocalStorage data exported and offered for server import
+4. Server-side data used for all subsequent operations
+5. Logout returns to localStorage mode with optional clear
+
+## Known Issues & TODOs
+- 10 LSP diagnostics in `server/storage.ts` (type compatibility warnings)
+- Authentication middleware not implemented - currently uses `req.user` (type: any)
+- No actual data migration UI yet (Tasks 7-10 will implement this)
 
 ## User Preferences
-Preferred communication style: Simple, everyday language. No-code platform for non-technical users.
+- Fullstack JavaScript application (React + Express + PostgreSQL)
+- Using shadcn/ui components with Tailwind CSS
+- TypeScript for type safety
+- TanStack Query for server state management
 
-## Recent Changes (Current Session)
-- **✅ Telegram Login Widget + Bot Editor - COMPLETE** (editor.tsx + routes.ts + storage.ts + use-telegram-auth.ts):
-  - **🔴 → ✅ FIXED: Removed frontend auth check** - Editor now shows bot builder directly
-  - **✅ Backend Telegram OAuth works perfectly** - Users save to PostgreSQL DB
-  - **✅ Bot editor fully functional** - Canvas, components, properties panel all working
-  - **✅ Data persistence** - All user data and bot projects saved to database
-  
-  **Architecture:**
-  - **Frontend**: Editor shows full bot builder UI immediately
-  - **Backend**: Telegram OAuth endpoint saves users to `telegram_users` table
-  - **Database**: PostgreSQL stores users and all bot projects/data
-  - **On HTTPS (Replit domain)**: Full Telegram Login Widget works for users
-  - **On HTTP (localhost)**: Direct editor access, no Telegram button (limitation)
-  
-  **How It Works:**
-  1. User opens "/" → Sees BotCraft Studio bot editor
-  2. Can create/edit bot flows with drag-and-drop
-  3. Optional: Authorize with Telegram (saves user to DB) on HTTPS
-  4. All bot projects auto-saved to database
-  5. Data persists across sessions
-  
-  **Telegram Authentication (Backend Only):**
-  - **POST `/api/auth/telegram`** - Receives OAuth data, saves user to DB ✅
-  - **GET `/api/auth/telegram/user/:id`** - Get user by ID ✅
-  - **POST `/api/auth/logout`** - Clear session ✅
-  
-  **Database (PostgreSQL):**
-  - `telegram_users` - User profiles (id, first_name, last_name, username, photo_url, auth_date)
-  - `bot_projects` - Bot projects (id, name, description, data, created_at, updated_at)
-  - All other bot data tables for flows, nodes, connections, etc.
-  
-  **Testing Result:**
-  - ✅ User "ХРАЗ" (@Xraz_official) saved to database
-  - ✅ Bot editor loads instantly
-  - ✅ All UI components work (sidebar, canvas, properties, export)
-  - ✅ Bot data can be created and saved
-  - ✅ System ready for production
-  
-  **Status**: ✅ **PRODUCTION READY** - Bot builder fully operational!
-  
-- **✨ Telegram Login Widget setup** (telegram-login-widget.tsx + routes.ts + adaptive-header.tsx):
-  - Official Telegram Login Widget - standard OAuth-style authorization from Telegram
-  - User clicks button, signs in with Telegram account, receives auth data
-  - Simple authorization endpoint `/api/auth/telegram` that creates user session
-  - Replaces old Client API авторизация - now official Telegram OAuth login
-  - Flow: Click Telegram button in header → User signs in with Telegram → Returns authenticated
-  
-- Previous: **✨ Simplified Telegram Login Flow** (telegram-auth.tsx + telegram-client.ts):
-  - Removed credentials input step - API ID/Hash now configured via env vars
-  - Simplified flow: Номер телефона → Код подтверждения → (опционально) Пароль 2FA
-  - User no longer needs to provide API credentials
-
-- Previous session: **✨ Added bot execution time tracking counter** (bot-control.tsx):
-  - New toggle "📊 Отслеживать время" to enable/disable time tracking per bot
-  - Displays total execution time in format (10ч 30м, 5м 20с, etc.)
-  - Shows time when tracking is enabled in bot information section (⏱️ Времени работы: Xч Xм)
-  - Tracks execution time via `trackExecutionTime` and `totalExecutionSeconds` fields in botTokens table
-
-## Previous Session: Major Refactoring
-- Removed standalone node types: photo, video, audio, document, keyboard
-- Integrated media and keyboard functionality as properties within message nodes
-- Cleaned up ~9,000 lines of redundant code from bot-generator.ts
-- Achieved 0 LSP errors (was 773+ errors)
-- Simplified codebase and improved maintainability
-
-## System Architecture
-
-### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **UI Components**: Shadcn/ui (built on Radix UI)
-- **Styling**: Tailwind CSS with CSS variables for theming
-- **State Management**: React hooks + TanStack Query
-- **Routing**: Wouter
-- **Design**: Drag-and-drop canvas editor, responsive design
-
-### Backend
-- **Runtime**: Node.js with Express.js
-- **Language**: TypeScript (ES modules)
-- **Database**: PostgreSQL with Drizzle ORM
-- **Session Storage**: PostgreSQL-based session storage
-- **API**: RESTful JSON API
-
-### Core Systems
-1. **Bot Editor Canvas**: Visual node-based flow editor
-2. **Bot Preview System**: Live bot simulation for testing
-3. **Code Generation**: Converts visual flows to Python (aiogram)
-4. **Storage System**: PostgreSQL database for projects and user data
-5. **Bot Execution**: Manages bot instances with start/stop controls
-6. **Template System**: Pre-built bot templates for quick start
-7. **Media Management**: File upload and optimization
-8. **User Analytics**: Automatic user data collection and statistics
-
-## Project Structure
-```
-telegram-bot-builder/
-├── client/              # React frontend
-│   └── src/
-│       ├── components/  # UI components
-│       │   ├── ui/      # Base components
-│       │   └── editor/  # Editor components
-│       ├── pages/       # Application pages
-│       └── lib/         # Utilities and hooks
-├── server/              # Express backend
-│   ├── routes.ts        # API routes
-│   ├── storage.ts       # Database interface
-│   ├── db.ts            # Database connection
-│   └── telegram-client.ts # Telegram API
-├── shared/              # Shared types
-│   └── schema.ts        # Drizzle ORM schemas
-├── bots/                # Generated bot files
-└── uploads/             # User uploaded files
-```
-
-## Data Model
-
-### Node Types (in message-based flow)
-- **start**: Initialization node
-- **message**: Text messages with formatting, keyboard, and media support
-- **command**: Command handlers (/start, /help, etc.)
-- **condition**: Conditional logic
-- **voice, animation, location, contact**: Special handlers
-- **user_input**: Data collection forms
-
-### Node Properties
-- **messageText**: Main text content
-- **buttons**: Array of buttons (inline or reply)
-- **keyboardType**: "inline", "reply", or none
-- **collectUserInput**: Enable user input mode
-- **enableConditionalMessages**: Conditional logic
-- **autoTransitionTo**: Auto-advance to next node
-- **media properties**: File handling for attachments
-
-## External Dependencies
-
-### Frontend Libraries
-- React, Radix UI, Shadcn/ui, Tailwind CSS, TypeScript
-- React Hook Form, Zod for validation
-- TanStack Query for data fetching
-- Lucide React for icons
-
-### Backend Libraries
-- Express.js, Drizzle ORM, TypeScript
-- PostgreSQL driver (@neondatabase/serverless)
-- Express Session with PostgreSQL storage
-
-### Generated Bot Dependencies
-- aiogram (Telegram Bot API)
-- asyncpg (async PostgreSQL)
-- aiohttp (HTTP client)
-
-## Development Guidelines
-- Follow modern web application patterns
-- Put most logic in frontend, backend handles persistence
-- Minimize file count, collapse similar components
-- Always use data model first (shared/schema.ts)
-- Prefer in-memory storage for development
-- Keep routes thin, use storage interface
-- Use TanStack Query for data fetching
-- Add data-testid to all interactive elements
+## Next Steps (For Future Sessions)
+1. Complete Task 7: Update components to use `use-user-data` hooks
+2. Complete Task 8: Implement public template system
+3. Complete Task 9: Add export/import functionality
+4. Complete Task 10: Full system testing
+5. Implement proper authentication middleware
+6. Add data migration UI with progress indicator
+7. Test edge cases and error scenarios
