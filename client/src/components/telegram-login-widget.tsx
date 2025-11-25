@@ -66,12 +66,13 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
     // Определяем глобальную функцию обратного вызова для обработки возврата с авторизации
     window.onTelegramAuth = async (telegramUser: any) => {
       try {
-        // Отправляем данные пользователя на бэк
+        // Отправляем данные пользователя на бэк - КРИТИЧНО: credentials для сессии!
         const response = await fetch('/api/auth/telegram', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // КРИТИЧНО: отправляем cookies для сессии!
           body: JSON.stringify({
             id: telegramUser.id,
             first_name: telegramUser.first_name,

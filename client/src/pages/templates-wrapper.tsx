@@ -40,8 +40,10 @@ export default function TemplatesPageWrapper() {
       // Если пользователь авторизован - очищаем localStorage ID шаблонов гостя
       // Теперь используются данные из БД
       localStorage.removeItem('myTemplateIds');
-      // Явно инвалидируем кеш при входе
-      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+      // КРИТИЧНО: удаляем старый кеш гостя и переполняем с новым user ID
+      queryClient.removeQueries({ queryKey: ['/api/templates/category/custom', 'guest'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
     }
   }, [user]);
 
