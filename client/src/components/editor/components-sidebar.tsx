@@ -1474,11 +1474,11 @@ export function ComponentsSidebar({
           <div className="space-y-4">
             {/* Заголовок и кнопки управления */}
             <div className="space-y-3 mb-4">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-bold bg-gradient-to-r from-slate-700 to-slate-600 dark:from-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                <h3 className="text-base font-bold bg-gradient-to-r from-slate-700 to-slate-600 dark:from-slate-300 dark:to-slate-400 bg-clip-text text-transparent whitespace-nowrap">
                   Проекты ({projects.length})
                 </h3>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button 
                     size="default" 
                     variant="outline" 
@@ -1486,6 +1486,7 @@ export function ComponentsSidebar({
                     onClick={handleCreateProject}
                     disabled={createProjectMutation.isPending}
                     title="Создать новый проект"
+                    data-testid="button-create-project"
                   >
                     <Plus className="h-4 w-4" />
                     <span>Новый</span>
@@ -1500,6 +1501,7 @@ export function ComponentsSidebar({
                       setImportError('');
                     }}
                     title="Импортировать проект из JSON"
+                    data-testid="button-import-project"
                   >
                     <i className="fas fa-upload text-xs" />
                     <span>Импорт</span>
