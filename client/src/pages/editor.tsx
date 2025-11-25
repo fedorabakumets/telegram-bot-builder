@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation, useParams, useRoute } from 'wouter';
+import { useLocation } from 'wouter';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { TelegramLoginWidget } from '@/components/telegram-login-widget';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,9 +37,15 @@ import { SheetsManager } from '@/utils/sheets-manager';
 import { nanoid } from 'nanoid';
 
 export default function Editor() {
+  // Используем useLocation для получения текущего пути
+  const [location] = useLocation();
   const [, setLocation] = useLocation();
-  const [match, params] = useRoute('/editor/:id');
-  const projectId = params?.id ? parseInt(params.id) : null;
+  
+  // Парсим ID проекта из URL вручную вместо useRoute
+  const projectId = (() => {
+    const match = location.match(/^\/editor\/(\d+)/) || location.match(/^\/projects\/(\d+)/);
+    return match ? parseInt(match[1]) : null;
+  })();
   const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -51,16 +57,11 @@ export default function Editor() {
   // Эффект для корректного восстановления мобильного интерфейса при навигации
   useEffect(() => {
     if (isMobile) {
-      // Закрываем все мобильные панели при возврате к редактору
       setShowMobileSidebar(false);
       setShowMobileProperties(false);
-      
-      // Устанавливаем корректную конфигурацию layout для мобильных устройств
       setFlexibleLayoutConfig(prev => ({
         ...prev,
         elements: prev.elements.map(element => {
-          // На мобильных устройствах по умолчанию скрываем sidebar и properties панели,
-          // но оставляем их в конфигурации, чтобы кнопки мобильного доступа работали
           if (element.type === 'sidebar' || element.type === 'properties') {
             return { ...element, visible: false };
           }
@@ -68,7 +69,6 @@ export default function Editor() {
         })
       }));
     } else {
-      // На десктопе восстанавливаем все панели
       setFlexibleLayoutConfig(prev => ({
         ...prev,
         elements: prev.elements.map(element => ({
@@ -77,7 +77,7 @@ export default function Editor() {
         }))
       }));
     }
-  }, [isMobile]); // Убираем match из зависимостей, чтобы эффект не срабатывал при каждой навигации
+  }, [isMobile]);
 
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
