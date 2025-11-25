@@ -335,11 +335,27 @@ export function Canvas({
 
   // Zoom utility functions
   const zoomIn = useCallback(() => {
-    setZoom(prev => Math.min(prev + 25, 200));
+    setZoom(prev => {
+      const newZoom = Math.min(prev + 25, 200);
+      const zoomRatio = newZoom / prev;
+      setPan(p => ({
+        x: p.x * zoomRatio,
+        y: p.y * zoomRatio
+      }));
+      return newZoom;
+    });
   }, []);
 
   const zoomOut = useCallback(() => {
-    setZoom(prev => Math.max(prev - 25, 1));
+    setZoom(prev => {
+      const newZoom = Math.max(prev - 25, 1);
+      const zoomRatio = newZoom / prev;
+      setPan(p => ({
+        x: p.x * zoomRatio,
+        y: p.y * zoomRatio
+      }));
+      return newZoom;
+    });
   }, []);
 
   const resetZoom = useCallback(() => {
