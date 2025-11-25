@@ -1068,30 +1068,30 @@ export function Canvas({
       </div>
 
       {/* Панель инструментов - фиксированная панель вверху */}
-      <div className="absolute top-0 z-40 pointer-events-none transition-all duration-300" style={{
-        left: isMobile ? '10px' : (sidebarVisible ? '100px' : '20px'),
-        right: isMobile ? '10px' : (propertiesVisible ? '150px' : '20px')
+      <div className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{
+        left: 0,
+        right: 0
       }}>
-        <div className="pt-0 w-full">
-          <div className={`pointer-events-auto flex items-center justify-between canvas-controls overflow-x-auto w-full ${
-            isMobile ? 'space-x-1 text-sm' : 'space-x-2'
+        <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
+          <div className={`flex items-center canvas-controls overflow-x-auto w-full gap-2 ${
+            isMobile ? 'text-sm' : 'text-sm'
           }`}>
 
-            <div className={`flex items-center flex-shrink-0 ${isMobile ? 'space-x-0.5' : 'space-x-1'}`}>
+            <div className={`flex items-center flex-shrink-0 gap-2`}>
               {/* Кнопки масштаба */}
               <button 
                 onClick={zoomOut}
                 disabled={zoom <= 1}
-                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed`}
                 title="Уменьшить масштаб (Ctrl + -)"
               >
-                <i className="fas fa-search-minus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                <i className="fas fa-search-minus text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center justify-center"></i>
               </button>
 
               <Popover>
                 <PopoverTrigger asChild>
                   <button
-                    className={`${isMobile ? 'px-2 py-2 text-xs min-w-[3rem]' : 'px-3 py-2.5 text-sm min-w-[4rem]'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 text-gray-700 dark:text-gray-300 font-mono text-center group`}
+                    className={`flex-shrink-0 px-2 py-0 h-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 text-slate-700 dark:text-slate-300 font-mono text-xs group flex items-center gap-1`}
                     title="Выбрать масштаб"
                   >
                     <span className="flex items-center justify-center space-x-1">
@@ -1146,59 +1146,59 @@ export function Canvas({
               <button 
                 onClick={zoomIn}
                 disabled={zoom >= 200}
-                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
                 title="Увеличить масштаб (Ctrl + +)"
               >
-                <i className="fas fa-search-plus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                <i className="fas fa-search-plus text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
               <button 
                 onClick={fitToContent}
                 disabled={nodes.length === 0}
-                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
                 title="Уместить в экран (Ctrl + 1)"
               >
-                <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                <i className="fas fa-expand-arrows-alt text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
               {/* Кнопка автоматической раскладки */}
               <button 
                 onClick={autoArrange}
                 disabled={nodes.length === 0}
-                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
                 title="Автоматическая раскладка (центрирует узлы между родителями)"
               >
-                <i className="fas fa-magic text-gray-600 dark:text-gray-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
+                <i className="fas fa-magic text-slate-600 dark:text-slate-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
               </button>
 
               <button 
                 onClick={onUndo}
                 disabled={!canUndo}
-                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
                 title="Отменить действие (Ctrl + Z)"
               >
-                <i className="fas fa-undo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                <i className="fas fa-undo text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
               <button 
                 onClick={onRedo}
                 disabled={!canRedo}
-                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
                 title="Повторить действие (Ctrl + Y)"
               >
-                <i className="fas fa-redo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                <i className="fas fa-redo text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
               {onSave && (
                 <button 
                   onClick={onSave}
                   disabled={isSaving}
-                  className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
                   title="Сохранить проект (Ctrl + S)"
                 >
                   {isSaving ? (
-                    <i className="fas fa-spinner fa-spin text-gray-600 dark:text-gray-400 text-sm"></i>
+                    <i className="fas fa-spinner fa-spin text-slate-600 dark:text-slate-400 text-sm"></i>
                   ) : (
-                    <i className="fas fa-save text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
+                    <i className="fas fa-save text-slate-600 dark:text-slate-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
                   )}
                 </button>
               )}
@@ -1207,33 +1207,36 @@ export function Canvas({
               {onCopyToClipboard && selectedNodeId && (
                 <button 
                   onClick={() => onCopyToClipboard([selectedNodeId])}
-                  className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}
+                  className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}
                   title="Копировать в буфер (Shift + Ctrl + C)"
                 >
-                  <i className="fas fa-clipboard text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                  <i className="fas fa-clipboard text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
                 </button>
               )}
 
               {onPasteFromClipboard && hasClipboardData && (
                 <button 
                   onClick={onPasteFromClipboard}
-                  className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}
+                  className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}
                   title="Вставить из буфера (Shift + Ctrl + V)"
                 >
-                  <i className="fas fa-paste text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
+                  <i className="fas fa-paste text-slate-600 dark:text-slate-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
                 </button>
               )}
 
+              {/* Разделитель */}
+              <div className="h-6 w-px bg-slate-300/50 dark:bg-slate-600/50"></div>
+
               {/* Кнопки управления интерфейсом - показываем только когда шапка скрыта */}
               {headerVisible === false && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
-                <div className="flex items-center space-x-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 p-1">
+                <div className="flex items-center gap-2">
                   {onToggleHeader && (
                     <button
                       onClick={onToggleHeader}
-                      className={`p-2 rounded-md transition-all duration-200 ${
+                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${
                         headerVisible 
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' 
+                          : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
                       }`}
                       title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
                     >
@@ -1244,10 +1247,10 @@ export function Canvas({
                   {onToggleSidebar && (
                     <button
                       onClick={onToggleSidebar}
-                      className={`p-2 rounded-md transition-all duration-200 ${
+                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${
                         sidebarVisible 
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' 
+                          : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
                       }`}
                       title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
                     >
@@ -1258,10 +1261,10 @@ export function Canvas({
                   {onToggleCanvas && (
                     <button
                       onClick={onToggleCanvas}
-                      className={`p-2 rounded-md transition-all duration-200 ${
+                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${
                         canvasVisible 
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' 
+                          : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
                       }`}
                       title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
                     >
@@ -1272,10 +1275,10 @@ export function Canvas({
                   {onToggleProperties && (
                     <button
                       onClick={onToggleProperties}
-                      className={`p-2 rounded-md transition-all duration-200 ${
+                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${
                         propertiesVisible 
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' 
+                          : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
                       }`}
                       title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
                     >
@@ -1291,15 +1294,15 @@ export function Canvas({
             <div className="h-6 w-px bg-border"></div>
 
             {/* Zoom Info and Help */}
-            <div className="flex items-center space-x-2 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {zoom !== 100 && (
-                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
-                  <div className="flex items-center space-x-2">
+                <div className="bg-slate-200/60 dark:bg-slate-700/50 backdrop-blur-md rounded-xl border border-slate-300/50 dark:border-slate-600/50 px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center gap-2">
                     <i className="fas fa-info-circle text-blue-500"></i>
                     <span>
                       {zoom > 100 ? 'Увеличено' : 'Уменьшено'} до {Math.round(zoom)}%
                     </span>
-                    <span className="text-gray-400 dark:text-gray-500">•</span>
+                    <span className="text-slate-400 dark:text-slate-500">•</span>
                     <span>Ctrl+0 для сброса</span>
                   </div>
                 </div>
@@ -1308,8 +1311,8 @@ export function Canvas({
               {/* Zoom Help */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className={`${isMobile ? 'p-1.5' : 'p-2'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}>
-                    <i className="fas fa-question-circle text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-500 transition-colors"></i>
+                  <button className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}>
+                    <i className="fas fa-question-circle text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-500 transition-colors"></i>
                   </button>
                 </PopoverTrigger>
                 <PopoverContent side="bottom" className="w-64 p-3">
