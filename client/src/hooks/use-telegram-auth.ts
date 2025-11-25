@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { queryClient } from '@/lib/queryClient';
 
 export interface TelegramUser {
   id: number;
@@ -39,8 +40,16 @@ export function useTelegramAuth() {
       try {
         if (e.detail.user) {
           setUser(e.detail.user);
+          // Инвалидируем кеш шаблонов при изменении пользователя
+          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
         } else {
           setUser(null);
+          // Очищаем кеш при выходе
+          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
         }
       } catch (err) {
         console.error('Error in auth change handler:', err);
@@ -54,8 +63,14 @@ export function useTelegramAuth() {
           if (e.newValue) {
             const parsedUser = JSON.parse(e.newValue);
             setUser(parsedUser);
+            queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
           } else {
             setUser(null);
+            queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
           }
         } catch (err) {
           console.error('Error parsing user from storage event:', err);
@@ -75,6 +90,10 @@ export function useTelegramAuth() {
     setUser(userData);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+      // Инвалидируем кеш при входе
+      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
     } catch (e) {
       console.error('Error saving user to localStorage:', e);
     }
@@ -95,6 +114,10 @@ export function useTelegramAuth() {
     setUser(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
+      // Инвалидируем кеш при выходе
+      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
     } catch (e) {
       console.error('Error removing user from localStorage:', e);
     }

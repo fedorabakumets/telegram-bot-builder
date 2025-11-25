@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import type { BotTemplate } from '@shared/schema';
 
 // Простая версия страницы шаблонов без сложной системы макетов
@@ -22,6 +23,7 @@ export default function TemplatesPageWrapper() {
   const [currentTab, setCurrentTab] = useState('all');
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'recent' | 'name'>('popular');
   const { toast } = useToast();
+  const { user } = useTelegramAuth();
 
   const { data: templates = [], isLoading } = useQuery<BotTemplate[]>({
     queryKey: ['/api/templates'],
@@ -32,15 +34,26 @@ export default function TemplatesPageWrapper() {
     enabled: currentTab === 'featured',
   });
 
+  // Очищаем локальный стейт гостя при авторизации
+  useEffect(() => {
+    if (user) {
+      // Если пользователь авторизован - очищаем localStorage ID шаблонов гостя
+      // Теперь используются данные из БД
+      localStorage.removeItem('myTemplateIds');
+      // Явно инвалидируем кеш при входе
+      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+    }
+  }, [user]);
+
   const { data: myTemplates = [], isLoading: isLoadingMy } = useQuery<BotTemplate[]>({
-    queryKey: ['/api/templates/category/custom'],
+    queryKey: ['/api/templates/category/custom', user?.id || 'guest'],
     queryFn: async () => {
       // Проверяем есть ли сохраненные шаблоны в localStorage для гостей
       const myTemplateIds = localStorage.getItem('myTemplateIds');
       
       // Только для гостей добавляем параметр ids
-      // Для авторизованных пользователей сервер автоматически вернет их шаблоны
-      const idsParam = myTemplateIds && myTemplateIds.length > 0 ? `?ids=${myTemplateIds}` : '';
+      // Для авторизованных пользователей сервер автоматически вернет их шаблоны по сессии
+      const idsParam = (myTemplateIds && myTemplateIds.length > 0 && !user) ? `?ids=${myTemplateIds}` : '';
       const response = await fetch(`/api/templates/category/custom${idsParam}`);
       return response.json();
     }

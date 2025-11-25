@@ -3,6 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTelegramAuth, type TelegramUser } from '@/hooks/use-telegram-auth';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
+import { queryClient } from '@/lib/queryClient';
 
 interface BotInfo {
   first_name: string;
@@ -94,6 +95,11 @@ export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLogin
           
           // Сохраняем в локальном состоянии (БД уже сохранила)
           login(userData);
+          
+          // Инвалидируем кеш для обновления данных
+          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
           
           // Отправляем custom event чтобы другие компоненты узнали об авторизации
           window.dispatchEvent(new CustomEvent('telegram-auth-change', {
