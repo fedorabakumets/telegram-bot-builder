@@ -25,6 +25,7 @@ interface TemplateFormData {
   description: string;
   category: string;
   isPublic: boolean;
+  isAnonymous: boolean;
 }
 
 export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: SaveTemplateModalProps) {
@@ -33,6 +34,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     description: '',
     category: 'custom',
     isPublic: false,
+    isAnonymous: false,
   });
   const { toast } = useToast();
   const { user } = useTelegramAuth();
@@ -83,7 +85,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
         requiresToken: 1,
         complexity: 1,
         estimatedTime: 5,
-        authorName: user?.username || 'Пользователь',
+        authorName: data.isAnonymous ? null : (user?.username || 'Пользователь'),
         featured: 0,
         data: botData,
       });
@@ -113,6 +115,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
       description: '',
       category: 'custom',
       isPublic: false,
+      isAnonymous: false,
     });
   };
 
@@ -191,17 +194,47 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
           </div>
 
           {/* Публичность */}
-          <div className="flex items-center space-x-2">
-            <input
-              id="isPublic"
-              type="checkbox"
-              checked={formData.isPublic}
-              onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))}
-              className="h-4 w-4"
-            />
-            <Label htmlFor="isPublic">
-              Сделать шаблон публичным (другие пользователи смогут его использовать)
-            </Label>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <input
+                id="isPublic"
+                type="checkbox"
+                checked={formData.isPublic}
+                onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="isPublic">
+                Сделать шаблон публичным (другие пользователи смогут его использовать)
+              </Label>
+            </div>
+
+            {/* Предупреждение о видимости */}
+            {formData.isPublic && !formData.isAnonymous && (
+              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
+                ⚠️ <strong>Внимание!</strong> Ваш юзернейм Telegram будет виден всем, кто использует этот шаблон.
+              </div>
+            )}
+
+            {/* Анонимность */}
+            <div className="flex items-center space-x-2">
+              <input
+                id="isAnonymous"
+                type="checkbox"
+                checked={formData.isAnonymous}
+                onChange={(e) => setFormData(prev => ({ ...prev, isAnonymous: e.target.checked }))}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="isAnonymous">
+                Сохранить анонимно (скрыть мой юзернейм)
+              </Label>
+            </div>
+
+            {/* Инфо об анонимности */}
+            {formData.isAnonymous && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-200">
+                ✓ Шаблон будет сохранён как "Сохранено от сообщества"
+              </div>
+            )}
           </div>
 
           {/* Статистика бота */}
