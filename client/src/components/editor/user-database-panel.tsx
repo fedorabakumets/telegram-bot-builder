@@ -796,11 +796,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           {/* Status Badges */}
                           <div className="flex flex-wrap gap-2">
                             <Badge variant={user.isActive === 1 ? "default" : "secondary"}>
-                              {String(user.isActive === 1 ? "Активен" : "Неактивен")}
+                              {user.isActive === 1 ? "Активен" : "Неактивен"}
                             </Badge>
-                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />{String("Premium")}</Badge>}
-                            {user.isBlocked === 1 && <Badge variant="destructive">{String("Заблокирован")}</Badge>}
-                            {user.isBot === 1 && <Badge variant="outline">{String("Бот")}</Badge>}
+                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                            {user.isBlocked === 1 && <Badge variant="destructive">Заблокирован</Badge>}
+                            {user.isBot === 1 && <Badge variant="outline">Бот</Badge>}
                           </div>
 
                           {/* Stats */}
@@ -1060,8 +1060,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
       </div>
     </ScrollArea>
 
-      {/* User Details Dialog */}
-      <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
+    {/* User Details Dialog */}
+    <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
         <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh]' : 'max-w-3xl max-h-[80vh]'} overflow-auto`}>
           <DialogHeader>
             <DialogTitle>Детали пользователя</DialogTitle>
@@ -1076,11 +1076,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div>
                   <Label className="text-sm font-medium">Основная информация</Label>
                   <div className="mt-2 space-y-2">
-                    <div><span className="text-sm text-muted-foreground">Имя:</span> {String(selectedUser?.firstName || 'Не указано')}</div>
-                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {String(selectedUser?.lastName || 'Не указано')}</div>
-                    <div><span className="text-sm text-muted-foreground">Username:</span> {String(selectedUser?.userName ? `@${selectedUser.userName}` : 'Не указано')}</div>
-                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {String(selectedUser?.userId)}</div>
-                    <div><span className="text-sm text-muted-foreground">Язык:</span> {String(selectedUser?.languageCode || 'Не указано')}</div>
+                    <div><span className="text-sm text-muted-foreground">Имя:</span> {selectedUser!.firstName || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {selectedUser!.lastName || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Username:</span> {selectedUser!.userName ? `@${selectedUser!.userName}` : 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {selectedUser!.userId}</div>
+                    <div><span className="text-sm text-muted-foreground">Язык:</span> {selectedUser!.languageCode || 'Не указано'}</div>
                   </div>
                 </div>
                 
@@ -1124,11 +1124,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 </div>
               </div>
 
-              {selectedUser?.tags && selectedUser.tags.length > 0 && (
+              {selectedUser?.tags && selectedUser!.tags.length > 0 && (
                 <div>
                   <Label className="text-sm font-medium">Теги</Label>
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {selectedUser.tags.map((tag, index) => (
+                    {selectedUser!.tags.map((tag, index) => (
                       <Badge key={index} variant="secondary">{String(tag)}</Badge>
                     ))}
                   </div>
@@ -1136,17 +1136,17 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               )}
 
               {/* Enhanced user responses section */}
-              {(selectedUser?.userData && Object.keys((selectedUser.userData as Record<string, unknown>) || {}).length > 0) && (
+              {(selectedUser?.userData && Object.keys((selectedUser!.userData as Record<string, unknown>) || {}).length > 0) && (
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <MessageSquare className="w-5 h-5 text-primary" />
                     <Label className="text-base font-semibold">Ответы пользователя</Label>
                     <Badge variant="secondary" className="text-xs">
-                      {Object.keys((selectedUser.userData as Record<string, unknown>) || {}).length}
+                      {Object.keys((selectedUser!.userData as Record<string, unknown>) || {}).length}
                     </Badge>
                   </div>
                   <div className="space-y-4">
-                    {Object.entries((selectedUser.userData as Record<string, unknown>) || {}).map(([key, value]) => {
+                    {Object.entries((selectedUser!.userData as Record<string, unknown>) || {}).map(([key, value]) => {
                       // Parse value if it's a string (from PostgreSQL)
                       let responseData: any = value;
                       if (typeof value === 'string') {
@@ -1169,20 +1169,20 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                               </div>
                               {responseData?.type && (
                                 <Badge variant="outline" className="text-xs border-primary/20 text-primary">
-                                  {responseData.type === 'text' ? '📝 Текст' : 
-                                   responseData.type === 'number' ? '🔢 Число' :
-                                   responseData.type === 'email' ? '📧 Email' :
-                                   responseData.type === 'phone' ? '📞 Телефон' :
-                                   responseData.type}
+                                  {String(responseData.type === 'text' ? 'Текст' : 
+                                   responseData.type === 'number' ? 'Число' :
+                                   responseData.type === 'email' ? 'Email' :
+                                   responseData.type === 'phone' ? 'Телефон' :
+                                   responseData.type)}
                                 </Badge>
                               )}
                             </div>
                             <div className="flex items-center gap-2">
                               <Calendar className="w-3 h-3 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground font-medium">
-                                {responseData?.timestamp 
+                                {String(responseData?.timestamp 
                                   ? formatDate(responseData.timestamp) 
-                                  : 'Недавно'}
+                                  : 'Недавно')}
                               </span>
                             </div>
                           </div>
@@ -1284,8 +1284,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
         </DialogContent>
       </Dialog>
 
-      {/* Chat Dialog */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+    {/* Chat Dialog */}
+    <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh]' : 'max-w-2xl max-h-[80vh]'} flex flex-col`}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1467,5 +1467,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           </div>
         </DialogContent>
       </Dialog>
+    </>
   );
 }
