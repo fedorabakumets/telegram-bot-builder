@@ -1051,12 +1051,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
             )}
           </TabsContent>
           
-          <TabsContent value="backup" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="p-4">
-                <DatabaseBackupPanel />
-              </div>
-            </ScrollArea>
+          <TabsContent value="backup" className="p-4">
+            <DatabaseBackupPanel />
           </TabsContent>
         </Tabs>
         </div>
@@ -1479,6 +1475,5 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           </div>
         </DialogContent>
       </Dialog>
-    </div>
   );
 }
