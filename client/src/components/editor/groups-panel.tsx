@@ -1539,36 +1539,36 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </p>
                     )}
 
-                    {/* Premium Info Grid with Glassmorphism */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+                    {/* Premium Info Grid with Glassmorphism - Ultra Responsive */}
+                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-1.5 sm:gap-2.5 mb-3">
                       {/* Members Info Card */}
-                      <div className="relative overflow-hidden rounded-xl p-3 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm transition-all hover:shadow-lg hover:border-blue-300/70 dark:hover:border-blue-700/70 group/info">
-                        <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl group-hover/info:blur-xl transition-all" />
-                        <div className="relative flex items-start justify-between">
-                          <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Участников</p>
-                            <p className="text-lg sm:text-xl font-bold text-blue-700 dark:text-blue-300">
+                      <div className="relative overflow-hidden rounded-lg sm:rounded-xl p-2 sm:p-3 bg-gradient-to-br from-blue-50/80 to-cyan-50/80 dark:from-blue-950/40 dark:to-cyan-950/40 border border-blue-200/60 dark:border-blue-800/60 backdrop-blur-md transition-all duration-300 hover:shadow-md sm:hover:shadow-lg hover:border-blue-300/80 dark:hover:border-blue-700/80 hover:scale-105 group/info">
+                        <div className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-blue-400/15 to-cyan-400/15 rounded-full blur-xl group-hover/info:blur-2xl group-hover/info:scale-125 transition-all duration-300" />
+                        <div className="relative flex items-center sm:items-start justify-between gap-2">
+                          <div className="flex flex-col gap-0.5 sm:gap-1.5 flex-1 min-w-0">
+                            <p className="text-xs sm:text-xs font-medium text-muted-foreground uppercase tracking-widest leading-tight">Участников</p>
+                            <p className="text-base sm:text-lg font-bold text-blue-700 dark:text-blue-300 line-clamp-1">
                               {group.memberCount || '—'}
                             </p>
                           </div>
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center flex-shrink-0 border border-blue-200/50 dark:border-blue-800/50">
-                            <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md sm:rounded-lg bg-gradient-to-br from-blue-500/25 to-cyan-500/25 flex items-center justify-center flex-shrink-0 border border-blue-200/60 dark:border-blue-800/60 transition-transform duration-300 group-hover/info:scale-110">
+                            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
                           </div>
                         </div>
                       </div>
 
                       {/* Created Date Card */}
-                      <div className="relative overflow-hidden rounded-xl p-3 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200/50 dark:border-amber-800/50 backdrop-blur-sm transition-all hover:shadow-lg hover:border-amber-300/70 dark:hover:border-amber-700/70 group/info">
-                        <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-amber-400/10 to-orange-400/10 rounded-full blur-2xl group-hover/info:blur-xl transition-all" />
-                        <div className="relative flex items-start justify-between">
-                          <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Создана</p>
-                            <p className="text-lg sm:text-xl font-bold text-amber-700 dark:text-amber-300">
+                      <div className="relative overflow-hidden rounded-lg sm:rounded-xl p-2 sm:p-3 bg-gradient-to-br from-amber-50/80 to-orange-50/80 dark:from-amber-950/40 dark:to-orange-950/40 border border-amber-200/60 dark:border-amber-800/60 backdrop-blur-md transition-all duration-300 hover:shadow-md sm:hover:shadow-lg hover:border-amber-300/80 dark:hover:border-amber-700/80 hover:scale-105 group/info">
+                        <div className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-amber-400/15 to-orange-400/15 rounded-full blur-xl group-hover/info:blur-2xl group-hover/info:scale-125 transition-all duration-300" />
+                        <div className="relative flex items-center sm:items-start justify-between gap-2">
+                          <div className="flex flex-col gap-0.5 sm:gap-1.5 flex-1 min-w-0">
+                            <p className="text-xs sm:text-xs font-medium text-muted-foreground uppercase tracking-widest leading-tight">Создана</p>
+                            <p className="text-base sm:text-lg font-bold text-amber-700 dark:text-amber-300 line-clamp-1">
                               {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {month: 'short', day: 'numeric'}) : '—'}
                             </p>
                           </div>
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center flex-shrink-0 border border-amber-200/50 dark:border-amber-800/50">
-                            <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md sm:rounded-lg bg-gradient-to-br from-amber-500/25 to-orange-500/25 flex items-center justify-center flex-shrink-0 border border-amber-200/60 dark:border-amber-800/60 transition-transform duration-300 group-hover/info:scale-110">
+                            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
                           </div>
                         </div>
                       </div>
