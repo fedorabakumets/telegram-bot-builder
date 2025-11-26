@@ -2794,15 +2794,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 </p>
                               </div>
                               
-                              <div className="space-y-2">
-                                <div className="flex gap-2">
+                              <div className="space-y-3">
+                                <div className="flex gap-2.5">
                                   <Input
                                     placeholder="@username или ID пользователя"
                                     value={userToFind}
                                     onChange={(e) => setUserToFind(e.target.value)}
                                     onKeyDown={(e) => {
                                       if (e.key === 'Enter' && userToFind.trim() && selectedGroup?.groupId) {
-                                        // Извлекаем ID из строки (может быть @username или просто ID)
                                         let userId = userToFind.trim().replace('@', '');
                                         checkMemberMutation.mutate({
                                           groupId: selectedGroup.groupId,
@@ -2810,14 +2809,13 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                         });
                                       }
                                     }}
-                                    className="flex-1"
+                                    className="flex-1 h-10"
                                   />
                                   <Button
-                                    variant="outline"
+                                    variant="default"
                                     size="sm"
                                     onClick={() => {
                                       if (userToFind.trim() && selectedGroup?.groupId) {
-                                        // Извлекаем ID из строки (может быть @username или просто ID)
                                         let userId = userToFind.trim().replace('@', '');
                                         checkMemberMutation.mutate({
                                           groupId: selectedGroup.groupId,
@@ -2826,14 +2824,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                       }
                                     }}
                                     disabled={checkMemberMutation.isPending || !userToFind.trim()}
+                                    className="gap-2"
                                   >
-                                    {checkMemberMutation.isPending ? '⏳' : '🔍'}
+                                    {checkMemberMutation.isPending ? (
+                                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                                    ) : (
+                                      <Search className="w-4 h-4" />
+                                    )}
+                                    <span className="hidden sm:inline">Найти</span>
                                   </Button>
                                 </div>
                                 
-                                <p className="text-xs text-muted-foreground text-center">
-                                  Введите @username или ID для поиска • Загрузите всех участников кнопкой выше
-                                </p>
+                                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40">
+                                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                    <span className="font-semibold">Поиск участника:</span> Введите @username или Telegram ID для проверки членства в группе. Получить ID можно через @userinfobot
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           );
@@ -2843,22 +2849,30 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
 
 
-                      <div className="border-t my-4" />
+                      <div className="border-t border-border/40 my-6" />
 
                       {/* Управление сообщениями */}
-                      <div className="space-y-3">
-                        <h5 className="font-medium text-sm">Управление сообщениями</h5>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                            <MessageSquare className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                          </div>
+                          <h5 className="font-semibold text-sm">Управление сообщениями</h5>
+                        </div>
                         
                         {/* Закрепление сообщения */}
-                        <div className="space-y-2">
-                          <Label htmlFor="pin-message" className="text-xs">Закрепить сообщение (ID)</Label>
-                          <div className="flex gap-2">
+                        <div className="space-y-2.5 p-3 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
+                          <Label htmlFor="pin-message" className="text-xs font-semibold flex items-center gap-1.5">
+                            <Pin className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            Закрепить сообщение
+                          </Label>
+                          <div className="flex gap-2.5">
                             <Input
                               id="pin-message"
                               value={messageIdToPin}
                               onChange={(e) => setMessageIdToPin(e.target.value)}
-                              placeholder="ID сообщения для закрепления..."
-                              className="flex-1"
+                              placeholder="ID сообщения"
+                              className="flex-1 h-10"
                             />
                             <Button 
                               onClick={() => pinMessageMutation.mutate({ 
@@ -2867,26 +2881,31 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               })}
                               disabled={!messageIdToPin.trim() || pinMessageMutation.isPending}
                               size="sm"
+                              className="gap-2"
                             >
                               {pinMessageMutation.isPending ? (
                                 <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
                               ) : (
                                 <Pin className="h-4 w-4" />
                               )}
+                              <span className="hidden sm:inline">Закрепить</span>
                             </Button>
                           </div>
                         </div>
 
                         {/* Открепление сообщения */}
-                        <div className="space-y-2">
-                          <Label htmlFor="unpin-message" className="text-xs">Открепить сообщение (ID)</Label>
-                          <div className="flex gap-2">
+                        <div className="space-y-2.5 p-3 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
+                          <Label htmlFor="unpin-message" className="text-xs font-semibold flex items-center gap-1.5">
+                            <PinOff className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                            Открепить сообщение
+                          </Label>
+                          <div className="flex gap-2.5">
                             <Input
                               id="unpin-message"
                               value={messageIdToUnpin}
                               onChange={(e) => setMessageIdToUnpin(e.target.value)}
-                              placeholder="ID сообщения или оставьте пустым для всех..."
-                              className="flex-1"
+                              placeholder="ID или оставьте пустым"
+                              className="flex-1 h-10"
                             />
                             <Button 
                               onClick={() => unpinMessageMutation.mutate({ 
@@ -2895,26 +2914,32 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               })}
                               disabled={unpinMessageMutation.isPending}
                               size="sm"
+                              variant="outline"
+                              className="gap-2"
                             >
                               {unpinMessageMutation.isPending ? (
                                 <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
                               ) : (
                                 <PinOff className="h-4 w-4" />
                               )}
+                              <span className="hidden sm:inline">Открепить</span>
                             </Button>
                           </div>
                         </div>
 
                         {/* Удаление сообщения */}
-                        <div className="space-y-2">
-                          <Label htmlFor="delete-message" className="text-xs">Удалить сообщение (ID)</Label>
-                          <div className="flex gap-2">
+                        <div className="space-y-2.5 p-3 rounded-lg bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors border border-red-200 dark:border-red-800/40">
+                          <Label htmlFor="delete-message" className="text-xs font-semibold flex items-center gap-1.5 text-red-700 dark:text-red-300">
+                            <Trash className="h-3.5 w-3.5" />
+                            Удалить сообщение
+                          </Label>
+                          <div className="flex gap-2.5">
                             <Input
                               id="delete-message"
                               value={messageIdToDelete}
                               onChange={(e) => setMessageIdToDelete(e.target.value)}
-                              placeholder="ID сообщения для удаления..."
-                              className="flex-1"
+                              placeholder="ID сообщения"
+                              className="flex-1 h-10"
                             />
                             <Button 
                               onClick={() => deleteMessageMutation.mutate({ 
@@ -2924,36 +2949,45 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               disabled={!messageIdToDelete.trim() || deleteMessageMutation.isPending}
                               size="sm"
                               variant="destructive"
+                              className="gap-2"
                             >
                               {deleteMessageMutation.isPending ? (
                                 <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
                               ) : (
                                 <Trash className="h-4 w-4" />
                               )}
+                              <span className="hidden sm:inline">Удалить</span>
                             </Button>
                           </div>
                         </div>
                       </div>
 
-                      <div className="border-t my-4" />
+                      <div className="border-t border-border/40 my-6" />
 
                       {/* Создание ссылок-приглашений */}
-                      <div className="space-y-3">
-                        <h5 className="font-medium text-sm">Ссылки-приглашения</h5>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                            <UserPlus className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          </div>
+                          <h5 className="font-semibold text-sm">Ссылки-приглашения</h5>
+                        </div>
                         
-                        <div className="space-y-2">
-                          <Label className="text-xs">Создать новую ссылку-приглашение</Label>
-                          <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-25 dark:from-green-950/30 dark:to-green-900/20 border border-green-200 dark:border-green-800/40">
+                          <Label className="text-xs font-semibold text-green-700 dark:text-green-300">Создать новую ссылку-приглашение</Label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             <Input
-                              placeholder="Название ссылки (опционально)"
+                              placeholder="Название ссылки"
                               value={inviteLinkName}
                               onChange={(e) => setInviteLinkName(e.target.value)}
+                              className="h-10"
                             />
                             <Input
                               type="number"
                               placeholder="Лимит участников"
                               value={inviteLinkLimit}
                               onChange={(e) => setInviteLinkLimit(e.target.value)}
+                              className="h-10"
                             />
                           </div>
                           
@@ -2965,24 +2999,31 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               createsJoinRequest: false
                             })}
                             disabled={createInviteLinkMutation.isPending}
-                            size="sm"
-                            className="w-full"
+                            className="w-full gap-2 h-10"
                           >
                             {createInviteLinkMutation.isPending ? (
-                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
                             ) : (
-                              <UserPlus className="h-4 w-4 mr-2" />
+                              <UserPlus className="h-4 w-4" />
                             )}
-                            Создать ссылку-приглашение
+                            Создать приглашение
                           </Button>
                         </div>
                       </div>
 
 
-                      <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                        <p className="text-xs text-muted-foreground">
-                          💡 <strong>Как получить User ID:</strong> Попросите пользователя написать /start боту @userinfobot или найти ID в настройках Telegram.
-                        </p>
+                      <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border border-blue-200 dark:border-blue-800/40">
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                            <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">Получение User ID</p>
+                            <p className="text-xs text-blue-600/80 dark:text-blue-400/80 leading-relaxed">
+                              Попросите пользователя отправить /start боту <code className="bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 rounded text-[11px] font-mono">@userinfobot</code> или найти ID в настройках Telegram.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
