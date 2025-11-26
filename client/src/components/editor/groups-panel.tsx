@@ -1466,43 +1466,67 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         <h3 className="font-bold text-sm sm:text-base text-foreground leading-tight truncate" data-testid={`text-group-name-${group.id}`}>
                           {group.name}
                         </h3>
-                        <div className="flex gap-1 mt-2 flex-wrap items-center">
-                          <Badge 
-                            variant={group.isAdmin ? "default" : "secondary"} 
-                            className="text-xs py-0.5 px-2 flex items-center gap-1 bg-gradient-to-r"
+                        <div className="flex gap-1.5 mt-2 flex-wrap items-center">
+                          {/* Admin Status Badge */}
+                          <div 
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all ${
+                              group.isAdmin 
+                                ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-700 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/50'
+                                : 'bg-gradient-to-r from-sky-500/15 to-cyan-500/15 text-sky-700 dark:text-sky-300 border border-sky-200/50 dark:border-sky-800/50'
+                            }`}
                             data-testid={`badge-admin-${group.id}`}
                           >
-                            {group.isAdmin ? (
-                              <>
-                                <Shield className="w-2.5 h-2.5" />
-                                <span>Админ</span>
-                              </>
-                            ) : (
-                              <>
-                                <Users className="w-2.5 h-2.5" />
-                                <span>Участник</span>
-                              </>
-                            )}
-                          </Badge>
-                          {group.chatType && (
-                            <Badge variant="outline" className="text-xs py-0.5 px-2 flex items-center gap-1">
-                              {group.chatType === 'supergroup' ? (
-                                <>
-                                  <TrendingUp className="w-2.5 h-2.5" />
-                                  Супер
-                                </>
-                              ) : group.chatType === 'channel' ? (
-                                <>
-                                  <Volume2 className="w-2.5 h-2.5" />
-                                  Канал
-                                </>
+                            <div className={`p-0.5 rounded-md ${
+                              group.isAdmin
+                                ? 'bg-purple-500/20'
+                                : 'bg-sky-500/20'
+                            }`}>
+                              {group.isAdmin ? (
+                                <Shield className="w-3 h-3" />
                               ) : (
-                                <>
-                                  <Users className="w-2.5 h-2.5" />
-                                  Группа
-                                </>
+                                <Users className="w-3 h-3" />
                               )}
-                            </Badge>
+                            </div>
+                            <span className="hidden sm:inline">
+                              {group.isAdmin ? 'Админ' : 'Участник'}
+                            </span>
+                          </div>
+
+                          {/* Chat Type Badge */}
+                          {group.chatType && (
+                            <div 
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all ${
+                                group.chatType === 'supergroup'
+                                  ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/50'
+                                  : group.chatType === 'channel'
+                                  ? 'bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-700 dark:text-pink-300 border border-pink-200/50 dark:border-pink-800/50'
+                                  : 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-700 dark:text-green-300 border border-green-200/50 dark:border-green-800/50'
+                              }`}
+                            >
+                              <div className={`p-0.5 rounded-md ${
+                                group.chatType === 'supergroup'
+                                  ? 'bg-amber-500/20'
+                                  : group.chatType === 'channel'
+                                  ? 'bg-pink-500/20'
+                                  : 'bg-green-500/20'
+                              }`}>
+                                {group.chatType === 'supergroup' ? (
+                                  <TrendingUp className="w-3 h-3" />
+                                ) : group.chatType === 'channel' ? (
+                                  <Volume2 className="w-3 h-3" />
+                                ) : (
+                                  <Users className="w-3 h-3" />
+                                )}
+                              </div>
+                              <span className="hidden sm:inline">
+                                {group.chatType === 'supergroup' ? 'Супергруппа' : 
+                                 group.chatType === 'channel' ? 'Канал' : 'Группа'}
+                              </span>
+                              <span className="sm:hidden text-xs">
+                                {group.chatType === 'supergroup' ? 'Супер' : 
+                                 group.chatType === 'channel' ? 'Канал' : 'Гр.'}
+                              </span>
+                            </div>
                           )}
                         </div>
                       </div>
