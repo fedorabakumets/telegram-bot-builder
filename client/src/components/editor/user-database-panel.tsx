@@ -411,8 +411,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const isDatabaseEnabled = project?.userDatabaseEnabled === 1;
 
   return (
-    <div className="h-full flex flex-col bg-background min-h-0">
-      <div className="border-b border-border/50 bg-card flex-none">
+    <ScrollArea className="h-full w-full">
+      <div className="flex flex-col bg-background">
+      <div className="border-b border-border/50 bg-card flex-none sticky top-0 z-10">
         <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5">
           {/* Modern Header with Glassmorphism */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-purple-500/10 dark:from-blue-500/20 dark:via-cyan-500/10 dark:to-purple-500/20 p-4 sm:p-5 lg:p-6">
@@ -730,15 +731,14 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
       {/* Tabs */}
       {isDatabaseEnabled && (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <Tabs defaultValue="users" className="flex-1 flex flex-col min-h-0">
+        <div>
+          <Tabs defaultValue="users" className="w-full">
           <TabsList className="grid w-full grid-cols-2 flex-shrink-0 m-3 sm:m-4">
             <TabsTrigger value="users">Пользователи</TabsTrigger>
             <TabsTrigger value="backup">Резервные копии</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="users" className="flex-1 overflow-hidden mt-2">
-            <ScrollArea className="h-full">
+          <TabsContent value="users" className="mt-2">
             {isMobile ? (
               // Mobile card layout
               <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
