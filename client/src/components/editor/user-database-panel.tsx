@@ -1059,7 +1059,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
       )}
       </div>
     </ScrollArea>
-
     {/* User Details Dialog */}
     <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
         <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh]' : 'max-w-3xl max-h-[80vh]'} overflow-auto`}>
@@ -1283,7 +1282,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           )}
         </DialogContent>
       </Dialog>
-
     {/* Chat Dialog */}
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh]' : 'max-w-2xl max-h-[80vh]'} flex flex-col`}>
