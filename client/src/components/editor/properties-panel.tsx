@@ -144,6 +144,50 @@ const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: с
   );
 };
 
+// Переиспользуемый компонент для выбора целевого узла
+const NodeSelector = ({
+  value,
+  onChange,
+  selectedNodeId,
+  getAllNodesFromAllSheets,
+  includeNoTransition = false,
+  manualInputProps = {}
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  selectedNodeId: string;
+  getAllNodesFromAllSheets: Array<{node: Node, sheetName: string}>;
+  includeNoTransition?: boolean;
+  manualInputProps?: {placeholder?: string; className?: string; onChange?: (e: any) => void; value?: string};
+}) => (
+  <div className="space-y-2">
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-400/30 dark:focus:ring-sky-600/30 transition-all duration-200 rounded-lg text-sky-900 dark:text-sky-50">
+        <SelectValue placeholder="⊘ Не выбрано" />
+      </SelectTrigger>
+      <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+        {includeNoTransition && <SelectItem value="no-transition">Не переходить</SelectItem>}
+        {getAllNodesFromAllSheets
+          .filter(n => n.node.id !== selectedNodeId)
+          .map(({node, sheetName}) => (
+            <SelectItem key={node.id} value={node.id}>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-sky-700 dark:text-sky-300">{node.id}</span>
+                <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
+              </div>
+            </SelectItem>
+          ))}
+      </SelectContent>
+    </Select>
+    {manualInputProps.onChange && (
+      <Input 
+        placeholder={manualInputProps.placeholder || "Или введите ID вручную"}
+        {...manualInputProps}
+      />
+    )}
+  </div>
+);
+
 interface PropertiesPanelProps {
   projectId: number;
   selectedNode: Node | null;
