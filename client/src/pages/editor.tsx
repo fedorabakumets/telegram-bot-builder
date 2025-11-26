@@ -510,6 +510,39 @@ export default function Editor() {
     }
   }, [updateNode, botDataWithSheets]);
 
+  // Обработчик смены ID узла
+  const handleNodeIdChange = useCallback((oldId: string, newId: string) => {
+    if (!botDataWithSheets || !botDataWithSheets.activeSheetId) return;
+    
+    const updatedSheets = botDataWithSheets.sheets.map(sheet => {
+      if (sheet.id === botDataWithSheets.activeSheetId) {
+        return {
+          ...sheet,
+          nodes: sheet.nodes.map(node => 
+            node.id === oldId 
+              ? { ...node, id: newId }
+              : node
+          ),
+          connections: sheet.connections.map(conn => ({
+            ...conn,
+            from: conn.from === oldId ? newId : conn.from,
+            to: conn.to === oldId ? newId : conn.to
+          }))
+        };
+      }
+      return sheet;
+    });
+    
+    setBotDataWithSheets({
+      ...botDataWithSheets,
+      sheets: updatedSheets
+    });
+    
+    if (selectedNodeId === oldId) {
+      setSelectedNodeId(newId);
+    }
+  }, [botDataWithSheets, selectedNodeId]);
+
   // Обновляем данные бота при смене проекта
   useEffect(() => {
     if (activeProject?.data && !isLoadingTemplate && !hasLocalChanges && 
@@ -1161,6 +1194,7 @@ export default function Editor() {
       currentSheetId={botDataWithSheets?.activeSheetId || undefined}
       onNodeUpdate={handleNodeUpdateWithSheets}
       onNodeTypeChange={handleNodeTypeChange}
+      onNodeIdChange={handleNodeIdChange}
       onButtonAdd={addButton}
       onButtonUpdate={updateButton}
       onButtonDelete={deleteButton}
@@ -1500,6 +1534,8 @@ export default function Editor() {
               allSheets={botDataWithSheets?.sheets || []}
               currentSheetId={botDataWithSheets?.activeSheetId || undefined}
               onNodeUpdate={handleNodeUpdateWithSheets}
+              onNodeTypeChange={handleNodeTypeChange}
+              onNodeIdChange={handleNodeIdChange}
               onButtonAdd={addButton}
               onButtonUpdate={updateButton}
               onButtonDelete={deleteButton}
@@ -1610,6 +1646,8 @@ export default function Editor() {
                   allSheets={botDataWithSheets?.sheets || []}
                   currentSheetId={botDataWithSheets?.activeSheetId || undefined}
                   onNodeUpdate={handleNodeUpdateWithSheets}
+                  onNodeTypeChange={handleNodeTypeChange}
+                  onNodeIdChange={handleNodeIdChange}
                   onButtonAdd={addButton}
                   onButtonUpdate={updateButton}
                   onButtonDelete={deleteButton}
@@ -1680,6 +1718,8 @@ export default function Editor() {
               allSheets={botDataWithSheets?.sheets || []}
               currentSheetId={botDataWithSheets?.activeSheetId || undefined}
               onNodeUpdate={handleNodeUpdateWithSheets}
+              onNodeTypeChange={handleNodeTypeChange}
+              onNodeIdChange={handleNodeIdChange}
               onButtonAdd={addButton}
               onButtonUpdate={updateButton}
               onButtonDelete={deleteButton}
