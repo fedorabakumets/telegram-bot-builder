@@ -150,6 +150,7 @@ export function Canvas({
 
   // Функция для добавления действия в историю
   const addAction = useCallback((type: Action['type'], description: string) => {
+    console.log('📝 addAction called:', type, description);
     setActionHistory(prev => {
       const newAction: Action = {
         id: nanoid(),
@@ -158,7 +159,9 @@ export function Canvas({
         timestamp: Date.now()
       };
       // Храним только последние 50 действий
-      return [newAction, ...prev].slice(0, 50);
+      const updated = [newAction, ...prev].slice(0, 50);
+      console.log('📝 actionHistory updated, now has', updated.length, 'actions');
+      return updated;
     });
   }, []);
 
@@ -188,21 +191,25 @@ export function Canvas({
 
   // Выбор диапазона действий
   const selectRange = useCallback((startIndex: number, endIndex: number) => {
-    const [min, max] = startIndex <= endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
-    const newSet = new Set<string>();
-    for (let i = min; i <= max; i++) {
-      if (actionHistory[i]) {
-        newSet.add(actionHistory[i].id);
+    setSelectedActionsForUndo(prev => {
+      const [min, max] = startIndex <= endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
+      const newSet = new Set<string>();
+      for (let i = min; i <= max; i++) {
+        if (actionHistory[i]) {
+          newSet.add(actionHistory[i].id);
+        }
       }
-    }
-    setSelectedActionsForUndo(newSet);
+      return newSet;
+    });
   }, [actionHistory]);
 
   // Начало выделения
   const handleMouseDownAction = useCallback((index: number) => {
-    setIsSelecting(true);
-    setSelectionStart(index);
-    toggleActionSelection(actionHistory[index].id);
+    if (actionHistory[index]) {
+      setIsSelecting(true);
+      setSelectionStart(index);
+      toggleActionSelection(actionHistory[index].id);
+    }
   }, [actionHistory, toggleActionSelection]);
 
   // Во время выделения
