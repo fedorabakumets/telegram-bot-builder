@@ -1743,13 +1743,16 @@ export default function Editor() {
         </SheetContent>
       </Sheet>
 
-      {/* Мобильная панель свойств */}
+      {/* Мобильная панель свойств - полноэкранная на мобильных */}
       <Sheet open={showMobileProperties} onOpenChange={setShowMobileProperties}>
-        <SheetContent side="right" className="p-0 w-80">
-          <SheetHeader className="px-4 py-3 border-b">
-            <SheetTitle>Свойства</SheetTitle>
+        <SheetContent 
+          side="right" 
+          className="p-0 w-full max-w-full sm:w-96 sm:max-w-md"
+        >
+          <SheetHeader className="px-4 py-3 border-b bg-background/95 backdrop-blur-sm sticky top-0 z-10">
+            <SheetTitle className="text-lg font-semibold">Свойства элемента</SheetTitle>
           </SheetHeader>
-          <div className="h-full overflow-auto">
+          <div className="h-[calc(100vh-60px)] overflow-auto pb-safe">
             {propertiesContent}
           </div>
         </SheetContent>
