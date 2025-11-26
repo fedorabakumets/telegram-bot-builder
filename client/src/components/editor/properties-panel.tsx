@@ -992,7 +992,7 @@ export function PropertiesPanel({
                   }
                 }}
               >
-                <SelectTrigger className="w-full text-xs sm:text-sm border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-200/50 dark:focus:ring-blue-900/50 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
+                <SelectTrigger className="w-full text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-slate-300/40 dark:border-slate-700/40 hover:border-slate-400/60 dark:hover:border-slate-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-slate-500 dark:focus:border-slate-500 focus:ring-2 focus:ring-slate-400/30 dark:focus:ring-slate-600/30 transition-all duration-200 rounded-lg text-slate-900 dark:text-slate-50">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
@@ -3059,7 +3059,7 @@ export function PropertiesPanel({
                               }
                             }}
                           >
-                            <SelectTrigger className="w-full text-xs">
+                            <SelectTrigger className="w-full text-xs bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 hover:border-blue-400/60 dark:hover:border-blue-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 dark:focus:ring-blue-600/30 transition-all duration-200 rounded-lg text-blue-900 dark:text-blue-50">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-gradient-to-br from-blue-50/95 to-cyan-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
@@ -3595,7 +3595,7 @@ export function PropertiesPanel({
                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                 }}
                               >
-                                <SelectTrigger className="text-xs">
+                                <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-purple-300/40 dark:border-purple-700/40 hover:border-purple-400/60 dark:hover:border-purple-600/60 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/30 dark:focus:ring-purple-600/30 transition-all duration-200 rounded-lg text-purple-900 dark:text-purple-50">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -3699,7 +3699,7 @@ export function PropertiesPanel({
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         >
-                                          <SelectTrigger className="text-xs">
+                                          <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-purple-300/40 dark:border-purple-700/40 hover:border-purple-400/60 dark:hover:border-purple-600/60 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/30 dark:focus:ring-purple-600/30 transition-all duration-200 rounded-lg text-purple-900 dark:text-purple-50">
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent>
@@ -4220,7 +4220,7 @@ export function PropertiesPanel({
                                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                                 }}
                                               >
-                                                <SelectTrigger className="h-9 text-sm bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 focus:border-sky-500 focus:ring-sky-400/30">
+                                                <SelectTrigger className="h-9 text-sm bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-400/30 dark:focus:ring-sky-600/30 transition-all duration-200 rounded-lg text-sky-900 dark:text-sky-50">
                                                   <SelectValue placeholder="Выберите узел" />
                                                 </SelectTrigger>
                                               <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
@@ -4540,7 +4540,7 @@ export function PropertiesPanel({
                         value={selectedNode.data.inputButtonType || 'inline'}
                         onValueChange={(value: 'inline' | 'reply') => onNodeUpdate(selectedNode.id, { inputButtonType: value })}
                       >
-                        <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500">
+                        <SelectTrigger className="w-full text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 hover:border-blue-400/60 dark:hover:border-blue-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 dark:focus:ring-blue-600/30 transition-all duration-200 rounded-lg text-blue-900 dark:text-blue-50">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
