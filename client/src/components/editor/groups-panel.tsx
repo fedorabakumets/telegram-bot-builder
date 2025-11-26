@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal, Hash, Link2 } from 'lucide-react';
+import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal, Hash, Link2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -1446,113 +1446,137 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               </Button>
             </div>
 
-            {/* Groups Grid - Modern Responsive */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+            {/* Groups Grid - Ultra Modern Responsive */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
               {safeGroups.map((group) => (
-                <Card key={group.id} className="group/card relative overflow-hidden border-border/60 hover:border-primary/40 transition-colors duration-200">
-                  {/* Subtle Top Accent */}
-                  <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
+                <Card 
+                  key={group.id} 
+                  className="group/card relative flex flex-col bg-gradient-to-b from-card to-card/95 border-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2),0_1px_2px_rgba(0,0,0,0.3)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4),0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300"
+                >
+                  {/* Animated Gradient Border Top */}
+                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-80 group-hover/card:opacity-100 transition-opacity" />
                   
-                  <div className="p-4 sm:p-5">
-                    {/* Header Row - Avatar, Name, Menu */}
-                    <div className="flex items-start gap-3 mb-4">
-                      <GroupAvatar 
-                        avatarUrl={group.avatarUrl}
-                        groupName={group.name}
-                        size={48}
-                        className="flex-shrink-0 ring-2 ring-background shadow-sm"
-                      />
-                      <div className="min-w-0 flex-1">
+                  {/* Card Content */}
+                  <div className="p-4 sm:p-5 flex flex-col flex-1">
+                    {/* Header Section */}
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      {/* Avatar with Status Ring */}
+                      <div className="relative flex-shrink-0">
+                        <GroupAvatar 
+                          avatarUrl={group.avatarUrl}
+                          groupName={group.name}
+                          size={52}
+                          className="ring-[3px] ring-background shadow-md"
+                        />
+                        {/* Online/Admin indicator */}
+                        {group.isAdmin === 1 && (
+                          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center ring-2 ring-background">
+                            <Shield className="w-2.5 h-2.5 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Title & Badges */}
+                      <div className="flex-1 min-w-0 pt-0.5">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold text-base text-foreground leading-snug line-clamp-2" data-testid={`text-group-name-${group.id}`}>
+                          <h3 
+                            className="font-semibold text-[15px] sm:text-base text-foreground leading-snug line-clamp-2 tracking-tight" 
+                            data-testid={`text-group-name-${group.id}`}
+                          >
                             {group.name}
                           </h3>
-                          {/* More Actions Menu */}
+                          
+                          {/* Actions Menu */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                                className="h-8 w-8 flex-shrink-0 opacity-60 group-hover/card:opacity-100 transition-opacity"
+                                className="h-7 w-7 -mt-0.5 -mr-1 rounded-full opacity-0 group-hover/card:opacity-100 focus:opacity-100 transition-all duration-200"
                                 data-testid={`button-menu-${group.id}`}
                               >
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuContent align="end" className="w-52 rounded-xl shadow-lg">
                               <DropdownMenuItem 
                                 onClick={() => getGroupInfoMutation.mutate(group.groupId)}
                                 disabled={getGroupInfoMutation.isPending}
+                                className="gap-2 py-2.5"
                                 data-testid={`button-info-${group.id}`}
                               >
-                                <BarChart3 className="w-4 h-4 mr-2" />
-                                Информация
+                                <BarChart3 className="w-4 h-4 text-blue-500" />
+                                <span>Информация о группе</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => getMembersCountMutation.mutate(group.groupId)}
                                 disabled={getMembersCountMutation.isPending}
+                                className="gap-2 py-2.5"
                                 data-testid={`button-members-${group.id}`}
                               >
-                                <Users className="w-4 h-4 mr-2" />
-                                Участники
+                                <Users className="w-4 h-4 text-green-500" />
+                                <span>Обновить участников</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => getAdminStatusMutation.mutate(group.groupId)}
                                 disabled={getAdminStatusMutation.isPending}
+                                className="gap-2 py-2.5"
                                 data-testid={`button-status-${group.id}`}
                               >
-                                <Shield className="w-4 h-4 mr-2" />
-                                Статус бота
+                                <Shield className="w-4 h-4 text-purple-500" />
+                                <span>Проверить права бота</span>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
                                 onClick={() => deleteGroupMutation.mutate(group.id)}
                                 disabled={deleteGroupMutation.isPending}
-                                className="text-destructive focus:text-destructive"
+                                className="gap-2 py-2.5 text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
                                 data-testid={`button-delete-${group.id}`}
                               >
-                                <X className="w-4 h-4 mr-2" />
-                                Удалить
+                                <X className="w-4 h-4" />
+                                <span>Удалить группу</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        {/* Badges Row */}
-                        <div className="flex flex-wrap gap-1.5 mt-2">
+                        
+                        {/* Compact Badges */}
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
                           <Badge 
                             variant={group.isAdmin ? "default" : "secondary"}
-                            className="text-xs px-2 py-0.5"
+                            className="text-[10px] sm:text-xs font-medium px-2 py-0.5 gap-1"
                             data-testid={`badge-admin-${group.id}`}
                           >
                             {group.isAdmin ? (
                               <>
-                                <Shield className="w-3 h-3 mr-1" />
-                                Админ
+                                <Crown className="w-3 h-3" />
+                                <span className="hidden xs:inline">Администратор</span>
+                                <span className="xs:hidden">Админ</span>
                               </>
                             ) : (
                               <>
-                                <Users className="w-3 h-3 mr-1" />
-                                Участник
+                                <Users className="w-3 h-3" />
+                                <span>Участник</span>
                               </>
                             )}
                           </Badge>
                           {group.chatType && (
-                            <Badge variant="outline" className="text-xs px-2 py-0.5">
+                            <Badge variant="outline" className="text-[10px] sm:text-xs font-medium px-2 py-0.5 gap-1 border-muted-foreground/20">
                               {group.chatType === 'supergroup' ? (
                                 <>
-                                  <TrendingUp className="w-3 h-3 mr-1" />
-                                  <span className="hidden xs:inline">Супергруппа</span>
-                                  <span className="xs:hidden">Супер</span>
+                                  <TrendingUp className="w-3 h-3" />
+                                  <span className="hidden sm:inline">Супергруппа</span>
+                                  <span className="sm:hidden">Супер</span>
                                 </>
                               ) : group.chatType === 'channel' ? (
                                 <>
-                                  <Volume2 className="w-3 h-3 mr-1" />
-                                  Канал
+                                  <Volume2 className="w-3 h-3" />
+                                  <span>Канал</span>
                                 </>
                               ) : (
                                 <>
-                                  <Users className="w-3 h-3 mr-1" />
-                                  Группа
+                                  <MessageSquare className="w-3 h-3" />
+                                  <span>Группа</span>
                                 </>
                               )}
                             </Badge>
@@ -1561,46 +1585,51 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </div>
                     </div>
 
-                    {/* Description */}
+                    {/* Description - Expandable feel */}
                     {group.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                      <p className="text-[13px] sm:text-sm text-muted-foreground line-clamp-2 mt-3 leading-relaxed">
                         {group.description}
                       </p>
                     )}
 
-                    {/* Stats Row - Clean Design */}
-                    <div className="flex items-center gap-4 mb-4 py-3 px-3 -mx-1 rounded-lg bg-muted/40">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Users className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground">Участников</p>
-                          <p className="text-sm font-semibold text-foreground truncate">
-                            {group.memberCount ? group.memberCount.toLocaleString('ru-RU') : '—'}
-                          </p>
+                    {/* Stats Grid - Modern Glass Style */}
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-4 mb-4">
+                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-muted/60 to-muted/30 p-3 sm:p-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wide">Участники</p>
+                            <p className="text-sm sm:text-base font-bold text-foreground truncate mt-0.5">
+                              {group.memberCount ? group.memberCount.toLocaleString('ru-RU') : '—'}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <div className="w-px h-8 bg-border" />
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Clock className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground">Создана</p>
-                          <p className="text-sm font-semibold text-foreground truncate">
-                            {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}) : '—'}
-                          </p>
+                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-muted/60 to-muted/30 p-3 sm:p-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wide">Добавлена</p>
+                            <p className="text-sm sm:text-base font-bold text-foreground truncate mt-0.5">
+                              {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}) : '—'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Action Buttons - Modern Layout */}
-                    <div className="flex gap-2">
+                    {/* Spacer to push buttons to bottom */}
+                    <div className="flex-1" />
+
+                    {/* Action Buttons - Premium Feel */}
+                    <div className="flex gap-2 sm:gap-3 pt-1">
                       <Button 
                         variant="default" 
-                        size="sm"
-                        className="flex-1 h-10"
+                        className="flex-1 h-11 sm:h-12 text-sm font-medium shadow-sm"
                         onClick={() => {
                           setSelectedGroup(group);
                           setGroupName(group.name);
@@ -1650,8 +1679,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </Button>
                       <Button 
                         variant="outline" 
-                        size="sm"
-                        className="flex-1 h-10"
+                        className="flex-1 h-11 sm:h-12 text-sm font-medium"
                         onClick={() => {
                           setSelectedGroupForMessage(group);
                           setShowSendMessage(true);
