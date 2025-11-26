@@ -1697,26 +1697,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           </div>
         )}
 
-        {/* Модальное окно подключения группы */}
+        {/* Add Group Dialog */}
         <Dialog open={showAddGroup} onOpenChange={setShowAddGroup}>
-          <DialogContent className="sm:max-w-lg">
-            {/* Modern Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-pink-500/10 dark:from-blue-500/20 dark:via-purple-500/10 dark:to-pink-500/20 p-5 mb-6 -mx-6 -mt-6">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-              
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
-                    <UserPlus className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="text-lg font-bold text-foreground">Подключить группу</h2>
+          <DialogContent className="sm:max-w-lg rounded-xl">
+            <DialogHeader className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <UserPlus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
-                <p className="text-sm text-muted-foreground ml-13">
-                  Добавьте вашу Telegram группу для управления ботом
-                </p>
+                <DialogTitle className="text-base font-bold">Подключить</DialogTitle>
               </div>
-            </div>
+              <DialogDescription className="text-xs sm:text-sm">
+                Добавьте группу для управления ботом
+              </DialogDescription>
+            </DialogHeader>
             
             <div className="space-y-5">
               {/* Input Field */}
@@ -1775,7 +1769,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             </div>
             
             {/* Action Buttons */}
-            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+            <div className="flex gap-2.5 pt-4 border-t border-border/40">
               <Button 
                 variant="outline" 
                 onClick={() => setShowAddGroup(false)}
@@ -1788,8 +1782,17 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 disabled={!groupId.trim() || isParsingGroup}
                 className="flex-1 h-10 gap-2"
               >
-                <UserPlus className="w-4 h-4" />
-                Подключить
+                {isParsingGroup ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                    <span className="hidden sm:inline">Подключаем</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    <span>Подключить</span>
+                  </>
+                )}
               </Button>
             </div>
           </DialogContent>
