@@ -2597,7 +2597,7 @@ export function PropertiesPanel({
                           Переменная для сохранения
                         </Label>
                         <div className="text-xs text-teal-700/70 dark:text-teal-300/70 mt-0.5 leading-snug">
-                          Опции через запятую в переменную
+                          Опции сохраняются в переменную
                         </div>
                       </div>
                     </div>
