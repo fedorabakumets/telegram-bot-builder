@@ -1263,25 +1263,23 @@ export function PropertiesPanel({
               </div>
             )}
 
-            {/* Synonyms for start and command nodes */}
-            {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
-              <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-green-50/20 dark:from-emerald-950/30 dark:to-green-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
-                <div className="flex items-center gap-2.5 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 flex items-center justify-center flex-shrink-0">
-                    <i className="fas fa-tags text-emerald-600 dark:text-emerald-400 text-sm"></i>
-                  </div>
-                  <Label className="text-sm sm:text-base font-bold text-emerald-900 dark:text-emerald-100">Синонимы команды</Label>
+            {/* Synonyms for all nodes */}
+            <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-green-50/20 dark:from-emerald-950/30 dark:to-green-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 flex items-center justify-center flex-shrink-0">
+                  <i className="fas fa-tags text-emerald-600 dark:text-emerald-400 text-sm"></i>
                 </div>
-                
-                <SynonymEditor
-                  synonyms={selectedNode.data.synonyms || []}
-                  onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
-                  title="Альтернативные команды"
-                  description="Текстовые сообщения, которые будут вызывать эту команду. Например: старт вместо /start"
-                  placeholder="Например: старт, привет, начать"
-                />
+                <Label className="text-sm sm:text-base font-bold text-emerald-900 dark:text-emerald-100">Синонимы команды</Label>
               </div>
-            )}
+              
+              <SynonymEditor
+                synonyms={selectedNode.data.synonyms || []}
+                onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+                title="Альтернативные команды"
+                description="Текстовые сообщения, которые будут вызывать эту команду. Например: старт вместо /start"
+                placeholder="Например: старт, привет, начать"
+              />
+            </div>
 
             {/* Command for Content Management and User Management */}
             {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message' ||
