@@ -1166,9 +1166,16 @@ export function PropertiesPanel({
                       <Input
                         value={selectedNode.data.command || getDefaultDataForType(selectedNode.type).command || ''}
                         onChange={(e) => {
-                          onNodeUpdate(selectedNode.id, { command: e.target.value });
-                          setCommandInput(e.target.value);
-                          setShowCommandSuggestions(e.target.value.length > 0);
+                          const newCommand = e.target.value;
+                          onNodeUpdate(selectedNode.id, { command: newCommand });
+                          setCommandInput(newCommand);
+                          setShowCommandSuggestions(newCommand.length > 0);
+                          
+                          // Обновляем ID узла на основе команды
+                          const newId = newCommand.replace(/^\//, '').toLowerCase() || selectedNode.id;
+                          if (onNodeIdChange && newId !== selectedNode.id) {
+                            onNodeIdChange(selectedNode.id, newId);
+                          }
                         }}
                         onFocus={() => setShowCommandSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowCommandSuggestions(false), 200)}
@@ -1189,6 +1196,13 @@ export function PropertiesPanel({
                                   command: suggestion.command,
                                   description: suggestion.description 
                                 });
+                                
+                                // Обновляем ID узла на основе команды
+                                const newId = suggestion.command.replace(/^\//, '').toLowerCase() || selectedNode.id;
+                                if (onNodeIdChange && newId !== selectedNode.id) {
+                                  onNodeIdChange(selectedNode.id, newId);
+                                }
+                                
                                 setShowCommandSuggestions(false);
                               }}
                               data-testid={`button-suggestion-${suggestion.command}`}
