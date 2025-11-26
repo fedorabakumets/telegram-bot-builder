@@ -2781,25 +2781,31 @@ export function PropertiesPanel({
                   )}
                   
                   {(selectedNode.data.buttons || []).map((button) => (
-                    <div key={button.id} className="bg-muted/50 rounded-lg p-4 border border-border/30 hover:border-primary/20 transition-colors">
-                      {/* Header with title and delete button */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                          <span className="text-xs font-semibold text-foreground">Кнопка</span>
-                          {selectedNode.data.allowMultipleSelection && button.buttonType && (
-                            <Badge variant="outline" className="text-xs h-5">
-                              {button.buttonType === 'option' && '🟢 Опция'}
-                              {button.buttonType === 'complete' && '🟣 Завершение'}
-                              {button.buttonType === 'normal' && '🔵 Обычная'}
-                            </Badge>
-                          )}
+                    <div key={button.id} className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all duration-200 group">
+                      {/* Header with icon, title and delete button */}
+                      <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
+                        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
+                          <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-200/50 dark:bg-blue-900/40 group-hover:bg-blue-300/50 dark:group-hover:bg-blue-800/50 transition-all">
+                            <i className="fas fa-rectangle-ad text-xs sm:text-sm text-blue-600 dark:text-blue-400"></i>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">
+                              Кнопка
+                            </div>
+                            {selectedNode.data.allowMultipleSelection && button.buttonType && (
+                              <Badge variant="outline" className="text-xs h-5 mt-1">
+                                {button.buttonType === 'option' && '🟢 Опция'}
+                                {button.buttonType === 'complete' && '🟣 Завершение'}
+                                {button.buttonType === 'normal' && '🔵 Обычная'}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         <UIButton
                           size="sm"
                           variant="ghost"
                           onClick={() => onButtonDelete(selectedNode.id, button.id)}
-                          className="text-muted-foreground hover:text-destructive dark:text-muted-foreground dark:hover:text-destructive h-auto p-1 transition-colors duration-200"
+                          className="text-blue-600 hover:text-red-600 dark:text-blue-400 dark:hover:text-red-400 h-auto p-1.5 transition-colors duration-200 flex-shrink-0"
                           title="Удалить кнопку"
                         >
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
