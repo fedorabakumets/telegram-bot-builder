@@ -3654,8 +3654,8 @@ export function PropertiesPanel({
                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                 }}
                               >
-                                <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-purple-300/40 dark:border-purple-700/40 hover:border-purple-400/60 dark:hover:border-purple-600/60 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/30 dark:focus:ring-purple-600/30 transition-all duration-200 rounded-lg text-purple-900 dark:text-purple-50">
-                                  <SelectValue />
+                                <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 bg-gradient-to-br from-white/70 to-white/60 dark:from-slate-900/70 dark:to-slate-950/80 border border-purple-300/50 dark:border-purple-700/50 hover:border-purple-400/70 dark:hover:border-purple-600/70 hover:bg-white/80 dark:hover:bg-slate-900/80 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/40 dark:focus:ring-purple-600/40 transition-all duration-300 rounded-lg text-purple-900 dark:text-purple-100 font-medium shadow-sm hover:shadow-md">
+                                  <SelectValue placeholder="Выберите тип..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="user_data_exists">Пользователь уже отвечал на вопрос</SelectItem>
@@ -3678,21 +3678,23 @@ export function PropertiesPanel({
                                 
                                 {/* Multiple Question Selection with Checkboxes */}
                                 {availableQuestions.length > 0 ? (
-                                  <div className="space-y-3">
-                                    <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
-                                      <div className="text-xs font-medium text-muted-foreground mb-2">
-                                        Выберите вопросы из списка:
+                                  <div className="space-y-3 sm:space-y-4">
+                                    <div className="bg-gradient-to-br from-purple-50/50 to-blue-50/30 dark:from-purple-950/20 dark:to-blue-950/10 rounded-lg p-3 sm:p-4 border border-purple-200/40 dark:border-purple-800/30 shadow-sm">
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <i className="fas fa-list-check text-purple-600 dark:text-purple-400 text-sm"></i>
+                                        <span className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-300">
+                                          Выберите вопросы:
+                                        </span>
                                       </div>
-                                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                                      <div className="space-y-2 sm:space-y-2.5 max-h-40 sm:max-h-48 overflow-y-auto pr-2">
                                         {availableQuestions.map((question) => {
                                           const currentVariableNames = condition.variableNames || [];
                                           const isSelected = currentVariableNames.includes(question.name);
                                           
                                           return (
-                                            <div key={`${question.nodeId}-${question.name}`} className="flex items-center space-x-2">
+                                            <label key={`${question.nodeId}-${question.name}`} className="flex items-center space-x-3 p-2 sm:p-2.5 rounded-lg hover:bg-white/40 dark:hover:bg-slate-800/40 cursor-pointer transition-all group">
                                               <input
                                                 type="checkbox"
-                                                id={`question-${condition.id}-${question.name}`}
                                                 checked={isSelected}
                                                 onChange={(e) => {
                                                   const currentConditions = selectedNode.data.conditionalMessages || [];
@@ -3709,34 +3711,27 @@ export function PropertiesPanel({
                                                     c.id === condition.id ? { 
                                                       ...c, 
                                                       variableNames: updatedVariableNames,
-                                                      // Update legacy variableName for backward compatibility
                                                       variableName: updatedVariableNames.length > 0 ? updatedVariableNames[0] : ''
                                                     } : c
                                                   );
                                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                                 }}
-                                                className="w-3 h-3 text-primary focus:ring-primary border-border rounded"
+                                                className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400 rounded-md border border-purple-300 dark:border-purple-700 cursor-pointer accent-purple-600 dark:accent-purple-400"
                                               />
-                                              <label 
-                                                htmlFor={`question-${condition.id}-${question.name}`}
-                                                className="flex items-center space-x-2 cursor-pointer flex-1"
-                                              >
+                                              <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
                                                 {question.mediaType ? (
-                                                  <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                    {question.mediaType === 'photo' && '📷'}
-                                                    {question.mediaType === 'video' && '🎥'}
-                                                    {question.mediaType === 'audio' && '🎵'}
-                                                    {question.mediaType === 'document' && '📄'}
-                                                    {question.mediaType}
+                                                  <span className="inline-flex items-center gap-1 text-xs sm:text-xs bg-gradient-to-r from-purple-100 to-purple-100 dark:from-purple-900/50 dark:to-purple-900/40 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-md whitespace-nowrap font-medium shadow-sm">
+                                                    <span>{question.mediaType === 'photo' ? '📷' : question.mediaType === 'video' ? '🎥' : question.mediaType === 'audio' ? '🎵' : '📄'}</span>
+                                                    <span className="hidden sm:inline">{question.mediaType}</span>
                                                   </span>
                                                 ) : (
-                                                  <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                                                  <span className="inline-flex items-center text-xs sm:text-xs bg-gradient-to-r from-blue-100 to-blue-100 dark:from-blue-900/50 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-md whitespace-nowrap font-medium shadow-sm">
                                                     {question.nodeType}
                                                   </span>
                                                 )}
-                                                <span className="text-xs">{question.name}</span>
-                                              </label>
-                                            </div>
+                                                <span className="text-xs sm:text-sm text-foreground truncate font-medium group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">{question.name}</span>
+                                              </div>
+                                            </label>
                                           );
                                         })}
                                       </div>
@@ -3758,12 +3753,22 @@ export function PropertiesPanel({
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         >
-                                          <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-purple-300/40 dark:border-purple-700/40 hover:border-purple-400/60 dark:hover:border-purple-600/60 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/30 dark:focus:ring-purple-600/30 transition-all duration-200 rounded-lg text-purple-900 dark:text-purple-50">
-                                            <SelectValue />
+                                          <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 bg-gradient-to-br from-white/70 to-white/60 dark:from-slate-900/70 dark:to-slate-950/80 border border-purple-300/50 dark:border-purple-700/50 hover:border-purple-400/70 dark:hover:border-purple-600/70 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/40 dark:focus:ring-purple-600/40 transition-all duration-300 rounded-lg text-purple-900 dark:text-purple-100 font-medium shadow-sm hover:shadow-md">
+                                            <SelectValue placeholder="Выберите логику..." />
                                           </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="AND">И (AND) - все выбранные вопросы</SelectItem>
-                                            <SelectItem value="OR">ИЛИ (OR) - любой из выбранных вопросов</SelectItem>
+                                          <SelectContent className="bg-gradient-to-br from-slate-50 to-slate-50 dark:from-slate-900 dark:to-slate-900">
+                                            <SelectItem value="AND" className="text-sm">
+                                              <div className="flex items-center gap-2">
+                                                <i className="fas fa-check-double text-green-600"></i>
+                                                <span>И (AND) - все вопросы</span>
+                                              </div>
+                                            </SelectItem>
+                                            <SelectItem value="OR" className="text-sm">
+                                              <div className="flex items-center gap-2">
+                                                <i className="fas fa-code-branch text-blue-600"></i>
+                                                <span>ИЛИ (OR) - любой вопрос</span>
+                                              </div>
+                                            </SelectItem>
                                           </SelectContent>
                                         </Select>
                                         <div className="text-xs text-muted-foreground mt-1">
