@@ -466,6 +466,7 @@ export function PropertiesPanel({
   }, [allSheets, allNodes, currentSheetId]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(true);
+  const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(true);
   
   // URL validation function
   const validateUrl = (url: string, type: string): { isValid: boolean; message?: string } => {
@@ -4557,14 +4558,26 @@ export function PropertiesPanel({
          selectedNode.type !== 'promote_user' && 
          selectedNode.type !== 'demote_user' && 
          selectedNode.type !== 'admin_rights' && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-foreground">✨ Сбор ответов</h3>
+          <div className="w-full">
+            {/* Header with Collapse Toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3 sm:mb-4 px-0.5 cursor-pointer group" onClick={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}>
+              <div className="flex items-center gap-2">
+                <div className="inline-flex h-5 w-5 items-center justify-center transition-transform duration-300" style={{ transform: isUserInputSectionOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+                  <i className="fas fa-chevron-down text-xs text-blue-600 dark:text-blue-400"></i>
+                </div>
+                <h3 className="text-sm sm:text-base font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent group-hover:from-blue-700 group-hover:to-cyan-700 dark:group-hover:from-blue-300 dark:group-hover:to-cyan-300 transition-all">
+                  ✨ Сбор ответов
+                </h3>
+              </div>
               <Switch
                 checked={selectedNode.data.collectUserInput ?? false}
-                onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { collectUserInput: checked })}
+                onCheckedChange={(checked) => {
+                  onNodeUpdate(selectedNode.id, { collectUserInput: checked });
+                }}
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
+            {isUserInputSectionOpen && (
             <div className="space-y-4">
 
               {/* Input Collection Settings */}
@@ -5060,6 +5073,7 @@ export function PropertiesPanel({
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
 
