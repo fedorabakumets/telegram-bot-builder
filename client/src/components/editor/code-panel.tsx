@@ -163,34 +163,42 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
 
   return (
     <div className="h-full bg-background overflow-auto">
-      <div className="p-4 md:p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-          {/* Заголовок */}
-          <div>
-            <h1 className="text-2xl font-bold flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 flex items-center justify-center">
-                <i className="fas fa-code text-purple-600 dark:text-purple-400"></i>
+      <div className="p-2.5 xs:p-3 sm:p-4 md:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto space-y-3 xs:space-y-4 sm:space-y-5 md:space-y-6">
+          {/* Header Section */}
+          <div className="space-y-1.5 xs:space-y-2">
+            <div className="flex items-start gap-2 xs:gap-2.5 sm:gap-3">
+              <div className="w-7 xs:w-8 sm:w-9 h-7 xs:h-8 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/40 dark:to-blue-900/40">
+                <i className="fas fa-code text-purple-600 dark:text-purple-400 text-xs xs:text-sm"></i>
               </div>
-              <span>Код проекта</span>
-            </h1>
-            <p className="text-muted-foreground mt-1">Предварительный просмотр и загрузка сгенерированного кода</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-foreground leading-tight">Код проекта</h1>
+                <p className="text-xs xs:text-sm text-muted-foreground mt-0.5 xs:mt-1 break-words">Просмотр и загрузка сгенерированного кода</p>
+              </div>
+            </div>
           </div>
 
-          {/* Карточка с выбором формата и статистикой */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <i className={`${getFormatIcon(selectedFormat)}`}></i>
-                <span>{getFormatLabel(selectedFormat)}</span>
-              </CardTitle>
-              <CardDescription>Выберите формат для просмотра и загрузки</CardDescription>
+          {/* Format & Actions Card */}
+          <Card className="border border-border/50 shadow-sm">
+            <CardHeader className="pb-3 xs:pb-4 sm:pb-5">
+              <div className="flex items-start gap-2 xs:gap-2.5 justify-between min-w-0">
+                <div className="flex items-center gap-1.5 xs:gap-2 min-w-0">
+                  <div className="w-6 xs:w-7 h-6 xs:h-7 rounded-md flex items-center justify-center flex-shrink-0 bg-muted/50">
+                    <i className={`${getFormatIcon(selectedFormat)} text-xs xs:text-sm`}></i>
+                  </div>
+                  <div className="min-w-0">
+                    <CardTitle className="text-sm xs:text-base font-semibold truncate">{getFormatLabel(selectedFormat)}</CardTitle>
+                    <CardDescription className="text-xs xs:text-sm mt-0.5">Выберите формат</CardDescription>
+                  </div>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Выбор формата */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Формат файла:</label>
+            <CardContent className="space-y-3 xs:space-y-3.5 sm:space-y-4">
+              {/* Format Selection */}
+              <div className="space-y-1.5 xs:space-y-2">
+                <label className="text-xs xs:text-sm font-semibold text-foreground block">Формат:</label>
                 <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as CodeFormat)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-xs xs:text-sm h-9 xs:h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -234,72 +242,74 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
                 </Select>
               </div>
 
-              {/* Кнопки действий */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 xs:gap-2.5">
                 <Button
                   onClick={copyToClipboard}
                   variant="outline"
-                  className="w-full"
+                  size="sm"
+                  className="w-full h-9 xs:h-10 text-xs xs:text-sm"
                   data-testid="button-copy-code"
                 >
-                  <i className="fas fa-copy mr-2"></i>
-                  Копировать
+                  <i className="fas fa-copy text-xs xs:text-sm"></i>
+                  <span className="hidden xs:inline ml-1.5">Копировать</span>
                 </Button>
                 <Button
                   onClick={downloadFile}
-                  className="w-full"
+                  size="sm"
+                  className="w-full h-9 xs:h-10 text-xs xs:text-sm"
                   data-testid="button-download-code"
                 >
-                  <i className="fas fa-download mr-2"></i>
-                  Скачать
+                  <i className="fas fa-download text-xs xs:text-sm"></i>
+                  <span className="hidden xs:inline ml-1.5">Скачать</span>
                 </Button>
               </div>
 
-              {/* Статистика кода */}
+              {/* Code Statistics */}
               {lineCount > 0 && (
-                <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} gap-2`}>
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 text-center">
-                    <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{codeStats.totalLines}</div>
-                    <div className="text-xs text-blue-700 dark:text-blue-300">Строк</div>
+                <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 gap-2 xs:gap-2.5">
+                  <div className="bg-blue-50/50 dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/50 rounded-md p-2 xs:p-2.5 text-center">
+                    <div className="text-sm xs:text-base font-bold text-blue-600 dark:text-blue-400">{codeStats.totalLines}</div>
+                    <div className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">Строк</div>
                   </div>
                   {selectedFormat === 'python' && codeStats.functions > 0 && (
-                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-green-600 dark:text-green-400">{codeStats.functions}</div>
-                      <div className="text-xs text-green-700 dark:text-green-300">Функций</div>
+                    <div className="bg-green-50/50 dark:bg-green-900/25 border border-green-200/50 dark:border-green-800/50 rounded-md p-2 xs:p-2.5 text-center">
+                      <div className="text-sm xs:text-base font-bold text-green-600 dark:text-green-400">{codeStats.functions}</div>
+                      <div className="text-xs text-green-700 dark:text-green-300 mt-0.5">Функции</div>
                     </div>
                   )}
                   {selectedFormat === 'python' && codeStats.classes > 0 && (
-                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{codeStats.classes}</div>
-                      <div className="text-xs text-purple-700 dark:text-purple-300">Классов</div>
+                    <div className="bg-purple-50/50 dark:bg-purple-900/25 border border-purple-200/50 dark:border-purple-800/50 rounded-md p-2 xs:p-2.5 text-center">
+                      <div className="text-sm xs:text-base font-bold text-purple-600 dark:text-purple-400">{codeStats.classes}</div>
+                      <div className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">Классы</div>
                     </div>
                   )}
                   {selectedFormat === 'json' && (
-                    <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-cyan-600 dark:text-cyan-400">{(content.match(/"/g) || []).length / 2}</div>
-                      <div className="text-xs text-cyan-700 dark:text-cyan-300">Ключей</div>
+                    <div className="bg-cyan-50/50 dark:bg-cyan-900/25 border border-cyan-200/50 dark:border-cyan-800/50 rounded-md p-2 xs:p-2.5 text-center">
+                      <div className="text-sm xs:text-base font-bold text-cyan-600 dark:text-cyan-400">{(content.match(/"/g) || []).length / 2}</div>
+                      <div className="text-xs text-cyan-700 dark:text-cyan-300 mt-0.5">Ключей</div>
                     </div>
                   )}
                 </div>
               )}
 
-              <Separator />
+              <Separator className="my-2 xs:my-3" />
 
-              {/* Информация о коде */}
+              {/* Code Info & Controls */}
               {codeStats.totalLines > 0 && (
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Размер: {Math.round(content.length / 1024)} KB</span>
+                <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-3 text-xs xs:text-sm">
+                  <div className="flex items-center gap-1.5 xs:gap-2 flex-wrap">
+                    <span className="text-muted-foreground whitespace-nowrap">Размер: {Math.round(content.length / 1024)} KB</span>
                     {(selectedFormat === 'python' || selectedFormat === 'json') && (
                       <Button 
                         size="sm" 
                         variant="ghost"
                         onClick={toggleAllFunctions}
-                        className="h-6 px-2 text-xs"
+                        className="h-7 xs:h-8 px-1.5 xs:px-2 text-xs"
                         data-testid="button-toggle-all-functions"
                       >
-                        <i className={`fas ${areAllCollapsed ? 'fa-expand' : 'fa-compress'} mr-1`}></i>
-                        {areAllCollapsed ? 'Развернуть' : 'Свернуть'}
+                        <i className={`fas ${areAllCollapsed ? 'fa-expand' : 'fa-compress'} text-xs`}></i>
+                        <span className="hidden xs:inline ml-1">{areAllCollapsed ? 'Развернуть' : 'Свернуть'}</span>
                       </Button>
                     )}
                   </div>
@@ -308,6 +318,7 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
                       size="sm" 
                       variant="outline"
                       onClick={() => setShowFullCode(true)}
+                      className="h-7 xs:h-8 px-2 text-xs xs:text-sm whitespace-nowrap"
                       data-testid="button-show-full-code"
                     >
                       Показать всё ({codeStats.totalLines})
@@ -318,9 +329,9 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
             </CardContent>
           </Card>
 
-          {/* Редактор кода */}
-          <Card>
-            <CardContent className={`p-0 ${isMobile ? 'h-48' : 'h-[500px]'}`}>
+          {/* Code Editor */}
+          <Card className="border border-border/50 shadow-sm overflow-hidden">
+            <CardContent className={`p-0 ${isMobile ? 'h-40 xs:h-48 sm:h-64' : 'h-64 xs:h-80 sm:h-96 md:h-[500px]'}`}>
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="flex flex-col items-center gap-3">
