@@ -1059,7 +1059,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
         </div>
       )}
       </div>
-      </div>
     </ScrollArea>
 
     <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
