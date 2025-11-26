@@ -429,6 +429,11 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       const boundedX = Math.max(minX, Math.min(snappedX, maxX));
       const boundedY = Math.max(minY, Math.min(snappedY, maxY));
       
+      // Используем requestAnimationFrame для оптимизации на мобильных
+      if (nodeRef.current) {
+        nodeRef.current.style.pointerEvents = 'none';
+      }
+      
       onMove({ x: boundedX, y: boundedY });
     }
   };
@@ -436,6 +441,11 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation(); // Останавливаем всплытие
+    
+    // Восстанавливаем pointer-events
+    if (nodeRef.current) {
+      nodeRef.current.style.pointerEvents = 'auto';
+    }
     
     const touchEndTime = Date.now();
     const touchDuration = touchEndTime - touchStartTime;
@@ -506,14 +516,16 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     };
   }, [node.id, onSizeChange]);
 
+  const isDragActive = isDragging || isTouchDragging;
+
   return (
     <div
       ref={nodeRef}
       data-canvas-node="true"
       className={cn(
-        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 transition-all duration-300 relative select-none group",
+        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 relative select-none group",
         isSelected ? "border-blue-500 ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10" : "border-gray-200 dark:border-slate-700",
-        (isDragging || isTouchDragging) ? "shadow-3xl scale-105 cursor-grabbing z-50 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "hover:shadow-2xl hover:border-gray-300 dark:hover:border-slate-600",
+        isDragActive ? "shadow-3xl cursor-grabbing z-50 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "hover:shadow-2xl hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-300",
         onMove ? "cursor-grab hover:cursor-grab" : "cursor-pointer"
       )}
       onClick={!isDragging ? onClick : undefined}
@@ -525,9 +537,12 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         position: 'absolute',
         left: node.position.x,
         top: node.position.y,
-        transform: (isDragging || isTouchDragging) ? 'rotate(2deg) scale(1.05)' : 'rotate(0deg) scale(1)',
-        zIndex: (isDragging || isTouchDragging) ? 1000 : isSelected ? 100 : 10,
-        transition: (isDragging || isTouchDragging) ? 'none' : 'all 0.2s ease'
+        transform: isDragActive ? 'translate3d(0, 0, 0) rotate(2deg)' : 'translate3d(0, 0, 0)',
+        willChange: isDragActive ? 'transform' : 'auto',
+        zIndex: isDragActive ? 1000 : isSelected ? 100 : 10,
+        transition: isDragActive ? 'none' : undefined,
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden' as any
       }}
     >
       {/* Action buttons */}
