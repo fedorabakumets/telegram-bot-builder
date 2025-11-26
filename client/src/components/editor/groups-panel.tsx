@@ -1713,142 +1713,95 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
         {/* Модальное окно подключения группы */}
         <Dialog open={showAddGroup} onOpenChange={setShowAddGroup}>
-          <DialogContent className="w-[95vw] sm:w-full sm:max-w-lg">
-            <div className="relative">
-              {/* Decorative background */}
-              <div className="absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-2xl" />
-              
-              <DialogHeader className="relative z-10">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-                    <Plus className="w-5 h-5 text-white" />
-                  </div>
-                  <DialogTitle className="text-xl">Подключить группу</DialogTitle>
-                </div>
-                <DialogDescription className="text-sm">
-                  Введите ID, @username или ссылку на вашу Telegram группу
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-5 relative z-10 mt-6">
-                <div className="space-y-2.5">
-                  <Label htmlFor="group-id" className="text-sm font-medium flex items-center gap-2">
-                    <span>Идентификатор группы</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="group-id"
-                      placeholder="Например: -1002726444678 или @groupname"
-                      value={groupId}
-                      onChange={(e) => setGroupId(e.target.value)}
-                      disabled={isParsingGroup}
-                      className="pr-10"
-                    />
-                    {isParsingGroup && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Поддерживаются форматы: ID группы, @username или полная ссылка t.me/groupname. Данные о группе загружаются автоматически.
-                  </p>
-                </div>
-
-                {/* Info Box */}
-                <div className="bg-blue-500/5 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                  <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
-                    Совет: Название и аватарка группы заполнятся автоматически при подключении.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-6 relative z-10">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowAddGroup(false)}
-                  className="w-full sm:w-auto"
-                >
-                  Отмена
-                </Button>
-                <Button 
-                  onClick={handleAddGroup} 
-                  disabled={isParsingGroup || !groupId.trim()}
-                  className="w-full sm:w-auto gap-2"
-                >
-                  {isParsingGroup ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      Загрузка...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Подключить группу
-                    </>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Подключить группу</DialogTitle>
+              <DialogDescription>
+                Введите данные Telegram группы для подключения к боту
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="group-id">ID группы или @username</Label>
+                <div className="relative">
+                  <Input
+                    id="group-id"
+                    placeholder="-1002726444678 или @groupname или https://t.me/group"
+                    value={groupId}
+                    onChange={(e) => setGroupId(e.target.value)}
+                    disabled={isParsingGroup}
+                  />
+                  {isParsingGroup && (
+                    <div className="absolute right-2 top-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    </div>
                   )}
-                </Button>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Информация о группе и ссылка получатся автоматически
+                </p>
               </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAddGroup(false)} 
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+              <Button onClick={handleAddGroup} className="flex-1">
+                Подключить группу
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
 
         {/* Модальное окно настроек группы */}
         <Dialog open={showGroupSettings} onOpenChange={setShowGroupSettings}>
-          <DialogContent className="w-[95vw] max-w-6xl max-h-[95vh] flex flex-col">
-            {/* Modern Header */}
-            <div className="border-b pb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-xl flex-shrink-0 bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                    <GroupAvatar 
-                      avatarUrl={selectedGroup?.avatarUrl}
-                      groupName={selectedGroup?.name || 'Группа'}
-                      size={48}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-lg sm:text-xl font-bold text-foreground truncate">
-                      {selectedGroup?.name}
-                    </h2>
-                    <p className="text-sm text-muted-foreground truncate">
-                      Комплексное управление группой
-                    </p>
-                  </div>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <Settings className="h-5 w-5" />
+                <div className="flex items-center gap-2">
+                  <GroupAvatar 
+                    avatarUrl={selectedGroup?.avatarUrl}
+                    groupName={selectedGroup?.name || 'Группа'}
+                    size={32}
+                  />
+                  <span>Настройки группы: {selectedGroup?.name}</span>
                 </div>
-              </div>
-            </div>
+              </DialogTitle>
+              <DialogDescription>
+                Комплексное управление группой и её участниками
+              </DialogDescription>
+            </DialogHeader>
             
             {selectedGroup && (
-              <div className="flex-1 overflow-hidden flex flex-col">
-                <Tabs defaultValue="general" className="w-full flex flex-col flex-1">
-                  {/* Responsive Tabs */}
-                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2 p-1 bg-muted/50">
-                    <TabsTrigger value="general" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-2">
-                      <Globe className="h-4 w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Общие</span>
-                      <span className="sm:hidden">Данные</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="admin" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-2">
-                      <Shield className="h-4 w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Права</span>
-                      <span className="sm:hidden">Права</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="members" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-2">
-                      <UserCheck className="h-4 w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Участники</span>
-                      <span className="sm:hidden">Люди</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="analytics" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-2">
-                      <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Аналитика</span>
-                      <span className="sm:hidden">Статы</span>
-                    </TabsTrigger>
-                  </TabsList>
+              <Tabs defaultValue="general" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="general" className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Общие
+                  </TabsTrigger>
+                  <TabsTrigger value="admin" className="flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Права
+                  </TabsTrigger>
+                  <TabsTrigger value="members" className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    Участники
+                  </TabsTrigger>
+                  <TabsTrigger value="analytics" className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Аналитика
+                  </TabsTrigger>
+                </TabsList>
 
-                  {/* Content with scrolling */}
-                  <div className="flex-1 overflow-y-auto mt-4 pr-4">
-                    <TabsContent value="general" className="space-y-4 mt-0">
+                <div className="mt-4 max-h-[60vh] overflow-y-auto">
+                  <TabsContent value="general" className="space-y-4 mt-0">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="edit-group-name">Название группы</Label>
@@ -2909,13 +2862,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         </Button>
                       </div>
                     </div>
-                    </TabsContent>
-                  </div>
-                </Tabs>
-              </div>
+                  </TabsContent>
+                </div>
+              </Tabs>
             )}
             
-            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-6 border-t">
+            <div className="flex gap-2 pt-4">
               <Button 
                 variant="outline" 
                 onClick={() => {
