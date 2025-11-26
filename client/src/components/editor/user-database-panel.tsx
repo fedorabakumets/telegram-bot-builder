@@ -796,11 +796,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           {/* Status Badges */}
                           <div className="flex flex-wrap gap-2">
                             <Badge variant={user.isActive === 1 ? "default" : "secondary"}>
-                              {user.isActive === 1 ? "Активен" : "Неактивен"}
+                              {String(user.isActive === 1 ? "Активен" : "Неактивен")}
                             </Badge>
-                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                            {user.isBlocked === 1 && <Badge variant="destructive">Заблокирован</Badge>}
-                            {user.isBot === 1 && <Badge variant="outline">Бот</Badge>}
+                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />{"Premium"}</Badge>}
+                            {user.isBlocked === 1 && <Badge variant="destructive">{"Заблокирован"}</Badge>}
+                            {user.isBot === 1 && <Badge variant="outline">{"Бот"}</Badge>}
                           </div>
 
                           {/* Stats */}
@@ -1151,7 +1151,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   <div className="space-y-4">
                     {Object.entries(selectedUser.userData).map(([key, value]) => {
                       // Parse value if it's a string (from PostgreSQL)
-                      let responseData = value;
+                      let responseData: any = value;
                       if (typeof value === 'string') {
                         try {
                           responseData = JSON.parse(value);
@@ -1167,7 +1167,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-green-500"></div>
                                 <span className="text-sm font-medium text-foreground">
-                                  {key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key}
+                                  {String(key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key)}
                                 </span>
                               </div>
                               {responseData?.type && (
@@ -1366,12 +1366,12 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
                             }`}>
                               <p className="text-sm whitespace-pre-wrap break-words">
-                                {String(message.messageText || '')}
+                                {String(message.messageText ?? '')}
                               </p>
                             </div>
                             
                             {/* Кнопки для сообщений бота */}
-                            {isBot && message.messageData && typeof message.messageData === 'object' && 'buttons' in message.messageData && Array.isArray((message.messageData as Record<string, unknown>).buttons) && ((message.messageData as Record<string, unknown>).buttons as unknown[]).length > 0 && (
+                            {isBot && message.messageData && typeof message.messageData === 'object' && 'buttons' in message.messageData && Array.isArray((message.messageData as Record<string, any>).buttons) && ((message.messageData as Record<string, any>).buttons as Array<any>).length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {((message.messageData as Record<string, unknown>).buttons as Array<{text: string}>).map((button, btnIndex: number) => (
                                   <div
@@ -1401,6 +1401,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                             
                             {/* Timestamp */}
                             {message.createdAt && (
+                              <span className="text-xs text-muted-foreground">{String(formatDate(message.createdAt))}</span>
+                            ) || null}
+                            {message.createdAt === undefined && (
                               <span 
                                 className={`text-xs text-muted-foreground ${isUser ? 'text-right' : 'text-left'}`}
                                 data-testid={`timestamp-${index}`}
