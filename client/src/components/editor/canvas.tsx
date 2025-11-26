@@ -74,6 +74,9 @@ interface CanvasProps {
 
   // Передача размеров узлов для иерархического макета
   onNodeSizesChange?: (nodeSizes: Map<string, { width: number; height: number }>) => void;
+
+  // Логирование действий в историю
+  onActionLog?: (type: Action['type'], description: string) => void;
 }
 
 export function Canvas({ 
@@ -113,7 +116,8 @@ export function Canvas({
   canvasVisible,
   onOpenMobileSidebar,
   onOpenMobileProperties,
-  onNodeSizesChange
+  onNodeSizesChange,
+  onActionLog
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -163,7 +167,11 @@ export function Canvas({
       console.log('📝 actionHistory updated, now has', updated.length, 'actions');
       return updated;
     });
-  }, []);
+    // Также передаём событие в родительский компонент если он хочет логировать
+    if (onActionLog) {
+      onActionLog(type, description);
+    }
+  }, [onActionLog]);
 
   // Функция для отмены выбранных действий
   const handleUndoSelected = useCallback(() => {
