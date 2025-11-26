@@ -1076,7 +1076,9 @@ export function PropertiesPanel({
                 }}
               >
                 <SelectTrigger className="w-full text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-slate-300/40 dark:border-slate-700/40 hover:border-slate-400/60 dark:hover:border-slate-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-slate-500 dark:focus:border-slate-500 focus:ring-2 focus:ring-slate-400/30 dark:focus:ring-slate-600/30 transition-all duration-200 rounded-lg text-slate-900 dark:text-slate-50">
-                  <SelectValue />
+                  {(selectedNode.type === 'start' || selectedNode.type === 'command') ? 
+                    `${selectedNode.data.command || nodeTypeNames[selectedNode.type]}` 
+                    : nodeTypeNames[selectedNode.type]}
                 </SelectTrigger>
                 <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
                   <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
