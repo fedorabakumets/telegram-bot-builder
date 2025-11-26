@@ -2560,19 +2560,24 @@ export function PropertiesPanel({
             {selectedNode.data.keyboardType !== 'none' && (
               <>
                 <div className="border-t border-border/20 pt-4"></div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
-                  <div className="flex-1">
-                    <Label className="text-xs font-medium text-foreground">
-                      Множественный выбор
-                    </Label>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {selectedNode.data.keyboardType === 'inline' 
-                        ? 'Кнопки отмечаются галочкой без перехода'
-                        : 'Обновляется после каждого выбора'
-                      }
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all duration-200 group">
+                  <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
+                    <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-200/50 dark:bg-blue-900/40 group-hover:bg-blue-300/50 dark:group-hover:bg-blue-800/50 transition-all">
+                      <i className="fas fa-list-check text-xs sm:text-sm text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <div className="min-w-0">
+                      <Label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100 cursor-pointer block">
+                        Множественный выбор
+                      </Label>
+                      <div className="text-xs text-blue-700/70 dark:text-blue-300/70 mt-0.5 leading-snug">
+                        {selectedNode.data.keyboardType === 'inline' 
+                          ? 'Отметки без перехода'
+                          : 'Обновление после выбора'
+                        }
+                      </div>
                     </div>
                   </div>
-                  <div className="ml-4">
+                  <div className="flex-shrink-0 self-start sm:self-center">
                     <Switch
                       checked={selectedNode.data.allowMultipleSelection ?? false}
                       onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { allowMultipleSelection: checked })}
