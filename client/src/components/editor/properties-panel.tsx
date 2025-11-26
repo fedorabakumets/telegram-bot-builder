@@ -5081,31 +5081,36 @@ export function PropertiesPanel({
 
                 </div>
               )}
+            </div>
+            )}
+          </div>
+        )}
 
-              {/* Auto Transition Section - Всегда видимый внутри спойлера */}
-              <div className="border-t border-blue-200/20 dark:border-blue-700/20 pt-4 mt-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 px-0.5 cursor-pointer group" onClick={() => {
-                  // Переключаем видимость путем изменения state
-                  if (!selectedNode.data.enableAutoTransition) {
-                    onNodeUpdate(selectedNode.id, { enableAutoTransition: true });
-                  }
-                }}>
-                  <div className="flex items-center gap-2">
-                    <div className="inline-flex h-5 w-5 items-center justify-center transition-transform duration-300" style={{ transform: selectedNode.data.enableAutoTransition ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
-                      <i className="fas fa-chevron-down text-xs text-emerald-600 dark:text-emerald-400"></i>
-                    </div>
-                    <h4 className="text-sm sm:text-base font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent group-hover:from-emerald-700 group-hover:to-teal-700 dark:group-hover:from-emerald-300 dark:group-hover:to-teal-300 transition-all">
-                      ⚡ Автопереход
-                    </h4>
-                  </div>
-                  <Switch
-                    checked={selectedNode.data.enableAutoTransition ?? false}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAutoTransition: checked })}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-                {selectedNode.data.enableAutoTransition && (
-                <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/15 dark:to-teal-950/5 border border-emerald-200/25 dark:border-emerald-800/25 rounded-xl p-3 sm:p-4 mt-3">
+        {/* Auto Transition Section - скрыто для узлов управления */}
+        {selectedNode.type !== 'pin_message' && 
+         selectedNode.type !== 'unpin_message' && 
+         selectedNode.type !== 'delete_message' &&
+         selectedNode.type !== 'ban_user' && 
+         selectedNode.type !== 'unban_user' && 
+         selectedNode.type !== 'mute_user' && 
+         selectedNode.type !== 'unmute_user' && 
+         selectedNode.type !== 'kick_user' && 
+         selectedNode.type !== 'promote_user' && 
+         selectedNode.type !== 'demote_user' && 
+         selectedNode.type !== 'admin_rights' &&
+         (!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
+         (selectedNode.data.keyboardType === 'none' || selectedNode.data.keyboardType === 'reply') && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-foreground">⚡ Автопереход</h3>
+              <Switch
+                checked={selectedNode.data.enableAutoTransition ?? false}
+                onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAutoTransition: checked })}
+              />
+            </div>
+            <div className="space-y-4">
+              {selectedNode.data.enableAutoTransition && (
+                <div className="space-y-4 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 dark:from-emerald-950/20 dark:to-teal-950/10 border border-emerald-200/30 dark:border-emerald-800/30 rounded-lg p-4">
                   <div className="text-xs text-muted-foreground mb-3">
                     Сообщение будет отправлено, и бот автоматически перейдёт к следующему узлу без ожидания ответа от пользователя.
                   </div>
