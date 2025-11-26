@@ -5343,56 +5343,6 @@ export function PropertiesPanel({
             )}
           </div>
         )}
-
-        <Separator />
-
-        {/* Keyboard Advanced Settings */}
-        {selectedNode.data.keyboardType === 'reply' && (
-          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-secondary-50/40 to-slate-50/20 dark:from-secondary-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-secondary-200/40 dark:border-secondary-800/40 backdrop-blur-sm">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-secondary-100 to-slate-100 dark:from-secondary-900/50 dark:to-slate-800/50 flex items-center justify-center flex-shrink-0">
-                <i className="fas fa-keyboard text-secondary-600 dark:text-secondary-400 text-sm sm:text-base"></i>
-              </div>
-              <h3 className="text-sm sm:text-base font-bold text-secondary-900 dark:text-secondary-100">Параметры Reply-клавиатуры</h3>
-            </div>
-            
-            <div className="space-y-2.5 sm:space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-secondary-50/60 to-slate-50/40 dark:from-secondary-950/30 dark:to-slate-950/20 border border-secondary-200/40 dark:border-secondary-700/40 hover:border-secondary-300/60 dark:hover:border-secondary-600/60 hover:shadow-sm transition-all duration-200">
-                <div className="flex-1 min-w-0">
-                  <Label className="text-xs sm:text-sm font-semibold text-secondary-700 dark:text-secondary-300 flex items-center gap-1.5">
-                    <i className="fas fa-hand-paper text-xs sm:text-sm"></i>
-                    <span className="truncate hidden xs:inline">Одноразовая клавиатура</span>
-                    <span className="truncate inline xs:hidden">Одноразовая</span>
-                  </Label>
-                  <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-0.5">Скроется после первого выбора</div>
-                </div>
-                <div className="flex-shrink-0">
-                  <Switch
-                    checked={selectedNode.data.oneTimeKeyboard}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { oneTimeKeyboard: checked })}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-secondary-50/60 to-slate-50/40 dark:from-secondary-950/30 dark:to-slate-950/20 border border-secondary-200/40 dark:border-secondary-700/40 hover:border-secondary-300/60 dark:hover:border-secondary-600/60 hover:shadow-sm transition-all duration-200">
-                <div className="flex-1 min-w-0">
-                  <Label className="text-xs sm:text-sm font-semibold text-secondary-700 dark:text-secondary-300 flex items-center gap-1.5">
-                    <i className="fas fa-up-right-and-down-left-from-center text-xs sm:text-sm"></i>
-                    <span className="truncate hidden xs:inline">Подогнать размер</span>
-                    <span className="truncate inline xs:hidden">Размер</span>
-                  </Label>
-                  <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-0.5">Клавиатура под размер экрана</div>
-                </div>
-                <div className="flex-shrink-0">
-                  <Switch
-                    checked={selectedNode.data.resizeKeyboard}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Properties Footer */}
