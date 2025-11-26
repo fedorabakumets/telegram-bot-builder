@@ -220,6 +220,7 @@ interface PropertiesPanelProps {
   allNodes?: Node[];
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
   onNodeTypeChange?: (nodeId: string, newType: Node['type'], newData: Partial<Node['data']>) => void;
+  onNodeIdChange?: (oldId: string, newId: string) => void;
   onButtonAdd: (nodeId: string, button: Button) => void;
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
   onButtonDelete: (nodeId: string, buttonId: string) => void;
@@ -234,6 +235,7 @@ export function PropertiesPanel({
   allNodes = [],
   onNodeUpdate, 
   onNodeTypeChange,
+  onNodeIdChange,
   onButtonAdd, 
   onButtonUpdate, 
   onButtonDelete,
