@@ -2814,8 +2814,7 @@ export function PropertiesPanel({
                           <SelectContent className="bg-gradient-to-br from-indigo-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-indigo-200/50 dark:border-indigo-800/50 shadow-xl max-h-48 overflow-y-auto">
                             <SelectItem value="none">
                               <div className="flex items-center gap-2">
-                                <i className="fas fa-ban text-gray-500 text-xs"></i>
-                                <span>Не выбрано</span>
+                                <span>⊘ Не выбрано</span>
                               </div>
                             </SelectItem>
                             {getAllNodesFromAllSheets
