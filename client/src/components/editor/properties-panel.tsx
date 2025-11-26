@@ -4377,6 +4377,8 @@ export function PropertiesPanel({
                                   )}
                                 </div>
                               )}
+                                </TabsContent>
+                              </Tabs>
                             </div>
                           </div>
                         </div>
