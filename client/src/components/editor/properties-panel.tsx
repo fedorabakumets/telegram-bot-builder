@@ -1025,7 +1025,21 @@ export function PropertiesPanel({
   };
 
   return (
-    <aside className="w-full h-full bg-background border-l border-border flex flex-col">
+    <aside className="fixed md:relative bottom-0 md:bottom-auto left-0 md:left-auto right-0 md:right-auto top-0 md:top-auto w-screen md:w-full h-screen md:h-full bg-background border-l border-border flex flex-col z-40 md:z-auto shadow-2xl md:shadow-none animate-in slide-in-from-right md:animate-none duration-300">
+      {/* Mobile Close Button */}
+      <div className="md:hidden flex items-center justify-between p-3 border-b border-border bg-muted/50">
+        <h3 className="font-semibold text-sm">Настройки элемента</h3>
+        <UIButton
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => onNodeSelect(null)}
+          data-testid="button-close-properties"
+        >
+          <X className="h-4 w-4" />
+        </UIButton>
+      </div>
+
       {/* Properties Header */}
       <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/40 dark:to-slate-900/30 border-b border-border/50 backdrop-blur-sm">
         <div className="p-3 sm:p-4 space-y-3">
