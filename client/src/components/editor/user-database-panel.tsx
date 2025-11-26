@@ -796,11 +796,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           {/* Status Badges */}
                           <div className="flex flex-wrap gap-2">
                             <Badge variant={user.isActive === 1 ? "default" : "secondary"}>
-                              {user.isActive === 1 ? "Активен" : "Неактивен"}
+                              {String(user.isActive === 1 ? "Активен" : "Неактивен")}
                             </Badge>
-                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                            {user.isBlocked === 1 && <Badge variant="destructive">Заблокирован</Badge>}
-                            {user.isBot === 1 && <Badge variant="outline">Бот</Badge>}
+                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />{String("Premium")}</Badge>}
+                            {user.isBlocked === 1 && <Badge variant="destructive">{String("Заблокирован")}</Badge>}
+                            {user.isBot === 1 && <Badge variant="outline">{String("Бот")}</Badge>}
                           </div>
 
                           {/* Stats */}
@@ -1076,11 +1076,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div>
                   <Label className="text-sm font-medium">Основная информация</Label>
                   <div className="mt-2 space-y-2">
-                    <div><span className="text-sm text-muted-foreground">Имя:</span> {selectedUser?.firstName || 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {selectedUser?.lastName || 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Username:</span> {selectedUser?.userName ? `@${selectedUser.userName}` : 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {selectedUser?.userId}</div>
-                    <div><span className="text-sm text-muted-foreground">Язык:</span> {selectedUser?.languageCode || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Имя:</span> {String(selectedUser?.firstName || 'Не указано')}</div>
+                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {String(selectedUser?.lastName || 'Не указано')}</div>
+                    <div><span className="text-sm text-muted-foreground">Username:</span> {String(selectedUser?.userName ? `@${selectedUser.userName}` : 'Не указано')}</div>
+                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {String(selectedUser?.userId)}</div>
+                    <div><span className="text-sm text-muted-foreground">Язык:</span> {String(selectedUser?.languageCode || 'Не указано')}</div>
                   </div>
                 </div>
                 
@@ -1118,9 +1118,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               <div>
                 <Label className="text-sm font-medium">Даты</Label>
                 <div className="mt-2 space-y-2">
-                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {formatDate(selectedUser?.createdAt)}</div>
-                  <div><span className="text-sm text-muted-foreground">Последнее обновление:</span> {formatDate(selectedUser?.updatedAt)}</div>
-                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {formatDate(selectedUser?.lastInteraction)}</div>
+                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {formatDate(selectedUser?.createdAt ?? null)}</div>
+                  <div><span className="text-sm text-muted-foreground">Последнее обновление:</span> {formatDate(selectedUser?.updatedAt ?? null)}</div>
+                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {formatDate(selectedUser?.lastInteraction ?? null)}</div>
                 </div>
               </div>
 
@@ -1363,7 +1363,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
                             }`}>
                               <p className="text-sm whitespace-pre-wrap break-words">
-                                {String(message.messageText ?? '')}
+                                {String(message?.messageText ?? '')}
                               </p>
                             </div>
                             
