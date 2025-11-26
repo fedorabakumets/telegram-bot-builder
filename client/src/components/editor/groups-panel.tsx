@@ -1797,109 +1797,112 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
         {/* Модальное окно настроек группы */}
         <Dialog open={showGroupSettings} onOpenChange={setShowGroupSettings}>
-          <DialogContent className="w-full max-w-3xl lg:max-w-5xl max-h-[85vh] sm:max-h-[90vh] overflow-hidden p-0 flex flex-col">
-            {/* Modern Header - Compact on Mobile */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-teal-500/10 dark:from-green-500/20 dark:via-emerald-500/10 dark:to-teal-500/20 p-3 sm:p-4 lg:p-5 flex-shrink-0 rounded-t-lg">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+          <DialogContent className="w-full max-w-3xl lg:max-w-5xl max-h-[90vh] overflow-hidden p-0 flex flex-col rounded-xl">
+            {/* Modern Header - Premium Design */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-green-500/8 via-emerald-500/5 to-transparent dark:from-green-500/15 dark:via-emerald-500/8 dark:to-transparent px-4 sm:px-6 py-4 sm:py-5 flex-shrink-0 border-b border-border/50">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-green-400/15 to-emerald-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+              <div className="absolute -bottom-10 left-0 w-32 h-32 bg-gradient-to-br from-emerald-400/10 to-teal-400/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
               
-              <div className="relative flex items-center gap-2.5 sm:gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
-                  <Settings className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <GroupAvatar 
-                      avatarUrl={selectedGroup?.avatarUrl}
-                      groupName={selectedGroup?.name || 'Группа'}
-                      size={20}
-                    />
-                    <h2 className="font-bold text-sm sm:text-base text-foreground truncate">{selectedGroup?.name}</h2>
+              <div className="relative flex items-center justify-between gap-4 min-h-12">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 shadow-md">
+                    <Settings className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white" />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Управление группой</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <GroupAvatar 
+                        avatarUrl={selectedGroup?.avatarUrl}
+                        groupName={selectedGroup?.name || 'Группа'}
+                        size={24}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <h2 className="font-bold text-sm sm:text-base text-foreground truncate leading-tight">{selectedGroup?.name}</h2>
+                        <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Параметры и управление</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
             
             {selectedGroup && (
               <Tabs defaultValue="general" className="w-full flex flex-col flex-1 min-h-0">
-                {/* Modern Adaptive Tabs */}
-                <div className="flex-shrink-0 px-4 sm:px-5 lg:px-6 py-3 bg-muted/30 border-b border-border/50">
-                  <TabsList className="inline-flex h-auto p-1 gap-1 bg-muted/60 rounded-xl w-full sm:w-auto">
+                {/* Modern Minimalist Tabs */}
+                <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-border/40">
+                  <TabsList className="flex h-auto p-0 gap-1 sm:gap-2 bg-transparent w-full overflow-x-auto">
                     <TabsTrigger 
                       value="general" 
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground transition-all duration-200"
+                      className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex-shrink-0 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold text-muted-foreground hover:text-foreground transition-all duration-200 border border-transparent data-[state=active]:border-primary/20"
                     >
-                      <Globe className="h-4 w-4" />
-                      <span className="hidden sm:inline">Общие</span>
-                      <span className="sm:hidden">Общие</span>
+                      <Globe className="h-4 w-4 flex-shrink-0" />
+                      <span>Общие</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="admin" 
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground transition-all duration-200"
+                      className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex-shrink-0 data-[state=active]:bg-purple/10 data-[state=active]:text-purple data-[state=active]:font-semibold text-muted-foreground hover:text-foreground transition-all duration-200 border border-transparent data-[state=active]:border-purple/20"
                     >
-                      <Shield className="h-4 w-4" />
-                      <span className="hidden sm:inline">Права</span>
-                      <span className="sm:hidden">Права</span>
+                      <Shield className="h-4 w-4 flex-shrink-0" />
+                      <span>Права</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="members" 
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground transition-all duration-200"
+                      className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex-shrink-0 data-[state=active]:bg-blue/10 data-[state=active]:text-blue data-[state=active]:font-semibold text-muted-foreground hover:text-foreground transition-all duration-200 border border-transparent data-[state=active]:border-blue/20"
                     >
-                      <Users className="h-4 w-4" />
-                      <span className="hidden sm:inline">Участники</span>
-                      <span className="sm:hidden">Люди</span>
+                      <Users className="h-4 w-4 flex-shrink-0" />
+                      <span>Участники</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="analytics" 
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground transition-all duration-200"
+                      className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex-shrink-0 data-[state=active]:bg-green/10 data-[state=active]:text-green data-[state=active]:font-semibold text-muted-foreground hover:text-foreground transition-all duration-200 border border-transparent data-[state=active]:border-green/20"
                     >
-                      <BarChart3 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Статистика</span>
-                      <span className="sm:hidden">Стат.</span>
+                      <BarChart3 className="h-4 w-4 flex-shrink-0" />
+                      <span>Статистика</span>
                     </TabsTrigger>
                   </TabsList>
                 </div>
 
-                <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-5 lg:px-6 py-4 sm:py-5">
-                  <TabsContent value="general" className="space-y-4 sm:space-y-5 mt-0">
+                <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 lg:px-7 py-5 sm:py-6">
+                  <TabsContent value="general" className="space-y-6 mt-0">
                     {/* Basic Info Section */}
                     <div className="space-y-4">
-                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Edit className="h-4 w-4 text-primary" />
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
+                          <Edit className="h-4.5 w-4.5 text-primary" />
                         </div>
-                        <h4 className="font-medium text-sm sm:text-base">Основная информация</h4>
+                        <div>
+                          <h4 className="font-bold text-sm sm:text-base text-foreground">Основная информация</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">Данные о группе</p>
+                        </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="edit-group-name" className="text-sm font-medium">Название группы</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-muted/20 rounded-xl p-4 sm:p-5 border border-border/30">
+                        <div className="space-y-2.5">
+                          <Label htmlFor="edit-group-name" className="text-xs sm:text-sm font-semibold text-foreground">Название</Label>
                           <Input
                             id="edit-group-name"
-                            placeholder="Введите название группы"
+                            placeholder="Введите название"
                             value={groupName}
                             onChange={(e) => setGroupName(e.target.value)}
-                            className="h-11"
+                            className="h-10 text-sm"
                           />
                         </div>
                         
-                        <div className="space-y-2">
-                          <Label htmlFor="edit-group-url" className="text-sm font-medium">Ссылка на группу</Label>
+                        <div className="space-y-2.5">
+                          <Label htmlFor="edit-group-url" className="text-xs sm:text-sm font-semibold text-foreground">Ссылка на группу</Label>
                           <Input
                             id="edit-group-url"
                             placeholder="https://t.me/group"
                             value={groupUrl}
                             onChange={(e) => setGroupUrl(e.target.value)}
-                            className="h-11"
+                            className="h-10 text-sm"
                           />
                         </div>
                       </div>
                       
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-group-chat-id" className="text-sm font-medium flex items-center gap-2">
-                          Chat ID группы
-                          <Badge variant="outline" className="text-[10px] font-normal">обязательно для приватных</Badge>
+                      <div className="space-y-2.5 bg-blue-50/40 dark:bg-blue-950/20 rounded-lg p-3.5 sm:p-4 border border-blue-200/40 dark:border-blue-800/30">
+                        <Label htmlFor="edit-group-chat-id" className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                          Chat ID
+                          <Badge variant="secondary" className="text-[9px] font-semibold">Приватные</Badge>
                         </Label>
                         <Input
                           id="edit-group-chat-id"
@@ -1913,40 +1916,43 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               });
                             }
                           }}
-                          className="h-11 font-mono text-sm"
+                          className="h-10 font-mono text-xs sm:text-sm"
                         />
-                        <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-                          <MessageSquare className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                          Для получения chat_id: отправьте сообщение в группу и переслайте его в @userinfobot
+                        <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-1.5 leading-relaxed">
+                          <MessageSquare className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                          Отправьте сообщение в группу, переслайте в @userinfobot
                         </p>
                       </div>
                       
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-group-desc" className="text-sm font-medium">Описание группы</Label>
+                      <div className="space-y-2.5">
+                        <Label htmlFor="edit-group-desc" className="text-xs sm:text-sm font-semibold text-foreground">Описание</Label>
                         <Textarea
                           id="edit-group-desc"
-                          placeholder="Краткое описание группы..."
+                          placeholder="Описание группы..."
                           value={groupDescription}
                           onChange={(e) => setGroupDescription(e.target.value)}
                           rows={3}
-                          className="resize-none"
+                          className="resize-none text-sm"
                         />
                       </div>
                     </div>
 
                     {/* Type & Avatar Section */}
                     <div className="space-y-4">
-                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                          <Settings className="h-4 w-4 text-purple-500" />
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-purple-500/15 flex items-center justify-center flex-shrink-0">
+                          <Sparkles className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <h4 className="font-medium text-sm sm:text-base">Тип и оформление</h4>
+                        <div>
+                          <h4 className="font-bold text-sm sm:text-base text-foreground">Оформление</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">Тип и внешний вид</p>
+                        </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="chat-type" className="text-sm font-medium">Тип чата</Label>
-                          <div className="flex items-center gap-3 h-11 px-3 rounded-lg bg-muted/50 border border-border/50">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-muted/20 rounded-xl p-4 sm:p-5 border border-border/30">
+                        <div className="space-y-2.5">
+                          <Label htmlFor="chat-type" className="text-xs sm:text-sm font-semibold text-foreground">Тип чата</Label>
+                          <div className="flex items-center gap-3 h-10 px-3 rounded-lg bg-background border border-border/50 hover:border-border/80 transition-colors">
                             {selectedGroup?.chatType === 'supergroup' ? (
                               <TrendingUp className="h-4 w-4 text-blue-500" />
                             ) : selectedGroup?.chatType === 'channel' ? (
@@ -1954,25 +1960,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             ) : (
                               <Users className="h-4 w-4 text-green-500" />
                             )}
-                            <span className="text-sm font-medium">
+                            <span className="text-xs sm:text-sm font-medium flex-1">
                               {selectedGroup?.chatType === 'group' ? 'Группа' : selectedGroup?.chatType === 'supergroup' ? 'Супергруппа' : selectedGroup?.chatType === 'channel' ? 'Канал' : 'Неизвестно'}
                             </span>
-                            <Badge variant="secondary" className="ml-auto text-[10px]">Авто</Badge>
+                            <Badge variant="secondary" className="text-[8px] font-bold flex-shrink-0">Авто</Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            Определяется Telegram автоматически
-                          </p>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="group-avatar" className="text-sm font-medium">Аватарка группы</Label>
+                        <div className="space-y-2.5">
+                          <Label htmlFor="group-avatar" className="text-xs sm:text-sm font-semibold text-foreground">Аватарка</Label>
                           <div className="flex gap-2">
                             <Input
                               id="group-avatar"
                               placeholder="https://example.com/avatar.jpg"
                               value={groupAvatarUrl}
                               onChange={(e) => setGroupAvatarUrl(e.target.value)}
-                              className="h-11"
+                              className="h-10 text-xs sm:text-sm"
                             />
                             <input
                               type="file"
@@ -2016,12 +2019,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             <Button 
                               variant="outline" 
                               size="icon"
-                              className="h-11 w-11 flex-shrink-0"
+                              className="h-10 w-10 flex-shrink-0"
                               onClick={() => {
                                 document.getElementById('avatar-upload')?.click();
                               }}
                             >
-                              <Upload className="h-4 w-4" />
+                              <Upload className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                           {groupAvatarUrl && (
@@ -2049,26 +2052,29 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
                     {/* Access Settings Section */}
                     <div className="space-y-4">
-                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-                        <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
-                          <Globe className="h-4 w-4 text-green-500" />
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-green-500/15 flex items-center justify-center flex-shrink-0">
+                          <Globe className="h-4.5 w-4.5 text-green-600 dark:text-green-400" />
                         </div>
-                        <h4 className="font-medium text-sm sm:text-base">Настройки доступа</h4>
+                        <div>
+                          <h4 className="font-bold text-sm sm:text-base text-foreground">Доступ</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">Видимость группы</p>
+                        </div>
                       </div>
                       
-                      <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-muted/40 border border-border/40">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isPublicGroup ? 'bg-green-500/10' : 'bg-muted'}`}>
+                      <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-green-500/5 to-emerald-500/5 border border-green-200/40 dark:border-green-800/30">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isPublicGroup ? 'bg-green-500/15' : 'bg-muted/50'}`}>
                             {isPublicGroup ? (
-                              <Globe className="h-5 w-5 text-green-500" />
+                              <Globe className="h-5 w-5 text-green-600 dark:text-green-400" />
                             ) : (
                               <Shield className="h-5 w-5 text-muted-foreground" />
                             )}
                           </div>
-                          <div>
-                            <p className="font-medium text-sm">Публичная группа</p>
-                            <p className="text-xs text-muted-foreground">
-                              {isPublicGroup ? 'Доступна по публичной ссылке' : 'Только по приглашению'}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-sm leading-tight">Публичная</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {isPublicGroup ? 'По ссылке' : 'По приглашению'}
                             </p>
                           </div>
                         </div>
@@ -2085,21 +2091,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </div>
                       
                       {isPublicGroup && (
-                        <div className="space-y-3 p-3 sm:p-4 rounded-xl bg-green-500/5 border border-green-500/20">
-                          <Label htmlFor="public-username" className="text-sm font-medium flex items-center gap-2">
-                            <Link2 className="h-4 w-4 text-green-500" />
-                            Публичная ссылка
-                            <Badge variant="outline" className="text-[10px] font-normal border-green-500/30 text-green-600 dark:text-green-400">обязательно</Badge>
+                        <div className="space-y-2.5 p-3.5 sm:p-4 rounded-lg bg-green-50/40 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/30">
+                          <Label htmlFor="public-username" className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                            <Link2 className="h-3.5 w-3.5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            Ссылка
                           </Label>
                           <Input
                             id="public-username"
                             placeholder="@username или t.me/username"
                             value={publicUsername}
                             onChange={(e) => setPublicUsername(e.target.value)}
-                            className="h-11"
+                            className="h-10 text-sm"
                           />
-                          <p className="text-xs text-muted-foreground">
-                            Введите @username группы или полную ссылку t.me/username
+                          <p className="text-xs text-green-700 dark:text-green-300">
+                            @username или полная ссылка
                           </p>
                         </div>
                       )}
@@ -2114,46 +2119,49 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         <h4 className="font-medium text-sm sm:text-base">Заметки</h4>
                       </div>
                       
-                      <div className="space-y-2">
-                        <Label htmlFor="group-notes" className="text-sm font-medium">Заметки администратора</Label>
+                      <div className="space-y-2.5 bg-amber-50/40 dark:bg-amber-950/20 rounded-lg p-3.5 sm:p-4 border border-amber-200/40 dark:border-amber-800/30">
+                        <Label htmlFor="group-notes" className="text-xs sm:text-sm font-semibold text-foreground">Заметки</Label>
                         <Textarea
                           id="group-notes"
-                          placeholder="Внутренние заметки о группе..."
+                          placeholder="Внутренние заметки..."
                           value={groupNotes}
                           onChange={(e) => setGroupNotes(e.target.value)}
                           rows={3}
-                          className="resize-none"
+                          className="resize-none text-sm"
                         />
-                        <p className="text-xs text-muted-foreground">
-                          Эти заметки видны только вам и не публикуются
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          Видны только вам
                         </p>
                       </div>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="admin" className="space-y-5 mt-0">
+                  <TabsContent value="admin" className="space-y-6 mt-0">
                     {/* Admin Status Section */}
                     <div className="space-y-4">
-                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                          <Crown className="h-4 w-4 text-purple-500" />
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-purple-500/15 flex items-center justify-center flex-shrink-0">
+                          <Crown className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <h4 className="font-medium text-sm sm:text-base">Статус бота</h4>
+                        <div>
+                          <h4 className="font-bold text-sm sm:text-base text-foreground">Статус бота</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">Права администратора</p>
+                        </div>
                       </div>
                       
-                      <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-purple-500/5 to-blue-500/5 border border-purple-500/20">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${makeAdmin ? 'bg-gradient-to-br from-purple-500 to-blue-500' : 'bg-muted'}`}>
+                      <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-purple-500/5 to-blue-500/5 border border-purple-200/40 dark:border-purple-800/30">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 ${makeAdmin ? 'bg-gradient-to-br from-purple-500 to-blue-500' : 'bg-muted/50'}`}>
                             {makeAdmin ? (
-                              <Crown className="h-6 w-6 text-white" />
+                              <Crown className="h-5.5 w-5.5 text-white" />
                             ) : (
-                              <Bot className="h-6 w-6 text-muted-foreground" />
+                              <Bot className="h-5.5 w-5.5 text-muted-foreground" />
                             )}
                           </div>
-                          <div>
-                            <p className="font-semibold text-base">{makeAdmin ? 'Администратор' : 'Обычный участник'}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {makeAdmin ? 'Бот имеет права администратора' : 'Бот является обычным участником группы'}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-sm leading-tight">{makeAdmin ? 'Администратор' : 'Участник'}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {makeAdmin ? 'Имеет права админа' : 'Обычный участник'}
                             </p>
                           </div>
                         </div>
@@ -2167,17 +2175,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     
                     {makeAdmin && (
                       <div className="space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                            <Shield className="h-4 w-4 text-blue-500" />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+                              <Shield className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <h5 className="font-bold text-sm text-foreground">Разрешения</h5>
+                              <p className="text-xs text-muted-foreground mt-0.5">Выберите права</p>
+                            </div>
                           </div>
-                          <h4 className="font-medium text-sm sm:text-base">Права администратора</h4>
-                          <Badge variant="secondary" className="ml-auto text-xs">
-                            {Object.values(adminRights).filter(Boolean).length} / {Object.keys(adminRights).length}
+                          <Badge variant="secondary" className="text-xs font-semibold flex-shrink-0">
+                            {Object.values(adminRights).filter(Boolean).length}/{Object.keys(adminRights).length}
                           </Badge>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                           {Object.entries(adminRights).map(([key, value]) => {
                             const rightInfo = {
                               can_manage_chat: { label: 'Управление чатом', icon: Settings, color: 'blue' },
@@ -2223,22 +2236,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           })}
                         </div>
                         
-                        <div className="flex gap-2 pt-2">
+                        <div className="flex gap-2 pt-1">
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className="text-xs"
+                            className="text-xs h-9"
                             onClick={() => setAdminRights(Object.fromEntries(Object.keys(adminRights).map(k => [k, true])) as typeof adminRights)}
                           >
-                            Включить все
+                            Все вкл
                           </Button>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className="text-xs"
+                            className="text-xs h-9"
                             onClick={() => setAdminRights(Object.fromEntries(Object.keys(adminRights).map(k => [k, false])) as typeof adminRights)}
                           >
-                            Отключить все
+                            Все выкл
                           </Button>
                         </div>
                       </div>
@@ -2248,80 +2261,75 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   <TabsContent value="members" className="space-y-4 mt-0">
                     <div className="space-y-4">
                       
-                      {/* Список администраторов */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h5 className="font-medium text-sm">Участники группы</h5>
+                      {/* Список членов */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
                           <div className="flex items-center gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setShowUserSearch(true);
-                              }}
-                            >
-                              <Search className="h-4 w-4 mr-2" />
-                              Найти пользователя
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedGroupForPromotion(selectedGroup);
-                                setShowAdminSearch(true);
-                              }}
-                            >
-                              <Crown className="h-4 w-4 mr-2" />
-                              Назначить админом
-                            </Button>
+                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                              <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <h5 className="font-semibold text-sm">Члены группы</h5>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
                             {isLoadingMembers && (
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                                Загрузка...
+                              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/30">
+                                <div className="animate-spin h-3 w-3 border-2 border-amber-600 dark:border-amber-400 border-t-transparent rounded-full" />
+                                <span className="text-xs font-medium text-amber-700 dark:text-amber-300">Загрузка...</span>
                               </div>
                             )}
-                            <Badge variant="outline">
+                            <Badge variant="secondary" className="text-xs font-semibold">
                               {(() => {
                                 const totalSavedMembers = savedMembers.length;
                                 const totalApiMembers = clientApiMembers.length || administrators.length;
                                 const totalMembers = totalSavedMembers + totalApiMembers;
                                 
                                 if (totalMembers > 0) {
-                                  if (totalSavedMembers > 0 && totalApiMembers > 0) {
-                                    return `${totalMembers} участников (${totalSavedMembers} сохр. + ${totalApiMembers} API)`;
-                                  } else if (totalSavedMembers > 0) {
-                                    return `${totalSavedMembers} сохраненных участников`;
-                                  } else {
-                                    return `${totalApiMembers} участников`;
-                                  }
+                                  return totalMembers;
                                 } else if (selectedGroup.memberCount) {
-                                  return `${selectedGroup.memberCount} участников`;
+                                  return selectedGroup.memberCount;
                                 } else {
-                                  return 'Загрузка...';
+                                  return '?';
                                 }
                               })()}
                             </Badge>
-                            {clientApiMembers.length === 0 && savedMembers.length === 0 && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => setShowTelegramAuth(true)}
-                              >
-                                <Shield className="h-4 w-4 mr-2" />
-                                Загрузить всех участников
-                              </Button>
-                            )}
-                            {savedMembers.length > 0 && clientApiMembers.length === 0 && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => setShowTelegramAuth(true)}
-                              >
-                                <Shield className="h-4 w-4 mr-2" />
-                                Загрузить еще участников
-                              </Button>
-                            )}
                           </div>
+                        </div>
+
+                        {/* Action Buttons - Responsive Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <Button 
+                            variant="outline"
+                            className="gap-2 h-10 text-sm"
+                            onClick={() => {
+                              setShowUserSearch(true);
+                            }}
+                          >
+                            <Search className="h-4 w-4 flex-shrink-0" />
+                            <span>Найти</span>
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            className="gap-2 h-10 text-sm"
+                            onClick={() => {
+                              setSelectedGroupForPromotion(selectedGroup);
+                              setShowAdminSearch(true);
+                            }}
+                          >
+                            <Crown className="h-4 w-4 flex-shrink-0" />
+                            <span className="hidden sm:inline">Админ</span>
+                            <span className="sm:hidden">Назначить</span>
+                          </Button>
+                          {(clientApiMembers.length === 0 && savedMembers.length === 0 || savedMembers.length > 0 && clientApiMembers.length === 0) && (
+                            <Button 
+                              variant="default"
+                              className="gap-2 h-10 text-sm"
+                              onClick={() => setShowTelegramAuth(true)}
+                            >
+                              <Shield className="h-4 w-4 flex-shrink-0" />
+                              <span>Загрузить</span>
+                            </Button>
+                          )}
                         </div>
                         
                         {(() => {
@@ -2358,48 +2366,48 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           // Показываем объединенный список если есть участники
                           if (allMembers.length > 0) {
                             return (
-                              <div className="space-y-2 max-h-60 overflow-y-auto">
+                              <div className="space-y-2 max-h-80 overflow-y-auto">
                                 {allMembers.map((member, index) => (
-                                  <div key={`${member.sourceType}-${index}`} className={`flex items-center justify-between p-3 border rounded-lg ${
-                                    member.sourceType === 'database' ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950' :
-                                    member.foundViaSearch ? 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950' : ''
+                                  <div key={`${member.sourceType}-${index}`} className={`flex items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border transition-all hover:shadow-md ${
+                                    member.sourceType === 'database' ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/40' :
+                                    member.foundViaSearch ? 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40' : 'border-border/50 bg-muted/30'
                                   }`}>
-                                    <div className="flex items-center space-x-3">
-                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                        member.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900' :
-                                        member.status === 'administrator' ? 'bg-blue-100 dark:bg-blue-900' :
-                                        member.isBot ? 'bg-gray-100 dark:bg-gray-900' :
-                                        'bg-green-100 dark:bg-green-900'
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                        member.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900/40' :
+                                        member.status === 'administrator' ? 'bg-blue-100 dark:bg-blue-900/40' :
+                                        member.isBot ? 'bg-slate-100 dark:bg-slate-900/40' :
+                                        'bg-green-100 dark:bg-green-900/40'
                                       }`}>
                                         {member.status === 'creator' ? (
-                                          <Crown className={`h-4 w-4 text-yellow-600 dark:text-yellow-400`} />
+                                          <Crown className={`h-4.5 w-4.5 text-yellow-600 dark:text-yellow-400`} />
                                         ) : member.status === 'administrator' ? (
-                                          <Shield className={`h-4 w-4 text-blue-600 dark:text-blue-400`} />
+                                          <Shield className={`h-4.5 w-4.5 text-blue-600 dark:text-blue-400`} />
                                         ) : member.isBot ? (
-                                          <Bot className={`h-4 w-4 text-gray-600 dark:text-gray-400`} />
+                                          <Bot className={`h-4.5 w-4.5 text-slate-600 dark:text-slate-400`} />
                                         ) : (
-                                          <Users className={`h-4 w-4 text-green-600 dark:text-green-400`} />
+                                          <Users className={`h-4.5 w-4.5 text-green-600 dark:text-green-400`} />
                                         )}
                                       </div>
-                                      <div>
-                                        <div className="flex items-center gap-2">
-                                          <p className="font-medium text-sm">
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <p className="font-medium text-sm leading-tight">
                                             {member?.firstName || member?.user?.first_name || member?.first_name || 'Неизвестно'} {member?.lastName || member?.user?.last_name || member?.last_name || ''}
                                           </p>
-                                          {member?.isBot && <Badge variant="outline" className="text-xs">Бот</Badge>}
-                                          {member.sourceType === 'database' && <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200">💾 Сохранен</Badge>}
+                                          {member?.isBot && <Badge variant="secondary" className="text-[10px] font-semibold">Бот</Badge>}
+                                          {member.sourceType === 'database' && <Badge variant="secondary" className="text-[10px] font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">Сохранен</Badge>}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
-                                          @{member?.username || member?.user?.username || 'Без username'} • ID: {member?.id || member?.user?.id || 'Неизвестно'}
+                                        <p className="text-xs text-muted-foreground truncate">
+                                          @{member?.username || member?.user?.username || '—'} • {member?.id || member?.user?.id || '—'}
                                         </p>
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-shrink-0">
                                       <Badge variant={
                                         member.status === 'creator' ? 'default' : 
                                         member.status === 'administrator' ? 'secondary' : 
                                         'outline'
-                                      }>
+                                      } className="text-[10px] font-semibold whitespace-nowrap">
                                         {member.status === 'creator' ? 'Создатель' : 
                                          member.status === 'administrator' ? 'Админ' : 
                                          member.isBot ? 'Бот' :
@@ -2410,7 +2418,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                       {member.status !== 'creator' && (
                                         <DropdownMenu>
                                           <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 hover:bg-muted/60">
                                               <MoreHorizontal className="h-4 w-4" />
                                             </Button>
                                           </DropdownMenuTrigger>
@@ -2573,41 +2581,41 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           // Если нет Client API данных, показываем администраторов от Bot API
                           if (administrators.length > 0) {
                             return (
-                              <div className="space-y-2 max-h-60 overflow-y-auto">
+                              <div className="space-y-2 max-h-80 overflow-y-auto">
                                 {administrators.map((admin, index) => (
-                                  <div key={`bot-${index}`} className={`flex items-center justify-between p-3 border rounded-lg ${admin.foundViaSearch ? 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950' : ''}`}>
-                                    <div className="flex items-center space-x-3">
-                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                        admin.foundViaSearch ? 'bg-purple-100 dark:bg-purple-900' :
-                                        admin.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900' :
-                                        'bg-blue-100 dark:bg-blue-900'
+                                  <div key={`bot-${index}`} className={`flex items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border transition-all hover:shadow-md ${admin.foundViaSearch ? 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40' : 'border-border/50 bg-muted/30'}`}>
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                        admin.foundViaSearch ? 'bg-purple-100 dark:bg-purple-900/40' :
+                                        admin.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900/40' :
+                                        'bg-blue-100 dark:bg-blue-900/40'
                                       }`}>
                                         {admin.foundViaSearch ? (
-                                          <Search className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                          <Search className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
                                         ) : admin.status === 'creator' ? (
-                                          <Crown className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                                          <Crown className="h-4.5 w-4.5 text-yellow-600 dark:text-yellow-400" />
                                         ) : (
-                                          <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                          <Shield className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
                                         )}
                                       </div>
-                                      <div>
-                                        <div className="flex items-center gap-2">
-                                          <p className="font-medium text-sm">
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <p className="font-medium text-sm leading-tight">
                                             {admin?.user?.first_name || admin?.first_name || admin?.firstName || 'Неизвестно'} {admin?.user?.last_name || admin?.last_name || admin?.lastName || ''}
                                           </p>
-                                          {admin.foundViaSearch && <Badge variant="outline" className="text-xs text-purple-600 dark:text-purple-400">Найден поиском</Badge>}
+                                          {admin.foundViaSearch && <Badge variant="secondary" className="text-[10px] font-semibold bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">Найден</Badge>}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
-                                          @{admin?.user?.username || admin?.username || 'Без username'} • ID: {admin?.user?.id || admin?.id || 'Неизвестно'}
+                                        <p className="text-xs text-muted-foreground truncate">
+                                          @{admin?.user?.username || admin?.username || '—'} • {admin?.user?.id || admin?.id || '—'}
                                         </p>
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-shrink-0">
                                       <Badge variant={
                                         admin.status === 'creator' ? 'default' : 
                                         admin.foundViaSearch ? 'outline' : 
                                         'secondary'
-                                      }>
+                                      } className="text-[10px] font-semibold whitespace-nowrap">
                                         {admin.status === 'creator' ? 'Создатель' : 
                                          admin.foundViaSearch ? admin.friendlyStatus || 'Участник' : 
                                          'Админ'}
@@ -2617,7 +2625,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                       {admin.status !== 'creator' && (
                                         <DropdownMenu>
                                           <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 hover:bg-muted/60">
                                               <MoreHorizontal className="h-4 w-4" />
                                             </Button>
                                           </DropdownMenuTrigger>
@@ -3341,7 +3349,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   }
                 }}
                 disabled={updateGroupMutation.isPending}
-                className="flex-1 h-12 gap-2"
+                className="flex-1 h-11 sm:h-12 gap-2 text-sm"
               >
                 {updateGroupMutation.isPending ? (
                   <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
@@ -3354,30 +3362,36 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           </DialogContent>
         </Dialog>
 
-        {/* Модальное окно отправки сообщения в группу */}
+        {/* Send Message Dialog */}
         <Dialog open={showSendMessage} onOpenChange={setShowSendMessage}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Отправить сообщение в группу</DialogTitle>
-              <DialogDescription>
-                Отправка сообщения в группу "{selectedGroupForMessage?.name}" через Telegram Bot API
+          <DialogContent className="sm:max-w-md rounded-xl">
+            <DialogHeader className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Send className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <DialogTitle className="text-base font-bold">Отправить</DialogTitle>
+              </div>
+              <DialogDescription className="text-xs sm:text-sm">
+                {selectedGroupForMessage?.name}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="message-text">Текст сообщения</Label>
+              <div className="space-y-2.5">
+                <Label htmlFor="message-text" className="text-sm font-semibold">Сообщение</Label>
                 <Textarea
                   id="message-text"
-                  placeholder="Введите текст сообщения..."
+                  placeholder="Введите текст..."
                   value={messageToSend}
                   onChange={(e) => setMessageToSend(e.target.value)}
                   rows={4}
+                  className="text-sm resize-none"
                 />
               </div>
             </div>
             
-            <div className="flex gap-2 pt-4">
+            <div className="flex gap-2.5 pt-4 border-t border-border/40">
               <Button 
                 variant="outline" 
                 onClick={() => {
@@ -3385,7 +3399,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   setMessageToSend('');
                   setSelectedGroupForMessage(null);
                 }} 
-                className="flex-1"
+                className="flex-1 h-10"
               >
                 Отмена
               </Button>
@@ -3399,9 +3413,19 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   }
                 }}
                 disabled={sendMessageMutation.isPending || !messageToSend.trim()}
-                className="flex-1"
+                className="flex-1 h-10 gap-2"
               >
-                {sendMessageMutation.isPending ? 'Отправляется...' : 'Отправить'}
+                {sendMessageMutation.isPending ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                    <span className="hidden sm:inline">Отправляется</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    <span>Отправить</span>
+                  </>
+                )}
               </Button>
             </div>
           </DialogContent>
