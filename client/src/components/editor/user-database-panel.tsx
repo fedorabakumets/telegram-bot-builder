@@ -832,12 +832,12 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                   
                                   return (
                                     <div key={key} className="text-xs bg-muted/50 rounded-lg p-2">
-                                      <div className="text-muted-foreground mb-1">{key}:</div>
+                                      <div className="text-muted-foreground mb-1">{String(key)}:</div>
                                       <div className="font-medium">
-                                        {(responseData as any)?.value ? 
+                                        {String((responseData as any)?.value ? 
                                           ((responseData as any).value.length > 50 ? `${(responseData as any).value.substring(0, 50)}...` : (responseData as any).value) :
                                           (typeof value === 'string' ? (value.length > 50 ? `${value.substring(0, 50)}...` : value) : JSON.stringify(value))
-                                        }
+                                        )}
                                       </div>
                                     </div>
                                   );
@@ -1201,7 +1201,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                       <span className="font-medium text-blue-900 dark:text-blue-100">Вопрос:</span>
                                     </div>
                                     <div className="text-blue-800 dark:text-blue-200 leading-relaxed">
-                                      {responseData.prompt}
+                                      {String(responseData.prompt)}
                                     </div>
                                   </div>
                                 ) : (
@@ -1225,7 +1225,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     <span className="font-medium text-green-900 dark:text-green-100">Ответ:</span>
                                   </div>
                                   <div className="text-green-800 dark:text-green-200 leading-relaxed font-medium">
-                                    {responseData.value}
+                                    {String(responseData.value)}
                                   </div>
                                 </div>
                                 
@@ -1234,7 +1234,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                   <div className="mt-3 pt-3 border-t border-border">
                                     <div className="text-xs text-muted-foreground flex items-center gap-1">
                                       <span className="inline-block w-2 h-2 bg-muted-foreground rounded-full"></span>
-                                      ID узла: {responseData.nodeId}
+                                      ID узла: {String(responseData.nodeId)}
                                     </div>
                                   </div>
                                 )}
@@ -1247,7 +1247,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 </div>
                                 <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 p-3">
                                   <pre className="text-xs text-orange-800 dark:text-orange-200 overflow-auto whitespace-pre-wrap">
-                                    {JSON.stringify(value, null, 2)}
+                                    {String(JSON.stringify(value, null, 2))}
                                   </pre>
                                 </div>
                               </div>
@@ -1379,7 +1379,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     className="inline-flex items-center px-3 py-1 text-xs rounded-md border bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300"
                                     data-testid={`button-preview-${index}-${btnIndex}`}
                                   >
-                                    {button.text}
+                                    {String(button.text)}
                                   </div>
                                 ))}
                               </div>
