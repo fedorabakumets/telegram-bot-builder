@@ -995,7 +995,7 @@ export function PropertiesPanel({
                 <SelectTrigger className="w-full text-xs sm:text-sm border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-200/50 dark:focus:ring-blue-900/50 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="z-50">
+                <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
                   <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
                   <SelectItem value="sticker">😀 Стикер</SelectItem>
                   <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
@@ -3062,7 +3062,7 @@ export function PropertiesPanel({
                             <SelectTrigger className="w-full text-xs">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-gradient-to-br from-blue-50/95 to-cyan-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                               <SelectItem value="normal">
                                 <div className="flex items-center gap-2">
                                   <div className="w-2 h-2 bg-blue-500" style={{clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'}}></div>
@@ -3297,10 +3297,10 @@ export function PropertiesPanel({
                             value={button.target || ''}
                             onValueChange={(value) => onButtonUpdate(selectedNode.id, button.id, { target: value })}
                           >
-                            <SelectTrigger className="text-xs">
+                            <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-orange-300/40 dark:border-orange-700/40 hover:border-orange-400/60 dark:hover:border-orange-600/60 focus:border-orange-500 focus:ring-orange-400/30">
                               <SelectValue placeholder="Выберите команду" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-gradient-to-br from-orange-50/95 to-amber-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                               {allNodes
                                 .filter(node => (node.type === 'start' || node.type === 'command') && node.data.command)
                                 .map((node) => (
