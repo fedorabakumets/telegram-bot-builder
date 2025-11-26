@@ -2539,7 +2539,7 @@ export function PropertiesPanel({
               {/* Header */}
               <button
                 onClick={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
-                className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
+                className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
                 title={isMediaSectionOpen ? 'Свернуть' : 'Развернуть'}
               >
                 <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/50 dark:to-pink-900/50 flex items-center justify-center flex-shrink-0">
@@ -2549,7 +2549,7 @@ export function PropertiesPanel({
                   <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-rose-900 to-pink-800 dark:from-rose-100 dark:to-pink-200 bg-clip-text text-transparent text-left">Прикрепленный медиафайл</h3>
                   <p className="text-xs sm:text-sm text-rose-700/70 dark:text-rose-300/70 mt-0.5 text-left">Картинка, видео, аудио или документ</p>
                 </div>
-                <i className={`fas fa-chevron-down text-xs sm:text-sm text-rose-600 dark:text-rose-400 ml-auto transition-transform duration-300 ${isMediaSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
+                <i className={`fas fa-chevron-down text-xs sm:text-sm text-rose-600 dark:text-rose-400 ml-auto flex-shrink-0 transition-transform duration-300 ${isMediaSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
               </button>
 
               {isMediaSectionOpen && (
@@ -2627,7 +2627,7 @@ export function PropertiesPanel({
             onClick={() => setIsKeyboardSectionOpen(!isKeyboardSectionOpen)}
             className="w-full flex items-start justify-between gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
           >
-            <div className="flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
+            <div className="flex items-start gap-2 sm:gap-2.5 flex-1 min-w-0">
               <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 flex items-center justify-center flex-shrink-0">
                 <i className="fas fa-keyboard text-amber-600 dark:text-amber-400 text-sm sm:text-base"></i>
               </div>
@@ -3508,9 +3508,9 @@ export function PropertiesPanel({
          selectedNode.type !== 'admin_rights' && (
           <div className="w-full">
             {/* Header with Collapse Toggle */}
-            <div className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group" onClick={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}>
+            <div className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group" onClick={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}>
               <button 
-                className="flex items-center gap-2.5 sm:gap-3 w-full"
+                className="flex items-start gap-2.5 sm:gap-3 w-full"
                 title={isConditionalMessagesSectionOpen ? 'Свернуть' : 'Развернуть'}
               >
                 <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/50 dark:to-indigo-900/50 flex items-center justify-center flex-shrink-0">
