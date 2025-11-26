@@ -247,6 +247,7 @@ export function PropertiesPanel({
   const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
+  const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(true);
 
   // Используем глобальную функцию форматирования узла
 
@@ -2615,23 +2616,32 @@ export function PropertiesPanel({
          selectedNode.type !== 'demote_user' && 
          selectedNode.type !== 'admin_rights' && (
         <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-xl p-3 sm:p-4 md:p-5 backdrop-blur-sm">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-2 sm:gap-3">
-            <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Header with Spoiler */}
+          <button 
+            onClick={() => setIsKeyboardSectionOpen(!isKeyboardSectionOpen)}
+            className="w-full flex items-start justify-between gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
+          >
+            <div className="flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
               <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 flex items-center justify-center flex-shrink-0">
                 <i className="fas fa-keyboard text-amber-600 dark:text-amber-400 text-sm sm:text-base"></i>
               </div>
-              <h3 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100">Клавиатура</h3>
+              <h3 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100 text-left">Клавиатура</h3>
             </div>
-            {selectedNode.data.keyboardType !== 'none' && (
-              <Badge variant="secondary" className="text-xs font-medium ml-auto">
-                {selectedNode.data.keyboardType === 'inline' ? '📍 Inline' : '💬 Reply'}
-              </Badge>
-            )}
-          </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {selectedNode.data.keyboardType !== 'none' && (
+                <Badge variant="secondary" className="text-xs font-medium">
+                  {selectedNode.data.keyboardType === 'inline' ? '📍 Inline' : '💬 Reply'}
+                </Badge>
+              )}
+              <i className={`fas fa-chevron-down text-amber-600 dark:text-amber-400 text-sm transition-transform duration-300 ${isKeyboardSectionOpen ? 'rotate-180' : ''}`}></i>
+            </div>
+          </button>
 
+          {/* Content - Toggleable with Spoiler */}
+          {isKeyboardSectionOpen && (
+            <>
           {/* Keyboard Type Selection */}
-          <div className="space-y-2.5 sm:space-y-3">
+          <div className="space-y-2.5 sm:space-y-3 animate-in fade-in duration-300">
             <label className="text-xs sm:text-sm font-semibold text-amber-900 dark:text-amber-100 flex items-center gap-2">
               <i className="fas fa-cog text-amber-600 dark:text-amber-400 text-xs"></i>
               Тип клавиатуры
