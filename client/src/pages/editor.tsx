@@ -403,7 +403,6 @@ export default function Editor() {
   const {
     nodes,
     connections,
-    selectedNode,
     selectedNodeId,
     setSelectedNodeId,
     addNode,
@@ -431,6 +430,9 @@ export default function Editor() {
     isNodeBeingDragged,
     setIsNodeBeingDragged
   } = useBotEditor(activeProject?.data as BotData);
+
+  // Вычисляем selectedNode из selectedNodeId и nodes
+  const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
 
   // Reset hasLocalChanges when activeProject changes
   useEffect(() => {
