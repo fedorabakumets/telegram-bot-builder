@@ -1133,11 +1133,15 @@ export function PropertiesPanel({
         <div className="space-y-3 sm:space-y-4">
           <button
             onClick={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-            className="flex items-center gap-2 w-full hover:opacity-75 transition-opacity duration-200"
+            className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
             title={isBasicSettingsOpen ? 'Свернуть' : 'Развернуть'}
           >
-            <div className="h-5 w-0.5 bg-gradient-to-b from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-400 rounded-full"></div>
-            <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Основные настройки</h3>
+            <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900/50 dark:to-slate-800/50 flex items-center justify-center flex-shrink-0">
+              <i className="fas fa-sliders-h text-slate-600 dark:text-slate-400 text-sm sm:text-base"></i>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 text-left">Основные настройки</h3>
+            </div>
             <i className={`fas fa-chevron-down text-xs sm:text-sm text-slate-600 dark:text-slate-400 ml-auto transition-transform duration-300 ${isBasicSettingsOpen ? 'rotate-0' : '-rotate-90'}`}></i>
           </button>
           {isBasicSettingsOpen && (
@@ -3504,24 +3508,34 @@ export function PropertiesPanel({
          selectedNode.type !== 'admin_rights' && (
           <div className="w-full">
             {/* Header with Collapse Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3 sm:mb-4 px-0.5 cursor-pointer group" onClick={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}>
-              <div className="flex items-center gap-2">
-                <div className="inline-flex h-5 w-5 items-center justify-center transition-transform duration-300" style={{ transform: isConditionalMessagesSectionOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
-                  <i className="fas fa-chevron-down text-xs text-purple-600 dark:text-purple-400"></i>
+            <div className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group" onClick={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}>
+              <button 
+                className="flex items-center gap-2.5 sm:gap-3 w-full"
+                title={isConditionalMessagesSectionOpen ? 'Свернуть' : 'Развернуть'}
+              >
+                <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/50 dark:to-indigo-900/50 flex items-center justify-center flex-shrink-0">
+                  <i className="fas fa-code-branch text-purple-600 dark:text-purple-400 text-sm sm:text-base"></i>
                 </div>
-                <h3 className="text-sm sm:text-base font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:to-indigo-700 dark:group-hover:from-purple-300 dark:group-hover:to-indigo-300 transition-all">
-                  🔄 Условные сообщения
-                </h3>
-                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold text-purple-900 dark:text-purple-100 text-left">Условные сообщения</h3>
+                  <p className="text-xs sm:text-sm text-purple-700/70 dark:text-purple-300/70 mt-0.5 text-left">Разные ответы на основе условий</p>
+                </div>
+              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
                   {(selectedNode.data.conditionalMessages || []).length}
                 </span>
+                <i className={`fas fa-chevron-down text-xs sm:text-sm text-purple-600 dark:text-purple-400 transition-transform duration-300 ${isConditionalMessagesSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
               </div>
+            </div>
+            
+            <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/40 dark:border-purple-800/40">
+              <span className="text-xs sm:text-sm font-medium text-purple-900 dark:text-purple-100">Включить</span>
               <Switch
                 checked={selectedNode.data.enableConditionalMessages ?? false}
                 onCheckedChange={(checked) => {
                   onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked });
                 }}
-                onClick={(e) => e.stopPropagation()}
               />
             </div>
 
@@ -4560,21 +4574,28 @@ export function PropertiesPanel({
          selectedNode.type !== 'admin_rights' && (
           <div className="w-full">
             {/* Header with Collapse Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3 sm:mb-4 px-0.5 cursor-pointer group" onClick={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}>
-              <div className="flex items-center gap-2">
-                <div className="inline-flex h-5 w-5 items-center justify-center transition-transform duration-300" style={{ transform: isUserInputSectionOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
-                  <i className="fas fa-chevron-down text-xs text-blue-600 dark:text-blue-400"></i>
-                </div>
-                <h3 className="text-sm sm:text-base font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent group-hover:from-blue-700 group-hover:to-cyan-700 dark:group-hover:from-blue-300 dark:group-hover:to-cyan-300 transition-all">
-                  ✨ Сбор ответов
-                </h3>
+            <button 
+              onClick={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}
+              className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
+              title={isUserInputSectionOpen ? 'Свернуть' : 'Развернуть'}
+            >
+              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 flex items-center justify-center flex-shrink-0">
+                <i className="fas fa-inbox text-blue-600 dark:text-blue-400 text-sm sm:text-base"></i>
               </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-100 text-left">Сбор ответов</h3>
+                <p className="text-xs sm:text-sm text-blue-700/70 dark:text-blue-300/70 mt-0.5 text-left">Собирать ввод пользователя в переменные</p>
+              </div>
+              <i className={`fas fa-chevron-down text-xs sm:text-sm text-blue-600 dark:text-blue-400 ml-auto transition-transform duration-300 ${isUserInputSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
+            </button>
+            
+            <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40">
+              <span className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">Включить</span>
               <Switch
                 checked={selectedNode.data.collectUserInput ?? false}
                 onCheckedChange={(checked) => {
                   onNodeUpdate(selectedNode.id, { collectUserInput: checked });
                 }}
-                onClick={(e) => e.stopPropagation()}
               />
             </div>
             {isUserInputSectionOpen && (
