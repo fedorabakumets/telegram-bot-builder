@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, ArrowLeft, Star, Trash2 } from 'lucide-react';
+import { Loader2, Search, Download, ArrowLeft, Star, Trash2, Filter, SortAsc } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -247,41 +247,65 @@ export default function TemplatesPageWrapper() {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Основной контент */}
           <div className="flex-1">
-            <div className="space-y-4">
+            <div className="space-y-3 xs:space-y-4 sm:space-y-4">
               {/* Поиск и фильтры */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <div className="rounded-lg border border-border/50 bg-card/50 dark:bg-card/30 p-2.5 xs:p-3 sm:p-4 space-y-2.5 xs:space-y-3">
+                {/* Поиск */}
+                <div className="relative group">
+                  <Search className="absolute left-2.5 xs:left-3 top-1/2 transform -translate-y-1/2 text-blue-400/60 h-4 w-4 group-focus-within:text-blue-500 transition-colors" />
                   <Input
                     placeholder="Поиск шаблонов..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-8 xs:pl-9 h-9 xs:h-10 text-xs xs:text-sm border-border/50 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all"
                   />
                 </div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="Категория" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-full sm:w-40">
-                    <SelectValue placeholder="Сортировка" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="popular">Популярные</SelectItem>
-                    <SelectItem value="rating">Рейтинг</SelectItem>
-                    <SelectItem value="recent">Новые</SelectItem>
-                    <SelectItem value="name">По алфавиту</SelectItem>
-                  </SelectContent>
-                </Select>
+
+                {/* Фильтры и сортировка */}
+                <div className="flex flex-col xs:flex-row gap-2 xs:gap-2.5">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 mb-1.5 xs:hidden">
+                      <Filter className="h-3 xs:h-3.5 w-3 xs:w-3.5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">Категория</span>
+                    </div>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="w-full h-8 xs:h-9 text-xs xs:text-sm border-border/50 hover:border-border/80 transition-colors">
+                        <div className="flex items-center gap-1.5">
+                          <Filter className="h-3.5 xs:h-4 w-3.5 xs:w-4 hidden xs:block text-muted-foreground" />
+                          <SelectValue placeholder="Категория" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.value} value={category.value}>
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 mb-1.5 xs:hidden">
+                      <SortAsc className="h-3 xs:h-3.5 w-3 xs:w-3.5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">Сортировка</span>
+                    </div>
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger className="w-full h-8 xs:h-9 text-xs xs:text-sm border-border/50 hover:border-border/80 transition-colors">
+                        <div className="flex items-center gap-1.5">
+                          <SortAsc className="h-3.5 xs:h-4 w-3.5 xs:w-4 hidden xs:block text-muted-foreground" />
+                          <SelectValue placeholder="Сортировка" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="popular">Популярные</SelectItem>
+                        <SelectItem value="rating">Рейтинг</SelectItem>
+                        <SelectItem value="recent">Новые</SelectItem>
+                        <SelectItem value="name">По алфавиту</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               {/* Вкладки */}
