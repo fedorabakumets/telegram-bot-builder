@@ -5238,8 +5238,7 @@ export function PropertiesPanel({
                     <div className="flex-1 min-w-0">
                       <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1 group-hover:text-destructive transition-colors duration-200">
                         <i className="fas fa-crown text-destructive text-xs flex-shrink-0"></i>
-                        <span className="truncate hidden xs:inline">Админы</span>
-                        <span className="truncate inline xs:hidden">Адм</span>
+                        <span className="truncate">Только админы</span>
                       </Label>
                     </div>
                     <Switch
