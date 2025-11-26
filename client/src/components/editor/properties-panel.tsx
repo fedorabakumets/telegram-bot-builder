@@ -2639,7 +2639,7 @@ export function PropertiesPanel({
                   {selectedNode.data.keyboardType === 'inline' ? '📍 Inline' : '💬 Reply'}
                 </Badge>
               )}
-              <i className={`fas fa-chevron-down text-amber-600 dark:text-amber-400 text-sm transition-transform duration-300 ${isKeyboardSectionOpen ? 'rotate-180' : ''}`}></i>
+              <i className={`fas fa-chevron-down text-amber-600 dark:text-amber-400 text-sm transition-transform duration-300 ${isKeyboardSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
             </div>
           </button>
 
@@ -3549,10 +3549,7 @@ export function PropertiesPanel({
                   {/* Information Block - Collapsible on mobile */}
                   <details className="group cursor-pointer">
                     <summary className="flex items-center gap-2 text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 select-none hover:text-blue-800 dark:hover:text-blue-200 transition-colors">
-                      <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-blue-500/10 group-open:hidden">
-                        <i className="fas fa-chevron-right text-xs"></i>
-                      </span>
-                      <span className="hidden group-open:inline-flex h-4 w-4 items-center justify-center rounded-full bg-blue-500/10">
+                      <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-blue-500/10 transition-transform duration-300" style={{ transform: 'rotate(-90deg)' }}>
                         <i className="fas fa-chevron-down text-xs"></i>
                       </span>
                       <span>ℹ️ Как это работает?</span>
