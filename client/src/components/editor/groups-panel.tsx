@@ -3469,18 +3469,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           }}
         />
 
-        {/* Диалог управления разрешениями участника */}
+        {/* Permissions Dialog */}
         <Dialog open={showPermissionsDialog} onOpenChange={setShowPermissionsDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Управление разрешениями участника</DialogTitle>
-              <DialogDescription>
+          <DialogContent className="max-w-2xl rounded-xl">
+            <DialogHeader className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                  <Lock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <DialogTitle className="text-base font-bold">Разрешения</DialogTitle>
+              </div>
+              <DialogDescription className="text-xs sm:text-sm">
                 {selectedMember && (
                   <span>
-                    Настройте разрешения для {selectedMember.firstName || selectedMember.user?.first_name || 'пользователя'} 
-                    (@{selectedMember.username || selectedMember.user?.username || 'без username'})
+                    {selectedMember.firstName || selectedMember.user?.first_name || 'Пользователь'} (@{selectedMember.username || selectedMember.user?.username || 'unknown'})
                     {loadMemberPermissionsMutation.isPending && (
-                      <span className="text-blue-600 ml-2">• Загружаем текущие права...</span>
+                      <span className="text-blue-600 dark:text-blue-400 ml-2">Загружаем...</span>
                     )}
                   </span>
                 )}
@@ -3537,14 +3541,13 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setShowPermissionsDialog(false)}>
+              <div className="flex gap-2.5 pt-4 border-t border-border/40">
+                <Button variant="outline" onClick={() => setShowPermissionsDialog(false)} className="flex-1 h-10">
                   Отмена
                 </Button>
                 <Button 
                   onClick={() => {
                     if (selectedMember && selectedGroup) {
-                      // Расширенная логика извлечения userId для разных форматов API
                       const userId = 
                         selectedMember.id?.toString() || 
                         selectedMember.user?.id?.toString() || 
@@ -3555,8 +3558,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       
                       const groupId = selectedGroup.groupId;
                       
-                      // Добавляем отладочную информацию
-                      console.log('💾 Сохраняем разрешения:', {
+                      console.log('💾 Saving permissions:', {
                         selectedMember,
                         extractedUserId: userId,
                         groupId,
@@ -3567,7 +3569,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       if (!userId || !groupId) {
                         toast({
                           title: 'Ошибка',
-                          description: `Не удалось получить ID пользователя (${userId}) или группы (${groupId}). Проверьте консоль для отладки.`,
+                          description: `ID не найден. Проверьте консоль.`,
                           variant: 'destructive'
                         });
                         return;
@@ -3581,30 +3583,46 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     }
                   }}
                   disabled={updatePermissionsMutation.isPending}
+                  className="flex-1 h-10 gap-2"
                 >
-                  {updatePermissionsMutation.isPending ? 'Сохранение...' : 'Сохранить разрешения'}
+                  {updatePermissionsMutation.isPending ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                      <span>Сохранение</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>Сохранить</span>
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Диалог поиска пользователя для добавления в список */}
+        {/* User Search Dialog */}
         <Dialog open={showUserSearch} onOpenChange={setShowUserSearch}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Найти пользователя</DialogTitle>
-              <DialogDescription>
-                Введите username (без @) или ID пользователя для добавления в список участников
+          <DialogContent className="sm:max-w-md rounded-xl">
+            <DialogHeader className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
+                </div>
+                <DialogTitle className="text-base font-bold">Найти участника</DialogTitle>
+              </div>
+              <DialogDescription className="text-xs sm:text-sm">
+                Введите username или ID для поиска
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="user-search">Username или ID</Label>
+              <div className="space-y-2.5">
+                <Label htmlFor="user-search" className="text-sm font-semibold">Username или ID</Label>
                 <Input
                   id="user-search"
-                  placeholder="Sonofbog2 или 123456789"
+                  placeholder="user или 123456789"
                   value={userSearchQuery}
                   onChange={(e) => setUserSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
@@ -3612,19 +3630,21 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       simpleSearchUserMutation.mutate(userSearchQuery.trim());
                     }
                   }}
+                  className="text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Например: <code>Sonofbog2</code> или <code>@Sonofbog2</code> или <code>123456789</code>
+                  Примеры: <code>user</code>, <code>@user</code>, <code>123456789</code>
                 </p>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex gap-2.5 pt-2 border-t border-border/40">
                 <Button 
                   variant="outline" 
                   onClick={() => {
                     setShowUserSearch(false);
                     setUserSearchQuery('');
                   }}
+                  className="flex-1 h-10"
                 >
                   Отмена
                 </Button>
@@ -3635,30 +3655,46 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     }
                   }}
                   disabled={simpleSearchUserMutation.isPending || !userSearchQuery.trim()}
+                  className="flex-1 h-10 gap-2"
                 >
-                  {simpleSearchUserMutation.isPending ? 'Поиск...' : 'Найти и добавить'}
+                  {simpleSearchUserMutation.isPending ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                      <span className="hidden sm:inline">Поиск</span>
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4" />
+                      <span>Найти</span>
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Диалог для назначения администратором */}
+        {/* Admin Promotion Dialog */}
         <Dialog open={showAdminSearch} onOpenChange={setShowAdminSearch}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Назначить администратором</DialogTitle>
-              <DialogDescription>
-                Введите username (без @) или ID пользователя для назначения администратором
+          <DialogContent className="sm:max-w-md rounded-xl">
+            <DialogHeader className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <DialogTitle className="text-base font-bold">Администратор</DialogTitle>
+              </div>
+              <DialogDescription className="text-xs sm:text-sm">
+                Введите username или ID для назначения
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="admin-search">Username или ID</Label>
+              <div className="space-y-2.5">
+                <Label htmlFor="admin-search" className="text-sm font-semibold">Username или ID</Label>
                 <Input
                   id="admin-search"
-                  placeholder="Sonofbog2 или 123456789"
+                  placeholder="user или 123456789"
                   value={userSearchQuery}
                   onChange={(e) => setUserSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
@@ -3666,19 +3702,21 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       searchUserMutation.mutate(userSearchQuery.trim());
                     }
                   }}
+                  className="text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Например: <code>Sonofbog2</code> или <code>@Sonofbog2</code> или <code>123456789</code>
+                  Примеры: <code>user</code>, <code>@user</code>, <code>123456789</code>
                 </p>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex gap-2.5 pt-2 border-t border-border/40">
                 <Button 
                   variant="outline" 
                   onClick={() => {
                     setShowAdminSearch(false);
                     setUserSearchQuery('');
                   }}
+                  className="flex-1 h-10"
                 >
                   Отмена
                 </Button>
@@ -3689,8 +3727,19 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     }
                   }}
                   disabled={searchUserMutation.isPending || !userSearchQuery.trim()}
+                  className="flex-1 h-10 gap-2"
                 >
-                  {searchUserMutation.isPending ? 'Поиск...' : 'Найти и назначить админом'}
+                  {searchUserMutation.isPending ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                      <span className="hidden sm:inline">Назначаем</span>
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4" />
+                      <span>Назначить</span>
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
