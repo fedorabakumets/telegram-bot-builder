@@ -411,6 +411,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const isDatabaseEnabled = project?.userDatabaseEnabled === 1;
 
   return (
+    <>
     <ScrollArea className="h-full w-full">
       <div className="flex flex-col bg-background">
       <div className="border-b border-border/50 bg-card flex-none sticky top-0 z-10">
