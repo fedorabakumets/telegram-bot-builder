@@ -4959,24 +4959,13 @@ export function PropertiesPanel({
                       <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                         {getAllNodesFromAllSheets
                           .filter(({ node }) => node.id !== selectedNode.id)
-                          .map(({ node, sheetId, sheetName }) => {
-                            const nodeName = 
-                              node.type === 'start' ? node.data.command :
-                              node.type === 'command' ? node.data.command :
-                              node.type === 'message' ? 'Сообщение' :
-                              node.type === 'photo' ? 'Фото' :
-                              node.type === 'video' ? 'Видео' :
-                              node.type === 'audio' ? 'Аудио' :
-                              node.type === 'document' ? 'Документ' : 'Узел';
-                            
-                            return (
-                              <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
-                                <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
-                                  {formatNodeDisplayGlobal(node, sheetName)}
-                                </span>
-                              </SelectItem>
-                            );
-                          })}
+                          .map(({ node, sheetId, sheetName }) => (
+                            <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
+                              <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
+                                {formatNodeDisplayGlobal(node, sheetName)}
+                              </span>
+                            </SelectItem>
+                          ))}
                         
                         {(!getAllNodesFromAllSheets || getAllNodesFromAllSheets.filter(({ node }) => node.id !== selectedNode.id).length === 0) && (
                           <SelectItem value="no-nodes" disabled>
