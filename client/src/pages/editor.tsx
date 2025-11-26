@@ -100,14 +100,31 @@ export default function Editor() {
   // Track the last loaded activeProject ID to prevent unnecessary reloads
   const [lastLoadedProjectId, setLastLoadedProjectId] = useState<number | null>(null);
   
+  // Состояние истории действий (поднято из Canvas для централизации)
+  type ActionType = 'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate';
+  interface ActionHistoryItem {
+    id: string;
+    type: ActionType;
+    description: string;
+    timestamp: number;
+  }
+  const [actionHistory, setActionHistory] = useState<ActionHistoryItem[]>([]);
+  
   // Callback для получения размеров узлов из Canvas
   const handleNodeSizesChange = useCallback((nodeSizes: Map<string, { width: number; height: number }>) => {
     setCurrentNodeSizes(nodeSizes);
   }, []);
 
-  // Обработчик логирования действий в историю
+  // Обработчик логирования действий в историю - теперь добавляет в состояние
   const handleActionLog = useCallback((type: string, description: string) => {
     console.log('📋 История действий:', type, '-', description);
+    const newAction: ActionHistoryItem = {
+      id: `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: type as ActionType,
+      description,
+      timestamp: Date.now()
+    };
+    setActionHistory(prev => [newAction, ...prev].slice(0, 50)); // Храним последние 50
   }, []);
   
   // Функции для управления видимостью панелей
@@ -895,6 +912,19 @@ export default function Editor() {
     updateNode(nodeId, { position });
   }, [updateNode]);
 
+  // Обёртки для deleteNode и duplicateNode с логированием в историю
+  const handleNodeDelete = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    handleActionLog('delete', `Удален узел "${node?.type || 'Unknown'}"`);
+    deleteNode(nodeId);
+  }, [deleteNode, nodes, handleActionLog]);
+
+  const handleNodeDuplicate = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    handleActionLog('duplicate', `Дублирован узел "${node?.type || 'Unknown'}"`);
+    duplicateNode(nodeId);
+  }, [duplicateNode, nodes, handleActionLog]);
+
   const handleComponentDrag = useCallback((component: ComponentDefinition) => {
     // Handle component drag start if needed
   }, []);
@@ -918,10 +948,10 @@ export default function Editor() {
     
     // Логируем добавление в историю действий
     console.log('📝 Добавление узла:', component.type);
+    handleActionLog('add', `Добавлен узел "${component.type}"`);
     
     // Добавляем узел на холст
     addNode(newNode);
-    
     
     // Auto-save after a short delay to persist the new node
     setTimeout(() => {
@@ -929,7 +959,7 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
     }, 1000);
-  }, [addNode, isLoadingTemplate, updateProjectMutation, activeProject]);
+  }, [addNode, isLoadingTemplate, updateProjectMutation, activeProject, handleActionLog]);
 
   const handleSaveAsTemplate = useCallback(() => {
     setShowSaveTemplate(true);
@@ -1204,8 +1234,8 @@ export default function Editor() {
             selectedConnectionId={selectedConnectionId ?? undefined}
             onNodeSelect={setSelectedNodeId}
             onNodeAdd={addNode}
-            onNodeDelete={deleteNode}
-            onNodeDuplicate={duplicateNode}
+            onNodeDelete={handleNodeDelete}
+            onNodeDuplicate={handleNodeDuplicate}
             onNodeMove={handleNodeMove}
             onConnectionSelect={setSelectedConnectionId}
             onConnectionDelete={deleteConnection}
@@ -1234,6 +1264,7 @@ export default function Editor() {
             onOpenMobileProperties={handleOpenMobileProperties}
             onNodeSizesChange={handleNodeSizesChange}
             onActionLog={handleActionLog}
+            actionHistory={actionHistory}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-background overflow-auto">
@@ -1424,6 +1455,7 @@ export default function Editor() {
                   canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
                   onOpenMobileSidebar={handleOpenMobileSidebar}
                   onActionLog={handleActionLog}
+                  actionHistory={actionHistory}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">
@@ -1563,6 +1595,7 @@ export default function Editor() {
                       sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
                       propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                       onActionLog={handleActionLog}
+                      actionHistory={actionHistory}
                     />
                   ) : null}
                 </div>
@@ -1632,6 +1665,7 @@ export default function Editor() {
                   onOpenMobileSidebar={handleOpenMobileSidebar}
                   onOpenMobileProperties={handleOpenMobileProperties}
                   onActionLog={handleActionLog}
+                  actionHistory={actionHistory}
                 />
               ) : null}
             </div>

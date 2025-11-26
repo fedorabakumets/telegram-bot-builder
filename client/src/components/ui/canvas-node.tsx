@@ -167,6 +167,7 @@ interface CanvasNodeProps {
   onDelete?: () => void;
   onDuplicate?: () => void;
   onMove?: (position: { x: number; y: number }) => void;
+  onMoveEnd?: () => void;
   onConnectionStart?: (nodeId: string, handle: 'source' | 'target') => void;
   connectionStart?: {
     nodeId: string;
@@ -232,7 +233,7 @@ const nodeColors = {
   admin_rights: 'bg-gradient-to-br from-violet-100 to-purple-200 dark:from-violet-900/40 dark:to-purple-800/40 text-violet-800 dark:text-violet-200 border-2 border-violet-300 dark:border-violet-700/50 shadow-xl shadow-violet-500/25 ring-1 ring-violet-400/30 dark:ring-violet-600/30'
 };
 
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onMove, onMoveEnd, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -320,6 +321,10 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   };
 
   const handleMouseUp = () => {
+    // Логируем перемещение только если узел реально перемещался
+    if (isDragging && onMoveEnd) {
+      onMoveEnd();
+    }
     setIsDragging(false);
     // Уведомляем глобальное состояние об окончании перетаскивания
     if (setIsNodeBeingDragged) {
@@ -438,6 +443,11 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     // Если это было короткое касание (менее 300ms) и не было движения, обрабатываем как клик
     if (touchDuration < 300 && !touchMoved && onClick) {
       onClick();
+    }
+    
+    // Логируем перемещение только если узел реально перемещался
+    if (isTouchDragging && touchMoved && onMoveEnd) {
+      onMoveEnd();
     }
     
     setIsTouchDragging(false);
@@ -1161,8 +1171,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         const multiSelectVariable = (node.data as any).multiSelectVariable;
         const allowMultipleSelection = (node.data as any).allowMultipleSelection;
         
-        // Если это keyboard с collectUserInput и кнопками, это уже показано выше - пропускаем основной блок
-        if (node.type === 'keyboard' && collectUserInput && node.data.buttons && node.data.buttons.length > 0) {
+        // Если это узел с collectUserInput и кнопками, это уже показано выше - пропускаем основной блок
+        if (collectUserInput && node.data.buttons && node.data.buttons.length > 0 && node.data.keyboardType !== 'none') {
           return null;
         }
         
@@ -1312,7 +1322,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       })()}
       
       {/* Text Input Indicator for keyboard type 'none' */}
-      {node.type === 'keyboard' && node.data.keyboardType === 'none' && (node.data as any).enableTextInput && (
+      {node.data.keyboardType === 'none' && (node.data as any).enableTextInput && (
         <div className="bg-gradient-to-br from-cyan-50/70 to-blue-50/70 dark:from-cyan-900/30 dark:to-blue-900/30 rounded-xl p-4 mb-4 border border-cyan-200 dark:border-cyan-800/30">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">

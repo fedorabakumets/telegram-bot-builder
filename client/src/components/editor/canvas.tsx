@@ -77,6 +77,9 @@ interface CanvasProps {
 
   // Логирование действий в историю
   onActionLog?: (type: Action['type'], description: string) => void;
+  
+  // История действий (передаётся из родителя)
+  actionHistory?: Action[];
 }
 
 export function Canvas({ 
@@ -117,7 +120,8 @@ export function Canvas({
   onOpenMobileSidebar,
   onOpenMobileProperties,
   onNodeSizesChange,
-  onActionLog
+  onActionLog,
+  actionHistory: externalActionHistory
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -146,8 +150,9 @@ export function Canvas({
   // Состояние для хранения реальных размеров узлов
   const [nodeSizes, setNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
 
-  // Система истории действий - последние 50 действий
-  const [actionHistory, setActionHistory] = useState<Action[]>([]);
+  // Система истории действий - используем внешнюю историю если передана, иначе локальную
+  const [localActionHistory, setLocalActionHistory] = useState<Action[]>([]);
+  const actionHistory = externalActionHistory || localActionHistory;
   const [selectedActionsForUndo, setSelectedActionsForUndo] = useState<Set<string>>(new Set());
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
@@ -155,21 +160,22 @@ export function Canvas({
   // Функция для добавления действия в историю
   const addAction = useCallback((type: Action['type'], description: string) => {
     console.log('📝 addAction called:', type, description);
-    setActionHistory(prev => {
-      const newAction: Action = {
-        id: nanoid(),
-        type,
-        description,
-        timestamp: Date.now()
-      };
-      // Храним только последние 50 действий
-      const updated = [newAction, ...prev].slice(0, 50);
-      console.log('📝 actionHistory updated, now has', updated.length, 'actions');
-      return updated;
-    });
-    // Также передаём событие в родительский компонент если он хочет логировать
+    // Если есть внешний обработчик - используем его (централизованное управление)
     if (onActionLog) {
       onActionLog(type, description);
+    } else {
+      // Иначе используем локальное состояние
+      setLocalActionHistory(prev => {
+        const newAction: Action = {
+          id: nanoid(),
+          type,
+          description,
+          timestamp: Date.now()
+        };
+        const updated = [newAction, ...prev].slice(0, 50);
+        console.log('📝 actionHistory updated, now has', updated.length, 'actions');
+        return updated;
+      });
     }
   }, [onActionLog]);
 
@@ -1133,8 +1139,10 @@ export function Canvas({
                 onDelete={() => onNodeDelete(node.id)}
                 onDuplicate={onNodeDuplicate ? () => onNodeDuplicate(node.id) : undefined}
                 onMove={(position) => {
-                  addAction('move', `Перемещен узел "${node.type}"`);
                   onNodeMove(node.id, position);
+                }}
+                onMoveEnd={() => {
+                  addAction('move', `Перемещен узел "${node.type}"`);
                 }}
                 onConnectionStart={handleConnectionStart}
                 connectionStart={connectionStart}
