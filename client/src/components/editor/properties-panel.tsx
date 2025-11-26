@@ -144,6 +144,33 @@ const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: с
   );
 };
 
+// Единая функция для форматирования отображения узла (ВНЕ компонента)
+const formatNodeDisplayGlobal = (node: Node, sheetName: string) => {
+  const getNodeTypeLabel = (type: Node['type']) => {
+    const types: Record<Node['type'], string> = {
+      start: 'Старт', command: 'Команда', message: 'Сообщение', photo: 'Фото', video: 'Видео',
+      audio: 'Аудио', document: 'Документ', keyboard: 'Клавиатура', location: 'Геолокация',
+      contact: 'Контакт', sticker: 'Стикер', voice: 'Голос', animation: 'Анимация',
+      pin_message: 'Закрепить', unpin_message: 'Открепить', delete_message: 'Удалить',
+      ban_user: 'Заблокировать', unban_user: 'Разблокировать', mute_user: 'Заглушить'
+    };
+    return types[type] || type;
+  };
+  
+  const getContent = () => {
+    if (node.type === 'start') return ((node.data as any).messageText || node.data.command || '').slice(0, 50);
+    if (node.type === 'command') return (node.data.command || '').slice(0, 50);
+    if (node.type === 'message') return ((node.data as any).messageText || '').slice(0, 50);
+    if (node.type === 'photo') return ((node.data as any).photoCaption || '').slice(0, 50);
+    if (node.type === 'keyboard') return ((node.data as any).keyboardText || '').slice(0, 50);
+    return ((node.data as any).label || '').slice(0, 50);
+  };
+  
+  const content = getContent();
+  const typeLabel = getNodeTypeLabel(node.type);
+  return `${node.id} | ${content} | ${typeLabel} | ${sheetName}`;
+};
+
 // Переиспользуемый компонент для выбора целевого узла
 const NodeSelector = ({
   value,
@@ -171,10 +198,9 @@ const NodeSelector = ({
           .filter(n => n.node.id !== selectedNodeId)
           .map(({node, sheetName}) => (
             <SelectItem key={node.id} value={node.id}>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-sky-700 dark:text-sky-300">{node.id}</span>
-                <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
-              </div>
+              <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
+                {formatNodeDisplayGlobal(node, sheetName)}
+              </span>
             </SelectItem>
           ))}
       </SelectContent>
@@ -222,32 +248,8 @@ export function PropertiesPanel({
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
 
-  // Единая функция для форматирования отображения узла
-  const formatNodeDisplay = (node: Node, sheetName: string) => {
-    const getNodeTypeLabel = (type: Node['type']) => {
-      const types: Record<Node['type'], string> = {
-        start: 'Старт', command: 'Команда', message: 'Сообщение', photo: 'Фото', video: 'Видео',
-        audio: 'Аудио', document: 'Документ', keyboard: 'Клавиатура', location: 'Геолокация',
-        contact: 'Контакт', sticker: 'Стикер', voice: 'Голос', animation: 'Анимация',
-        pin_message: 'Закрепить', unpin_message: 'Открепить', delete_message: 'Удалить',
-        ban_user: 'Заблокировать', unban_user: 'Разблокировать', mute_user: 'Заглушить'
-      };
-      return types[type] || type;
-    };
-    
-    const getContent = () => {
-      if (node.type === 'start') return ((node.data as any).messageText || node.data.command || '').slice(0, 50);
-      if (node.type === 'command') return (node.data.command || '').slice(0, 50);
-      if (node.type === 'message') return ((node.data as any).messageText || '').slice(0, 50);
-      if (node.type === 'photo') return ((node.data as any).photoCaption || '').slice(0, 50);
-      if (node.type === 'keyboard') return ((node.data as any).keyboardText || '').slice(0, 50);
-      return ((node.data as any).label || '').slice(0, 50);
-    };
-    
-    const content = getContent();
-    const typeLabel = getNodeTypeLabel(node.type);
-    return `${node.id} | ${content} | ${typeLabel} | ${sheetName}`;
-  };
+  // Используем глобальную функцию форматирования узла
+  const formatNodeDisplay = formatNodeDisplayGlobal;
 
   // Функция для получения данных по умолчанию для каждого типа узла
   const getDefaultDataForType = (type: Node['type']) => {
