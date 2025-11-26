@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal, Hash, Link2, Sparkles } from 'lucide-react';
+import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal, Hash, Link2, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -2781,17 +2781,23 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           
                           // Если ничего нет, показываем улучшенную подсказку
                           return (
-                            <div className="space-y-3 py-4">
-                              <div className="text-center">
-                                <p className="text-sm text-muted-foreground">
-                                  📝 Показаны только администраторы
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Обычные участники скрыты из-за ограничений Telegram Bot API
-                                </p>
-                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                  💡 Проверьте конкретного участника кнопкой ниже
-                                </p>
+                            <div className="space-y-4 py-6">
+                              <div className="rounded-xl bg-gradient-to-br from-amber-50 to-orange-25 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800/40 p-4 sm:p-5">
+                                <div className="flex gap-4">
+                                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                                    <Users className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className="font-semibold text-sm text-amber-900 dark:text-amber-100 mb-2">Видны только администраторы</h4>
+                                    <p className="text-xs text-amber-700 dark:text-amber-300/90 leading-relaxed mb-2">
+                                      Обычные участники не видны в списке из-за ограничений Telegram Bot API. Это ограничение установлено самим Telegram для безопасности.
+                                    </p>
+                                    <p className="text-xs text-amber-600 dark:text-amber-400/80 font-medium flex items-center gap-1.5">
+                                      <Shield className="w-3.5 h-3.5 flex-shrink-0" />
+                                      Решение: Используйте поиск участника ниже для проверки членства
+                                    </p>
+                                  </div>
+                                </div>
                               </div>
                               
                               <div className="space-y-3">
@@ -3029,49 +3035,64 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   </TabsContent>
 
                   <TabsContent value="analytics" className="space-y-4 mt-0">
-                    <div className="grid grid-cols-2 gap-4">
-                      <Card className="p-4">
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="h-5 w-5 text-blue-500" />
-                          <div>
-                            <p className="text-sm font-medium">Сообщений</p>
-                            <p className="text-2xl font-bold">{selectedGroup.messagesCount || 0}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50 to-blue-25 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-200 dark:border-blue-800/40 p-4 sm:p-5 hover:shadow-md transition-shadow">
+                        <div className="flex items-start gap-3">
+                          <div className="w-11 h-11 rounded-lg bg-blue-500/15 dark:bg-blue-500/25 flex items-center justify-center flex-shrink-0">
+                            <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Сообщений</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{selectedGroup.messagesCount || 0}</p>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                       
-                      <Card className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-5 w-5 text-green-500" />
-                          <div>
-                            <p className="text-sm font-medium">Активные пользователи</p>
-                            <p className="text-2xl font-bold">{selectedGroup.activeUsers || 0}</p>
+                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-50 to-green-25 dark:from-green-950/30 dark:to-green-900/20 border border-green-200 dark:border-green-800/40 p-4 sm:p-5 hover:shadow-md transition-shadow">
+                        <div className="flex items-start gap-3">
+                          <div className="w-11 h-11 rounded-lg bg-green-500/15 dark:bg-green-500/25 flex items-center justify-center flex-shrink-0">
+                            <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">Активные</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{selectedGroup.activeUsers || 0}</p>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Последняя активность</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedGroup.lastActivity 
-                          ? new Date(selectedGroup.lastActivity).toLocaleString('ru-RU')
-                          : 'Нет данных'
-                        }
-                      </p>
+                    <div className="rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800/40 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                          <Clock className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide mb-1">Последняя активность</p>
+                          <p className="text-sm text-purple-600 dark:text-purple-300">
+                            {selectedGroup.lastActivity 
+                              ? new Date(selectedGroup.lastActivity).toLocaleString('ru-RU')
+                              : 'Нет данных'
+                            }
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Теги группы</Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                          <Tag className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <Label className="font-semibold text-sm">Теги группы</Label>
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {groupTags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="flex items-center gap-1">
-                            <Tag className="h-3 w-3" />
-                            {tag}
+                          <Badge key={index} variant="secondary" className="flex items-center gap-2 py-1.5 px-2.5 text-xs font-medium">
+                            <span>{tag}</span>
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="h-4 w-4 p-0 ml-1"
+                              className="h-4 w-4 p-0 ml-0.5 hover:bg-destructive/20"
                               onClick={() => setGroupTags(prev => prev.filter((_, i) => i !== index))}
                             >
                               <X className="h-3 w-3" />
@@ -3085,9 +3106,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             const newTag = prompt('Введите новый тег:');
                             if (newTag) setGroupTags(prev => [...prev, newTag]);
                           }}
+                          className="gap-1.5"
                         >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Добавить тег
+                          <Plus className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Добавить</span>
                         </Button>
                       </div>
                     </div>
@@ -3096,14 +3118,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               </Tabs>
             )}
             
-            <div className="flex gap-2 pt-4">
+            <div className="flex gap-2.5 pt-6 border-t border-border/40">
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setShowGroupSettings(false);
                   setSelectedGroup(null);
                 }} 
-                className="flex-1"
+                className="flex-1 h-12"
               >
                 Отмена
               </Button>
@@ -3319,8 +3341,13 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   }
                 }}
                 disabled={updateGroupMutation.isPending}
-                className="flex-1"
+                className="flex-1 h-12 gap-2"
               >
+                {updateGroupMutation.isPending ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
                 Сохранить
               </Button>
             </div>
