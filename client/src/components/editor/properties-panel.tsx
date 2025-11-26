@@ -4014,8 +4014,8 @@ export function PropertiesPanel({
 
                                 {/* Buttons Tab */}
                                 <TabsContent value="buttons" className="space-y-3 sm:space-y-4 mt-0">
-                            {/* Keyboard Configuration for Conditional Messages */}
-                            <div className="space-y-3">
+                                  {/* Keyboard Configuration for Conditional Messages */}
+                                  <div className="space-y-3">
                               <div className="flex flex-col gap-3">
                                 <Label className="text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">
                                   <i className="fas fa-keyboard mr-1.5"></i>
@@ -4053,10 +4053,10 @@ export function PropertiesPanel({
                                   </div>
                                 </div>
                               </div>
-                            </div>
+                                  </div>
 
-                              {/* Buttons Configuration */}
-                              {condition.keyboardType && condition.keyboardType !== 'none' && (
+                                  {/* Buttons Configuration */}
+                                  {condition.keyboardType && condition.keyboardType !== 'none' && (
                                 <div className="space-y-4">
                                   <div className="border-t border-purple-200/20 dark:border-purple-800/20 pt-4"></div>
                                   
@@ -4378,9 +4378,9 @@ export function PropertiesPanel({
                                   )}
                                 </div>
                               )}
-                            </div>
-                                </TabsContent>
-                              </Tabs>
+                            </TabsContent>
+
+                            {/* Empty State */}
                             </div>
                           </div>
                         </div>
