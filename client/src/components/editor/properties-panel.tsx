@@ -5200,63 +5200,57 @@ export function PropertiesPanel({
               <AccordionContent className="bg-gradient-to-br from-background to-muted/15 dark:from-background dark:to-muted/5 border border-border/50 rounded-lg mt-2 overflow-hidden p-0">
                 <div className="space-y-2 sm:space-y-2.5 p-3 sm:p-4">
                   {/* Show in Menu Setting */}
-                  <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-primary/5 to-primary/0 dark:from-primary/10 dark:to-primary/0 border border-primary/20 dark:border-primary/30 hover:border-primary/40 dark:hover:border-primary/50 hover:bg-primary/8 dark:hover:bg-primary/15 transition-all duration-200">
-                    <div className="flex-1">
-                      <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-200 flex items-center gap-2">
-                        <i className="fas fa-menu text-primary text-xs sm:text-sm"></i>
-                        Показать в меню
+                  <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-primary/5 hover:bg-primary/8 dark:bg-primary/10 dark:hover:bg-primary/15 border border-primary/25 dark:border-primary/35 hover:border-primary/40 dark:hover:border-primary/50 transition-all duration-200">
+                    <div className="flex-1 min-w-0">
+                      <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-primary transition-colors duration-200">
+                        <i className="fas fa-menu text-primary flex-shrink-0"></i>
+                        <span className="truncate">Показать в меню</span>
                       </Label>
-                      <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
+                      <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
                         В меню @BotFather
                       </div>
                     </div>
-                    <div className="sm:ml-4">
-                      <Switch
-                        checked={selectedNode.data.showInMenu ?? true}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { showInMenu: checked })}
-                        className="data-[state=checked]:bg-primary"
-                      />
-                    </div>
+                    <Switch
+                      checked={selectedNode.data.showInMenu ?? true}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { showInMenu: checked })}
+                      className="data-[state=checked]:bg-primary flex-shrink-0"
+                    />
                   </div>
                   
                   {/* Private Only Setting */}
-                  <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-warning/5 to-warning/0 dark:from-warning/10 dark:to-warning/0 border border-warning/20 dark:border-warning/30 hover:border-warning/40 dark:hover:border-warning/50 hover:bg-warning/8 dark:hover:bg-warning/15 transition-all duration-200">
-                    <div className="flex-1">
-                      <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-warning transition-colors duration-200 flex items-center gap-2">
-                        <i className="fas fa-lock text-warning text-xs sm:text-sm"></i>
-                        Только в приватных чатах
+                  <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-warning/5 hover:bg-warning/8 dark:bg-warning/10 dark:hover:bg-warning/15 border border-warning/25 dark:border-warning/35 hover:border-warning/40 dark:hover:border-warning/50 transition-all duration-200">
+                    <div className="flex-1 min-w-0">
+                      <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-warning transition-colors duration-200">
+                        <i className="fas fa-lock text-warning flex-shrink-0"></i>
+                        <span className="truncate">Только в приватных чатах</span>
                       </Label>
-                      <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
-                        Только в диалоге с ботом
+                      <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
+                        Диалог с ботом
                       </div>
                     </div>
-                    <div className="sm:ml-4">
-                      <Switch
-                        checked={selectedNode.data.isPrivateOnly ?? false}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { isPrivateOnly: checked })}
-                        className="data-[state=checked]:bg-warning"
-                      />
-                    </div>
+                    <Switch
+                      checked={selectedNode.data.isPrivateOnly ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { isPrivateOnly: checked })}
+                      className="data-[state=checked]:bg-warning flex-shrink-0"
+                    />
                   </div>
 
                   {/* Admin Only Setting */}
-                  <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-destructive/5 to-destructive/0 dark:from-destructive/10 dark:to-destructive/0 border border-destructive/20 dark:border-destructive/30 hover:border-destructive/40 dark:hover:border-destructive/50 hover:bg-destructive/8 dark:hover:bg-destructive/15 transition-all duration-200">
-                    <div className="flex-1">
-                      <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-destructive transition-colors duration-200 flex items-center gap-2">
-                        <i className="fas fa-shield-halved text-destructive text-xs sm:text-sm"></i>
-                        Только для администраторов
+                  <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-destructive/5 hover:bg-destructive/8 dark:bg-destructive/10 dark:hover:bg-destructive/15 border border-destructive/25 dark:border-destructive/35 hover:border-destructive/40 dark:hover:border-destructive/50 transition-all duration-200">
+                    <div className="flex-1 min-w-0">
+                      <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-destructive transition-colors duration-200">
+                        <i className="fas fa-shield-halved text-destructive flex-shrink-0"></i>
+                        <span className="truncate">Только администраторы</span>
                       </Label>
-                      <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
+                      <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
                         Доступна только админам
                       </div>
                     </div>
-                    <div className="sm:ml-4">
-                      <Switch
-                        checked={selectedNode.data.adminOnly ?? false}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
-                        className="data-[state=checked]:bg-destructive"
-                      />
-                    </div>
+                    <Switch
+                      checked={selectedNode.data.adminOnly ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
+                      className="data-[state=checked]:bg-destructive flex-shrink-0"
+                    />
                   </div>
                 </div>
               </AccordionContent>
@@ -5280,43 +5274,39 @@ export function PropertiesPanel({
               </h3>
             </div>
             
-            <div className="space-y-2 sm:space-y-2.5">
-              <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-secondary/5 to-secondary/0 dark:from-secondary/10 dark:to-secondary/0 border border-secondary/20 dark:border-secondary/30 hover:border-secondary/40 dark:hover:border-secondary/50 hover:bg-secondary/8 dark:hover:bg-secondary/15 transition-all duration-200">
-                <div className="flex-1">
-                  <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-secondary transition-colors duration-200 flex items-center gap-2">
-                    <i className="fas fa-hand-paper text-secondary text-xs sm:text-sm"></i>
-                    Одноразовая клавиатура
+            <div className="space-y-1.5 sm:space-y-2">
+              <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-secondary/5 hover:bg-secondary/8 dark:bg-secondary/10 dark:hover:bg-secondary/15 border border-secondary/25 dark:border-secondary/35 hover:border-secondary/40 dark:hover:border-secondary/50 transition-all duration-200">
+                <div className="flex-1 min-w-0">
+                  <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-secondary transition-colors duration-200">
+                    <i className="fas fa-hand-paper text-secondary flex-shrink-0"></i>
+                    <span className="truncate">Одноразовая клавиатура</span>
                   </Label>
-                  <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
+                  <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
                     Скрыть после нажатия
                   </div>
                 </div>
-                <div className="sm:ml-4">
-                  <Switch
-                    checked={selectedNode.data.oneTimeKeyboard}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { oneTimeKeyboard: checked })}
-                    className="data-[state=checked]:bg-secondary"
-                  />
-                </div>
+                <Switch
+                  checked={selectedNode.data.oneTimeKeyboard}
+                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { oneTimeKeyboard: checked })}
+                  className="data-[state=checked]:bg-secondary flex-shrink-0"
+                />
               </div>
               
-              <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-secondary/5 to-secondary/0 dark:from-secondary/10 dark:to-secondary/0 border border-secondary/20 dark:border-secondary/30 hover:border-secondary/40 dark:hover:border-secondary/50 hover:bg-secondary/8 dark:hover:bg-secondary/15 transition-all duration-200">
-                <div className="flex-1">
-                  <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-secondary transition-colors duration-200 flex items-center gap-2">
-                    <i className="fas fa-expand text-secondary text-xs sm:text-sm"></i>
-                    Подогнать размер
+              <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-secondary/5 hover:bg-secondary/8 dark:bg-secondary/10 dark:hover:bg-secondary/15 border border-secondary/25 dark:border-secondary/35 hover:border-secondary/40 dark:hover:border-secondary/50 transition-all duration-200">
+                <div className="flex-1 min-w-0">
+                  <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-secondary transition-colors duration-200">
+                    <i className="fas fa-expand text-secondary flex-shrink-0"></i>
+                    <span className="truncate">Подогнать размер</span>
                   </Label>
-                  <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
+                  <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
                     Под содержимое
                   </div>
                 </div>
-                <div className="sm:ml-4">
-                  <Switch
-                    checked={selectedNode.data.resizeKeyboard}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
-                    className="data-[state=checked]:bg-secondary"
-                  />
-                </div>
+                <Switch
+                  checked={selectedNode.data.resizeKeyboard}
+                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
+                  className="data-[state=checked]:bg-secondary flex-shrink-0"
+                />
               </div>
             </div>
           </div>
@@ -5324,11 +5314,12 @@ export function PropertiesPanel({
       </div>
 
       {/* Properties Footer */}
-      <div className="p-4 border-t border-border bg-gradient-to-r from-background to-muted/10 dark:from-background dark:to-muted/5">
-        <div className="flex space-x-2">
+      <div className="sticky bottom-0 p-2.5 sm:p-3 lg:p-4 border-t border-border/50 bg-gradient-to-r from-background via-background to-muted/5 dark:from-background dark:via-background dark:to-muted/2 backdrop-blur-sm">
+        <div className="flex flex-col xs:flex-row gap-2 xs:space-x-2">
           <UIButton 
             variant="outline" 
-            className="flex-1 hover:bg-muted/80 dark:hover:bg-muted/60 transition-all duration-200"
+            size="sm"
+            className="flex-1 text-xs sm:text-sm h-8 sm:h-9 hover:bg-muted/80 dark:hover:bg-muted/60 transition-all duration-200"
             onClick={() => {
               // Reset to default values
               onNodeUpdate(selectedNode.id, {
@@ -5341,9 +5332,14 @@ export function PropertiesPanel({
               });
             }}
           >
+            <i className="fas fa-redo-alt mr-1.5"></i>
             Сбросить
           </UIButton>
-          <UIButton className="flex-1 bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/80 transition-all duration-200">
+          <UIButton 
+            size="sm"
+            className="flex-1 text-xs sm:text-sm h-8 sm:h-9 bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/80 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <i className="fas fa-check mr-1.5"></i>
             Применить
           </UIButton>
         </div>
