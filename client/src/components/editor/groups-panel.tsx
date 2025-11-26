@@ -1453,100 +1453,71 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   {/* Gradient Header */}
                   <div className="h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                   
-                  <div className="p-4 sm:p-5">
-                    {/* Header Row */}
-                    <div className="flex items-start justify-between gap-3 mb-4">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <GroupAvatar 
-                          avatarUrl={group.avatarUrl}
-                          groupName={group.name}
-                          size={44}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-bold text-sm sm:text-base leading-tight mb-1.5 truncate">{group.name}</h3>
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <Badge 
-                              variant={group.isAdmin ? "default" : "secondary"} 
-                              className="text-xs"
-                            >
-                              {group.isAdmin ? 'Админ' : 'Участник'}
+                  <div className="p-3 sm:p-4 flex flex-col h-full">
+                    {/* Header - Group Name & Avatar */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <GroupAvatar 
+                        avatarUrl={group.avatarUrl}
+                        groupName={group.name}
+                        size={40}
+                        className="flex-shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-sm sm:text-base text-foreground leading-tight truncate" data-testid={`text-group-name-${group.id}`}>
+                          {group.name}
+                        </h3>
+                        <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                          <Badge 
+                            variant={group.isAdmin ? "default" : "secondary"} 
+                            className="text-xs"
+                            data-testid={`badge-admin-${group.id}`}
+                          >
+                            {group.isAdmin ? 'Админ' : 'Пользователь'}
+                          </Badge>
+                          {group.chatType && (
+                            <Badge variant="outline" className="text-xs">
+                              {group.chatType === 'supergroup' ? 'Супер' : 
+                               group.chatType === 'channel' ? 'Канал' : 'Группа'}
                             </Badge>
-                            {group.chatType && (
-                              <Badge variant="outline" className="text-xs">
-                                {group.chatType === 'supergroup' ? 'Супер' : 
-                                 group.chatType === 'channel' ? 'Канал' : 'Группа'}
-                              </Badge>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="h-9 w-9 flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          parseGroupInfoMutation.mutate(group.groupId!);
-                        }}
-                        disabled={parseGroupInfoMutation.isPending}
-                        title="Обновить информацию о группе"
-                      >
-                        <div className="w-4 h-4">{parseGroupInfoMutation.isPending ? '⏳' : '🔄'}</div>
-                      </Button>
                     </div>
-                    
-                    {/* Description */}
+
+                    {/* Description - Mobile optimized */}
                     {group.description && (
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
                         {group.description}
                       </p>
                     )}
-                    
-                    {/* Info Grid - Adaptive */}
-                    <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-muted/30 rounded-lg">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                          <span className="text-xs font-medium text-foreground">
-                            {group.memberCount || 'N/A'}
-                          </span>
+
+                    {/* Compact Info Grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-3 p-2 bg-muted/40 rounded-lg">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{group.memberCount || '—'}</p>
+                          <p className="text-xs text-muted-foreground">Участников</p>
                         </div>
-                        <p className="text-xs text-muted-foreground">Участников</p>
                       </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                          <span className="text-xs font-medium text-foreground truncate">
-                            {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {month: 'numeric', day: 'numeric'}) : 'N/A'}
-                          </span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">
+                            {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {month: 'short', day: 'numeric'}) : '—'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Создана</p>
                         </div>
-                        <p className="text-xs text-muted-foreground">Дата создания</p>
                       </div>
                     </div>
-                    
-                    {/* URL */}
-                    <div className="mb-4">
-                      <a 
-                        href={group.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors truncate"
-                        title={group.url}
-                      >
-                        <Globe className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span className="truncate">{group.url.replace('https://', '').replace('http://', '')}</span>
-                      </a>
-                    </div>
-                    
-                    {/* Action Buttons */}
-                    <div className="space-y-2">
-                      {/* Primary Actions */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          className="h-9 text-xs"
-                          onClick={() => {
+
+                    {/* Primary Action Buttons - Full Width Stacked on Mobile */}
+                    <div className="flex gap-2 mb-2">
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="flex-1 h-8 text-xs sm:h-9"
+                        onClick={() => {
                           setSelectedGroup(group);
                           setGroupName(group.name);
                           setGroupUrl(group.url);
@@ -1558,10 +1529,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           setGroupNotes(group.notes || '');
                           setMakeAdmin(group.isAdmin === 1);
                           setIsPublicGroup(Boolean(group.isPublic));
-                          
-                          // Инициализируем публичный username если группа публичная
                           if (group.isPublic && group.url && !group.url.includes('+')) {
-                            // Извлекаем username из публичной ссылки
                             if (group.url.includes('t.me/')) {
                               const username = group.url.replace('https://t.me/', '').replace('http://t.me/', '');
                               setPublicUsername(username.startsWith('@') ? username : `@${username}`);
@@ -1573,139 +1541,93 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           } else {
                             setPublicUsername('');
                           }
-                          
-                          // Получаем актуальные права администратора из Telegram API
                           if (group.isAdmin === 1 && group.groupId) {
                             fetch(`/api/projects/${projectId}/bot/group-admins/${group.groupId}`)
                               .then(res => res.json())
                               .then(data => {
-                                // Создаем базовую структуру с полным набором прав
-                                const baseRights = {
-                                  can_manage_chat: false,
-                                  can_change_info: false,
-                                  can_delete_messages: false,
-                                  can_invite_users: false,
-                                  can_restrict_members: false,
-                                  can_pin_messages: false,
-                                  can_promote_members: false,
-                                  can_manage_video_chats: false,
-                                  can_be_anonymous: false,
-                                  can_manage_stories: false
-                                };
-                                
-                                // Объединяем с данными из API и базы данных
-                                const finalRights = {
-                                  ...baseRights,
-                                  ...((group.adminRights as any) || {}),
-                                  ...(data.botAdminRights || {})
-                                };
-                                
+                                const baseRights = {can_manage_chat: false,can_change_info: false,can_delete_messages: false,can_invite_users: false,can_restrict_members: false,can_pin_messages: false,can_promote_members: false,can_manage_video_chats: false,can_be_anonymous: false,can_manage_stories: false};
+                                const finalRights = {...baseRights,...((group.adminRights as any) || {}),...(data.botAdminRights || {})};
                                 setAdminRights(finalRights);
                               })
                               .catch(() => {
-                                // Fallback при ошибке - также используем базовую структуру
-                                const baseRights = {
-                                  can_manage_chat: false,
-                                  can_change_info: false,
-                                  can_delete_messages: false,
-                                  can_invite_users: false,
-                                  can_restrict_members: false,
-                                  can_pin_messages: false,
-                                  can_promote_members: false,
-                                  can_manage_video_chats: false,
-                                  can_be_anonymous: false,
-                                  can_manage_stories: false
-                                };
-                                
-                                const finalRights = {
-                                  ...baseRights,
-                                  ...((group.adminRights as any) || {})
-                                };
-                                
+                                const baseRights = {can_manage_chat: false,can_change_info: false,can_delete_messages: false,can_invite_users: false,can_restrict_members: false,can_pin_messages: false,can_promote_members: false,can_manage_video_chats: false,can_be_anonymous: false,can_manage_stories: false};
+                                const finalRights = {...baseRights,...((group.adminRights as any) || {})};
                                 setAdminRights(finalRights);
                               });
                           } else {
-                            // Если не админ, используем базовые права
-                            setAdminRights({
-                              can_manage_chat: false,
-                              can_change_info: false,
-                              can_delete_messages: false,
-                              can_invite_users: false,
-                              can_restrict_members: false,
-                              can_pin_messages: false,
-                              can_promote_members: false,
-                              can_manage_video_chats: false,
-                              can_be_anonymous: false,
-                              can_manage_stories: false
-                            });
+                            setAdminRights({can_manage_chat: false,can_change_info: false,can_delete_messages: false,can_invite_users: false,can_restrict_members: false,can_pin_messages: false,can_promote_members: false,can_manage_video_chats: false,can_be_anonymous: false,can_manage_stories: false});
                           }
-                          
                           setShowGroupSettings(true);
                         }}
+                        data-testid={`button-settings-${group.id}`}
                       >
-                        <Settings className="w-4 h-4" />
-                        <span className="hidden sm:inline ml-1.5">Настройки</span>
+                        <Settings className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline ml-1">Настройки</span>
                       </Button>
                       <Button 
                         variant="outline" 
-                        size="sm" 
-                        className="h-9 text-xs"
+                        size="sm"
+                        className="flex-1 h-8 text-xs sm:h-9"
                         onClick={() => {
                           setSelectedGroupForMessage(group);
                           setShowSendMessage(true);
                         }}
+                        data-testid={`button-message-${group.id}`}
                       >
-                        <Send className="w-4 h-4" />
-                        <span className="hidden sm:inline ml-1.5">Сообщение</span>
+                        <Send className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline ml-1">Сообщение</span>
                       </Button>
                     </div>
-                    
-                    {/* Info Actions - Compact on Mobile */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+
+                    {/* Quick Actions - Icon Only on Mobile */}
+                    <div className="grid grid-cols-3 gap-1 mb-2">
                       <Button 
                         variant="ghost" 
-                        size="sm" 
-                        className="h-8 text-xs"
+                        size="sm"
+                        className="h-7 text-xs"
                         onClick={() => getGroupInfoMutation.mutate(group.groupId)}
                         disabled={getGroupInfoMutation.isPending}
+                        data-testid={`button-info-${group.id}`}
                       >
                         <BarChart3 className="w-3 h-3" />
-                        <span className="hidden sm:inline ml-1">Инфо</span>
+                        <span className="hidden sm:inline ml-0.5">Инфо</span>
                       </Button>
                       <Button 
                         variant="ghost" 
-                        size="sm" 
-                        className="h-8 text-xs"
+                        size="sm"
+                        className="h-7 text-xs"
                         onClick={() => getMembersCountMutation.mutate(group.groupId)}
                         disabled={getMembersCountMutation.isPending}
+                        data-testid={`button-members-${group.id}`}
                       >
                         <Users className="w-3 h-3" />
-                        <span className="hidden sm:inline ml-1">Люди</span>
+                        <span className="hidden sm:inline ml-0.5">Люди</span>
                       </Button>
                       <Button 
                         variant="ghost" 
-                        size="sm" 
-                        className="h-8 text-xs col-span-2 sm:col-span-1"
+                        size="sm"
+                        className="h-7 text-xs"
                         onClick={() => getAdminStatusMutation.mutate(group.groupId)}
                         disabled={getAdminStatusMutation.isPending}
+                        data-testid={`button-status-${group.id}`}
                       >
                         <Shield className="w-3 h-3" />
-                        <span className="hidden sm:inline ml-1">Статус</span>
+                        <span className="hidden sm:inline ml-0.5">Статус</span>
                       </Button>
                     </div>
-                    
-                    {/* Delete Action */}
+
+                    {/* Delete Button */}
                     <Button 
                       variant="ghost" 
-                      size="sm" 
-                      className="w-full h-8 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs"
+                      size="sm"
+                      className="w-full h-7 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs"
                       onClick={() => deleteGroupMutation.mutate(group.id)}
                       disabled={deleteGroupMutation.isPending}
+                      data-testid={`button-delete-${group.id}`}
                     >
-                      <X className="w-3 h-3 mr-1" />
-                      Удалить
+                      <X className="w-3 h-3" />
+                      <span className="hidden sm:inline ml-1">Удалить</span>
                     </Button>
-                  </div>
                   </div>
                 </Card>
               ))}
