@@ -3352,10 +3352,10 @@ export function PropertiesPanel({
                             </div>
                             <div className="min-w-0 flex-1">
                               <Label className="text-xs sm:text-sm font-semibold text-sky-900 dark:text-sky-100 cursor-pointer block">
-                                Переход на экран
+                                🎯 Целевой экран
                               </Label>
                               <div className="text-xs text-sky-700/70 dark:text-sky-300/70 mt-0.5 leading-snug hidden sm:block">
-                                Выберите или укажите целевой экран
+                                Выберите или введите ID экрана
                               </div>
                             </div>
                           </div>
