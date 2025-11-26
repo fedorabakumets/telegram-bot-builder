@@ -2506,21 +2506,35 @@ export function PropertiesPanel({
          selectedNode.type !== 'promote_user' && 
          selectedNode.type !== 'demote_user' && 
          selectedNode.type !== 'admin_rights' && (
-        <div className="bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-            <span>⌨️ Клавиатура</span>
+        <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-xl p-3 sm:p-4 md:p-5 backdrop-blur-sm">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 flex items-center justify-center flex-shrink-0">
+                <i className="fas fa-keyboard text-amber-600 dark:text-amber-400 text-sm sm:text-base"></i>
+              </div>
+              <h3 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100">Клавиатура</h3>
+            </div>
             {selectedNode.data.keyboardType !== 'none' && (
-              <Badge variant="secondary" className="text-xs">
-                {selectedNode.data.keyboardType === 'inline' ? 'Inline' : 'Reply'}
+              <Badge variant="secondary" className="text-xs font-medium ml-auto">
+                {selectedNode.data.keyboardType === 'inline' ? '📍 Inline' : '💬 Reply'}
               </Badge>
             )}
-          </h3>
-          
-          <div className="space-y-3 mb-5">
-            <Label className="text-xs font-medium text-muted-foreground block">Тип клавиатуры</Label>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 flex-1">
-                <Label className="text-xs font-medium text-foreground cursor-pointer flex-1">Inline</Label>
+          </div>
+
+          {/* Keyboard Type Selection */}
+          <div className="space-y-2.5 sm:space-y-3">
+            <label className="text-xs sm:text-sm font-semibold text-amber-900 dark:text-amber-100 flex items-center gap-2">
+              <i className="fas fa-cog text-amber-600 dark:text-amber-400 text-xs"></i>
+              Тип клавиатуры
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+              <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200 cursor-pointer group">
+                <i className="fas fa-th text-amber-600 dark:text-amber-400 text-sm sm:text-base flex-shrink-0"></i>
+                <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer flex-1">
+                  Inline
+                  <span className="text-xs text-amber-700/70 dark:text-amber-300/70 ml-1 hidden sm:inline">(под сообщением)</span>
+                </label>
                 <Switch
                   checked={selectedNode.data.keyboardType === 'inline'}
                   onCheckedChange={(checked) => {
@@ -2528,8 +2542,12 @@ export function PropertiesPanel({
                   }}
                 />
               </div>
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 flex-1">
-                <Label className="text-xs font-medium text-foreground cursor-pointer flex-1">Reply</Label>
+              <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200 cursor-pointer group">
+                <i className="fas fa-comment-dots text-amber-600 dark:text-amber-400 text-sm sm:text-base flex-shrink-0"></i>
+                <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer flex-1">
+                  Reply
+                  <span className="text-xs text-amber-700/70 dark:text-amber-300/70 ml-1 hidden sm:inline">(клавиатура)</span>
+                </label>
                 <Switch
                   checked={selectedNode.data.keyboardType === 'reply'}
                   onCheckedChange={(checked) => {
