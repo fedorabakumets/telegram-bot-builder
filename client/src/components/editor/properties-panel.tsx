@@ -2844,23 +2844,23 @@ export function PropertiesPanel({
                   )}
                   
                   {(selectedNode.data.buttons || []).map((button) => (
-                    <div key={button.id} className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all duration-200 group">
-                      {/* Header with icon, title and delete button */}
-                      <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
-                        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                          <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-200/50 dark:bg-blue-900/40 group-hover:bg-blue-300/50 dark:group-hover:bg-blue-800/50 transition-all">
-                            <i className="fas fa-rectangle-ad text-xs sm:text-sm text-blue-600 dark:text-blue-400"></i>
+                    <div key={button.id} className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-50/50 to-cyan-50/40 dark:from-blue-950/25 dark:to-cyan-950/15 border border-blue-200/40 dark:border-blue-800/25 hover:border-blue-300/60 dark:hover:border-blue-700/50 hover:shadow-md dark:hover:shadow-blue-900/20 transition-all duration-300 group">
+                      {/* Header - Compact and modern */}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 justify-between p-2.5 sm:p-3 md:p-4 border-b border-blue-200/30 dark:border-blue-800/20 bg-gradient-to-r from-blue-100/40 to-cyan-100/30 dark:from-blue-900/20 dark:to-cyan-900/10">
+                        <div className="flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
+                          <div className="w-5 sm:w-6 h-5 sm:h-6 rounded-md flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-400 to-cyan-500 text-white shadow-sm">
+                            <i className="fas fa-rectangle-ad text-xs"></i>
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">
-                              Кнопка
+                            <div className="text-xs sm:text-sm font-bold text-blue-900 dark:text-blue-100 truncate">
+                              Кнопка #{button.id.slice(0, 8)}
                             </div>
                             {selectedNode.data.allowMultipleSelection && button.buttonType && (
-                              <Badge variant="outline" className="text-xs h-5 mt-1">
+                              <div className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 truncate">
                                 {button.buttonType === 'option' && '🟢 Опция'}
                                 {button.buttonType === 'complete' && '🟣 Завершение'}
                                 {button.buttonType === 'normal' && '🔵 Обычная'}
-                              </Badge>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -2868,7 +2868,7 @@ export function PropertiesPanel({
                           size="sm"
                           variant="ghost"
                           onClick={() => onButtonDelete(selectedNode.id, button.id)}
-                          className="text-blue-600 hover:text-red-600 dark:text-blue-400 dark:hover:text-red-400 h-auto p-1.5 transition-colors duration-200 flex-shrink-0"
+                          className="text-blue-500 hover:text-red-500 dark:text-blue-400 dark:hover:text-red-400 h-6 w-6 p-0 flex-shrink-0 hover:bg-red-100/50 dark:hover:bg-red-900/30 rounded-md transition-all"
                           title="Удалить кнопку"
                         >
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -2877,22 +2877,17 @@ export function PropertiesPanel({
                         </UIButton>
                       </div>
 
-                      {/* Text input and variables button */}
-                      <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-purple-50/40 to-pink-50/30 dark:from-purple-950/20 dark:to-pink-950/10 border border-purple-200/40 dark:border-purple-800/30 hover:border-purple-300/60 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/30 transition-all duration-200 group">
-                        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-                          <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-200/50 dark:bg-purple-900/40 group-hover:bg-purple-300/50 dark:group-hover:bg-purple-800/50 transition-all">
-                            <i className="fas fa-keyboard text-xs sm:text-sm text-purple-600 dark:text-purple-400"></i>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <Label className="text-xs sm:text-sm font-semibold text-purple-900 dark:text-purple-100 cursor-pointer block">
-                              Текст кнопки
-                            </Label>
-                            <div className="text-xs text-purple-700/70 dark:text-purple-300/70 mt-0.5 leading-snug hidden sm:block">
-                              Введите текст или вставьте переменную
-                            </div>
-                          </div>
+                      {/* Content */}
+                      <div className="space-y-2 sm:space-y-2.5 md:space-y-3 p-2.5 sm:p-3 md:p-4">
+                        {/* Text input and variables button */}
+                      <div className="space-y-2 p-2 sm:p-2.5 rounded-lg bg-gradient-to-br from-purple-50/60 to-pink-50/40 dark:from-purple-900/20 dark:to-pink-900/10 border border-purple-200/40 dark:border-purple-800/30 hover:border-purple-300/50 dark:hover:border-purple-700/40 transition-all duration-200">
+                        <div className="flex items-center gap-2 sm:gap-2.5 px-2 sm:px-2.5 py-1.5">
+                          <i className="fas fa-keyboard text-xs text-purple-600 dark:text-purple-400 flex-shrink-0"></i>
+                          <Label className="text-xs sm:text-sm font-semibold text-purple-900 dark:text-purple-100 cursor-pointer">
+                            Текст
+                          </Label>
                         </div>
-                        <div className="flex items-center gap-2 mt-2.5 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg bg-white/60 dark:bg-slate-950/60 border border-purple-300/40 dark:border-purple-700/40 hover:border-purple-400/60 dark:hover:border-purple-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus-within:border-purple-500 dark:focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-400/30 dark:focus-within:ring-purple-600/30 transition-all duration-200">
+                        <div className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-md bg-white/70 dark:bg-slate-950/50 border border-purple-300/40 dark:border-purple-700/40 hover:border-purple-400/60 dark:hover:border-purple-600/60 focus-within:border-purple-500 dark:focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-400/30 dark:focus-within:ring-purple-600/30 transition-all duration-200">
                           <Input
                             value={button.text}
                             onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { text: e.target.value })}
@@ -3009,15 +3004,14 @@ export function PropertiesPanel({
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                      </div>
-                      
-                      {/* Divider */}
-                      <div className="border-t border-border/20 my-3"></div>
-
-                      {/* Button Type Selection - Show for Multiple Selection Mode */}
-                      {selectedNode.data.allowMultipleSelection && (
-                        <div className="mb-3">
-                          <Label className="text-xs font-medium text-muted-foreground mb-2 block">Тип кнопки</Label>
+                        
+                        {/* Button Type Selection - Show for Multiple Selection Mode */}
+                        {selectedNode.data.allowMultipleSelection && (
+                          <div className="space-y-2 p-2 sm:p-2.5 rounded-lg bg-gradient-to-br from-purple-50/60 to-pink-50/40 dark:from-purple-900/20 dark:to-pink-900/10 border border-purple-200/40 dark:border-purple-800/30">
+                          <div className="flex items-center gap-2 px-2">
+                            <i className="fas fa-flag-checkered text-xs text-purple-600 dark:text-purple-400"></i>
+                            <Label className="text-xs font-semibold text-purple-900 dark:text-purple-100">Тип</Label>
+                          </div>
                           <Select
                             value={button.buttonType || 'normal'}
                             onValueChange={(value: 'normal' | 'option' | 'complete') => {
@@ -3042,7 +3036,7 @@ export function PropertiesPanel({
                               }
                             }}
                           >
-                            <SelectTrigger className="w-full text-xs">
+                            <SelectTrigger className="w-full text-xs h-7 px-2 bg-white/70 dark:bg-slate-950/50 border-purple-300/40 dark:border-purple-700/40">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -3067,22 +3061,13 @@ export function PropertiesPanel({
                             </SelectContent>
                           </Select>
                         </div>
-                      )}
-                      {/* Action Selection - Show for normal buttons or non-multiple-selection modes */}
-                      {(!selectedNode.data.allowMultipleSelection || (button.buttonType !== 'option' && button.buttonType !== 'complete')) && (
-                        <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-teal-50/40 to-cyan-50/30 dark:from-teal-950/20 dark:to-cyan-950/10 border border-teal-200/40 dark:border-teal-800/30 hover:border-teal-300/60 dark:hover:border-teal-700/60 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-all duration-200 group">
-                          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-                            <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-teal-200/50 dark:bg-teal-900/40 group-hover:bg-teal-300/50 dark:group-hover:bg-teal-800/50 transition-all">
-                              <i className="fas fa-arrow-right text-xs sm:text-sm text-teal-600 dark:text-teal-400"></i>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <Label className="text-xs sm:text-sm font-semibold text-teal-900 dark:text-teal-100 cursor-pointer block">
-                                Действие
-                              </Label>
-                              <div className="text-xs text-teal-700/70 dark:text-teal-300/70 mt-0.5 leading-snug hidden sm:block">
-                                Что должна сделать кнопка при нажатии
-                              </div>
-                            </div>
+                        )}
+                        {/* Action Selection - Show for normal buttons or non-multiple-selection modes */}
+                        {(!selectedNode.data.allowMultipleSelection || (button.buttonType !== 'option' && button.buttonType !== 'complete')) && (
+                          <div className="space-y-2 p-2 sm:p-2.5 rounded-lg bg-gradient-to-br from-teal-50/60 to-cyan-50/40 dark:from-teal-900/20 dark:to-cyan-900/10 border border-teal-200/40 dark:border-teal-800/30">
+                          <div className="flex items-center gap-2 px-2">
+                            <i className="fas fa-arrow-right text-xs text-teal-600 dark:text-teal-400"></i>
+                            <Label className="text-xs font-semibold text-teal-900 dark:text-teal-100">Действие</Label>
                           </div>
                           <Select
                             value={button.action}
@@ -3090,8 +3075,8 @@ export function PropertiesPanel({
                               onButtonUpdate(selectedNode.id, button.id, { action: value })
                             }
                           >
-                            <SelectTrigger className="w-full text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-teal-300/40 dark:border-teal-700/40 hover:border-teal-400/60 dark:hover:border-teal-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-teal-500 dark:focus:border-teal-500 focus:ring-2 focus:ring-teal-400/30 dark:focus:ring-teal-600/30 transition-all duration-200 rounded-lg text-teal-900 dark:text-teal-50">
-                              <SelectValue placeholder="Выберите действие" />
+                            <SelectTrigger className="w-full text-xs h-7 px-2 bg-white/70 dark:bg-slate-950/50 border-teal-300/40 dark:border-teal-700/40 text-teal-900 dark:text-teal-50">
+                              <SelectValue placeholder="Выберите" />
                             </SelectTrigger>
                             <SelectContent className="bg-gradient-to-br from-teal-50/95 to-cyan-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl">
                               <SelectItem value="goto">
@@ -3121,11 +3106,11 @@ export function PropertiesPanel({
                             </SelectContent>
                           </Select>
                         </div>
-                      )}
+                        )}
 
-                      {/* Skip Data Collection Toggle - Only show when collectUserInput is enabled */}
-                      {selectedNode.data.collectUserInput && (
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 mt-3">
+                        {/* Skip Data Collection Toggle - Only show when collectUserInput is enabled */}
+                        {selectedNode.data.collectUserInput && (
+                          <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 mt-3">
                           <div className="flex-1">
                             <Label className="text-xs font-medium text-foreground">
                               Не сохранять ответы
@@ -3143,11 +3128,11 @@ export function PropertiesPanel({
                             />
                           </div>
                         </div>
-                      )}
+                        )}
 
-                      {/* Hide After Click Toggle - For reply buttons */}
-                      {selectedNode.data.keyboardType === 'reply' && (
-                        <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-red-50/40 to-rose-50/30 dark:from-red-950/20 dark:to-rose-950/10 border border-red-200/40 dark:border-red-800/30 hover:border-red-300/60 dark:hover:border-red-700/60 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-all duration-200 group">
+                        {/* Hide After Click Toggle - For reply buttons */}
+                        {selectedNode.data.keyboardType === 'reply' && (
+                          <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-red-50/40 to-rose-50/30 dark:from-red-950/20 dark:to-rose-950/10 border border-red-200/40 dark:border-red-800/30 hover:border-red-300/60 dark:hover:border-red-700/60 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-all duration-200 group">
                           <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
                             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
                               <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-200/50 dark:bg-red-900/40 group-hover:bg-red-300/50 dark:group-hover:bg-red-800/50 transition-all">
@@ -3172,11 +3157,11 @@ export function PropertiesPanel({
                             </div>
                           </div>
                         </div>
-                      )}
-                      
-                      {/* Button Type Info Blocks */}
-                      {selectedNode.data.allowMultipleSelection && (
-                        <>
+                        )}
+                        
+                        {/* Button Type Info Blocks */}
+                        {selectedNode.data.allowMultipleSelection && (
+                          <>
                           {/* Option Button Info */}
                           {button.buttonType === 'option' && (
                             <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/40 rounded-lg p-2 mt-2 space-y-2">
@@ -3230,18 +3215,18 @@ export function PropertiesPanel({
                             </div>
                           )}
                         </>
-                      )}
-                      
-                      {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'url' && (
-                        <Input
-                          value={button.url || ''}
-                          onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { url: e.target.value })}
-                          className="mt-2 text-xs"
-                          placeholder="https://example.com"
-                        />
-                      )}
-                      
-                      {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'command' && (
+                        )}
+                        
+                          {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'url' && (
+                          <Input
+                            value={button.url || ''}
+                            onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { url: e.target.value })}
+                            className="mt-2 text-xs"
+                            placeholder="https://example.com"
+                          />
+                        )}
+                        
+                        {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'command' && (
                         <div className="mt-2 space-y-2">
                           <Select
                             value={button.target || ''}
