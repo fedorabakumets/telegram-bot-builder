@@ -1134,7 +1134,7 @@ export function PropertiesPanel({
         <div className="space-y-3 sm:space-y-4">
           <button
             onClick={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-            className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
+            className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
             title={isBasicSettingsOpen ? 'Свернуть' : 'Развернуть'}
           >
             <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900/50 dark:to-slate-800/50 flex items-center justify-center flex-shrink-0">
@@ -1143,7 +1143,7 @@ export function PropertiesPanel({
             <div className="flex-1 min-w-0">
               <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 text-left">Основные настройки</h3>
             </div>
-            <i className={`fas fa-chevron-down text-xs sm:text-sm text-slate-600 dark:text-slate-400 ml-auto transition-transform duration-300 ${isBasicSettingsOpen ? 'rotate-0' : '-rotate-90'}`}></i>
+            <i className={`fas fa-chevron-down text-xs sm:text-sm text-slate-600 dark:text-slate-400 ml-auto flex-shrink-0 transition-transform duration-300 ${isBasicSettingsOpen ? 'rotate-0' : '-rotate-90'}`}></i>
           </button>
           {isBasicSettingsOpen && (
             <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
@@ -2487,7 +2487,7 @@ export function PropertiesPanel({
               {/* Header */}
               <button
                 onClick={() => setIsMessageTextOpen(!isMessageTextOpen)}
-                className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
+                className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
                 title={isMessageTextOpen ? 'Свернуть' : 'Развернуть'}
               >
                 <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 flex items-center justify-center flex-shrink-0">
@@ -2497,7 +2497,7 @@ export function PropertiesPanel({
                   <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-blue-900 to-cyan-800 dark:from-blue-100 dark:to-cyan-200 bg-clip-text text-transparent text-left">Текст сообщения</h3>
                   <p className="text-xs sm:text-sm text-blue-700/70 dark:text-blue-300/70 mt-0.5 text-left">Основное содержание для отправки пользователю</p>
                 </div>
-                <i className={`fas fa-chevron-down text-xs sm:text-sm text-blue-600 dark:text-blue-400 ml-auto transition-transform duration-300 ${isMessageTextOpen ? 'rotate-0' : '-rotate-90'}`}></i>
+                <i className={`fas fa-chevron-down text-xs sm:text-sm text-blue-600 dark:text-blue-400 ml-auto flex-shrink-0 transition-transform duration-300 ${isMessageTextOpen ? 'rotate-0' : '-rotate-90'}`}></i>
               </button>
 
               {isMessageTextOpen && (
@@ -4576,7 +4576,7 @@ export function PropertiesPanel({
             {/* Header with Collapse Toggle */}
             <button 
               onClick={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}
-              className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
+              className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
               title={isUserInputSectionOpen ? 'Свернуть' : 'Развернуть'}
             >
               <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 flex items-center justify-center flex-shrink-0">
@@ -4586,7 +4586,7 @@ export function PropertiesPanel({
                 <h3 className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-100 text-left">Сбор ответов</h3>
                 <p className="text-xs sm:text-sm text-blue-700/70 dark:text-blue-300/70 mt-0.5 text-left">Собирать ввод пользователя в переменные</p>
               </div>
-              <i className={`fas fa-chevron-down text-xs sm:text-sm text-blue-600 dark:text-blue-400 ml-auto transition-transform duration-300 ${isUserInputSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
+              <i className={`fas fa-chevron-down text-xs sm:text-sm text-blue-600 dark:text-blue-400 ml-auto flex-shrink-0 transition-transform duration-300 ${isUserInputSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
             </button>
             
             <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40">
@@ -5231,7 +5231,7 @@ export function PropertiesPanel({
           <div className="space-y-3 sm:space-y-4">
             <button
               onClick={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-              className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
+              className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
               title={isBasicSettingsOpen ? 'Свернуть' : 'Развернуть'}
             >
               <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/50 dark:to-blue-900/50 flex items-center justify-center flex-shrink-0">
@@ -5241,7 +5241,7 @@ export function PropertiesPanel({
                 <h3 className="text-sm sm:text-base font-bold text-cyan-900 dark:text-cyan-100 text-left">Расширенные настройки</h3>
                 <p className="text-xs sm:text-sm text-cyan-700/70 dark:text-cyan-300/70 mt-0.5 text-left">Меню, приватность и права администратора</p>
               </div>
-              <i className={`fas fa-chevron-down text-xs sm:text-sm text-cyan-600 dark:text-cyan-400 ml-auto transition-transform duration-300 ${isBasicSettingsOpen ? 'rotate-0' : '-rotate-90'}`}></i>
+              <i className={`fas fa-chevron-down text-xs sm:text-sm text-cyan-600 dark:text-cyan-400 ml-auto flex-shrink-0 transition-transform duration-300 ${isBasicSettingsOpen ? 'rotate-0' : '-rotate-90'}`}></i>
             </button>
 
             {isBasicSettingsOpen && (
