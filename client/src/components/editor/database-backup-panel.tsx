@@ -327,7 +327,7 @@ export function DatabaseBackupPanel() {
       </div>
 
       {/* Guide */}
-      <div className="rounded-lg border border-blue-200/50 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-950/20 p-2.5 xs:p-3 sm:p-4 space-y-2.5 xs:space-y-3">
+      <div className="rounded-lg border border-blue-200/50 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-950/20 p-2.5 xs:p-3 sm:p-4 space-y-2.5 xs:space-y-3 max-h-32 xs:max-h-40 sm:max-h-48 overflow-y-auto">
         <div className="flex gap-2 xs:gap-3">
           <div className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5">
             <svg className="w-4 xs:w-5 h-4 xs:h-5" fill="currentColor" viewBox="0 0 20 20">
