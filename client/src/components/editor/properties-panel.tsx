@@ -2529,9 +2529,9 @@ export function PropertiesPanel({
               Тип клавиатуры
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-              <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200 cursor-pointer group">
-                <i className="fas fa-th text-amber-600 dark:text-amber-400 text-sm sm:text-base flex-shrink-0"></i>
-                <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer flex-1">
+              <div className="flex flex-wrap items-start sm:items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200 cursor-pointer group">
+                <i className="fas fa-th text-amber-600 dark:text-amber-400 text-sm sm:text-base flex-shrink-0 mt-0.5 sm:mt-0"></i>
+                <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer min-w-fit">
                   Inline
                   <span className="text-xs text-amber-700/70 dark:text-amber-300/70 ml-1 hidden sm:inline">(под сообщением)</span>
                 </label>
@@ -2540,11 +2540,12 @@ export function PropertiesPanel({
                   onCheckedChange={(checked) => {
                     onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
                   }}
+                  className="ml-auto sm:ml-0"
                 />
               </div>
-              <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200 cursor-pointer group">
-                <i className="fas fa-comment-dots text-amber-600 dark:text-amber-400 text-sm sm:text-base flex-shrink-0"></i>
-                <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer flex-1">
+              <div className="flex flex-wrap items-start sm:items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200 cursor-pointer group">
+                <i className="fas fa-comment-dots text-amber-600 dark:text-amber-400 text-sm sm:text-base flex-shrink-0 mt-0.5 sm:mt-0"></i>
+                <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer min-w-fit">
                   Reply
                   <span className="text-xs text-amber-700/70 dark:text-amber-300/70 ml-1 hidden sm:inline">(клавиатура)</span>
                 </label>
@@ -2553,6 +2554,7 @@ export function PropertiesPanel({
                   onCheckedChange={(checked) => {
                     onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
                   }}
+                  className="ml-auto sm:ml-0"
                 />
               </div>
             </div>
