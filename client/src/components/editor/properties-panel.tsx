@@ -2601,12 +2601,15 @@ export function PropertiesPanel({
                         </div>
                       </div>
                     </div>
-                    <Input
-                      value={selectedNode.data.multiSelectVariable || ''}
-                      onChange={(e) => onNodeUpdate(selectedNode.id, { multiSelectVariable: e.target.value })}
-                      className="text-xs sm:text-sm mt-2.5 bg-white/70 dark:bg-slate-950/40 border-teal-200/50 dark:border-teal-800/50 focus:border-teal-400 dark:focus:border-teal-600"
-                      placeholder="выбранные_опции"
-                    />
+                    <div className="flex items-center gap-2 mt-2.5 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg bg-white/60 dark:bg-slate-950/60 border border-teal-300/40 dark:border-teal-700/40 hover:border-teal-400/60 dark:hover:border-teal-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus-within:border-teal-500 dark:focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-400/30 dark:focus-within:ring-teal-600/30 transition-all duration-200">
+                      <i className="fas fa-code text-xs sm:text-sm text-teal-600 dark:text-teal-400 flex-shrink-0"></i>
+                      <Input
+                        value={selectedNode.data.multiSelectVariable || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { multiSelectVariable: e.target.value })}
+                        className="flex-1 text-xs sm:text-sm bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-teal-900 dark:text-teal-50 placeholder:text-teal-500/50 dark:placeholder:text-teal-400/50 p-0"
+                        placeholder="выбранные_опции"
+                      />
+                    </div>
                   </div>
                 )}
               </>
