@@ -222,6 +222,32 @@ export function PropertiesPanel({
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
 
+  // Единая функция для форматирования отображения узла
+  const formatNodeDisplay = (node: Node, sheetName: string) => {
+    const getNodeTypeLabel = (type: Node['type']) => {
+      const types: Record<Node['type'], string> = {
+        start: 'Старт', command: 'Команда', message: 'Сообщение', photo: 'Фото', video: 'Видео',
+        audio: 'Аудио', document: 'Документ', keyboard: 'Клавиатура', location: 'Геолокация',
+        contact: 'Контакт', sticker: 'Стикер', voice: 'Голос', animation: 'Анимация',
+        pin_message: 'Закрепить', unpin_message: 'Открепить', delete_message: 'Удалить',
+        ban_user: 'Заблокировать', unban_user: 'Разблокировать', mute_user: 'Заглушить'
+      };
+      return types[type] || type;
+    };
+    
+    const getContent = () => {
+      if (node.type === 'start' || node.type === 'command') return (node.data.command || '').slice(0, 50);
+      if (node.type === 'message') return ((node.data as any).messageText || '').slice(0, 50);
+      if (node.type === 'photo') return ((node.data as any).photoCaption || '').slice(0, 50);
+      if (node.type === 'keyboard') return ((node.data as any).keyboardText || '').slice(0, 50);
+      return ((node.data as any).label || '').slice(0, 50);
+    };
+    
+    const content = getContent();
+    const typeLabel = getNodeTypeLabel(node.type);
+    return `${node.id} | ${content} | ${typeLabel} | ${sheetName}`;
+  };
+
   // Функция для получения данных по умолчанию для каждого типа узла
   const getDefaultDataForType = (type: Node['type']) => {
     const defaults: Record<Node['type'], any> = {
