@@ -104,6 +104,11 @@ export default function Editor() {
   const handleNodeSizesChange = useCallback((nodeSizes: Map<string, { width: number; height: number }>) => {
     setCurrentNodeSizes(nodeSizes);
   }, []);
+
+  // Обработчик логирования действий в историю
+  const handleActionLog = useCallback((type: string, description: string) => {
+    console.log('📋 История действий:', type, '-', description);
+  }, []);
   
   // Функции для управления видимостью панелей
   const handleToggleHeader = useCallback(() => {
@@ -1228,6 +1233,7 @@ export default function Editor() {
             onOpenMobileSidebar={handleOpenMobileSidebar}
             onOpenMobileProperties={handleOpenMobileProperties}
             onNodeSizesChange={handleNodeSizesChange}
+            onActionLog={handleActionLog}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-background overflow-auto">
