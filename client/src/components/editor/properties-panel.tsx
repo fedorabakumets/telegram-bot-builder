@@ -5100,63 +5100,78 @@ export function PropertiesPanel({
          selectedNode.type !== 'admin_rights' &&
          (!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
          (selectedNode.data.keyboardType === 'none' || selectedNode.data.keyboardType === 'reply') && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-foreground">⚡ Автопереход</h3>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-lg bg-gradient-to-r from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/25 dark:to-teal-950/15 border border-emerald-200/30 dark:border-emerald-800/30 hover:border-emerald-300/50 dark:hover:border-emerald-700/50 transition-all duration-200">
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs font-bold">⚡</span>
+                </div>
+                <h3 className="text-xs sm:text-sm font-semibold text-emerald-900 dark:text-emerald-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-50 transition-colors duration-200">
+                  Автопереход
+                </h3>
+              </div>
               <Switch
                 checked={selectedNode.data.enableAutoTransition ?? false}
                 onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAutoTransition: checked })}
+                className="data-[state=checked]:bg-emerald-500"
               />
             </div>
-            <div className="space-y-4">
+            
+            <div className="space-y-3 sm:space-y-4">
               {selectedNode.data.enableAutoTransition && (
-                <div className="space-y-4 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 dark:from-emerald-950/20 dark:to-teal-950/10 border border-emerald-200/30 dark:border-emerald-800/30 rounded-lg p-4">
-                  <div className="text-xs text-muted-foreground mb-3">
-                    Сообщение будет отправлено, и бот автоматически перейдёт к следующему узлу без ожидания ответа от пользователя.
+                <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/60 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-200/40 dark:border-emerald-800/40 rounded-lg p-3 sm:p-4 hover:shadow-sm transition-all duration-200">
+                  <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 bg-white/50 dark:bg-slate-950/30 rounded-md border border-emerald-200/30 dark:border-emerald-700/30">
+                    <i className="fas fa-lightbulb text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
+                    <p className="text-xs sm:text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                      Сообщение будет отправлено, и бот автоматически перейдёт к следующему узлу без ожидания ответа.
+                    </p>
                   </div>
                   
-                  <div>
-                    <Label className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mb-2 block">
-                      <i className="fas fa-arrow-right mr-1"></i>
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <Label className="text-xs sm:text-sm font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
+                      <i className="fas fa-arrow-right-long text-emerald-600 dark:text-emerald-400"></i>
                       Следующий узел
                     </Label>
-                    <Select
-                      value={selectedNode.data.autoTransitionTo || ''}
-                      onValueChange={(value) => onNodeUpdate(selectedNode.id, { autoTransitionTo: value })}
-                    >
-                      <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-emerald-300/40 dark:border-emerald-700/40 hover:border-emerald-400/60 dark:hover:border-emerald-600/60 focus:border-emerald-500 focus:ring-emerald-400/30">
-                        <SelectValue placeholder="⊘ Не выбрано" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
-                        {getAllNodesFromAllSheets
-                          .filter(({ node }) => node.id !== selectedNode.id)
-                          .map(({ node, sheetId, sheetName }) => (
-                            <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
-                              <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
-                                {formatNodeDisplayGlobal(node, sheetName)}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        
-                        {(!getAllNodesFromAllSheets || getAllNodesFromAllSheets.filter(({ node }) => node.id !== selectedNode.id).length === 0) && (
-                          <SelectItem value="no-nodes" disabled>
-                            Создайте другие части бота
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
                     
-                    <Input
-                      value={selectedNode.data.autoTransitionTo || ''}
-                      onChange={(e) => onNodeUpdate(selectedNode.id, { autoTransitionTo: e.target.value })}
-                      className="text-xs bg-white/60 dark:bg-slate-950/60 border border-emerald-300/40 dark:border-emerald-700/40 text-emerald-900 dark:text-emerald-50 placeholder:text-emerald-500/50 focus:border-emerald-500"
-                      placeholder="Или введите ID вручную"
-                    />
+                    <div className="space-y-2">
+                      <Select
+                        value={selectedNode.data.autoTransitionTo || ''}
+                        onValueChange={(value) => onNodeUpdate(selectedNode.id, { autoTransitionTo: value })}
+                      >
+                        <SelectTrigger className="text-xs sm:text-sm h-8 sm:h-9 bg-white/70 dark:bg-slate-950/50 border border-emerald-300/50 dark:border-emerald-700/50 hover:border-emerald-400/70 dark:hover:border-emerald-600/70 focus:border-emerald-500 focus:ring-emerald-400/30 transition-colors duration-200">
+                          <SelectValue placeholder="Выберите узел" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+                          {getAllNodesFromAllSheets
+                            .filter(({ node }) => node.id !== selectedNode.id)
+                            .map(({ node, sheetId, sheetName }) => (
+                              <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
+                                <span className="text-xs sm:text-sm font-mono text-sky-700 dark:text-sky-300 truncate">
+                                  {formatNodeDisplayGlobal(node, sheetName)}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          
+                          {(!getAllNodesFromAllSheets || getAllNodesFromAllSheets.filter(({ node }) => node.id !== selectedNode.id).length === 0) && (
+                            <SelectItem value="no-nodes" disabled>
+                              Создайте другие части бота
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Input
+                        value={selectedNode.data.autoTransitionTo || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { autoTransitionTo: e.target.value })}
+                        className="text-xs sm:text-sm h-8 sm:h-9 bg-white/70 dark:bg-slate-950/50 border border-emerald-300/50 dark:border-emerald-700/50 text-emerald-900 dark:text-emerald-50 placeholder:text-emerald-500/50 focus:border-emerald-500 focus:ring-emerald-400/30 transition-colors duration-200"
+                        placeholder="или введите ID вручную"
+                      />
+                    </div>
                     
                     {selectedNode.data.autoTransitionTo && (
-                      <div className="mt-2 p-2 bg-emerald-100/50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded text-xs text-emerald-700 dark:text-emerald-300">
-                        <i className="fas fa-info-circle mr-1"></i>
-                        Бот автоматически перейдёт к узлу <strong>{selectedNode.data.autoTransitionTo}</strong> сразу после отправки этого сообщения
+                      <div className="flex items-start gap-2 sm:gap-2.5 mt-2.5 p-2.5 sm:p-3 bg-emerald-100/50 dark:bg-emerald-900/20 border border-emerald-200/50 dark:border-emerald-800/50 rounded-md text-xs sm:text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                        <i className="fas fa-check-circle text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5"></i>
+                        <span>Переход к узлу <strong className="font-semibold">{selectedNode.data.autoTransitionTo}</strong> после отправки</span>
                       </div>
                     )}
                   </div>
@@ -5170,31 +5185,32 @@ export function PropertiesPanel({
         {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="advanced-settings" className="border-border">
-              <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline hover:text-foreground/90 transition-colors duration-200">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 rounded-full bg-gradient-to-r from-primary/20 to-primary/10 flex items-center justify-center">
-                    <svg className="w-2.5 h-2.5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+              <AccordionTrigger className="text-xs sm:text-sm font-semibold text-foreground hover:no-underline hover:text-foreground/90 transition-colors duration-200 px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg hover:bg-muted/40 dark:hover:bg-muted/30">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                    Расширенные настройки команды
+                  <span className="text-xs sm:text-sm font-semibold text-foreground">
+                    Расширенные настройки
                   </span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="bg-gradient-to-br from-background to-muted/20 dark:from-background dark:to-muted/10 border border-border/50 rounded-lg mt-2 overflow-hidden">
-                <div className="space-y-4 p-4">
+              <AccordionContent className="bg-gradient-to-br from-background to-muted/15 dark:from-background dark:to-muted/5 border border-border/50 rounded-lg mt-2 overflow-hidden p-0">
+                <div className="space-y-2 sm:space-y-2.5 p-3 sm:p-4">
                   {/* Show in Menu Setting */}
-                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
+                  <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-primary/5 to-primary/0 dark:from-primary/10 dark:to-primary/0 border border-primary/20 dark:border-primary/30 hover:border-primary/40 dark:hover:border-primary/50 hover:bg-primary/8 dark:hover:bg-primary/15 transition-all duration-200">
                     <div className="flex-1">
-                      <Label className="text-xs font-medium text-foreground group-hover:text-primary transition-colors duration-200">
+                      <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-200 flex items-center gap-2">
+                        <i className="fas fa-menu text-primary text-xs sm:text-sm"></i>
                         Показать в меню
                       </Label>
-                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Команда появится в меню @BotFather
+                      <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
+                        В меню @BotFather
                       </div>
                     </div>
-                    <div className="ml-4">
+                    <div className="sm:ml-4">
                       <Switch
                         checked={selectedNode.data.showInMenu ?? true}
                         onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { showInMenu: checked })}
@@ -5204,16 +5220,17 @@ export function PropertiesPanel({
                   </div>
                   
                   {/* Private Only Setting */}
-                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-warning/30 hover:bg-card/80 transition-all duration-200">
+                  <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-warning/5 to-warning/0 dark:from-warning/10 dark:to-warning/0 border border-warning/20 dark:border-warning/30 hover:border-warning/40 dark:hover:border-warning/50 hover:bg-warning/8 dark:hover:bg-warning/15 transition-all duration-200">
                     <div className="flex-1">
-                      <Label className="text-xs font-medium text-foreground group-hover:text-warning transition-colors duration-200">
+                      <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-warning transition-colors duration-200 flex items-center gap-2">
+                        <i className="fas fa-lock text-warning text-xs sm:text-sm"></i>
                         Только в приватных чатах
                       </Label>
-                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Команда работает только в диалоге с ботом
+                      <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
+                        Только в диалоге с ботом
                       </div>
                     </div>
-                    <div className="ml-4">
+                    <div className="sm:ml-4">
                       <Switch
                         checked={selectedNode.data.isPrivateOnly ?? false}
                         onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { isPrivateOnly: checked })}
@@ -5221,20 +5238,19 @@ export function PropertiesPanel({
                       />
                     </div>
                   </div>
-                  
 
-                  
                   {/* Admin Only Setting */}
-                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-destructive/30 hover:bg-card/80 transition-all duration-200">
+                  <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-destructive/5 to-destructive/0 dark:from-destructive/10 dark:to-destructive/0 border border-destructive/20 dark:border-destructive/30 hover:border-destructive/40 dark:hover:border-destructive/50 hover:bg-destructive/8 dark:hover:bg-destructive/15 transition-all duration-200">
                     <div className="flex-1">
-                      <Label className="text-xs font-medium text-foreground group-hover:text-destructive transition-colors duration-200">
+                      <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-destructive transition-colors duration-200 flex items-center gap-2">
+                        <i className="fas fa-shield-halved text-destructive text-xs sm:text-sm"></i>
                         Только для администраторов
                       </Label>
-                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Команда доступна только админам
+                      <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
+                        Доступна только админам
                       </div>
                     </div>
-                    <div className="ml-4">
+                    <div className="sm:ml-4">
                       <Switch
                         checked={selectedNode.data.adminOnly ?? false}
                         onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
@@ -5252,29 +5268,30 @@ export function PropertiesPanel({
 
         {/* Keyboard Advanced Settings */}
         {selectedNode.data.keyboardType === 'reply' && (
-          <div className="bg-gradient-to-br from-background to-muted/20 dark:from-background dark:to-muted/10 border border-border/50 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-4 h-4 rounded-full bg-gradient-to-r from-secondary/20 to-secondary/10 flex items-center justify-center">
-                <svg className="w-2.5 h-2.5 text-secondary-foreground" fill="currentColor" viewBox="0 0 20 20">
+          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-background to-muted/15 dark:from-background dark:to-muted/5 border border-border/50 rounded-lg p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-secondary/30 to-secondary/10 flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-secondary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
-              <h3 className="text-sm font-medium text-foreground bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text">
+              <h3 className="text-xs sm:text-sm font-semibold text-foreground">
                 Настройки клавиатуры
               </h3>
             </div>
             
-            <div className="space-y-4">
-              <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-secondary/30 hover:bg-card/80 transition-all duration-200">
+            <div className="space-y-2 sm:space-y-2.5">
+              <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-secondary/5 to-secondary/0 dark:from-secondary/10 dark:to-secondary/0 border border-secondary/20 dark:border-secondary/30 hover:border-secondary/40 dark:hover:border-secondary/50 hover:bg-secondary/8 dark:hover:bg-secondary/15 transition-all duration-200">
                 <div className="flex-1">
-                  <Label className="text-xs font-medium text-foreground group-hover:text-secondary transition-colors duration-200">
+                  <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-secondary transition-colors duration-200 flex items-center gap-2">
+                    <i className="fas fa-hand-paper text-secondary text-xs sm:text-sm"></i>
                     Одноразовая клавиатура
                   </Label>
-                  <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
                     Скрыть после нажатия
                   </div>
                 </div>
-                <div className="ml-4">
+                <div className="sm:ml-4">
                   <Switch
                     checked={selectedNode.data.oneTimeKeyboard}
                     onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { oneTimeKeyboard: checked })}
@@ -5283,16 +5300,17 @@ export function PropertiesPanel({
                 </div>
               </div>
               
-              <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-secondary/30 hover:bg-card/80 transition-all duration-200">
+              <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-secondary/5 to-secondary/0 dark:from-secondary/10 dark:to-secondary/0 border border-secondary/20 dark:border-secondary/30 hover:border-secondary/40 dark:hover:border-secondary/50 hover:bg-secondary/8 dark:hover:bg-secondary/15 transition-all duration-200">
                 <div className="flex-1">
-                  <Label className="text-xs font-medium text-foreground group-hover:text-secondary transition-colors duration-200">
-                    Изменить размер клавиатуры
+                  <Label className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-secondary transition-colors duration-200 flex items-center gap-2">
+                    <i className="fas fa-expand text-secondary text-xs sm:text-sm"></i>
+                    Подогнать размер
                   </Label>
-                  <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Подогнать под содержимое
+                  <div className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
+                    Под содержимое
                   </div>
                 </div>
-                <div className="ml-4">
+                <div className="sm:ml-4">
                   <Switch
                     checked={selectedNode.data.resizeKeyboard}
                     onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
