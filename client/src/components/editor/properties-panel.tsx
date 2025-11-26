@@ -3587,38 +3587,39 @@ export function PropertiesPanel({
                           const hasWarnings = ruleConflicts.some(c => c.severity === 'warning');
                           
                           return (
-                            <div key={condition.id} className={`border rounded-lg sm:rounded-xl transition-all duration-200 overflow-hidden ${
+                            <div key={condition.id} className={`border rounded-lg sm:rounded-xl transition-all duration-300 overflow-hidden ${
                               hasErrors 
                                 ? 'border-red-400/60 dark:border-red-600/60 bg-red-50/30 dark:bg-red-950/20 shadow-sm shadow-red-200/40 dark:shadow-red-900/20' 
                                 : hasWarnings 
                                   ? 'border-yellow-400/50 dark:border-yellow-600/50 bg-yellow-50/30 dark:bg-yellow-950/20 shadow-sm shadow-yellow-200/40 dark:shadow-yellow-900/20'
-                                  : 'border-purple-300/40 dark:border-purple-700/40 bg-purple-50/20 dark:bg-purple-950/10 hover:border-purple-400/60 dark:hover:border-purple-700/60 shadow-sm hover:shadow-md shadow-transparent dark:shadow-transparent hover:shadow-purple-200/30 dark:hover:shadow-purple-900/20 transition-all'
+                                  : 'border-purple-300/40 dark:border-purple-700/40 bg-purple-50/20 dark:bg-purple-950/10 hover:border-purple-400/60 dark:hover:border-purple-700/60 shadow-sm hover:shadow-md shadow-transparent dark:shadow-transparent hover:shadow-purple-200/30 dark:hover:shadow-purple-900/20 transition-all hover:scale-[1.01]'
                             }`}>
-                              {/* Compact Header */}
-                              <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-white/50 dark:border-slate-800/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-200/50 dark:bg-purple-800/40 text-xs font-bold text-purple-700 dark:text-purple-300 flex-shrink-0">
+                              {/* Compact Header - Responsive */}
+                              <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/50 dark:border-slate-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-purple-300/60 to-purple-400/60 dark:from-purple-800/50 dark:to-purple-700/50 text-xs font-bold text-purple-900 dark:text-purple-100 flex-shrink-0 shadow-sm">
                                     {index + 1}
                                   </span>
-                                  <span className="text-xs sm:text-sm font-medium text-foreground truncate max-w-xs">
-                                    {condition.variableNames?.join(', ')?.slice(0, 25) || 'Новое условие'}
+                                  <span className="text-xs sm:text-sm font-medium text-foreground truncate">
+                                    {condition.variableNames?.join(', ')?.slice(0, 30) || 'Условие'}
                                   </span>
                                   {hasErrors && (
-                                    <div className="h-2 w-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse" title="Ошибка"></div>
+                                    <div className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex-shrink-0 animate-pulse shadow-lg shadow-red-500/30" title="Ошибка"></div>
                                   )}
                                   {hasWarnings && !hasErrors && (
-                                    <div className="h-2 w-2 rounded-full bg-yellow-500 flex-shrink-0" title="Предупреждение"></div>
+                                    <div className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 flex-shrink-0 shadow-lg shadow-yellow-500/20" title="Предупреждение"></div>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-1 justify-end">
-                                  <div className="inline-flex items-center gap-1 bg-purple-100/40 dark:bg-purple-900/30 px-2 py-1 rounded-md border border-purple-300/40 dark:border-purple-700/40 text-xs font-medium text-purple-700 dark:text-purple-300 flex-shrink-0">
+                                  <div className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100/60 to-blue-100/60 dark:from-purple-900/40 dark:to-blue-900/40 px-2 py-1 rounded-md border border-purple-300/40 dark:border-purple-700/40 text-xs font-medium text-purple-700 dark:text-purple-300 flex-shrink-0 shadow-sm">
                                     <i className="fas fa-fire text-xs"></i>
-                                    {condition.priority || 0}
+                                    <span className="hidden sm:inline">{condition.priority || 0}</span>
+                                    <span className="inline sm:hidden text-xs font-bold">{Math.floor((condition.priority || 0) / 10)}</span>
                                   </div>
                                   <div className="h-5 w-px bg-border/40"></div>
-                                  <UIButton size="sm" variant="ghost" onClick={() => {const currentConditions = selectedNode.data.conditionalMessages || [];const updatedConditions = currentConditions.map(c => c.id === condition.id ? { ...c, priority: (c.priority || 0) + 10 } : c);onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });}} className="h-6 w-6 p-0 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/40 dark:hover:bg-blue-900/30 rounded transition-all" title="Вверх"><i className="fas fa-arrow-up text-xs"></i></UIButton>
-                                  <UIButton size="sm" variant="ghost" onClick={() => {const currentConditions = selectedNode.data.conditionalMessages || [];const updatedConditions = currentConditions.map(c => c.id === condition.id ? { ...c, priority: Math.max(0, (c.priority || 0) - 10) } : c);onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });}} className="h-6 w-6 p-0 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/40 dark:hover:bg-blue-900/30 rounded transition-all" title="Вниз"><i className="fas fa-arrow-down text-xs"></i></UIButton>
-                                  <UIButton size="sm" variant="ghost" onClick={() => {const currentConditions = selectedNode.data.conditionalMessages || [];const newConditions = currentConditions.filter(c => c.id !== condition.id);onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });}} className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100/40 dark:hover:bg-red-900/30 rounded transition-all" title="Удалить"><i className="fas fa-trash text-xs"></i></UIButton>
+                                  <UIButton size="sm" variant="ghost" onClick={() => {const currentConditions = selectedNode.data.conditionalMessages || [];const updatedConditions = currentConditions.map(c => c.id === condition.id ? { ...c, priority: (c.priority || 0) + 10 } : c);onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });}} className="h-6 w-6 p-0 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/40 dark:hover:bg-blue-900/30 rounded transition-all hover:scale-110" title="Повысить приоритет"><i className="fas fa-chevron-up text-xs"></i></UIButton>
+                                  <UIButton size="sm" variant="ghost" onClick={() => {const currentConditions = selectedNode.data.conditionalMessages || [];const updatedConditions = currentConditions.map(c => c.id === condition.id ? { ...c, priority: Math.max(0, (c.priority || 0) - 10) } : c);onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });}} className="h-6 w-6 p-0 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/40 dark:hover:bg-blue-900/30 rounded transition-all hover:scale-110" title="Понизить приоритет"><i className="fas fa-chevron-down text-xs"></i></UIButton>
+                                  <UIButton size="sm" variant="ghost" onClick={() => {const currentConditions = selectedNode.data.conditionalMessages || [];const newConditions = currentConditions.filter(c => c.id !== condition.id);onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });}} className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100/40 dark:hover:bg-red-900/30 rounded transition-all hover:scale-110" title="Удалить"><i className="fas fa-xmark text-xs"></i></UIButton>
                                 </div>
                               </div>
 
@@ -4382,10 +4383,64 @@ export function PropertiesPanel({
                       )}
 
                       {(selectedNode.data.conditionalMessages || []).length === 0 && (
-                        <div className="text-center py-6 text-muted-foreground">
-                          <i className="fas fa-plus-circle text-2xl mb-2"></i>
-                          <div className="text-xs">
-                            Нажмите "Добавить условие" чтобы создать первое условное сообщение
+                        <div className="flex flex-col items-center justify-center py-8 sm:py-12 px-3 sm:px-4">
+                          <div className="relative mb-4 sm:mb-6">
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-300/20 to-blue-300/20 dark:from-purple-700/10 dark:to-blue-700/10 rounded-full blur-xl"></div>
+                            <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 border border-purple-200/50 dark:border-purple-700/50 flex items-center justify-center">
+                              <i className="fas fa-wand-magic-sparkles text-2xl sm:text-3xl text-purple-600 dark:text-purple-400"></i>
+                            </div>
+                          </div>
+                          
+                          <div className="text-center max-w-sm">
+                            <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2">
+                              Создайте первое условное сообщение
+                            </h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-4 leading-relaxed">
+                              Условия позволяют показывать разные сообщения в зависимости от ответов пользователя
+                            </p>
+                            
+                            <div className="space-y-2 mb-6 text-xs sm:text-sm text-muted-foreground">
+                              <div className="flex items-start gap-2 justify-center">
+                                <span className="text-purple-600 dark:text-purple-400 font-bold mt-0.5 flex-shrink-0">✓</span>
+                                <span>Проверяйте сохраненные ответы пользователя</span>
+                              </div>
+                              <div className="flex items-start gap-2 justify-center">
+                                <span className="text-purple-600 dark:text-purple-400 font-bold mt-0.5 flex-shrink-0">✓</span>
+                                <span>Показывайте персонализированные сообщения</span>
+                              </div>
+                              <div className="flex items-start gap-2 justify-center">
+                                <span className="text-purple-600 dark:text-purple-400 font-bold mt-0.5 flex-shrink-0">✓</span>
+                                <span>Автоматически маршрутизируйте по разным веткам</span>
+                              </div>
+                            </div>
+                            
+                            <button
+                              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 transition-all duration-200 text-white text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
+                              onClick={() => {
+                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                const nextPriority = Math.max(0, ...currentConditions.map(c => c.priority || 0)) + 10;
+                                onNodeUpdate(selectedNode.id, { 
+                                  conditionalMessages: [...currentConditions, {
+                                    id: `condition-${Date.now()}`,
+                                    condition: 'user_data_exists' as const,
+                                    variableName: '',
+                                    variableNames: [],
+                                    logicOperator: 'AND' as const,
+                                    messageText: 'Добро пожаловать обратно!',
+                                    formatMode: 'text' as const,
+                                    keyboardType: 'none' as const,
+                                    buttons: [],
+                                    waitForTextInput: false,
+                                    priority: nextPriority
+                                  }] 
+                                });
+                              }}
+                            >
+                              <span className="flex items-center justify-center gap-1.5">
+                                <span className="inline-block">+</span>
+                                Добавить условие
+                              </span>
+                            </button>
                           </div>
                         </div>
                       )}
