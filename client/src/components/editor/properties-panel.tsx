@@ -1044,7 +1044,9 @@ export function PropertiesPanel({
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Текущий элемент</p>
                 <h2 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight truncate">
-                  {nodeTypeNames[selectedNode.type]}
+                  {(selectedNode.type === 'start' || selectedNode.type === 'command') ? 
+                    `${selectedNode.data.command || nodeTypeNames[selectedNode.type]}` 
+                    : nodeTypeNames[selectedNode.type]}
                 </h2>
               </div>
             </div>
