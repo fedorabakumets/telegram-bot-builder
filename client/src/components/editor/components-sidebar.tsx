@@ -1678,78 +1678,75 @@ export function ComponentsSidebar({
                       }
                     }}
                     onDragEnd={handleProjectDragEnd}
-                    className={`group p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm ${
+                    className={`group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm overflow-hidden ${
                       currentProjectId === project.id 
-                        ? 'bg-gradient-to-br from-blue-600/15 to-cyan-600/10 dark:from-blue-600/25 dark:to-cyan-600/15 border-blue-500/40 dark:border-blue-400/40 shadow-xl shadow-blue-500/20 scale-100 sm:scale-105' 
-                        : 'bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-900/40 dark:to-slate-800/30 border-slate-300/30 dark:border-slate-700/30 hover:border-slate-400/50 dark:hover:border-slate-600/50 hover:bg-gradient-to-br hover:from-slate-100/70 hover:to-slate-100/40 dark:hover:from-slate-800/60 dark:hover:to-slate-700/40 hover:shadow-lg hover:shadow-slate-500/15'
+                        ? 'bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-cyan-600/15 dark:from-blue-600/30 dark:via-blue-500/20 dark:to-cyan-600/25 border-blue-500/50 dark:border-blue-400/50 shadow-lg shadow-blue-500/25' 
+                        : 'bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-900/50 dark:to-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:border-slate-300/60 dark:hover:border-slate-600/60 hover:bg-gradient-to-br hover:from-slate-100/80 hover:to-slate-100/50 dark:hover:from-slate-800/70 dark:hover:to-slate-700/50 hover:shadow-md hover:shadow-slate-500/20'
                     } ${
-                      dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 sm:scale-105 shadow-2xl shadow-blue-500/40 bg-gradient-to-br from-blue-600/20 to-cyan-600/15 dark:from-blue-600/35 dark:to-cyan-600/25' : ''
+                      dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 shadow-xl shadow-blue-500/50 bg-gradient-to-br from-blue-600/25 to-cyan-600/20 dark:from-blue-600/40 dark:to-cyan-600/30' : ''
                     } ${
                       draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
                     }`}
                     onClick={() => onProjectSelect && onProjectSelect(project.id)}
                   >
-                    <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4">
-                      <div className="hidden sm:flex cursor-grab active:cursor-grabbing opacity-60 group-hover:opacity-100 transition-opacity hover:text-blue-500 flex-shrink-0 mt-1">
-                        <GripVertical className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                    {/* Header Section */}
+                    <div className="flex gap-1.5 xs:gap-2 sm:gap-3 mb-2.5 xs:mb-3 sm:mb-4 items-start">
+                      <div className="hidden xs:flex cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 flex-shrink-0 mt-0.5">
+                        <GripVertical className="h-4 xs:h-4.5 w-4 xs:w-4.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="mb-1.5 sm:mb-2 space-y-1 sm:space-y-2">
-                          <h4 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-snug line-clamp-2">
-                            {project.name}
-                          </h4>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full whitespace-nowrap font-semibold backdrop-blur-sm flex-shrink-0 ${
-                              project.ownerId === null 
-                                ? 'bg-blue-500/20 border border-blue-400/30 text-blue-700 dark:text-blue-300' 
-                                : 'bg-green-500/20 border border-green-400/30 text-green-700 dark:text-green-300'
-                            }`}>
-                              {project.ownerId === null ? '👥' : '👤'}
-                            </span>
-                          </div>
-                        </div>
+                        <h4 className="text-xs xs:text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-tight line-clamp-2">
+                          {project.name}
+                        </h4>
                         {project.description && (
-                          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 break-words line-clamp-2 sm:line-clamp-3 leading-relaxed">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 break-words line-clamp-1 xs:line-clamp-2 leading-relaxed mt-1">
                             {project.description}
                           </p>
                         )}
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteProject(project.id);
-                        }}
-                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 opacity-60 group-hover:opacity-100 transition-all flex hover:bg-red-500/20 rounded-lg flex-shrink-0"
-                      >
-                        <Trash2 className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <span className={`text-xs px-1.5 xs:px-2 py-0.5 rounded-full whitespace-nowrap font-semibold flex-shrink-0 transition-all ${
+                          project.ownerId === null 
+                            ? 'bg-blue-500/25 text-blue-700 dark:text-blue-300' 
+                            : 'bg-green-500/25 text-green-700 dark:text-green-300'
+                        }`}>
+                          {project.ownerId === null ? '👥' : '👤'}
+                        </span>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProject(project.id);
+                          }}
+                          className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 rounded-md flex-shrink-0"
+                        >
+                          <Trash2 className="h-3 xs:h-3.5 w-3 xs:w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                     
-                    <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span className="flex items-center gap-1 bg-blue-500/10 dark:bg-blue-600/15 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-blue-400/20 dark:border-blue-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
-                          <Zap className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-blue-600 dark:text-blue-400" />
-                          <span className="hidden sm:inline">{getNodeCount(project)}</span>
-                          <span className="sm:hidden">{getNodeCount(project)}</span>
-                        </span>
-                        <span className="flex items-center gap-1 bg-purple-500/10 dark:bg-purple-600/15 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-purple-400/20 dark:border-purple-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
-                          <FileText className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-purple-600 dark:text-purple-400" />
-                          <span>{(() => { const info = getSheetsInfo(project); return info.count; })()}</span>
-                        </span>
-                        <span className="flex items-center gap-1 bg-slate-500/10 dark:bg-slate-600/15 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-slate-400/20 dark:border-slate-500/20 font-medium text-slate-700 dark:text-slate-300 text-xs">
-                          <Calendar className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-slate-600 dark:text-slate-400" />
-                          <span className="hidden sm:inline">{formatDate(project.updatedAt)}</span>
-                          <span className="sm:hidden text-xs">{formatDate(project.updatedAt).split(',')[0]}</span>
-                        </span>
-                      </div>
-                      
-                      {/* Информация о листах */}
-                      {(() => {
-                        const sheetsInfo = getSheetsInfo(project);
-                        return (
-                          <div className="space-y-1">
+                    {/* Metadata Section */}
+                    <div className="flex flex-col xs:flex-row gap-1.5 xs:gap-2 text-xs mb-2.5 xs:mb-3 sm:mb-4 flex-wrap">
+                      <span className="flex items-center gap-1 bg-blue-500/15 dark:bg-blue-600/20 px-2 xs:px-2.5 py-1 rounded-md border border-blue-400/30 dark:border-blue-500/30 font-semibold text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                        <Zap className="h-3 w-3" />
+                        <span className="text-xs">{getNodeCount(project)}</span>
+                      </span>
+                      <span className="flex items-center gap-1 bg-purple-500/15 dark:bg-purple-600/20 px-2 xs:px-2.5 py-1 rounded-md border border-purple-400/30 dark:border-purple-500/30 font-semibold text-purple-700 dark:text-purple-300 whitespace-nowrap">
+                        <FileText className="h-3 w-3" />
+                        <span className="text-xs">{(() => { const info = getSheetsInfo(project); return info.count; })()}</span>
+                      </span>
+                      <span className="flex items-center gap-1 bg-slate-500/15 dark:bg-slate-600/20 px-2 xs:px-2.5 py-1 rounded-md border border-slate-400/30 dark:border-slate-500/30 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        <Calendar className="h-3 w-3" />
+                        <span className="text-xs">{formatDate(project.updatedAt).split(',')[0]}</span>
+                      </span>
+                    </div>
+                    
+                    {/* Sheets Section */}
+                    {(() => {
+                      const sheetsInfo = getSheetsInfo(project);
+                      return (
+                        <div className="space-y-1 xs:space-y-1.5">
                             {sheetsInfo.names.length > 0 && (
                               <div className="space-y-0.5 sm:space-y-1">
                                 {sheetsInfo.names.map((name: string, index: number) => {
@@ -1943,10 +1940,9 @@ export function ComponentsSidebar({
                               })}
                               </div>
                             )}
-                          </div>
-                        );
-                      })()}
-                    </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>
