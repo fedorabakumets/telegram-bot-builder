@@ -3483,8 +3483,9 @@ export function PropertiesPanel({
             )}
           </div>
             </>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Conditional Messages - скрыто для узлов управления */}
         {(selectedNode.type === 'start' || selectedNode.type === 'command' || selectedNode.type === 'message') && 
