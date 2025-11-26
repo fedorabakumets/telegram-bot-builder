@@ -1423,6 +1423,7 @@ export default function Editor() {
                   propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                   canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
                   onOpenMobileSidebar={handleOpenMobileSidebar}
+                  onActionLog={handleActionLog}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">
@@ -1561,6 +1562,7 @@ export default function Editor() {
                       headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
                       sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
                       propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                      onActionLog={handleActionLog}
                     />
                   ) : null}
                 </div>
@@ -1629,6 +1631,7 @@ export default function Editor() {
                   })()}
                   onOpenMobileSidebar={handleOpenMobileSidebar}
                   onOpenMobileProperties={handleOpenMobileProperties}
+                  onActionLog={handleActionLog}
                 />
               ) : null}
             </div>
