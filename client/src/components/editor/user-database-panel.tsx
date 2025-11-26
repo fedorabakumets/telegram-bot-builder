@@ -411,8 +411,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const isDatabaseEnabled = project?.userDatabaseEnabled === 1;
 
   return (
-    <div className="h-full flex flex-col bg-background min-h-0">
-      <div className="border-b border-border/50 bg-card flex-none">
+    <ScrollArea className="h-full w-full">
+      <div className="flex flex-col min-h-full bg-background">
+        <div className="border-b border-border/50 bg-card flex-none">
         <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5">
           {/* Modern Header with Glassmorphism */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-purple-500/10 dark:from-blue-500/20 dark:via-cyan-500/10 dark:to-purple-500/20 p-4 sm:p-5 lg:p-6">
