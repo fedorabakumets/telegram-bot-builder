@@ -4053,6 +4053,7 @@ export function PropertiesPanel({
                                   </div>
                                 </div>
                               </div>
+                            </div>
 
                               {/* Buttons Configuration */}
                               {condition.keyboardType && condition.keyboardType !== 'none' && (
