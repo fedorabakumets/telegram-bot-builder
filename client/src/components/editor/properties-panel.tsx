@@ -2562,9 +2562,6 @@ export function PropertiesPanel({
                     </div>
                   )}
                 </div>
-                <div className="text-xs text-amber-700 dark:text-amber-300 text-left leading-snug hidden md:block">
-                  Кнопки размещаются под сообщением, без обновления текста
-                </div>
               </button>
 
               {/* Reply Option */}
@@ -2599,9 +2596,6 @@ export function PropertiesPanel({
                       <i className="fas fa-check text-white text-xs"></i>
                     </div>
                   )}
-                </div>
-                <div className="text-xs text-amber-700 dark:text-amber-300 text-left leading-snug hidden md:block">
-                  Системная клавиатура, обновляется после каждого выбора
                 </div>
               </button>
             </div>
