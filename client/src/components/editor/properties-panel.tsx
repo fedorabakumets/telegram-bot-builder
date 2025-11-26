@@ -251,6 +251,14 @@ export function PropertiesPanel({
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
   const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(true);
   const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(true);
+  const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
+
+  // Синхронизируем displayNodeId с selectedNode.id при изменении узла
+  useEffect(() => {
+    if (selectedNode?.id) {
+      setDisplayNodeId(selectedNode.id);
+    }
+  }, [selectedNode?.id]);
 
   // Используем глобальную функцию форматирования узла
 
@@ -1113,10 +1121,10 @@ export function PropertiesPanel({
             <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded-md bg-muted/40">ID:</span>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(selectedNode.id);
+                navigator.clipboard.writeText(displayNodeId);
                 toast({
                   title: "✅ ID скопирован!",
-                  description: `"${selectedNode.id}" в буфер обмена`,
+                  description: `"${displayNodeId}" в буфер обмена`,
                 });
               }}
               className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-600/20 dark:to-cyan-600/15 hover:from-blue-500/25 hover:to-cyan-500/20 dark:hover:from-blue-600/30 dark:hover:to-cyan-600/25 border border-blue-300/40 dark:border-blue-600/40 hover:border-blue-400/60 dark:hover:border-blue-500/60 rounded-lg transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md"
@@ -1124,7 +1132,7 @@ export function PropertiesPanel({
               data-testid="button-copy-node-id"
             >
               <code className="text-xs sm:text-sm font-mono font-semibold text-blue-700 dark:text-blue-300 truncate group-hover:text-blue-800 dark:group-hover:text-blue-200 transition-colors">
-                {selectedNode.id}
+                {displayNodeId}
               </code>
               <i className="fas fa-copy text-blue-600 dark:text-blue-400 text-xs opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
             </button>
@@ -1176,6 +1184,7 @@ export function PropertiesPanel({
                           // Обновляем ID узла на основе команды
                           const newId = newCommand.replace(/^\//, '').toLowerCase() || selectedNode.id;
                           if (onNodeIdChange && newId !== selectedNode.id) {
+                            setDisplayNodeId(newId);
                             onNodeIdChange(selectedNode.id, newId);
                           }
                         }}
@@ -1202,6 +1211,7 @@ export function PropertiesPanel({
                                 // Обновляем ID узла на основе команды
                                 const newId = suggestion.command.replace(/^\//, '').toLowerCase() || selectedNode.id;
                                 if (onNodeIdChange && newId !== selectedNode.id) {
+                                  setDisplayNodeId(newId);
                                   onNodeIdChange(selectedNode.id, newId);
                                 }
                                 
