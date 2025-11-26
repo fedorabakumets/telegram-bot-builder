@@ -1374,68 +1374,103 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   };
 
   return (
-    <div className="h-full w-full p-6 bg-background">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Управление группами</h1>
-          <p className="text-muted-foreground">
-            Администрирование Telegram групп для проекта "{projectName}"
-          </p>
+    <div className="h-full w-full bg-background">
+      <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-5 lg:py-6 max-w-7xl mx-auto">
+        {/* Modern Header with Glassmorphism */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-cyan-500/10 dark:from-purple-500/20 dark:via-blue-500/10 dark:to-cyan-500/20 p-4 sm:p-5 lg:p-6 mb-6">
+          {/* Decorative background elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+          
+          <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
+            {/* Icon and Title */}
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg shadow-purple-500/25">
+                <Users className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground leading-tight tracking-tight">
+                  Управление группами
+                </h1>
+                <p className="text-sm sm:text-base text-muted-foreground mt-0.5 truncate">
+                  {projectName}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
         
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <div className="flex flex-col items-center justify-center py-16 sm:py-20">
+            <div className="animate-spin w-10 h-10 border-3 border-primary border-t-transparent rounded-full mb-4"></div>
             <p className="text-muted-foreground">Загружаем группы...</p>
           </div>
         ) : safeGroups.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Users className="w-8 h-8 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-16 sm:py-24 px-4">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Users className="w-10 h-10 sm:w-12 sm:h-12 text-purple-600 dark:text-purple-400" />
             </div>
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">
+            <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2 text-center">
               Нет подключенных групп
             </h3>
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-sm sm:text-base text-muted-foreground mb-8 text-center max-w-sm">
               Добавьте первую группу для управления участниками и контентом
             </p>
-            <Button onClick={() => setShowAddGroup(true)}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Подключить группу
+            <Button 
+              onClick={() => setShowAddGroup(true)} 
+              size="lg"
+              className="gap-2"
+            >
+              <UserPlus className="w-5 h-5" />
+              Подключить первую группу
             </Button>
           </div>
         ) : (
           <div>
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-lg font-semibold">Подключенные группы ({safeGroups.length})</h2>
-                <p className="text-sm text-muted-foreground">Управление вашими Telegram группами</p>
+            {/* Groups List Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 bg-muted/20 rounded-xl p-4 sm:p-5">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">Подключенные группы</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  <span className="font-semibold">{safeGroups.length}</span> {safeGroups.length === 1 ? 'группа' : 'групп'}
+                </p>
               </div>
-              <Button onClick={() => setShowAddGroup(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Добавить группу
+              <Button 
+                onClick={() => setShowAddGroup(true)}
+                size="sm"
+                className="gap-2 sm:gap-2 w-full sm:w-auto flex-shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Добавить</span>
+                <span className="sm:hidden">Добавить группу</span>
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Groups Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
               {safeGroups.map((group) => (
-                <Card key={group.id} className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-4">
-                      <GroupAvatar 
-                        avatarUrl={group.avatarUrl}
-                        groupName={group.name}
-                        size={56}
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg leading-tight mb-1">{group.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={group.isAdmin ? "default" : "secondary"} className="text-xs">
-                            {group.isAdmin ? 'Администратор' : 'Участник'}
+                <Card key={group.id} className="p-4 sm:p-5 hover:shadow-lg transition-all duration-300">
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                      <div className="flex-shrink-0">
+                        <GroupAvatar 
+                          avatarUrl={group.avatarUrl}
+                          groupName={group.name}
+                          size={48}
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold text-sm sm:text-base leading-tight mb-2 truncate">{group.name}</h3>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Badge 
+                            variant={group.isAdmin ? "default" : "secondary"} 
+                            className="text-xs whitespace-nowrap"
+                          >
+                            {group.isAdmin ? 'Админ' : 'Участник'}
                           </Badge>
                           {group.chatType && (
-                            <Badge variant="outline" className="text-xs">
-                              {group.chatType === 'supergroup' ? 'Супергруппа' : 
+                            <Badge variant="outline" className="text-xs whitespace-nowrap">
+                              {group.chatType === 'supergroup' ? 'Супер' : 
                                group.chatType === 'channel' ? 'Канал' : 'Группа'}
                             </Badge>
                           )}
@@ -1444,16 +1479,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     </div>
                     <Button 
                       variant="ghost" 
-                      size="sm"
+                      size="icon"
+                      className="h-8 w-8 flex-shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log('🔄 Принудительное обновление информации о группе:', group.groupId);
                         parseGroupInfoMutation.mutate(group.groupId!);
                       }}
                       disabled={parseGroupInfoMutation.isPending}
                       title="Обновить информацию о группе"
                     >
-                      {parseGroupInfoMutation.isPending ? '⏳' : '🔄'}
+                      <div className="w-4 h-4">{parseGroupInfoMutation.isPending ? '⏳' : '🔄'}</div>
                     </Button>
                   </div>
                   
