@@ -1025,7 +1025,7 @@ export function PropertiesPanel({
   };
 
   return (
-    <aside className="fixed md:relative z-50 md:z-auto top-0 md:top-auto left-0 md:left-auto right-0 md:right-auto bottom-0 md:bottom-auto w-screen md:w-auto h-screen md:h-auto bg-background border-l border-border flex flex-col shadow-2xl md:shadow-none md:border-l">
+    <aside className="w-full md:w-96 h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
       {/* Mobile Close Button */}
       <div className="md:hidden flex items-center justify-between p-3 border-b border-border bg-muted/50 sticky top-0 z-10">
         <h3 className="font-semibold text-sm">Настройки элемента</h3>
