@@ -1735,65 +1735,61 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
         {/* Модальное окно настроек группы */}
         <Dialog open={showGroupSettings} onOpenChange={setShowGroupSettings}>
-          <DialogContent className="w-full max-w-5xl max-h-[90vh] overflow-hidden p-4 sm:p-6">
-            {/* Modern Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-teal-500/10 dark:from-green-500/20 dark:via-emerald-500/10 dark:to-teal-500/20 p-4 sm:p-5 mb-6 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+          <DialogContent className="w-full max-w-3xl lg:max-w-5xl max-h-[85vh] sm:max-h-[90vh] overflow-hidden p-0 flex flex-col">
+            {/* Modern Header - Compact on Mobile */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-teal-500/10 dark:from-green-500/20 dark:via-emerald-500/10 dark:to-teal-500/20 p-3 sm:p-4 lg:p-5 flex-shrink-0 rounded-t-lg">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
               
-              <div className="relative">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
-                    <Settings className="w-5 h-5 text-white" />
+              <div className="relative flex items-center gap-2.5 sm:gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
+                  <Settings className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <GroupAvatar 
+                      avatarUrl={selectedGroup?.avatarUrl}
+                      groupName={selectedGroup?.name || 'Группа'}
+                      size={20}
+                    />
+                    <h2 className="font-bold text-sm sm:text-base text-foreground truncate">{selectedGroup?.name}</h2>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <GroupAvatar 
-                        avatarUrl={selectedGroup?.avatarUrl}
-                        groupName={selectedGroup?.name || 'Группа'}
-                        size={24}
-                      />
-                      <h2 className="font-bold text-foreground truncate">{selectedGroup?.name}</h2>
-                    </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      Управление группой и участниками
-                    </p>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Управление группой</p>
                 </div>
               </div>
             </div>
             
             {selectedGroup && (
-              <Tabs defaultValue="general" className="w-full flex flex-col">
-                {/* Adaptive Tabs */}
-                <div className="overflow-x-auto -mx-4 sm:mx-0 sm:overflow-visible mb-4">
-                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 p-1 bg-muted/50 rounded-lg">
-                    <TabsTrigger value="general" className="flex items-center gap-1.5 text-xs sm:text-sm">
-                      <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <Tabs defaultValue="general" className="w-full flex flex-col flex-1 min-h-0">
+                {/* Adaptive Tabs - Compact on Mobile */}
+                <div className="overflow-x-auto flex-shrink-0 border-b border-muted px-3 sm:px-4 lg:px-5 -mx-3 sm:-mx-4 lg:-mx-5">
+                  <TabsList className="grid grid-cols-2 sm:grid-cols-4 gap-0 p-0 bg-transparent justify-start w-max">
+                    <TabsTrigger value="general" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                      <Globe className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">Общие</span>
                       <span className="sm:hidden">Данные</span>
                     </TabsTrigger>
-                    <TabsTrigger value="admin" className="flex items-center gap-1.5 text-xs sm:text-sm">
-                      <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <TabsTrigger value="admin" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                      <Shield className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">Права</span>
-                      <span className="sm:hidden">Права</span>
+                      <span className="sm:hidden">Админ</span>
                     </TabsTrigger>
-                    <TabsTrigger value="members" className="flex items-center gap-1.5 text-xs sm:text-sm col-span-2 sm:col-span-1">
-                      <UserCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <TabsTrigger value="members" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                      <UserCheck className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">Участники</span>
                       <span className="sm:hidden">Люди</span>
                     </TabsTrigger>
-                    <TabsTrigger value="analytics" className="flex items-center gap-1.5 text-xs sm:text-sm col-span-2 sm:col-span-1">
-                      <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                      <MessageSquare className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">Аналитика</span>
-                      <span className="sm:hidden">Статистика</span>
+                      <span className="sm:hidden">Аналит.</span>
                     </TabsTrigger>
                   </TabsList>
                 </div>
 
-                <div className="flex-1 overflow-y-auto">
-                  <TabsContent value="general" className="space-y-4 mt-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex-1 overflow-y-auto min-h-0 px-3 sm:px-4 lg:px-5 py-3 sm:py-4">
+                  <TabsContent value="general" className="space-y-3 sm:space-y-4 mt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="edit-group-name">Название группы</Label>
                         <Input
