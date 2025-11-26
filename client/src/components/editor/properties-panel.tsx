@@ -2856,11 +2856,30 @@ export function PropertiesPanel({
                               Кнопка
                             </div>
                             {selectedNode.data.allowMultipleSelection && button.buttonType && (
-                              <Badge variant="outline" className="text-xs h-5 mt-1">
-                                {button.buttonType === 'option' && '🟢 Опция'}
-                                {button.buttonType === 'complete' && '🟣 Завершение'}
-                                {button.buttonType === 'normal' && '🔵 Обычная'}
-                              </Badge>
+                              <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-xs sm:text-xs font-medium transition-all duration-200
+                                {button.buttonType === 'option' && 'bg-gradient-to-r from-green-100/60 to-emerald-100/50 dark:from-green-900/30 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border border-green-300/50 dark:border-green-700/40'}
+                                {button.buttonType === 'complete' && 'bg-gradient-to-r from-purple-100/60 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/20 text-purple-700 dark:text-purple-300 border border-purple-300/50 dark:border-purple-700/40'}
+                                {button.buttonType === 'normal' && 'bg-gradient-to-r from-blue-100/60 to-cyan-100/50 dark:from-blue-900/30 dark:to-cyan-900/20 text-blue-700 dark:text-blue-300 border border-blue-300/50 dark:border-blue-700/40'}
+                              ">
+                                {button.buttonType === 'option' && (
+                                  <>
+                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                                    <span>Опция</span>
+                                  </>
+                                )}
+                                {button.buttonType === 'complete' && (
+                                  <>
+                                    <div className="w-1.5 h-1.5 bg-purple-500" style={{clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'}}></div>
+                                    <span>Завершение</span>
+                                  </>
+                                )}
+                                {button.buttonType === 'normal' && (
+                                  <>
+                                    <div className="w-1.5 h-1.5 bg-blue-500" style={{clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'}}></div>
+                                    <span>Обычная</span>
+                                  </>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>
