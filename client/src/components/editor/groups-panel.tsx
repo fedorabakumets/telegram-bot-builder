@@ -1455,7 +1455,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   
                   <div className="p-3 sm:p-4 flex flex-col h-full">
                     {/* Header - Group Name & Avatar */}
-                    <div className="flex items-start gap-3 mb-3">
+                    <div className="flex items-start gap-2.5 mb-3">
                       <GroupAvatar 
                         avatarUrl={group.avatarUrl}
                         groupName={group.name}
@@ -1463,21 +1463,45 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         className="flex-shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-sm sm:text-base text-foreground leading-tight truncate" data-testid={`text-group-name-${group.id}`}>
+                        <h3 className="font-bold text-sm sm:text-base text-foreground leading-tight truncate" data-testid={`text-group-name-${group.id}`}>
                           {group.name}
                         </h3>
-                        <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                        <div className="flex gap-1 mt-2 flex-wrap items-center">
                           <Badge 
                             variant={group.isAdmin ? "default" : "secondary"} 
-                            className="text-xs"
+                            className="text-xs py-0.5 px-2 flex items-center gap-1 bg-gradient-to-r"
                             data-testid={`badge-admin-${group.id}`}
                           >
-                            {group.isAdmin ? 'Админ' : 'Пользователь'}
+                            {group.isAdmin ? (
+                              <>
+                                <Shield className="w-2.5 h-2.5" />
+                                <span>Админ</span>
+                              </>
+                            ) : (
+                              <>
+                                <Users className="w-2.5 h-2.5" />
+                                <span>Участник</span>
+                              </>
+                            )}
                           </Badge>
                           {group.chatType && (
-                            <Badge variant="outline" className="text-xs">
-                              {group.chatType === 'supergroup' ? 'Супер' : 
-                               group.chatType === 'channel' ? 'Канал' : 'Группа'}
+                            <Badge variant="outline" className="text-xs py-0.5 px-2 flex items-center gap-1">
+                              {group.chatType === 'supergroup' ? (
+                                <>
+                                  <TrendingUp className="w-2.5 h-2.5" />
+                                  Супер
+                                </>
+                              ) : group.chatType === 'channel' ? (
+                                <>
+                                  <Volume2 className="w-2.5 h-2.5" />
+                                  Канал
+                                </>
+                              ) : (
+                                <>
+                                  <Users className="w-2.5 h-2.5" />
+                                  Группа
+                                </>
+                              )}
                             </Badge>
                           )}
                         </div>
@@ -1486,28 +1510,32 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
                     {/* Description - Mobile optimized */}
                     {group.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2.5 leading-relaxed">
                         {group.description}
                       </p>
                     )}
 
-                    {/* Compact Info Grid */}
-                    <div className="grid grid-cols-2 gap-2 mb-3 p-2 bg-muted/40 rounded-lg">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-foreground truncate">{group.memberCount || '—'}</p>
-                          <p className="text-xs text-muted-foreground">Участников</p>
+                    {/* Modern Info Grid with Icons */}
+                    <div className="grid grid-cols-2 gap-2 mb-3 p-2.5 bg-gradient-to-br from-muted/50 to-muted/30 rounded-lg border border-muted/50">
+                      <div className="flex flex-col items-start gap-1.5">
+                        <div className="flex items-center gap-1.5 w-full">
+                          <div className="w-6 h-6 rounded-md bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+                            <Users className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <p className="text-xs font-semibold text-foreground">{group.memberCount || '—'}</p>
                         </div>
+                        <p className="text-xs text-muted-foreground pl-7">Участников</p>
                       </div>
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-foreground truncate">
+                      <div className="flex flex-col items-start gap-1.5">
+                        <div className="flex items-center gap-1.5 w-full">
+                          <div className="w-6 h-6 rounded-md bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+                            <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <p className="text-xs font-semibold text-foreground truncate">
                             {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {month: 'short', day: 'numeric'}) : '—'}
                           </p>
-                          <p className="text-xs text-muted-foreground">Создана</p>
                         </div>
+                        <p className="text-xs text-muted-foreground pl-7">Создана</p>
                       </div>
                     </div>
 
