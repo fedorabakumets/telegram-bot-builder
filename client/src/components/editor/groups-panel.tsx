@@ -1847,8 +1847,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   </TabsList>
 
                   {/* Content with scrolling */}
-                  <div className="flex-1 overflow-y-auto mt-4">
-                  <TabsContent value="general" className="space-y-4 mt-0">
+                  <div className="flex-1 overflow-y-auto mt-4 pr-4">
+                    <TabsContent value="general" className="space-y-4 mt-0">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="edit-group-name">Название группы</Label>
@@ -2909,12 +2909,13 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         </Button>
                       </div>
                     </div>
-                  </TabsContent>
-                </div>
-              </Tabs>
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </div>
             )}
             
-            <div className="flex gap-2 pt-4">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-6 border-t">
               <Button 
                 variant="outline" 
                 onClick={() => {
