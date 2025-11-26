@@ -3638,12 +3638,16 @@ export function PropertiesPanel({
                               )}
 
                               {/* Main Content */}
-                              <div className="px-3 sm:px-4 py-3 space-y-3 sm:space-y-4 border-t border-white/40 dark:border-slate-800/40">
+                              <div className="px-3 sm:px-4 py-3 sm:py-4 space-y-4 sm:space-y-5 border-t border-white/40 dark:border-slate-800/40">
                               {/* Condition Type */}
-                              <div>
-                                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
-                                  Тип условия
+                              <div className="space-y-2 sm:space-y-2.5">
+                                <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                                  <i className="fas fa-code-branch text-purple-600 dark:text-purple-400"></i>
+                                  <span>Тип условия</span>
                                 </Label>
+                                <div className="text-xs text-muted-foreground leading-relaxed">
+                                  Выберите, как проверять ответы пользователя
+                                </div>
                               <Select
                                 value={condition.condition}
                                 onValueChange={(value) => {
@@ -3654,36 +3658,60 @@ export function PropertiesPanel({
                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                 }}
                               >
-                                <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 bg-gradient-to-br from-white/70 to-white/60 dark:from-slate-900/70 dark:to-slate-950/80 border border-purple-300/50 dark:border-purple-700/50 hover:border-purple-400/70 dark:hover:border-purple-600/70 hover:bg-white/80 dark:hover:bg-slate-900/80 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/40 dark:focus:ring-purple-600/40 transition-all duration-300 rounded-lg text-purple-900 dark:text-purple-100 font-medium shadow-sm hover:shadow-md">
-                                  <SelectValue placeholder="Выберите тип..." />
+                                <SelectTrigger className="text-xs sm:text-sm h-10 sm:h-11 bg-gradient-to-br from-purple-50/60 via-white/60 to-white/60 dark:from-purple-950/30 dark:via-slate-900/60 dark:to-slate-950/70 border border-purple-300/60 dark:border-purple-700/60 hover:border-purple-400/80 dark:hover:border-purple-600/80 hover:bg-purple-50/40 dark:hover:bg-purple-950/20 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/50 dark:focus:ring-purple-600/50 transition-all duration-300 rounded-xl text-purple-900 dark:text-purple-100 font-medium shadow-sm hover:shadow-md">
+                                  <SelectValue placeholder="Выберите тип условия..." />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="user_data_exists">Пользователь уже отвечал на вопрос</SelectItem>
-                                  <SelectItem value="user_data_not_exists">Пользователь НЕ отвечал на вопрос</SelectItem>
-                                  <SelectItem value="user_data_equals">Ответ пользователя равен определенному значению</SelectItem>
-                                  <SelectItem value="user_data_contains">Ответ пользователя содержит определенный текст</SelectItem>
+                                <SelectContent className="bg-gradient-to-b from-slate-50 to-slate-50 dark:from-slate-900 dark:to-slate-900 rounded-xl">
+                                  <SelectItem value="user_data_exists" className="text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-green-600">✓</span>
+                                      <span>Пользователь уже отвечал</span>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="user_data_not_exists" className="text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-red-600">✕</span>
+                                      <span>Пользователь НЕ отвечал</span>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="user_data_equals" className="text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-blue-600">=</span>
+                                      <span>Ответ равен значению</span>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="user_data_contains" className="text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-orange-600">⊃</span>
+                                      <span>Ответ содержит текст</span>
+                                    </div>
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
-                            </div>
+                              </div>
 
                             {/* Variable Names - Multiple Question Selection */}
                             {(condition.condition === 'user_data_exists' || 
                               condition.condition === 'user_data_not_exists' || 
                               condition.condition === 'user_data_equals' || 
                               condition.condition === 'user_data_contains') && (
-                              <div>
-                                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
-                                  На какие вопросы должен был ответить пользователь?
+                              <div className="space-y-2 sm:space-y-3">
+                                <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                                  <i className="fas fa-question text-blue-600 dark:text-blue-400"></i>
+                                  <span>На какие вопросы ответил?</span>
                                 </Label>
                                 
                                 {/* Multiple Question Selection with Checkboxes */}
                                 {availableQuestions.length > 0 ? (
                                   <div className="space-y-3 sm:space-y-4">
-                                    <div className="bg-gradient-to-br from-purple-50/50 to-blue-50/30 dark:from-purple-950/20 dark:to-blue-950/10 rounded-lg p-3 sm:p-4 border border-purple-200/40 dark:border-purple-800/30 shadow-sm">
+                                    <div className="bg-gradient-to-br from-blue-50/60 to-purple-50/30 dark:from-blue-950/30 dark:to-purple-950/15 rounded-xl p-3 sm:p-4 border border-blue-200/50 dark:border-blue-800/40 shadow-sm hover:shadow-md transition-all">
                                       <div className="flex items-center gap-2 mb-3">
-                                        <i className="fas fa-list-check text-purple-600 dark:text-purple-400 text-sm"></i>
-                                        <span className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-300">
-                                          Выберите вопросы:
+                                        <i className="fas fa-checklist text-blue-600 dark:text-blue-400 text-sm"></i>
+                                        <span className="text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300">
+                                          Доступные вопросы:
+                                        </span>
+                                        <span className="ml-auto text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full font-semibold">
+                                          {availableQuestions.length}
                                         </span>
                                       </div>
                                       <div className="space-y-2 sm:space-y-2.5 max-h-40 sm:max-h-48 overflow-y-auto pr-2">
@@ -3808,23 +3836,30 @@ export function PropertiesPanel({
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="text-center py-4 text-muted-foreground bg-muted/30 rounded-lg border border-border/50">
-                                    <i className="fas fa-question-circle text-lg mb-2"></i>
-                                    <div className="text-xs">
-                                      Нет доступных вопросов. Создайте узлы с пользовательским вводом.
+                                  <div className="text-center py-6 sm:py-8 px-4 text-muted-foreground bg-gradient-to-br from-slate-50/50 to-slate-50/30 dark:from-slate-900/20 dark:to-slate-950/20 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                                    <i className="fas fa-inbox text-2xl sm:text-3xl mb-3 opacity-50"></i>
+                                    <div className="text-xs sm:text-sm font-medium">
+                                      Нет доступных вопросов
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Создайте узлы со сбором пользовательских ответов
                                     </div>
                                   </div>
                                 )}
                                 
                                 {/* Display Selected Questions */}
                                 {(condition.variableNames?.length || 0) > 0 && (
-                                  <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/40 rounded-lg p-2">
-                                    <div className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">
-                                      Выбранные вопросы ({condition.variableNames?.length || 0}):
+                                  <div className="bg-gradient-to-r from-green-50/70 to-emerald-50/50 dark:from-green-950/30 dark:to-emerald-950/20 border border-green-200/60 dark:border-green-800/50 rounded-xl p-3 sm:p-4 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-2.5">
+                                      <i className="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                                      <span className="text-xs sm:text-sm font-bold text-green-700 dark:text-green-300">
+                                        Выбрано: {condition.variableNames?.length || 0}
+                                      </span>
                                     </div>
-                                    <div className="flex flex-wrap gap-1">
+                                    <div className="flex flex-wrap gap-2">
                                       {(condition.variableNames || []).map((name, idx) => (
-                                        <span key={idx} className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
+                                        <span key={idx} className="inline-flex items-center text-xs sm:text-xs bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/40 text-green-700 dark:text-green-300 px-3 py-1.5 rounded-full font-medium shadow-sm">
+                                          <i className="fas fa-tag mr-1.5 text-xs opacity-70"></i>
                                           {name}
                                         </span>
                                       ))}
