@@ -413,134 +413,235 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   return (
     <div className="h-full flex flex-col bg-background min-h-0">
       <div className="border-b border-border/50 bg-card flex-none">
-        <div className="p-2.5 xs:p-3 sm:p-4 space-y-2.5 xs:space-y-3 sm:space-y-4">
-          {/* Header */}
-          <div className="flex items-start gap-2 xs:gap-2.5 sm:gap-3">
-            <div className="w-7 xs:w-8 h-7 xs:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/40 dark:to-cyan-900/40">
-              <Users className="w-4 xs:w-4.5 h-4 xs:h-4.5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-sm xs:text-base sm:text-lg font-bold text-foreground leading-tight">База данных пользователей</h2>
-              <p className="text-xs xs:text-sm text-muted-foreground mt-0.5 break-words">Управление пользователями "{projectName}"</p>
-            </div>
-          </div>
-
-          {/* Controls Row */}
-          <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-2.5">
-            {/* Database Toggle */}
-            <div className={`flex items-center gap-2 xs:gap-2.5 px-2.5 xs:px-3 py-1.5 xs:py-2 rounded-lg border transition-all flex-1 xs:flex-none ${
-              isDatabaseEnabled 
-                ? 'bg-green-50/50 dark:bg-green-950/30 border-green-300/40 dark:border-green-700/40' 
-                : 'bg-red-50/50 dark:bg-red-950/30 border-red-300/40 dark:border-red-700/40'
-            }`} data-testid="database-toggle-container">
-              <Database className={`w-3.5 xs:w-4 h-3.5 xs:h-4 flex-shrink-0 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
-              <Label htmlFor="db-toggle" className={`text-xs xs:text-sm font-semibold cursor-pointer flex-1 whitespace-nowrap ${
-                isDatabaseEnabled 
-                  ? 'text-green-700 dark:text-green-300' 
-                  : 'text-red-700 dark:text-red-300'
-              }`}>
-                {isDatabaseEnabled ? 'Включена' : 'Выключена'}
-              </Label>
-              <Switch
-                id="db-toggle"
-                data-testid="switch-database-toggle"
-                checked={isDatabaseEnabled}
-                onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
-                disabled={toggleDatabaseMutation.isPending}
-                className="scale-75 xs:scale-90"
-              />
-            </div>
+        <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5">
+          {/* Modern Header with Glassmorphism */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-purple-500/10 dark:from-blue-500/20 dark:via-cyan-500/10 dark:to-purple-500/20 p-4 sm:p-5 lg:p-6">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
             
-            {isDatabaseEnabled && (
-              <div className="flex gap-1.5 xs:gap-2">
-                <Button onClick={handleRefresh} variant="outline" size="sm" className="h-8 xs:h-9 px-2 xs:px-3 text-xs xs:text-sm flex-1 xs:flex-none">
-                  <RefreshCw className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0" />
-                  <span className="hidden xs:inline ml-1">Обновить</span>
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" className="h-8 xs:h-9 px-2 xs:px-3 text-xs xs:text-sm flex-1 xs:flex-none">
-                      <Trash2 className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0" />
-                      <span className="hidden xs:inline ml-1">Очистить</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Удалить все данные пользователей?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Это действие нельзя отменить. Все данные пользователей для этого бота будут удалены навсегда.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Отмена</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteAllUsersMutation.mutate()}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Удалить все
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
+              {/* Icon and Title */}
+              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/25">
+                  <Users className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground leading-tight tracking-tight">
+                    База данных пользователей
+                  </h2>
+                  <p className="text-sm sm:text-base text-muted-foreground mt-0.5 truncate">
+                    {projectName}
+                  </p>
+                </div>
               </div>
-            )}
+              
+              {/* Status Badge & Controls */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                {/* Database Status Toggle */}
+                <div 
+                  className={`flex items-center gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border-2 transition-all duration-300 backdrop-blur-sm ${
+                    isDatabaseEnabled 
+                      ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 shadow-emerald-500/10 shadow-lg' 
+                      : 'bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/30 shadow-rose-500/10 shadow-lg'
+                  }`} 
+                  data-testid="database-toggle-container"
+                >
+                  <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${isDatabaseEnabled ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                  <Label 
+                    htmlFor="db-toggle" 
+                    className={`text-sm font-semibold cursor-pointer whitespace-nowrap ${
+                      isDatabaseEnabled ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'
+                    }`}
+                  >
+                    {isDatabaseEnabled ? 'Активна' : 'Отключена'}
+                  </Label>
+                  <Switch
+                    id="db-toggle"
+                    data-testid="switch-database-toggle"
+                    checked={isDatabaseEnabled}
+                    onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
+                    disabled={toggleDatabaseMutation.isPending}
+                  />
+                </div>
+                
+                {/* Action Buttons */}
+                {isDatabaseEnabled && (
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleRefresh} 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-2 hover:bg-background/80 backdrop-blur-sm"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-2">Обновить</span>
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-2 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="hidden sm:inline ml-2">Очистить</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Удалить все данные пользователей?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Это действие нельзя отменить. Все данные пользователей для этого бота будут удалены навсегда.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Отмена</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteAllUsersMutation.mutate()}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Удалить все
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Stats Grid */}
+          {/* Stats Grid - Modern Responsive Design */}
           {isDatabaseEnabled && stats && (
-            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1.5 xs:gap-2 sm:gap-2.5">
-              {[
-                { icon: Users, label: 'Всего', value: stats.totalUsers, color: 'blue' },
-                { icon: Activity, label: 'Активны', value: stats.activeUsers, color: 'green' },
-                { icon: Shield, label: 'Блокиров.', value: stats.blockedUsers, color: 'red' },
-                { icon: Crown, label: 'Premium', value: stats.premiumUsers, color: 'yellow' },
-                { icon: MessageSquare, label: 'Сообщ.', value: stats.totalInteractions, color: 'purple' },
-                { icon: BarChart3, label: 'Среднее', value: stats.avgInteractionsPerUser, color: 'indigo' },
-                { icon: Edit, label: 'Ответы', value: stats.usersWithResponses || 0, color: 'orange' },
-              ].map((stat, idx) => {
-                const colorClasses = {
-                  blue: 'bg-blue-50/50 dark:bg-blue-900/20 border-blue-200/50 dark:border-blue-800/50 text-blue-600 dark:text-blue-400',
-                  green: 'bg-green-50/50 dark:bg-green-900/20 border-green-200/50 dark:border-green-800/50 text-green-600 dark:text-green-400',
-                  red: 'bg-red-50/50 dark:bg-red-900/20 border-red-200/50 dark:border-red-800/50 text-red-600 dark:text-red-400',
-                  yellow: 'bg-yellow-50/50 dark:bg-yellow-900/20 border-yellow-200/50 dark:border-yellow-800/50 text-yellow-600 dark:text-yellow-400',
-                  purple: 'bg-purple-50/50 dark:bg-purple-900/20 border-purple-200/50 dark:border-purple-800/50 text-purple-600 dark:text-purple-400',
-                  indigo: 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-200/50 dark:border-indigo-800/50 text-indigo-600 dark:text-indigo-400',
-                  orange: 'bg-orange-50/50 dark:bg-orange-900/20 border-orange-200/50 dark:border-orange-800/50 text-orange-600 dark:text-orange-400',
-                };
-                const Icon = stat.icon;
-                const colorClass = colorClasses[stat.color as keyof typeof colorClasses];
-                return (
-                  <div key={idx} className={`${colorClass} border rounded-lg p-1.5 xs:p-2 sm:p-2.5 flex flex-col items-center gap-1 xs:gap-1.5 text-center`}>
-                    <Icon className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0" />
-                    <p className="text-xs xs:text-xs sm:text-sm font-bold text-foreground leading-tight">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground leading-tight hidden xs:block">{stat.label}</p>
-                  </div>
-                );
-              })}
+            <div className="space-y-3">
+              {/* Mobile: Horizontal scroll with snap */}
+              <div className="block sm:hidden">
+                <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-2 px-2">
+                  {[
+                    { icon: Users, label: 'Всего', value: stats.totalUsers, gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+                    { icon: Activity, label: 'Активны', value: stats.activeUsers, gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+                    { icon: Shield, label: 'Заблок.', value: stats.blockedUsers, gradient: 'from-rose-500 to-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40' },
+                    { icon: Crown, label: 'Premium', value: stats.premiumUsers, gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+                    { icon: MessageSquare, label: 'Сообщ.', value: stats.totalInteractions, gradient: 'from-violet-500 to-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40' },
+                    { icon: BarChart3, label: 'Среднее', value: stats.avgInteractionsPerUser, gradient: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950/40' },
+                    { icon: Edit, label: 'Ответы', value: stats.usersWithResponses || 0, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/40' },
+                  ].map((stat, idx) => {
+                    const Icon = stat.icon;
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`${stat.bg} flex-shrink-0 snap-start w-[100px] rounded-xl p-3 flex flex-col items-center gap-2 transition-transform duration-200 active:scale-95`}
+                        data-testid={`stat-card-mobile-${idx}`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-sm`}>
+                          <Icon className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-foreground tabular-nums">{stat.value ?? 0}</p>
+                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Scroll indicator dots */}
+                <div className="flex justify-center gap-1 mt-2">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                  ))}
+                </div>
+              </div>
+
+              {/* Tablet: 2 rows grid */}
+              <div className="hidden sm:grid md:hidden grid-cols-4 gap-2">
+                {[
+                  { icon: Users, label: 'Всего пользователей', value: stats.totalUsers, gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40', textColor: 'text-blue-600 dark:text-blue-400' },
+                  { icon: Activity, label: 'Активных', value: stats.activeUsers, gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40', textColor: 'text-emerald-600 dark:text-emerald-400' },
+                  { icon: Shield, label: 'Заблокировано', value: stats.blockedUsers, gradient: 'from-rose-500 to-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40', textColor: 'text-rose-600 dark:text-rose-400' },
+                  { icon: Crown, label: 'Premium', value: stats.premiumUsers, gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40', textColor: 'text-amber-600 dark:text-amber-400' },
+                  { icon: MessageSquare, label: 'Сообщений', value: stats.totalInteractions, gradient: 'from-violet-500 to-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40', textColor: 'text-violet-600 dark:text-violet-400' },
+                  { icon: BarChart3, label: 'Среднее/юзер', value: stats.avgInteractionsPerUser, gradient: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950/40', textColor: 'text-indigo-600 dark:text-indigo-400' },
+                  { icon: Edit, label: 'С ответами', value: stats.usersWithResponses || 0, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/40', textColor: 'text-orange-600 dark:text-orange-400' },
+                ].map((stat, idx) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`${stat.bg} rounded-xl p-3 flex items-center gap-3 transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${idx === 6 ? 'col-span-4 sm:col-span-1' : ''}`}
+                      data-testid={`stat-card-tablet-${idx}`}
+                    >
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-sm flex-shrink-0`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xl font-bold text-foreground tabular-nums">{stat.value ?? 0}</p>
+                        <p className="text-xs text-muted-foreground truncate">{stat.label}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop: Single row with all stats */}
+              <div className="hidden md:flex gap-2 justify-between">
+                {[
+                  { icon: Users, label: 'Всего', fullLabel: 'Всего пользователей', value: stats.totalUsers, gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-50/80 dark:bg-blue-950/40', ring: 'ring-blue-200 dark:ring-blue-800' },
+                  { icon: Activity, label: 'Активны', fullLabel: 'Активных пользователей', value: stats.activeUsers, gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50/80 dark:bg-emerald-950/40', ring: 'ring-emerald-200 dark:ring-emerald-800' },
+                  { icon: Shield, label: 'Заблок.', fullLabel: 'Заблокировано', value: stats.blockedUsers, gradient: 'from-rose-500 to-rose-600', bg: 'bg-rose-50/80 dark:bg-rose-950/40', ring: 'ring-rose-200 dark:ring-rose-800' },
+                  { icon: Crown, label: 'Premium', fullLabel: 'Premium пользователей', value: stats.premiumUsers, gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50/80 dark:bg-amber-950/40', ring: 'ring-amber-200 dark:ring-amber-800' },
+                  { icon: MessageSquare, label: 'Сообщ.', fullLabel: 'Всего сообщений', value: stats.totalInteractions, gradient: 'from-violet-500 to-violet-600', bg: 'bg-violet-50/80 dark:bg-violet-950/40', ring: 'ring-violet-200 dark:ring-violet-800' },
+                  { icon: BarChart3, label: 'Среднее', fullLabel: 'Сообщений на пользователя', value: stats.avgInteractionsPerUser, gradient: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50/80 dark:bg-indigo-950/40', ring: 'ring-indigo-200 dark:ring-indigo-800' },
+                  { icon: Edit, label: 'Ответы', fullLabel: 'Пользователей с ответами', value: stats.usersWithResponses || 0, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50/80 dark:bg-orange-950/40', ring: 'ring-orange-200 dark:ring-orange-800' },
+                ].map((stat, idx) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`${stat.bg} group flex-1 rounded-xl p-3 lg:p-4 flex flex-col items-center gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.03] cursor-default ring-1 ${stat.ring} ring-opacity-50`}
+                      title={stat.fullLabel}
+                      data-testid={`stat-card-desktop-${idx}`}
+                    >
+                      <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
+                        <Icon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xl lg:text-2xl font-bold text-foreground tabular-nums leading-none">{stat.value ?? 0}</p>
+                        <p className="text-[10px] lg:text-xs font-medium text-muted-foreground mt-1 uppercase tracking-wide">{stat.label}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          {/* Search & Filters */}
+          {/* Modern Search & Filters */}
           {isDatabaseEnabled && (
-            <div className="flex flex-col gap-2 xs:gap-2.5 sm:gap-3">
-              {/* Search Input */}
+            <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-3 sm:p-4 space-y-3">
+              {/* Search Input with modern styling */}
               <div className="relative group">
-                <Search className="absolute left-2.5 xs:left-3 top-1/2 transform -translate-y-1/2 w-3.5 xs:w-4 h-3.5 xs:h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <div className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center transition-colors group-focus-within:bg-primary/20">
+                  <Search className="w-4 h-4 text-primary" />
+                </div>
                 <Input
-                  placeholder="Поиск по имени или ID..."
+                  placeholder="Поиск по имени, username или ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 xs:pl-9 pr-2.5 xs:pr-3 h-8 xs:h-9 sm:h-10 text-xs xs:text-sm rounded-lg border border-border/50 hover:border-border transition-colors focus:ring-2 focus:ring-primary/20"
+                  className="pl-14 sm:pl-16 pr-4 h-11 sm:h-12 text-sm sm:text-base rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 focus:border-primary/40 focus:ring-0 transition-all"
+                  data-testid="input-search-users"
                 />
               </div>
 
-              {/* Filters Row */}
-              <div className="flex flex-col xs:flex-row gap-2 xs:gap-2.5 sm:gap-3">
+              {/* Filters Row - Responsive Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                 {/* Status Filter */}
                 <Select value={filterActive?.toString() || 'all'} onValueChange={(value) => setFilterActive(value === 'all' ? null : value === 'true')}>
-                  <SelectTrigger className="h-8 xs:h-9 sm:h-10 text-xs xs:text-sm flex-1 xs:flex-none xs:w-32 sm:w-36 rounded-lg border border-border/50 hover:border-border transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Activity className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0 hidden xs:block text-muted-foreground" />
+                  <SelectTrigger className="h-10 sm:h-11 text-sm rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 transition-all" data-testid="select-status-filter">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center">
+                        <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      </div>
                       <SelectValue placeholder="Статус" />
                     </div>
                   </SelectTrigger>
@@ -553,9 +654,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
                 {/* Premium Filter */}
                 <Select value={filterPremium?.toString() || 'all'} onValueChange={(value) => setFilterPremium(value === 'all' ? null : value === 'true')}>
-                  <SelectTrigger className="h-8 xs:h-9 sm:h-10 text-xs xs:text-sm flex-1 xs:flex-none xs:w-32 sm:w-36 rounded-lg border border-border/50 hover:border-border transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Crown className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0 hidden xs:block text-muted-foreground" />
+                  <SelectTrigger className="h-10 sm:h-11 text-sm rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 transition-all" data-testid="select-premium-filter">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center">
+                        <Crown className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      </div>
                       <SelectValue placeholder="Premium" />
                     </div>
                   </SelectTrigger>
@@ -572,21 +675,23 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   setSortField(field);
                   setSortDirection(direction);
                 }}>
-                  <SelectTrigger className="h-8 xs:h-9 sm:h-10 text-xs xs:text-sm flex-1 xs:flex-none xs:w-32 sm:w-40 rounded-lg border border-border/50 hover:border-border transition-colors">
-                    <div className="flex items-center gap-2">
-                      <ArrowUpDown className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0 hidden xs:block text-muted-foreground" />
+                  <SelectTrigger className="h-10 sm:h-11 text-sm rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 transition-all" data-testid="select-sort-filter">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded-md bg-indigo-500/10 flex items-center justify-center">
+                        <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      </div>
                       <SelectValue placeholder="Сортировка" />
                     </div>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="lastInteraction-desc">Последняя активность ↓</SelectItem>
-                    <SelectItem value="lastInteraction-asc">Последняя активность ↑</SelectItem>
+                    <SelectItem value="lastInteraction-desc">Последняя активность</SelectItem>
+                    <SelectItem value="lastInteraction-asc">Давняя активность</SelectItem>
                     <SelectItem value="interactionCount-desc">Больше сообщений</SelectItem>
                     <SelectItem value="interactionCount-asc">Меньше сообщений</SelectItem>
-                    <SelectItem value="createdAt-desc">Новые</SelectItem>
-                    <SelectItem value="createdAt-asc">Старые</SelectItem>
-                    <SelectItem value="firstName-asc">По имени A-Z</SelectItem>
-                    <SelectItem value="firstName-desc">По имени Z-A</SelectItem>
+                    <SelectItem value="createdAt-desc">Сначала новые</SelectItem>
+                    <SelectItem value="createdAt-asc">Сначала старые</SelectItem>
+                    <SelectItem value="firstName-asc">Имя А-Я</SelectItem>
+                    <SelectItem value="firstName-desc">Имя Я-А</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -625,30 +730,18 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
       {/* Tabs */}
       {isDatabaseEnabled && (
-        <div className="w-full">
-          <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <Tabs defaultValue="users" className="flex-1 flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-2 flex-shrink-0 m-3 sm:m-4">
             <TabsTrigger value="users">Пользователи</TabsTrigger>
             <TabsTrigger value="backup">Резервные копии</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="users" className="w-full">
+          <TabsContent value="users" className="flex-1 overflow-hidden mt-2">
+            <ScrollArea className="h-full">
             {isMobile ? (
-              // Mobile card layout with simple scrolling  
-              <div 
-                className="overflow-y-scroll" 
-                style={{ 
-                  height: '350px', 
-                  overflowY: 'scroll', 
-                  WebkitOverflowScrolling: 'touch',
-                  scrollBehavior: 'smooth'
-                }}
-              >
-                <div className="p-4 space-y-4">
-                  {/* Debug info */}
-                  <div className="text-xs text-blue-500 bg-blue-50 p-2 rounded mb-2" data-testid="debug-mobile-info">
-                    DEBUG: isMobile={isMobile.toString()}, users={users.length}, filteredUsers={filteredAndSortedUsers.length}
-                  </div>
+              // Mobile card layout
+              <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
                   {filteredAndSortedUsers.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="text-muted-foreground">
@@ -693,21 +786,21 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 size="sm"
                                 data-testid={`button-toggle-active-${index}`}
                                 onClick={() => handleUserStatusToggle(user, 'isActive')}
-                                className={user.isActive ? "text-red-600" : "text-green-600"}
+                                className={user.isActive === 1 ? "text-red-600" : "text-green-600"}
                               >
-                                {user.isActive ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
+                                {user.isActive === 1 ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
                               </Button>
                             </div>
                           </div>
 
                           {/* Status Badges */}
                           <div className="flex flex-wrap gap-2">
-                            <Badge variant={user.isActive ? "default" : "secondary"}>
-                              {user.isActive ? "Активен" : "Неактивен"}
+                            <Badge variant={user.isActive === 1 ? "default" : "secondary"}>
+                              {user.isActive === 1 ? "Активен" : "Неактивен"}
                             </Badge>
-                            {user.isPremium && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                            {user.isBlocked && <Badge variant="destructive">Заблокирован</Badge>}
-                            {user.isBot && <Badge variant="outline">Бот</Badge>}
+                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                            {user.isBlocked === 1 && <Badge variant="destructive">Заблокирован</Badge>}
+                            {user.isBot === 1 && <Badge variant="outline">Бот</Badge>}
                           </div>
 
                           {/* Stats */}
@@ -761,11 +854,10 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                       </Card>
                     ))
                   )}
-                </div>
               </div>
             ) : (
               // Desktop table layout
-              <ScrollArea className="h-full">
+              <div className="p-3 sm:p-4">
                 <Table>
             <TableHeader>
               <TableRow>
@@ -800,12 +892,12 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        <Badge variant={user.isActive ? "default" : "secondary"}>
-                          {user.isActive ? "Активен" : "Неактивен"}
+                        <Badge variant={user.isActive === 1 ? "default" : "secondary"}>
+                          {user.isActive === 1 ? "Активен" : "Неактивен"}
                         </Badge>
-                        {user.isPremium && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                        {user.isBlocked && <Badge variant="destructive">Заблокирован</Badge>}
-                        {user.isBot && <Badge variant="outline">Бот</Badge>}
+                        {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                        {user.isBlocked === 1 && <Badge variant="destructive">Заблокирован</Badge>}
+                        {user.isBot === 1 && <Badge variant="outline">Бот</Badge>}
                       </div>
                     </TableCell>
                     <TableCell>{user.interactionCount || 0}</TableCell>
@@ -918,9 +1010,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           size="sm"
                           data-testid={`button-toggle-active-${index}`}
                           onClick={() => handleUserStatusToggle(user, 'isActive')}
-                          className={user.isActive ? "text-red-600" : "text-green-600"}
+                          className={user.isActive === 1 ? "text-red-600" : "text-green-600"}
                         >
-                          {user.isActive ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
+                          {user.isActive === 1 ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -955,8 +1047,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               )}
             </TableBody>
               </Table>
-              </ScrollArea>
+              </div>
             )}
+            </ScrollArea>
           </TabsContent>
           
           <TabsContent value="backup" className="flex-1 overflow-hidden">
@@ -1039,7 +1132,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   <Label className="text-sm font-medium">Теги</Label>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {selectedUser.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary">{tag}</Badge>
+                      <Badge key={index} variant="secondary">{String(tag)}</Badge>
                     ))}
                   </div>
                 </div>
@@ -1273,14 +1366,14 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
                             }`}>
                               <p className="text-sm whitespace-pre-wrap break-words">
-                                {message.messageText}
+                                {String(message.messageText || '')}
                               </p>
                             </div>
                             
                             {/* Кнопки для сообщений бота */}
-                            {isBot && message.messageData && typeof message.messageData === 'object' && 'buttons' in message.messageData && Array.isArray(message.messageData.buttons) && message.messageData.buttons.length > 0 && (
+                            {isBot && message.messageData && typeof message.messageData === 'object' && 'buttons' in message.messageData && Array.isArray((message.messageData as Record<string, unknown>).buttons) && ((message.messageData as Record<string, unknown>).buttons as unknown[]).length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {message.messageData.buttons.map((button: any, btnIndex: number) => (
+                                {((message.messageData as Record<string, unknown>).buttons as Array<{text: string}>).map((button, btnIndex: number) => (
                                   <div
                                     key={btnIndex}
                                     className="inline-flex items-center px-3 py-1 text-xs rounded-md border bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300"
