@@ -236,7 +236,8 @@ export function PropertiesPanel({
     };
     
     const getContent = () => {
-      if (node.type === 'start' || node.type === 'command') return (node.data.command || '').slice(0, 50);
+      if (node.type === 'start') return ((node.data as any).messageText || node.data.command || '').slice(0, 50);
+      if (node.type === 'command') return (node.data.command || '').slice(0, 50);
       if (node.type === 'message') return ((node.data as any).messageText || '').slice(0, 50);
       if (node.type === 'photo') return ((node.data as any).photoCaption || '').slice(0, 50);
       if (node.type === 'keyboard') return ((node.data as any).keyboardText || '').slice(0, 50);
