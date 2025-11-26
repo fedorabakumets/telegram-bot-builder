@@ -2616,24 +2616,35 @@ export function PropertiesPanel({
             {selectedNode.data.keyboardType !== 'none' && (
               <div className="space-y-3">
                 <div className="border-t border-border/20 pt-4"></div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Кнопки
-                  </Label>
-                  <div className="flex gap-1.5 flex-wrap justify-end">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-50/40 to-amber-50/30 dark:from-orange-950/20 dark:to-amber-950/10 border border-orange-200/40 dark:border-orange-800/30 hover:border-orange-300/60 dark:hover:border-orange-700/60 hover:bg-orange-50/60 dark:hover:bg-orange-950/30 transition-all duration-200 group">
+                  <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
+                    <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-orange-200/50 dark:bg-orange-900/40 group-hover:bg-orange-300/50 dark:group-hover:bg-orange-800/50 transition-all">
+                      <i className="fas fa-square-plus text-xs sm:text-sm text-orange-600 dark:text-orange-400"></i>
+                    </div>
+                    <div className="min-w-0">
+                      <Label className="text-xs sm:text-sm font-semibold text-orange-900 dark:text-orange-100 cursor-pointer block">
+                        Кнопки
+                      </Label>
+                      <div className="text-xs text-orange-700/70 dark:text-orange-300/70 mt-0.5 leading-snug">
+                        Добавляйте и управляйте кнопками
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap justify-start sm:justify-end">
                     <UIButton
                       size="sm"
-                      variant="ghost"
+                      variant="outline"
                       onClick={handleAddButton}
-                      className="text-xs text-primary hover:text-primary/80 font-medium h-auto p-1"
+                      className="text-xs font-medium h-8 px-2 border-orange-300/50 dark:border-orange-700/50 text-orange-700 dark:text-orange-300 hover:bg-orange-100/50 dark:hover:bg-orange-900/30 transition-all"
                     >
-                      + Добавить кнопку
+                      <i className="fas fa-plus text-xs mr-1.5"></i>
+                      <span className="hidden sm:inline">Кнопка</span>
                     </UIButton>
                     {selectedNode.data.allowMultipleSelection && (
                       <>
                         <UIButton
                           size="sm"
-                          variant="ghost"
+                          variant="outline"
                           onClick={() => {
                             const newButton = {
                               id: Date.now().toString(),
@@ -2649,13 +2660,14 @@ export function PropertiesPanel({
                             const updatedButtons = [...currentButtons, newButton];
                             onNodeUpdate(selectedNode.id, { buttons: updatedButtons });
                           }}
-                          className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium h-auto p-1"
+                          className="text-xs font-medium h-8 px-2 border-green-300/50 dark:border-green-700/50 text-green-700 dark:text-green-300 hover:bg-green-100/50 dark:hover:bg-green-900/30 transition-all"
                         >
-                          + Опция
+                          <i className="fas fa-check text-xs mr-1.5"></i>
+                          <span className="hidden sm:inline">Опция</span>
                         </UIButton>
                         <UIButton
                           size="sm"
-                          variant="ghost"
+                          variant="outline"
                           onClick={() => {
                             const newButton = {
                               id: Date.now().toString(),
@@ -2671,9 +2683,10 @@ export function PropertiesPanel({
                             const updatedButtons = [...currentButtons, newButton];
                             onNodeUpdate(selectedNode.id, { buttons: updatedButtons });
                           }}
-                          className="text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium h-auto p-1"
+                          className="text-xs font-medium h-8 px-2 border-purple-300/50 dark:border-purple-700/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 transition-all"
                         >
-                          + Завершение
+                          <i className="fas fa-flag-checkered text-xs mr-1.5"></i>
+                          <span className="hidden sm:inline">Завершение</span>
                         </UIButton>
                       </>
                     )}
