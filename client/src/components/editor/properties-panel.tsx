@@ -2891,10 +2891,9 @@ export function PropertiesPanel({
                               .filter(n => n.node.id !== selectedNode.id)
                               .map(({node, sheetName}) => (
                                 <SelectItem key={node.id} value={node.id}>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs font-mono text-indigo-700 dark:text-indigo-300">{node.id}</span>
-                                    <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
-                                  </div>
+                                  <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
+                                    {formatNodeDisplay(node, sheetName)}
+                                  </span>
                                 </SelectItem>
                               ))
                             }
@@ -4762,11 +4761,9 @@ export function PropertiesPanel({
                                         ?.filter(n => n.node.id !== selectedNode.id && (n.node.type === 'start' || n.node.type === 'command'))
                                         .map(({node, sheetName}) => (
                                           <SelectItem key={node.id} value={node.id}>
-                                            <div className="flex items-center gap-2">
-                                              <i className="fas fa-terminal text-xs text-purple-500"></i>
-                                              <span>{node.data.command}</span>
-                                              <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
-                                            </div>
+                                            <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
+                                              {formatNodeDisplay(node, sheetName)}
+                                            </span>
                                           </SelectItem>
                                         ))}
                                       
@@ -4909,23 +4906,23 @@ export function PropertiesPanel({
                           {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
                             const nodeContent = 
                               node.type === 'command' ? node.data.command :
-                              node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
-                              node.type === 'photo' ? ((node.data as any).photoCaption || '').slice(0, 50) :
-                              node.type === 'keyboard' ? ((node.data as any).keyboardText || '').slice(0, 50) :
-                              ((node.data as any).label || '').slice(0, 50);
-                            return (
-                              <SelectItem key={node.id} value={node.id}>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-mono text-blue-700 dark:text-blue-300">{node.id}</span>
-                                  {nodeContent && <span className="text-xs text-muted-foreground truncate">{nodeContent}</span>}
-                                  <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                       <Input
                         value={selectedNode.data.inputTargetNodeId && selectedNode.data.inputTargetNodeId !== 'no-transition' ? selectedNode.data.inputTargetNodeId : ''}
                         onChange={(e) => {
