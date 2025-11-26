@@ -176,6 +176,7 @@ export function PropertiesPanel({
   const [urlValidation, setUrlValidation] = useState<{[key: string]: { isValid: boolean; message?: string }}>({});
   const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
+  const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
 
   // Функция для получения данных по умолчанию для каждого типа узла
   const getDefaultDataForType = (type: Node['type']) => {
@@ -2455,18 +2456,25 @@ export function PropertiesPanel({
              selectedNode.type !== 'promote_user' && 
              selectedNode.type !== 'demote_user' && 
              selectedNode.type !== 'admin_rights' && (
-            <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-rose-50/40 to-pink-50/20 dark:from-rose-950/30 dark:to-pink-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-rose-200/40 dark:border-rose-800/40 backdrop-blur-sm">
+            <div className="space-y-3 sm:space-y-4">
               {/* Header */}
-              <div className="flex items-center gap-2.5 sm:gap-3">
+              <button
+                onClick={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
+                className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
+                title={isMediaSectionOpen ? 'Свернуть' : 'Развернуть'}
+              >
                 <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/50 dark:to-pink-900/50 flex items-center justify-center flex-shrink-0">
                   <i className="fas fa-paperclip text-rose-600 dark:text-rose-400 text-sm sm:text-base"></i>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-rose-900 to-pink-800 dark:from-rose-100 dark:to-pink-200 bg-clip-text text-transparent">Прикрепленный медиафайл</h3>
-                  <p className="text-xs sm:text-sm text-rose-700/70 dark:text-rose-300/70 mt-0.5">Картинка, видео, аудио или документ</p>
+                  <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-rose-900 to-pink-800 dark:from-rose-100 dark:to-pink-200 bg-clip-text text-transparent text-left">Прикрепленный медиафайл</h3>
+                  <p className="text-xs sm:text-sm text-rose-700/70 dark:text-rose-300/70 mt-0.5 text-left">Картинка, видео, аудио или документ</p>
                 </div>
-              </div>
+                <i className={`fas fa-chevron-down text-xs sm:text-sm text-rose-600 dark:text-rose-400 ml-auto transition-transform duration-300 ${isMediaSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
+              </button>
 
+              {isMediaSectionOpen && (
+              <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-rose-50/40 to-pink-50/20 dark:from-rose-950/30 dark:to-pink-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-rose-200/40 dark:border-rose-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
               {/* Media Selector */}
               <MediaSelector
                 projectId={projectId}
@@ -2512,6 +2520,8 @@ export function PropertiesPanel({
                 label=""
                 placeholder="Выберите медиафайл или введите URL"
               />
+              </div>
+              )}
             </div>
             )}
             </div>
