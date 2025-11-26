@@ -4016,7 +4016,8 @@ export function PropertiesPanel({
                                   </div>
                                 </div>
                               )}
-                            </div>
+                                </div>
+                              </details>
 
                             {/* Keyboard Configuration for Conditional Messages */}
                             <div className="space-y-3 border-t border-purple-200/30 dark:border-purple-800/30 pt-4">
