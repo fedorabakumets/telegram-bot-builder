@@ -162,7 +162,7 @@ export function MediaSelector({
                 <span className="sm:hidden">Выбрать файл</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-full sm:max-w-5xl">
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl">
                   <i className="fas fa-folder-open mr-2 text-blue-600 dark:text-blue-400"></i>
