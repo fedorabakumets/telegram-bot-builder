@@ -1540,42 +1540,42 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           </DropdownMenu>
                         </div>
                         
-                        {/* Compact Badges */}
-                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        {/* Status Badges - Improved Responsive Layout */}
+                        <div className="flex flex-wrap items-center gap-2 mt-3">
                           <Badge 
                             variant={group.isAdmin ? "default" : "secondary"}
-                            className="text-[10px] sm:text-xs font-medium px-2 py-0.5 gap-1"
+                            className="text-[11px] sm:text-xs font-semibold px-2.5 py-1 gap-1.5 whitespace-nowrap"
                             data-testid={`badge-admin-${group.id}`}
                           >
                             {group.isAdmin ? (
                               <>
-                                <Crown className="w-3 h-3" />
+                                <Crown className="w-3.5 h-3.5 flex-shrink-0" />
                                 <span className="hidden xs:inline">Администратор</span>
                                 <span className="xs:hidden">Админ</span>
                               </>
                             ) : (
                               <>
-                                <Users className="w-3 h-3" />
+                                <Users className="w-3.5 h-3.5 flex-shrink-0" />
                                 <span>Участник</span>
                               </>
                             )}
                           </Badge>
                           {group.chatType && (
-                            <Badge variant="outline" className="text-[10px] sm:text-xs font-medium px-2 py-0.5 gap-1 border-muted-foreground/20">
+                            <Badge variant="outline" className="text-[11px] sm:text-xs font-semibold px-2.5 py-1 gap-1.5 border-border/60 whitespace-nowrap">
                               {group.chatType === 'supergroup' ? (
                                 <>
-                                  <TrendingUp className="w-3 h-3" />
+                                  <TrendingUp className="w-3.5 h-3.5 flex-shrink-0" />
                                   <span className="hidden sm:inline">Супергруппа</span>
                                   <span className="sm:hidden">Супер</span>
                                 </>
                               ) : group.chatType === 'channel' ? (
                                 <>
-                                  <Volume2 className="w-3 h-3" />
+                                  <Volume2 className="w-3.5 h-3.5 flex-shrink-0" />
                                   <span>Канал</span>
                                 </>
                               ) : (
                                 <>
-                                  <MessageSquare className="w-3 h-3" />
+                                  <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
                                   <span>Группа</span>
                                 </>
                               )}
@@ -1592,29 +1592,29 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </p>
                     )}
 
-                    {/* Stats Grid - Modern Glass Style */}
-                    <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-4 mb-4">
-                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-muted/60 to-muted/30 p-3 sm:p-3.5">
+                    {/* Stats Grid - Modern Glass Style with Better Responsiveness */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-3.5 mt-5 mb-4">
+                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50 to-blue-25 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-100 dark:border-blue-800/40 p-3 sm:p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+                          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-blue-500/15 dark:bg-blue-500/25 flex items-center justify-center flex-shrink-0">
+                            <Users className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wide">Участники</p>
-                            <p className="text-sm sm:text-base font-bold text-foreground truncate mt-0.5">
+                            <p className="text-[10px] sm:text-xs text-blue-600/80 dark:text-blue-400/80 font-semibold uppercase tracking-wide">Участники</p>
+                            <p className="text-base sm:text-lg font-bold text-foreground truncate mt-1">
                               {group.memberCount ? group.memberCount.toLocaleString('ru-RU') : '—'}
                             </p>
                           </div>
                         </div>
                       </div>
-                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-muted/60 to-muted/30 p-3 sm:p-3.5">
+                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-amber-25 dark:from-amber-950/30 dark:to-amber-900/20 border border-amber-100 dark:border-amber-800/40 p-3 sm:p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
+                          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-amber-500/15 dark:bg-amber-500/25 flex items-center justify-center flex-shrink-0">
+                            <Clock className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wide">Добавлена</p>
-                            <p className="text-sm sm:text-base font-bold text-foreground truncate mt-0.5">
+                            <p className="text-[10px] sm:text-xs text-amber-600/80 dark:text-amber-400/80 font-semibold uppercase tracking-wide">Добавлена</p>
+                            <p className="text-base sm:text-lg font-bold text-foreground truncate mt-1">
                               {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}) : '—'}
                             </p>
                           </div>
@@ -1625,11 +1625,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     {/* Spacer to push buttons to bottom */}
                     <div className="flex-1" />
 
-                    {/* Action Buttons - Premium Feel */}
-                    <div className="flex gap-2 sm:gap-3 pt-1">
+                    {/* Action Buttons - Premium Feel with Better Touch Targets */}
+                    <div className="flex gap-2.5 sm:gap-3 pt-2 -mx-4 sm:-mx-5 px-4 sm:px-5 pb-4 sm:pb-5 -mb-4 sm:-mb-5 mt-4 bg-gradient-to-t from-card/80 to-transparent">
                       <Button 
                         variant="default" 
-                        className="flex-1 h-11 sm:h-12 text-sm font-medium shadow-sm"
+                        className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-semibold shadow-md hover:shadow-lg transition-all"
                         onClick={() => {
                           setSelectedGroup(group);
                           setGroupName(group.name);
@@ -1679,7 +1679,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="flex-1 h-11 sm:h-12 text-sm font-medium"
+                        className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-semibold hover:bg-muted/60 transition-all"
                         onClick={() => {
                           setSelectedGroupForMessage(group);
                           setShowSendMessage(true);
