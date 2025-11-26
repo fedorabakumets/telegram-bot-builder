@@ -797,11 +797,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           {/* Status Badges */}
                           <div className="flex flex-wrap gap-2">
                             <Badge variant={user.isActive === 1 ? "default" : "secondary"}>
-                              {user.isActive === 1 ? "Активен" : "Неактивен"}
+                              {String(user.isActive === 1 ? "Активен" : "Неактивен")}
                             </Badge>
-                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                            {user.isBlocked === 1 && <Badge variant="destructive">Заблокирован</Badge>}
-                            {user.isBot === 1 && <Badge variant="outline">Бот</Badge>}
+                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />{String("Premium")}</Badge>}
+                            {user.isBlocked === 1 && <Badge variant="destructive">{String("Заблокирован")}</Badge>}
+                            {user.isBot === 1 && <Badge variant="outline">{String("Бот")}</Badge>}
                           </div>
 
                           {/* Stats */}
@@ -1118,9 +1118,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               <div>
                 <Label className="text-sm font-medium">Даты</Label>
                 <div className="mt-2 space-y-2">
-                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {formatDate(selectedUser?.createdAt ?? null)}</div>
-                  <div><span className="text-sm text-muted-foreground">Последнее обновление:</span> {formatDate(selectedUser?.updatedAt ?? null)}</div>
-                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {formatDate(selectedUser?.lastInteraction ?? null)}</div>
+                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {String(formatDate(selectedUser?.createdAt ?? null))}</div>
+                  <div><span className="text-sm text-muted-foreground">Последнее обновление:</span> {String(formatDate(selectedUser?.updatedAt ?? null))}</div>
+                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {String(formatDate(selectedUser?.lastInteraction ?? null))}</div>
                 </div>
               </div>
 
@@ -1362,7 +1362,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
                             }`}>
                               <p className="text-sm whitespace-pre-wrap break-words">
-                                {String(message?.messageText ?? '')}
+                                {String(message?.messageText) || ''}
                               </p>
                             </div>
                             
@@ -1375,7 +1375,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     className="inline-flex items-center px-3 py-1 text-xs rounded-md border bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300"
                                     data-testid={`button-preview-${index}-${btnIndex}`}
                                   >
-                                    {String(button.text)}
+                                    {String(button?.text ?? '')}
                                   </div>
                                 ))}
                               </div>
