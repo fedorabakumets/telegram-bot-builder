@@ -465,6 +465,7 @@ export function PropertiesPanel({
     return allNodesFromSheets;
   }, [allSheets, allNodes, currentSheetId]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(true);
   
   // URL validation function
   const validateUrl = (url: string, type: string): { isValid: boolean; message?: string } => {
@@ -3501,10 +3502,13 @@ export function PropertiesPanel({
          selectedNode.type !== 'demote_user' && 
          selectedNode.type !== 'admin_rights' && (
           <div className="w-full">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3 sm:mb-4 px-0.5">
+            {/* Header with Collapse Toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3 sm:mb-4 px-0.5 cursor-pointer group" onClick={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                <div className="inline-flex h-5 w-5 items-center justify-center transition-transform duration-300" style={{ transform: isConditionalMessagesSectionOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+                  <i className="fas fa-chevron-down text-xs text-purple-600 dark:text-purple-400"></i>
+                </div>
+                <h3 className="text-sm sm:text-base font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent group-hover:from-purple-700 group-hover:to-indigo-700 dark:group-hover:from-purple-300 dark:group-hover:to-indigo-300 transition-all">
                   🔄 Условные сообщения
                 </h3>
                 <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
@@ -3513,10 +3517,14 @@ export function PropertiesPanel({
               </div>
               <Switch
                 checked={selectedNode.data.enableConditionalMessages ?? false}
-                onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked })}
+                onCheckedChange={(checked) => {
+                  onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked });
+                }}
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
 
+            {isConditionalMessagesSectionOpen && (
             <div className="space-y-3 sm:space-y-4">
 
               {/* Conditional Messages Settings */}
@@ -5051,6 +5059,7 @@ export function PropertiesPanel({
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
 
