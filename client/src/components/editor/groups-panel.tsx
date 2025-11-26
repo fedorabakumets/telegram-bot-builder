@@ -1706,6 +1706,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       Удалить
                     </Button>
                   </div>
+                  </div>
                 </Card>
               ))}
             </div>
