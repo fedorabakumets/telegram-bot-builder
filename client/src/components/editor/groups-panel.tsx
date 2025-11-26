@@ -1823,287 +1823,426 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             
             {selectedGroup && (
               <Tabs defaultValue="general" className="w-full flex flex-col flex-1 min-h-0">
-                {/* Adaptive Tabs - Compact on Mobile */}
-                <div className="overflow-x-auto flex-shrink-0 border-b border-muted px-3 sm:px-4 lg:px-5 -mx-3 sm:-mx-4 lg:-mx-5">
-                  <TabsList className="grid grid-cols-2 sm:grid-cols-4 gap-0 p-0 bg-transparent justify-start w-max">
-                    <TabsTrigger value="general" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                      <Globe className="h-3.5 w-3.5" />
+                {/* Modern Adaptive Tabs */}
+                <div className="flex-shrink-0 px-4 sm:px-5 lg:px-6 py-3 bg-muted/30 border-b border-border/50">
+                  <TabsList className="inline-flex h-auto p-1 gap-1 bg-muted/60 rounded-xl w-full sm:w-auto">
+                    <TabsTrigger 
+                      value="general" 
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground transition-all duration-200"
+                    >
+                      <Globe className="h-4 w-4" />
                       <span className="hidden sm:inline">Общие</span>
-                      <span className="sm:hidden">Данные</span>
+                      <span className="sm:hidden">Общие</span>
                     </TabsTrigger>
-                    <TabsTrigger value="admin" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                      <Shield className="h-3.5 w-3.5" />
+                    <TabsTrigger 
+                      value="admin" 
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground transition-all duration-200"
+                    >
+                      <Shield className="h-4 w-4" />
                       <span className="hidden sm:inline">Права</span>
-                      <span className="sm:hidden">Админ</span>
+                      <span className="sm:hidden">Права</span>
                     </TabsTrigger>
-                    <TabsTrigger value="members" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                      <UserCheck className="h-3.5 w-3.5" />
+                    <TabsTrigger 
+                      value="members" 
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground transition-all duration-200"
+                    >
+                      <Users className="h-4 w-4" />
                       <span className="hidden sm:inline">Участники</span>
                       <span className="sm:hidden">Люди</span>
                     </TabsTrigger>
-                    <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Аналитика</span>
-                      <span className="sm:hidden">Аналит.</span>
+                    <TabsTrigger 
+                      value="analytics" 
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground transition-all duration-200"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Статистика</span>
+                      <span className="sm:hidden">Стат.</span>
                     </TabsTrigger>
                   </TabsList>
                 </div>
 
-                <div className="flex-1 overflow-y-auto min-h-0 px-3 sm:px-4 lg:px-5 py-3 sm:py-4">
-                  <TabsContent value="general" className="space-y-3 sm:space-y-4 mt-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-group-name">Название группы</Label>
-                        <Input
-                          id="edit-group-name"
-                          placeholder="Введите название группы"
-                          value={groupName}
-                          onChange={(e) => setGroupName(e.target.value)}
-                        />
+                <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-5 lg:px-6 py-4 sm:py-5">
+                  <TabsContent value="general" className="space-y-4 sm:space-y-5 mt-0">
+                    {/* Basic Info Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Edit className="h-4 w-4 text-primary" />
+                        </div>
+                        <h4 className="font-medium text-sm sm:text-base">Основная информация</h4>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-group-name" className="text-sm font-medium">Название группы</Label>
+                          <Input
+                            id="edit-group-name"
+                            placeholder="Введите название группы"
+                            value={groupName}
+                            onChange={(e) => setGroupName(e.target.value)}
+                            className="h-11"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-group-url" className="text-sm font-medium">Ссылка на группу</Label>
+                          <Input
+                            id="edit-group-url"
+                            placeholder="https://t.me/group"
+                            value={groupUrl}
+                            onChange={(e) => setGroupUrl(e.target.value)}
+                            className="h-11"
+                          />
+                        </div>
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="edit-group-url">Ссылка на группу</Label>
+                        <Label htmlFor="edit-group-chat-id" className="text-sm font-medium flex items-center gap-2">
+                          Chat ID группы
+                          <Badge variant="outline" className="text-[10px] font-normal">обязательно для приватных</Badge>
+                        </Label>
                         <Input
-                          id="edit-group-url"
-                          placeholder="https://t.me/group"
-                          value={groupUrl}
-                          onChange={(e) => setGroupUrl(e.target.value)}
+                          id="edit-group-chat-id"
+                          placeholder="-1001234567890"
+                          value={selectedGroup?.groupId || ''}
+                          onChange={(e) => {
+                            if (selectedGroup) {
+                              setSelectedGroup({
+                                ...selectedGroup,
+                                groupId: e.target.value
+                              });
+                            }
+                          }}
+                          className="h-11 font-mono text-sm"
                         />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-group-chat-id">
-                        Chat ID группы
-                        <span className="text-xs text-muted-foreground ml-2">
-                          (для приватных групп обязательно)
-                        </span>
-                      </Label>
-                      <Input
-                        id="edit-group-chat-id"
-                        placeholder="-1001234567890"
-                        value={selectedGroup?.groupId || ''}
-                        onChange={(e) => {
-                          if (selectedGroup) {
-                            setSelectedGroup({
-                              ...selectedGroup,
-                              groupId: e.target.value
-                            });
-                          }
-                        }}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Для получения chat_id: отправьте любое сообщение в группу, затем переслайте его в @userinfobot
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-group-desc">Описание группы</Label>
-                      <Textarea
-                        id="edit-group-desc"
-                        placeholder="Краткое описание группы..."
-                        value={groupDescription}
-                        onChange={(e) => setGroupDescription(e.target.value)}
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="chat-type">Тип чата</Label>
-                        <Input
-                          id="chat-type"
-                          value={selectedGroup?.chatType === 'group' ? 'Группа' : selectedGroup?.chatType === 'supergroup' ? 'Супергруппа' : selectedGroup?.chatType === 'channel' ? 'Канал' : 'Неизвестно'}
-                          readOnly
-                          className="bg-muted cursor-not-allowed"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Тип чата определяется Telegram автоматически и не может быть изменен
+                        <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                          <MessageSquare className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                          Для получения chat_id: отправьте сообщение в группу и переслайте его в @userinfobot
                         </p>
                       </div>
-
+                      
                       <div className="space-y-2">
-                        <Label htmlFor="group-avatar">Аватарка группы</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="group-avatar"
-                            placeholder="https://example.com/avatar.jpg"
-                            value={groupAvatarUrl}
-                            onChange={(e) => setGroupAvatarUrl(e.target.value)}
-                          />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            id="avatar-upload"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                try {
-                                  // Загружаем файл на сервер
-                                  const formData = new FormData();
-                                  formData.append('file', file);
-                                  
-                                  const response = await fetch(`/api/media/upload/${projectId}`, {
-                                    method: 'POST',
-                                    body: formData
-                                  });
-                                  
-                                  if (response.ok) {
-                                    const result = await response.json();
-                                    // Устанавливаем путь к загруженному файлу
-                                    const serverUrl = result.url || `/uploads/${result.filename}`;
-                                    setGroupAvatarUrl(serverUrl);
-                                    toast({
-                                      title: "Изображение загружено",
-                                      description: "Аватарка готова к установке"
-                                    });
-                                  } else {
-                                    throw new Error('Ошибка загрузки файла');
-                                  }
-                                } catch (error) {
-                                  console.error('Upload error:', error);
-                                  toast({
-                                    title: "Ошибка загрузки",
-                                    description: "Не удалось загрузить изображение",
-                                    variant: "destructive"
-                                  });
-                                }
-                              }
-                            }}
-                          />
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => {
-                              document.getElementById('avatar-upload')?.click();
-                            }}
-                          >
-                            <Upload className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        {groupAvatarUrl && (
-                          <div className="mt-2">
-                            <div className="w-16 h-16 border rounded-lg overflow-hidden">
-                              <img 
-                                src={groupAvatarUrl} 
-                                alt="Предпросмотр аватарки" 
-                                className="w-full h-full object-cover"
-                                onError={() => {
-                                  toast({
-                                    title: "Ошибка загрузки изображения",
-                                    description: "Проверьте правильность URL",
-                                    variant: "destructive"
-                                  });
-                                }}
-                              />
-                            </div>
-                          </div>
-                        )}
+                        <Label htmlFor="edit-group-desc" className="text-sm font-medium">Описание группы</Label>
+                        <Textarea
+                          id="edit-group-desc"
+                          placeholder="Краткое описание группы..."
+                          value={groupDescription}
+                          onChange={(e) => setGroupDescription(e.target.value)}
+                          rows={3}
+                          className="resize-none"
+                        />
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
+                    {/* Type & Avatar Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                          <Settings className="h-4 w-4 text-purple-500" />
+                        </div>
+                        <h4 className="font-medium text-sm sm:text-base">Тип и оформление</h4>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="chat-type" className="text-sm font-medium">Тип чата</Label>
+                          <div className="flex items-center gap-3 h-11 px-3 rounded-lg bg-muted/50 border border-border/50">
+                            {selectedGroup?.chatType === 'supergroup' ? (
+                              <TrendingUp className="h-4 w-4 text-blue-500" />
+                            ) : selectedGroup?.chatType === 'channel' ? (
+                              <Volume2 className="h-4 w-4 text-purple-500" />
+                            ) : (
+                              <Users className="h-4 w-4 text-green-500" />
+                            )}
+                            <span className="text-sm font-medium">
+                              {selectedGroup?.chatType === 'group' ? 'Группа' : selectedGroup?.chatType === 'supergroup' ? 'Супергруппа' : selectedGroup?.chatType === 'channel' ? 'Канал' : 'Неизвестно'}
+                            </span>
+                            <Badge variant="secondary" className="ml-auto text-[10px]">Авто</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Определяется Telegram автоматически
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="group-avatar" className="text-sm font-medium">Аватарка группы</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="group-avatar"
+                              placeholder="https://example.com/avatar.jpg"
+                              value={groupAvatarUrl}
+                              onChange={(e) => setGroupAvatarUrl(e.target.value)}
+                              className="h-11"
+                            />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              id="avatar-upload"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  try {
+                                    const formData = new FormData();
+                                    formData.append('file', file);
+                                    
+                                    const response = await fetch(`/api/media/upload/${projectId}`, {
+                                      method: 'POST',
+                                      body: formData
+                                    });
+                                    
+                                    if (response.ok) {
+                                      const result = await response.json();
+                                      const serverUrl = result.url || `/uploads/${result.filename}`;
+                                      setGroupAvatarUrl(serverUrl);
+                                      toast({
+                                        title: "Изображение загружено",
+                                        description: "Аватарка готова к установке"
+                                      });
+                                    } else {
+                                      throw new Error('Ошибка загрузки файла');
+                                    }
+                                  } catch (error) {
+                                    console.error('Upload error:', error);
+                                    toast({
+                                      title: "Ошибка загрузки",
+                                      description: "Не удалось загрузить изображение",
+                                      variant: "destructive"
+                                    });
+                                  }
+                                }
+                              }}
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="icon"
+                              className="h-11 w-11 flex-shrink-0"
+                              onClick={() => {
+                                document.getElementById('avatar-upload')?.click();
+                              }}
+                            >
+                              <Upload className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {groupAvatarUrl && (
+                            <div className="mt-2 flex items-center gap-3">
+                              <div className="w-14 h-14 rounded-xl overflow-hidden border-2 border-border/50 shadow-sm">
+                                <img 
+                                  src={groupAvatarUrl} 
+                                  alt="Предпросмотр аватарки" 
+                                  className="w-full h-full object-cover"
+                                  onError={() => {
+                                    toast({
+                                      title: "Ошибка загрузки изображения",
+                                      description: "Проверьте правильность URL",
+                                      variant: "destructive"
+                                    });
+                                  }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground">Предпросмотр</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Access Settings Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                        <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                          <Globe className="h-4 w-4 text-green-500" />
+                        </div>
+                        <h4 className="font-medium text-sm sm:text-base">Настройки доступа</h4>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-muted/40 border border-border/40">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isPublicGroup ? 'bg-green-500/10' : 'bg-muted'}`}>
+                            {isPublicGroup ? (
+                              <Globe className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <Shield className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">Публичная группа</p>
+                            <p className="text-xs text-muted-foreground">
+                              {isPublicGroup ? 'Доступна по публичной ссылке' : 'Только по приглашению'}
+                            </p>
+                          </div>
+                        </div>
                         <Switch 
                           id="public-group"
                           checked={isPublicGroup}
                           onCheckedChange={(checked) => {
                             setIsPublicGroup(checked);
-                            // Если переключаем на приватную, очищаем публичный username
                             if (!checked) {
                               setPublicUsername('');
                             }
                           }}
                         />
-                        <Label htmlFor="public-group">
-                          Публичная группа
-                        </Label>
                       </div>
                       
                       {isPublicGroup && (
-                        <div className="space-y-2 pl-6 border-l-2 border-primary/20">
-                          <Label htmlFor="public-username" className="text-sm font-medium">
+                        <div className="space-y-3 p-3 sm:p-4 rounded-xl bg-green-500/5 border border-green-500/20">
+                          <Label htmlFor="public-username" className="text-sm font-medium flex items-center gap-2">
+                            <Link2 className="h-4 w-4 text-green-500" />
                             Публичная ссылка
-                            <span className="text-xs text-muted-foreground ml-2">
-                              (обязательно для публичных групп)
-                            </span>
+                            <Badge variant="outline" className="text-[10px] font-normal border-green-500/30 text-green-600 dark:text-green-400">обязательно</Badge>
                           </Label>
-                          <div className="space-y-2">
-                            <Input
-                              id="public-username"
-                              placeholder="@username или t.me/username"
-                              value={publicUsername}
-                              onChange={(e) => setPublicUsername(e.target.value)}
-                              className="text-sm"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              Введите @username группы или полную ссылку t.me/username. 
-                              Это заменит приватную ссылку-приглашение на публичную.
-                            </p>
-                          </div>
+                          <Input
+                            id="public-username"
+                            placeholder="@username или t.me/username"
+                            value={publicUsername}
+                            onChange={(e) => setPublicUsername(e.target.value)}
+                            className="h-11"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Введите @username группы или полную ссылку t.me/username
+                          </p>
                         </div>
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="group-notes">Заметки администратора</Label>
-                      <Textarea
-                        id="group-notes"
-                        placeholder="Внутренние заметки о группе..."
-                        value={groupNotes}
-                        onChange={(e) => setGroupNotes(e.target.value)}
-                        rows={2}
-                      />
+                    {/* Notes Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                          <Tag className="h-4 w-4 text-amber-500" />
+                        </div>
+                        <h4 className="font-medium text-sm sm:text-base">Заметки</h4>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="group-notes" className="text-sm font-medium">Заметки администратора</Label>
+                        <Textarea
+                          id="group-notes"
+                          placeholder="Внутренние заметки о группе..."
+                          value={groupNotes}
+                          onChange={(e) => setGroupNotes(e.target.value)}
+                          rows={3}
+                          className="resize-none"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Эти заметки видны только вам и не публикуются
+                        </p>
+                      </div>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="admin" className="space-y-4 mt-0">
+                  <TabsContent value="admin" className="space-y-5 mt-0">
+                    {/* Admin Status Section */}
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">Статус администратора</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Является ли бот администратором группы
-                          </p>
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                          <Crown className="h-4 w-4 text-purple-500" />
+                        </div>
+                        <h4 className="font-medium text-sm sm:text-base">Статус бота</h4>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-purple-500/5 to-blue-500/5 border border-purple-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${makeAdmin ? 'bg-gradient-to-br from-purple-500 to-blue-500' : 'bg-muted'}`}>
+                            {makeAdmin ? (
+                              <Crown className="h-6 w-6 text-white" />
+                            ) : (
+                              <Bot className="h-6 w-6 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-base">{makeAdmin ? 'Администратор' : 'Обычный участник'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {makeAdmin ? 'Бот имеет права администратора' : 'Бот является обычным участником группы'}
+                            </p>
+                          </div>
                         </div>
                         <Switch 
                           checked={makeAdmin}
                           onCheckedChange={setMakeAdmin}
+                          className="scale-110"
                         />
                       </div>
-                      
-                      {makeAdmin && (
-                        <div className="space-y-3">
-                          <h5 className="font-medium text-sm">Права администратора</h5>
-                          <div className="grid grid-cols-2 gap-3">
-                            {Object.entries(adminRights).map(([key, value]) => (
-                              <div key={key} className="flex items-center space-x-2">
+                    </div>
+                    
+                    {makeAdmin && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                            <Shield className="h-4 w-4 text-blue-500" />
+                          </div>
+                          <h4 className="font-medium text-sm sm:text-base">Права администратора</h4>
+                          <Badge variant="secondary" className="ml-auto text-xs">
+                            {Object.values(adminRights).filter(Boolean).length} / {Object.keys(adminRights).length}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                          {Object.entries(adminRights).map(([key, value]) => {
+                            const rightInfo = {
+                              can_manage_chat: { label: 'Управление чатом', icon: Settings, color: 'blue' },
+                              can_change_info: { label: 'Изменение информации', icon: Edit, color: 'green' },
+                              can_delete_messages: { label: 'Удаление сообщений', icon: Trash, color: 'red' },
+                              can_invite_users: { label: 'Приглашение пользователей', icon: UserPlus, color: 'purple' },
+                              can_restrict_members: { label: 'Ограничение участников', icon: Ban, color: 'orange' },
+                              can_pin_messages: { label: 'Закрепление сообщений', icon: Pin, color: 'amber' },
+                              can_promote_members: { label: 'Назначение админов', icon: Crown, color: 'yellow' },
+                              can_manage_video_chats: { label: 'Видеочаты', icon: Volume2, color: 'cyan' },
+                              can_be_anonymous: { label: 'Анонимность', icon: Shield, color: 'gray' },
+                              can_manage_stories: { label: 'Управление историями', icon: Sparkles, color: 'pink' }
+                            }[key] || { label: key, icon: Settings, color: 'gray' };
+                            const IconComponent = rightInfo.icon;
+                            
+                            return (
+                              <div 
+                                key={key} 
+                                className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200 ${
+                                  value 
+                                    ? 'bg-primary/5 border-primary/30' 
+                                    : 'bg-muted/30 border-border/40 hover:border-border/60'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                                    value ? 'bg-primary/10' : 'bg-muted/50'
+                                  }`}>
+                                    <IconComponent className={`h-4 w-4 ${value ? 'text-primary' : 'text-muted-foreground'}`} />
+                                  </div>
+                                  <span className={`text-sm font-medium ${value ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                    {rightInfo.label}
+                                  </span>
+                                </div>
                                 <Switch
                                   checked={value}
                                   onCheckedChange={(checked) => 
                                     setAdminRights(prev => ({ ...prev, [key]: checked }))
                                   }
                                 />
-                                <Label className="text-xs">
-                                  {key === 'can_manage_chat' && 'Управление чатом'}
-                                  {key === 'can_change_info' && 'Изменение информации'}
-                                  {key === 'can_delete_messages' && 'Удаление сообщений'}
-                                  {key === 'can_invite_users' && 'Приглашение пользователей'}
-                                  {key === 'can_restrict_members' && 'Ограничение участников'}
-                                  {key === 'can_pin_messages' && 'Закрепление сообщений'}
-                                  {key === 'can_promote_members' && 'Назначение администраторов'}
-                                  {key === 'can_manage_video_chats' && 'Управление видеочатами'}
-                                  {key === 'can_be_anonymous' && 'Анонимность администратора'}
-                                  {key === 'can_manage_stories' && 'Управление историями'}
-                                </Label>
                               </div>
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
-                      )}
-                    </div>
+                        
+                        <div className="flex gap-2 pt-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => setAdminRights(Object.fromEntries(Object.keys(adminRights).map(k => [k, true])) as typeof adminRights)}
+                          >
+                            Включить все
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => setAdminRights(Object.fromEntries(Object.keys(adminRights).map(k => [k, false])) as typeof adminRights)}
+                          >
+                            Отключить все
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="members" className="space-y-4 mt-0">
