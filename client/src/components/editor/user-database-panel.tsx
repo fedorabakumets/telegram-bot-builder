@@ -796,11 +796,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           {/* Status Badges */}
                           <div className="flex flex-wrap gap-2">
                             <Badge variant={user.isActive === 1 ? "default" : "secondary"}>
-                              {String(user.isActive === 1 ? "Активен" : "Неактивен")}
+                              {user.isActive === 1 ? "Активен" : "Неактивен"}
                             </Badge>
-                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />{"Premium"}</Badge>}
-                            {user.isBlocked === 1 && <Badge variant="destructive">{"Заблокирован"}</Badge>}
-                            {user.isBot === 1 && <Badge variant="outline">{"Бот"}</Badge>}
+                            {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                            {user.isBlocked === 1 && <Badge variant="destructive">Заблокирован</Badge>}
+                            {user.isBot === 1 && <Badge variant="outline">Бот</Badge>}
                           </div>
 
                           {/* Stats */}
@@ -1076,22 +1076,22 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div>
                   <Label className="text-sm font-medium">Основная информация</Label>
                   <div className="mt-2 space-y-2">
-                    <div><span className="text-sm text-muted-foreground">Имя:</span> {selectedUser.firstName || 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {selectedUser.lastName || 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Username:</span> {selectedUser.userName ? `@${selectedUser.userName}` : 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {selectedUser.userId}</div>
-                    <div><span className="text-sm text-muted-foreground">Язык:</span> {selectedUser.languageCode || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Имя:</span> {selectedUser?.firstName || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {selectedUser?.lastName || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Username:</span> {selectedUser?.userName ? `@${selectedUser.userName}` : 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {selectedUser?.userId}</div>
+                    <div><span className="text-sm text-muted-foreground">Язык:</span> {selectedUser?.languageCode || 'Не указано'}</div>
                   </div>
                 </div>
                 
                 <div>
                   <Label className="text-sm font-medium">Статистика</Label>
                   <div className="mt-2 space-y-2">
-                    <div><span className="text-sm text-muted-foreground">Сообщений:</span> {selectedUser.interactionCount || 0}</div>
-                    <div><span className="text-sm text-muted-foreground">Сессий:</span> {selectedUser.sessionsCount || 0}</div>
-                    <div><span className="text-sm text-muted-foreground">Отправлено:</span> {selectedUser.totalMessagesSent || 0}</div>
-                    <div><span className="text-sm text-muted-foreground">Получено:</span> {selectedUser.totalMessagesReceived || 0}</div>
-                    <div><span className="text-sm text-muted-foreground">Состояние:</span> {selectedUser.currentState || 'Не установлено'}</div>
+                    <div><span className="text-sm text-muted-foreground">Сообщений:</span> {selectedUser?.interactionCount || 0}</div>
+                    <div><span className="text-sm text-muted-foreground">Сессий:</span> {selectedUser?.sessionsCount || 0}</div>
+                    <div><span className="text-sm text-muted-foreground">Отправлено:</span> {selectedUser?.totalMessagesSent || 0}</div>
+                    <div><span className="text-sm text-muted-foreground">Получено:</span> {selectedUser?.totalMessagesReceived || 0}</div>
+                    <div><span className="text-sm text-muted-foreground">Состояние:</span> {selectedUser?.currentState || 'Не установлено'}</div>
                   </div>
                 </div>
               </div>
@@ -1101,8 +1101,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div className="mt-2">
                   <div className="flex items-center space-x-2">
                     <Switch
-                      checked={Boolean(selectedUser.isActive)}
-                      onCheckedChange={(checked) => handleUserStatusToggle(selectedUser, 'isActive')}
+                      checked={Boolean(selectedUser?.isActive)}
+                      onCheckedChange={(checked) => selectedUser && handleUserStatusToggle(selectedUser, 'isActive')}
                     />
                     <Label>Активен</Label>
                     <span className="text-xs text-muted-foreground ml-2">
@@ -1118,13 +1118,13 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               <div>
                 <Label className="text-sm font-medium">Даты</Label>
                 <div className="mt-2 space-y-2">
-                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {formatDate(selectedUser.createdAt)}</div>
-                  <div><span className="text-sm text-muted-foreground">Последнее обновление:</span> {formatDate(selectedUser.updatedAt)}</div>
-                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {formatDate(selectedUser.lastInteraction)}</div>
+                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {formatDate(selectedUser?.createdAt)}</div>
+                  <div><span className="text-sm text-muted-foreground">Последнее обновление:</span> {formatDate(selectedUser?.updatedAt)}</div>
+                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {formatDate(selectedUser?.lastInteraction)}</div>
                 </div>
               </div>
 
-              {selectedUser.tags && selectedUser.tags.length > 0 && (
+              {selectedUser?.tags && selectedUser.tags.length > 0 && (
                 <div>
                   <Label className="text-sm font-medium">Теги</Label>
                   <div className="mt-2 flex flex-wrap gap-1">
@@ -1136,17 +1136,17 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               )}
 
               {/* Enhanced user responses section */}
-              {(selectedUser.userData && Object.keys(selectedUser.userData).length > 0) && (
+              {(selectedUser?.userData && Object.keys((selectedUser.userData as Record<string, unknown>) || {}).length > 0) && (
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <MessageSquare className="w-5 h-5 text-primary" />
                     <Label className="text-base font-semibold">Ответы пользователя</Label>
                     <Badge variant="secondary" className="text-xs">
-                      {Object.keys(selectedUser.userData).length}
+                      {Object.keys((selectedUser.userData as Record<string, unknown>) || {}).length}
                     </Badge>
                   </div>
                   <div className="space-y-4">
-                    {Object.entries(selectedUser.userData).map(([key, value]) => {
+                    {Object.entries((selectedUser.userData as Record<string, unknown>) || {}).map(([key, value]) => {
                       // Parse value if it's a string (from PostgreSQL)
                       let responseData: any = value;
                       if (typeof value === 'string') {
@@ -1399,14 +1399,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                             {/* Timestamp */}
                             {message.createdAt && (
                               <span className="text-xs text-muted-foreground">{String(formatDate(message.createdAt))}</span>
-                            ) || null}
-                            {message.createdAt === undefined && (
-                              <span 
-                                className={`text-xs text-muted-foreground ${isUser ? 'text-right' : 'text-left'}`}
-                                data-testid={`timestamp-${index}`}
-                              >
-                                {format(new Date(message.createdAt), 'dd MMM yyyy, HH:mm', { locale: ru })}
-                              </span>
                             )}
                           </div>
                         </div>
