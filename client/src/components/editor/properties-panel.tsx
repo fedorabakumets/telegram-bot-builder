@@ -2633,7 +2633,7 @@ export function PropertiesPanel({
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-1.5 flex-wrap justify-start sm:justify-end">
+                  <div className="flex gap-1.5 flex-wrap sm:flex-nowrap justify-start sm:justify-end">
                     <UIButton
                       size="sm"
                       variant="outline"
