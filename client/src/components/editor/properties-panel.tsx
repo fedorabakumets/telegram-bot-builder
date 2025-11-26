@@ -13,7 +13,7 @@ import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { extractCoordinatesFromUrl, formatCoordinates, getLocationInfo } from '@/lib/map-utils';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 
 import { InlineRichEditor } from './inline-rich-editor';
 import { EmojiPicker } from './emoji-picker';
