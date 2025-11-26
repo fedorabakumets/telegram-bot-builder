@@ -1030,13 +1030,17 @@ export function PropertiesPanel({
       <div className="flex-1 overflow-y-auto">
         <div className="p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5 md:space-y-6">
         
-        {/* Basic Settings */}
-        <div className="space-y-3 sm:space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-5 w-0.5 bg-gradient-to-b from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-400 rounded-full"></div>
-            <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Основные настройки</h3>
-          </div>
-          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm">
+        {/* Basic Settings - Accordion */}
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="basic-settings" className="border-0">
+            <AccordionTrigger className="hover:no-underline px-0 py-2">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-0.5 bg-gradient-to-b from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-400 rounded-full"></div>
+                <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Основные настройки</h3>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-0 pt-2">
+              <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm">
 
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
               <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
