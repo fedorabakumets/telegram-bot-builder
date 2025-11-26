@@ -959,144 +959,140 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                                       botStatus.instance.tokenId === token.id;
             
             return (
-            <Card key={token.id} className="transition-all hover:shadow-md">
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <BotAvatar 
-                      botName={token.botFirstName || token.name} 
-                      photoUrl={token.botPhotoUrl}
-                      size={48}
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        {editingField?.tokenId === token.id && editingField?.field === 'name' ? (
-                          <Input
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleSaveEdit();
-                              } else if (e.key === 'Escape') {
-                                handleCancelEdit();
-                              }
-                            }}
-                            onBlur={handleSaveEdit}
-                            autoFocus
-                            className="font-semibold text-lg leading-tight h-auto px-2 py-1"
-                            data-testid="input-bot-name-edit"
-                          />
-                        ) : (
-                          <h3 
-                            className="font-semibold text-lg leading-tight cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-                            onDoubleClick={() => handleStartEdit(token.id, 'name', token.botFirstName || token.name)}
-                            title="Двойной клик для редактирования"
-                            data-testid="text-bot-name"
-                          >
-                            {token.botFirstName || token.name}
-                          </h3>
-                        )}
-                        {token.botUsername && (
-                          <span className="text-sm text-muted-foreground">@{token.botUsername}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        {getStatusBadge(token)}
-                      </div>
-                      {(token.botDescription || token.description) && (
-                        editingField?.tokenId === token.id && editingField?.field === 'description' ? (
-                          <Textarea
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSaveEdit();
-                              } else if (e.key === 'Escape') {
-                                handleCancelEdit();
-                              }
-                            }}
-                            onBlur={handleSaveEdit}
-                            autoFocus
-                            className="text-sm resize-none min-h-[40px]"
-                            rows={2}
-                            data-testid="textarea-bot-description-edit"
-                          />
-                        ) : (
-                          <p 
-                            className="text-sm text-muted-foreground mb-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-                            onDoubleClick={() => handleStartEdit(token.id, 'description', token.botDescription || token.description || '')}
-                            title="Двойной клик для редактирования"
-                            data-testid="text-bot-description"
-                          >
-                            {token.botDescription || token.description}
-                          </p>
-                        )
+            <Card key={token.id} className="group/card overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 hover:border-border/50">
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover/card:opacity-100 transition-opacity" />
+              
+              <CardContent className="p-4 sm:p-5 space-y-4">
+                {/* Header Section */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <BotAvatar 
+                    botName={token.botFirstName || token.name} 
+                    photoUrl={token.botPhotoUrl}
+                    size={48}
+                    className="flex-shrink-0"
+                  />
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      {editingField?.tokenId === token.id && editingField?.field === 'name' ? (
+                        <Input
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEdit();
+                            else if (e.key === 'Escape') handleCancelEdit();
+                          }}
+                          onBlur={handleSaveEdit}
+                          autoFocus
+                          className="font-bold text-base sm:text-lg h-auto px-2 py-1 flex-1 min-w-0"
+                          data-testid="input-bot-name-edit"
+                        />
+                      ) : (
+                        <h3 
+                          className="font-bold text-base sm:text-lg cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors truncate"
+                          onDoubleClick={() => handleStartEdit(token.id, 'name', token.botFirstName || token.name)}
+                          title="Double-click to edit"
+                          data-testid="text-bot-name"
+                        >
+                          {token.botFirstName || token.name}
+                        </h3>
                       )}
-                      {token.botShortDescription && token.botShortDescription !== token.botDescription && (
-                        editingField?.tokenId === token.id && editingField?.field === 'shortDescription' ? (
-                          <Input
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleSaveEdit();
-                              } else if (e.key === 'Escape') {
-                                handleCancelEdit();
-                              }
-                            }}
-                            onBlur={handleSaveEdit}
-                            autoFocus
-                            className="text-xs h-auto px-2 py-1 mb-1"
-                            data-testid="input-bot-short-description-edit"
-                          />
-                        ) : (
-                          <p 
-                            className="text-xs text-muted-foreground mb-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-                            onDoubleClick={() => handleStartEdit(token.id, 'shortDescription', token.botShortDescription || '')}
-                            title="Двойной клик для редактирования"
-                            data-testid="text-bot-short-description"
-                          >
-                            {token.botShortDescription}
-                          </p>
-                        )
+                      {token.botUsername && (
+                        <span className="text-xs sm:text-sm text-muted-foreground truncate">@{token.botUsername}</span>
                       )}
-                      <p className="text-xs text-muted-foreground">
-                        Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
-                        {token.lastUsedAt && (
-                          <> • Последний запуск: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}</>
-                        )}
-                        {token.trackExecutionTime === 1 && (
-                          <> • ⏱️ Времени работы: {formatExecutionTime(token.totalExecutionSeconds || 0)}</>
-                        )}
-                      </p>
                     </div>
+                    
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {getStatusBadge(token)}
+                    </div>
+                    
+                    {(token.botDescription || token.description) && (
+                      editingField?.tokenId === token.id && editingField?.field === 'description' ? (
+                        <Textarea
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSaveEdit();
+                            } else if (e.key === 'Escape') handleCancelEdit();
+                          }}
+                          onBlur={handleSaveEdit}
+                          autoFocus
+                          className="text-xs sm:text-sm resize-none min-h-[36px]"
+                          rows={2}
+                          data-testid="textarea-bot-description-edit"
+                        />
+                      ) : (
+                        <p 
+                          className="text-xs sm:text-sm text-muted-foreground line-clamp-2 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                          onDoubleClick={() => handleStartEdit(token.id, 'description', token.botDescription || token.description || '')}
+                          title="Double-click to edit"
+                          data-testid="text-bot-description"
+                        >
+                          {token.botDescription || token.description}
+                        </p>
+                      )
+                    )}
+                    
+                    {token.botShortDescription && token.botShortDescription !== token.botDescription && (
+                      editingField?.tokenId === token.id && editingField?.field === 'shortDescription' ? (
+                        <Input
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEdit();
+                            else if (e.key === 'Escape') handleCancelEdit();
+                          }}
+                          onBlur={handleSaveEdit}
+                          autoFocus
+                          className="text-xs h-auto px-2 py-1 mb-1"
+                          data-testid="input-bot-short-description-edit"
+                        />
+                      ) : (
+                        <p 
+                          className="text-xs text-muted-foreground line-clamp-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                          onDoubleClick={() => handleStartEdit(token.id, 'shortDescription', token.botShortDescription || '')}
+                          title="Double-click to edit"
+                          data-testid="text-bot-short-description"
+                        >
+                          {token.botShortDescription}
+                        </p>
+                      )
+                    )}
+                    
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
+                      {token.lastUsedAt && (
+                        <> • Последний: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}</>
+                      )}
+                      {token.trackExecutionTime === 1 && (
+                        <> • {formatExecutionTime(token.totalExecutionSeconds || 0)}</>
+                      )}
+                    </p>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    {/* Кнопка редактирования профиля бота - показываем всегда */}
+                  {/* Actions - Responsive */}
+                  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                     <BotProfileEditor 
                       projectId={projectId} 
                       botInfo={botInfo} 
                       onProfileUpdated={refetchBotInfo} 
                     />
                     
-                    {/* Проверяем статус конкретного токена */}
                     {(() => {
-                      const isThisTokenRunning = botStatus?.instance && 
-                                                isRunning && 
-                                                botStatus.instance.tokenId === token.id;
-                      
+                      const isThisTokenRunning = botStatus?.instance && isRunning && botStatus.instance.tokenId === token.id;
                       if (!isThisTokenRunning) {
                         return (
                           <Button
                             size="sm"
                             onClick={() => startBotMutation.mutate(token.id)}
                             disabled={startBotMutation.isPending}
-                            className="flex items-center gap-2"
+                            className="h-9 gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm bg-green-600 hover:bg-green-700"
                           >
-                            <Play className="w-4 h-4" />
-                            {startBotMutation.isPending ? 'Запуск...' : 'Запустить'}
+                            <Play className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">{startBotMutation.isPending ? 'Запуск...' : 'Запустить'}</span>
+                            <span className="sm:hidden">{startBotMutation.isPending ? '...' : 'Запуск'}</span>
                           </Button>
                         );
                       } else {
@@ -1106,10 +1102,11 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                             variant="outline"
                             onClick={() => stopBotMutation.mutate(token.id)}
                             disabled={stopBotMutation.isPending}
-                            className="flex items-center gap-2"
+                            className="h-9 gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm"
                           >
-                            <Square className="w-4 h-4" />
-                            {stopBotMutation.isPending ? 'Остановка...' : 'Остановить'}
+                            <Square className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">{stopBotMutation.isPending ? 'Остановка...' : 'Остановить'}</span>
+                            <span className="sm:hidden">{stopBotMutation.isPending ? '...' : 'Стоп'}</span>
                           </Button>
                         );
                       }
@@ -1117,14 +1114,14 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid="button-bot-menu">
+                        <Button variant="ghost" size="sm" className="h-9 w-9 p-0" data-testid="button-bot-menu">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem 
                           onClick={() => deleteBotMutation.mutate(token.id)}
-                          className="text-red-600"
+                          className="text-red-600 dark:text-red-400"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Удалить
@@ -1134,16 +1131,16 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                   </div>
                 </div>
                 
-                {/* Database Toggle and Timer Display */}
-                <div className="space-y-3">
+                {/* Settings Section - Responsive Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Database Toggle */}
-                  <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+                  <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${
                     isDatabaseEnabled 
-                      ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
-                      : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
+                      ? 'bg-green-500/8 border-green-500/30 dark:bg-green-500/10 dark:border-green-500/40' 
+                      : 'bg-red-500/8 border-red-500/30 dark:bg-red-500/10 dark:border-red-500/40'
                   }`} data-testid="database-toggle-container-bot-card">
-                    <Database className={`w-4 h-4 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
-                    <Label htmlFor={`db-toggle-bot-${token.id}`} className={`text-sm font-bold cursor-pointer flex-1 ${
+                    <Database className={`w-4 h-4 flex-shrink-0 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
+                    <Label htmlFor={`db-toggle-bot-${token.id}`} className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${
                       isDatabaseEnabled 
                         ? 'text-green-700 dark:text-green-300' 
                         : 'text-red-700 dark:text-red-300'
@@ -1156,43 +1153,41 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                       checked={isDatabaseEnabled}
                       onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
                       disabled={toggleDatabaseMutation.isPending}
-                      className="scale-100"
                     />
                   </div>
 
                   {/* Generator Logs Toggle */}
-                  <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+                  <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${
                     generatorLogsEnabled
-                      ? 'bg-purple-50 dark:bg-purple-950 border-purple-500 dark:border-purple-600' 
-                      : 'bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600'
+                      ? 'bg-purple-500/8 border-purple-500/30 dark:bg-purple-500/10 dark:border-purple-500/40' 
+                      : 'bg-gray-500/8 border-gray-500/30 dark:bg-gray-500/10 dark:border-gray-500/40'
                   }`} data-testid="generator-logs-toggle-container-bot-card">
-                    <Terminal className={`w-4 h-4 ${generatorLogsEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'}`} />
-                    <Label htmlFor="generator-logs-toggle" className={`text-sm font-bold cursor-pointer flex-1 ${
+                    <Terminal className={`w-4 h-4 flex-shrink-0 ${generatorLogsEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'}`} />
+                    <Label htmlFor="generator-logs-toggle" className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${
                       generatorLogsEnabled
                         ? 'text-purple-700 dark:text-purple-300' 
                         : 'text-gray-700 dark:text-gray-300'
                     }`}>
-                      📋 Логи генератора
+                      Логи
                     </Label>
                     <Switch
                       id="generator-logs-toggle"
                       data-testid="switch-generator-logs-toggle"
                       checked={generatorLogsEnabled}
                       onCheckedChange={handleToggleGeneratorLogs}
-                      className="scale-100"
                     />
                   </div>
 
-                  {/* Execution Timer - Shows when bot is running */}
+                  {/* Execution Timer */}
                   {isThisTokenRunning && (
-                    <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950 border-amber-500 dark:border-amber-600`} data-testid="timer-display-bot-card">
-                      <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400 animate-spin" />
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
-                          Бот запущен
+                    <div className={`sm:col-span-2 flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border bg-gradient-to-r from-amber-500/8 to-orange-500/8 border-amber-500/30 dark:from-amber-500/10 dark:to-orange-500/10 dark:border-amber-500/40`} data-testid="timer-display-bot-card">
+                      <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-spin flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-semibold text-amber-700 dark:text-amber-300">
+                          Запущен
                         </p>
-                        <p className="text-lg font-mono font-bold text-amber-600 dark:text-amber-300 mt-1">
-                          ⏱️ {formatExecutionTime(currentElapsedSeconds)}
+                        <p className="text-sm sm:text-base font-mono font-bold text-amber-600 dark:text-amber-300">
+                          {formatExecutionTime(currentElapsedSeconds)}
                         </p>
                       </div>
                     </div>
