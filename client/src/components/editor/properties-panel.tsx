@@ -5184,31 +5184,31 @@ export function PropertiesPanel({
         {/* Command Advanced Settings */}
         {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
           <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="advanced-settings" className="border-border">
-              <AccordionTrigger className="text-xs sm:text-sm font-semibold text-foreground hover:no-underline hover:text-foreground/90 transition-colors duration-200 px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg hover:bg-muted/40 dark:hover:bg-muted/30">
-                <div className="flex items-center gap-2 sm:gap-2.5">
-                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
+            <AccordionItem value="advanced-settings" className="border-border/30">
+              <AccordionTrigger className="text-xs sm:text-sm font-semibold text-foreground hover:no-underline hover:text-primary transition-colors duration-200 px-2 sm:px-3 py-2.5 sm:py-3 rounded-md hover:bg-primary/8 dark:hover:bg-primary/12 group">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-br from-primary/40 to-primary/15 flex items-center justify-center flex-shrink-0 group-hover:shadow-sm group-hover:shadow-primary/30 transition-all duration-200">
+                    <svg className="w-2 h-2 sm:w-3 sm:h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="text-xs sm:text-sm font-semibold text-foreground">
-                    Расширенные настройки
+                  <span className="text-xs sm:text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors duration-200">
+                    Расширенные
+                  </span>
+                  <span className="text-xs sm:text-sm font-semibold text-foreground truncate hidden sm:inline group-hover:text-primary transition-colors duration-200">
+                    настройки
                   </span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="bg-gradient-to-br from-background to-muted/15 dark:from-background dark:to-muted/5 border border-border/50 rounded-lg mt-2 overflow-hidden p-0">
-                <div className="space-y-2 sm:space-y-2.5 p-3 sm:p-4">
+              <AccordionContent className="bg-gradient-to-br from-background to-muted/10 dark:from-background dark:to-muted/5 border border-primary/15 dark:border-primary/25 rounded-md mt-1.5 overflow-hidden p-0">
+                <div className="space-y-1 sm:space-y-1.5 p-2 sm:p-3">
                   {/* Show in Menu Setting */}
-                  <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-primary/5 hover:bg-primary/8 dark:bg-primary/10 dark:hover:bg-primary/15 border border-primary/25 dark:border-primary/35 hover:border-primary/40 dark:hover:border-primary/50 transition-all duration-200">
+                  <div className="group flex items-center justify-between gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-sm hover:rounded-md bg-primary/4 hover:bg-primary/7 dark:bg-primary/8 dark:hover:bg-primary/12 border border-primary/20 dark:border-primary/30 hover:border-primary/35 dark:hover:border-primary/45 transition-all duration-200">
                     <div className="flex-1 min-w-0">
-                      <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-primary transition-colors duration-200">
-                        <i className="fas fa-menu text-primary flex-shrink-0"></i>
-                        <span className="truncate">Показать в меню</span>
+                      <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1 group-hover:text-primary transition-colors duration-200">
+                        <i className="fas fa-list text-primary text-xs flex-shrink-0"></i>
+                        <span className="truncate">Меню</span>
                       </Label>
-                      <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
-                        В меню @BotFather
-                      </div>
                     </div>
                     <Switch
                       checked={selectedNode.data.showInMenu ?? true}
@@ -5218,15 +5218,13 @@ export function PropertiesPanel({
                   </div>
                   
                   {/* Private Only Setting */}
-                  <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-warning/5 hover:bg-warning/8 dark:bg-warning/10 dark:hover:bg-warning/15 border border-warning/25 dark:border-warning/35 hover:border-warning/40 dark:hover:border-warning/50 transition-all duration-200">
+                  <div className="group flex items-center justify-between gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-sm hover:rounded-md bg-warning/4 hover:bg-warning/7 dark:bg-warning/8 dark:hover:bg-warning/12 border border-warning/20 dark:border-warning/30 hover:border-warning/35 dark:hover:border-warning/45 transition-all duration-200">
                     <div className="flex-1 min-w-0">
-                      <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-warning transition-colors duration-200">
-                        <i className="fas fa-lock text-warning flex-shrink-0"></i>
-                        <span className="truncate">Только в приватных чатах</span>
+                      <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1 group-hover:text-warning transition-colors duration-200">
+                        <i className="fas fa-lock text-warning text-xs flex-shrink-0"></i>
+                        <span className="truncate hidden xs:inline">Приватные</span>
+                        <span className="truncate inline xs:hidden">Приват</span>
                       </Label>
-                      <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
-                        Диалог с ботом
-                      </div>
                     </div>
                     <Switch
                       checked={selectedNode.data.isPrivateOnly ?? false}
@@ -5236,15 +5234,13 @@ export function PropertiesPanel({
                   </div>
 
                   {/* Admin Only Setting */}
-                  <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-destructive/5 hover:bg-destructive/8 dark:bg-destructive/10 dark:hover:bg-destructive/15 border border-destructive/25 dark:border-destructive/35 hover:border-destructive/40 dark:hover:border-destructive/50 transition-all duration-200">
+                  <div className="group flex items-center justify-between gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-sm hover:rounded-md bg-destructive/4 hover:bg-destructive/7 dark:bg-destructive/8 dark:hover:bg-destructive/12 border border-destructive/20 dark:border-destructive/30 hover:border-destructive/35 dark:hover:border-destructive/45 transition-all duration-200">
                     <div className="flex-1 min-w-0">
-                      <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-destructive transition-colors duration-200">
-                        <i className="fas fa-shield-halved text-destructive flex-shrink-0"></i>
-                        <span className="truncate">Только администраторы</span>
+                      <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1 group-hover:text-destructive transition-colors duration-200">
+                        <i className="fas fa-crown text-destructive text-xs flex-shrink-0"></i>
+                        <span className="truncate hidden xs:inline">Админы</span>
+                        <span className="truncate inline xs:hidden">Адм</span>
                       </Label>
-                      <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
-                        Доступна только админам
-                      </div>
                     </div>
                     <Switch
                       checked={selectedNode.data.adminOnly ?? false}
@@ -5262,28 +5258,26 @@ export function PropertiesPanel({
 
         {/* Keyboard Advanced Settings */}
         {selectedNode.data.keyboardType === 'reply' && (
-          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-background to-muted/15 dark:from-background dark:to-muted/5 border border-border/50 rounded-lg p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-secondary/30 to-secondary/10 flex items-center justify-center flex-shrink-0">
-                <svg className="w-3 h-3 text-secondary" fill="currentColor" viewBox="0 0 20 20">
+          <div className="space-y-1.5 sm:space-y-2 bg-gradient-to-br from-background to-muted/10 dark:from-background dark:to-muted/5 border border-secondary/15 dark:border-secondary/25 rounded-md p-2 sm:p-3">
+            <div className="flex items-center gap-1.5 sm:gap-2 px-1">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-br from-secondary/40 to-secondary/15 flex items-center justify-center flex-shrink-0">
+                <svg className="w-2 h-2 sm:w-3 sm:h-3 text-secondary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
-              <h3 className="text-xs sm:text-sm font-semibold text-foreground">
-                Настройки клавиатуры
+              <h3 className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                Клавиатура
               </h3>
             </div>
             
-            <div className="space-y-1.5 sm:space-y-2">
-              <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-secondary/5 hover:bg-secondary/8 dark:bg-secondary/10 dark:hover:bg-secondary/15 border border-secondary/25 dark:border-secondary/35 hover:border-secondary/40 dark:hover:border-secondary/50 transition-all duration-200">
+            <div className="space-y-1 sm:space-y-1.5 pt-0.5">
+              <div className="group flex items-center justify-between gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-sm hover:rounded-md bg-secondary/4 hover:bg-secondary/7 dark:bg-secondary/8 dark:hover:bg-secondary/12 border border-secondary/20 dark:border-secondary/30 hover:border-secondary/35 dark:hover:border-secondary/45 transition-all duration-200">
                 <div className="flex-1 min-w-0">
-                  <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-secondary transition-colors duration-200">
-                    <i className="fas fa-hand-paper text-secondary flex-shrink-0"></i>
-                    <span className="truncate">Одноразовая клавиатура</span>
+                  <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1 group-hover:text-secondary transition-colors duration-200">
+                    <i className="fas fa-hand-paper text-secondary text-xs flex-shrink-0"></i>
+                    <span className="truncate hidden xs:inline">Одноразовая</span>
+                    <span className="truncate inline xs:hidden">1-раз</span>
                   </Label>
-                  <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
-                    Скрыть после нажатия
-                  </div>
                 </div>
                 <Switch
                   checked={selectedNode.data.oneTimeKeyboard}
@@ -5292,15 +5286,13 @@ export function PropertiesPanel({
                 />
               </div>
               
-              <div className="group flex items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 rounded-md hover:rounded-lg bg-secondary/5 hover:bg-secondary/8 dark:bg-secondary/10 dark:hover:bg-secondary/15 border border-secondary/25 dark:border-secondary/35 hover:border-secondary/40 dark:hover:border-secondary/50 transition-all duration-200">
+              <div className="group flex items-center justify-between gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-sm hover:rounded-md bg-secondary/4 hover:bg-secondary/7 dark:bg-secondary/8 dark:hover:bg-secondary/12 border border-secondary/20 dark:border-secondary/30 hover:border-secondary/35 dark:hover:border-secondary/45 transition-all duration-200">
                 <div className="flex-1 min-w-0">
-                  <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1.5 group-hover:text-secondary transition-colors duration-200">
-                    <i className="fas fa-expand text-secondary flex-shrink-0"></i>
-                    <span className="truncate">Подогнать размер</span>
+                  <Label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1 group-hover:text-secondary transition-colors duration-200">
+                    <i className="fas fa-up-right-and-down-left-from-center text-secondary text-xs flex-shrink-0"></i>
+                    <span className="truncate hidden xs:inline">Подогнать</span>
+                    <span className="truncate inline xs:hidden">Размер</span>
                   </Label>
-                  <div className="text-xs text-muted-foreground mt-0.5 ml-6 truncate hidden sm:block">
-                    Под содержимое
-                  </div>
                 </div>
                 <Switch
                   checked={selectedNode.data.resizeKeyboard}
