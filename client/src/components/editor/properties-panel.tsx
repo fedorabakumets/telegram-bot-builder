@@ -2590,12 +2590,12 @@ export function PropertiesPanel({
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-2">
 
             {/* Multiple Selection Setting */}
             {selectedNode.data.keyboardType !== 'none' && (
               <>
-                <div className="border-t border-border/20 pt-4"></div>
+                <div className="border-t border-border/20 pt-2"></div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all duration-200 group">
                   <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
                     <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-200/50 dark:bg-blue-900/40 group-hover:bg-blue-300/50 dark:group-hover:bg-blue-800/50 transition-all">
@@ -3021,19 +3021,19 @@ export function PropertiesPanel({
                             <SelectContent>
                               <SelectItem value="normal">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                  <div className="w-2 h-2 bg-blue-500" style={{clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'}}></div>
                                   <span>Обычная кнопка</span>
                                 </div>
                               </SelectItem>
                               <SelectItem value="option">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                  <div className="w-2 h-2 bg-green-500" style={{clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'}}></div>
                                   <span>Опция для выбора</span>
                                 </div>
                               </SelectItem>
                               <SelectItem value="complete">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                                  <div className="w-2 h-2 bg-purple-500" style={{clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'}}></div>
                                   <span>Кнопка завершения</span>
                                 </div>
                               </SelectItem>
