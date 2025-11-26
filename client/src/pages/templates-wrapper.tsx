@@ -263,7 +263,7 @@ export default function TemplatesPageWrapper() {
 
                 {/* Фильтры и сортировка */}
                 <div className="flex flex-col xs:flex-row gap-2 xs:gap-2.5">
-                  <div className="flex-1">
+                  <div className="flex-1 relative z-40">
                     <div className="flex items-center gap-1.5 mb-1.5 xs:hidden">
                       <Filter className="h-3 xs:h-3.5 w-3 xs:w-3.5 text-muted-foreground" />
                       <span className="text-xs font-medium text-muted-foreground">Категория</span>
@@ -275,7 +275,7 @@ export default function TemplatesPageWrapper() {
                           <SelectValue placeholder="Категория" />
                         </div>
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-50">
                         {categories.map((category) => (
                           <SelectItem key={category.value} value={category.value}>
                             {category.label}
@@ -285,7 +285,7 @@ export default function TemplatesPageWrapper() {
                     </Select>
                   </div>
 
-                  <div className="flex-1">
+                  <div className="flex-1 relative z-40">
                     <div className="flex items-center gap-1.5 mb-1.5 xs:hidden">
                       <SortAsc className="h-3 xs:h-3.5 w-3 xs:w-3.5 text-muted-foreground" />
                       <span className="text-xs font-medium text-muted-foreground">Сортировка</span>
@@ -297,7 +297,7 @@ export default function TemplatesPageWrapper() {
                           <SelectValue placeholder="Сортировка" />
                         </div>
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-50">
                         <SelectItem value="popular">Популярные</SelectItem>
                         <SelectItem value="rating">Рейтинг</SelectItem>
                         <SelectItem value="recent">Новые</SelectItem>
