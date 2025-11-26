@@ -2587,19 +2587,26 @@ export function PropertiesPanel({
 
                 {/* Multiple Selection Settings */}
                 {selectedNode.data.allowMultipleSelection && (
-                  <div className="space-y-3 p-3 rounded-lg bg-blue-50/30 dark:bg-blue-950/20 border border-blue-200/30 dark:border-blue-800/30">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-muted-foreground">Переменная для сохранения</Label>
-                      <Input
-                        value={selectedNode.data.multiSelectVariable || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { multiSelectVariable: e.target.value })}
-                        className="text-xs"
-                        placeholder="выбранные_опции"
-                      />
-                      <div className="text-xs text-muted-foreground">
-                        Опции будут через запятую в переменную
+                  <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-teal-50/40 to-cyan-50/30 dark:from-teal-950/20 dark:to-cyan-950/10 border border-teal-200/40 dark:border-teal-800/30 hover:border-teal-300/60 dark:hover:border-teal-700/60 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-all duration-200 group">
+                    <div className="flex items-start gap-2.5 sm:gap-3">
+                      <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-teal-200/50 dark:bg-teal-900/40 group-hover:bg-teal-300/50 dark:group-hover:bg-teal-800/50 transition-all">
+                        <i className="fas fa-tag text-xs sm:text-sm text-teal-600 dark:text-teal-400"></i>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Label className="text-xs sm:text-sm font-semibold text-teal-900 dark:text-teal-100 cursor-pointer block">
+                          Переменная для сохранения
+                        </Label>
+                        <div className="text-xs text-teal-700/70 dark:text-teal-300/70 mt-0.5 leading-snug">
+                          Опции через запятую в переменную
+                        </div>
                       </div>
                     </div>
+                    <Input
+                      value={selectedNode.data.multiSelectVariable || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { multiSelectVariable: e.target.value })}
+                      className="text-xs sm:text-sm mt-2.5 bg-white/70 dark:bg-slate-950/40 border-teal-200/50 dark:border-teal-800/50 focus:border-teal-400 dark:focus:border-teal-600"
+                      placeholder="выбранные_опции"
+                    />
                   </div>
                 )}
               </>
