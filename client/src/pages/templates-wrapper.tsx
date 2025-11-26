@@ -358,17 +358,17 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-2 xs:gap-2.5 sm:gap-3 md:gap-4 lg:gap-5">
       {templates.map((template) => (
-        <Card key={template.id} className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <CardTitle className="text-lg">{template.name}</CardTitle>
+        <Card key={template.id} className="border border-border/50 shadow-sm hover:shadow-md hover:border-border/80 transition-all duration-200 flex flex-col h-full overflow-hidden">
+          <CardHeader className="pb-2 xs:pb-2.5 sm:pb-3">
+            <div className="flex items-start justify-between gap-1.5 xs:gap-2">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-sm xs:text-base sm:text-lg font-bold leading-tight truncate">{template.name}</CardTitle>
+                <div className="flex items-center flex-wrap gap-1 xs:gap-1.5 mt-1.5 xs:mt-2">
                   {template.ownerId === null ? (
                     <>
-                      <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-white text-xs">
                         Официальный
                       </Badge>
                       <Badge variant="outline" className="text-xs">
@@ -376,40 +376,40 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                       </Badge>
                     </>
                   ) : template.authorName ? (
-                    <Badge variant="secondary" title={template.authorName}>
-                      От пользователя @{template.authorName}
+                    <Badge variant="secondary" title={template.authorName} className="text-xs">
+                      От @{template.authorName}
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                      🤝 Сохранено от сообщества
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-xs">
+                      🤝 От сообщества
                     </Badge>
                   )}
                   {showDelete && (
-                    <Badge variant={template.isPublic === 1 ? "outline" : "secondary"} className={template.isPublic === 1 ? "border-green-500 text-green-600 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"}>
-                      {template.isPublic === 1 ? '🌍 Публичный' : '🔒 Приватный'}
+                    <Badge variant={template.isPublic === 1 ? "outline" : "secondary"} className={`text-xs ${template.isPublic === 1 ? "border-green-500 text-green-600 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"}`}>
+                      {template.isPublic === 1 ? '🌍' : '🔒'}
                     </Badge>
                   )}
                 </div>
-                {template.description && (
-                  <CardDescription className="mt-1">{template.description}</CardDescription>
-                )}
               </div>
               {(template.rating ?? 0) > 0 && (
-                <div className="flex items-center gap-1 ml-auto">
-                  <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                  <span className="text-sm font-medium">{(template.rating ?? 0).toFixed(1)}</span>
+                <div className="flex items-center gap-0.5 ml-auto flex-shrink-0 bg-yellow-50 dark:bg-yellow-900/20 px-1.5 xs:px-2 py-1 rounded-md">
+                  <Star className="h-3 xs:h-3.5 w-3 xs:w-3.5 fill-yellow-500 text-yellow-500 flex-shrink-0" />
+                  <span className="text-xs xs:text-sm font-semibold text-yellow-700 dark:text-yellow-300">{(template.rating ?? 0).toFixed(1)}</span>
                 </div>
               )}
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Download className="h-4 w-4" />
-                <span>{template.useCount || 0}</span>
+          <CardContent className="flex-1 flex flex-col gap-2 xs:gap-2.5 p-2 xs:p-2.5 sm:p-3">
+            {template.description && (
+              <CardDescription className="text-xs xs:text-sm line-clamp-2 flex-1">{template.description}</CardDescription>
+            )}
+            <div className="space-y-2 xs:space-y-2.5 mt-auto">
+              <div className="flex items-center gap-1.5 xs:gap-2 text-xs xs:text-sm text-muted-foreground bg-muted/50 rounded-md px-2 py-1.5 xs:py-2">
+                <Download className="h-3 xs:h-3.5 w-3 xs:w-3.5 flex-shrink-0" />
+                <span>{template.useCount || 0} исп.</span>
               </div>
-              <div className="flex gap-2">
-                <Button size="sm" className="flex-1" onClick={() => onUse(template)}>
+              <div className="flex gap-1.5 xs:gap-2">
+                <Button size="sm" className="flex-1 h-8 xs:h-9 text-xs xs:text-sm" onClick={() => onUse(template)}>
                   Использовать
                 </Button>
                 {showDelete && (
@@ -417,9 +417,10 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
                     size="sm" 
                     variant="destructive" 
                     onClick={() => onDelete(template)}
+                    className="h-8 xs:h-9 px-2 xs:px-2.5"
                     data-testid="button-delete-template"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3 xs:h-3.5 w-3 xs:w-3.5" />
                   </Button>
                 )}
               </div>
