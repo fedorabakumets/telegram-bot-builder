@@ -1447,40 +1447,40 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             </div>
 
             {/* Groups Grid - Ultra Modern Responsive */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
               {safeGroups.map((group) => (
                 <Card 
                   key={group.id} 
-                  className="group/card relative flex flex-col bg-gradient-to-b from-card to-card/95 border-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2),0_1px_2px_rgba(0,0,0,0.3)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4),0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300"
+                  className="group/card relative overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-lg dark:hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 flex flex-col"
                 >
                   {/* Animated Gradient Border Top */}
-                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-80 group-hover/card:opacity-100 transition-opacity" />
+                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover/card:opacity-100 transition-opacity" />
                   
                   {/* Card Content */}
-                  <div className="p-4 sm:p-5 flex flex-col flex-1">
-                    {/* Header Section */}
-                    <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="p-3 sm:p-4 flex flex-col flex-1 space-y-3">
+                    {/* Header Section - Responsive Layout */}
+                    <div className="flex items-start gap-2 sm:gap-3">
                       {/* Avatar with Status Ring */}
                       <div className="relative flex-shrink-0">
                         <GroupAvatar 
                           avatarUrl={group.avatarUrl}
                           groupName={group.name}
-                          size={52}
-                          className="ring-[3px] ring-background shadow-md"
+                          size={44}
+                          className="ring-2 ring-background shadow-md"
                         />
-                        {/* Online/Admin indicator */}
+                        {/* Admin indicator */}
                         {group.isAdmin === 1 && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center ring-2 ring-background">
-                            <Shield className="w-2.5 h-2.5 text-white" />
+                          <div className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center ring-2 ring-background">
+                            <Shield className="w-2 h-2 text-white" />
                           </div>
                         )}
                       </div>
                       
-                      {/* Title & Badges */}
-                      <div className="flex-1 min-w-0 pt-0.5">
-                        <div className="flex items-start justify-between gap-2">
+                      {/* Title & Menu */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-1">
                           <h3 
-                            className="font-semibold text-[15px] sm:text-base text-foreground leading-snug line-clamp-2 tracking-tight" 
+                            className="font-bold text-sm sm:text-base text-foreground line-clamp-2 leading-tight" 
                             data-testid={`text-group-name-${group.id}`}
                           >
                             {group.name}
@@ -1492,90 +1492,88 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                                className="h-7 w-7 -mt-0.5 -mr-1 rounded-full opacity-0 group-hover/card:opacity-100 focus:opacity-100 transition-all duration-200"
+                                className="h-7 w-7 -mt-1 -mr-1.5 rounded-lg flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity"
                                 data-testid={`button-menu-${group.id}`}
                               >
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-52 rounded-xl shadow-lg">
+                            <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-lg">
                               <DropdownMenuItem 
                                 onClick={() => getGroupInfoMutation.mutate(group.groupId)}
                                 disabled={getGroupInfoMutation.isPending}
-                                className="gap-2 py-2.5"
+                                className="gap-2 py-2"
                                 data-testid={`button-info-${group.id}`}
                               >
-                                <BarChart3 className="w-4 h-4 text-blue-500" />
-                                <span>Информация о группе</span>
+                                <BarChart3 className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                <span className="text-sm">Информация</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => getMembersCountMutation.mutate(group.groupId)}
                                 disabled={getMembersCountMutation.isPending}
-                                className="gap-2 py-2.5"
+                                className="gap-2 py-2"
                                 data-testid={`button-members-${group.id}`}
                               >
-                                <Users className="w-4 h-4 text-green-500" />
-                                <span>Обновить участников</span>
+                                <Users className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                <span className="text-sm">Участники</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => getAdminStatusMutation.mutate(group.groupId)}
                                 disabled={getAdminStatusMutation.isPending}
-                                className="gap-2 py-2.5"
+                                className="gap-2 py-2"
                                 data-testid={`button-status-${group.id}`}
                               >
-                                <Shield className="w-4 h-4 text-purple-500" />
-                                <span>Проверить права бота</span>
+                                <Shield className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                                <span className="text-sm">Права</span>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
                                 onClick={() => deleteGroupMutation.mutate(group.id)}
                                 disabled={deleteGroupMutation.isPending}
-                                className="gap-2 py-2.5 text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                                className="gap-2 py-2 text-red-600 dark:text-red-400"
                                 data-testid={`button-delete-${group.id}`}
                               >
-                                <X className="w-4 h-4" />
-                                <span>Удалить группу</span>
+                                <X className="w-4 h-4 flex-shrink-0" />
+                                <span className="text-sm">Удалить</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
                         
-                        {/* Status Badges - Improved Responsive Layout */}
-                        <div className="flex flex-wrap items-center gap-2 mt-3">
+                        {/* Status Badges */}
+                        <div className="flex gap-1.5 mt-2 flex-wrap">
                           <Badge 
                             variant={group.isAdmin ? "default" : "secondary"}
-                            className="text-[11px] sm:text-xs font-semibold px-2.5 py-1 gap-1.5 whitespace-nowrap"
+                            className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 gap-1 whitespace-nowrap h-6"
                             data-testid={`badge-admin-${group.id}`}
                           >
                             {group.isAdmin ? (
                               <>
-                                <Crown className="w-3.5 h-3.5 flex-shrink-0" />
-                                <span className="hidden xs:inline">Администратор</span>
-                                <span className="xs:hidden">Админ</span>
+                                <Crown className="w-3 h-3 flex-shrink-0" />
+                                <span className="hidden xs:inline">Админ</span>
                               </>
                             ) : (
                               <>
-                                <Users className="w-3.5 h-3.5 flex-shrink-0" />
-                                <span>Участник</span>
+                                <Users className="w-3 h-3 flex-shrink-0" />
+                                <span className="hidden xs:inline">Участник</span>
                               </>
                             )}
                           </Badge>
                           {group.chatType && (
-                            <Badge variant="outline" className="text-[11px] sm:text-xs font-semibold px-2.5 py-1 gap-1.5 border-border/60 whitespace-nowrap">
+                            <Badge variant="outline" className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 gap-1 whitespace-nowrap h-6 border-border/60">
                               {group.chatType === 'supergroup' ? (
                                 <>
-                                  <TrendingUp className="w-3.5 h-3.5 flex-shrink-0" />
-                                  <span className="hidden sm:inline">Супергруппа</span>
-                                  <span className="sm:hidden">Супер</span>
+                                  <TrendingUp className="w-3 h-3 flex-shrink-0" />
+                                  <span className="hidden sm:inline">Супер</span>
                                 </>
                               ) : group.chatType === 'channel' ? (
                                 <>
-                                  <Volume2 className="w-3.5 h-3.5 flex-shrink-0" />
+                                  <Volume2 className="w-3 h-3 flex-shrink-0" />
                                   <span>Канал</span>
                                 </>
                               ) : (
                                 <>
-                                  <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
+                                  <MessageSquare className="w-3 h-3 flex-shrink-0" />
                                   <span>Группа</span>
                                 </>
                               )}
@@ -1585,36 +1583,32 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </div>
                     </div>
 
-                    {/* Description - Expandable feel */}
+                    {/* Description */}
                     {group.description && (
-                      <p className="text-[13px] sm:text-sm text-muted-foreground line-clamp-2 mt-3 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                         {group.description}
                       </p>
                     )}
 
-                    {/* Stats Grid - Modern Glass Style with Better Responsiveness */}
-                    <div className="grid grid-cols-2 gap-3 sm:gap-3.5 mt-5 mb-4">
-                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50 to-blue-25 dark:from-blue-950/30 dark:to-blue-900/20 border border-blue-100 dark:border-blue-800/40 p-3 sm:p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-blue-500/15 dark:bg-blue-500/25 flex items-center justify-center flex-shrink-0">
-                            <Users className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
-                          </div>
+                    {/* Stats - Compact Responsive */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-lg bg-blue-500/8 border border-blue-500/20 p-2.5 sm:p-3">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
-                            <p className="text-[10px] sm:text-xs text-blue-600/80 dark:text-blue-400/80 font-semibold uppercase tracking-wide">Участники</p>
-                            <p className="text-base sm:text-lg font-bold text-foreground truncate mt-1">
-                              {group.memberCount ? group.memberCount.toLocaleString('ru-RU') : '—'}
+                            <p className="text-[9px] sm:text-xs text-blue-600/70 dark:text-blue-400/70 font-semibold uppercase">УЧА</p>
+                            <p className="text-sm sm:text-base font-bold text-foreground truncate">
+                              {group.memberCount ? (group.memberCount > 999 ? Math.floor(group.memberCount / 1000) + 'K' : group.memberCount) : '—'}
                             </p>
                           </div>
                         </div>
                       </div>
-                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-amber-25 dark:from-amber-950/30 dark:to-amber-900/20 border border-amber-100 dark:border-amber-800/40 p-3 sm:p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-amber-500/15 dark:bg-amber-500/25 flex items-center justify-center flex-shrink-0">
-                            <Clock className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
-                          </div>
+                      <div className="rounded-lg bg-amber-500/8 border border-amber-500/20 p-2.5 sm:p-3">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
-                            <p className="text-[10px] sm:text-xs text-amber-600/80 dark:text-amber-400/80 font-semibold uppercase tracking-wide">Добавлена</p>
-                            <p className="text-base sm:text-lg font-bold text-foreground truncate mt-1">
+                            <p className="text-[9px] sm:text-xs text-amber-600/70 dark:text-amber-400/70 font-semibold uppercase">ДОЕ</p>
+                            <p className="text-sm sm:text-base font-bold text-foreground truncate">
                               {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}) : '—'}
                             </p>
                           </div>
@@ -1622,14 +1616,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </div>
                     </div>
 
-                    {/* Spacer to push buttons to bottom */}
+                    {/* Spacer */}
                     <div className="flex-1" />
 
-                    {/* Action Buttons - Premium Feel with Better Touch Targets */}
-                    <div className="flex gap-2.5 sm:gap-3 pt-2 -mx-4 sm:-mx-5 px-4 sm:px-5 pb-4 sm:pb-5 -mb-4 sm:-mb-5 mt-4 bg-gradient-to-t from-card/80 to-transparent">
+                    {/* Action Buttons - Responsive */}
+                    <div className="flex gap-2 pt-2 -mx-3 sm:-mx-4 px-3 sm:px-4 -mb-3 sm:-mb-4 pb-3 sm:pb-4 bg-gradient-to-t from-card/60 to-transparent">
                       <Button 
                         variant="default" 
-                        className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-semibold shadow-md hover:shadow-lg transition-all"
+                        className="flex-1 h-9 sm:h-10 text-xs sm:text-sm font-semibold gap-1 shadow-sm hover:shadow-md transition-all"
                         onClick={() => {
                           setSelectedGroup(group);
                           setGroupName(group.name);
@@ -1674,20 +1668,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         }}
                         data-testid={`button-settings-${group.id}`}
                       >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Настройки
+                        <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Настройки</span>
+                        <span className="sm:hidden">Наст</span>
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-semibold hover:bg-muted/60 transition-all"
+                        className="flex-1 h-9 sm:h-10 text-xs sm:text-sm font-semibold hover:bg-muted/60 transition-all gap-1"
                         onClick={() => {
                           setSelectedGroupForMessage(group);
                           setShowSendMessage(true);
                         }}
                         data-testid={`button-message-${group.id}`}
                       >
-                        <Send className="w-4 h-4 mr-2" />
-                        Написать
+                        <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="hidden xs:inline">Написать</span>
+                        <span className="xs:hidden">Пис</span>
                       </Button>
                     </div>
                   </div>
