@@ -2763,40 +2763,67 @@ export function PropertiesPanel({
                         </div>
                       </div>
 
-                      {/* Button Type Selection - Disabled for continue button */}
-                      <div className="mb-2">
-                        <Label className="text-xs font-medium text-muted-foreground mb-1">Тип кнопки</Label>
-                        <Select value="complete" disabled>
-                          <SelectTrigger className="text-xs opacity-60">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="complete">Кнопка завершения</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <div className="text-xs text-muted-foreground mt-1">
+                      {/* Button Type Section - Disabled for continue button */}
+                      <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-50/40 to-pink-50/30 dark:from-purple-950/20 dark:to-pink-950/10 border border-purple-200/40 dark:border-purple-800/30 hover:border-purple-300/60 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/30 transition-all duration-200 group">
+                        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
+                          <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-200/50 dark:bg-purple-900/40 group-hover:bg-purple-300/50 dark:group-hover:bg-purple-800/50 transition-all">
+                            <i className="fas fa-flag-checkered text-xs sm:text-sm text-purple-600 dark:text-purple-400"></i>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <Label className="text-xs sm:text-sm font-semibold text-purple-900 dark:text-purple-100 cursor-pointer block">
+                              Тип кнопки
+                            </Label>
+                            <div className="text-xs text-purple-700/70 dark:text-purple-300/70 mt-0.5 leading-snug hidden sm:block">
+                              Автоматическая кнопка завершения
+                            </div>
+                          </div>
+                        </div>
+                        <div className="px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg bg-gradient-to-br from-purple-100/50 to-pink-100/40 dark:from-purple-900/30 dark:to-pink-900/20 border border-purple-300/40 dark:border-purple-700/40">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-purple-500" style={{clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'}}></div>
+                            <span className="text-xs sm:text-sm font-medium text-purple-900 dark:text-purple-100">Кнопка завершения</span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-purple-700/80 dark:text-purple-300/80 leading-relaxed">
                           Сохраняет выбранные опции и переходит к следующему экрану
                         </div>
                       </div>
 
                       {/* Continue Button Target */}
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-muted-foreground">Выберите экран</Label>
+                      <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-indigo-50/40 to-blue-50/30 dark:from-indigo-950/20 dark:to-blue-950/10 border border-indigo-200/40 dark:border-indigo-800/30 hover:border-indigo-300/60 dark:hover:border-indigo-700/60 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 transition-all duration-200 group">
+                        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
+                          <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-indigo-200/50 dark:bg-indigo-900/40 group-hover:bg-indigo-300/50 dark:group-hover:bg-indigo-800/50 transition-all">
+                            <i className="fas fa-right-long text-xs sm:text-sm text-indigo-600 dark:text-indigo-400"></i>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <Label className="text-xs sm:text-sm font-semibold text-indigo-900 dark:text-indigo-100 cursor-pointer block">
+                              Целевой экран
+                            </Label>
+                            <div className="text-xs text-indigo-700/70 dark:text-indigo-300/70 mt-0.5 leading-snug hidden sm:block">
+                              Куда перейти после завершения выбора
+                            </div>
+                          </div>
+                        </div>
                         <Select
                           value={selectedNode.data.continueButtonTarget || 'none'}
                           onValueChange={(value) => onNodeUpdate(selectedNode.id, { continueButtonTarget: value === 'none' ? '' : value })}
                         >
-                          <SelectTrigger className="text-xs">
-                            <SelectValue placeholder="Или введите ID вручную" />
+                          <SelectTrigger className="w-full text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-indigo-300/40 dark:border-indigo-700/40 hover:border-indigo-400/60 dark:hover:border-indigo-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400/30 dark:focus:ring-indigo-600/30 transition-all duration-200 rounded-lg text-indigo-900 dark:text-indigo-50">
+                            <SelectValue placeholder="Выберите экран" />
                           </SelectTrigger>
-                          <SelectContent className="max-h-48 overflow-y-auto">
-                            <SelectItem value="none">Не выбрано</SelectItem>
+                          <SelectContent className="bg-gradient-to-br from-indigo-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-indigo-200/50 dark:border-indigo-800/50 shadow-xl max-h-48 overflow-y-auto">
+                            <SelectItem value="none">
+                              <div className="flex items-center gap-2">
+                                <i className="fas fa-ban text-gray-500 text-xs"></i>
+                                <span>Не выбрано</span>
+                              </div>
+                            </SelectItem>
                             {getAllNodesFromAllSheets
                               .filter(n => n.node.id !== selectedNode.id)
                               .map(({node, sheetName}) => (
                                 <SelectItem key={node.id} value={node.id}>
-                                  <div className="flex items-center space-x-2">
-                                    <i className={`${nodeIcons[node.type]} text-xs`}></i>
+                                  <div className="flex items-center gap-2">
+                                    <i className={`${nodeIcons[node.type]} text-xs text-indigo-600 dark:text-indigo-400`}></i>
                                     <span className="truncate">{node.id}</span>
                                     <span className="text-muted-foreground text-xs">({nodeTypeNames[node.type]})</span>
                                     <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
@@ -2809,8 +2836,8 @@ export function PropertiesPanel({
                         <Input
                           value={selectedNode.data.continueButtonTarget || ''}
                           onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonTarget: e.target.value })}
-                          className="text-xs"
-                          placeholder="Или введите ID вручную"
+                          className="text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-indigo-300/40 dark:border-indigo-700/40 text-indigo-900 dark:text-indigo-50 placeholder:text-indigo-500/50 dark:placeholder:text-indigo-400/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400/30"
+                          placeholder="Или введите ID экрана вручную"
                         />
                       </div>
                     </div>
