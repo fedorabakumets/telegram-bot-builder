@@ -4541,6 +4541,7 @@ export function PropertiesPanel({
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
 
@@ -5059,7 +5060,6 @@ export function PropertiesPanel({
                 </div>
               )}
             </div>
-            )}
           </div>
         )}
 
