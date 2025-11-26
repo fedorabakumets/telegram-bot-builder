@@ -911,6 +911,9 @@ export default function Editor() {
       data: component.defaultData || {}
     };
     
+    // Логируем добавление в историю действий
+    console.log('📝 Добавление узла:', component.type);
+    
     // Добавляем узел на холст
     addNode(newNode);
     
