@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MediaSelector } from '@/components/media/media-selector';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
@@ -3637,70 +3636,44 @@ export function PropertiesPanel({
                                 </div>
                               )}
 
-                              {/* Modern Tabs Layout */}
-                              <Tabs defaultValue="condition" className="w-full">
-                                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-white/30 dark:bg-slate-900/30 p-1 mb-3 rounded-lg border border-purple-200/30 dark:border-purple-800/30">
-                                  <TabsTrigger value="condition" className="text-xs sm:text-sm data-[state=active]:bg-white/80 dark:data-[state=active]:bg-slate-800/80">
-                                    <i className="fas fa-filter mr-1 hidden sm:inline"></i>
-                                    <span className="hidden sm:inline">Условие</span>
-                                    <span className="sm:hidden">Условие</span>
-                                  </TabsTrigger>
-                                  <TabsTrigger value="message" className="text-xs sm:text-sm data-[state=active]:bg-white/80 dark:data-[state=active]:bg-slate-800/80">
-                                    <i className="fas fa-envelope mr-1 hidden sm:inline"></i>
-                                    <span className="hidden sm:inline">Сообщение</span>
-                                    <span className="sm:hidden">Сообщ.</span>
-                                  </TabsTrigger>
-                                  <TabsTrigger value="input" className="text-xs sm:text-sm data-[state=active]:bg-white/80 dark:data-[state=active]:bg-slate-800/80">
-                                    <i className="fas fa-keyboard mr-1 hidden sm:inline"></i>
-                                    <span className="hidden sm:inline">Ввод</span>
-                                    <span className="sm:hidden">Ввод</span>
-                                  </TabsTrigger>
-                                  <TabsTrigger value="buttons" className="text-xs sm:text-sm data-[state=active]:bg-white/80 dark:data-[state=active]:bg-slate-800/80">
-                                    <i className="fas fa-square mr-1 hidden sm:inline"></i>
-                                    <span className="hidden sm:inline">Кнопки</span>
-                                    <span className="sm:hidden">Кноп.</span>
-                                  </TabsTrigger>
-                                </TabsList>
+                              {/* Main Content */}
+                              <div className="px-3 sm:px-4 py-3 space-y-3 sm:space-y-4 border-t border-white/40 dark:border-slate-800/40">
+                              {/* Condition Type */}
+                              <div>
+                                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                  Тип условия
+                                </Label>
+                              <Select
+                                value={condition.condition}
+                                onValueChange={(value) => {
+                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                  const updatedConditions = currentConditions.map(c => 
+                                    c.id === condition.id ? { ...c, condition: value as any } : c
+                                  );
+                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                }}
+                              >
+                                <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-purple-300/40 dark:border-purple-700/40 hover:border-purple-400/60 dark:hover:border-purple-600/60 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/30 dark:focus:ring-purple-600/30 transition-all duration-200 rounded-lg text-purple-900 dark:text-purple-50">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="user_data_exists">Пользователь уже отвечал на вопрос</SelectItem>
+                                  <SelectItem value="user_data_not_exists">Пользователь НЕ отвечал на вопрос</SelectItem>
+                                  <SelectItem value="user_data_equals">Ответ пользователя равен определенному значению</SelectItem>
+                                  <SelectItem value="user_data_contains">Ответ пользователя содержит определенный текст</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
 
-                                {/* Condition Tab */}
-                                <TabsContent value="condition" className="space-y-3 sm:space-y-4 mt-0">
-                                  <div>
-                                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block flex items-center gap-2">
-                                      <i className="fas fa-filter text-purple-600 dark:text-purple-400"></i>
-                                      Тип условия
-                                    </Label>
-                                    <Select
-                                      value={condition.condition}
-                                      onValueChange={(value) => {
-                                        const currentConditions = selectedNode.data.conditionalMessages || [];
-                                        const updatedConditions = currentConditions.map(c => 
-                                          c.id === condition.id ? { ...c, condition: value as any } : c
-                                        );
-                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                      }}
-                                    >
-                                      <SelectTrigger className="text-xs bg-gradient-to-br from-purple-50/80 to-purple-100/60 dark:from-slate-800/60 dark:to-slate-900/60 border border-purple-300/50 dark:border-purple-700/50 hover:border-purple-400/70 dark:hover:border-purple-600/70 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/40 dark:focus:ring-purple-600/40 transition-all duration-200 rounded-lg text-purple-900 dark:text-purple-50">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="user_data_exists">✓ Пользователь уже отвечал</SelectItem>
-                                        <SelectItem value="user_data_not_exists">✗ Пользователь НЕ отвечал</SelectItem>
-                                        <SelectItem value="user_data_equals">= Ответ равен значению</SelectItem>
-                                        <SelectItem value="user_data_contains">⊂ Ответ содержит текст</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-
-                                  {/* Variable Names - Multiple Question Selection */}
-                                  {(condition.condition === 'user_data_exists' || 
-                                    condition.condition === 'user_data_not_exists' || 
-                                    condition.condition === 'user_data_equals' || 
-                                    condition.condition === 'user_data_contains') && (
-                                    <div>
-                                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block flex items-center gap-2">
-                                        <i className="fas fa-question-circle text-purple-600 dark:text-purple-400"></i>
-                                        На какие вопросы?
-                                      </Label>
+                            {/* Variable Names - Multiple Question Selection */}
+                            {(condition.condition === 'user_data_exists' || 
+                              condition.condition === 'user_data_not_exists' || 
+                              condition.condition === 'user_data_equals' || 
+                              condition.condition === 'user_data_contains') && (
+                              <div>
+                                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                  На какие вопросы должен был ответить пользователь?
+                                </Label>
                                 
                                 {/* Multiple Question Selection with Checkboxes */}
                                 {availableQuestions.length > 0 ? (
@@ -3851,171 +3824,195 @@ export function PropertiesPanel({
                                       ))}
                                     </div>
                                   </div>
-                                      )}
-                                    </div>
-                                  )}
+                                )}
+                              </div>
+                            )}
 
-                                  {/* Expected Value */}
-                                  {(condition.condition === 'user_data_equals' || 
-                                    condition.condition === 'user_data_contains') && (
-                                    <div>
-                                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-1 block">
-                                        {condition.condition === 'user_data_equals' 
-                                          ? 'Точный ответ' 
-                                          : 'Содержит текст'}
-                                      </Label>
+                            {/* Expected Value */}
+                            {(condition.condition === 'user_data_equals' || 
+                              condition.condition === 'user_data_contains') && (
+                              <div>
+                                <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                  {condition.condition === 'user_data_equals' 
+                                    ? 'Какой должен быть точный ответ пользователя?' 
+                                    : 'Какой текст должен содержаться в ответе?'}
+                                </Label>
+                                <Input
+                                  value={condition.expectedValue || ''}
+                                  onChange={(e) => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, expectedValue: e.target.value } : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                  className="text-xs"
+                                  placeholder={condition.condition === 'user_data_equals' ? 'Реклама' : 'рекл'}
+                                />
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {condition.condition === 'user_data_equals' 
+                                    ? 'Например: "Реклама", "Мужской", "25"' 
+                                    : 'Например: "рекл" найдет "Реклама", "реклама в интернете"'}
+                                </div>
+                              </div>
+                            )}
+
+
+
+                            {/* Message Text with Formatting */}
+                            <div className="border border-green-200/50 dark:border-green-800/50 rounded-lg p-3 bg-green-50/30 dark:bg-green-950/20">
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className="text-xs font-medium text-green-700 dark:text-green-300">
+                                  Что показать пользователю, если условие выполнится?
+                                </Label>
+                                <Switch
+                                  checked={(condition as any).showCustomMessage ?? false}
+                                  onCheckedChange={(checked) => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, showCustomMessage: checked } as any : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                />
+                              </div>
+                              {(condition as any).showCustomMessage && (
+                                <div className="space-y-2">
+                                  {/* Rich Text Editor for conditional message */}
+                                  <InlineRichEditor
+                                    value={condition.messageText}
+                                    onChange={(value) => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id ? { ...c, messageText: value } : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                    placeholder="Добро пожаловать обратно! Рады вас снова видеть."
+                                    enableMarkdown={condition.formatMode === 'markdown'}
+                                    onMarkdownToggle={(enabled) => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id ? { ...c, formatMode: (enabled ? 'markdown' : 'text') as 'text' | 'markdown' | 'html' } : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                    availableVariables={textVariables}
+                                  />
+                                  
+                                  <div className="text-xs text-green-600 dark:text-green-400">
+                                    Если не указано, будет использоваться основной текст узла
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Text Input Configuration */}
+                            <div className="border border-blue-200/50 dark:border-blue-800/50 rounded-lg p-3 bg-blue-50/30 dark:bg-blue-950/20">
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center">
+                                  <i className="fas fa-keyboard mr-1"></i>
+                                  Ожидание текстового ввода
+                                </Label>
+                                <Switch
+                                  checked={condition.waitForTextInput ?? false}
+                                  onCheckedChange={(checked) => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, waitForTextInput: checked } : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                />
+                              </div>
+                              {condition.waitForTextInput && (
+                                <div className="space-y-2">
+                                  <div className="text-xs text-blue-600 dark:text-blue-400">
+                                    После показа этого сообщения бот будет ждать текстовый ответ от пользователя
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                      Переменная для сохранения ответа (необязательно)
+                                    </Label>
+                                    <Input
+                                      value={condition.textInputVariable || ''}
+                                      onChange={(e) => {
+                                        const currentConditions = selectedNode.data.conditionalMessages || [];
+                                        const updatedConditions = currentConditions.map(c => 
+                                          c.id === condition.id ? { ...c, textInputVariable: e.target.value } : c
+                                        );
+                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                      }}
+                                      className="text-xs"
+                                      placeholder="conditional_answer"
+                                    />
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Если не указать, будет использовано автоматическое имя переменной
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                      Куда перейти после ответа
+                                    </Label>
+                                    <div className="space-y-2">
+                                      <Select
+                                        value={condition.nextNodeAfterInput || 'no-transition'}
+                                        onValueChange={(value) => {
+                                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                                          const updatedConditions = currentConditions.map(c => 
+                                            c.id === condition.id ? { ...c, nextNodeAfterInput: value === 'no-transition' ? undefined : value } : c
+                                          );
+                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                        }}
+                                      >
+                                        <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 focus:border-sky-500 focus:ring-sky-400/30">
+                                          <SelectValue placeholder="⊘ Не выбрано" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+                                          <SelectItem value="no-transition">Не переходить</SelectItem>
+                                          {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
+                                            const nodeContent = 
+                                              node.type === 'command' ? node.data.command :
+                                              node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
+                                              node.type === 'photo' ? ((node.data as any).photoCaption || '').slice(0, 50) :
+                                              node.type === 'keyboard' ? ((node.data as any).keyboardText || '').slice(0, 50) :
+                                              ((node.data as any).label || '').slice(0, 50);
+                                            return (
+                                              <SelectItem key={node.id} value={node.id}>
+                                                <div className="flex items-center gap-2">
+                                                  <span className="text-xs font-mono text-sky-700 dark:text-sky-300">{node.id}</span>
+                                                  {nodeContent && <span className="text-xs text-muted-foreground truncate">{nodeContent}</span>}
+                                                  <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
+                                                </div>
+                                              </SelectItem>
+                                            );
+                                          })}
+                                        </SelectContent>
+                                      </Select>
+                                      
                                       <Input
-                                        value={condition.expectedValue || ''}
+                                        value={condition.nextNodeAfterInput && condition.nextNodeAfterInput !== 'no-transition' ? condition.nextNodeAfterInput : ''}
                                         onChange={(e) => {
                                           const currentConditions = selectedNode.data.conditionalMessages || [];
                                           const updatedConditions = currentConditions.map(c => 
-                                            c.id === condition.id ? { ...c, expectedValue: e.target.value } : c
+                                            c.id === condition.id ? { ...c, nextNodeAfterInput: e.target.value || undefined } : c
                                           );
                                           onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                         }}
-                                        className="text-xs h-8 bg-gradient-to-br from-purple-50/80 to-purple-100/60 dark:from-slate-800/60 dark:to-slate-900/60 border border-purple-300/50 dark:border-purple-700/50"
-                                        placeholder={condition.condition === 'user_data_equals' ? 'Реклама' : 'рекл'}
-                                      />
-                                      <div className="text-xs text-muted-foreground mt-1">
-                                        {condition.condition === 'user_data_equals' 
-                                          ? 'Например: "Реклама", "25"' 
-                                          : 'Например: "рекл"'}
-                                      </div>
-                                    </div>
-                                  )}
-                                </TabsContent>
-
-
-
-                                {/* Message Tab */}
-                                <TabsContent value="message" className="space-y-3 sm:space-y-4 mt-0">
-                                  <div className="border border-green-200/50 dark:border-green-800/50 rounded-lg p-3 bg-green-50/30 dark:bg-green-950/20">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <Label className="text-xs font-medium text-green-700 dark:text-green-300 flex items-center gap-2">
-                                        <i className="fas fa-envelope text-green-600 dark:text-green-400"></i>
-                                        Пользовательское сообщение
-                                      </Label>
-                                      <Switch
-                                        checked={(condition as any).showCustomMessage ?? false}
-                                        onCheckedChange={(checked) => {
-                                          const currentConditions = selectedNode.data.conditionalMessages || [];
-                                          const updatedConditions = currentConditions.map(c => 
-                                            c.id === condition.id ? { ...c, showCustomMessage: checked } as any : c
-                                          );
-                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                        }}
+                                        className="text-xs h-8 bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 text-sky-900 dark:text-sky-50 placeholder:text-sky-500/50"
+                                        placeholder="Или введите ID вручную"
                                       />
                                     </div>
-                                    {(condition as any).showCustomMessage && (
-                                      <div className="space-y-2">
-                                        <InlineRichEditor
-                                          value={condition.messageText}
-                                          onChange={(value) => {
-                                            const currentConditions = selectedNode.data.conditionalMessages || [];
-                                            const updatedConditions = currentConditions.map(c => 
-                                              c.id === condition.id ? { ...c, messageText: value } : c
-                                            );
-                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                          }}
-                                          placeholder="Добро пожаловать обратно!"
-                                          enableMarkdown={condition.formatMode === 'markdown'}
-                                          onMarkdownToggle={(enabled) => {
-                                            const currentConditions = selectedNode.data.conditionalMessages || [];
-                                            const updatedConditions = currentConditions.map(c => 
-                                              c.id === condition.id ? { ...c, formatMode: (enabled ? 'markdown' : 'text') as 'text' | 'markdown' | 'html' } : c
-                                            );
-                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                          }}
-                                          availableVariables={textVariables}
-                                        />
-                                        <div className="text-xs text-green-600 dark:text-green-400">
-                                          Если не указано → основной текст узла
-                                        </div>
-                                      </div>
-                                    )}
+                                    <div className="text-xs text-muted-foreground mt-2">
+                                      Узел, к которому перейти после получения ответа пользователя
+                                    </div>
                                   </div>
-                                </TabsContent>
+                                </div>
+                              )}
+                              </div>
 
-                                {/* Input Tab */}
-                                <TabsContent value="input" className="space-y-3 sm:space-y-4 mt-0">
-                                  <div className="border border-blue-200/50 dark:border-blue-800/50 rounded-lg p-3 bg-blue-50/30 dark:bg-blue-950/20">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                                        <i className="fas fa-keyboard text-blue-600 dark:text-blue-400"></i>
-                                        Ожидать ввод
-                                      </Label>
-                                      <Switch
-                                        checked={condition.waitForTextInput ?? false}
-                                        onCheckedChange={(checked) => {
-                                          const currentConditions = selectedNode.data.conditionalMessages || [];
-                                          const updatedConditions = currentConditions.map(c => 
-                                            c.id === condition.id ? { ...c, waitForTextInput: checked } : c
-                                          );
-                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                        }}
-                                      />
-                                    </div>
-                                    {condition.waitForTextInput && (
-                                      <div className="space-y-3 sm:space-y-4 pt-2 border-t border-blue-200/30 dark:border-blue-800/30">
-                                        <div>
-                                          <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1.5 block">
-                                            Имя переменной (опционально)
-                                          </Label>
-                                          <Input
-                                            value={condition.textInputVariable || ''}
-                                            onChange={(e) => {
-                                              const currentConditions = selectedNode.data.conditionalMessages || [];
-                                              const updatedConditions = currentConditions.map(c => 
-                                                c.id === condition.id ? { ...c, textInputVariable: e.target.value } : c
-                                              );
-                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                            }}
-                                            className="text-xs h-8 bg-gradient-to-br from-blue-50/80 to-blue-100/60 dark:from-slate-800/60 dark:to-slate-900/60 border border-blue-300/50 dark:border-blue-700/50"
-                                            placeholder="answer_text"
-                                          />
-                                        </div>
-                                        <div>
-                                          <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1.5 block">
-                                            Переход после ответа
-                                          </Label>
-                                          <Select
-                                            value={condition.nextNodeAfterInput || 'no-transition'}
-                                            onValueChange={(value) => {
-                                              const currentConditions = selectedNode.data.conditionalMessages || [];
-                                              const updatedConditions = currentConditions.map(c => 
-                                                c.id === condition.id ? { ...c, nextNodeAfterInput: value === 'no-transition' ? undefined : value } : c
-                                              );
-                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                            }}
-                                          >
-                                            <SelectTrigger className="text-xs h-8 bg-gradient-to-br from-blue-50/80 to-blue-100/60 dark:from-slate-800/60 dark:to-slate-900/60 border border-blue-300/50 dark:border-blue-700/50">
-                                              <SelectValue placeholder="⊘ Выберите..." />
-                                            </SelectTrigger>
-                                            <SelectContent className="max-h-48 overflow-y-auto">
-                                              <SelectItem value="no-transition">Не переходить</SelectItem>
-                                              {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
-                                                const nodeContent = 
-                                                  node.type === 'command' ? node.data.command :
-                                                  node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 30) :
-                                                  ((node.data as any).label || '').slice(0, 30);
-                                                return (
-                                                  <SelectItem key={node.id} value={node.id}>
-                                                    <span className="text-xs">{node.id} • {nodeContent}</span>
-                                                  </SelectItem>
-                                                );
-                                              })}
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </TabsContent>
-
-                                {/* Buttons Tab */}
-                                <TabsContent value="buttons" className="space-y-3 sm:space-y-4 mt-0">
-                                  {/* Keyboard Configuration for Conditional Messages */}
-                                  <div className="space-y-3">
+                            {/* Keyboard Configuration for Conditional Messages */}
+                            <div className="space-y-3 border-t border-purple-200/30 dark:border-purple-800/30 pt-4">
                               <div className="flex flex-col gap-3">
                                 <Label className="text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">
                                   <i className="fas fa-keyboard mr-1.5"></i>
@@ -4053,10 +4050,9 @@ export function PropertiesPanel({
                                   </div>
                                 </div>
                               </div>
-                                  </div>
 
-                                  {/* Buttons Configuration */}
-                                  {condition.keyboardType && condition.keyboardType !== 'none' && (
+                              {/* Buttons Configuration */}
+                              {condition.keyboardType && condition.keyboardType !== 'none' && (
                                 <div className="space-y-4">
                                   <div className="border-t border-purple-200/20 dark:border-purple-800/20 pt-4"></div>
                                   
@@ -4378,9 +4374,6 @@ export function PropertiesPanel({
                                   )}
                                 </div>
                               )}
-                            </TabsContent>
-
-                            {/* Empty State */}
                             </div>
                           </div>
                         </div>
