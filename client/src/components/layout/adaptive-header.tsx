@@ -180,7 +180,7 @@ export function AdaptiveHeader({
     <div className="flex flex-col gap-3 sm:gap-4">
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
+        <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:gap-2.5">
           {onToggleHeader && (
             <Button
               size="sm"
@@ -188,7 +188,7 @@ export function AdaptiveHeader({
                 onToggleHeader();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
                 headerVisible 
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40' 
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -196,8 +196,8 @@ export function AdaptiveHeader({
               title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
               data-testid="button-mobile-toggle-header"
             >
-              <NavigationIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-              <span className="hidden sm:inline">Шапка</span>
+              <NavigationIcon className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
+              <span className="sm:hidden">{headerVisible ? 'Скрыть' : 'Показать'} шапку</span>
             </Button>
           )}
           
@@ -208,7 +208,7 @@ export function AdaptiveHeader({
                 onToggleSidebar();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
                 sidebarVisible 
                   ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/40' 
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -216,8 +216,8 @@ export function AdaptiveHeader({
               title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
               data-testid="button-mobile-toggle-sidebar"
             >
-              <Sidebar className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-              <span className="hidden sm:inline">Панель</span>
+              <Sidebar className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
+              <span className="sm:hidden">{sidebarVisible ? 'Скрыть' : 'Показать'} панель</span>
             </Button>
           )}
           
@@ -228,7 +228,7 @@ export function AdaptiveHeader({
                 onToggleCanvas();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
                 canvasVisible 
                   ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/40' 
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -236,8 +236,8 @@ export function AdaptiveHeader({
               title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
               data-testid="button-mobile-toggle-canvas"
             >
-              <Monitor className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-              <span className="hidden sm:inline">Холст</span>
+              <Monitor className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
+              <span className="sm:hidden">{canvasVisible ? 'Скрыть' : 'Показать'} холст</span>
             </Button>
           )}
           
@@ -248,7 +248,7 @@ export function AdaptiveHeader({
                 onToggleProperties();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
                 propertiesVisible 
                   ? 'bg-pink-600 text-white shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/40' 
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -256,8 +256,8 @@ export function AdaptiveHeader({
               title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
               data-testid="button-mobile-toggle-properties"
             >
-              <Sliders className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-              <span className="hidden sm:inline">Св-ва</span>
+              <Sliders className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
+              <span className="sm:hidden">{propertiesVisible ? 'Скрыть' : 'Показать'} свойства</span>
             </Button>
           )}
           
@@ -268,7 +268,7 @@ export function AdaptiveHeader({
                 onToggleCode();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg transition-all font-medium text-xs sm:text-sm ${
+              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
                 codeVisible 
                   ? 'bg-orange-600 text-white shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40' 
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -276,8 +276,8 @@ export function AdaptiveHeader({
               title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
               data-testid="button-mobile-toggle-code"
             >
-              <Code className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-              <span className="hidden sm:inline">Код</span>
+              <Code className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
+              <span className="sm:hidden">{codeVisible ? 'Скрыть' : 'Показать'} код</span>
             </Button>
           )}
         </div>
