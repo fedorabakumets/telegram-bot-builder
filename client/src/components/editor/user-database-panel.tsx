@@ -38,7 +38,8 @@ import {
   Send,
   Bot,
   User,
-  Database
+  Database,
+  ArrowUpDown
 } from 'lucide-react';
 import { UserBotData, BotProject, BotMessage } from '@shared/schema';
 import { DatabaseBackupPanel } from './database-backup-panel';
@@ -521,46 +522,61 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
           {/* Search & Filters */}
           {isDatabaseEnabled && (
-            <div className="flex flex-col gap-2 xs:gap-2.5">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 xs:w-4 h-3.5 xs:h-4 text-muted-foreground" />
+            <div className="flex flex-col gap-2 xs:gap-2.5 sm:gap-3">
+              {/* Search Input */}
+              <div className="relative group">
+                <Search className="absolute left-2.5 xs:left-3 top-1/2 transform -translate-y-1/2 w-3.5 xs:w-4 h-3.5 xs:h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
-                  placeholder="Поиск..."
+                  placeholder="Поиск по имени или ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 xs:pl-9 h-8 xs:h-9 text-xs xs:text-sm"
+                  className="pl-8 xs:pl-9 pr-2.5 xs:pr-3 h-8 xs:h-9 sm:h-10 text-xs xs:text-sm rounded-lg border border-border/50 hover:border-border transition-colors focus:ring-2 focus:ring-primary/20"
                 />
               </div>
-              <div className="flex flex-col xs:flex-row gap-2 xs:gap-2.5">
+
+              {/* Filters Row */}
+              <div className="flex flex-col xs:flex-row gap-2 xs:gap-2.5 sm:gap-3">
+                {/* Status Filter */}
                 <Select value={filterActive?.toString() || 'all'} onValueChange={(value) => setFilterActive(value === 'all' ? null : value === 'true')}>
-                  <SelectTrigger className="h-8 xs:h-9 text-xs xs:text-sm flex-1 xs:flex-none xs:w-28">
-                    <SelectValue placeholder="Статус" />
+                  <SelectTrigger className="h-8 xs:h-9 sm:h-10 text-xs xs:text-sm flex-1 xs:flex-none xs:w-32 sm:w-36 rounded-lg border border-border/50 hover:border-border transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0 hidden xs:block text-muted-foreground" />
+                      <SelectValue placeholder="Статус" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Все</SelectItem>
+                    <SelectItem value="all">Все статусы</SelectItem>
                     <SelectItem value="true">Активные</SelectItem>
                     <SelectItem value="false">Неактивные</SelectItem>
                   </SelectContent>
                 </Select>
 
+                {/* Premium Filter */}
                 <Select value={filterPremium?.toString() || 'all'} onValueChange={(value) => setFilterPremium(value === 'all' ? null : value === 'true')}>
-                  <SelectTrigger className="h-8 xs:h-9 text-xs xs:text-sm flex-1 xs:flex-none xs:w-28">
-                    <SelectValue placeholder="Premium" />
+                  <SelectTrigger className="h-8 xs:h-9 sm:h-10 text-xs xs:text-sm flex-1 xs:flex-none xs:w-32 sm:w-36 rounded-lg border border-border/50 hover:border-border transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Crown className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0 hidden xs:block text-muted-foreground" />
+                      <SelectValue placeholder="Premium" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Все</SelectItem>
-                    <SelectItem value="true">Premium</SelectItem>
+                    <SelectItem value="all">Все пользователи</SelectItem>
+                    <SelectItem value="true">Только Premium</SelectItem>
                     <SelectItem value="false">Обычные</SelectItem>
                   </SelectContent>
                 </Select>
 
+                {/* Sort Filter */}
                 <Select value={`${sortField}-${sortDirection}`} onValueChange={(value) => {
                   const [field, direction] = value.split('-') as [SortField, SortDirection];
                   setSortField(field);
                   setSortDirection(direction);
                 }}>
-                  <SelectTrigger className="h-8 xs:h-9 text-xs xs:text-sm flex-1 xs:flex-none xs:w-auto">
-                    <SelectValue placeholder="Сортировка" />
+                  <SelectTrigger className="h-8 xs:h-9 sm:h-10 text-xs xs:text-sm flex-1 xs:flex-none xs:w-32 sm:w-40 rounded-lg border border-border/50 hover:border-border transition-colors">
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0 hidden xs:block text-muted-foreground" />
+                      <SelectValue placeholder="Сортировка" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="lastInteraction-desc">Последняя активность ↓</SelectItem>
