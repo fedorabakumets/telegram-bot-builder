@@ -411,55 +411,58 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
   return (
     <div className="h-full flex flex-col bg-background min-h-0">
-      <div className="border-b bg-card flex-none">
-        <div className="p-4">
-          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'} mb-4`}>
-            <div>
-              <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold flex items-center gap-2`}>
-                <Users className="w-5 h-5" />
-                База данных пользователей
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Управление пользователями бота "{projectName}"
-              </p>
+      <div className="border-b border-border/50 bg-card flex-none">
+        <div className="p-2.5 xs:p-3 sm:p-4 space-y-2.5 xs:space-y-3 sm:space-y-4">
+          {/* Header */}
+          <div className="flex items-start gap-2 xs:gap-2.5 sm:gap-3">
+            <div className="w-7 xs:w-8 h-7 xs:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/40 dark:to-cyan-900/40">
+              <Users className="w-4 xs:w-4.5 h-4 xs:h-4.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <div className={`flex items-center gap-2 ${isMobile ? 'self-stretch flex-wrap' : ''}`}>
-              {/* Database Toggle */}
-              <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+            <div className="flex-1 min-w-0">
+              <h2 className="text-sm xs:text-base sm:text-lg font-bold text-foreground leading-tight">База данных пользователей</h2>
+              <p className="text-xs xs:text-sm text-muted-foreground mt-0.5 break-words">Управление пользователями "{projectName}"</p>
+            </div>
+          </div>
+
+          {/* Controls Row */}
+          <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-2.5">
+            {/* Database Toggle */}
+            <div className={`flex items-center gap-2 xs:gap-2.5 px-2.5 xs:px-3 py-1.5 xs:py-2 rounded-lg border transition-all flex-1 xs:flex-none ${
+              isDatabaseEnabled 
+                ? 'bg-green-50/50 dark:bg-green-950/30 border-green-300/40 dark:border-green-700/40' 
+                : 'bg-red-50/50 dark:bg-red-950/30 border-red-300/40 dark:border-red-700/40'
+            }`} data-testid="database-toggle-container">
+              <Database className={`w-3.5 xs:w-4 h-3.5 xs:h-4 flex-shrink-0 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
+              <Label htmlFor="db-toggle" className={`text-xs xs:text-sm font-semibold cursor-pointer flex-1 whitespace-nowrap ${
                 isDatabaseEnabled 
-                  ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
-                  : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
-              } ${isMobile ? 'flex-1 min-w-full' : ''}`} data-testid="database-toggle-container">
-                <Database className={`w-5 h-5 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
-                <Label htmlFor="db-toggle" className={`text-base font-bold cursor-pointer flex-1 ${
-                  isDatabaseEnabled 
-                    ? 'text-green-700 dark:text-green-300' 
-                    : 'text-red-700 dark:text-red-300'
-                }`}>
-                  {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
-                </Label>
-                <Switch
-                  id="db-toggle"
-                  data-testid="switch-database-toggle"
-                  checked={isDatabaseEnabled}
-                  onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
-                  disabled={toggleDatabaseMutation.isPending}
-                  className="scale-110"
-                />
-              </div>
-              {isDatabaseEnabled && (
-                <>
-                  <Button onClick={handleRefresh} variant="outline" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
-                    <RefreshCw className="w-4 h-4 mr-1" />
-                    {isMobile ? 'Обновить' : 'Обновить'}
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        {isMobile ? 'Очистить' : 'Очистить базу'}
-                      </Button>
-                    </AlertDialogTrigger>
+                  ? 'text-green-700 dark:text-green-300' 
+                  : 'text-red-700 dark:text-red-300'
+              }`}>
+                {isDatabaseEnabled ? 'Включена' : 'Выключена'}
+              </Label>
+              <Switch
+                id="db-toggle"
+                data-testid="switch-database-toggle"
+                checked={isDatabaseEnabled}
+                onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
+                disabled={toggleDatabaseMutation.isPending}
+                className="scale-75 xs:scale-90"
+              />
+            </div>
+            
+            {isDatabaseEnabled && (
+              <div className="flex gap-1.5 xs:gap-2">
+                <Button onClick={handleRefresh} variant="outline" size="sm" className="h-8 xs:h-9 px-2 xs:px-3 text-xs xs:text-sm flex-1 xs:flex-none">
+                  <RefreshCw className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0" />
+                  <span className="hidden xs:inline ml-1">Обновить</span>
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" className="h-8 xs:h-9 px-2 xs:px-3 text-xs xs:text-sm flex-1 xs:flex-none">
+                      <Trash2 className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0" />
+                      <span className="hidden xs:inline ml-1">Очистить</span>
+                    </Button>
+                  </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Удалить все данные пользователей?</AlertDialogTitle>
@@ -478,95 +481,59 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Stats Cards */}
+          {/* Stats Grid */}
           {isDatabaseEnabled && stats && (
-            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-7'} gap-3 mb-4`}>
-              <Card className="p-3">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-blue-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Всего</p>
-                    <p className="text-sm font-semibold">{stats.totalUsers}</p>
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1.5 xs:gap-2 sm:gap-2.5">
+              {[
+                { icon: Users, label: 'Всего', value: stats.totalUsers, color: 'blue' },
+                { icon: Activity, label: 'Активны', value: stats.activeUsers, color: 'green' },
+                { icon: Shield, label: 'Блокиров.', value: stats.blockedUsers, color: 'red' },
+                { icon: Crown, label: 'Premium', value: stats.premiumUsers, color: 'yellow' },
+                { icon: MessageSquare, label: 'Сообщ.', value: stats.totalInteractions, color: 'purple' },
+                { icon: BarChart3, label: 'Среднее', value: stats.avgInteractionsPerUser, color: 'indigo' },
+                { icon: Edit, label: 'Ответы', value: stats.usersWithResponses || 0, color: 'orange' },
+              ].map((stat, idx) => {
+                const colorClasses = {
+                  blue: 'bg-blue-50/50 dark:bg-blue-900/20 border-blue-200/50 dark:border-blue-800/50 text-blue-600 dark:text-blue-400',
+                  green: 'bg-green-50/50 dark:bg-green-900/20 border-green-200/50 dark:border-green-800/50 text-green-600 dark:text-green-400',
+                  red: 'bg-red-50/50 dark:bg-red-900/20 border-red-200/50 dark:border-red-800/50 text-red-600 dark:text-red-400',
+                  yellow: 'bg-yellow-50/50 dark:bg-yellow-900/20 border-yellow-200/50 dark:border-yellow-800/50 text-yellow-600 dark:text-yellow-400',
+                  purple: 'bg-purple-50/50 dark:bg-purple-900/20 border-purple-200/50 dark:border-purple-800/50 text-purple-600 dark:text-purple-400',
+                  indigo: 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-200/50 dark:border-indigo-800/50 text-indigo-600 dark:text-indigo-400',
+                  orange: 'bg-orange-50/50 dark:bg-orange-900/20 border-orange-200/50 dark:border-orange-800/50 text-orange-600 dark:text-orange-400',
+                };
+                const Icon = stat.icon;
+                const colorClass = colorClasses[stat.color as keyof typeof colorClasses];
+                return (
+                  <div key={idx} className={`${colorClass} border rounded-lg p-1.5 xs:p-2 sm:p-2.5 flex flex-col items-center gap-1 xs:gap-1.5 text-center`}>
+                    <Icon className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0" />
+                    <p className="text-xs xs:text-xs sm:text-sm font-bold text-foreground leading-tight">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground leading-tight hidden xs:block">{stat.label}</p>
                   </div>
-                </div>
-              </Card>
-              <Card className="p-3">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-green-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Активных</p>
-                    <p className="text-sm font-semibold">{stats.activeUsers}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-3">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-red-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Заблокировано</p>
-                    <p className="text-sm font-semibold">{stats.blockedUsers}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-3">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-yellow-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Premium</p>
-                    <p className="text-sm font-semibold">{stats.premiumUsers}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-3">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-purple-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Сообщений</p>
-                    <p className="text-sm font-semibold">{stats.totalInteractions}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-3">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-indigo-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Среднее</p>
-                    <p className="text-sm font-semibold">{stats.avgInteractionsPerUser}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-3">
-                <div className="flex items-center gap-2">
-                  <Edit className="w-4 h-4 text-orange-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">С ответами</p>
-                    <p className="text-sm font-semibold">{stats.usersWithResponses || 0}</p>
-                  </div>
-                </div>
-              </Card>
+                );
+              })}
             </div>
           )}
 
-          {/* Search and Filters */}
+          {/* Search & Filters */}
           {isDatabaseEnabled && (
-            <div className={`flex ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'} gap-3`}>
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="flex flex-col gap-2 xs:gap-2.5">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 xs:w-4 h-3.5 xs:h-4 text-muted-foreground" />
                 <Input
-                  placeholder={isMobile ? "Поиск..." : "Поиск по имени, username или ID..."}
+                  placeholder="Поиск..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 xs:pl-9 h-8 xs:h-9 text-xs xs:text-sm"
                 />
               </div>
-              <div className={`flex gap-2 ${isMobile ? 'grid grid-cols-2' : 'flex'}`}>
+              <div className="flex flex-col xs:flex-row gap-2 xs:gap-2.5">
                 <Select value={filterActive?.toString() || 'all'} onValueChange={(value) => setFilterActive(value === 'all' ? null : value === 'true')}>
-                  <SelectTrigger className={isMobile ? 'w-full' : 'w-32'}>
+                  <SelectTrigger className="h-8 xs:h-9 text-xs xs:text-sm flex-1 xs:flex-none xs:w-28">
                     <SelectValue placeholder="Статус" />
                   </SelectTrigger>
                   <SelectContent>
@@ -577,7 +544,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 </Select>
 
                 <Select value={filterPremium?.toString() || 'all'} onValueChange={(value) => setFilterPremium(value === 'all' ? null : value === 'true')}>
-                  <SelectTrigger className={isMobile ? 'w-full' : 'w-32'}>
+                  <SelectTrigger className="h-8 xs:h-9 text-xs xs:text-sm flex-1 xs:flex-none xs:w-28">
                     <SelectValue placeholder="Premium" />
                   </SelectTrigger>
                   <SelectContent>
@@ -592,7 +559,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   setSortField(field);
                   setSortDirection(direction);
                 }}>
-                  <SelectTrigger className={isMobile ? 'w-full col-span-2' : 'w-40'}>
+                  <SelectTrigger className="h-8 xs:h-9 text-xs xs:text-sm flex-1 xs:flex-none xs:w-auto">
                     <SelectValue placeholder="Сортировка" />
                   </SelectTrigger>
                   <SelectContent>
