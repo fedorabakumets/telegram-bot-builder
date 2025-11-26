@@ -2823,9 +2823,7 @@ export function PropertiesPanel({
                               .map(({node, sheetName}) => (
                                 <SelectItem key={node.id} value={node.id}>
                                   <div className="flex items-center gap-2">
-                                    <i className={`${nodeIcons[node.type]} text-xs text-indigo-600 dark:text-indigo-400`}></i>
-                                    <span className="truncate">{node.id}</span>
-                                    <span className="text-muted-foreground text-xs">({nodeTypeNames[node.type]})</span>
+                                    <span className="text-xs font-mono text-indigo-700 dark:text-indigo-300">{node.id}</span>
                                     <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                   </div>
                                 </SelectItem>
@@ -3909,10 +3907,10 @@ export function PropertiesPanel({
                                           onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                         }}
                                       >
-                                        <SelectTrigger className="text-xs h-8">
+                                        <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 focus:border-sky-500 focus:ring-sky-400/30">
                                           <SelectValue placeholder="Выберите следующий шаг" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                                           <SelectItem value="no-transition">Не переходить</SelectItem>
                                           {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
                                             const nodeContent = 
@@ -3924,9 +3922,8 @@ export function PropertiesPanel({
                                             return (
                                               <SelectItem key={node.id} value={node.id}>
                                                 <div className="flex items-center gap-2">
-                                                  <span className="text-xs text-muted-foreground">{node.type}</span>
-                                                  <span className="text-xs font-mono text-muted-foreground">{node.id}</span>
-                                                  <span>{nodeContent}</span>
+                                                  <span className="text-xs font-mono text-sky-700 dark:text-sky-300">{node.id}</span>
+                                                  {nodeContent && <span className="text-xs text-muted-foreground truncate">{nodeContent}</span>}
                                                   <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                                 </div>
                                               </SelectItem>
@@ -3935,9 +3932,6 @@ export function PropertiesPanel({
                                         </SelectContent>
                                       </Select>
                                       
-                                      <div className="text-xs text-muted-foreground mb-1">
-                                        Или введите ID узла вручную (например: ylObKToWFsIl-opIcowPZ)
-                                      </div>
                                       <Input
                                         value={condition.nextNodeAfterInput && condition.nextNodeAfterInput !== 'no-transition' ? condition.nextNodeAfterInput : ''}
                                         onChange={(e) => {
@@ -3947,8 +3941,8 @@ export function PropertiesPanel({
                                           );
                                           onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                         }}
-                                        className="text-xs h-8"
-                                        placeholder="Введите ID узла вручную"
+                                        className="text-xs h-8 bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 text-sky-900 dark:text-sky-50 placeholder:text-sky-500/50"
+                                        placeholder="Или введите ID вручную"
                                       />
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-2">
@@ -4226,10 +4220,10 @@ export function PropertiesPanel({
                                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                                 }}
                                               >
-                                                <SelectTrigger className="h-9 text-sm">
+                                                <SelectTrigger className="h-9 text-sm bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 focus:border-sky-500 focus:ring-sky-400/30">
                                                   <SelectValue placeholder="Выберите узел" />
                                                 </SelectTrigger>
-                                              <SelectContent>
+                                              <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                                                 {getAllNodesFromAllSheets
                                                   .filter(n => n.node.id !== selectedNode.id)
                                                   .map(({node, sheetName}) => {
@@ -4240,7 +4234,7 @@ export function PropertiesPanel({
                                                     return (
                                                       <SelectItem key={node.id} value={node.id}>
                                                         <div className="flex items-center gap-2">
-                                                          <span>{nodeName}</span>
+                                                          <span className="text-xs font-mono text-sky-700 dark:text-sky-300">{node.id}</span>
                                                           <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                                         </div>
                                                       </SelectItem>
@@ -4690,10 +4684,10 @@ export function PropertiesPanel({
                                       onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
                                     }}
                                   >
-                                    <SelectTrigger className="text-xs border-blue-200 dark:border-blue-700 focus:border-blue-500">
-                                      <SelectValue placeholder="Выберите экран или введите ID вручную" />
+                                    <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 hover:border-blue-400/60 dark:hover:border-blue-600/60 focus:border-blue-500 focus:ring-blue-400/30">
+                                      <SelectValue placeholder="Выберите экран из списка" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-gradient-to-br from-blue-50/95 to-cyan-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                                       {/* Команды */}
                                       {getAllNodesFromAllSheets
                                         ?.filter(n => n.node.id !== selectedNode.id && (n.node.type === 'start' || n.node.type === 'command'))
@@ -4838,10 +4832,10 @@ export function PropertiesPanel({
                           onNodeUpdate(selectedNode.id, { inputTargetNodeId: value === 'no-transition' ? undefined : value });
                         }}
                       >
-                        <SelectTrigger className="text-xs h-8">
+                        <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 hover:border-blue-400/60 dark:hover:border-blue-600/60 focus:border-blue-500 focus:ring-blue-400/30">
                           <SelectValue placeholder="Выберите следующий шаг" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-gradient-to-br from-blue-50/95 to-cyan-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                           <SelectItem value="no-transition">Не переходить</SelectItem>
                           {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
                             const nodeContent = 
@@ -4853,9 +4847,8 @@ export function PropertiesPanel({
                             return (
                               <SelectItem key={node.id} value={node.id}>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-muted-foreground">{node.type}</span>
-                                  <span className="text-xs font-mono text-muted-foreground">{node.id}</span>
-                                  <span>{nodeContent}</span>
+                                  <span className="text-xs font-mono text-blue-700 dark:text-blue-300">{node.id}</span>
+                                  {nodeContent && <span className="text-xs text-muted-foreground truncate">{nodeContent}</span>}
                                   <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                 </div>
                               </SelectItem>
@@ -4864,16 +4857,13 @@ export function PropertiesPanel({
                         </SelectContent>
                       </Select>
                       
-                      <div className="text-xs text-muted-foreground mb-1">
-                        Или введите ID узла вручную (например: ylObKToWFsIl-opIcowPZ)
-                      </div>
                       <Input
                         value={selectedNode.data.inputTargetNodeId && selectedNode.data.inputTargetNodeId !== 'no-transition' ? selectedNode.data.inputTargetNodeId : ''}
                         onChange={(e) => {
                           onNodeUpdate(selectedNode.id, { inputTargetNodeId: e.target.value || undefined });
                         }}
-                        className="text-xs h-8"
-                        placeholder="Введите ID узла вручную"
+                        className="text-xs h-8 bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 text-blue-900 dark:text-blue-50 placeholder:text-blue-500/50"
+                        placeholder="Или введите ID вручную"
                       />
                     </div>
                     <div className="text-xs text-muted-foreground mt-2">
@@ -4925,10 +4915,10 @@ export function PropertiesPanel({
                       value={selectedNode.data.autoTransitionTo || ''}
                       onValueChange={(value) => onNodeUpdate(selectedNode.id, { autoTransitionTo: value })}
                     >
-                      <SelectTrigger className="border-emerald-200 dark:border-emerald-700 focus:border-emerald-500">
+                      <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-emerald-300/40 dark:border-emerald-700/40 hover:border-emerald-400/60 dark:hover:border-emerald-600/60 focus:border-emerald-500 focus:ring-emerald-400/30">
                         <SelectValue placeholder="Выберите узел для перехода" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-gradient-to-br from-emerald-50/95 to-teal-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                         {getAllNodesFromAllSheets
                           .filter(({ node }) => node.id !== selectedNode.id)
                           .map(({ node, sheetId, sheetName }) => {
@@ -4943,8 +4933,9 @@ export function PropertiesPanel({
                             
                             return (
                               <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
-                                <div className="flex items-center gap-1">
-                                  <span>{nodeName} ({node.id})</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-mono text-emerald-700 dark:text-emerald-300">{node.id}</span>
+                                  <span className="text-xs text-muted-foreground">{nodeName}</span>
                                   {sheetId !== currentSheetId && (
                                     <span className="text-xs text-emerald-600 dark:text-emerald-400">({sheetName})</span>
                                   )}
@@ -4955,7 +4946,7 @@ export function PropertiesPanel({
                         
                         {(!getAllNodesFromAllSheets || getAllNodesFromAllSheets.filter(({ node }) => node.id !== selectedNode.id).length === 0) && (
                           <SelectItem value="no-nodes" disabled>
-                            Создайте другие части бота для выбора
+                            Создайте другие части бота
                           </SelectItem>
                         )}
                       </SelectContent>
@@ -4964,8 +4955,8 @@ export function PropertiesPanel({
                     <Input
                       value={selectedNode.data.autoTransitionTo || ''}
                       onChange={(e) => onNodeUpdate(selectedNode.id, { autoTransitionTo: e.target.value })}
-                      className="mt-2 text-xs border-emerald-200 dark:border-emerald-700 focus:border-emerald-500 focus:ring-emerald-200"
-                      placeholder="Или введите ID узла вручную"
+                      className="text-xs bg-white/60 dark:bg-slate-950/60 border border-emerald-300/40 dark:border-emerald-700/40 text-emerald-900 dark:text-emerald-50 placeholder:text-emerald-500/50 focus:border-emerald-500"
+                      placeholder="Или введите ID вручную"
                     />
                     
                     {selectedNode.data.autoTransitionTo && (
