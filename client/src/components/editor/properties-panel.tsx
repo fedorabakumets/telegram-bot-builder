@@ -3266,22 +3266,29 @@ export function PropertiesPanel({
 
                       {/* Skip Data Collection Toggle - Only show when collectUserInput is enabled */}
                       {selectedNode.data.collectUserInput && (
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 mt-3">
-                          <div className="flex-1">
-                            <Label className="text-xs font-medium text-foreground">
-                              Не сохранять ответы
-                            </Label>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Кнопка будет работать только для навигации, без сбора данных пользователя
+                        <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-cyan-50/40 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/40 dark:border-cyan-800/30 hover:border-cyan-300/60 dark:hover:border-cyan-700/60 hover:bg-cyan-50/60 dark:hover:bg-cyan-950/30 transition-all duration-200 group">
+                          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
+                            <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
+                              <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-cyan-200/50 dark:bg-cyan-900/40 group-hover:bg-cyan-300/50 dark:group-hover:bg-cyan-800/50 transition-all">
+                                <i className="fas fa-ban text-xs sm:text-sm text-cyan-600 dark:text-cyan-400"></i>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <Label className="text-xs sm:text-sm font-semibold text-cyan-900 dark:text-cyan-100 cursor-pointer block">
+                                  Не сохранять ответы
+                                </Label>
+                                <div className="text-xs text-cyan-700/70 dark:text-cyan-300/70 mt-0.5 leading-snug hidden sm:block">
+                                  Кнопка работает только для навигации, без сбора данных
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                          <div className="ml-4">
-                            <Switch
-                              checked={button.skipDataCollection ?? false}
-                              onCheckedChange={(checked) => 
-                                onButtonUpdate(selectedNode.id, button.id, { skipDataCollection: checked })
-                              }
-                            />
+                            <div className="flex-shrink-0">
+                              <Switch
+                                checked={button.skipDataCollection ?? false}
+                                onCheckedChange={(checked) => 
+                                  onButtonUpdate(selectedNode.id, button.id, { skipDataCollection: checked })
+                                }
+                              />
+                            </div>
                           </div>
                         </div>
                       )}
