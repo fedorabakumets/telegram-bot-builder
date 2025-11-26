@@ -2855,7 +2855,7 @@ export function PropertiesPanel({
                           <SelectTrigger className="w-full text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-indigo-300/40 dark:border-indigo-700/40 hover:border-indigo-400/60 dark:hover:border-indigo-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400/30 dark:focus:ring-indigo-600/30 transition-all duration-200 rounded-lg text-indigo-900 dark:text-indigo-50">
                             <SelectValue placeholder="⊘ Не выбрано" />
                           </SelectTrigger>
-                          <SelectContent className="bg-gradient-to-br from-indigo-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-indigo-200/50 dark:border-indigo-800/50 shadow-xl max-h-48 overflow-y-auto">
+                          <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-indigo-200/50 dark:border-indigo-800/50 shadow-xl max-h-48 overflow-y-auto">
                             <SelectItem value="none">
                               <div className="flex items-center gap-2">
                                 <span>⊘ Не выбрано</span>
@@ -3105,7 +3105,7 @@ export function PropertiesPanel({
                             <SelectTrigger className="w-full text-xs bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 hover:border-blue-400/60 dark:hover:border-blue-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 dark:focus:ring-blue-600/30 transition-all duration-200 rounded-lg text-blue-900 dark:text-blue-50">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-gradient-to-br from-blue-50/95 to-cyan-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+                            <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                               <SelectItem value="normal">
                                 <div className="flex items-center gap-2">
                                   <div className="w-2 h-2 bg-blue-500" style={{clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'}}></div>
@@ -4730,7 +4730,7 @@ export function PropertiesPanel({
                                     <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 hover:border-blue-400/60 dark:hover:border-blue-600/60 focus:border-blue-500 focus:ring-blue-400/30">
                                       <SelectValue placeholder="⊘ Не выбрано" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-gradient-to-br from-blue-50/95 to-cyan-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+                                    <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                                       {/* Команды */}
                                       {getAllNodesFromAllSheets
                                         ?.filter(n => n.node.id !== selectedNode.id && (n.node.type === 'start' || n.node.type === 'command'))
@@ -4878,7 +4878,7 @@ export function PropertiesPanel({
                         <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 hover:border-blue-400/60 dark:hover:border-blue-600/60 focus:border-blue-500 focus:ring-blue-400/30">
                           <SelectValue placeholder="⊘ Не выбрано" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gradient-to-br from-blue-50/95 to-cyan-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+                        <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                           <SelectItem value="no-transition">Не переходить</SelectItem>
                           {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
                             const nodeContent = 
@@ -4961,7 +4961,7 @@ export function PropertiesPanel({
                       <SelectTrigger className="text-xs bg-white/60 dark:bg-slate-950/60 border border-emerald-300/40 dark:border-emerald-700/40 hover:border-emerald-400/60 dark:hover:border-emerald-600/60 focus:border-emerald-500 focus:ring-emerald-400/30">
                         <SelectValue placeholder="⊘ Не выбрано" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gradient-to-br from-emerald-50/95 to-teal-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+                      <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                         {getAllNodesFromAllSheets
                           .filter(({ node }) => node.id !== selectedNode.id)
                           .map(({ node, sheetId, sheetName }) => {
