@@ -2655,7 +2655,7 @@ export function PropertiesPanel({
             {selectedNode.data.keyboardType !== 'none' && (
               <div className="space-y-3">
                 <div className="border-t border-border/20 pt-4"></div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-50/40 to-amber-50/30 dark:from-orange-950/20 dark:to-amber-950/10 border border-orange-200/40 dark:border-orange-800/30 hover:border-orange-300/60 dark:hover:border-orange-700/60 hover:bg-orange-50/60 dark:hover:bg-orange-950/30 transition-all duration-200 group">
+                <div className="flex flex-col gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-50/40 to-amber-50/30 dark:from-orange-950/20 dark:to-amber-950/10 border border-orange-200/40 dark:border-orange-800/30 hover:border-orange-300/60 dark:hover:border-orange-700/60 hover:bg-orange-50/60 dark:hover:bg-orange-950/30 transition-all duration-200 group">
                   <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
                     <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-orange-200/50 dark:bg-orange-900/40 group-hover:bg-orange-300/50 dark:group-hover:bg-orange-800/50 transition-all">
                       <i className="fas fa-square-plus text-xs sm:text-sm text-orange-600 dark:text-orange-400"></i>
@@ -2669,7 +2669,7 @@ export function PropertiesPanel({
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-1.5 flex-nowrap overflow-x-auto justify-end">
+                  <div className="flex gap-1.5 flex-wrap">
                     <UIButton
                       size="sm"
                       variant="outline"
