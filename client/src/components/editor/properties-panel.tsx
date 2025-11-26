@@ -2440,72 +2440,80 @@ export function PropertiesPanel({
                   </p>
                 </div>
               </div>
+                </div>
+              )}
 
-              {/* File Attachment - скрыто для узлов управления */}
-              {isMessageTextOpen && selectedNode.type !== 'pin_message' && 
-               selectedNode.type !== 'unpin_message' && 
-               selectedNode.type !== 'delete_message' &&
-               selectedNode.type !== 'ban_user' && 
-               selectedNode.type !== 'unban_user' && 
-               selectedNode.type !== 'mute_user' && 
-               selectedNode.type !== 'unmute_user' && 
-               selectedNode.type !== 'kick_user' && 
-               selectedNode.type !== 'promote_user' && 
-               selectedNode.type !== 'demote_user' && 
-               selectedNode.type !== 'admin_rights' && (
-              <div className="space-y-2 sm:space-y-2.5 pt-2 sm:pt-3 border-t border-blue-200/40 dark:border-blue-800/40">
-                <label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                  <i className="fas fa-paperclip text-blue-600 dark:text-blue-400 text-xs sm:text-sm"></i>
-                  Прикрепленный медиафайл
-                </label>
-                <MediaSelector
-                  projectId={projectId}
-                  value={selectedNode.data.imageUrl || selectedNode.data.videoUrl || selectedNode.data.audioUrl || selectedNode.data.documentUrl || ''}
-                  onChange={(url: string, fileName?: string) => {
-                    if (!url) {
-                      onNodeUpdate(selectedNode.id, {
-                        imageUrl: undefined,
-                        videoUrl: undefined,
-                        audioUrl: undefined,
-                        documentUrl: undefined,
-                        documentName: undefined
-                      });
-                      return;
-                    }
-                    
-                    const extension = url.split('.').pop()?.toLowerCase();
-                    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
-                    const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'];
-                    const audioExtensions = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a'];
-                    
-                    const updates: Partial<Node['data']> = {
+            {/* File Attachment Section - скрыто для узлов управления */}
+            {selectedNode.type !== 'pin_message' && 
+             selectedNode.type !== 'unpin_message' && 
+             selectedNode.type !== 'delete_message' &&
+             selectedNode.type !== 'ban_user' && 
+             selectedNode.type !== 'unban_user' && 
+             selectedNode.type !== 'mute_user' && 
+             selectedNode.type !== 'unmute_user' && 
+             selectedNode.type !== 'kick_user' && 
+             selectedNode.type !== 'promote_user' && 
+             selectedNode.type !== 'demote_user' && 
+             selectedNode.type !== 'admin_rights' && (
+            <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-rose-50/40 to-pink-50/20 dark:from-rose-950/30 dark:to-pink-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-rose-200/40 dark:border-rose-800/40 backdrop-blur-sm">
+              {/* Header */}
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/50 dark:to-pink-900/50 flex items-center justify-center flex-shrink-0">
+                  <i className="fas fa-paperclip text-rose-600 dark:text-rose-400 text-sm sm:text-base"></i>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-rose-900 to-pink-800 dark:from-rose-100 dark:to-pink-200 bg-clip-text text-transparent">Прикрепленный медиафайл</h3>
+                  <p className="text-xs sm:text-sm text-rose-700/70 dark:text-rose-300/70 mt-0.5">Картинка, видео, аудио или документ</p>
+                </div>
+              </div>
+
+              {/* Media Selector */}
+              <MediaSelector
+                projectId={projectId}
+                value={selectedNode.data.imageUrl || selectedNode.data.videoUrl || selectedNode.data.audioUrl || selectedNode.data.documentUrl || ''}
+                onChange={(url: string, fileName?: string) => {
+                  if (!url) {
+                    onNodeUpdate(selectedNode.id, {
                       imageUrl: undefined,
                       videoUrl: undefined,
                       audioUrl: undefined,
                       documentUrl: undefined,
                       documentName: undefined
-                    };
-                    
-                    if (imageExtensions.includes(extension || '')) {
-                      updates.imageUrl = url;
-                    } else if (videoExtensions.includes(extension || '')) {
-                      updates.videoUrl = url;
-                    } else if (audioExtensions.includes(extension || '')) {
-                      updates.audioUrl = url;
-                    } else {
-                      updates.documentUrl = url;
-                      updates.documentName = fileName || 'document';
-                    }
-                    
-                    onNodeUpdate(selectedNode.id, updates);
-                  }}
-                  label=""
-                  placeholder="Выберите медиафайл или введите URL"
-                />
-              </div>
-              )}
-                </div>
-              )}
+                    });
+                    return;
+                  }
+                  
+                  const extension = url.split('.').pop()?.toLowerCase();
+                  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+                  const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'];
+                  const audioExtensions = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a'];
+                  
+                  const updates: Partial<Node['data']> = {
+                    imageUrl: undefined,
+                    videoUrl: undefined,
+                    audioUrl: undefined,
+                    documentUrl: undefined,
+                    documentName: undefined
+                  };
+                  
+                  if (imageExtensions.includes(extension || '')) {
+                    updates.imageUrl = url;
+                  } else if (videoExtensions.includes(extension || '')) {
+                    updates.videoUrl = url;
+                  } else if (audioExtensions.includes(extension || '')) {
+                    updates.audioUrl = url;
+                  } else {
+                    updates.documentUrl = url;
+                    updates.documentName = fileName || 'document';
+                  }
+                  
+                  onNodeUpdate(selectedNode.id, updates);
+                }}
+                label=""
+                placeholder="Выберите медиафайл или введите URL"
+              />
+            </div>
+            )}
             </div>
           </div>
         </div>
