@@ -2528,35 +2528,82 @@ export function PropertiesPanel({
               <i className="fas fa-cog text-amber-600 dark:text-amber-400 text-xs"></i>
               Тип клавиатуры
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-              <div className="flex flex-wrap items-start sm:items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200 cursor-pointer group">
-                <i className="fas fa-th text-amber-600 dark:text-amber-400 text-sm sm:text-base flex-shrink-0 mt-0.5 sm:mt-0"></i>
-                <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer min-w-fit">
-                  Inline
-                  <span className="text-xs text-amber-700/70 dark:text-amber-300/70 ml-1 hidden sm:inline">(под сообщением)</span>
-                </label>
-                <Switch
-                  checked={selectedNode.data.keyboardType === 'inline'}
-                  onCheckedChange={(checked) => {
-                    onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
-                  }}
-                  className="ml-auto sm:ml-0"
-                />
-              </div>
-              <div className="flex flex-wrap items-start sm:items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200 cursor-pointer group">
-                <i className="fas fa-comment-dots text-amber-600 dark:text-amber-400 text-sm sm:text-base flex-shrink-0 mt-0.5 sm:mt-0"></i>
-                <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer min-w-fit">
-                  Reply
-                  <span className="text-xs text-amber-700/70 dark:text-amber-300/70 ml-1 hidden sm:inline">(клавиатура)</span>
-                </label>
-                <Switch
-                  checked={selectedNode.data.keyboardType === 'reply'}
-                  onCheckedChange={(checked) => {
-                    onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
-                  }}
-                  className="ml-auto sm:ml-0"
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+              {/* Inline Option */}
+              <button
+                onClick={() => onNodeUpdate(selectedNode.id, { keyboardType: 'inline' })}
+                className={`relative flex flex-col gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-xl transition-all duration-300 group ${
+                  selectedNode.data.keyboardType === 'inline'
+                    ? 'bg-gradient-to-br from-amber-100/80 to-yellow-100/60 dark:from-amber-900/60 dark:to-yellow-900/40 border-2 border-amber-400 dark:border-amber-600 shadow-lg shadow-amber-200/50 dark:shadow-amber-900/30'
+                    : 'bg-white/40 dark:bg-slate-950/20 border-2 border-amber-200/40 dark:border-amber-800/30 hover:border-amber-300/70 dark:hover:border-amber-700/60 hover:bg-white/60 dark:hover:bg-slate-900/40'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2.5">
+                    <div className={`w-7 sm:w-8 h-7 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                      selectedNode.data.keyboardType === 'inline'
+                        ? 'bg-amber-400 dark:bg-amber-600 shadow-md'
+                        : 'bg-amber-200/50 dark:bg-amber-900/40 group-hover:bg-amber-300/50 dark:group-hover:bg-amber-800/50'
+                    }`}>
+                      <i className={`fas fa-th text-sm ${
+                        selectedNode.data.keyboardType === 'inline'
+                          ? 'text-white'
+                          : 'text-amber-600 dark:text-amber-400'
+                      }`}></i>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-100">Inline</div>
+                      <div className="text-xs text-amber-700/70 dark:text-amber-300/70">Под сообщением</div>
+                    </div>
+                  </div>
+                  {selectedNode.data.keyboardType === 'inline' && (
+                    <div className="w-5 h-5 rounded-full bg-amber-500 dark:bg-amber-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <i className="fas fa-check text-white text-xs"></i>
+                    </div>
+                  )}
+                </div>
+                <div className="text-xs text-amber-700 dark:text-amber-300 text-left leading-relaxed">
+                  Кнопки размещаются под сообщением, без обновления текста
+                </div>
+              </button>
+
+              {/* Reply Option */}
+              <button
+                onClick={() => onNodeUpdate(selectedNode.id, { keyboardType: 'reply' })}
+                className={`relative flex flex-col gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-xl transition-all duration-300 group ${
+                  selectedNode.data.keyboardType === 'reply'
+                    ? 'bg-gradient-to-br from-amber-100/80 to-yellow-100/60 dark:from-amber-900/60 dark:to-yellow-900/40 border-2 border-amber-400 dark:border-amber-600 shadow-lg shadow-amber-200/50 dark:shadow-amber-900/30'
+                    : 'bg-white/40 dark:bg-slate-950/20 border-2 border-amber-200/40 dark:border-amber-800/30 hover:border-amber-300/70 dark:hover:border-amber-700/60 hover:bg-white/60 dark:hover:bg-slate-900/40'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2.5">
+                    <div className={`w-7 sm:w-8 h-7 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                      selectedNode.data.keyboardType === 'reply'
+                        ? 'bg-amber-400 dark:bg-amber-600 shadow-md'
+                        : 'bg-amber-200/50 dark:bg-amber-900/40 group-hover:bg-amber-300/50 dark:group-hover:bg-amber-800/50'
+                    }`}>
+                      <i className={`fas fa-comment-dots text-sm ${
+                        selectedNode.data.keyboardType === 'reply'
+                          ? 'text-white'
+                          : 'text-amber-600 dark:text-amber-400'
+                      }`}></i>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-100">Reply</div>
+                      <div className="text-xs text-amber-700/70 dark:text-amber-300/70">Системная клавиатура</div>
+                    </div>
+                  </div>
+                  {selectedNode.data.keyboardType === 'reply' && (
+                    <div className="w-5 h-5 rounded-full bg-amber-500 dark:bg-amber-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <i className="fas fa-check text-white text-xs"></i>
+                    </div>
+                  )}
+                </div>
+                <div className="text-xs text-amber-700 dark:text-amber-300 text-left leading-relaxed">
+                  Системная клавиатура, обновляется после каждого выбора
+                </div>
+              </button>
             </div>
           </div>
 
