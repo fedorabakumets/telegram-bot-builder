@@ -378,6 +378,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     const touch = e.touches[0];
     if (!touch || !onMove) return;
     
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Вычисляем расстояние от начальной точки касания
     const deltaX = touch.clientX - touchStartPos.x;
     const deltaY = touch.clientY - touchStartPos.y;
@@ -387,82 +390,59 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     if (distance > 10 && !isTouchDragging) {
       setIsTouchDragging(true);
       setTouchMoved(true);
-      // Уведомляем глобальное состояние о начале перетаскивания
       if (setIsNodeBeingDragged) {
         setIsNodeBeingDragged(true);
       }
     }
     
-    // Всегда предотвращаем всплытие при движении по узлу, даже если еще не началось перетаскивание
-    e.preventDefault();
-    e.stopPropagation(); // Останавливаем всплытие, чтобы не конфликтовать с панорамированием холста
-    
     if (!isTouchDragging) return;
     
-    // Находим канвас (родительский элемент трансформируемого контейнера)
+    // Быстрая перерисовка только позиции - без обновления других стилей
     const transformedContainer = nodeRef.current?.parentElement;
     const canvas = transformedContainer?.parentElement;
     
-    if (canvas && transformedContainer) {
-      const canvasRect = canvas.getBoundingClientRect();
-      
-      // Получаем экранные координаты touch относительно канваса
-      const screenX = touch.clientX - canvasRect.left;
-      const screenY = touch.clientY - canvasRect.top;
-      
-      // Преобразуем экранные координаты в координаты канваса с учетом зума и панорамирования
-      const zoomFactor = zoom / 100;
-      const canvasX = (screenX - pan.x) / zoomFactor - touchOffset.x;
-      const canvasY = (screenY - pan.y) / zoomFactor - touchOffset.y;
-      
-      // Привязка к сетке (20px grid в канвасных координатах)
-      const gridSize = 20;
-      const snappedX = Math.round(canvasX / gridSize) * gridSize;
-      const snappedY = Math.round(canvasY / gridSize) * gridSize;
-      
-      // Ограничиваем позицию в пределах canvas с отступами (в канвасных координатах)
-      const minX = 20;
-      const minY = 20;
-      const maxX = Math.max(minX, (canvas.clientWidth / zoomFactor) - 340);
-      const maxY = Math.max(minY, Math.min(snappedY, (canvas.clientHeight / zoomFactor) - 220));
-      
-      const boundedX = Math.max(minX, Math.min(snappedX, maxX));
-      const boundedY = Math.max(minY, Math.min(snappedY, maxY));
-      
-      // Используем requestAnimationFrame для оптимизации на мобильных
-      if (nodeRef.current) {
-        nodeRef.current.style.pointerEvents = 'none';
-      }
-      
-      onMove({ x: boundedX, y: boundedY });
-    }
+    if (!canvas || !transformedContainer) return;
+    
+    const canvasRect = canvas.getBoundingClientRect();
+    const screenX = touch.clientX - canvasRect.left;
+    const screenY = touch.clientY - canvasRect.top;
+    
+    const zoomFactor = zoom / 100;
+    const canvasX = (screenX - pan.x) / zoomFactor - touchOffset.x;
+    const canvasY = (screenY - pan.y) / zoomFactor - touchOffset.y;
+    
+    const gridSize = 20;
+    const snappedX = Math.round(canvasX / gridSize) * gridSize;
+    const snappedY = Math.round(canvasY / gridSize) * gridSize;
+    
+    const minX = 20;
+    const minY = 20;
+    const maxX = Math.max(minX, (canvas.clientWidth / zoomFactor) - 340);
+    const maxY = Math.max(minY, (canvas.clientHeight / zoomFactor) - 220);
+    
+    const boundedX = Math.max(minX, Math.min(snappedX, maxX));
+    const boundedY = Math.max(minY, Math.min(snappedY, maxY));
+    
+    onMove({ x: boundedX, y: boundedY });
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Останавливаем всплытие
-    
-    // Восстанавливаем pointer-events
-    if (nodeRef.current) {
-      nodeRef.current.style.pointerEvents = 'auto';
-    }
+    e.stopPropagation();
     
     const touchEndTime = Date.now();
     const touchDuration = touchEndTime - touchStartTime;
     
-    // Если это было короткое касание (менее 300ms) и не было движения, обрабатываем как клик
     if (touchDuration < 300 && !touchMoved && onClick) {
       onClick();
     }
     
-    // Логируем перемещение только если узел реально перемещался
     if (isTouchDragging && touchMoved && onMoveEnd) {
       onMoveEnd();
     }
     
     setIsTouchDragging(false);
     setTouchMoved(false);
-    // Уведомляем глобальное состояние об окончании перетаскивания
     if (setIsNodeBeingDragged) {
       setIsNodeBeingDragged(false);
     }
@@ -523,10 +503,10 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       ref={nodeRef}
       data-canvas-node="true"
       className={cn(
-        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 relative select-none group",
-        isSelected ? "border-blue-500 ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10" : "border-gray-200 dark:border-slate-700",
-        isDragActive ? "shadow-3xl cursor-grabbing z-50 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "hover:shadow-2xl hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-300",
-        onMove ? "cursor-grab hover:cursor-grab" : "cursor-pointer"
+        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl border-2 p-6 w-80 relative select-none group",
+        isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-shadow duration-300",
+        isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
+        onMove ? "cursor-grab" : "cursor-pointer"
       )}
       onClick={!isDragging ? onClick : undefined}
       onMouseDown={handleMouseDown}
@@ -537,10 +517,11 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         position: 'absolute',
         left: node.position.x,
         top: node.position.y,
-        transform: isDragActive ? 'translate3d(0, 0, 0) rotate(2deg)' : 'translate3d(0, 0, 0)',
+        transform: isDragActive ? 'translate3d(0, 0, 0)' : 'translate3d(0, 0, 0)',
         willChange: isDragActive ? 'transform' : 'auto',
         zIndex: isDragActive ? 1000 : isSelected ? 100 : 10,
-        transition: isDragActive ? 'none' : undefined,
+        transition: isDragActive ? 'none' : 'box-shadow 0.2s ease',
+        contain: isDragActive ? 'layout style paint' : 'auto',
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden' as any
       }}
