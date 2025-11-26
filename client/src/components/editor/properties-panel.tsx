@@ -2474,9 +2474,20 @@ export function PropertiesPanel({
 
         {/* Synonyms - для всех узлов кроме управления контентом и управления пользователями */}
         {!selectedNode.type.includes('management') && !['pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights'].includes(selectedNode.type) && (
-          <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Синонимы</h3>
-            <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-purple-50/40 to-pink-50/20 dark:from-purple-950/30 dark:to-pink-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-purple-200/40 dark:border-purple-800/40 backdrop-blur-sm">
+            {/* Header */}
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 flex items-center justify-center flex-shrink-0">
+                <i className="fas fa-tags text-purple-600 dark:text-purple-400 text-sm sm:text-base"></i>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-purple-900 to-pink-800 dark:from-purple-100 dark:to-pink-200 bg-clip-text text-transparent">Синонимы команды</h3>
+                <p className="text-xs sm:text-sm text-purple-700/70 dark:text-purple-300/70 mt-0.5">Альтернативные фразы для срабатывания</p>
+              </div>
+            </div>
+
+            {/* Editor */}
+            <div className="space-y-2 sm:space-y-2.5">
               <SynonymEditor
                 synonyms={selectedNode.data.synonyms || []}
                 onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
@@ -2486,6 +2497,12 @@ export function PropertiesPanel({
                 allNodesFromAllSheets={getAllNodesFromAllSheets}
                 currentNodeId={selectedNode.id}
               />
+              <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200/50 dark:border-purple-800/40">
+                <i className="fas fa-lightbulb text-purple-600 dark:text-purple-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
+                <p className="text-xs sm:text-sm text-purple-700 dark:text-purple-300 leading-relaxed">
+                  Введите синонимы через запятую или нажимайте Enter для добавления каждого синонима отдельно
+                </p>
+              </div>
             </div>
           </div>
         )}
