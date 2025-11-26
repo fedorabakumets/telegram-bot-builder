@@ -3441,25 +3441,13 @@ export function PropertiesPanel({
                             <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-sky-200/50 dark:border-sky-800/50 shadow-xl max-h-48 overflow-y-auto">
                               {getAllNodesFromAllSheets
                                 .filter(n => n.node.id !== selectedNode.id)
-                                .map(({node, sheetName}) => {
-                                  const nodeContent = 
-                                    node.type === 'start' ? node.data.command :
-                                    node.type === 'command' ? node.data.command :
-                                    node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
-                                    node.type === 'photo' ? ((node.data as any).photoCaption || '').slice(0, 50) :
-                                    node.type === 'keyboard' ? ((node.data as any).keyboardText || '').slice(0, 50) :
-                                    '';
-                                  
-                                  return (
-                                    <SelectItem key={node.id} value={node.id}>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs font-mono text-sky-700 dark:text-sky-300">{node.id}</span>
-                                        {nodeContent && <span className="text-xs text-muted-foreground truncate">{nodeContent}</span>}
-                                        <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
-                                      </div>
-                                    </SelectItem>
-                                  );
-                                })}
+                                .map(({node, sheetName}) => (
+                                  <SelectItem key={node.id} value={node.id}>
+                                    <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
+                                      {formatNodeDisplayGlobal(node, sheetName)}
+                                    </span>
+                                  </SelectItem>
+                                ))}
                               {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).length === 0 && (
                                 <SelectItem value="no-nodes" disabled>
                                   <div className="flex items-center gap-2 text-muted-foreground">
@@ -4297,20 +4285,13 @@ export function PropertiesPanel({
                                               <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                                                 {getAllNodesFromAllSheets
                                                   .filter(n => n.node.id !== selectedNode.id)
-                                                  .map(({node, sheetName}) => {
-                                                    const nodeName = 
-                                                      node.type === 'start' ? node.data.command :
-                                                      node.type === 'command' ? node.data.command :
-                                                      node.data.messageText?.slice(0, 30) + '...' || `${node.type} ${node.id}`;
-                                                    return (
-                                                      <SelectItem key={node.id} value={node.id}>
-                                                        <div className="flex items-center gap-2">
-                                                          <span className="text-xs font-mono text-sky-700 dark:text-sky-300">{node.id}</span>
-                                                          <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
-                                                        </div>
-                                                      </SelectItem>
-                                                    );
-                                                  })}
+                                                  .map(({node, sheetName}) => (
+                                                    <SelectItem key={node.id} value={node.id}>
+                                                      <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
+                                                        {formatNodeDisplayGlobal(node, sheetName)}
+                                                      </span>
+                                                    </SelectItem>
+                                                  ))}
                                               </SelectContent>
                                             </Select>
                                           )}
