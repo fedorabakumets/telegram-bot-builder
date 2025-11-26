@@ -5139,14 +5139,6 @@ export function PropertiesPanel({
 
             {isAutoTransitionOpen && (
               <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl p-3 sm:p-4 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                {/* Info Block */}
-                <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-emerald-100/40 dark:bg-emerald-900/20 border border-emerald-200/40 dark:border-emerald-800/40">
-                  <i className="fas fa-lightbulb text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
-                  <p className="text-xs sm:text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                    После отправки сообщения бот автоматически перейдёт к следующему узлу без ожидания действия пользователя.
-                  </p>
-                </div>
-
                 {/* Enable Toggle */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-emerald-50/60 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-200/40 dark:border-emerald-700/40 hover:border-emerald-300/60 dark:hover:border-emerald-600/60 hover:shadow-sm transition-all duration-200">
                   <div className="flex-1 min-w-0">
