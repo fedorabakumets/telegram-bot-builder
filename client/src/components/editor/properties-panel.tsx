@@ -249,7 +249,6 @@ export function PropertiesPanel({
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
 
   // Используем глобальную функцию форматирования узла
-  const formatNodeDisplay = formatNodeDisplayGlobal;
 
   // Функция для получения данных по умолчанию для каждого типа узла
   const getDefaultDataForType = (type: Node['type']) => {
@@ -2895,7 +2894,7 @@ export function PropertiesPanel({
                               .map(({node, sheetName}) => (
                                 <SelectItem key={node.id} value={node.id}>
                                   <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
-                                    {formatNodeDisplay(node, sheetName)}
+                                    {formatNodeDisplayGlobal(node, sheetName)}
                                   </span>
                                 </SelectItem>
                               ))
@@ -4746,7 +4745,7 @@ export function PropertiesPanel({
                                         .map(({node, sheetName}) => (
                                           <SelectItem key={node.id} value={node.id}>
                                             <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
-                                              {formatNodeDisplay(node, sheetName)}
+                                              {formatNodeDisplayGlobal(node, sheetName)}
                                             </span>
                                           </SelectItem>
                                         ))}
@@ -4890,7 +4889,7 @@ export function PropertiesPanel({
                           {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => (
                             <SelectItem key={node.id} value={node.id}>
                               <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
-                                {formatNodeDisplay(node, sheetName)}
+                                {formatNodeDisplayGlobal(node, sheetName)}
                               </span>
                             </SelectItem>
                           ))}
@@ -4973,7 +4972,7 @@ export function PropertiesPanel({
                             return (
                               <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
                                 <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
-                                  {formatNodeDisplay(node, sheetName)}
+                                  {formatNodeDisplayGlobal(node, sheetName)}
                                 </span>
                               </SelectItem>
                             );
