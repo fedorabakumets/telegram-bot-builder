@@ -1049,7 +1049,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               </Table>
               </div>
             )}
-            </ScrollArea>
           </TabsContent>
           
           <TabsContent value="backup" className="flex-1 overflow-hidden">
@@ -1062,6 +1061,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
         </Tabs>
         </div>
       )}
+      </div>
+    </ScrollArea>
 
       {/* User Details Dialog */}
       <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
