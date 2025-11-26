@@ -3645,8 +3645,8 @@ export function PropertiesPanel({
                                   <i className="fas fa-code-branch text-purple-600 dark:text-purple-400"></i>
                                   <span>Тип условия</span>
                                 </Label>
-                                <div className="text-xs text-muted-foreground leading-relaxed">
-                                  Выберите, как проверять ответы пользователя
+                                <div className="text-xs sm:text-sm text-muted-foreground leading-relaxed bg-purple-50/50 dark:bg-purple-950/20 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg border border-purple-200/40 dark:border-purple-800/40">
+                                  Выберите правило для проверки ответов пользователя
                                 </div>
                               <Select
                                 value={condition.condition}
@@ -3767,9 +3767,10 @@ export function PropertiesPanel({
                                     
                                     {/* Logic Operator Selection for Multiple Questions */}
                                     {(condition.variableNames?.length || 0) > 1 && (
-                                      <div>
-                                        <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                          Логика проверки нескольких вопросов:
+                                      <div className="space-y-2 sm:space-y-2.5">
+                                        <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                                          <i className="fas fa-shuffle text-amber-600 dark:text-amber-400"></i>
+                                          <span>Логика для нескольких вопросов</span>
                                         </Label>
                                         <Select
                                           value={condition.logicOperator || 'AND'}
@@ -3781,28 +3782,28 @@ export function PropertiesPanel({
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         >
-                                          <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 bg-gradient-to-br from-white/70 to-white/60 dark:from-slate-900/70 dark:to-slate-950/80 border border-purple-300/50 dark:border-purple-700/50 hover:border-purple-400/70 dark:hover:border-purple-600/70 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-2 focus:ring-purple-400/40 dark:focus:ring-purple-600/40 transition-all duration-300 rounded-lg text-purple-900 dark:text-purple-100 font-medium shadow-sm hover:shadow-md">
+                                          <SelectTrigger className="text-xs sm:text-sm h-10 sm:h-11 bg-gradient-to-br from-amber-50/60 to-white/60 dark:from-amber-950/30 dark:to-slate-950/70 border border-amber-300/60 dark:border-amber-700/60 hover:border-amber-400/80 dark:hover:border-amber-600/80 focus:border-amber-500 dark:focus:border-amber-500 focus:ring-2 focus:ring-amber-400/50 dark:focus:ring-amber-600/50 transition-all duration-300 rounded-xl text-amber-900 dark:text-amber-100 font-medium shadow-sm hover:shadow-md">
                                             <SelectValue placeholder="Выберите логику..." />
                                           </SelectTrigger>
-                                          <SelectContent className="bg-gradient-to-br from-slate-50 to-slate-50 dark:from-slate-900 dark:to-slate-900">
+                                          <SelectContent className="bg-gradient-to-b from-slate-50 to-slate-50 dark:from-slate-900 dark:to-slate-900 rounded-xl">
                                             <SelectItem value="AND" className="text-sm">
                                               <div className="flex items-center gap-2">
-                                                <i className="fas fa-check-double text-green-600"></i>
-                                                <span>И (AND) - все вопросы</span>
+                                                <span className="text-green-600">∧</span>
+                                                <span>И (AND) - ВСЕ вопросы должны быть выполнены</span>
                                               </div>
                                             </SelectItem>
                                             <SelectItem value="OR" className="text-sm">
                                               <div className="flex items-center gap-2">
-                                                <i className="fas fa-code-branch text-blue-600"></i>
-                                                <span>ИЛИ (OR) - любой вопрос</span>
+                                                <span className="text-blue-600">∨</span>
+                                                <span>ИЛИ (OR) - ЛЮБОЙ из вопросов годится</span>
                                               </div>
                                             </SelectItem>
                                           </SelectContent>
                                         </Select>
-                                        <div className="text-xs text-muted-foreground mt-1">
+                                        <div className="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/40 rounded-lg px-3 py-2 text-xs sm:text-sm text-amber-700 dark:text-amber-300">
                                           {condition.logicOperator === 'AND' 
-                                            ? 'Пользователь должен ответить на ВСЕ выбранные вопросы'
-                                            : 'Пользователь должен ответить на ЛЮБОЙ из выбранных вопросов'
+                                            ? '✓ Пользователь должен ответить на ВСЕ выбранные вопросы'
+                                            : '→ Пользователь может ответить на ЛЮБОЙ из выбранных вопросов'
                                           }
                                         </div>
                                       </div>
@@ -3872,11 +3873,12 @@ export function PropertiesPanel({
                             {/* Expected Value */}
                             {(condition.condition === 'user_data_equals' || 
                               condition.condition === 'user_data_contains') && (
-                              <div>
-                                <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                  {condition.condition === 'user_data_equals' 
-                                    ? 'Какой должен быть точный ответ пользователя?' 
-                                    : 'Какой текст должен содержаться в ответе?'}
+                              <div className="space-y-2 sm:space-y-2.5 bg-gradient-to-br from-orange-50/40 to-yellow-50/30 dark:from-orange-950/15 dark:to-yellow-950/10 border border-orange-200/40 dark:border-orange-800/40 rounded-xl p-3 sm:p-4">
+                                <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                                  <i className="fas fa-target text-orange-600 dark:text-orange-400"></i>
+                                  <span>{condition.condition === 'user_data_equals' 
+                                    ? 'Точное значение ответа' 
+                                    : 'Текст в ответе'}</span>
                                 </Label>
                                 <Input
                                   value={condition.expectedValue || ''}
@@ -3887,13 +3889,13 @@ export function PropertiesPanel({
                                     );
                                     onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                   }}
-                                  className="text-xs"
-                                  placeholder={condition.condition === 'user_data_equals' ? 'Реклама' : 'рекл'}
+                                  className="text-xs sm:text-sm h-10 sm:h-11 bg-white/70 dark:bg-slate-950/70 border border-orange-300/50 dark:border-orange-700/50 focus:border-orange-500 rounded-lg"
+                                  placeholder={condition.condition === 'user_data_equals' ? 'Точное значение...' : 'Искомый текст...'}
                                 />
-                                <div className="text-xs text-muted-foreground mt-1">
+                                <div className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                                   {condition.condition === 'user_data_equals' 
-                                    ? 'Например: "Реклама", "Мужской", "25"' 
-                                    : 'Например: "рекл" найдет "Реклама", "реклама в интернете"'}
+                                    ? 'Пример: "Да", "Мужской", "25"' 
+                                    : 'Пример: "привет" найдет "привет мир" и "привет там"'}
                                 </div>
                               </div>
                             )}
@@ -3901,10 +3903,11 @@ export function PropertiesPanel({
 
 
                             {/* Message Text with Formatting */}
-                            <div className="border border-green-200/50 dark:border-green-800/50 rounded-lg p-3 bg-green-50/30 dark:bg-green-950/20">
-                              <div className="flex items-center justify-between mb-2">
-                                <Label className="text-xs font-medium text-green-700 dark:text-green-300">
-                                  Что показать пользователю, если условие выполнится?
+                            <div className="border border-green-200/50 dark:border-green-800/50 rounded-xl p-3 sm:p-4 bg-gradient-to-br from-green-50/60 to-emerald-50/30 dark:from-green-950/25 dark:to-emerald-950/15 space-y-3 sm:space-y-3.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs sm:text-sm font-semibold text-green-700 dark:text-green-300 flex items-center gap-2">
+                                  <i className="fas fa-message text-green-600 dark:text-green-400"></i>
+                                  <span>Кастомное сообщение (опционально)</span>
                                 </Label>
                                 <Switch
                                   checked={(condition as any).showCustomMessage ?? false}
@@ -3949,11 +3952,11 @@ export function PropertiesPanel({
                             </div>
 
                             {/* Text Input Configuration */}
-                            <div className="border border-blue-200/50 dark:border-blue-800/50 rounded-lg p-3 bg-blue-50/30 dark:bg-blue-950/20">
-                              <div className="flex items-center justify-between mb-2">
-                                <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center">
-                                  <i className="fas fa-keyboard mr-1"></i>
-                                  Ожидание текстового ввода
+                            <div className="border border-blue-200/50 dark:border-blue-800/50 rounded-xl p-3 sm:p-4 bg-gradient-to-br from-blue-50/60 to-cyan-50/30 dark:from-blue-950/25 dark:to-cyan-950/15 space-y-3 sm:space-y-3.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                                  <i className="fas fa-keyboard text-blue-600 dark:text-blue-400 mr-0.5"></i>
+                                  <span>Ожидание текстового ввода</span>
                                 </Label>
                                 <Switch
                                   checked={condition.waitForTextInput ?? false}
@@ -3967,13 +3970,15 @@ export function PropertiesPanel({
                                 />
                               </div>
                               {condition.waitForTextInput && (
-                                <div className="space-y-2">
-                                  <div className="text-xs text-blue-600 dark:text-blue-400">
-                                    После показа этого сообщения бот будет ждать текстовый ответ от пользователя
+                                <div className="space-y-3 sm:space-y-3.5 pt-2 border-t border-blue-200/40 dark:border-blue-800/40">
+                                  <div className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30 px-3 py-2 rounded-lg leading-relaxed">
+                                    <i className="fas fa-info-circle mr-2"></i>
+                                    Бот ждёт текстовый ответ от пользователя и сохранит его
                                   </div>
-                                  <div>
-                                    <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                      Переменная для сохранения ответа (необязательно)
+                                  <div className="space-y-2">
+                                    <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                                      <i className="fas fa-box text-blue-600 dark:text-blue-400"></i>
+                                      <span>Переменная сохранения (опционально)</span>
                                     </Label>
                                     <Input
                                       value={condition.textInputVariable || ''}
@@ -3984,18 +3989,19 @@ export function PropertiesPanel({
                                         );
                                         onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                       }}
-                                      className="text-xs"
+                                      className="text-xs sm:text-sm h-9 sm:h-10 bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 focus:border-blue-500 rounded-lg"
                                       placeholder="conditional_answer"
                                     />
-                                    <div className="text-xs text-muted-foreground mt-1">
-                                      Если не указать, будет использовано автоматическое имя переменной
+                                    <div className="text-xs text-muted-foreground">
+                                      Авто-имя: <code className="bg-slate-100/50 dark:bg-slate-900/50 px-2 py-1 rounded text-xs font-mono">conditional_answer_{condition.id}</code>
                                     </div>
                                   </div>
-                                  <div>
-                                    <Label className="text-xs font-medium text-muted-foreground mb-2 block">
-                                      Куда перейти после ответа
+                                  <div className="space-y-2">
+                                    <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                                      <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400"></i>
+                                      <span>Переход после ответа</span>
                                     </Label>
-                                    <div className="space-y-2">
+                                    <div className="space-y-2.5">
                                       <Select
                                         value={condition.nextNodeAfterInput || 'no-transition'}
                                         onValueChange={(value) => {
@@ -4006,8 +4012,8 @@ export function PropertiesPanel({
                                           onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                         }}
                                       >
-                                        <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 focus:border-sky-500 focus:ring-sky-400/30">
-                                          <SelectValue placeholder="⊘ Не выбрано" />
+                                        <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 bg-gradient-to-br from-blue-50/60 to-white/60 dark:from-blue-950/30 dark:to-slate-950/70 border border-blue-300/60 dark:border-blue-700/60 hover:border-blue-400/80 dark:hover:border-blue-600/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/40 rounded-lg">
+                                          <SelectValue placeholder="⊘ Выберите узел..." />
                                         </SelectTrigger>
                                         <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                                           <SelectItem value="no-transition">Не переходить</SelectItem>
@@ -4040,12 +4046,12 @@ export function PropertiesPanel({
                                           );
                                           onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                         }}
-                                        className="text-xs h-8 bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 text-sky-900 dark:text-sky-50 placeholder:text-sky-500/50"
-                                        placeholder="Или введите ID вручную"
+                                        className="text-xs sm:text-sm h-9 sm:h-10 bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 focus:border-blue-500 rounded-lg text-foreground placeholder:text-muted-foreground/50"
+                                        placeholder="Введите ID узла (опционально)"
                                       />
                                     </div>
-                                    <div className="text-xs text-muted-foreground mt-2">
-                                      Узел, к которому перейти после получения ответа пользователя
+                                    <div className="text-xs text-muted-foreground leading-relaxed">
+                                      Узел, куда перейти после получения текстового ответа
                                     </div>
                                   </div>
                                 </div>
