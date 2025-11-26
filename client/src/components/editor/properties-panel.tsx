@@ -174,6 +174,7 @@ export function PropertiesPanel({
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
   const [urlValidation, setUrlValidation] = useState<{[key: string]: { isValid: boolean; message?: string }}>({});
+  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
 
   // Функция для получения данных по умолчанию для каждого типа узла
   const getDefaultDataForType = (type: Node['type']) => {
@@ -1053,11 +1054,17 @@ export function PropertiesPanel({
         
         {/* Basic Settings */}
         <div className="space-y-3 sm:space-y-4">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
+            className="flex items-center gap-2 w-full hover:opacity-75 transition-opacity duration-200"
+            title={isBasicSettingsOpen ? 'Свернуть' : 'Развернуть'}
+          >
             <div className="h-5 w-0.5 bg-gradient-to-b from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-400 rounded-full"></div>
             <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Основные настройки</h3>
-          </div>
-          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm">
+            <i className={`fas fa-chevron-down text-xs sm:text-sm text-slate-600 dark:text-slate-400 ml-auto transition-transform duration-300 ${isBasicSettingsOpen ? 'rotate-0' : '-rotate-90'}`}></i>
+          </button>
+          {isBasicSettingsOpen && (
+            <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
 
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
               <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
@@ -1201,6 +1208,7 @@ export function PropertiesPanel({
 
 
           </div>
+          )}
 
           {/* Sticker Configuration */}
           {selectedNode.type === 'sticker' && (
