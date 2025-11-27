@@ -344,8 +344,8 @@ function generateWaitingStateCode(node: any, indentLevel: string = '    ', userI
   const inputTargetNodeId = node.data.inputTargetNodeId || '';
   
   let code = '';
-  code += `${indentLevel}user_data[${userIdSource}] = user_data.get(${userIdSource}, {})\n`;
-  code += `${indentLevel}user_data[${userIdSource}]["${waitingStateKey}"] = {\n`;
+  code += `${indentLevel}user_data[str(${userIdSource})] = user_data.get(${userIdSource}, {})\n`;
+  code += `${indentLevel}user_data[str(${userIdSource})]["${waitingStateKey}"] = {\n`;
   code += `${indentLevel}    "type": "${inputType}",\n`;
   code += `${indentLevel}    "variable": "${inputVariable}",\n`;
   code += `${indentLevel}    "save_to_database": True,\n`;
@@ -4929,7 +4929,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `    text = ${formattedTargetText}\n`;
             
             // Добавляем замену переменных для reply кнопок
-            code += '    user_id = message.from_user.id\n';
+            code += '    user_id = str(message.from_user.id)\n';
             code += generateUniversalVariableReplacement('    ');
             
             // Handle keyboard for target node
@@ -4953,7 +4953,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Дополнительно: сохраняем нажатие reply кнопки если включен сбор ответов
             code += '    \n';
             code += '    # Сохраняем нажатие reply кнопки если включен сбор ответов\n';
-            code += '    user_id = message.from_user.id\n';
+            code += '    user_id = str(message.from_user.id)\n';
             code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
             code += '        import datetime\n';
             code += '        timestamp = get_moscow_time()\n';
@@ -5060,7 +5060,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Дополнительно: сохраняем нажатие reply кнопки если включен сбор ответов
             code += '    \n';
             code += '    # Сохраняем нажатие reply кнопки если включен сбор ответов\n';
-            code += '    user_id = message.from_user.id\n';
+            code += '    user_id = str(message.from_user.id)\n';
             code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
             code += '        import datetime\n';
             code += '        timestamp = get_moscow_time()\n';
@@ -5603,7 +5603,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '\n\n# Универсальный обработчик пользовательского ввода\n';
     code += '@dp.message(F.text)\n';
     code += 'async def handle_user_input(message: types.Message):\n';
-  code += '    user_id = message.from_user.id\n';
+  code += '    user_id = str(message.from_user.id)\n';
   code += '    \n';
   code += '    # Проверяем, ожидаем ли мы ввод для условного сообщения\n';
   code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
@@ -6996,7 +6996,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '\n\n# Обработчик получения фото от пользователя\n';
     code += '@dp.message(F.photo)\n';
     code += 'async def handle_photo_input(message: types.Message):\n';
-    code += '    user_id = message.from_user.id\n';
+    code += '    user_id = str(message.from_user.id)\n';
     code += '    logging.info(f"📸 Получено фото от пользователя {user_id}")\n';
     code += '    \n';
     code += '    # Проверяем, ожидаем ли мы ввод фото\n';
@@ -7212,7 +7212,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '\n\n# Обработчик получения аудио от пользователя\n';
     code += '@dp.message(F.audio | F.voice)\n';
     code += 'async def handle_audio_input(message: types.Message):\n';
-    code += '    user_id = message.from_user.id\n';
+    code += '    user_id = str(message.from_user.id)\n';
     code += '    logging.info(f"🎵 Получено аудио от пользователя {user_id}")\n';
     code += '    \n';
     code += '    # Проверяем, ожидаем ли мы ввод аудио\n';
@@ -7313,7 +7313,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '\n\n# Обработчик получения документа от пользователя\n';
     code += '@dp.message(F.document)\n';
     code += 'async def handle_document_input(message: types.Message):\n';
-    code += '    user_id = message.from_user.id\n';
+    code += '    user_id = str(message.from_user.id)\n';
     code += '    logging.info(f"📄 Получен документ от пользователя {user_id}")\n';
     code += '    \n';
     code += '    # Проверяем, ожидаем ли мы ввод документа\n';
@@ -7932,7 +7932,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    Обработчик сообщений в группах\n';
     code += '    """\n';
     code += '    chat_id = message.chat.id\n';
-    code += '    user_id = message.from_user.id\n';
+    code += '    user_id = str(message.from_user.id)\n';
     code += '    username = message.from_user.username or "Неизвестный"\n';
     code += '    \n';
     code += '    # Проверяем, является ли группа подключенной\n';
@@ -8646,7 +8646,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '# Обработчик для reply кнопок множественного выбора\n';
     code += '@dp.message()\n';
     code += 'async def handle_multi_select_reply(message: types.Message):\n';
-  code += '    user_id = message.from_user.id\n';
+  code += '    user_id = str(message.from_user.id)\n';
   code += '    user_input = message.text\n';
   code += '    \n';
   code += '    # Проверяем, находится ли пользователь в режиме множественного выбора reply\n';
@@ -8769,7 +8769,7 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
   // Регистрируем пользователя только если включена БД или есть множественный выбор
   if (userDatabaseEnabled || node.data.allowMultipleSelection) {
     code += '\n    # Регистрируем пользователя в системе\n';
-    code += '    user_id = message.from_user.id\n';
+    code += '    user_id = str(message.from_user.id)\n';
     code += '    username = message.from_user.username\n';
     code += '    first_name = message.from_user.first_name\n';
     code += '    last_name = message.from_user.last_name\n';
@@ -8792,7 +8792,7 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
       code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
     } else {
       code += '    # Инициализируем user_data для множественного выбора\n';
-      code += '    user_id = message.from_user.id\n';
+      code += '    user_id = str(message.from_user.id)\n';
       code += '    if user_id not in user_data:\n';
       code += '        user_data[user_id] = {}\n\n';
     }
@@ -9011,7 +9011,7 @@ function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): strin
 
   // Сохраняем информацию о команде в пользовательских данных
   code += '    # Сохраняем пользователя и статистику использования команд\n';
-  code += '    user_id = message.from_user.id\n';
+  code += '    user_id = str(message.from_user.id)\n';
   code += '    username = message.from_user.username\n';
   code += '    first_name = message.from_user.first_name\n';
   code += '    last_name = message.from_user.last_name\n';
