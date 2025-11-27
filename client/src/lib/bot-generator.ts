@@ -4647,7 +4647,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         }
                         
                         // Генерируем клавиатуру для условного сообщения если она есть
-                        if (condition.keyboardType && condition.keyboardType !== 'none' && condition.buttons && condition.buttons.length > 0) {
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, не установлено ли keyboardType="none" на РОДИТЕЛЬСКОМ узле
+                        const shouldGenerateKeyboard = navTargetNode.data.keyboardType !== 'none' && condition.keyboardType && condition.keyboardType !== 'none' && condition.buttons && condition.buttons.length > 0;
+                        if (shouldGenerateKeyboard) {
                           code += '                # Создаем клавиатуру для условного сообщения\n';
                           
                           if (condition.keyboardType === 'inline') {
