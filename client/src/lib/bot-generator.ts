@@ -11865,7 +11865,40 @@ function generateKeyboard(node: Node): string {
       const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
       const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
       code += `${indent4}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-      code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      
+      // ИСПРАВЛЕНИЕ: Проверяем медиа перед отправкой reply кнопок
+      const photoVarCase1Reply = node.data.photoInputVariable;
+      const videoVarCase1Reply = node.data.videoInputVariable;
+      const audioVarCase1Reply = node.data.audioInputVariable;
+      const docVarCase1Reply = node.data.documentInputVariable;
+      
+      if (photoVarCase1Reply) {
+        code += `${indent4}photo_value = user_data_dict.get("${photoVarCase1Reply}") if 'user_data_dict' in locals() else None\n`;
+        code += `${indent4}if photo_value and photo_value != "":\n`;
+        code += `${indent4}    await message.answer_photo(photo=photo_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent4}else:\n`;
+        code += `${indent4}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      } else if (videoVarCase1Reply) {
+        code += `${indent4}video_value = user_data_dict.get("${videoVarCase1Reply}") if 'user_data_dict' in locals() else None\n`;
+        code += `${indent4}if video_value and video_value != "":\n`;
+        code += `${indent4}    await message.answer_video(video=video_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent4}else:\n`;
+        code += `${indent4}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      } else if (audioVarCase1Reply) {
+        code += `${indent4}audio_value = user_data_dict.get("${audioVarCase1Reply}") if 'user_data_dict' in locals() else None\n`;
+        code += `${indent4}if audio_value and audio_value != "":\n`;
+        code += `${indent4}    await message.answer_audio(audio=audio_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent4}else:\n`;
+        code += `${indent4}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      } else if (docVarCase1Reply) {
+        code += `${indent4}doc_value = user_data_dict.get("${docVarCase1Reply}") if 'user_data_dict' in locals() else None\n`;
+        code += `${indent4}if doc_value and doc_value != "":\n`;
+        code += `${indent4}    await message.answer_document(document=doc_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent4}else:\n`;
+        code += `${indent4}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      } else {
+        code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      }
       
     } else if (node.data.keyboardType === "inline") {
       code += `${indent4}# Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n`;
@@ -11884,7 +11917,40 @@ function generateKeyboard(node: Node): string {
       
       code += `${indent4}builder.adjust(2)  # Используем 2 колонки для консистентности\n`;
       code += `${indent4}keyboard = builder.as_markup()\n`;
-      code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      
+      // ИСПРАВЛЕНИЕ: Проверяем медиа перед отправкой inline кнопок
+      const photoVarCase1Inline = node.data.photoInputVariable;
+      const videoVarCase1Inline = node.data.videoInputVariable;
+      const audioVarCase1Inline = node.data.audioInputVariable;
+      const docVarCase1Inline = node.data.documentInputVariable;
+      
+      if (photoVarCase1Inline) {
+        code += `${indent4}photo_value = user_data_dict.get("${photoVarCase1Inline}") if 'user_data_dict' in locals() else None\n`;
+        code += `${indent4}if photo_value and photo_value != "":\n`;
+        code += `${indent4}    await message.answer_photo(photo=photo_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent4}else:\n`;
+        code += `${indent4}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      } else if (videoVarCase1Inline) {
+        code += `${indent4}video_value = user_data_dict.get("${videoVarCase1Inline}") if 'user_data_dict' in locals() else None\n`;
+        code += `${indent4}if video_value and video_value != "":\n`;
+        code += `${indent4}    await message.answer_video(video=video_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent4}else:\n`;
+        code += `${indent4}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      } else if (audioVarCase1Inline) {
+        code += `${indent4}audio_value = user_data_dict.get("${audioVarCase1Inline}") if 'user_data_dict' in locals() else None\n`;
+        code += `${indent4}if audio_value and audio_value != "":\n`;
+        code += `${indent4}    await message.answer_audio(audio=audio_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent4}else:\n`;
+        code += `${indent4}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      } else if (docVarCase1Inline) {
+        code += `${indent4}doc_value = user_data_dict.get("${docVarCase1Inline}") if 'user_data_dict' in locals() else None\n`;
+        code += `${indent4}if doc_value and doc_value != "":\n`;
+        code += `${indent4}    await message.answer_document(document=doc_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent4}else:\n`;
+        code += `${indent4}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      } else {
+        code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      }
     }
     
     // Закрываем блок else если были условные сообщения
@@ -12104,7 +12170,40 @@ function generateKeyboard(node: Node): string {
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        // ИСПРАВЛЕНИЕ: Проверяем медиа в CASE 3 для обычной reply клавиатуры
+        const photoVarCase3Reply = node.data.photoInputVariable;
+        const videoVarCase3Reply = node.data.videoInputVariable;
+        const audioVarCase3Reply = node.data.audioInputVariable;
+        const docVarCase3Reply = node.data.documentInputVariable;
+        
+        if (photoVarCase3Reply) {
+          code += `${indent3}photo_value = user_data_dict.get("${photoVarCase3Reply}") if 'user_data_dict' in locals() else None\n`;
+          code += `${indent3}if photo_value and photo_value != "":\n`;
+          code += `${indent3}    await message.answer_photo(photo=photo_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+          code += `${indent3}else:\n`;
+          code += `${indent3}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        } else if (videoVarCase3Reply) {
+          code += `${indent3}video_value = user_data_dict.get("${videoVarCase3Reply}") if 'user_data_dict' in locals() else None\n`;
+          code += `${indent3}if video_value and video_value != "":\n`;
+          code += `${indent3}    await message.answer_video(video=video_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+          code += `${indent3}else:\n`;
+          code += `${indent3}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        } else if (audioVarCase3Reply) {
+          code += `${indent3}audio_value = user_data_dict.get("${audioVarCase3Reply}") if 'user_data_dict' in locals() else None\n`;
+          code += `${indent3}if audio_value and audio_value != "":\n`;
+          code += `${indent3}    await message.answer_audio(audio=audio_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+          code += `${indent3}else:\n`;
+          code += `${indent3}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        } else if (docVarCase3Reply) {
+          code += `${indent3}doc_value = user_data_dict.get("${docVarCase3Reply}") if 'user_data_dict' in locals() else None\n`;
+          code += `${indent3}if doc_value and doc_value != "":\n`;
+          code += `${indent3}    await message.answer_document(document=doc_value, caption=text, reply_markup=keyboard${parseMode})\n`;
+          code += `${indent3}else:\n`;
+          code += `${indent3}    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        } else {
+          code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        }
       }
     } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       // Проверяем, есть ли множественный выбор
