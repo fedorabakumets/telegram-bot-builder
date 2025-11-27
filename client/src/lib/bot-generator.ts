@@ -4042,9 +4042,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    keyboard = builder.as_markup()\n';
             }
             
-          } else if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+          } else if (targetNode.data.keyboardType !== 'none' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             // Обычные кнопки без множественного выбора
             // ИСПРАВЛЕНИЕ: Проверяем keyboardType узла и генерируем соответствующую клавиатуру
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: НЕ генерируем клавиатуру если keyboardType === 'none'
             if (targetNode.data.keyboardType === 'reply') {
               // Генерируем reply клавиатуру
               code += '    # Create reply keyboard\n';
