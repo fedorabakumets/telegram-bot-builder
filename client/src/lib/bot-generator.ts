@@ -4695,8 +4695,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                           code += '                await bot.send_message(user_id, text)\n';
                         }
                         
-                        // Настраиваем ожидание текстового ввода для условного сообщения (если нужно)
-                        if (condition.waitForTextInput) {
+                        // Настраиваем ожидание ввода для условного сообщения (если нужно)
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем ВСЕ типы ввода у целевого узла
+                        const needsTextInput = condition.waitForTextInput || (navTargetNode.data.collectUserInput && navTargetNode.data.enableTextInput);
+                        const needsPhotoInput = navTargetNode.data.enablePhotoInput;
+                        const needsVideoInput = navTargetNode.data.enableVideoInput;
+                        const needsAudioInput = navTargetNode.data.enableAudioInput;
+                        const needsDocumentInput = navTargetNode.data.enableDocumentInput;
+                        const needsAnyMediaInput = needsPhotoInput || needsVideoInput || needsAudioInput || needsDocumentInput;
+                        
+                        if (needsTextInput) {
                           // ИСПРАВЛЕНИЕ: Используем переменную из условия или из целевого узла
                           const conditionalInputVariable = condition.textInputVariable || navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                           code += `                # Настраиваем ожидание текстового ввода для условного сообщения\n`;
@@ -4708,6 +4716,39 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                           code += `                    "next_node_id": "${condition.nextNodeAfterInput || inputTargetNodeId}"\n`;
                           code += `                }\n`;
                           code += `                logging.info(f"🔧 Настроено условное ожидание ввода для переменной: ${conditionalInputVariable} (узел ${navTargetNode.id})")\n`;
+                        } else if (needsAnyMediaInput) {
+                          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем ожидание медиа-ввода
+                          let waitingStateKey = 'waiting_for_input';
+                          let inputType = 'text';
+                          let inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
+                          
+                          if (needsPhotoInput) {
+                            waitingStateKey = 'waiting_for_photo';
+                            inputType = 'photo';
+                            inputVariable = navTargetNode.data.photoInputVariable || 'user_photo';
+                          } else if (needsVideoInput) {
+                            waitingStateKey = 'waiting_for_video';
+                            inputType = 'video';
+                            inputVariable = navTargetNode.data.videoInputVariable || 'user_video';
+                          } else if (needsAudioInput) {
+                            waitingStateKey = 'waiting_for_audio';
+                            inputType = 'audio';
+                            inputVariable = navTargetNode.data.audioInputVariable || 'user_audio';
+                          } else if (needsDocumentInput) {
+                            waitingStateKey = 'waiting_for_document';
+                            inputType = 'document';
+                            inputVariable = navTargetNode.data.documentInputVariable || 'user_document';
+                          }
+                          
+                          code += `                # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настраиваем ожидание ${inputType} ввода\n`;
+                          code += `                user_data[user_id]["${waitingStateKey}"] = {\n`;
+                          code += `                    "type": "${inputType}",\n`;
+                          code += `                    "variable": "${inputVariable}",\n`;
+                          code += `                    "save_to_database": True,\n`;
+                          code += `                    "node_id": "${navTargetNode.id}",\n`;
+                          code += `                    "next_node_id": "${condition.nextNodeAfterInput || inputTargetNodeId}"\n`;
+                          code += `                }\n`;
+                          code += `                logging.info(f"🔧 Настроено условное ожидание ${inputType} ввода для переменной: ${inputVariable} (узел ${navTargetNode.id})")\n`;
                         }
                       }
                     }
@@ -5754,15 +5795,63 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += `                            await message.answer(main_text, reply_markup=keyboard)\n`;
                     
                     // Устанавливаем ожидание ввода, даже если есть клавиатура
-                    // Пользователь может ввести текст вместо нажатия кнопки
-                    code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
-                    code += `                                "type": "text",\n`;
-                    code += `                                "variable": "${inputVariable}",\n`;
-                    code += `                                "save_to_database": True,\n`;
-                    code += `                                "node_id": "${targetNode.id}",\n`;
-                    code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
-                    code += `                            }\n`;
-                    code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}")\n`;
+                    // Пользователь может ввести текст/медиа вместо нажатия кнопки
+                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем тип ввода целевого узла
+                    const needsPhotoInput4 = targetNode.data.enablePhotoInput;
+                    const needsVideoInput4 = targetNode.data.enableVideoInput;
+                    const needsAudioInput4 = targetNode.data.enableAudioInput;
+                    const needsDocumentInput4 = targetNode.data.enableDocumentInput;
+                    
+                    if (needsPhotoInput4) {
+                      const photoVar = targetNode.data.photoInputVariable || 'user_photo';
+                      code += `                            user_data[user_id]["waiting_for_photo"] = {\n`;
+                      code += `                                "type": "photo",\n`;
+                      code += `                                "variable": "${photoVar}",\n`;
+                      code += `                                "save_to_database": True,\n`;
+                      code += `                                "node_id": "${targetNode.id}",\n`;
+                      code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                      code += `                            }\n`;
+                      code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}, ожидаем фото")\n`;
+                    } else if (needsVideoInput4) {
+                      const videoVar = targetNode.data.videoInputVariable || 'user_video';
+                      code += `                            user_data[user_id]["waiting_for_video"] = {\n`;
+                      code += `                                "type": "video",\n`;
+                      code += `                                "variable": "${videoVar}",\n`;
+                      code += `                                "save_to_database": True,\n`;
+                      code += `                                "node_id": "${targetNode.id}",\n`;
+                      code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                      code += `                            }\n`;
+                      code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}, ожидаем видео")\n`;
+                    } else if (needsAudioInput4) {
+                      const audioVar = targetNode.data.audioInputVariable || 'user_audio';
+                      code += `                            user_data[user_id]["waiting_for_audio"] = {\n`;
+                      code += `                                "type": "audio",\n`;
+                      code += `                                "variable": "${audioVar}",\n`;
+                      code += `                                "save_to_database": True,\n`;
+                      code += `                                "node_id": "${targetNode.id}",\n`;
+                      code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                      code += `                            }\n`;
+                      code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}, ожидаем аудио")\n`;
+                    } else if (needsDocumentInput4) {
+                      const docVar = targetNode.data.documentInputVariable || 'user_document';
+                      code += `                            user_data[user_id]["waiting_for_document"] = {\n`;
+                      code += `                                "type": "document",\n`;
+                      code += `                                "variable": "${docVar}",\n`;
+                      code += `                                "save_to_database": True,\n`;
+                      code += `                                "node_id": "${targetNode.id}",\n`;
+                      code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                      code += `                            }\n`;
+                      code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}, ожидаем документ")\n`;
+                    } else {
+                      code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
+                      code += `                                "type": "text",\n`;
+                      code += `                                "variable": "${inputVariable}",\n`;
+                      code += `                                "save_to_database": True,\n`;
+                      code += `                                "node_id": "${targetNode.id}",\n`;
+                      code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                      code += `                            }\n`;
+                      code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}, ожидаем текст")\n`;
+                    }
                   } else {
                     // Нет кнопок - показываем сообщение и ждем текстового ввода
                     code += `                            # Если условный текст пустой, используем основное сообщение узла\n`;
@@ -5828,6 +5917,61 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard2})\n`;
                     code += `                            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, node_id="${targetNode.id}")\n`;
                     code += `                            logging.info(f"✅ Показана условная клавиатура (кнопки ведут напрямую, автопереход НЕ выполняется)")\n`;
+                    
+                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем ожидание ввода для целевого узла
+                    // Это нужно для того, чтобы пользователь мог либо нажать кнопку, либо ввести данные
+                    const needsTextInput2 = condition.waitForTextInput || (targetNode.data.collectUserInput && targetNode.data.enableTextInput);
+                    const needsPhotoInput2 = targetNode.data.enablePhotoInput;
+                    const needsVideoInput2 = targetNode.data.enableVideoInput;
+                    const needsAudioInput2 = targetNode.data.enableAudioInput;
+                    const needsDocumentInput2 = targetNode.data.enableDocumentInput;
+                    const needsAnyMediaInput2 = needsPhotoInput2 || needsVideoInput2 || needsAudioInput2 || needsDocumentInput2;
+                    const inputTargetNodeIdForCond = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
+                    
+                    if (needsTextInput2) {
+                      const conditionalInputVar2 = condition.textInputVariable || targetNode.data.inputVariable || `response_${targetNode.id}`;
+                      code += `                            # Настраиваем ожидание текстового ввода\n`;
+                      code += `                            user_data[callback_query.from_user.id]["waiting_for_input"] = {\n`;
+                      code += `                                "type": "text",\n`;
+                      code += `                                "variable": "${conditionalInputVar2}",\n`;
+                      code += `                                "save_to_database": True,\n`;
+                      code += `                                "node_id": "${targetNode.id}",\n`;
+                      code += `                                "next_node_id": "${inputTargetNodeIdForCond || ''}"\n`;
+                      code += `                            }\n`;
+                      code += `                            logging.info(f"🔧 Настроено ожидание текстового ввода для: ${conditionalInputVar2}")\n`;
+                    } else if (needsAnyMediaInput2) {
+                      let waitingKey2 = 'waiting_for_input';
+                      let inputType2 = 'text';
+                      let inputVar2 = targetNode.data.inputVariable || `response_${targetNode.id}`;
+                      
+                      if (needsPhotoInput2) {
+                        waitingKey2 = 'waiting_for_photo';
+                        inputType2 = 'photo';
+                        inputVar2 = targetNode.data.photoInputVariable || 'user_photo';
+                      } else if (needsVideoInput2) {
+                        waitingKey2 = 'waiting_for_video';
+                        inputType2 = 'video';
+                        inputVar2 = targetNode.data.videoInputVariable || 'user_video';
+                      } else if (needsAudioInput2) {
+                        waitingKey2 = 'waiting_for_audio';
+                        inputType2 = 'audio';
+                        inputVar2 = targetNode.data.audioInputVariable || 'user_audio';
+                      } else if (needsDocumentInput2) {
+                        waitingKey2 = 'waiting_for_document';
+                        inputType2 = 'document';
+                        inputVar2 = targetNode.data.documentInputVariable || 'user_document';
+                      }
+                      
+                      code += `                            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настраиваем ожидание ${inputType2} ввода\n`;
+                      code += `                            user_data[callback_query.from_user.id]["${waitingKey2}"] = {\n`;
+                      code += `                                "type": "${inputType2}",\n`;
+                      code += `                                "variable": "${inputVar2}",\n`;
+                      code += `                                "save_to_database": True,\n`;
+                      code += `                                "node_id": "${targetNode.id}",\n`;
+                      code += `                                "next_node_id": "${inputTargetNodeIdForCond || ''}"\n`;
+                      code += `                            }\n`;
+                      code += `                            logging.info(f"🔧 Настроено ожидание ${inputType2} ввода для: ${inputVar2}")\n`;
+                    }
                   } else {
                     // Нет кнопок - автоматически переходим к следующему узлу
                     const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
@@ -6338,10 +6482,62 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                     code += `${bodyIndent}    main_text = text\n`;
                     code += `${bodyIndent}    await message.answer(main_text, reply_markup=keyboard)\n`;
-                    code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id} (ожидание ввода НЕ настроено - кнопки ведут напрямую)")\n`;
+                    code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}")\n`;
                     
-                    // ИСПРАВЛЕНИЕ: НЕ настраиваем ожидание ввода для условных кнопок!
-                    // Условные кнопки ведут напрямую к целевым узлам, пропуская узлы сбора данных
+                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем ожидание ввода если у узла включен сбор данных
+                    // Это позволяет пользователю либо нажать кнопку, либо ввести данные
+                    const needsTextInput3 = condition.waitForTextInput || (targetNode.data.collectUserInput && targetNode.data.enableTextInput);
+                    const needsPhotoInput3 = targetNode.data.enablePhotoInput;
+                    const needsVideoInput3 = targetNode.data.enableVideoInput;
+                    const needsAudioInput3 = targetNode.data.enableAudioInput;
+                    const needsDocumentInput3 = targetNode.data.enableDocumentInput;
+                    const needsAnyMediaInput3 = needsPhotoInput3 || needsVideoInput3 || needsAudioInput3 || needsDocumentInput3;
+                    const inputTargetNodeIdForCond3 = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
+                    
+                    if (needsTextInput3) {
+                      const inputVar3 = condition.textInputVariable || targetNode.data.inputVariable || `response_${targetNode.id}`;
+                      code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
+                      code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
+                      code += `${bodyIndent}        "type": "text",\n`;
+                      code += `${bodyIndent}        "variable": "${inputVar3}",\n`;
+                      code += `${bodyIndent}        "save_to_database": True,\n`;
+                      code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
+                      code += `${bodyIndent}        "next_node_id": "${inputTargetNodeIdForCond3 || ''}"\n`;
+                      code += `${bodyIndent}    }\n`;
+                      code += `${bodyIndent}    logging.info(f"🔧 Настроено ожидание текстового ввода для: ${inputVar3}")\n`;
+                    } else if (needsAnyMediaInput3) {
+                      let waitingKey3 = 'waiting_for_input';
+                      let inputType3 = 'text';
+                      let inputVar3 = targetNode.data.inputVariable || `response_${targetNode.id}`;
+                      
+                      if (needsPhotoInput3) {
+                        waitingKey3 = 'waiting_for_photo';
+                        inputType3 = 'photo';
+                        inputVar3 = targetNode.data.photoInputVariable || 'user_photo';
+                      } else if (needsVideoInput3) {
+                        waitingKey3 = 'waiting_for_video';
+                        inputType3 = 'video';
+                        inputVar3 = targetNode.data.videoInputVariable || 'user_video';
+                      } else if (needsAudioInput3) {
+                        waitingKey3 = 'waiting_for_audio';
+                        inputType3 = 'audio';
+                        inputVar3 = targetNode.data.audioInputVariable || 'user_audio';
+                      } else if (needsDocumentInput3) {
+                        waitingKey3 = 'waiting_for_document';
+                        inputType3 = 'document';
+                        inputVar3 = targetNode.data.documentInputVariable || 'user_document';
+                      }
+                      
+                      code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
+                      code += `${bodyIndent}    user_data[message.from_user.id]["${waitingKey3}"] = {\n`;
+                      code += `${bodyIndent}        "type": "${inputType3}",\n`;
+                      code += `${bodyIndent}        "variable": "${inputVar3}",\n`;
+                      code += `${bodyIndent}        "save_to_database": True,\n`;
+                      code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
+                      code += `${bodyIndent}        "next_node_id": "${inputTargetNodeIdForCond3 || ''}"\n`;
+                      code += `${bodyIndent}    }\n`;
+                      code += `${bodyIndent}    logging.info(f"🔧 Настроено ожидание ${inputType3} ввода для: ${inputVar3}")\n`;
+                    }
                   }
                 }
               });
