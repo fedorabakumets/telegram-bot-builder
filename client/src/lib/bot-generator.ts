@@ -6338,10 +6338,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                     code += `${bodyIndent}    main_text = text\n`;
                     code += `${bodyIndent}    await message.answer(main_text, reply_markup=keyboard)\n`;
-                    code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id} (ожидание ввода НЕ настроено - кнопки ведут напрямую)")\n`;
                     
-                    // ИСПРАВЛЕНИЕ: НЕ настраиваем ожидание ввода для условных кнопок!
-                    // Условные кнопки ведут напрямую к целевым узлам, пропуская узлы сбора данных
+                    // Проверяем, нужно ли ждать текстового ввода для условного сообщения
+                    if (condition.waitForTextInput === true) {
+                      code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id} (ожидание текстового ввода НАСТРОЕНО)")\n`;
+                      code += `${bodyIndent}    # Настраиваем ожидание ввода для условного сообщения с waitForTextInput\n`;
+                      const condInputVariable = condition.variableName || targetNode.data.inputVariable || `response_${targetNode.id}`;
+                      const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
+                      code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
+                      code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
+                      code += `${bodyIndent}        "type": "text",\n`;
+                      code += `${bodyIndent}        "variable": "${condInputVariable}",\n`;
+                      code += `${bodyIndent}        "save_to_database": True,\n`;
+                      code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
+                      code += `${bodyIndent}        "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                      code += `${bodyIndent}    }\n`;
+                      code += `${bodyIndent}    logging.info(f"🔧 Установлено ожидание ввода для условного сообщения: {user_data[message.from_user.id]['waiting_for_input']}")\n`;
+                    } else {
+                      code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id} (ожидание ввода НЕ настроено - кнопки ведут напрямую)")\n`;
+                    }
                   }
                 }
               });
