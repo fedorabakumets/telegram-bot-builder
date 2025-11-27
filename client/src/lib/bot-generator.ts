@@ -424,7 +424,7 @@ function generateReplyKeyboardCode(buttons: any[], indentLevel: string, nodeId?:
   let code = '';
   code += `${indentLevel}builder = ReplyKeyboardBuilder()\n`;
   
-  buttons.forEach((button, index) => {
+  buttons.forEach((button, index: number) => {
     if (button.action === "contact" && button.requestContact) {
       code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
     } else if (button.action === "location" && button.requestLocation) {
@@ -504,7 +504,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Проверяем условие инициализации: hasSelectionButtons=${hasSelectionButtons} && isMultipleSelection=${isMultipleSelection}`);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Результат проверки: ${hasSelectionButtons && isMultipleSelection}`);
   
-  buttons.forEach((button, index) => {
+  buttons.forEach((button, index: number) => {
     if (button.action === "url") {
       code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
     } else if (button.action === 'goto') {
@@ -784,7 +784,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   }
 
   let code = '';
-  const sortedConditions = [...conditionalMessages].sort((a: Button, b: Button) => (b.priority || 0) - (a.priority || 0));
+  const sortedConditions = [...conditionalMessages].sort((a: any: Button, b: Button) => (b.priority || 0) - (a.priority || 0));
   
   // НЕ инициализируем conditional_parse_mode и conditional_keyboard здесь
   // Они должны быть инициализированы вызывающей функцией ПЕРЕД вызовом generateConditionalMessageLogic
@@ -1293,7 +1293,7 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
         description: description,
         allowMultipleSelection: nodeContent.includes('allowMultipleSelection=True'),
         formatMode: 'none' as const,
-                   nodeContent.includes('parse_mode=ParseMode.MARKDOWN') ? 'markdown' : 'text',
+                   nodeContent.includes('parse_mode=ParseMode.MARKDOWN') ? 'markdown' : 'none',
         enablePhotoInput: nodeContent.includes('enablePhotoInput'),
         enableVideoInput: nodeContent.includes('enableVideoInput'),
         enableAudioInput: nodeContent.includes('enableAudioInput'),
@@ -1359,7 +1359,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Логируем все узлы с их свойствами
   if (nodes && nodes.length > 0) {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем все узлы:');
-    nodes.forEach((node, index) => {
+    nodes.forEach((node, index: number) => {
       const hasMultiSelect = node.data.allowMultipleSelection;
       const hasButtons = node.data.buttons && node.data.buttons.length > 0;
       const continueTarget = node.data.continueButtonTarget;
@@ -1380,7 +1380,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     // Проверим связи
     if (connections && connections.length > 0) {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем связи:');
-      connections.forEach((conn, index) => {
+      connections.forEach((conn, index: number) => {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Связь ${index + 1}: ${conn.source} -> ${conn.target}`);
       });
     }
@@ -1857,7 +1857,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (groups && groups.length > 0) {
     code += '# Подключенные группы\n';
     code += 'CONNECTED_GROUPS = {\n';
-    groups.forEach((group, index) => {
+    groups.forEach((group, index: number) => {
       const groupId = group.groupId || 'None';
       const isLast = index === groups.length - 1;
       code += `    "${group.name}": {\n`;
@@ -2326,7 +2326,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // Add all connection targets to ensure every connected node gets a handler
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Обрабатываем ${connections.length} соединений`);
-  connections.forEach((connection, index) => {
+  connections.forEach((connection, index: number) => {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Соединение ${index}: source=${connection.source} -> target=${connection.target}`);
     if (connection.target) {
       allReferencedNodeIds.add(connection.target);
@@ -3146,7 +3146,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    builder = ReplyKeyboardBuilder()\n';
                   
                   responseOptions.forEach((option: any, index: number) => {
-                    code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
+                    code += `    builder.add(KeyboardButton(text="${typeof option === "string" ? option : (option?.text || "")}"))\n`;
                   });
                   
                   if (allowSkip) {
@@ -3159,8 +3159,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    builder = InlineKeyboardBuilder()\n';
                   
                   responseOptions.forEach((option: any, index: number) => {
-                    const optionValue = option.value || option.text;
-                    code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
+                    const optionValue = option.value || typeof option === "string" ? option : (option?.text || "");
+                    code += `    builder.add(InlineKeyboardButton(text="${typeof option === "string" ? option : (option?.text || "")}", callback_data="response_${targetNode.id}_${index}"))\n`;
                   });
                   
                   if (allowSkip) {
@@ -3189,11 +3189,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `        "next_node_id": "${nextNodeId || ''}",\n`;
                 code += '        "options": [\n';
                 responseOptions.forEach((option: any, index: number) => {
-                  const optionValue = option.value || option.text;
+                  const optionValue = option.value || typeof option === "string" ? option : (option?.text || "");
                   const optionAction = option.action || 'goto';
                   const optionTarget = option.target || '';
                   const optionUrl = option.url || '';
-                  code += `            {"index": ${index}, "text": "${escapeForJsonString(option.text)}", "value": "${escapeForJsonString(optionValue)}", "action": "${optionAction}", "target": "${optionTarget}", "url": "${escapeForJsonString(optionUrl)}"},\n`;
+                  code += `            {"index": ${index}, "text": "${escapeForJsonString(typeof option === "string" ? option : (option?.text || ""))}", "value": "${escapeForJsonString(optionValue)}", "action": "${optionAction}", "target": "${optionTarget}", "url": "${escapeForJsonString(optionUrl)}"},\n`;
                 });
                 code += '        ],\n';
                 code += `        "selected": []\n`;
@@ -3951,7 +3951,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const regularButtons = buttonsToUse.filter(button => button.action !== 'selection');
               
               // Добавляем кнопки выбора с отметками о состоянии
-              selectionButtons.forEach((button, index) => {
+              selectionButtons.forEach((button, index: number) => {
                 code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
                 code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
                 code += `    builder.add(KeyboardButton(text=f"{selected_mark}${button.text}"))\n`;
@@ -3987,7 +3987,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               // Добавляем кнопки выбора с отметками о состоянии
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
-              selectionButtons.forEach((button, index) => {
+              selectionButtons.forEach((button, index: number) => {
                 // Используем короткие callback_data
                 const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []); // Используем новую функцию
                 const shortTarget = (button.target || button.id || 'btn').slice(-8);
@@ -4281,7 +4281,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // Несколько кнопок ведут к одному узлу - создаем логику определения по callback_data
               code += `    # Определяем текст кнопки по callback_data\n`;
               code += `    button_display_text = "Неизвестная кнопка"\n`;
-              buttonsToTargetNode.forEach((button, index) => {
+              buttonsToTargetNode.forEach((button, index: number) => {
                 // Проверяем по суффиксу _btn_index в callback_data
                 code += `    if callback_query.data.endswith("_btn_${index}"):\n`;
                 code += `        button_display_text = "${button.text}"\n`;
@@ -4407,7 +4407,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             
             // Добавляем навигацию для каждого узла
             if (nodes.length > 0) {
-              nodes.forEach((navTargetNode, index) => {
+              nodes.forEach((navTargetNode, index: number) => {
                 const condition = index === 0 ? 'if' : 'elif';
                 code += `        ${condition} next_node_id == "${navTargetNode.id}":\n`;
                 
@@ -4606,7 +4606,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += '                return False, None\n\n';
                     
                     // Генерируем условную логику для этого узла
-                    const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a: Button, b: Button) => (b.priority || 0) - (a.priority || 0));
+                    const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a: any: Button, b: Button) => (b.priority || 0) - (a.priority || 0));
                     
                     // Создаем единую if/elif/else структуру для всех условий
                     for (let i = 0; i < conditionalMessages.length; i++) {
@@ -5183,8 +5183,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '        return\n';
         code += '    \n';
         code += '    config = user_data[user_id]["button_response_config"]\n';
-        code += `    selected_value = "${option.value || option.text}"\n`;
-        code += `    selected_text = "${option.text}"\n`;
+        code += `    selected_value = "${option.value || typeof option === "string" ? option : (option?.text || "")}"\n`;
+        code += `    selected_text = "${typeof option === "string" ? option : (option?.text || "")}"\n`;
         code += '    \n';
         code += '    # Обработка множественного выбора\n';
         code += '    if config.get("allow_multiple"):\n';
@@ -5474,7 +5474,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     const uniqueButtons = new Map<string, typeof replyGotoButtons[0]>();
     replyGotoButtons.forEach(btn => {
       if (!uniqueButtons.has(btn.text)) {
-        uniqueButtons.set(btn.text, btn);
+        uniqueButtons.set(btn.text, btn: Button);
       }
     });
     
@@ -5623,7 +5623,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '                    \n';
   
   if (nodes.length > 0) {
-    nodes.forEach((targetNode, index) => {
+    nodes.forEach((targetNode, index: number) => {
       const condition = index === 0 ? 'if' : 'elif';
       const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
       code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
@@ -5674,7 +5674,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                        user_data_dict.update(user_data.get(user_id, {}))\n`;
             
             // Генерируем логику проверки условий встроенно
-            const conditionalMessages = targetNode.data.conditionalMessages.sort((a: Button, b: Button) => (b.priority || 0) - (a.priority || 0));
+            const conditionalMessages = targetNode.data.conditionalMessages.sort((a: any: Button, b: Button) => (b.priority || 0) - (a.priority || 0));
             
             code += `                        # Функция для проверки переменных пользователя\n`;
             code += `                        def check_user_variable_inline(var_name, user_data_dict):\n`;
@@ -6349,7 +6349,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   // Добавляем навигацию для каждого узла
   if (nodes.length > 0) {
-    nodes.forEach((targetNode, index) => {
+    nodes.forEach((targetNode, index: number) => {
       const condition = index === 0 ? 'if' : 'elif';
       code += `${conditionIndent}${condition} current_node_id == "${targetNode.id}":\n`;
       
@@ -6461,7 +6461,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // Генерируем проверку условий
               code += `${bodyIndent}conditional_met = False\n`;
               
-              const sortedConditions = [...targetNode.data.conditionalMessages].sort((a: any, b: any) => (b.priority || 0) - (a.priority || 0));
+              const sortedConditions = [...targetNode.data.conditionalMessages].sort((a: any: any, b: any) => (b.priority || 0) - (a.priority || 0));
               sortedConditions.forEach((condition: any, condIndex: number) => {
                 const ifKeyword = condIndex === 0 ? 'if' : 'if';
                 
@@ -6771,7 +6771,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Генерируем проверку для каждого узла с универсальным сбором ввода (старый формат)
   const inputNodes = (nodes || []).filter(node => node.data.collectUserInput);
   code += `        logging.info(f"DEBUG old format: checking inputNodes: ${inputNodes.map(n => n.id).join(', ')}")\n`;
-  inputNodes.forEach((node, index) => {
+  inputNodes.forEach((node, index: number) => {
     const condition = index === 0 ? 'if' : 'elif';
     code += `        ${condition} waiting_node_id == "${node.id}":\n`;
     
@@ -7144,7 +7144,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     
     // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
-      nodes.forEach((targetNode, index) => {
+      nodes.forEach((targetNode, index: number) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
         
@@ -7265,7 +7265,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     
     // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
-      nodes.forEach((targetNode, index) => {
+      nodes.forEach((targetNode, index: number) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
         
@@ -7366,7 +7366,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     
     // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
-      nodes.forEach((targetNode, index) => {
+      nodes.forEach((targetNode, index: number) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
         
@@ -7461,7 +7461,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     
     // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
-      nodes.forEach((targetNode, index) => {
+      nodes.forEach((targetNode, index: number) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
         
@@ -7590,7 +7590,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   // Generate navigation logic for each node type
   if (nodes.length > 0) {
-    nodes.forEach((targetNode, index) => {
+    nodes.forEach((targetNode, index: number) => {
       const condition = index === 0 ? 'if' : 'elif';
       code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
       
@@ -7747,7 +7747,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           
           // Создаем кнопки для вариантов ответа
           const responseButtons = responseOptions.map((option: string, index: number) => ({
-            text: option.text,
+            text: typeof option === "string" ? option : (option?.text || ""),
             action: 'goto',
             target: `response_${targetNode.id}_${index}`,
             id: `response_${targetNode.id}_${index}`
@@ -7780,13 +7780,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           
           // Добавляем каждый вариант ответа с индивидуальными настройками навигации
           responseOptions.forEach((option: any, index: number) => {
-            const optionValue = option.value || option.text;
+            const optionValue = option.value || typeof option === "string" ? option : (option?.text || "");
             const action = option.action || 'goto';
             const target = option.target || '';
             const url = option.url || '';
             
             code += '                        {\n';
-            code += `                            "text": "${escapeForJsonString(option.text)}",\n`;
+            code += `                            "text": "${escapeForJsonString(typeof option === "string" ? option : (option?.text || ""))}",\n`;
             code += `                            "value": "${escapeForJsonString(optionValue)}",\n`;
             code += `                            "action": "${action}",\n`;
             code += `                            "target": "${target}",\n`;
@@ -8500,7 +8500,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       
       // Добавляем кнопки выбора с галочками
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
-      selectionButtons.forEach((button, index) => {
+      selectionButtons.forEach((button, index: number) => {
         // ИСПРАВЛЕНИЕ: используем тот же формат callback_data как при создании кнопок
         const shortNodeId = generateUniqueShortId(node.id, allNodeIds || []);
         const shortTarget = button.target || button.id || 'btn';
@@ -8660,7 +8660,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `        builder = ReplyKeyboardBuilder()\n`;
               
               // Добавляем кнопки выбора с учетом ранее сохраненных значений
-              targetNode.data.buttons.forEach((button, index) => {
+              targetNode.data.buttons.forEach((button, index: number) => {
                 if (button.action === 'selection') {
                   const cleanText = button.text.replace(/"/g, '\\"');
                   code += `        # Кнопка выбора: ${cleanText}\n`;
@@ -8683,7 +8683,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `        builder = InlineKeyboardBuilder()\n`;
               
               // Добавляем кнопки выбора с учетом ранее сохраненных значений
-              targetNode.data.buttons.forEach((button, index) => {
+              targetNode.data.buttons.forEach((button, index: number) => {
                 if (button.action === 'selection') {
                   const cleanText = button.text.replace(/"/g, '\\"');
                   const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -9671,7 +9671,7 @@ function generatePinMessageHandler(node: Node): string {
   code += `\n`;
   
   // Создаем универсальный обработчик, который работает в любых группах
-  synonyms.forEach((synonym, index) => {
+  synonyms.forEach((synonym, index: number) => {
     const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
     
     // Условие: проверяем синоним и что сообщение пришло из группы
@@ -9800,7 +9800,7 @@ function generateUnpinMessageHandler(node: Node): string {
   code += `\n`;
   
   // Создаем универсальный обработчик, который работает в любых группах
-  synonyms.forEach((synonym, index) => {
+  synonyms.forEach((synonym, index: number) => {
     const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
     
     // Условие: проверяем синоним и что сообщение пришло из группы
@@ -9882,7 +9882,7 @@ function generateDeleteMessageHandler(node: Node): string {
   if (targetGroupId) {
     const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
     
-    synonyms.forEach((synonym, index) => {
+    synonyms.forEach((synonym, index: number) => {
       const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
       code += `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
       code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
@@ -9995,7 +9995,7 @@ function generateDeleteMessageHandler(node: Node): string {
     code += `\n`;
     
     // Генерируем обработчики для синонимов
-    synonyms.forEach((synonym, index) => {
+    synonyms.forEach((synonym, index: number) => {
       const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
       code += `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
       code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
@@ -11975,7 +11975,7 @@ function generateKeyboard(node: Node): string {
         code += '    # Создаем reply клавиатуру для сбора ответов\n';
         code += '    builder = ReplyKeyboardBuilder()\n';
         node.data.responseOptions.forEach(option => {
-          code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
+          code += `    builder.add(KeyboardButton(text="${typeof option === "string" ? option : (option?.text || "")}"))\n`;
         });
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
@@ -11989,7 +11989,7 @@ function generateKeyboard(node: Node): string {
         code += '    builder = InlineKeyboardBuilder()\n';
         node.data.responseOptions.forEach(option => {
           const callbackData = `input_${node.id}_${option.id}`;
-          code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="${callbackData}"))\n`;
+          code += `    builder.add(InlineKeyboardButton(text="${typeof option === "string" ? option : (option?.text || "")}", callback_data="${callbackData}"))\n`;
         });
         
         // Автоматическое распределение колонок
@@ -12546,7 +12546,7 @@ export function parseCodeMap(code: string): CodeWithMap {
   const nodeMap: CodeNodeRange[] = [];
   const stack: Array<{ nodeId: string; startLine: number }> = [];
   
-  lines.forEach((line, index) => {
+  lines.forEach((line, index: number) => {
     const lineNumber = index + 1;
     
     // Проверяем маркер начала
