@@ -587,7 +587,6 @@ export const buttonSchema = z.object({
   url: z.string().optional(),
   requestContact: z.boolean().optional(),
   requestLocation: z.boolean().optional(),
-  priority: z.number().optional(),
   buttonType: z.enum(['normal', 'option', 'complete']).default('normal'),
   skipDataCollection: z.boolean().default(false), // Отключить сбор ответов для этой кнопки
   hideAfterClick: z.boolean().default(false), // Скрыть кнопку после использования
