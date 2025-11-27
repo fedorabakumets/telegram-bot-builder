@@ -82,7 +82,7 @@ function formatTextForPython(text: string): string {
 }
 
 // Функция для получения режима парсинга
-function getParseMode(formatMode: string): string {
+function getParseMode(formatMode: 'none' as const,
   if (formatMode === 'html') {
     return ', parse_mode=ParseMode.HTML';
   } else if (formatMode === 'markdown') {
@@ -784,7 +784,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   }
 
   let code = '';
-  const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+  const sortedConditions = [...conditionalMessages].sort((a: Button, b: Button) => (b.priority || 0) - (a.priority || 0));
   
   // НЕ инициализируем conditional_parse_mode и conditional_keyboard здесь
   // Они должны быть инициализированы вызывающей функцией ПЕРЕД вызовом generateConditionalMessageLogic
@@ -914,7 +914,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         // Устанавливаем parse_mode для условного сообщения
-        const parseMode1 = getParseMode(condition.formatMode || 'text');
+        const parseMode1 = getParseMode(condition.formatMode || 'none');
         if (parseMode1) {
           code += `${indentLevel}    conditional_parse_mode = "${parseMode1}"\n`;
         } else {
@@ -980,7 +980,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Устанавливаем parse_mode для условного сообщения
-        const parseMode2 = getParseMode(condition.formatMode || 'text');
+        const parseMode2 = getParseMode(condition.formatMode || 'none');
         if (parseMode2) {
           code += `${indentLevel}    conditional_parse_mode = "${parseMode2}"\n`;
         } else {
@@ -1039,7 +1039,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Устанавливаем parse_mode для условного сообщения
-        const parseMode3 = getParseMode(condition.formatMode || 'text');
+        const parseMode3 = getParseMode(condition.formatMode || 'none');
         if (parseMode3) {
           code += `${indentLevel}    conditional_parse_mode = "${parseMode3}"\n`;
         } else {
@@ -1104,7 +1104,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Устанавливаем parse_mode для условного сообщения
-        const parseMode4 = getParseMode(condition.formatMode || 'text');
+        const parseMode4 = getParseMode(condition.formatMode || 'none');
         if (parseMode4) {
           code += `${indentLevel}    conditional_parse_mode = "${parseMode4}"\n`;
         } else {
@@ -1286,13 +1286,13 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
       position: { x: xPosition, y: 50 },
       data: {
         messageText: messageText || `Узел ${nodeId}`,
-        keyboardType: keyboardType,
+        keyboardType: keyboardType as 'reply' | 'inline' | 'none',
         buttons: buttons,
         showInMenu: (nodeType === 'start' || nodeType === 'command') && !nodeContent.includes('showInMenu=False'),
         command: command,
         description: description,
         allowMultipleSelection: nodeContent.includes('allowMultipleSelection=True'),
-        formatMode: nodeContent.includes('parse_mode=ParseMode.HTML') ? 'html' : 
+        formatMode: 'none' as const,
                    nodeContent.includes('parse_mode=ParseMode.MARKDOWN') ? 'markdown' : 'text',
         enablePhotoInput: nodeContent.includes('enablePhotoInput'),
         enableVideoInput: nodeContent.includes('enableVideoInput'),
@@ -3145,7 +3145,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 if (buttonType === 'reply') {
                   code += '    builder = ReplyKeyboardBuilder()\n';
                   
-                  responseOptions.forEach((option: string, index: number) => {
+                  responseOptions.forEach((option: any, index: number) => {
                     code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
                   });
                   
@@ -3158,7 +3158,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 } else {
                   code += '    builder = InlineKeyboardBuilder()\n';
                   
-                  responseOptions.forEach((option: string, index: number) => {
+                  responseOptions.forEach((option: any, index: number) => {
                     const optionValue = option.value || option.text;
                     code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
                   });
@@ -3188,7 +3188,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `        "allow_multiple": ${toPythonBoolean(allowMultipleSelection)},\n`;
                 code += `        "next_node_id": "${nextNodeId || ''}",\n`;
                 code += '        "options": [\n';
-                responseOptions.forEach((option: string, index: number) => {
+                responseOptions.forEach((option: any, index: number) => {
                   const optionValue = option.value || option.text;
                   const optionAction = option.action || 'goto';
                   const optionTarget = option.target || '';
@@ -4289,7 +4289,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ищем кнопку по точному соответствию callback_data с nodeId
               code += `    # Дополнительная проверка по точному соответствию callback_data\n`;
-              buttonsToTargetNode.forEach((button) => {
+              buttonsToTargetNode.forEach((button: Button) => {
                 code += `    if callback_query.data == "${nodeId}":\n`;
                 // Для случая когда несколько кнопок ведут к одному узлу, используем первую найденную
                 code += `        button_display_text = "${button.text}"\n`;
@@ -4606,7 +4606,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += '                return False, None\n\n';
                     
                     // Генерируем условную логику для этого узла
-                    const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+                    const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a: Button, b: Button) => (b.priority || 0) - (a.priority || 0));
                     
                     // Создаем единую if/elif/else структуру для всех условий
                     for (let i = 0; i < conditionalMessages.length; i++) {
@@ -5171,7 +5171,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       const responseOptions = node.data.responseOptions || [];
       
       // Обработчики для каждого варианта ответа
-      responseOptions.forEach((option: string, index: number) => {
+      responseOptions.forEach((option: any, index: number) => {
         code += `\n@dp.callback_query(F.data == "response_${node.id}_${index}")\n`;
         const safeFunctionName = `${node.id}_${index}`.replace(/[^a-zA-Z0-9_]/g, '_');
         code += `async def handle_response_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
@@ -5453,7 +5453,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 text: button.text,
                 target: button.target,
                 nodeId: node.id,
-                keyboardType: keyboardType,
+                keyboardType: keyboardType as 'reply' | 'inline' | 'none',
                 hideAfterClick: button.hideAfterClick || false
               });
             }
@@ -5674,7 +5674,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                        user_data_dict.update(user_data.get(user_id, {}))\n`;
             
             // Генерируем логику проверки условий встроенно
-            const conditionalMessages = targetNode.data.conditionalMessages.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+            const conditionalMessages = targetNode.data.conditionalMessages.sort((a: Button, b: Button) => (b.priority || 0) - (a.priority || 0));
             
             code += `                        # Функция для проверки переменных пользователя\n`;
             code += `                        def check_user_variable_inline(var_name, user_data_dict):\n`;
@@ -7779,7 +7779,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '                    "options": [\n';
           
           // Добавляем каждый вариант ответа с индивидуальными настройками навигации
-          responseOptions.forEach((option: string, index: number) => {
+          responseOptions.forEach((option: any, index: number) => {
             const optionValue = option.value || option.text;
             const action = option.action || 'goto';
             const target = option.target || '';
