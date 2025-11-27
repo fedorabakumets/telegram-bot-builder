@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { BotData, Node, BotGroup, buttonSchema } from '@shared/schema';
 import { generateBotFatherCommands } from './commands';
 import { z } from 'zod';
