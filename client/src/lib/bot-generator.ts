@@ -82,7 +82,7 @@ function formatTextForPython(text: string): string {
 }
 
 // Функция для получения режима парсинга
-function getParseMode(formatMode: 'none' as const,
+function getParseMode(formatMode: string): string {
   if (formatMode === 'html') {
     return ', parse_mode=ParseMode.HTML';
   } else if (formatMode === 'markdown') {
