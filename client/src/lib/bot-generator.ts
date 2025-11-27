@@ -4316,8 +4316,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           }
           
           // Определяем переменную для сохранения на основе кнопки (ТОЛЬКО если есть sourceNode)
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: НЕ сохраняем переменную если показана условная клавиатура
+          // Нужно дождаться, пока пользователь нажмёт кнопку на условной клавиатуре
           if (sourceNode) {
             code += '    \n';
+            code += '    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура\n';
+            code += '    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя\n';
+            code += '    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)\n';
+            code += '    if not has_conditional_keyboard_for_save:\n';
+            
             const parentNode = nodes.find(n => 
               n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
             );
@@ -4363,9 +4370,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
             }
             
-            code += '    # Сохраняем в базу данных с правильным именем переменной\n';
-            code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-            code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
+            code += '        # Сохраняем в базу данных с правильным именем переменной\n';
+            code += `        await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
+            code += `        logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
+            code += '    else:\n';
+            code += '        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")\n';
             code += '    \n';
           }
           
