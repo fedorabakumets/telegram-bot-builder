@@ -4214,7 +4214,7 @@ export function PropertiesPanel({
                                             Переменная для текста
                                           </Label>
                                           <Input
-                                            value={condition.textInputVariable || condition.inputVariable || ''}
+                                            value={condition.textInputVariable || condition.inputVariable || condition.variableName || ''}
                                             onChange={(e) => {
                                               const currentConditions = selectedNode.data.conditionalMessages || [];
                                               const updatedConditions = currentConditions.map(c => 
