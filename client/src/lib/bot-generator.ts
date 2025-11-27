@@ -5504,7 +5504,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `    try:\n`;
           code += `        await handle_callback_${safeNodeFunctionName}(fake_callback)\n`;
           code += `    except Exception as e:\n`;
-          code += `        logging.error(f"Ошибка при вызове обработчика узла ${button.target}: {{e}}")\n`;
+          code += `        logging.error(f"Ошибка при вызове обработчика узла ${button.target}: {e}")\n`;
           code += `        await message.answer("Произошла ошибка при обработке кнопки")\n`;
         }
       } else {
