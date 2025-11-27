@@ -28,7 +28,7 @@ function extractNodesAndConnections(botData: BotData) {
     let allNodes: any[] = [];
     let allConnections: any[] = [];
     
-    (botData as any).sheets.forEach((sheet: any) => {
+    (botData as any).sheets.forEach((item: any =sheet: any) => {
       if (sheet.nodes && Array.isArray(sheet.nodes)) {
         allNodes = allNodes.concat(sheet.nodes);
       }
@@ -103,7 +103,7 @@ function hasLocationFeatures(nodes: Node[]): boolean {
     const buttons = node.data.buttons;
     if (!buttons || !Array.isArray(buttons)) return false;
     return buttons.some((button: Button) => 
-      button.action === 'location' && button.requestLocation
+      button.action === 'location' && (button as Button)?.requestLocation
     );
   });
   
@@ -424,10 +424,10 @@ function generateReplyKeyboardCode(buttons: any[], indentLevel: string, nodeId?:
   let code = '';
   code += `${indentLevel}builder = ReplyKeyboardBuilder()\n`;
   
-  buttons.forEach((button, index: number) => {
-    if (button.action === "contact" && button.requestContact) {
+  buttons.forEach((item: any =button, index: number) => {
+    if (button.action === "contact" && (button as Button)?.requestContact) {
       code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-    } else if (button.action === "location" && button.requestLocation) {
+    } else if (button.action === "location" && (button as Button)?.requestLocation) {
       code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
     } else {
       code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
@@ -504,7 +504,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Проверяем условие инициализации: hasSelectionButtons=${hasSelectionButtons} && isMultipleSelection=${isMultipleSelection}`);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Результат проверки: ${hasSelectionButtons && isMultipleSelection}`);
   
-  buttons.forEach((button, index: number) => {
+  buttons.forEach((item: any =button, index: number) => {
     if (button.action === "url") {
       code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
     } else if (button.action === 'goto') {
@@ -725,7 +725,7 @@ function generateConditionalKeyboard(condition: any, indentLevel: string, nodeDa
     code += `${indentLevel}# Создаем inline клавиатуру для условного сообщения\n`;
     code += `${indentLevel}builder = InlineKeyboardBuilder()\n`;
     
-    condition.buttons.forEach((button: Button) => {
+    condition.buttons.forEach((item: any =button: Button) => {
       if (button.action === "url") {
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
       } else if (button.action === 'goto') {
@@ -758,10 +758,10 @@ function generateConditionalKeyboard(condition: any, indentLevel: string, nodeDa
     code += `${indentLevel}# Создаем reply клавиатуру для условного сообщения\n`;
     code += `${indentLevel}builder = ReplyKeyboardBuilder()\n`;
     
-    condition.buttons.forEach((button: Button) => {
-      if (button.action === "contact" && button.requestContact) {
+    condition.buttons.forEach((item: any =button: Button) => {
+      if (button.action === "contact" && (button as Button)?.requestContact) {
         code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-      } else if (button.action === "location" && button.requestLocation) {
+      } else if (button.action === "location" && (button as Button)?.requestLocation) {
         code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
       } else {
         code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
@@ -1359,7 +1359,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Логируем все узлы с их свойствами
   if (nodes && nodes.length > 0) {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем все узлы:');
-    nodes.forEach((node, index: number) => {
+    nodes.forEach((item: any =node, index: number) => {
       const hasMultiSelect = node.data.allowMultipleSelection;
       const hasButtons = node.data.buttons && node.data.buttons.length > 0;
       const continueTarget = node.data.continueButtonTarget;
@@ -1380,7 +1380,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     // Проверим связи
     if (connections && connections.length > 0) {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем связи:');
-      connections.forEach((conn, index: number) => {
+      connections.forEach((item: any =conn, index: number) => {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Связь ${index + 1}: ${conn.source} -> ${conn.target}`);
       });
     }
@@ -1857,7 +1857,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (groups && groups.length > 0) {
     code += '# Подключенные группы\n';
     code += 'CONNECTED_GROUPS = {\n';
-    groups.forEach((group, index: number) => {
+    groups.forEach((item: any =group, index: number) => {
       const groupId = group.groupId || 'None';
       const isLast = index === groups.length - 1;
       code += `    "${group.name}": {\n`;
@@ -2189,7 +2189,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   // Generate handlers for each node
-  (nodes || []).forEach((node: Node) => {
+  (nodes || []).forEach((item: any =node: Node) => {
     // Добавляем маркер начала узла для отслеживания позиции в коде
     code += `\n# @@NODE_START:${node.id}@@\n`;
     
@@ -2246,7 +2246,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '\n# Обработчики синонимов\n';
     nodesWithSynonyms.forEach(node => {
       if (node.data.synonyms) {
-        node.data.synonyms.forEach((synonym: string) => {
+        node.data.synonyms.forEach((item: any =synonym: string) => {
           // Добавляем маркер для синонимов того же узла
           code += `# @@NODE_START:${node.id}@@\n`;
           
@@ -2299,9 +2299,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Collect buttons from conditional messages
   (nodes || []).forEach(node => {
     if (node.data.conditionalMessages) {
-      node.data.conditionalMessages.forEach((condition: any) => {
+      node.data.conditionalMessages.forEach((item: any =condition: any) => {
         if (condition.buttons) {
-          condition.buttons.forEach((button: Button) => {
+          condition.buttons.forEach((item: any =button: Button) => {
             if (button.action === 'goto' && button.target) {
               allConditionalButtons.add(button.target);
             }
@@ -2326,7 +2326,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // Add all connection targets to ensure every connected node gets a handler
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Обрабатываем ${connections.length} соединений`);
-  connections.forEach((connection, index: number) => {
+  connections.forEach((item: any =connection, index: number) => {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Соединение ${index}: source=${connection.source} -> target=${connection.target}`);
     if (connection.target) {
       allReferencedNodeIds.add(connection.target);
@@ -2826,7 +2826,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
@@ -2871,7 +2871,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
@@ -2922,7 +2922,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
@@ -3047,7 +3047,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '        \n';
                 code += '        # Отправляем дополнительные кнопки\n';
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
@@ -3080,7 +3080,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
@@ -3145,7 +3145,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 if (buttonType === 'reply') {
                   code += '    builder = ReplyKeyboardBuilder()\n';
                   
-                  responseOptions.forEach((option: any, index: number) => {
+                  responseOptions.forEach((item: any =option: any, index: number) => {
                     code += `    builder.add(KeyboardButton(text="${typeof option === "string" ? option : (option?.text || "")}"))\n`;
                   });
                   
@@ -3158,8 +3158,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 } else {
                   code += '    builder = InlineKeyboardBuilder()\n';
                   
-                  responseOptions.forEach((option: any, index: number) => {
-                    const optionValue = option.value || typeof option === "string" ? option : (option?.text || "");
+                  responseOptions.forEach((item: any =option: any, index: number) => {
+                    const optionValue = (option as any).value || typeof option === "string" ? option : (option?.text || "");
                     code += `    builder.add(InlineKeyboardButton(text="${typeof option === "string" ? option : (option?.text || "")}", callback_data="response_${targetNode.id}_${index}"))\n`;
                   });
                   
@@ -3188,11 +3188,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `        "allow_multiple": ${toPythonBoolean(allowMultipleSelection)},\n`;
                 code += `        "next_node_id": "${nextNodeId || ''}",\n`;
                 code += '        "options": [\n';
-                responseOptions.forEach((option: any, index: number) => {
-                  const optionValue = option.value || typeof option === "string" ? option : (option?.text || "");
-                  const optionAction = option.action || 'goto';
-                  const optionTarget = option.target || '';
-                  const optionUrl = option.url || '';
+                responseOptions.forEach((item: any =option: any, index: number) => {
+                  const optionValue = (option as any).value || typeof option === "string" ? option : (option?.text || "");
+                  const optionAction = (option as any).action || 'goto';
+                  const optionTarget = (option as any).target || '';
+                  const optionUrl = (option as any).url || '';
                   code += `            {"index": ${index}, "text": "${escapeForJsonString(typeof option === "string" ? option : (option?.text || ""))}", "value": "${escapeForJsonString(optionValue)}", "action": "${optionAction}", "target": "${optionTarget}", "url": "${escapeForJsonString(optionUrl)}"},\n`;
                 });
                 code += '        ],\n';
@@ -3286,7 +3286,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    if keyboard is None:\n';
                 code += '        # Создаем inline клавиатуру для start узла\n';
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
@@ -3338,7 +3338,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += '    # Создаем inline клавиатуру для command узла\n';
                 code += '    builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                   if (btn.action === "url") {
                     code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
@@ -3425,7 +3425,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
                   code += '        builder = InlineKeyboardBuilder()\n';
-                  targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                  targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                     if (btn.action === "url") {
                       code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                     } else if (btn.action === 'goto') {
@@ -3646,7 +3646,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '        builder = InlineKeyboardBuilder()\n';
           
           // Добавляем кнопки метро
-          metroNode.data.buttons.forEach((btn: Button, index: number) => {
+          metroNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
             const shortNodeId = metroNode.id.slice(-10).replace(/^_+/, '');
             const callbackData = `ms_${shortNodeId}_${btn.target || `btn_${index}`}`;
             code += `        # Кнопка метро: ${btn.text}\n`;
@@ -3666,7 +3666,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '        # Добавляем обычные кнопки interests_result\n';
           if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
             code += '        result_builder = InlineKeyboardBuilder()\n';
-            interestsResultNode.data.buttons.forEach((btn: Button, index: number) => {
+            interestsResultNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
               if (btn.action === "goto" && btn.target) {
                 const btnCallbackData = `${btn.target}_btn_${index}`;
                 code += `        result_builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
@@ -3694,7 +3694,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Handle buttons if any (без метро клавиатуры)
           if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
             code += '        builder = InlineKeyboardBuilder()\n';
-            interestsResultNode.data.buttons.forEach((btn: Button, index: number) => {
+            interestsResultNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
               if (btn.action === "goto" && btn.target) {
                 const btnCallbackData = `${btn.target}_btn_${index}`;
                 code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
@@ -3716,7 +3716,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    logging.info("🚇 Узел metro_selection не найден, используем обычную логику")\n';
           if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
             code += '    builder = InlineKeyboardBuilder()\n';
-            interestsResultNode.data.buttons.forEach((btn: Button, index: number) => {
+            interestsResultNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
               if (btn.action === "goto" && btn.target) {
                 const btnCallbackData = `${btn.target}_btn_${index}`;
                 code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
@@ -3951,7 +3951,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const regularButtons = buttonsToUse.filter(button => button.action !== 'selection');
               
               // Добавляем кнопки выбора с отметками о состоянии
-              selectionButtons.forEach((button, index: number) => {
+              selectionButtons.forEach((item: any =button, index: number) => {
                 code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
                 code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
                 code += `    builder.add(KeyboardButton(text=f"{selected_mark}${button.text}"))\n`;
@@ -3964,7 +3964,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               // Добавляем обычные кнопки
-              regularButtons.forEach((btn: Button) => {
+              regularButtons.forEach((item: any =btn: Button) => {
                 code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
               });
               
@@ -3987,7 +3987,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               // Добавляем кнопки выбора с отметками о состоянии
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
-              selectionButtons.forEach((button, index: number) => {
+              selectionButtons.forEach((item: any =button, index: number) => {
                 // Используем короткие callback_data
                 const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []); // Используем новую функцию
                 const shortTarget = (button.target || button.id || 'btn').slice(-8);
@@ -4023,7 +4023,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }  
               
               // Добавляем обычные кнопки (navigation и другие)
-              regularButtons.forEach((btn: Button, index: number) => {
+              regularButtons.forEach((item: any =btn: Button, index: number) => {
                 if (btn.action === "goto" && btn.target) {
                   const btnCallbackData = `${btn.target}_btn_${index}`;
                   code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
@@ -4061,7 +4061,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    else:\n';
                 code += '        # Условная клавиатура не создана, используем обычную\n';
                 code += '        builder = ReplyKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button) => {
+                targetNode.data.buttons.forEach((item: any =btn: Button) => {
                   if (btn.action === "contact" && btn.requestContact) {
                     code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
                   } else if (btn.action === "location" && btn.requestLocation) {
@@ -4078,7 +4078,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 // Нет условных сообщений, просто создаем обычную клавиатуру
                 code += '    # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
                 code += '    builder = ReplyKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button) => {
+                targetNode.data.buttons.forEach((item: any =btn: Button) => {
                   if (btn.action === "contact" && btn.requestContact) {
                     code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
                   } else if (btn.action === "location" && btn.requestLocation) {
@@ -4120,7 +4120,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // Генерируем inline клавиатуру (по умолчанию)
               code += '    # Create inline keyboard\n';
               code += '    builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn: Button, index: number) => {
+              targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                 if (btn.action === "goto" && btn.target) {
                   const btnCallbackData = `${btn.target}_btn_${index}`;
                   code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
@@ -4281,7 +4281,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // Несколько кнопок ведут к одному узлу - создаем логику определения по callback_data
               code += `    # Определяем текст кнопки по callback_data\n`;
               code += `    button_display_text = "Неизвестная кнопка"\n`;
-              buttonsToTargetNode.forEach((button, index: number) => {
+              buttonsToTargetNode.forEach((item: any =button, index: number) => {
                 // Проверяем по суффиксу _btn_index в callback_data
                 code += `    if callback_query.data.endswith("_btn_${index}"):\n`;
                 code += `        button_display_text = "${button.text}"\n`;
@@ -4289,7 +4289,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ищем кнопку по точному соответствию callback_data с nodeId
               code += `    # Дополнительная проверка по точному соответствию callback_data\n`;
-              buttonsToTargetNode.forEach((button: Button) => {
+              buttonsToTargetNode.forEach((item: any =button: Button) => {
                 code += `    if callback_query.data == "${nodeId}":\n`;
                 // Для случая когда несколько кнопок ведут к одному узлу, используем первую найденную
                 code += `        button_display_text = "${button.text}"\n`;
@@ -4407,7 +4407,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             
             // Добавляем навигацию для каждого узла
             if (nodes.length > 0) {
-              nodes.forEach((navTargetNode, index: number) => {
+              nodes.forEach((item: any =navTargetNode, index: number) => {
                 const condition = index === 0 ? 'if' : 'elif';
                 code += `        ${condition} next_node_id == "${navTargetNode.id}":\n`;
                 
@@ -4480,10 +4480,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         if (navTargetNode.data.keyboardType === 'reply' && navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                           code += '            # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
                           code += '            builder = ReplyKeyboardBuilder()\n';
-                          navTargetNode.data.buttons.forEach((button: Button) => {
-                            if (button.action === "contact" && button.requestContact) {
+                          navTargetNode.data.buttons.forEach((item: any =button: Button) => {
+                            if (button.action === "contact" && (button as Button)?.requestContact) {
                               code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-                            } else if (button.action === "location" && button.requestLocation) {
+                            } else if (button.action === "location" && (button as Button)?.requestLocation) {
                               code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
                             } else {
                               code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
@@ -4657,7 +4657,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                           
                           if (condition.keyboardType === 'inline') {
                             code += '                builder = InlineKeyboardBuilder()\n';
-                            condition.buttons.forEach((button: Button) => {
+                            condition.buttons.forEach((item: any =button: Button) => {
                               if (button.action === "url") {
                                 code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
                               } else if (button.action === 'goto') {
@@ -4676,10 +4676,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                             code += '                await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n';
                           } else if (condition.keyboardType === 'reply') {
                             code += '                builder = ReplyKeyboardBuilder()\n';
-                            condition.buttons.forEach((button: Button) => {
-                              if (button.action === "contact" && button.requestContact) {
+                            condition.buttons.forEach((item: any =button: Button) => {
+                              if (button.action === "contact" && (button as Button)?.requestContact) {
                                 code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-                              } else if (button.action === "location" && button.requestLocation) {
+                              } else if (button.action === "location" && (button as Button)?.requestLocation) {
                                 code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
                               } else {
                                 code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
@@ -4967,7 +4967,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Handle keyboard for target node
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
               code += '    builder = ReplyKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn: Button, index: number) => {
+              targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                 code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
               });
               const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
@@ -5034,7 +5034,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
               code += '    else:\n';
               code += '        builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn: Button, index: number) => {
+              targetNode.data.buttons.forEach((item: any =btn: Button, index: number) => {
                 if (btn.action === "url") {
                   code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                 } else if (btn.action === 'goto') {
@@ -5171,7 +5171,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       const responseOptions = node.data.responseOptions || [];
       
       // Обработчики для каждого варианта ответа
-      responseOptions.forEach((option: any, index: number) => {
+      responseOptions.forEach((item: any =option: any, index: number) => {
         code += `\n@dp.callback_query(F.data == "response_${node.id}_${index}")\n`;
         const safeFunctionName = `${node.id}_${index}`.replace(/[^a-zA-Z0-9_]/g, '_');
         code += `async def handle_response_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
@@ -5183,7 +5183,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '        return\n';
         code += '    \n';
         code += '    config = user_data[user_id]["button_response_config"]\n';
-        code += `    selected_value = "${option.value || typeof option === "string" ? option : (option?.text || "")}"\n`;
+        code += `    selected_value = "${(option as any).value || typeof option === "string" ? option : (option?.text || "")}"\n`;
         code += `    selected_text = "${typeof option === "string" ? option : (option?.text || "")}"\n`;
         code += '    \n';
         code += '    # Обработка множественного выбора\n';
@@ -5238,7 +5238,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         
         // Add navigation for done button
         if (nodes.length > 0) {
-          nodes.forEach((btnNode, btnIndex) => {
+          nodes.forEach((item: any =btnNode, btnIndex) => {
             const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
             const condition = btnIndex === 0 ? 'if' : 'elif';
             code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
@@ -5343,7 +5343,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         
         // Добавляем обработку различных команд для button responses
         const commandNodes = (nodes || []).filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
-        commandNodes.forEach((cmdNode, cmdIndex) => {
+        commandNodes.forEach((item: any =cmdNode, cmdIndex) => {
           const condition = cmdIndex === 0 ? 'if' : 'elif';
           code += `            ${condition} command == "${cmdNode.data.command}":\n`;
           code += `                try:\n`;
@@ -5363,7 +5363,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         
         // Generate navigation logic for button responses  
         if (nodes.length > 0) {
-          nodes.forEach((btnNode, btnIndex) => {
+          nodes.forEach((item: any =btnNode, btnIndex) => {
             const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
             const condition = btnIndex === 0 ? 'if' : 'elif';
             code += `                ${condition} target_node_id == "${btnNode.id}":\n`;
@@ -5384,7 +5384,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '                # Вызываем обработчик для следующего узла\n';
           
           if (nodes.length > 0) {
-            nodes.forEach((btnNode, btnIndex) => {
+            nodes.forEach((item: any =btnNode, btnIndex) => {
               const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
               const condition = btnIndex === 0 ? 'if' : 'elif';
               code += `                ${condition} next_node_id == "${btnNode.id}":\n`;
@@ -5426,7 +5426,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   nodes.forEach(node => {
     // Обычные кнопки узла
     if (node.data.buttons) {
-      node.data.buttons.forEach((button: Button) => {
+      node.data.buttons.forEach((item: any =button: Button) => {
         if (button.action === 'goto' && button.target && node.data.keyboardType === 'reply') {
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА reply goto кнопка: "${button.text}" -> ${button.target} в узле ${node.id}`);
           replyGotoButtons.push({
@@ -5442,9 +5442,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     
     // Кнопки в условных сообщениях
     if (node.data.conditionalMessages) {
-      node.data.conditionalMessages.forEach((condition: any) => {
+      node.data.conditionalMessages.forEach((item: any =condition: any) => {
         if (condition.buttons) {
-          condition.buttons.forEach((button: Button) => {
+          condition.buttons.forEach((item: any =button: Button) => {
             // Для conditional messages берем keyboardType из condition или node
             const keyboardType = condition.keyboardType || node.data.keyboardType || 'reply';
             if (button.action === 'goto' && button.target && keyboardType === 'reply') {
@@ -5478,7 +5478,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       }
     });
     
-    uniqueButtons.forEach((button, buttonText) => {
+    uniqueButtons.forEach((item: any =button, buttonText) => {
       const safeFunctionName = button.text.replace(/[^a-zA-Z0-9_а-яА-Я]/g, '_');
       const safeNodeFunctionName = button.target.replace(/[^a-zA-Z0-9_]/g, '_');
       
@@ -5623,7 +5623,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '                    \n';
   
   if (nodes.length > 0) {
-    nodes.forEach((targetNode, index: number) => {
+    nodes.forEach((item: any =targetNode, index: number) => {
       const condition = index === 0 ? 'if' : 'elif';
       const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
       code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
@@ -6059,7 +6059,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             code += '                        # Создаем reply клавиатуру\n';
             code += '                        builder = ReplyKeyboardBuilder()\n';
-            targetNode.data.buttons.forEach((btn: Button) => {
+            targetNode.data.buttons.forEach((item: any =btn: Button) => {
               code += `                        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
             });
             const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
@@ -6169,7 +6169,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   // Добавляем обработку различных команд для reply клавиатур
   const commandNodes = (nodes || []).filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
-  commandNodes.forEach((cmdNode, cmdIndex) => {
+  commandNodes.forEach((item: any =cmdNode, cmdIndex) => {
     const condition = cmdIndex === 0 ? 'if' : 'elif';
     code += `                ${condition} command == "${cmdNode.data.command}":\n`;
     code += `                    try:\n`;
@@ -6190,7 +6190,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // Generate navigation logic for reply button responses  
   if (nodes.length > 0) {
-    nodes.forEach((btnNode, btnIndex) => {
+    nodes.forEach((item: any =btnNode, btnIndex) => {
       const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
       const condition = btnIndex === 0 ? 'if' : 'elif';
       code += `                    ${condition} target_node_id == "${btnNode.id}":\n`;
@@ -6211,7 +6211,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '                        # Вызываем обработчик для следующего узла\n';
   
   if (nodes.length > 0) {
-    nodes.forEach((btnNode, btnIndex) => {
+    nodes.forEach((item: any =btnNode, btnIndex) => {
       const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
       const condition = btnIndex === 0 ? 'if' : 'elif';
       code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
@@ -6349,7 +6349,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   // Добавляем навигацию для каждого узла
   if (nodes.length > 0) {
-    nodes.forEach((targetNode, index: number) => {
+    nodes.forEach((item: any =targetNode, index: number) => {
       const condition = index === 0 ? 'if' : 'elif';
       code += `${conditionIndent}${condition} current_node_id == "${targetNode.id}":\n`;
       
@@ -6406,7 +6406,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
             
             // Добавляем кнопки для узла с collectUserInput + buttons
-            targetNode.data.buttons.forEach((btn: Button, btnIndex: number) => {
+            targetNode.data.buttons.forEach((item: any =btn: Button, btnIndex: number) => {
               if (btn.action === "goto" && btn.target) {
                 const callbackData = `${btn.target}`;
                 code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
@@ -6462,7 +6462,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `${bodyIndent}conditional_met = False\n`;
               
               const sortedConditions = [...targetNode.data.conditionalMessages].sort((a: any: any, b: any) => (b.priority || 0) - (a.priority || 0));
-              sortedConditions.forEach((condition: any, condIndex: number) => {
+              sortedConditions.forEach((item: any =condition: any, condIndex: number) => {
                 const ifKeyword = condIndex === 0 ? 'if' : 'if';
                 
                 if (condition.condition === 'user_data_exists' && condition.variableName) {
@@ -6474,7 +6474,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   // Условная клавиатура
                   if (condition.buttons && condition.buttons.length > 0) {
                     code += `${bodyIndent}    builder = ReplyKeyboardBuilder()\n`;
-                    condition.buttons.forEach((btn: Button) => {
+                    condition.buttons.forEach((item: any =btn: Button) => {
                       code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
                     });
                     const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
@@ -6549,7 +6549,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `${bodyIndent}    builder = ReplyKeyboardBuilder()\n`;
               
               // Добавляем кнопки для reply клавиатуры
-              targetNode.data.buttons.forEach((btn: Button) => {
+              targetNode.data.buttons.forEach((item: any =btn: Button) => {
                 if (btn.action === "contact" && btn.requestContact) {
                   code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
                 } else if (btn.action === "location" && btn.requestLocation) {
@@ -6588,7 +6588,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
               
               // Добавляем кнопки для reply клавиатуры
-              targetNode.data.buttons.forEach((btn: Button) => {
+              targetNode.data.buttons.forEach((item: any =btn: Button) => {
                 if (btn.action === "contact" && btn.requestContact) {
                   code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
                 } else if (btn.action === "location" && btn.requestLocation) {
@@ -6626,7 +6626,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
             
             // Добавляем кнопки
-            targetNode.data.buttons.forEach((btn: Button, btnIndex: number) => {
+            targetNode.data.buttons.forEach((item: any =btn: Button, btnIndex: number) => {
               if (btn.action === "goto" && btn.target) {
                 const callbackData = `${btn.target}`;
                 code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
@@ -6650,7 +6650,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
             
             // Добавляем кнопки для reply клавиатуры
-            targetNode.data.buttons.forEach((btn: Button) => {
+            targetNode.data.buttons.forEach((item: any =btn: Button) => {
               if (btn.action === "contact" && btn.requestContact) {
                 code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
               } else if (btn.action === "location" && btn.requestLocation) {
@@ -6771,7 +6771,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Генерируем проверку для каждого узла с универсальным сбором ввода (старый формат)
   const inputNodes = (nodes || []).filter(node => node.data.collectUserInput);
   code += `        logging.info(f"DEBUG old format: checking inputNodes: ${inputNodes.map(n => n.id).join(', ')}")\n`;
-  inputNodes.forEach((node, index: number) => {
+  inputNodes.forEach((item: any =node, index: number) => {
     const condition = index === 0 ? 'if' : 'elif';
     code += `        ${condition} waiting_node_id == "${node.id}":\n`;
     
@@ -7005,7 +7005,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '            # Находим и вызываем обработчик целевого узла\n';
   
   // Добавляем навигацию к целевому узлу
-  nodes.forEach((targetNode) => {
+  nodes.forEach((item: any =targetNode) => {
     code += `            if input_target_node_id == "${targetNode.id}":\n`;
     if (targetNode.type === 'message') {
       const messageText = targetNode.data.messageText || 'Сообщение';
@@ -7144,7 +7144,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     
     // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
-      nodes.forEach((targetNode, index: number) => {
+      nodes.forEach((item: any =targetNode, index: number) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
         
@@ -7265,7 +7265,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     
     // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
-      nodes.forEach((targetNode, index: number) => {
+      nodes.forEach((item: any =targetNode, index: number) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
         
@@ -7366,7 +7366,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     
     // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
-      nodes.forEach((targetNode, index: number) => {
+      nodes.forEach((item: any =targetNode, index: number) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
         
@@ -7461,7 +7461,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     
     // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
-      nodes.forEach((targetNode, index: number) => {
+      nodes.forEach((item: any =targetNode, index: number) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
         
@@ -7590,7 +7590,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   // Generate navigation logic for each node type
   if (nodes.length > 0) {
-    nodes.forEach((targetNode, index: number) => {
+    nodes.forEach((item: any =targetNode, index: number) => {
       const condition = index === 0 ? 'if' : 'elif';
       code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
       
@@ -7601,7 +7601,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         
         code += `                text = ${formattedText}\n`;
         code += '                builder = InlineKeyboardBuilder()\n';
-        targetNode.data.buttons.forEach((button: Button, buttonIndex: number) => {
+        targetNode.data.buttons.forEach((item: any =button: Button, buttonIndex: number) => {
           if (button.action === "url") {
             code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
           } else if (button.action === 'goto') {
@@ -7623,10 +7623,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         
         code += `                text = ${formattedText}\n`;
           code += '                builder = ReplyKeyboardBuilder()\n';
-          targetNode.data.buttons.forEach((button: Button) => {
-            if (button.action === "contact" && button.requestContact) {
+          targetNode.data.buttons.forEach((item: any =button: Button) => {
+            if (button.action === "contact" && (button as Button)?.requestContact) {
               code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-            } else if (button.action === "location" && button.requestLocation) {
+            } else if (button.action === "location" && (button as Button)?.requestLocation) {
               code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
             } else {
               code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
@@ -7779,11 +7779,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '                    "options": [\n';
           
           // Добавляем каждый вариант ответа с индивидуальными настройками навигации
-          responseOptions.forEach((option: any, index: number) => {
-            const optionValue = option.value || typeof option === "string" ? option : (option?.text || "");
-            const action = option.action || 'goto';
-            const target = option.target || '';
-            const url = option.url || '';
+          responseOptions.forEach((item: any =option: any, index: number) => {
+            const optionValue = (option as any).value || typeof option === "string" ? option : (option?.text || "");
+            const action = (option as any).action || 'goto';
+            const target = (option as any).target || '';
+            const url = (option as any).url || '';
             
             code += '                        {\n';
             code += `                            "text": "${escapeForJsonString(typeof option === "string" ? option : (option?.text || ""))}",\n`;
@@ -7933,7 +7933,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     // Обычные кнопки узла
     if (node.data.buttons) {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
-      node.data.buttons.forEach((button: Button, index: number) => {
+      node.data.buttons.forEach((item: any =button: Button, index: number) => {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
         if (button.action === 'command' && button.target) {
           const commandCallback = `cmd_${button.target.replace('/', '')}`;
@@ -7948,9 +7948,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     // Кнопки в условных сообщениях
     if (node.data.conditionalMessages) {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
-      node.data.conditionalMessages.forEach((condition: any) => {
+      node.data.conditionalMessages.forEach((item: any =condition: any) => {
         if (condition.buttons) {
-          condition.buttons.forEach((button: Button) => {
+          condition.buttons.forEach((item: any =button: Button) => {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
             if (button.action === 'command' && button.target) {
               const commandCallback = `cmd_${button.target.replace('/', '')}`;
@@ -8500,7 +8500,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       
       // Добавляем кнопки выбора с галочками
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
-      selectionButtons.forEach((button, index: number) => {
+      selectionButtons.forEach((item: any =button, index: number) => {
         // ИСПРАВЛЕНИЕ: используем тот же формат callback_data как при создании кнопок
         const shortNodeId = generateUniqueShortId(node.id, allNodeIds || []);
         const shortTarget = button.target || button.id || 'btn';
@@ -8660,7 +8660,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `        builder = ReplyKeyboardBuilder()\n`;
               
               // Добавляем кнопки выбора с учетом ранее сохраненных значений
-              targetNode.data.buttons.forEach((button, index: number) => {
+              targetNode.data.buttons.forEach((item: any =button, index: number) => {
                 if (button.action === 'selection') {
                   const cleanText = button.text.replace(/"/g, '\\"');
                   code += `        # Кнопка выбора: ${cleanText}\n`;
@@ -8683,7 +8683,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `        builder = InlineKeyboardBuilder()\n`;
               
               // Добавляем кнопки выбора с учетом ранее сохраненных значений
-              targetNode.data.buttons.forEach((button, index: number) => {
+              targetNode.data.buttons.forEach((item: any =button, index: number) => {
                 if (button.action === 'selection') {
                   const cleanText = button.text.replace(/"/g, '\\"');
                   const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -9671,7 +9671,7 @@ function generatePinMessageHandler(node: Node): string {
   code += `\n`;
   
   // Создаем универсальный обработчик, который работает в любых группах
-  synonyms.forEach((synonym, index: number) => {
+  synonyms.forEach((item: any =synonym, index: number) => {
     const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
     
     // Условие: проверяем синоним и что сообщение пришло из группы
@@ -9800,7 +9800,7 @@ function generateUnpinMessageHandler(node: Node): string {
   code += `\n`;
   
   // Создаем универсальный обработчик, который работает в любых группах
-  synonyms.forEach((synonym, index: number) => {
+  synonyms.forEach((item: any =synonym, index: number) => {
     const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
     
     // Условие: проверяем синоним и что сообщение пришло из группы
@@ -9882,7 +9882,7 @@ function generateDeleteMessageHandler(node: Node): string {
   if (targetGroupId) {
     const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
     
-    synonyms.forEach((synonym, index: number) => {
+    synonyms.forEach((item: any =synonym, index: number) => {
       const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
       code += `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
       code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
@@ -9995,7 +9995,7 @@ function generateDeleteMessageHandler(node: Node): string {
     code += `\n`;
     
     // Генерируем обработчики для синонимов
-    synonyms.forEach((synonym, index: number) => {
+    synonyms.forEach((item: any =synonym, index: number) => {
       const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
       code += `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
       code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
@@ -11916,9 +11916,9 @@ function generateKeyboard(node: Node): string {
       code += `${indent4}# Создаем reply клавиатуру (+ дополнительный сбор ответов включен)\n`;
       code += `${indent4}builder = ReplyKeyboardBuilder()\n`;
       node.data.buttons.forEach(button => {
-        if (button.action === "contact" && button.requestContact) {
+        if (button.action === "contact" && (button as Button)?.requestContact) {
           code += `${indent4}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-        } else if (button.action === "location" && button.requestLocation) {
+        } else if (button.action === "location" && (button as Button)?.requestLocation) {
           code += `${indent4}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
         } else {
           code += `${indent4}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
@@ -12054,9 +12054,9 @@ function generateKeyboard(node: Node): string {
         
         // Добавляем обычные кнопки
         regularButtons.forEach(button => {
-          if (button.action === "contact" && button.requestContact) {
+          if (button.action === "contact" && (button as Button)?.requestContact) {
             code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-          } else if (button.action === "location" && button.requestLocation) {
+          } else if (button.action === "location" && (button as Button)?.requestLocation) {
             code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
           } else {
             code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
@@ -12086,10 +12086,10 @@ function generateKeyboard(node: Node): string {
       } else {
         // Обычная reply клавиатура
         code += `${indent3}builder = ReplyKeyboardBuilder()\n`;
-        node.data.buttons.forEach((button: Button) => {
-          if (button.action === "contact" && button.requestContact) {
+        node.data.buttons.forEach((item: any =button: Button) => {
+          if (button.action === "contact" && (button as Button)?.requestContact) {
             code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-          } else if (button.action === "location" && button.requestLocation) {
+          } else if (button.action === "location" && (button as Button)?.requestLocation) {
             code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
           } else {
             code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
@@ -12159,7 +12159,7 @@ function generateKeyboard(node: Node): string {
         });
         
         // Добавляем обычные кнопки
-        regularButtons.forEach((button: Button) => {
+        regularButtons.forEach((item: any =button: Button) => {
           if (button.action === "url") {
             code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
           } else if (button.action === 'goto') {
@@ -12202,7 +12202,7 @@ function generateKeyboard(node: Node): string {
         code += `${indent3}# Создаем inline клавиатуру с кнопками\n`;
         code += `${indent3}logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${node.id} с ${node.data.buttons ? node.data.buttons.length : 0} кнопками")\n`;
         code += `${indent3}builder = InlineKeyboardBuilder()\n`;
-        node.data.buttons.forEach((button: Button) => {
+        node.data.buttons.forEach((item: any =button: Button) => {
           if (button.action === "url") {
             code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
           } else if (button.action === 'goto') {
@@ -12546,7 +12546,7 @@ export function parseCodeMap(code: string): CodeWithMap {
   const nodeMap: CodeNodeRange[] = [];
   const stack: Array<{ nodeId: string; startLine: number }> = [];
   
-  lines.forEach((line, index: number) => {
+  lines.forEach((item: any =line, index: number) => {
     const lineNumber = index + 1;
     
     // Проверяем маркер начала
