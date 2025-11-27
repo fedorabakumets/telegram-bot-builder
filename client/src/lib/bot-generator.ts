@@ -11733,7 +11733,45 @@ function generateKeyboard(node: Node): string {
       code += '    \n';
       code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
       code += '    if use_conditional_keyboard:\n';
-      code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+      
+      // ИСПРАВЛЕНИЕ: Проверяем наличие медиа переменных (фото, видео и т.д.)
+      const photoVar = node.data.photoInputVariable;
+      const videoVar = node.data.videoInputVariable;
+      const audioVar = node.data.audioInputVariable;
+      const docVar = node.data.documentInputVariable;
+      
+      if (photoVar) {
+        code += `        # Проверяем, есть ли фото для отправки\n`;
+        code += `        photo_value = user_data_dict.get("${photoVar}") if 'user_data_dict' in locals() else None\n`;
+        code += `        if photo_value and photo_value != "":\n`;
+        code += `            await message.answer_photo(photo=photo_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        code += `        else:\n`;
+        code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+      } else if (videoVar) {
+        code += `        # Проверяем, есть ли видео для отправки\n`;
+        code += `        video_value = user_data_dict.get("${videoVar}") if 'user_data_dict' in locals() else None\n`;
+        code += `        if video_value and video_value != "":\n`;
+        code += `            await message.answer_video(video=video_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        code += `        else:\n`;
+        code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+      } else if (audioVar) {
+        code += `        # Проверяем, есть ли аудио для отправки\n`;
+        code += `        audio_value = user_data_dict.get("${audioVar}") if 'user_data_dict' in locals() else None\n`;
+        code += `        if audio_value and audio_value != "":\n`;
+        code += `            await message.answer_audio(audio=audio_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        code += `        else:\n`;
+        code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+      } else if (docVar) {
+        code += `        # Проверяем, есть ли документ для отправки\n`;
+        code += `        doc_value = user_data_dict.get("${docVar}") if 'user_data_dict' in locals() else None\n`;
+        code += `        if doc_value and doc_value != "":\n`;
+        code += `            await message.answer_document(document=doc_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        code += `        else:\n`;
+        code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+      } else {
+        code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+      }
+      
       code += '    else:\n';
       code += '        # Отправляем обычные кнопки если условной клавиатуры нет\n';
     }
@@ -11834,7 +11872,41 @@ function generateKeyboard(node: Node): string {
         code += '    \n';
         code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
         code += '    if use_conditional_keyboard:\n';
-        code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+        
+        // ИСПРАВЛЕНИЕ: Проверяем медиа переменные для текстового ввода
+        const photoVar2 = node.data.photoInputVariable;
+        const videoVar2 = node.data.videoInputVariable;
+        const audioVar2 = node.data.audioInputVariable;
+        const docVar2 = node.data.documentInputVariable;
+        
+        if (photoVar2) {
+          code += `        photo_value = user_data_dict.get("${photoVar2}") if 'user_data_dict' in locals() else None\n`;
+          code += `        if photo_value and photo_value != "":\n`;
+          code += `            await message.answer_photo(photo=photo_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+          code += `        else:\n`;
+          code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        } else if (videoVar2) {
+          code += `        video_value = user_data_dict.get("${videoVar2}") if 'user_data_dict' in locals() else None\n`;
+          code += `        if video_value and video_value != "":\n`;
+          code += `            await message.answer_video(video=video_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+          code += `        else:\n`;
+          code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        } else if (audioVar2) {
+          code += `        audio_value = user_data_dict.get("${audioVar2}") if 'user_data_dict' in locals() else None\n`;
+          code += `        if audio_value and audio_value != "":\n`;
+          code += `            await message.answer_audio(audio=audio_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+          code += `        else:\n`;
+          code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        } else if (docVar2) {
+          code += `        doc_value = user_data_dict.get("${docVar2}") if 'user_data_dict' in locals() else None\n`;
+          code += `        if doc_value and doc_value != "":\n`;
+          code += `            await message.answer_document(document=doc_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+          code += `        else:\n`;
+          code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        } else {
+          code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+        }
+        
         code += '    else:\n';
         code += `        await message.answer(text${parseMode})\n`;
       } else {
