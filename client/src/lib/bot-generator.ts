@@ -4992,6 +4992,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
               code += '    if use_conditional_keyboard:\n';
+              
+              // ИСПРАВЛЕНИЕ: Добавляем проверку медиа для reply button handler
+              const photoVarReply1 = targetNode.data.photoInputVariable;
+              const videoVarReply1 = targetNode.data.videoInputVariable;
+              const audioVarReply1 = targetNode.data.audioInputVariable;
+              const docVarReply1 = targetNode.data.documentInputVariable;
+              
               // Определяем режим форматирования для целевого узла
               let parseModeTarget = '';
               if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -4999,7 +5006,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else if (targetNode.data.formatMode === 'html') {
                 parseModeTarget = ', parse_mode=ParseMode.HTML';
               }
-              code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              
+              if (photoVarReply1) {
+                code += `        photo_value = user_data_dict.get("${photoVarReply1}") if 'user_data_dict' in locals() else None\n`;
+                code += `        if photo_value and photo_value != "":\n`;
+                code += `            await message.answer_photo(photo=photo_value, caption=text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += `        else:\n`;
+                code += `            await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              } else if (videoVarReply1) {
+                code += `        video_value = user_data_dict.get("${videoVarReply1}") if 'user_data_dict' in locals() else None\n`;
+                code += `        if video_value and video_value != "":\n`;
+                code += `            await message.answer_video(video=video_value, caption=text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += `        else:\n`;
+                code += `            await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              } else if (audioVarReply1) {
+                code += `        audio_value = user_data_dict.get("${audioVarReply1}") if 'user_data_dict' in locals() else None\n`;
+                code += `        if audio_value and audio_value != "":\n`;
+                code += `            await message.answer_audio(audio=audio_value, caption=text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += `        else:\n`;
+                code += `            await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              } else if (docVarReply1) {
+                code += `        doc_value = user_data_dict.get("${docVarReply1}") if 'user_data_dict' in locals() else None\n`;
+                code += `        if doc_value and doc_value != "":\n`;
+                code += `            await message.answer_document(document=doc_value, caption=text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += `        else:\n`;
+                code += `            await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              } else {
+                code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              }
+              
               code += '    else:\n';
               code += '        builder = InlineKeyboardBuilder()\n';
               targetNode.data.buttons.forEach((btn: Button, index: number) => {
@@ -5061,6 +5096,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    # Отправляем сообщение с учетом условной клавиатуры\n';
               code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
               code += '        # Используем условную клавиатуру\n';
+              
+              // ИСПРАВЛЕНИЕ: Добавляем проверку медиа для второго reply button handler
+              const photoVarReply2 = targetNode.data.photoInputVariable;
+              const videoVarReply2 = targetNode.data.videoInputVariable;
+              const audioVarReply2 = targetNode.data.audioInputVariable;
+              const docVarReply2 = targetNode.data.documentInputVariable;
+              
               // Определяем режим форматирования для целевого узла
               let parseModeTarget = '';
               if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -5068,7 +5110,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else if (targetNode.data.formatMode === 'html') {
                 parseModeTarget = ', parse_mode=ParseMode.HTML';
               }
-              code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              
+              if (photoVarReply2) {
+                code += `        photo_value = user_data_dict.get("${photoVarReply2}") if 'user_data_dict' in locals() else None\n`;
+                code += `        if photo_value and photo_value != "":\n`;
+                code += `            await message.answer_photo(photo=photo_value, caption=text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += `        else:\n`;
+                code += `            await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              } else if (videoVarReply2) {
+                code += `        video_value = user_data_dict.get("${videoVarReply2}") if 'user_data_dict' in locals() else None\n`;
+                code += `        if video_value and video_value != "":\n`;
+                code += `            await message.answer_video(video=video_value, caption=text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += `        else:\n`;
+                code += `            await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              } else if (audioVarReply2) {
+                code += `        audio_value = user_data_dict.get("${audioVarReply2}") if 'user_data_dict' in locals() else None\n`;
+                code += `        if audio_value and audio_value != "":\n`;
+                code += `            await message.answer_audio(audio=audio_value, caption=text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += `        else:\n`;
+                code += `            await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              } else if (docVarReply2) {
+                code += `        doc_value = user_data_dict.get("${docVarReply2}") if 'user_data_dict' in locals() else None\n`;
+                code += `        if doc_value and doc_value != "":\n`;
+                code += `            await message.answer_document(document=doc_value, caption=text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += `        else:\n`;
+                code += `            await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              } else {
+                code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              }
+              
               code += '    else:\n';
               code += '        # Удаляем предыдущие reply клавиатуры если они были\n';
               code += `        await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
@@ -11933,7 +12003,41 @@ function generateKeyboard(node: Node): string {
       code += '    \n';
       code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
       code += '    if use_conditional_keyboard:\n';
-      code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+      
+      // ИСПРАВЛЕНИЕ: Проверяем медиа для CASE 3
+      const photoVar3 = node.data.photoInputVariable;
+      const videoVar3 = node.data.videoInputVariable;
+      const audioVar3 = node.data.audioInputVariable;
+      const docVar3 = node.data.documentInputVariable;
+      
+      if (photoVar3) {
+        code += `        photo_value = user_data_dict.get("${photoVar3}") if 'user_data_dict' in locals() else None\n`;
+        code += `        if photo_value and photo_value != "":\n`;
+        code += `            await message.answer_photo(photo=photo_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        code += `        else:\n`;
+        code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+      } else if (videoVar3) {
+        code += `        video_value = user_data_dict.get("${videoVar3}") if 'user_data_dict' in locals() else None\n`;
+        code += `        if video_value and video_value != "":\n`;
+        code += `            await message.answer_video(video=video_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        code += `        else:\n`;
+        code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+      } else if (audioVar3) {
+        code += `        audio_value = user_data_dict.get("${audioVar3}") if 'user_data_dict' in locals() else None\n`;
+        code += `        if audio_value and audio_value != "":\n`;
+        code += `            await message.answer_audio(audio=audio_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        code += `        else:\n`;
+        code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+      } else if (docVar3) {
+        code += `        doc_value = user_data_dict.get("${docVar3}") if 'user_data_dict' in locals() else None\n`;
+        code += `        if doc_value and doc_value != "":\n`;
+        code += `            await message.answer_document(document=doc_value, caption=text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+        code += `        else:\n`;
+        code += `            await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n`;
+      } else {
+        code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+      }
+      
       code += '        return  # Возвращаемся чтобы не отправлять сообщение дважды\n';
       code += '    \n';
     }
