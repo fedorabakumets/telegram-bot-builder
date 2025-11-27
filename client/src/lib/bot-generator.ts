@@ -768,7 +768,9 @@ function generateConditionalKeyboard(condition: any, indentLevel: string, nodeDa
       }
     });
     
-    code += `${indentLevel}keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)\n`;
+    // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
+    const conditionOneTimeKb = toPythonBoolean(condition.oneTimeKeyboard === true);
+    code += `${indentLevel}keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKb})\n`;
     code += `${indentLevel}conditional_keyboard = keyboard\n`;
   }
   
@@ -4683,7 +4685,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                                 code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
                               }
                             });
-                            code += '                conditional_keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)\n';
+                            // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
+                            const conditionOneTimeKeyboard = toPythonBoolean(condition.oneTimeKeyboard === true);
+                            code += `                conditional_keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard})\n`;
                             code += '                await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n';
                           }
                         } else {
@@ -5739,7 +5743,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     }
                     
                     code += `                            builder.adjust(1)\n`;
-                    code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)\n`;
+                    // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
+                    const conditionOneTimeKeyboard1 = toPythonBoolean(condition.oneTimeKeyboard === true);
+                    code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard1})\n`;
                     
                     // Отправляем сообщение с клавиатурой
                     const mainMessageText = targetNode.data.messageText || 'Выберите действие';
@@ -5817,7 +5823,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     }
                     
                     code += `                            builder.adjust(1)\n`;
-                    code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)\n`;
+                    // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
+                    const conditionOneTimeKeyboard2 = toPythonBoolean(condition.oneTimeKeyboard === true);
+                    code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard2})\n`;
                     code += `                            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, node_id="${targetNode.id}")\n`;
                     code += `                            logging.info(f"✅ Показана условная клавиатура (кнопки ведут напрямую, автопереход НЕ выполняется)")\n`;
                   } else {
