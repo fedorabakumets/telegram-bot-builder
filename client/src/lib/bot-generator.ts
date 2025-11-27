@@ -11846,7 +11846,7 @@ function generateKeyboard(node: Node): string {
       code += '        # Отправляем обычные кнопки если условной клавиатуры нет\n';
     } else {
       code += '    # Инициализируем user_data_dict если нет условных сообщений\n';
-      code += '    user_data_dict = user_data.get(message.from_user.id, {})\n';
+      code += '    user_data_dict = user_data.get(str(message.from_user.id), {})\n';
     }
     
     const indent4 = hasConditionalMessages ? '        ' : '    ';
@@ -12056,7 +12056,7 @@ function generateKeyboard(node: Node): string {
         const docVarCase2 = node.data.documentInputVariable;
         
         code += '    # Инициализируем user_data_dict для проверки медиа\n';
-        code += '    user_data_dict = user_data.get(message.from_user.id, {})\n';
+        code += '    user_data_dict = user_data.get(str(message.from_user.id), {})\n';
         code += '    \n';
         
         if (photoVarCase2) {
@@ -12105,7 +12105,7 @@ function generateKeyboard(node: Node): string {
     // КРИТИЧЕСКОЕ: Инициализируем user_data_dict если нет условных сообщений
     if (!hasConditionalMessages) {
       code += '    # Инициализируем user_data_dict для проверки медиа\n';
-      code += '    user_data_dict = user_data.get(message.from_user.id, {})\n';
+      code += '    user_data_dict = user_data.get(str(message.from_user.id), {})\n';
     }
     
     // Проверяем условную клавиатуру только если есть условные сообщения
