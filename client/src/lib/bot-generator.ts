@@ -11844,6 +11844,9 @@ function generateKeyboard(node: Node): string {
       
       code += '    else:\n';
       code += '        # Отправляем обычные кнопки если условной клавиатуры нет\n';
+    } else {
+      code += '    # Инициализируем user_data_dict если нет условных сообщений\n';
+      code += '    user_data_dict = user_data.get(message.from_user.id, {})\n';
     }
     
     const indent4 = hasConditionalMessages ? '        ' : '    ';
@@ -12063,6 +12066,12 @@ function generateKeyboard(node: Node): string {
   else {
     code += `    # DEBUG: Узел ${node.id} - hasRegularButtons=${toPythonBoolean(hasRegularButtons)}, hasInputCollection=${toPythonBoolean(hasInputCollection)}\n`;
     code += `    logging.info(f"DEBUG: Узел ${node.id} обработка кнопок - keyboardType=${node.data.keyboardType}, buttons=${node.data.buttons ? node.data.buttons.length : 0}")\n`;
+    
+    // КРИТИЧЕСКОЕ: Инициализируем user_data_dict если нет условных сообщений
+    if (!hasConditionalMessages) {
+      code += '    # Инициализируем user_data_dict для проверки медиа\n';
+      code += '    user_data_dict = user_data.get(message.from_user.id, {})\n';
+    }
     
     // Проверяем условную клавиатуру только если есть условные сообщения
     if (hasConditionalMessages) {
