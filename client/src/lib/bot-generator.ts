@@ -12049,8 +12049,43 @@ function generateKeyboard(node: Node): string {
         code += '    else:\n';
         code += `        await message.answer(text${parseMode})\n`;
       } else {
+        // КРИТИЧЕСКОЕ: Проверяем медиа даже без условных сообщений
+        const photoVarCase2 = node.data.photoInputVariable;
+        const videoVarCase2 = node.data.videoInputVariable;
+        const audioVarCase2 = node.data.audioInputVariable;
+        const docVarCase2 = node.data.documentInputVariable;
+        
+        code += '    # Инициализируем user_data_dict для проверки медиа\n';
+        code += '    user_data_dict = user_data.get(message.from_user.id, {})\n';
         code += '    \n';
-        code += `    await message.answer(text${parseMode})\n`;
+        
+        if (photoVarCase2) {
+          code += `    photo_value = user_data_dict.get("${photoVarCase2}") if 'user_data_dict' in locals() else None\n`;
+          code += `    if photo_value and photo_value != "":\n`;
+          code += `        await message.answer_photo(photo=photo_value, caption=text${parseMode})\n`;
+          code += `    else:\n`;
+          code += `        await message.answer(text${parseMode})\n`;
+        } else if (videoVarCase2) {
+          code += `    video_value = user_data_dict.get("${videoVarCase2}") if 'user_data_dict' in locals() else None\n`;
+          code += `    if video_value and video_value != "":\n`;
+          code += `        await message.answer_video(video=video_value, caption=text${parseMode})\n`;
+          code += `    else:\n`;
+          code += `        await message.answer(text${parseMode})\n`;
+        } else if (audioVarCase2) {
+          code += `    audio_value = user_data_dict.get("${audioVarCase2}") if 'user_data_dict' in locals() else None\n`;
+          code += `    if audio_value and audio_value != "":\n`;
+          code += `        await message.answer_audio(audio=audio_value, caption=text${parseMode})\n`;
+          code += `    else:\n`;
+          code += `        await message.answer(text${parseMode})\n`;
+        } else if (docVarCase2) {
+          code += `    doc_value = user_data_dict.get("${docVarCase2}") if 'user_data_dict' in locals() else None\n`;
+          code += `    if doc_value and doc_value != "":\n`;
+          code += `        await message.answer_document(document=doc_value, caption=text${parseMode})\n`;
+          code += `    else:\n`;
+          code += `        await message.answer(text${parseMode})\n`;
+        } else {
+          code += `    await message.answer(text${parseMode})\n`;
+        }
       }
     }
     
