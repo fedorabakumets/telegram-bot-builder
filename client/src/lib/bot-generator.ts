@@ -7117,7 +7117,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '\n\n# Обработчик получения видео от пользователя\n';
     code += '@dp.message(F.video)\n';
     code += 'async def handle_video_input(message: types.Message):\n';
-    code += '    user_id = message.from_user.id\n';
+    code += '    user_id = str(message.from_user.id)\n';
     code += '    logging.info(f"🎥 Получено видео от пользователя {user_id}")\n';
     code += '    \n';
     code += '    # Проверяем, ожидаем ли мы ввод видео\n';
