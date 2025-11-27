@@ -4094,9 +4094,19 @@ export function PropertiesPanel({
                                           checked={condition.enableTextInput ?? condition.waitForTextInput ?? false}
                                           onCheckedChange={(checked) => {
                                             const currentConditions = selectedNode.data.conditionalMessages || [];
-                                            const updatedConditions = currentConditions.map(c => 
-                                              c.id === condition.id ? { ...c, enableTextInput: checked, waitForTextInput: checked } : c
-                                            );
+                                            const updatedConditions = currentConditions.map(c => {
+                                              if (c.id === condition.id) {
+                                                const updated = { ...c, enableTextInput: checked, waitForTextInput: checked };
+                                                if (checked) {
+                                                  updated.collectUserInput = true;
+                                                } else {
+                                                  const anyInputEnabled = updated.enablePhotoInput || updated.enableVideoInput || updated.enableAudioInput || updated.enableDocumentInput;
+                                                  if (!anyInputEnabled) updated.collectUserInput = false;
+                                                }
+                                                return updated;
+                                              }
+                                              return c;
+                                            });
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         />
@@ -4119,9 +4129,19 @@ export function PropertiesPanel({
                                           checked={condition.enablePhotoInput ?? false}
                                           onCheckedChange={(checked) => {
                                             const currentConditions = selectedNode.data.conditionalMessages || [];
-                                            const updatedConditions = currentConditions.map(c => 
-                                              c.id === condition.id ? { ...c, enablePhotoInput: checked } : c
-                                            );
+                                            const updatedConditions = currentConditions.map(c => {
+                                              if (c.id === condition.id) {
+                                                const updated = { ...c, enablePhotoInput: checked };
+                                                if (checked) {
+                                                  updated.collectUserInput = true;
+                                                } else {
+                                                  const anyInputEnabled = updated.enableTextInput || updated.enableVideoInput || updated.enableAudioInput || updated.enableDocumentInput;
+                                                  if (!anyInputEnabled) updated.collectUserInput = false;
+                                                }
+                                                return updated;
+                                              }
+                                              return c;
+                                            });
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         />
@@ -4144,9 +4164,19 @@ export function PropertiesPanel({
                                           checked={condition.enableVideoInput ?? false}
                                           onCheckedChange={(checked) => {
                                             const currentConditions = selectedNode.data.conditionalMessages || [];
-                                            const updatedConditions = currentConditions.map(c => 
-                                              c.id === condition.id ? { ...c, enableVideoInput: checked } : c
-                                            );
+                                            const updatedConditions = currentConditions.map(c => {
+                                              if (c.id === condition.id) {
+                                                const updated = { ...c, enableVideoInput: checked };
+                                                if (checked) {
+                                                  updated.collectUserInput = true;
+                                                } else {
+                                                  const anyInputEnabled = updated.enableTextInput || updated.enablePhotoInput || updated.enableAudioInput || updated.enableDocumentInput;
+                                                  if (!anyInputEnabled) updated.collectUserInput = false;
+                                                }
+                                                return updated;
+                                              }
+                                              return c;
+                                            });
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         />
@@ -4169,9 +4199,19 @@ export function PropertiesPanel({
                                           checked={condition.enableAudioInput ?? false}
                                           onCheckedChange={(checked) => {
                                             const currentConditions = selectedNode.data.conditionalMessages || [];
-                                            const updatedConditions = currentConditions.map(c => 
-                                              c.id === condition.id ? { ...c, enableAudioInput: checked } : c
-                                            );
+                                            const updatedConditions = currentConditions.map(c => {
+                                              if (c.id === condition.id) {
+                                                const updated = { ...c, enableAudioInput: checked };
+                                                if (checked) {
+                                                  updated.collectUserInput = true;
+                                                } else {
+                                                  const anyInputEnabled = updated.enableTextInput || updated.enablePhotoInput || updated.enableVideoInput || updated.enableDocumentInput;
+                                                  if (!anyInputEnabled) updated.collectUserInput = false;
+                                                }
+                                                return updated;
+                                              }
+                                              return c;
+                                            });
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         />
@@ -4194,9 +4234,19 @@ export function PropertiesPanel({
                                           checked={condition.enableDocumentInput ?? false}
                                           onCheckedChange={(checked) => {
                                             const currentConditions = selectedNode.data.conditionalMessages || [];
-                                            const updatedConditions = currentConditions.map(c => 
-                                              c.id === condition.id ? { ...c, enableDocumentInput: checked } : c
-                                            );
+                                            const updatedConditions = currentConditions.map(c => {
+                                              if (c.id === condition.id) {
+                                                const updated = { ...c, enableDocumentInput: checked };
+                                                if (checked) {
+                                                  updated.collectUserInput = true;
+                                                } else {
+                                                  const anyInputEnabled = updated.enableTextInput || updated.enablePhotoInput || updated.enableVideoInput || updated.enableAudioInput;
+                                                  if (!anyInputEnabled) updated.collectUserInput = false;
+                                                }
+                                                return updated;
+                                              }
+                                              return c;
+                                            });
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         />
