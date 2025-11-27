@@ -3631,6 +3631,12 @@ export function PropertiesPanel({
                               formatMode: 'text' as const,
                               keyboardType: 'none' as const,
                               buttons: [],
+                              collectUserInput: false,
+                              enableTextInput: false,
+                              enablePhotoInput: false,
+                              enableVideoInput: false,
+                              enableAudioInput: false,
+                              enableDocumentInput: false,
                               waitForTextInput: false,
                               priority: nextPriority
                             };
@@ -4045,112 +4051,333 @@ export function PropertiesPanel({
                               )}
                             </div>
 
-                            {/* Text Input Configuration */}
+                            {/* Response Collection for Conditional Messages */}
                             <div className="border border-blue-200/50 dark:border-blue-800/50 rounded-xl p-3 sm:p-4 bg-gradient-to-br from-blue-50/60 to-cyan-50/30 dark:from-blue-950/25 dark:to-cyan-950/15 space-y-3 sm:space-y-3.5">
                               <div className="flex items-center justify-between">
                                 <Label className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                                  <i className="fas fa-keyboard text-blue-600 dark:text-blue-400 mr-0.5"></i>
-                                  <span>Ожидание текстового ввода</span>
+                                  <i className="fas fa-inbox text-blue-600 dark:text-blue-400 mr-0.5"></i>
+                                  <span>Сбор ответов</span>
                                 </Label>
                                 <Switch
-                                  checked={condition.waitForTextInput ?? false}
+                                  checked={condition.collectUserInput ?? false}
                                   onCheckedChange={(checked) => {
                                     const currentConditions = selectedNode.data.conditionalMessages || [];
                                     const updatedConditions = currentConditions.map(c => 
-                                      c.id === condition.id ? { ...c, waitForTextInput: checked } : c
+                                      c.id === condition.id ? { ...c, collectUserInput: checked } : c
                                     );
                                     onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                   }}
                                 />
                               </div>
-                              {condition.waitForTextInput && (
+                              {condition.collectUserInput && (
                                 <div className="space-y-3 sm:space-y-3.5 pt-2 border-t border-blue-200/40 dark:border-blue-800/40">
                                   <div className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30 px-3 py-2 rounded-lg leading-relaxed">
                                     <i className="fas fa-info-circle mr-2"></i>
-                                    Бот ждёт текстовый ответ от пользователя и сохранит его
+                                    Собирать ввод пользователя в переменные
                                   </div>
-                                  <div className="space-y-2">
-                                    <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
-                                      <i className="fas fa-box text-blue-600 dark:text-blue-400"></i>
-                                      <span>Переменная сохранения (опционально)</span>
-                                    </Label>
-                                    <Input
-                                      value={condition.textInputVariable || ''}
-                                      onChange={(e) => {
-                                        const currentConditions = selectedNode.data.conditionalMessages || [];
-                                        const updatedConditions = currentConditions.map(c => 
-                                          c.id === condition.id ? { ...c, textInputVariable: e.target.value } : c
-                                        );
-                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                      }}
-                                      className="text-xs sm:text-sm h-9 sm:h-10 bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 focus:border-blue-500 rounded-lg"
-                                      placeholder="conditional_answer"
-                                    />
-                                    <div className="text-xs text-muted-foreground">
-                                      Авто-имя: <code className="bg-slate-100/50 dark:bg-slate-900/50 px-2 py-1 rounded text-xs font-mono">conditional_answer_{condition.id}</code>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
-                                      <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400"></i>
-                                      <span>Переход после ответа</span>
-                                    </Label>
-                                    <div className="space-y-2.5">
-                                      <Select
-                                        value={condition.nextNodeAfterInput || 'no-transition'}
-                                        onValueChange={(value) => {
-                                          const currentConditions = selectedNode.data.conditionalMessages || [];
-                                          const updatedConditions = currentConditions.map(c => 
-                                            c.id === condition.id ? { ...c, nextNodeAfterInput: value === 'no-transition' ? undefined : value } : c
-                                          );
-                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                        }}
-                                      >
-                                        <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 bg-gradient-to-br from-blue-50/60 to-white/60 dark:from-blue-950/30 dark:to-slate-950/70 border border-blue-300/60 dark:border-blue-700/60 hover:border-blue-400/80 dark:hover:border-blue-600/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/40 rounded-lg">
-                                          <SelectValue placeholder="⊘ Выберите узел..." />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
-                                          <SelectItem value="no-transition">Не переходить</SelectItem>
-                                          {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
-                                            const nodeContent = 
-                                              node.type === 'command' ? node.data.command :
-                                              node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
-                                              node.type === 'photo' ? ((node.data as any).photoCaption || '').slice(0, 50) :
-                                              node.type === 'keyboard' ? ((node.data as any).keyboardText || '').slice(0, 50) :
-                                              ((node.data as any).label || '').slice(0, 50);
-                                            return (
-                                              <SelectItem key={node.id} value={node.id}>
-                                                <div className="flex items-center gap-2">
-                                                  <span className="text-xs font-mono text-sky-700 dark:text-sky-300">{node.id}</span>
-                                                  {nodeContent && <span className="text-xs text-muted-foreground truncate">{nodeContent}</span>}
-                                                  <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
-                                                </div>
-                                              </SelectItem>
+                                  
+                                  {/* Media Input Toggles Grid */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                    {/* Text Input Toggle */}
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-blue-50/60 to-cyan-50/40 dark:from-blue-950/30 dark:to-cyan-950/20 border border-blue-200/40 dark:border-blue-700/40 hover:border-blue-300/60 dark:hover:border-blue-600/60 hover:shadow-sm transition-all duration-200">
+                                      <div className="flex-1 min-w-0">
+                                        <Label className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                                          <i className="fas fa-keyboard text-xs sm:text-sm"></i>
+                                          Текстовый ввод
+                                        </Label>
+                                        <div className="text-xs text-blue-600 dark:text-blue-400 mt-1 line-clamp-2">
+                                          Принимать текстовые сообщения
+                                        </div>
+                                      </div>
+                                      <div className="mt-2 sm:mt-0 sm:ml-2 flex-shrink-0">
+                                        <Switch
+                                          checked={condition.enableTextInput ?? condition.waitForTextInput ?? false}
+                                          onCheckedChange={(checked) => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, enableTextInput: checked, waitForTextInput: checked } : c
                                             );
-                                          })}
-                                        </SelectContent>
-                                      </Select>
-                                      
-                                      <Input
-                                        value={condition.nextNodeAfterInput && condition.nextNodeAfterInput !== 'no-transition' ? condition.nextNodeAfterInput : ''}
-                                        onChange={(e) => {
-                                          const currentConditions = selectedNode.data.conditionalMessages || [];
-                                          const updatedConditions = currentConditions.map(c => 
-                                            c.id === condition.id ? { ...c, nextNodeAfterInput: e.target.value || undefined } : c
-                                          );
-                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                        }}
-                                        className="text-xs sm:text-sm h-9 sm:h-10 bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 focus:border-blue-500 rounded-lg text-foreground placeholder:text-muted-foreground/50"
-                                        placeholder="Введите ID узла (опционально)"
-                                      />
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        />
+                                      </div>
                                     </div>
-                                    <div className="text-xs text-muted-foreground leading-relaxed">
-                                      Узел, куда перейти после получения текстового ответа
+
+                                    {/* Photo Input Toggle */}
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-green-50/60 to-emerald-50/40 dark:from-green-950/30 dark:to-emerald-950/20 border border-green-200/40 dark:border-green-700/40 hover:border-green-300/60 dark:hover:border-green-600/60 hover:shadow-sm transition-all duration-200">
+                                      <div className="flex-1 min-w-0">
+                                        <Label className="text-xs sm:text-sm font-semibold text-green-700 dark:text-green-300 flex items-center gap-1.5">
+                                          <i className="fas fa-image text-xs sm:text-sm"></i>
+                                          Ввод фото
+                                        </Label>
+                                        <div className="text-xs text-green-600 dark:text-green-400 mt-1 line-clamp-2">
+                                          Ожидать фото от пользователя
+                                        </div>
+                                      </div>
+                                      <div className="mt-2 sm:mt-0 sm:ml-2 flex-shrink-0">
+                                        <Switch
+                                          checked={condition.enablePhotoInput ?? false}
+                                          onCheckedChange={(checked) => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, enablePhotoInput: checked } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Video Input Toggle */}
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-red-50/60 to-pink-50/40 dark:from-red-950/30 dark:to-pink-950/20 border border-red-200/40 dark:border-red-700/40 hover:border-red-300/60 dark:hover:border-red-600/60 hover:shadow-sm transition-all duration-200">
+                                      <div className="flex-1 min-w-0">
+                                        <Label className="text-xs sm:text-sm font-semibold text-red-700 dark:text-red-300 flex items-center gap-1.5">
+                                          <i className="fas fa-video text-xs sm:text-sm"></i>
+                                          Ввод видео
+                                        </Label>
+                                        <div className="text-xs text-red-600 dark:text-red-400 mt-1 line-clamp-2">
+                                          Ожидать видео от пользователя
+                                        </div>
+                                      </div>
+                                      <div className="mt-2 sm:mt-0 sm:ml-2 flex-shrink-0">
+                                        <Switch
+                                          checked={condition.enableVideoInput ?? false}
+                                          onCheckedChange={(checked) => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, enableVideoInput: checked } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Audio Input Toggle */}
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-yellow-50/60 to-orange-50/40 dark:from-yellow-950/30 dark:to-orange-950/20 border border-yellow-200/40 dark:border-yellow-700/40 hover:border-yellow-300/60 dark:hover:border-yellow-600/60 hover:shadow-sm transition-all duration-200">
+                                      <div className="flex-1 min-w-0">
+                                        <Label className="text-xs sm:text-sm font-semibold text-yellow-700 dark:text-yellow-300 flex items-center gap-1.5">
+                                          <i className="fas fa-music text-xs sm:text-sm"></i>
+                                          Ввод аудио
+                                        </Label>
+                                        <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1 line-clamp-2">
+                                          Ожидать аудио от пользователя
+                                        </div>
+                                      </div>
+                                      <div className="mt-2 sm:mt-0 sm:ml-2 flex-shrink-0">
+                                        <Switch
+                                          checked={condition.enableAudioInput ?? false}
+                                          onCheckedChange={(checked) => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, enableAudioInput: checked } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Document Input Toggle */}
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-purple-50/60 to-indigo-50/40 dark:from-purple-950/30 dark:to-indigo-950/20 border border-purple-200/40 dark:border-purple-700/40 hover:border-purple-300/60 dark:hover:border-purple-600/60 hover:shadow-sm transition-all duration-200">
+                                      <div className="flex-1 min-w-0">
+                                        <Label className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                                          <i className="fas fa-file text-xs sm:text-sm"></i>
+                                          Ввод документа
+                                        </Label>
+                                        <div className="text-xs text-purple-600 dark:text-purple-400 mt-1 line-clamp-2">
+                                          Ожидать документ от пользователя
+                                        </div>
+                                      </div>
+                                      <div className="mt-2 sm:mt-0 sm:ml-2 flex-shrink-0">
+                                        <Switch
+                                          checked={condition.enableDocumentInput ?? false}
+                                          onCheckedChange={(checked) => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, enableDocumentInput: checked } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        />
+                                      </div>
                                     </div>
                                   </div>
+
+                                  {/* Variable Inputs */}
+                                  {(condition.enableTextInput || condition.waitForTextInput || condition.enablePhotoInput || condition.enableVideoInput || condition.enableAudioInput || condition.enableDocumentInput) && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-2 border-t border-blue-200/30 dark:border-blue-800/30">
+                                      {(condition.enableTextInput || condition.waitForTextInput) && (
+                                        <div>
+                                          <Label className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 mb-1 block">
+                                            <i className="fas fa-tag mr-1"></i>
+                                            Переменная для текста
+                                          </Label>
+                                          <Input
+                                            value={condition.textInputVariable || condition.inputVariable || ''}
+                                            onChange={(e) => {
+                                              const currentConditions = selectedNode.data.conditionalMessages || [];
+                                              const updatedConditions = currentConditions.map(c => 
+                                                c.id === condition.id ? { ...c, textInputVariable: e.target.value, inputVariable: e.target.value } : c
+                                              );
+                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                            }}
+                                            className="text-xs sm:text-sm border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                                            placeholder="user_text"
+                                          />
+                                        </div>
+                                      )}
+
+                                      {condition.enablePhotoInput && (
+                                        <div>
+                                          <Label className="text-xs sm:text-sm font-medium text-green-700 dark:text-green-300 mb-1 block">
+                                            <i className="fas fa-tag mr-1"></i>
+                                            Переменная для фото
+                                          </Label>
+                                          <Input
+                                            value={condition.photoInputVariable || ''}
+                                            onChange={(e) => {
+                                              const currentConditions = selectedNode.data.conditionalMessages || [];
+                                              const updatedConditions = currentConditions.map(c => 
+                                                c.id === condition.id ? { ...c, photoInputVariable: e.target.value } : c
+                                              );
+                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                            }}
+                                            className="text-xs sm:text-sm border-green-200 dark:border-green-700 focus:border-green-500 focus:ring-green-200"
+                                            placeholder="user_photo"
+                                          />
+                                        </div>
+                                      )}
+
+                                      {condition.enableVideoInput && (
+                                        <div>
+                                          <Label className="text-xs sm:text-sm font-medium text-red-700 dark:text-red-300 mb-1 block">
+                                            <i className="fas fa-tag mr-1"></i>
+                                            Переменная для видео
+                                          </Label>
+                                          <Input
+                                            value={condition.videoInputVariable || ''}
+                                            onChange={(e) => {
+                                              const currentConditions = selectedNode.data.conditionalMessages || [];
+                                              const updatedConditions = currentConditions.map(c => 
+                                                c.id === condition.id ? { ...c, videoInputVariable: e.target.value } : c
+                                              );
+                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                            }}
+                                            className="text-xs sm:text-sm border-red-200 dark:border-red-700 focus:border-red-500 focus:ring-red-200"
+                                            placeholder="user_video"
+                                          />
+                                        </div>
+                                      )}
+
+                                      {condition.enableAudioInput && (
+                                        <div>
+                                          <Label className="text-xs sm:text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-1 block">
+                                            <i className="fas fa-tag mr-1"></i>
+                                            Переменная для аудио
+                                          </Label>
+                                          <Input
+                                            value={condition.audioInputVariable || ''}
+                                            onChange={(e) => {
+                                              const currentConditions = selectedNode.data.conditionalMessages || [];
+                                              const updatedConditions = currentConditions.map(c => 
+                                                c.id === condition.id ? { ...c, audioInputVariable: e.target.value } : c
+                                              );
+                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                            }}
+                                            className="text-xs sm:text-sm border-yellow-200 dark:border-yellow-700 focus:border-yellow-500 focus:ring-yellow-200"
+                                            placeholder="user_audio"
+                                          />
+                                        </div>
+                                      )}
+
+                                      {condition.enableDocumentInput && (
+                                        <div>
+                                          <Label className="text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300 mb-1 block">
+                                            <i className="fas fa-tag mr-1"></i>
+                                            Переменная для документа
+                                          </Label>
+                                          <Input
+                                            value={condition.documentInputVariable || ''}
+                                            onChange={(e) => {
+                                              const currentConditions = selectedNode.data.conditionalMessages || [];
+                                              const updatedConditions = currentConditions.map(c => 
+                                                c.id === condition.id ? { ...c, documentInputVariable: e.target.value } : c
+                                              );
+                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                            }}
+                                            className="text-xs sm:text-sm border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                                            placeholder="user_document"
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Transition After Input */}
+                                  {(condition.enableTextInput || condition.waitForTextInput || condition.enablePhotoInput || condition.enableVideoInput || condition.enableAudioInput || condition.enableDocumentInput) && (
+                                    <div className="space-y-2 pt-2 border-t border-blue-200/30 dark:border-blue-800/30">
+                                      <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                                        <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400"></i>
+                                        <span>Переход после ответа</span>
+                                      </Label>
+                                      <div className="space-y-2.5">
+                                        <Select
+                                          value={condition.nextNodeAfterInput || 'no-transition'}
+                                          onValueChange={(value) => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, nextNodeAfterInput: value === 'no-transition' ? undefined : value } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        >
+                                          <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 bg-gradient-to-br from-blue-50/60 to-white/60 dark:from-blue-950/30 dark:to-slate-950/70 border border-blue-300/60 dark:border-blue-700/60 hover:border-blue-400/80 dark:hover:border-blue-600/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/40 rounded-lg">
+                                            <SelectValue placeholder="Выберите узел..." />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+                                            <SelectItem value="no-transition">Не переходить</SelectItem>
+                                            {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
+                                              const nodeContent = 
+                                                node.type === 'command' ? node.data.command :
+                                                node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
+                                                node.type === 'photo' ? ((node.data as any).photoCaption || '').slice(0, 50) :
+                                                node.type === 'keyboard' ? ((node.data as any).keyboardText || '').slice(0, 50) :
+                                                ((node.data as any).label || '').slice(0, 50);
+                                              return (
+                                                <SelectItem key={node.id} value={node.id}>
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-mono text-sky-700 dark:text-sky-300">{node.id}</span>
+                                                    {nodeContent && <span className="text-xs text-muted-foreground truncate">{nodeContent}</span>}
+                                                    <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
+                                                  </div>
+                                                </SelectItem>
+                                              );
+                                            })}
+                                          </SelectContent>
+                                        </Select>
+                                        
+                                        <Input
+                                          value={condition.nextNodeAfterInput && condition.nextNodeAfterInput !== 'no-transition' ? condition.nextNodeAfterInput : ''}
+                                          onChange={(e) => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, nextNodeAfterInput: e.target.value || undefined } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                          className="text-xs sm:text-sm h-9 sm:h-10 bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 focus:border-blue-500 rounded-lg text-foreground placeholder:text-muted-foreground/50"
+                                          placeholder="Введите ID узла (опционально)"
+                                        />
+                                      </div>
+                                      <div className="text-xs text-muted-foreground leading-relaxed">
+                                        Узел, куда перейти после получения ответа от пользователя
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
-                              </div>
+                            </div>
 
                             {/* Keyboard Configuration for Conditional Messages */}
                             <div className="space-y-3 border-t border-purple-200/30 dark:border-purple-800/30 pt-4">
@@ -4570,6 +4797,12 @@ export function PropertiesPanel({
                                     formatMode: 'text' as const,
                                     keyboardType: 'none' as const,
                                     buttons: [],
+                                    collectUserInput: false,
+                                    enableTextInput: false,
+                                    enablePhotoInput: false,
+                                    enableVideoInput: false,
+                                    enableAudioInput: false,
+                                    enableDocumentInput: false,
                                     waitForTextInput: false,
                                     priority: nextPriority
                                   }] 

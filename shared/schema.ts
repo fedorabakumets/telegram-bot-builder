@@ -710,7 +710,19 @@ export const nodeSchema = z.object({
       buttons: z.array(buttonSchema).default([]), // Кнопки для условного сообщения
       resizeKeyboard: z.boolean().default(true).optional(), // Автоматически подбирать размер клавиатуры
       oneTimeKeyboard: z.boolean().default(false).optional(), // Скрыть клавиатуру после использования
-      waitForTextInput: z.boolean().default(false), // Ожидание текстового ввода после показа сообщения
+      // Сбор ответов для условного сообщения
+      collectUserInput: z.boolean().default(false), // Включить сбор ответов
+      enableTextInput: z.boolean().default(false), // Принимать текстовый ввод
+      enablePhotoInput: z.boolean().default(false), // Принимать фото
+      enableVideoInput: z.boolean().default(false), // Принимать видео
+      enableAudioInput: z.boolean().default(false), // Принимать аудио
+      enableDocumentInput: z.boolean().default(false), // Принимать документ
+      inputVariable: z.string().optional(), // Переменная для сохранения текста
+      photoInputVariable: z.string().optional(), // Переменная для сохранения фото
+      videoInputVariable: z.string().optional(), // Переменная для сохранения видео
+      audioInputVariable: z.string().optional(), // Переменная для сохранения аудио
+      documentInputVariable: z.string().optional(), // Переменная для сохранения документа
+      waitForTextInput: z.boolean().default(false), // Ожидание текстового ввода после показа сообщения (устаревшее, используйте enableTextInput)
       textInputVariable: z.string().optional(), // Переменная для сохранения текстового ввода
       nextNodeAfterInput: z.string().optional(), // ID узла, к которому перейти после получения ввода
       priority: z.number().default(0) // Приоритет проверки (чем больше, тем выше приоритет)
