@@ -4268,26 +4268,27 @@ export function PropertiesPanel({
                                             </UIButton>
                                           </div>
 
-                                          {/* Button Text Section - Modern & Responsive */}
-                                          <div className="space-y-2.5">
-                                            <div className="flex items-center justify-between gap-2 flex-wrap">
-                                              <Label className="text-xs font-semibold text-foreground">
-                                                Текст кнопки
+                                          {/* Button Text Section */}
+                                          <div className="space-y-2">
+                                            <div className="flex items-center justify-between gap-2">
+                                              <Label className="text-xs font-medium text-foreground">
+                                                Текст
                                               </Label>
-                                              <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                  <UIButton
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-7 text-xs gap-1 whitespace-nowrap"
-                                                    title="Вставить переменную"
-                                                  >
-                                                    <Plus className="h-3 w-3 flex-shrink-0" />
-                                                    <span>Переменная</span>
-                                                  </UIButton>
-                                                </DropdownMenuTrigger>
-                                              <DropdownMenuContent align="end" className="w-64 max-h-64 overflow-y-auto">
-                                                <DropdownMenuLabel className="text-xs font-semibold">
+                                              <div className="flex items-center gap-1">
+                                                <DropdownMenu>
+                                                  <DropdownMenuTrigger asChild>
+                                                    <UIButton
+                                                      size="sm"
+                                                      variant="outline"
+                                                      className="h-7 text-xs gap-1"
+                                                      title="Вставить переменную"
+                                                    >
+                                                      <Plus className="h-3 w-3" />
+                                                      <span className="hidden sm:inline">Переменная</span>
+                                                    </UIButton>
+                                                  </DropdownMenuTrigger>
+                                              <DropdownMenuContent align="end" className="w-56">
+                                                <DropdownMenuLabel className="text-xs">
                                                   Доступные переменные
                                                 </DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
@@ -4320,12 +4321,12 @@ export function PropertiesPanel({
                                                       }}
                                                       className="cursor-pointer"
                                                     >
-                                                      <div className="flex flex-col gap-1.5 w-full py-0.5">
-                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                          <code className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2 py-1 rounded font-mono font-semibold">
+                                                      <div className="flex flex-col gap-1 w-full">
+                                                        <div className="flex items-center gap-2">
+                                                          <code className="text-xs bg-muted px-1 py-0.5 rounded">
                                                             {`{${variable.name}}`}
                                                           </code>
-                                                          <Badge variant="outline" className="text-xs h-5">
+                                                          <Badge variant="outline" className="text-xs h-4">
                                                             {getBadgeText()}
                                                           </Badge>
                                                         </div>
@@ -4346,9 +4347,9 @@ export function PropertiesPanel({
                                                   </DropdownMenuItem>
                                                 )}
                                               </DropdownMenuContent>
-                                              </DropdownMenu>
+                                                </DropdownMenu>
+                                              </div>
                                             </div>
-                                            
                                             <Input
                                               value={button.text}
                                               onChange={(e) => {
@@ -4363,35 +4364,12 @@ export function PropertiesPanel({
                                                 );
                                                 onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                               }}
-                                              className="h-9 text-sm border-purple-200/50 dark:border-purple-800/50 focus:border-purple-400 dark:focus:border-purple-600 transition-colors"
-                                              placeholder="Введите текст кнопки..."
+                                              className="h-9 text-sm"
+                                              placeholder="Текст кнопки"
                                             />
-                                            
-                                            {textVariables.length > 0 && (
-                                              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-gradient-to-r from-purple-50/40 to-indigo-50/30 dark:from-purple-950/20 dark:to-indigo-950/15 border border-purple-200/40 dark:border-purple-800/40">
-                                                <i className="fas fa-circle-info text-xs text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5"></i>
-                                                <div className="flex-1 min-w-0">
-                                                  <p className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-1">
-                                                    Доступные переменные:
-                                                  </p>
-                                                  <div className="flex flex-wrap gap-1">
-                                                    {textVariables.slice(0, 3).map((variable, idx) => (
-                                                      <code 
-                                                        key={idx}
-                                                        className="inline-block text-xs bg-purple-200/60 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 px-2 py-1 rounded font-mono"
-                                                      >
-                                                        {`{${variable.name}}`}
-                                                      </code>
-                                                    ))}
-                                                    {textVariables.length > 3 && (
-                                                      <span className="text-xs text-purple-600 dark:text-purple-400 px-2 py-1">
-                                                        +{textVariables.length - 3} еще
-                                                      </span>
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            )}
+                                            <div className="text-xs text-muted-foreground">
+                                              {`Переменные: {age} → "25"`}
+                                            </div>
                                           </div>
 
                                           {/* Button Action Configuration */}
