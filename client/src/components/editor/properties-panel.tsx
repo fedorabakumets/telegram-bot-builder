@@ -1163,7 +1163,7 @@ export function PropertiesPanel({
         <div className="space-y-3 sm:space-y-4">
           <button
             onClick={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-            className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
+            className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
             title={isBasicSettingsOpen ? 'Свернуть' : 'Развернуть'}
           >
             <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900/50 dark:to-slate-800/50 flex items-center justify-center flex-shrink-0">
