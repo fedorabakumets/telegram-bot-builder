@@ -1034,6 +1034,16 @@ export function PropertiesPanel({
     onButtonAdd(selectedNode.id, newButton);
   };
 
+  if (!selectedNode) {
+    return (
+      <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+        <div className="text-center">
+          <p className="text-sm">Выберите элемент для редактирования</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <aside className="w-full md:w-96 h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
       {/* Mobile Close Button */}
