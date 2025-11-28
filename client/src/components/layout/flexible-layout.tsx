@@ -447,7 +447,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                         minSize={10}
                         maxSize={100}
                       >
-                        <div className="h-full w-full bg-background overflow-hidden flex flex-col">
+                        <div className="h-full w-full overflow-hidden flex flex-col">
                           {getElementContent(rightEl.type)}
                         </div>
                       </ResizablePanel>
