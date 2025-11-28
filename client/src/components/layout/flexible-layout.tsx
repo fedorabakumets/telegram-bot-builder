@@ -435,8 +435,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 </ResizableHandle>
                 <ResizablePanel 
                   defaultSize={totalRightSize} 
-                  minSize={15} 
-                  maxSize={60}
+                  minSize={15}
                 >
                   <ResizablePanelGroup direction="horizontal" className="h-full w-full">
                     {rightElements.flatMap((rightEl, index) => [
