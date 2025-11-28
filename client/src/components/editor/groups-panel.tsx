@@ -1630,9 +1630,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     <div className="flex-1" />
 
                     {/* Action Buttons - Modern & Convenient */}
-                    <div className="flex gap-2.5 pt-3 -mx-3 sm:-mx-4 px-3 sm:px-4 -mb-3 sm:-mb-4 pb-3 sm:pb-4 bg-gradient-to-t from-card/80 via-card/40 to-transparent">
+                    <div className="flex gap-2 pt-2 -mx-3 sm:-mx-4 px-3 sm:px-4 -mb-3 sm:-mb-4 pb-3 sm:pb-4 bg-gradient-to-t from-card/80 via-card/40 to-transparent">
                       <Button 
-                        className="flex-1 h-11 sm:h-12 text-xs sm:text-sm font-semibold gap-2 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+                        className="flex-1 h-9 sm:h-11 text-xs sm:text-sm font-semibold gap-1.5 sm:gap-2 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
                         onClick={() => {
                           setSelectedGroup(group);
                           setGroupName(group.name);
@@ -1682,7 +1682,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </Button>
                       <Button 
                         variant="secondary"
-                        className="flex-1 h-11 sm:h-12 text-xs sm:text-sm font-semibold gap-1.5 sm:gap-2 shadow-sm hover:shadow-md transition-all"
+                        className="flex-1 h-9 sm:h-11 text-xs sm:text-sm font-semibold gap-1.5 sm:gap-2 shadow-sm hover:shadow-md transition-all"
                         onClick={() => {
                           setSelectedGroupForMessage(group);
                           setShowSendMessage(true);
