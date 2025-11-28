@@ -1590,28 +1590,32 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </p>
                     )}
 
-                    {/* Stats - Compact Responsive */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-lg bg-blue-500/8 border border-blue-500/20 p-2.5 sm:p-3">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[9px] sm:text-xs text-blue-600/70 dark:text-blue-400/70 font-semibold uppercase">УЧА</p>
-                            <p className="text-sm sm:text-base font-bold text-foreground truncate">
-                              {group.memberCount ? (group.memberCount > 999 ? Math.floor(group.memberCount / 1000) + 'K' : group.memberCount) : '—'}
-                            </p>
+                    {/* Stats - Modern & Clean */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-950/20 dark:to-blue-950/10 border border-blue-200/40 dark:border-blue-800/20 p-3 sm:p-3.5 hover:shadow-sm transition-all duration-200">
+                        <div className="flex flex-col gap-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+                              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <p className="text-xs sm:text-sm font-semibold text-muted-foreground">Участники</p>
                           </div>
+                          <p className="text-base sm:text-lg font-bold text-foreground pl-0.5">
+                            {group.memberCount ? (group.memberCount > 999 ? Math.floor(group.memberCount / 1000) + 'K' : group.memberCount) : '—'}
+                          </p>
                         </div>
                       </div>
-                      <div className="rounded-lg bg-amber-500/8 border border-amber-500/20 p-2.5 sm:p-3">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[9px] sm:text-xs text-amber-600/70 dark:text-amber-400/70 font-semibold uppercase">ДОЕ</p>
-                            <p className="text-sm sm:text-base font-bold text-foreground truncate">
-                              {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}) : '—'}
-                            </p>
+                      <div className="rounded-xl bg-gradient-to-br from-amber-50 to-amber-50/50 dark:from-amber-950/20 dark:to-amber-950/10 border border-amber-200/40 dark:border-amber-800/20 p-3 sm:p-3.5 hover:shadow-sm transition-all duration-200">
+                        <div className="flex flex-col gap-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+                              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <p className="text-xs sm:text-sm font-semibold text-muted-foreground">Создана</p>
                           </div>
+                          <p className="text-base sm:text-lg font-bold text-foreground pl-0.5">
+                            {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}) : '—'}
+                          </p>
                         </div>
                       </div>
                     </div>
