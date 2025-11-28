@@ -1458,33 +1458,36 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   
                   {/* Card Content */}
                   <div className="p-2 sm:p-4 flex flex-col flex-1 space-y-2 sm:space-y-3">
-                    {/* Header Section - Responsive Layout */}
-                    <div className="flex items-start gap-2 sm:gap-3">
+                    {/* Header Section - Modern & Convenient */}
+                    <div className="flex items-start gap-2.5 sm:gap-3">
                       {/* Avatar with Status Ring */}
                       <div className="relative flex-shrink-0">
                         <GroupAvatar 
                           avatarUrl={group.avatarUrl}
                           groupName={group.name}
-                          size={44}
-                          className="ring-2 ring-background shadow-md"
+                          size={40}
+                          className="ring-2 ring-background shadow-sm hover:shadow-md transition-shadow"
                         />
                         {/* Admin indicator */}
                         {group.isAdmin === 1 && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center ring-2 ring-background">
-                            <Shield className="w-2 h-2 text-white" />
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center ring-2 ring-background shadow-sm">
+                            <Shield className="w-2.5 h-2.5 text-white" />
                           </div>
                         )}
                       </div>
                       
-                      {/* Title & Menu */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-1">
-                          <h3 
-                            className="font-bold text-sm sm:text-base text-foreground line-clamp-2 leading-tight" 
-                            data-testid={`text-group-name-${group.id}`}
-                          >
-                            {group.name}
-                          </h3>
+                      {/* Title & Badges & Menu */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                        <div className="flex items-start justify-between gap-1.5 min-w-0">
+                          <div className="flex-1 min-w-0">
+                            <h3 
+                              className="font-bold text-sm sm:text-base text-foreground leading-tight truncate" 
+                              data-testid={`text-group-name-${group.id}`}
+                              title={group.name}
+                            >
+                              {group.name}
+                            </h3>
+                          </div>
                           
                           {/* Actions Menu */}
                           <DropdownMenu>
@@ -1492,7 +1495,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                                className="h-7 w-7 -mt-1 -mr-1.5 rounded-lg flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity"
+                                className="h-8 w-8 -mt-1 -mr-1.5 rounded-md flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity"
                                 data-testid={`button-menu-${group.id}`}
                               >
                                 <MoreHorizontal className="w-4 h-4" />
@@ -1540,40 +1543,40 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           </DropdownMenu>
                         </div>
                         
-                        {/* Status Badges */}
-                        <div className="flex gap-1.5 mt-2 flex-wrap">
+                        {/* Status Badges - Modern Inline Layout */}
+                        <div className="flex gap-1 flex-wrap items-center">
                           <Badge 
                             variant={group.isAdmin ? "default" : "secondary"}
-                            className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 gap-1 whitespace-nowrap h-6"
+                            className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 gap-1 whitespace-nowrap h-5"
                             data-testid={`badge-admin-${group.id}`}
                           >
                             {group.isAdmin ? (
                               <>
-                                <Crown className="w-3 h-3 flex-shrink-0" />
+                                <Crown className="w-2.5 h-2.5 flex-shrink-0" />
                                 <span className="hidden xs:inline">Админ</span>
                               </>
                             ) : (
                               <>
-                                <Users className="w-3 h-3 flex-shrink-0" />
+                                <Users className="w-2.5 h-2.5 flex-shrink-0" />
                                 <span className="hidden xs:inline">Участник</span>
                               </>
                             )}
                           </Badge>
                           {group.chatType && (
-                            <Badge variant="outline" className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 gap-1 whitespace-nowrap h-6 border-border/60">
+                            <Badge variant="outline" className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 gap-1 whitespace-nowrap h-5 border-border/60">
                               {group.chatType === 'supergroup' ? (
                                 <>
-                                  <TrendingUp className="w-3 h-3 flex-shrink-0" />
+                                  <TrendingUp className="w-2.5 h-2.5 flex-shrink-0" />
                                   <span className="hidden sm:inline">Супер</span>
                                 </>
                               ) : group.chatType === 'channel' ? (
                                 <>
-                                  <Volume2 className="w-3 h-3 flex-shrink-0" />
+                                  <Volume2 className="w-2.5 h-2.5 flex-shrink-0" />
                                   <span>Канал</span>
                                 </>
                               ) : (
                                 <>
-                                  <MessageSquare className="w-3 h-3 flex-shrink-0" />
+                                  <MessageSquare className="w-2.5 h-2.5 flex-shrink-0" />
                                   <span>Группа</span>
                                 </>
                               )}
