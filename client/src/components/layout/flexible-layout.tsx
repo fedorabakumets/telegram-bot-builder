@@ -404,7 +404,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   minSize={15} 
                   maxSize={40}
                 >
-                  <div className="h-full border-r border-border bg-background overflow-hidden">
+                  <div className="h-full w-full border-r border-border bg-background overflow-hidden flex flex-col">
                     {getElementContent(leftEl.type)}
                   </div>
                 </ResizablePanel>
@@ -420,7 +420,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             <ResizablePanel 
               minSize={30}
             >
-              <div className="h-full bg-background overflow-hidden">
+              <div className="h-full w-full bg-background overflow-hidden flex flex-col">
                 {centerEl ? getElementContent(centerEl.type) : null}
               </div>
             </ResizablePanel>
@@ -438,7 +438,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   minSize={15} 
                   maxSize={60}
                 >
-                  <ResizablePanelGroup direction="horizontal" className="h-full">
+                  <ResizablePanelGroup direction="horizontal" className="h-full w-full">
                     {rightElements.flatMap((rightEl, index) => [
                       ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle className="bg-gradient-to-r from-transparent via-slate-200/0 to-transparent hover:from-purple-500/15 hover:via-purple-500/30 hover:to-purple-500/15 dark:hover:from-purple-600/15 dark:hover:via-purple-500/25 dark:hover:to-purple-600/15 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md" />] : []),
                       <ResizablePanel 
