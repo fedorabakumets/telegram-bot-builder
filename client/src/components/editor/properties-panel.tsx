@@ -929,9 +929,9 @@ export function PropertiesPanel({
               </div>
               <div className="flex items-center text-xs text-muted-foreground empty-state-tip floating-tip">
                 <div className="w-5 h-5 bg-gradient-to-br from-primary/20 to-primary/30 rounded-md flex items-center justify-center mr-3 flex-shrink-0 shadow-sm">
-                  <i className="fas fa-magic text-primary text-xs"></i>
+                  <i className="fas fa-sliders-h text-primary text-xs"></i>
                 </div>
-                <span>Используйте предварительный просмотр для тестирования</span>
+                <span>Свойства элемента появятся здесь</span>
               </div>
             </div>
           </div>
