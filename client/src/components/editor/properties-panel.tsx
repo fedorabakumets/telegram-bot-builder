@@ -1163,10 +1163,10 @@ export function PropertiesPanel({
         <div className="space-y-3 sm:space-y-4">
           <button
             onClick={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-            className="flex items-center gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
+            className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
             title={isBasicSettingsOpen ? 'Свернуть' : 'Развернуть'}
           >
-            <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900/50 dark:to-slate-800/50 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900/50 dark:to-slate-800/50 flex items-center justify-center flex-shrink-0 pt-0.5">
               <i className="fas fa-sliders-h text-slate-600 dark:text-slate-400 text-sm sm:text-base"></i>
             </div>
             <div className="flex-1 min-w-0">
@@ -2526,7 +2526,7 @@ export function PropertiesPanel({
                 className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
                 title={isMessageTextOpen ? 'Свернуть' : 'Развернуть'}
               >
-                <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
                   <i className="fas fa-message text-blue-600 dark:text-blue-400 text-sm sm:text-base"></i>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -2579,7 +2579,7 @@ export function PropertiesPanel({
                 className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
                 title={isMediaSectionOpen ? 'Свернуть' : 'Развернуть'}
               >
-                <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/50 dark:to-pink-900/50 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/50 dark:to-pink-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
                   <i className="fas fa-paperclip text-rose-600 dark:text-rose-400 text-sm sm:text-base"></i>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -2665,7 +2665,7 @@ export function PropertiesPanel({
             className="w-full flex items-start justify-between gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
           >
             <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
-              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
                 <i className="fas fa-keyboard text-amber-600 dark:text-amber-400 text-sm sm:text-base"></i>
               </div>
               <div className="flex-1 min-w-0">
@@ -3559,7 +3559,7 @@ export function PropertiesPanel({
                 className="flex items-start gap-2.5 sm:gap-3 w-full"
                 title={isConditionalMessagesSectionOpen ? 'Свернуть' : 'Развернуть'}
               >
-                <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/50 dark:to-indigo-900/50 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/50 dark:to-indigo-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
                   <i className="fas fa-code-branch text-purple-600 dark:text-purple-400 text-sm sm:text-base"></i>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -4905,7 +4905,7 @@ export function PropertiesPanel({
               className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
               title={isUserInputSectionOpen ? 'Свернуть' : 'Развернуть'}
             >
-              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
                 <i className="fas fa-inbox text-blue-600 dark:text-blue-400 text-sm sm:text-base"></i>
               </div>
               <div className="flex-1 min-w-0">
@@ -5453,7 +5453,7 @@ export function PropertiesPanel({
               className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
               title={isAutoTransitionOpen ? 'Свернуть' : 'Развернуть'}
             >
-              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
                 <i className="fas fa-bolt text-emerald-600 dark:text-emerald-400 text-sm sm:text-base"></i>
               </div>
               <div className="flex-1 min-w-0">
@@ -5560,7 +5560,7 @@ export function PropertiesPanel({
               className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200"
               title={isBasicSettingsOpen ? 'Свернуть' : 'Развернуть'}
             >
-              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/50 dark:to-blue-900/50 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/50 dark:to-blue-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
                 <i className="fas fa-gear text-cyan-600 dark:text-cyan-400 text-sm sm:text-base"></i>
               </div>
               <div className="flex-1 min-w-0">
