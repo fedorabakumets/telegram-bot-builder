@@ -894,7 +894,7 @@ export function PropertiesPanel({
         </div>
 
         {/* Empty State Content */}
-        <div className="flex-1 flex items-center justify-center p-8 empty-state-container">
+        <div className="flex-1 flex flex-col items-center justify-start pt-12 px-8 empty-state-container">
           <div className="text-center max-w-xs">
             {/* Animated Icon */}
             <div className="relative mx-auto mb-6 empty-state-icon">
