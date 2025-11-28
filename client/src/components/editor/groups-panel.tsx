@@ -1623,11 +1623,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     {/* Spacer */}
                     <div className="flex-1" />
 
-                    {/* Action Buttons - Responsive */}
-                    <div className="flex gap-2 pt-2 -mx-3 sm:-mx-4 px-3 sm:px-4 -mb-3 sm:-mb-4 pb-3 sm:pb-4 bg-gradient-to-t from-card/60 to-transparent">
+                    {/* Action Buttons - Modern & Convenient */}
+                    <div className="flex gap-2.5 pt-3 -mx-3 sm:-mx-4 px-3 sm:px-4 -mb-3 sm:-mb-4 pb-3 sm:pb-4 bg-gradient-to-t from-card/80 via-card/40 to-transparent">
                       <Button 
-                        variant="default" 
-                        className="flex-1 h-9 sm:h-10 text-xs sm:text-sm font-semibold gap-1 shadow-sm hover:shadow-md transition-all"
+                        className="flex-1 h-10 sm:h-11 text-xs sm:text-sm font-semibold gap-2 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm hover:shadow-md transition-all"
                         onClick={() => {
                           setSelectedGroup(group);
                           setGroupName(group.name);
@@ -1672,22 +1671,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         }}
                         data-testid={`button-settings-${group.id}`}
                       >
-                        <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="hidden sm:inline">Настройки</span>
-                        <span className="sm:hidden">Наст</span>
+                        <Settings className="w-4 h-4 sm:w-4.5 sm:h-4.5 flex-shrink-0" />
+                        <span>Управление</span>
                       </Button>
                       <Button 
-                        variant="outline" 
-                        className="flex-1 h-9 sm:h-10 text-xs sm:text-sm font-semibold hover:bg-muted/60 transition-all gap-1"
+                        variant="secondary"
+                        className="flex-1 h-10 sm:h-11 text-xs sm:text-sm font-semibold gap-2 shadow-sm hover:shadow-md transition-all"
                         onClick={() => {
                           setSelectedGroupForMessage(group);
                           setShowSendMessage(true);
                         }}
                         data-testid={`button-message-${group.id}`}
                       >
-                        <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="hidden xs:inline">Написать</span>
-                        <span className="xs:hidden">Пис</span>
+                        <Send className="w-4 h-4 sm:w-4.5 sm:h-4.5 flex-shrink-0" />
+                        <span>Сообщение</span>
                       </Button>
                     </div>
                   </div>
