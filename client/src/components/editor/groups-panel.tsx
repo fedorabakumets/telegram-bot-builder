@@ -1457,7 +1457,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover/card:opacity-100 transition-opacity" />
                   
                   {/* Card Content */}
-                  <div className="p-3 sm:p-4 flex flex-col flex-1 space-y-3">
+                  <div className="p-2 sm:p-4 flex flex-col flex-1 space-y-2 sm:space-y-3">
                     {/* Header Section - Responsive Layout */}
                     <div className="flex items-start gap-2 sm:gap-3">
                       {/* Avatar with Status Ring */}
@@ -1630,7 +1630,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     <div className="flex-1" />
 
                     {/* Action Buttons - Modern & Convenient */}
-                    <div className="flex gap-2 pt-2 -mx-3 sm:-mx-4 px-3 sm:px-4 -mb-3 sm:-mb-4 pb-3 sm:pb-4 bg-gradient-to-t from-card/80 via-card/40 to-transparent">
+                    <div className="flex gap-2 pt-2 -mx-2 sm:-mx-4 px-2 sm:px-4 -mb-2 sm:-mb-4 pb-2 sm:pb-4 bg-gradient-to-t from-card/80 via-card/40 to-transparent">
                       <Button 
                         className="flex-1 h-9 sm:h-11 text-xs sm:text-sm font-semibold gap-1.5 sm:gap-2 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
                         onClick={() => {
