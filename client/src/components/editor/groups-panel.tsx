@@ -1593,35 +1593,35 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     {/* Stats - Modern & Clean */}
                     <div className="grid grid-cols-2 gap-2 sm:gap-4">
                       <div className="rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-950/20 dark:to-blue-950/10 border border-blue-200/40 dark:border-blue-800/20 p-2 sm:p-3.5 hover:shadow-sm transition-all duration-200">
-                        <div className="flex flex-col gap-1.5 sm:gap-2.5">
-                          <div className="flex items-center gap-1.5 sm:gap-2">
-                            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
-                              <Users className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <p className="text-[10px] sm:text-sm font-semibold text-muted-foreground line-clamp-1">
-                              <span className="sm:hidden">Уч.</span>
+                        <div className="flex flex-col gap-1.5 sm:gap-2">
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+                            <Users className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div>
+                            <p className="text-[9px] sm:text-xs font-semibold text-muted-foreground mb-0.5">
+                              <span className="sm:hidden">Участники</span>
                               <span className="hidden sm:inline">Участники</span>
                             </p>
+                            <p className="text-sm sm:text-base font-bold text-foreground">
+                              {group.memberCount ? (group.memberCount > 999 ? Math.floor(group.memberCount / 1000) + 'K' : group.memberCount) : '—'}
+                            </p>
                           </div>
-                          <p className="text-sm sm:text-lg font-bold text-foreground pl-0.5">
-                            {group.memberCount ? (group.memberCount > 999 ? Math.floor(group.memberCount / 1000) + 'K' : group.memberCount) : '—'}
-                          </p>
                         </div>
                       </div>
                       <div className="rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-50 to-amber-50/50 dark:from-amber-950/20 dark:to-amber-950/10 border border-amber-200/40 dark:border-amber-800/20 p-2 sm:p-3.5 hover:shadow-sm transition-all duration-200">
-                        <div className="flex flex-col gap-1.5 sm:gap-2.5">
-                          <div className="flex items-center gap-1.5 sm:gap-2">
-                            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-                              <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <p className="text-[10px] sm:text-sm font-semibold text-muted-foreground line-clamp-1">
-                              <span className="sm:hidden">Соз.</span>
+                        <div className="flex flex-col gap-1.5 sm:gap-2">
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+                            <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <div>
+                            <p className="text-[9px] sm:text-xs font-semibold text-muted-foreground mb-0.5">
+                              <span className="sm:hidden">Создана</span>
                               <span className="hidden sm:inline">Создана</span>
                             </p>
+                            <p className="text-sm sm:text-base font-bold text-foreground">
+                              {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}) : '—'}
+                            </p>
                           </div>
-                          <p className="text-sm sm:text-lg font-bold text-foreground pl-0.5">
-                            {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}) : '—'}
-                          </p>
                         </div>
                       </div>
                     </div>
