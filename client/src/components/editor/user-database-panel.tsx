@@ -222,6 +222,16 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     return null;
   };
 
+  // Calculate real message counts from loaded messages
+  const userMessageCounts = useMemo(() => {
+    if (!userDetailsMessages.length) {
+      return { userSent: 0, botSent: 0, total: 0 };
+    }
+    const userSent = userDetailsMessages.filter(m => m.messageType === 'user').length;
+    const botSent = userDetailsMessages.filter(m => m.messageType === 'bot').length;
+    return { userSent, botSent, total: userDetailsMessages.length };
+  }, [userDetailsMessages]);
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: (userId: number) => {
@@ -1172,9 +1182,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div>
                   <Label className="text-sm font-medium">Статистика</Label>
                   <div className="mt-2 space-y-2">
-                    <div><span className="text-sm text-muted-foreground">Сообщений:</span> {selectedUser?.interactionCount || 0}</div>
-                    <div><span className="text-sm text-muted-foreground">Отправлено:</span> {selectedUser?.totalMessagesSent || 0}</div>
-                    <div><span className="text-sm text-muted-foreground">Получено:</span> {selectedUser?.totalMessagesReceived || 0}</div>
+                    <div><span className="text-sm text-muted-foreground">Всего сообщений:</span> {userMessageCounts.total || selectedUser?.interactionCount || 0}</div>
+                    <div><span className="text-sm text-muted-foreground">От пользователя:</span> {userMessageCounts.userSent}</div>
+                    <div><span className="text-sm text-muted-foreground">От бота:</span> {userMessageCounts.botSent}</div>
                   </div>
                 </div>
               </div>
