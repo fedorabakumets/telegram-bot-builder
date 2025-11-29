@@ -4440,74 +4440,16 @@ export function PropertiesPanel({
                             </div>
 
                             {/* Keyboard Configuration for Conditional Messages */}
-                            <div className="space-y-4 border-t border-border/20 pt-4">
-                              <div className="flex flex-col gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-50/40 to-amber-50/30 dark:from-orange-950/20 dark:to-amber-950/10 border border-orange-200/40 dark:border-orange-800/30 hover:border-orange-300/60 dark:hover:border-orange-700/60 hover:bg-orange-50/60 dark:hover:bg-orange-950/30 transition-all duration-200 group">
-                                <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                                  <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-orange-200/50 dark:bg-orange-900/40 group-hover:bg-orange-300/50 dark:group-hover:bg-orange-800/50 transition-all">
-                                    <i className="fas fa-square-plus text-xs sm:text-sm text-orange-600 dark:text-orange-400"></i>
-                                  </div>
-                                  <div className="min-w-0">
-                                    <Label className="text-xs sm:text-sm font-semibold text-orange-900 dark:text-orange-100 cursor-pointer block">
-                                      Кнопки
-                                    </Label>
-                                    <div className="text-xs text-orange-700/70 dark:text-orange-300/70 mt-0.5 leading-snug">
-                                      Добавляйте и управляйте кнопками
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex gap-1.5 flex-wrap">
-                                  <UIButton
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      const newButton = {
-                                        id: nanoid(),
-                                        text: 'Новая кнопка',
-                                        action: 'goto' as const,
-                                        target: '',
-                                        url: '',
-                                        buttonType: 'normal' as const,
-                                        skipDataCollection: false,
-                                        hideAfterClick: false
-                                      };
-                                      const currentConditions = selectedNode.data.conditionalMessages || [];
-                                      const updatedConditions = currentConditions.map(c => 
-                                        c.id === condition.id ? { 
-                                          ...c, 
-                                          buttons: [...(c.buttons || []), newButton] 
-                                        } : c
-                                      );
-                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                    }}
-                                    className="text-xs font-medium h-8 px-2 border-orange-300/50 dark:border-orange-700/50 text-orange-700 dark:text-orange-300 hover:bg-orange-100/50 dark:hover:bg-orange-900/30 transition-all"
-                                  >
-                                    <i className="fas fa-plus text-xs mr-1.5"></i>
-                                    <span className="hidden sm:inline">Кнопка</span>
-                                  </UIButton>
-                                </div>
-                              </div>
-
-                              {/* Keyboard Type Selection */}
-                              <div className="flex flex-col gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-50/40 to-violet-50/30 dark:from-purple-950/20 dark:to-violet-950/10 border border-purple-200/40 dark:border-purple-800/30 hover:border-purple-300/60 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/30 transition-all duration-200 group">
-                                <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-                                  <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-200/50 dark:bg-purple-900/40 group-hover:bg-purple-300/50 dark:group-hover:bg-purple-800/50 transition-all">
-                                    <i className="fas fa-keyboard text-xs sm:text-sm text-purple-600 dark:text-purple-400"></i>
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <Label className="text-xs sm:text-sm font-semibold text-purple-900 dark:text-purple-100 cursor-pointer block">
-                                      Тип клавиатуры
-                                    </Label>
-                                    <div className="text-xs text-purple-700/70 dark:text-purple-300/70 mt-0.5 leading-snug hidden sm:block">
-                                      Выберите как показывать кнопки пользователю
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                  <div className="flex items-center justify-between gap-3 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg bg-white/60 dark:bg-slate-950/60 border border-purple-300/40 dark:border-purple-700/40">
-                                    <Label className="text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300 cursor-pointer flex items-center gap-2 flex-1">
-                                      <i className="fas fa-square text-xs"></i>
-                                      Inline
-                                    </Label>
+                            <div className="space-y-3 border-t border-purple-200/30 dark:border-purple-800/30 pt-4">
+                              <div className="flex flex-col gap-3">
+                                <Label className="text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">
+                                  <i className="fas fa-keyboard mr-1.5"></i>
+                                  Кнопки для условного сообщения
+                                </Label>
+                                <div className="flex flex-wrap items-center gap-2 bg-purple-100/30 dark:bg-purple-900/20 rounded-lg p-2 border border-purple-200/40 dark:border-purple-800/40">
+                                  <div className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-purple-200/40 dark:hover:bg-purple-800/40 transition-all cursor-pointer">
+                                    <i className="fas fa-square text-purple-600 dark:text-purple-400 text-xs"></i>
+                                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 cursor-pointer">Inline</Label>
                                     <Switch
                                       checked={(condition as any).keyboardType === 'inline'}
                                       onCheckedChange={(checked) => {
@@ -4519,11 +4461,10 @@ export function PropertiesPanel({
                                       }}
                                     />
                                   </div>
-                                  <div className="flex items-center justify-between gap-3 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg bg-white/60 dark:bg-slate-950/60 border border-purple-300/40 dark:border-purple-700/40">
-                                    <Label className="text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300 cursor-pointer flex items-center gap-2 flex-1">
-                                      <i className="fas fa-bars text-xs"></i>
-                                      Reply
-                                    </Label>
+                                  <div className="w-px h-5 bg-purple-300/30 dark:bg-purple-700/30"></div>
+                                  <div className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-purple-200/40 dark:hover:bg-purple-800/40 transition-all cursor-pointer">
+                                    <i className="fas fa-bars text-purple-600 dark:text-purple-400 text-xs"></i>
+                                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 cursor-pointer">Reply</Label>
                                     <Switch
                                       checked={(condition as any).keyboardType === 'reply'}
                                       onCheckedChange={(checked) => {
@@ -4540,92 +4481,103 @@ export function PropertiesPanel({
 
                               {/* Buttons Configuration */}
                               {condition.keyboardType && condition.keyboardType !== 'none' && (
-                                <div className="space-y-3">
-                                  {/* Buttons List */}
-                                  <div className="space-y-3">
-                                    {(condition.buttons || []).map((button, buttonIndex) => (
-                                      <div key={button.id} className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all duration-200 group">
-                                        {/* Header with icon, title and delete button */}
-                                        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
-                                          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                                            <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-200/50 dark:bg-blue-900/40 group-hover:bg-blue-300/50 dark:group-hover:bg-blue-800/50 transition-all">
-                                              <i className="fas fa-rectangle-ad text-xs sm:text-sm text-blue-600 dark:text-blue-400"></i>
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                              <div className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">
-                                                Кнопка
-                                              </div>
-                                            </div>
-                                          </div>
-                                          <UIButton
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => {
-                                              const currentConditions = selectedNode.data.conditionalMessages || [];
-                                              const updatedConditions = currentConditions.map(c => 
-                                                c.id === condition.id ? {
-                                                  ...c,
-                                                  buttons: (c.buttons || []).filter((_, i) => i !== buttonIndex)
-                                                } : c
-                                              );
-                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                            }}
-                                            className="text-blue-600 hover:text-red-600 dark:text-blue-400 dark:hover:text-red-400 h-auto p-1.5 transition-colors duration-200 flex-shrink-0"
-                                            title="Удалить кнопку"
-                                          >
-                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                            </svg>
-                                          </UIButton>
-                                        </div>
+                                <div className="space-y-4">
+                                  <div className="border-t border-purple-200/20 dark:border-purple-800/20 pt-4"></div>
+                                  
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0"></div>
+                                      <span className="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide truncate">
+                                        Кнопки ({(condition.buttons || []).length})
+                                      </span>
+                                    </div>
+                                    <UIButton
+                                      size="sm"
+                                      variant="default"
+                                      onClick={() => {
+                                        const newButton = {
+                                          id: nanoid(),
+                                          text: 'Новая кнопка',
+                                          action: 'goto' as const,
+                                          target: '',
+                                          url: '',
+                                          buttonType: 'normal' as const,
+                                          skipDataCollection: false,
+                                          hideAfterClick: false
+                                        };
+                                        const currentConditions = selectedNode.data.conditionalMessages || [];
+                                        const updatedConditions = currentConditions.map(c => 
+                                          c.id === condition.id ? { 
+                                            ...c, 
+                                            buttons: [...(c.buttons || []), newButton] 
+                                          } : c
+                                        );
+                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                      }}
+                                      title="Добавить кнопку"
+                                      className="text-xs bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 transition-all duration-200 h-8 flex-shrink-0"
+                                    >
+                                      <i className="fas fa-plus"></i>
+                                      <span className="hidden sm:inline ml-1.5">Добавить кнопку</span>
+                                    </UIButton>
+                                  </div>
 
-                                        {/* Text input and variables button */}
-                                        <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-purple-50/40 to-pink-50/30 dark:from-purple-950/20 dark:to-pink-950/10 border border-purple-200/40 dark:border-purple-800/30 hover:border-purple-300/60 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/30 transition-all duration-200 group">
-                                          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-                                            <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-200/50 dark:bg-purple-900/40 group-hover:bg-purple-300/50 dark:group-hover:bg-purple-800/50 transition-all">
-                                              <i className="fas fa-type text-xs sm:text-sm text-purple-600 dark:text-purple-400"></i>
+                                  {/* Buttons List */}
+                                  <div className="space-y-2.5">
+                                    {(condition.buttons || []).map((button, buttonIndex) => (
+                                      <div key={button.id} className="bg-white dark:bg-gray-900/50 rounded-lg p-3 border border-purple-200/50 dark:border-purple-800/50 shadow-sm hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                                        <div className="space-y-2.5">
+                                          {/* Button Header */}
+                                          <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-purple-100/30 dark:border-purple-800/20">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                              <div className="w-1 h-1 rounded-full bg-purple-500 flex-shrink-0"></div>
+                                              <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 truncate">
+                                                Кнопка {buttonIndex + 1}
+                                              </span>
                                             </div>
-                                            <div className="min-w-0 flex-1">
-                                              <Label className="text-xs sm:text-sm font-semibold text-purple-900 dark:text-purple-100 cursor-pointer block">
-                                                Текст кнопки
-                                              </Label>
-                                              <div className="text-xs text-purple-700/70 dark:text-purple-300/70 mt-0.5 leading-snug hidden sm:block">
-                                                Поддерживает переменные: {'{age}'} → "25"
-                                              </div>
-                                            </div>
-                                          </div>
-                                          <div className="flex gap-2 flex-col sm:flex-row">
-                                            <Input
-                                              value={button.text}
-                                              onChange={(e) => {
+                                            <UIButton
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => {
                                                 const currentConditions = selectedNode.data.conditionalMessages || [];
                                                 const updatedConditions = currentConditions.map(c => 
                                                   c.id === condition.id ? {
                                                     ...c,
-                                                    buttons: (c.buttons || []).map((b, i) => 
-                                                      i === buttonIndex ? { ...b, text: e.target.value } : b
-                                                    )
+                                                    buttons: (c.buttons || []).filter((_, i) => i !== buttonIndex)
                                                   } : c
                                                 );
                                                 onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                               }}
-                                              className="flex-1 h-9 text-sm"
-                                              placeholder="Текст кнопки"
-                                            />
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <UIButton
-                                                  size="sm"
-                                                  variant="outline"
-                                                  className="h-9 text-xs gap-1 flex-shrink-0"
-                                                  title="Вставить переменную"
-                                                >
-                                                  <Plus className="h-3 w-3" />
-                                                  <span className="hidden sm:inline">Переменная</span>
-                                                </UIButton>
-                                              </DropdownMenuTrigger>
+                                              className="h-6 text-destructive hover:text-destructive/80 flex-shrink-0"
+                                              title="Удалить кнопку"
+                                            >
+                                              <i className="fas fa-trash text-xs"></i>
+                                            </UIButton>
+                                          </div>
+
+                                          {/* Button Text Section */}
+                                          <div className="space-y-2">
+                                            <div className="flex items-center justify-between gap-2">
+                                              <Label className="text-xs font-medium text-foreground">
+                                                Текст
+                                              </Label>
+                                              <div className="flex items-center gap-1">
+                                                <DropdownMenu>
+                                                  <DropdownMenuTrigger asChild>
+                                                    <UIButton
+                                                      size="sm"
+                                                      variant="outline"
+                                                      className="h-7 text-xs gap-1"
+                                                      title="Вставить переменную"
+                                                    >
+                                                      <Plus className="h-3 w-3" />
+                                                      <span className="hidden sm:inline">Переменная</span>
+                                                    </UIButton>
+                                                  </DropdownMenuTrigger>
                                               <DropdownMenuContent align="end" className="w-56">
-                                                <DropdownMenuLabel className="text-xs">Доступные переменные</DropdownMenuLabel>
+                                                <DropdownMenuLabel className="text-xs">
+                                                  Доступные переменные
+                                                </DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
                                                 {textVariables.map((variable, index) => {
                                                   const getBadgeText = () => {
@@ -4636,6 +4588,7 @@ export function PropertiesPanel({
                                                     if (variable.nodeType === 'conditional') return 'Условие';
                                                     return 'Другое';
                                                   };
+                                                  
                                                   return (
                                                     <DropdownMenuItem
                                                       key={`${variable.nodeId}-${variable.name}-${index}`}
@@ -4657,90 +4610,111 @@ export function PropertiesPanel({
                                                     >
                                                       <div className="flex flex-col gap-1 w-full">
                                                         <div className="flex items-center gap-2">
-                                                          <code className="text-xs bg-muted px-1 py-0.5 rounded">{`{${variable.name}}`}</code>
-                                                          <Badge variant="outline" className="text-xs h-4">{getBadgeText()}</Badge>
+                                                          <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                                                            {`{${variable.name}}`}
+                                                          </code>
+                                                          <Badge variant="outline" className="text-xs h-4">
+                                                            {getBadgeText()}
+                                                          </Badge>
                                                         </div>
-                                                        {variable.description && <div className="text-xs text-muted-foreground">{variable.description}</div>}
+                                                        {variable.description && (
+                                                          <div className="text-xs text-muted-foreground">
+                                                            {variable.description}
+                                                          </div>
+                                                        )}
                                                       </div>
                                                     </DropdownMenuItem>
                                                   );
                                                 })}
                                                 {textVariables.length === 0 && (
                                                   <DropdownMenuItem disabled>
-                                                    <span className="text-xs text-muted-foreground">Нет переменных</span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                      Нет доступных переменных
+                                                    </span>
                                                   </DropdownMenuItem>
                                                 )}
                                               </DropdownMenuContent>
-                                            </DropdownMenu>
-                                          </div>
-                                        </div>
-
-                                        {/* Button Action Configuration */}
-                                        <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-indigo-50/40 to-blue-50/30 dark:from-indigo-950/20 dark:to-blue-950/10 border border-indigo-200/40 dark:border-indigo-800/30 hover:border-indigo-300/60 dark:hover:border-indigo-700/60 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 transition-all duration-200 group">
-                                          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-                                            <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-indigo-200/50 dark:bg-indigo-900/40 group-hover:bg-indigo-300/50 dark:group-hover:bg-indigo-800/50 transition-all">
-                                              <i className="fas fa-right-long text-xs sm:text-sm text-indigo-600 dark:text-indigo-400"></i>
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                              <Label className="text-xs sm:text-sm font-semibold text-indigo-900 dark:text-indigo-100 cursor-pointer block">
-                                                Действие
-                                              </Label>
-                                              <div className="text-xs text-indigo-700/70 dark:text-indigo-300/70 mt-0.5 leading-snug hidden sm:block">
-                                                Что произойдет при нажатии кнопки
+                                                </DropdownMenu>
                                               </div>
                                             </div>
-                                          </div>
-                                          <Select
-                                            value={button.action || 'goto'}
-                                            onValueChange={(value: 'goto' | 'url' | 'command' | 'selection') => {
-                                              const currentConditions = selectedNode.data.conditionalMessages || [];
-                                              const updatedConditions = currentConditions.map(c => 
-                                                c.id === condition.id ? {
-                                                  ...c,
-                                                  buttons: (c.buttons || []).map((b, i) => 
-                                                    i === buttonIndex ? { ...b, action: value } : b
-                                                  )
-                                                } : c
-                                              );
-                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                            }}
-                                          >
-                                            <SelectTrigger className="h-9 text-sm">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="goto">Перейти к узлу</SelectItem>
-                                              <SelectItem value="url">Открыть ссылку</SelectItem>
-                                              <SelectItem value="command">Выполнить команду</SelectItem>
-                                              <SelectItem value="selection">Выбор опции</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-
-                                          {button.action === 'goto' && (
-                                            <Select
-                                              value={button.target || ''}
-                                              onValueChange={(value) => {
+                                            <Input
+                                              value={button.text}
+                                              onChange={(e) => {
                                                 const currentConditions = selectedNode.data.conditionalMessages || [];
                                                 const updatedConditions = currentConditions.map(c => 
                                                   c.id === condition.id ? {
                                                     ...c,
                                                     buttons: (c.buttons || []).map((b, i) => 
-                                                      i === buttonIndex ? { ...b, target: value } : b
+                                                      i === buttonIndex ? { ...b, text: e.target.value } : b
+                                                    )
+                                                  } : c
+                                                );
+                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                              }}
+                                              className="h-9 text-sm"
+                                              placeholder="Текст кнопки"
+                                            />
+                                            <div className="text-xs text-muted-foreground">
+                                              {`Переменные: {age} → "25"`}
+                                            </div>
+                                          </div>
+
+                                          {/* Button Action Configuration */}
+                                          <div className="space-y-2 border-t border-purple-100/30 dark:border-purple-800/20 pt-2.5">
+                                            <Label className="text-xs font-medium text-foreground">
+                                              Действие
+                                            </Label>
+                                            <Select
+                                              value={button.action || 'goto'}
+                                              onValueChange={(value: 'goto' | 'url' | 'command' | 'selection') => {
+                                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                const updatedConditions = currentConditions.map(c => 
+                                                  c.id === condition.id ? {
+                                                    ...c,
+                                                    buttons: (c.buttons || []).map((b, i) => 
+                                                      i === buttonIndex ? { ...b, action: value } : b
                                                     )
                                                   } : c
                                                 );
                                                 onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                               }}
                                             >
-                                              <SelectTrigger className="h-9 text-sm bg-white/60 dark:bg-slate-950/60 border border-indigo-300/40 dark:border-indigo-700/40 hover:border-indigo-400/60 dark:hover:border-indigo-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400/30 dark:focus:ring-indigo-600/30 transition-all duration-200 rounded-lg text-indigo-900 dark:text-indigo-50">
-                                                <SelectValue placeholder="⊘ Не выбрано" />
+                                              <SelectTrigger className="h-9 text-sm">
+                                                <SelectValue />
                                               </SelectTrigger>
-                                              <SelectContent className="bg-gradient-to-br from-indigo-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+                                              <SelectContent>
+                                                <SelectItem value="goto">Перейти к узлу</SelectItem>
+                                                <SelectItem value="url">Открыть ссылку</SelectItem>
+                                                <SelectItem value="command">Выполнить команду</SelectItem>
+                                                <SelectItem value="selection">Выбор опции</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+
+                                            {button.action === 'goto' && (
+                                              <Select
+                                                value={button.target || ''}
+                                                onValueChange={(value) => {
+                                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                  const updatedConditions = currentConditions.map(c => 
+                                                    c.id === condition.id ? {
+                                                      ...c,
+                                                      buttons: (c.buttons || []).map((b, i) => 
+                                                        i === buttonIndex ? { ...b, target: value } : b
+                                                      )
+                                                    } : c
+                                                  );
+                                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                }}
+                                              >
+                                                <SelectTrigger className="h-9 text-sm bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-400/30 dark:focus:ring-sky-600/30 transition-all duration-200 rounded-lg text-sky-900 dark:text-sky-50">
+                                                  <SelectValue placeholder="⊘ Не выбрано" />
+                                                </SelectTrigger>
+                                              <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
                                                 {getAllNodesFromAllSheets
                                                   .filter(n => n.node.id !== selectedNode.id)
                                                   .map(({node, sheetName}) => (
                                                     <SelectItem key={node.id} value={node.id}>
-                                                      <span className="text-xs font-mono text-indigo-700 dark:text-indigo-300 truncate">
+                                                      <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
                                                         {formatNodeDisplayGlobal(node, sheetName)}
                                                       </span>
                                                     </SelectItem>
@@ -4749,83 +4723,85 @@ export function PropertiesPanel({
                                             </Select>
                                           )}
 
-                                          {button.action === 'url' && (
-                                            <Input
-                                              value={button.url || ''}
-                                              onChange={(e) => {
-                                                const currentConditions = selectedNode.data.conditionalMessages || [];
-                                                const updatedConditions = currentConditions.map(c => 
-                                                  c.id === condition.id ? {
-                                                    ...c,
-                                                    buttons: (c.buttons || []).map((b, i) => 
-                                                      i === buttonIndex ? { ...b, url: e.target.value } : b
-                                                    )
-                                                  } : c
-                                                );
-                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                              }}
-                                              className="h-9 text-sm"
-                                              placeholder="https://example.com"
-                                            />
-                                          )}
-
-                                          {button.action === 'command' && (
-                                            <Input
-                                              value={button.target || ''}
-                                              onChange={(e) => {
-                                                const currentConditions = selectedNode.data.conditionalMessages || [];
-                                                const updatedConditions = currentConditions.map(c => 
-                                                  c.id === condition.id ? {
-                                                    ...c,
-                                                    buttons: (c.buttons || []).map((b, i) => 
-                                                      i === buttonIndex ? { ...b, target: e.target.value } : b
-                                                    )
-                                                  } : c
-                                                );
-                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                              }}
-                                              className="h-9 text-sm"
-                                              placeholder="/help"
-                                            />
-                                          )}
-                                        </div>
-
-                                        {/* Skip Data Collection Toggle */}
-                                        {(condition.waitForTextInput || condition.collectUserInput || selectedNode.data.collectUserInput) && (
-                                          <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-cyan-50/40 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/40 dark:border-cyan-800/30 hover:border-cyan-300/60 dark:hover:border-cyan-700/60 hover:bg-cyan-50/60 dark:hover:bg-cyan-950/30 transition-all duration-200 group">
-                                            <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-                                              <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-cyan-200/50 dark:bg-cyan-900/40 group-hover:bg-cyan-300/50 dark:group-hover:bg-cyan-800/50 transition-all">
-                                                <i className="fas fa-forward text-xs sm:text-sm text-cyan-600 dark:text-cyan-400"></i>
-                                              </div>
-                                              <div className="min-w-0 flex-1">
-                                                <Label className="text-xs sm:text-sm font-semibold text-cyan-900 dark:text-cyan-100 cursor-pointer block">
-                                                  Пропустить сохранение
-                                                </Label>
-                                                <div className="text-xs text-cyan-700/70 dark:text-cyan-300/70 mt-0.5 leading-snug">
-                                                  Перейти к узлу без сохранения данных
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <div className="flex items-center justify-between gap-3 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg bg-white/60 dark:bg-slate-950/60 border border-cyan-300/40 dark:border-cyan-700/40">
-                                              <span className="text-xs sm:text-sm font-medium text-cyan-700 dark:text-cyan-300">Пропустить сбор данных</span>
-                                              <Switch
-                                                checked={button.skipDataCollection ?? false}
-                                                onCheckedChange={(checked) => {
+                                            {button.action === 'url' && (
+                                              <Input
+                                                value={button.url || ''}
+                                                onChange={(e) => {
                                                   const currentConditions = selectedNode.data.conditionalMessages || [];
                                                   const updatedConditions = currentConditions.map(c => 
                                                     c.id === condition.id ? {
                                                       ...c,
                                                       buttons: (c.buttons || []).map((b, i) => 
-                                                        i === buttonIndex ? { ...b, skipDataCollection: checked } : b
+                                                        i === buttonIndex ? { ...b, url: e.target.value } : b
                                                       )
                                                     } : c
                                                   );
                                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                                 }}
+                                                className="h-9 text-sm"
+                                                placeholder="https://example.com"
                                               />
-                                            </div>
+                                            )}
+
+                                            {button.action === 'command' && (
+                                              <Input
+                                                value={button.target || ''}
+                                                onChange={(e) => {
+                                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                  const updatedConditions = currentConditions.map(c => 
+                                                    c.id === condition.id ? {
+                                                      ...c,
+                                                      buttons: (c.buttons || []).map((b, i) => 
+                                                        i === buttonIndex ? { ...b, target: e.target.value } : b
+                                                      )
+                                                    } : c
+                                                  );
+                                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                }}
+                                                className="h-9 text-sm"
+                                                placeholder="/help"
+                                              />
+                                            )}
                                           </div>
-                                        )}
+
+                                          {/* Skip Data Collection Toggle for conditional message buttons */}
+                                          {(condition.waitForTextInput || condition.collectUserInput || selectedNode.data.collectUserInput) && (
+                                            <div className="space-y-2 p-2.5 rounded-lg bg-gradient-to-br from-cyan-50/40 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/40 dark:border-cyan-800/30">
+                                              <div className="flex items-center gap-2.5 justify-between">
+                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                  <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-cyan-200/50 dark:bg-cyan-900/40">
+                                                    <i className="fas fa-forward text-xs text-cyan-600 dark:text-cyan-400"></i>
+                                                  </div>
+                                                  <div className="min-w-0 flex-1">
+                                                    <Label className="text-xs font-semibold text-cyan-900 dark:text-cyan-100 cursor-pointer block">
+                                                      Пропустить сохранение
+                                                    </Label>
+                                                    <div className="text-xs text-cyan-700/70 dark:text-cyan-300/70 mt-0.5 leading-snug">
+                                                      Перейти к узлу без сохранения данных
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div className="flex-shrink-0">
+                                                  <Switch
+                                                    checked={button.skipDataCollection ?? false}
+                                                    onCheckedChange={(checked) => {
+                                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                      const updatedConditions = currentConditions.map(c => 
+                                                        c.id === condition.id ? {
+                                                          ...c,
+                                                          buttons: (c.buttons || []).map((b, i) => 
+                                                            i === buttonIndex ? { ...b, skipDataCollection: checked } : b
+                                                          )
+                                                        } : c
+                                                      );
+                                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                    }}
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                     ))}
                                   </div>
