@@ -60,12 +60,13 @@ type BotMessageWithMedia = BotMessage & {
 interface UserDatabasePanelProps {
   projectId: number;
   projectName: string;
+  onOpenDialogPanel?: (user: UserBotData) => void;
 }
 
 type SortField = 'lastInteraction' | 'interactionCount' | 'createdAt' | 'firstName' | 'userName';
 type SortDirection = 'asc' | 'desc';
 
-export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelProps) {
+export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel }: UserDatabasePanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
   const [showUserDetails, setShowUserDetails] = useState(false);
@@ -907,10 +908,13 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 size="sm"
                                 data-testid={`button-show-dialog-${index}`}
                                 onClick={() => {
-                                  setSelectedUserForDialog(user);
-                                  setShowDialog(true);
-                                  // Scroll to bottom after dialog opens
-                                  setTimeout(() => scrollToBottom(), 200);
+                                  if (onOpenDialogPanel) {
+                                    onOpenDialogPanel(user);
+                                  } else {
+                                    setSelectedUserForDialog(user);
+                                    setShowDialog(true);
+                                    setTimeout(() => scrollToBottom(), 200);
+                                  }
                                 }}
                               >
                                 <MessageSquare className="w-3 h-3" />
@@ -1127,10 +1131,13 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           size="sm"
                           data-testid={`button-show-dialog-${index}`}
                           onClick={() => {
-                            setSelectedUserForDialog(user);
-                            setShowDialog(true);
-                            // Scroll to bottom after dialog opens
-                            setTimeout(() => scrollToBottom(), 200);
+                            if (onOpenDialogPanel) {
+                              onOpenDialogPanel(user);
+                            } else {
+                              setSelectedUserForDialog(user);
+                              setShowDialog(true);
+                              setTimeout(() => scrollToBottom(), 200);
+                            }
                           }}
                         >
                           <MessageSquare className="w-3 h-3" />

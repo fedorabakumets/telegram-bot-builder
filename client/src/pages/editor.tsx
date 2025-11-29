@@ -19,6 +19,7 @@ import { EnhancedConnectionControls } from '@/components/editor/enhanced-connect
 import { ConnectionVisualization } from '@/components/editor/connection-visualization';
 import { SmartConnectionCreator } from '@/components/editor/smart-connection-creator';
 import { UserDatabasePanel } from '@/components/editor/user-database-panel';
+import { DialogPanel } from '@/components/editor/dialog-panel';
 import { GroupsPanel } from '@/components/editor/groups-panel';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
@@ -32,7 +33,7 @@ import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { apiRequest } from '@/lib/queryClient';
-import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets, Node } from '@shared/schema';
+import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets, Node, UserBotData } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { nanoid } from 'nanoid';
 
@@ -49,6 +50,7 @@ export default function Editor() {
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
+  const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
   
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
@@ -183,6 +185,30 @@ export default function Editor() {
     }));
   }, []);
 
+  const handleOpenDialogPanel = useCallback((user: UserBotData) => {
+    setSelectedDialogUser(user);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element =>
+        element.id === 'dialog'
+          ? { ...element, visible: true }
+          : element
+      )
+    }));
+  }, []);
+
+  const handleCloseDialogPanel = useCallback(() => {
+    setSelectedDialogUser(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element =>
+        element.id === 'dialog'
+          ? { ...element, visible: false }
+          : element
+      )
+    }));
+  }, []);
+
   const handleOpenMobileSidebar = useCallback(() => {
     setShowMobileSidebar(true);
   }, []);
@@ -236,6 +262,14 @@ export default function Editor() {
           name: 'Код',
           position: 'right',
           size: 25,
+          visible: false
+        },
+        {
+          id: 'dialog',
+          type: 'dialog',
+          name: 'Диалог',
+          position: 'right',
+          size: 20,
           visible: false
         }
       ],
@@ -1316,6 +1350,7 @@ export default function Editor() {
             <UserDatabasePanel
               projectId={activeProject.id}
               projectName={activeProject.name}
+              onOpenDialogPanel={handleOpenDialogPanel}
             />
           </div>
         ) : currentTab === 'export' ? (
@@ -1379,6 +1414,15 @@ export default function Editor() {
             canvasContent={canvasContent}
             propertiesContent={propertiesContent}
             codeContent={codeContent}
+            dialogContent={
+              selectedDialogUser && activeProject && (
+                <DialogPanel
+                  projectId={activeProject.id}
+                  user={selectedDialogUser}
+                  onClose={handleCloseDialogPanel}
+                />
+              )
+            }
             onConfigChange={setFlexibleLayoutConfig}
             hideOnMobile={isMobile}
             currentTab={currentTab}
@@ -1507,6 +1551,7 @@ export default function Editor() {
                   <UserDatabasePanel
                     projectId={activeProject.id}
                     projectName={activeProject.name}
+                    onOpenDialogPanel={handleOpenDialogPanel}
                   />
                 </div>
               ) : currentTab === 'groups' ? (

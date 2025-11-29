@@ -12,6 +12,7 @@ interface FlexibleLayoutProps {
   canvasContent: React.ReactNode;
   propertiesContent: React.ReactNode;
   codeContent?: React.ReactNode;
+  dialogContent?: React.ReactNode;
   onConfigChange?: (newConfig: SimpleLayoutConfig) => void;
   hideOnMobile?: boolean; // Скрывать боковые панели на маленьких устройствах
   currentTab?: string; // Текущая активная вкладка
@@ -24,6 +25,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   canvasContent,
   propertiesContent,
   codeContent,
+  dialogContent,
   onConfigChange,
   hideOnMobile = false,
   currentTab
@@ -96,6 +98,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         return propertiesContent;
       case 'code':
         return codeContent;
+      case 'dialog':
+        return dialogContent;
       default:
         return null;
     }
