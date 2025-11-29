@@ -4763,6 +4763,44 @@ export function PropertiesPanel({
                                               />
                                             )}
                                           </div>
+
+                                          {/* Skip Data Collection Toggle for conditional message buttons */}
+                                          {(condition.waitForTextInput || condition.collectUserInput || selectedNode.data.collectUserInput) && (
+                                            <div className="space-y-2 p-2.5 rounded-lg bg-gradient-to-br from-cyan-50/40 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/40 dark:border-cyan-800/30">
+                                              <div className="flex items-center gap-2.5 justify-between">
+                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                  <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-cyan-200/50 dark:bg-cyan-900/40">
+                                                    <i className="fas fa-forward text-xs text-cyan-600 dark:text-cyan-400"></i>
+                                                  </div>
+                                                  <div className="min-w-0 flex-1">
+                                                    <Label className="text-xs font-semibold text-cyan-900 dark:text-cyan-100 cursor-pointer block">
+                                                      Пропустить сохранение
+                                                    </Label>
+                                                    <div className="text-xs text-cyan-700/70 dark:text-cyan-300/70 mt-0.5 leading-snug">
+                                                      Перейти к узлу без сохранения данных
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div className="flex-shrink-0">
+                                                  <Switch
+                                                    checked={button.skipDataCollection ?? false}
+                                                    onCheckedChange={(checked) => {
+                                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                      const updatedConditions = currentConditions.map(c => 
+                                                        c.id === condition.id ? {
+                                                          ...c,
+                                                          buttons: (c.buttons || []).map((b, i) => 
+                                                            i === buttonIndex ? { ...b, skipDataCollection: checked } : b
+                                                          )
+                                                        } : c
+                                                      );
+                                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                    }}
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
                                     ))}

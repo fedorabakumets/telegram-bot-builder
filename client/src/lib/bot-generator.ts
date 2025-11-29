@@ -995,6 +995,16 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}        # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break\n`;
         }
         
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
+        // Это нужно чтобы текстовый обработчик мог обработать кнопки даже когда ожидается фото/видео
+        if (skipButtons.length > 0) {
+          code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
+          code += `${indentLevel}    if user_id not in user_data:\n`;
+          code += `${indentLevel}        user_data[user_id] = {}\n`;
+          code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson}\n`;
+          code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
+        }
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} (${logicOperator})")\n`;
         break;
         
@@ -1057,6 +1067,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
           code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+        }
+        
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
+        if (skipButtons2.length > 0) {
+          code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
+          code += `${indentLevel}    if user_id not in user_data:\n`;
+          code += `${indentLevel}        user_data[user_id] = {}\n`;
+          code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson2}\n`;
+          code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
         }
         
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
@@ -1132,6 +1151,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
         
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
+        if (skipButtons3.length > 0) {
+          code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
+          code += `${indentLevel}    if user_id not in user_data:\n`;
+          code += `${indentLevel}        user_data[user_id] = {}\n`;
+          code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson3}\n`;
+          code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
+        }
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} равны '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
         
@@ -1203,6 +1231,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
           code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+        }
+        
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
+        if (skipButtons4.length > 0) {
+          code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
+          code += `${indentLevel}    if user_id not in user_data:\n`;
+          code += `${indentLevel}        user_data[user_id] = {}\n`;
+          code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson4}\n`;
+          code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
         }
         
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} содержат '${condition.expectedValue || ''}' (${logicOperator})")\n`;
@@ -6205,6 +6242,51 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '            options_text = "\\n".join([f"• {opt}" for opt in available_options])\n';
   code += '            await message.answer(f"❌ Неверный выбор. Пожалуйста, выберите один из предложенных вариантов:\\n\\n{options_text}")\n';
   code += '            return\n';
+  code += '    \n';
+  code += '    # ИСПРАВЛЕНИЕ: Проверяем pending_skip_buttons для медиа-узлов (фото/видео/аудио)\n';
+  code += '    # Эта проверка нужна когда узел ожидает медиа, но пользователь нажал reply-кнопку с skipDataCollection\n';
+  code += '    if user_id in user_data and "pending_skip_buttons" in user_data[user_id]:\n';
+  code += '        pending_buttons = user_data[user_id]["pending_skip_buttons"]\n';
+  code += '        user_text = message.text\n';
+  code += '        for skip_btn in pending_buttons:\n';
+  code += '            if skip_btn.get("text") == user_text:\n';
+  code += '                skip_target = skip_btn.get("target")\n';
+  code += '                logging.info(f"⏭️ Нажата кнопка skipDataCollection для медиа-узла: {user_text} -> {skip_target}")\n';
+  code += '                # Очищаем pending_skip_buttons и любые медиа-ожидания\n';
+  code += '                if "pending_skip_buttons" in user_data[user_id]:\n';
+  code += '                    del user_data[user_id]["pending_skip_buttons"]\n';
+  code += '                for media_wait in ["waiting_for_photo", "waiting_for_video", "waiting_for_audio", "waiting_for_document"]:\n';
+  code += '                    if media_wait in user_data[user_id]:\n';
+  code += '                        del user_data[user_id][media_wait]\n';
+  code += '                # Переходим к целевому узлу\n';
+  code += '                if skip_target:\n';
+  code += '                    try:\n';
+  code += '                        logging.info(f"🚀 Переходим к узлу skipDataCollection медиа: {skip_target}")\n';
+  code += '                        import types as aiogram_types\n';
+  code += '                        fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                            id="skip_media_nav",\n';
+  code += '                            from_user=message.from_user,\n';
+  code += '                            chat_instance="",\n';
+  code += '                            data=skip_target,\n';
+  code += '                            message=message,\n';
+  code += '                            answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                        )\n';
+
+  // Добавляем навигацию для skip_buttons медиа-узлов
+  if (nodes.length > 0) {
+    nodes.forEach((mediaSkipNode, mediaSkipIdx) => {
+      const mediaSkipCond = mediaSkipIdx === 0 ? 'if' : 'elif';
+      const mediaSkipFnName = mediaSkipNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `                        ${mediaSkipCond} skip_target == "${mediaSkipNode.id}":\n`;
+      code += `                            await handle_callback_${mediaSkipFnName}(fake_callback)\n`;
+    });
+    code += '                        else:\n';
+    code += '                            logging.warning(f"Неизвестный целевой узел skipDataCollection медиа: {skip_target}")\n';
+  }
+
+  code += '                    except Exception as e:\n';
+  code += '                        logging.error(f"Ошибка при переходе к узлу skipDataCollection медиа {skip_target}: {e}")\n';
+  code += '                return\n';
   code += '    \n';
   code += '    # Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)\n';
   code += '    has_waiting_state = user_id in user_data and "waiting_for_input" in user_data[user_id]\n';
