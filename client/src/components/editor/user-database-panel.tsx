@@ -267,8 +267,16 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
   // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: ({ userId, data }: { userId: number; data: Partial<UserBotData> }) => 
-      apiRequest('PUT', `/api/users/${userId}`, data),
+    mutationFn: ({ userId, data }: { userId: number; data: Partial<UserBotData> }) => {
+      // Convert boolean values to 0/1 for database
+      const normalizedData = {
+        ...data,
+        ...(data.isActive !== undefined && { isActive: data.isActive ? 1 : 0 }),
+        ...(data.isBlocked !== undefined && { isBlocked: data.isBlocked ? 1 : 0 }),
+        ...(data.isPremium !== undefined && { isPremium: data.isPremium ? 1 : 0 }),
+      };
+      return apiRequest('PUT', `/api/users/${userId}`, normalizedData);
+    },
     onSuccess: () => {
       // Принудительно очищаем кэш и обновляем данные
       qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
