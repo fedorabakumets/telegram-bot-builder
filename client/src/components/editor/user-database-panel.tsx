@@ -1222,24 +1222,40 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     <span className="font-medium text-green-900 dark:text-green-100">Ответ:</span>
                                   </div>
                                   {(() => {
+                                    // Проверяем если это медиа
+                                    if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
+                                      return (
+                                        <div className="rounded-lg overflow-hidden max-w-md space-y-2">
+                                          {responseData.media.map((m: any, idx: number) => (
+                                            <img 
+                                              key={idx}
+                                              src={m.url || m} 
+                                              alt="Ответ фото" 
+                                              className="w-full h-auto rounded-lg"
+                                              onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                              }}
+                                            />
+                                          ))}
+                                        </div>
+                                      );
+                                    }
+                                    
                                     const valueStr = String(responseData.value);
                                     const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://');
                                     const isImageId = /^[A-Za-z0-9_\-]{20,}$/.test(valueStr);
                                     
                                     if (isImageUrl || isImageId) {
                                       return (
-                                        <div className="space-y-2">
-                                          <div className="rounded-lg overflow-hidden max-w-md bg-white dark:bg-gray-900">
-                                            <img 
-                                              src={valueStr}
-                                              alt="Ответ фото"
-                                              className="w-full h-auto rounded-lg"
-                                              onError={() => {}}
-                                            />
-                                          </div>
-                                          <div className="text-xs text-green-600 dark:text-green-400">
-                                            {isImageId ? 'Telegram фото' : 'Изображение'}
-                                          </div>
+                                        <div className="rounded-lg overflow-hidden max-w-md">
+                                          <img 
+                                            src={valueStr}
+                                            alt="Ответ фото"
+                                            className="w-full h-auto rounded-lg"
+                                            onError={(e) => {
+                                              (e.target as HTMLImageElement).style.display = 'none';
+                                            }}
+                                          />
                                         </div>
                                       );
                                     }
