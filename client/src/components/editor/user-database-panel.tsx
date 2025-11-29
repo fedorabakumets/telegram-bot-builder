@@ -129,6 +129,48 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     refetchOnWindowFocus: true,
   });
 
+  // Fetch messages for user details modal (to get photo URLs)
+  const { data: userDetailsMessages = [] } = useQuery<BotMessageWithMedia[]>({
+    queryKey: [`/api/projects/${projectId}/users/${selectedUser?.userId}/messages`],
+    enabled: showUserDetails && !!selectedUser?.userId,
+    staleTime: 0,
+  });
+
+  // Helper function to find photo URL from messages by file_id
+  const getPhotoUrlFromMessages = (fileId: string): string | null => {
+    if (!fileId || !userDetailsMessages.length) return null;
+    
+    for (const msg of userDetailsMessages) {
+      // Check if message has media with matching URL pattern or file_id reference
+      if (msg.media && Array.isArray(msg.media)) {
+        for (const m of msg.media) {
+          if (m.url) {
+            return m.url;
+          }
+        }
+      }
+      // Check messageData for photo with matching file_id
+      const msgData = msg.messageData as Record<string, any> | null;
+      if (msgData?.photo?.file_id === fileId && msg.media?.[0]?.url) {
+        return msg.media[0].url;
+      }
+      // Also check if this is a photo answer message
+      if (msgData?.is_photo_answer && msg.media?.[0]?.url) {
+        return msg.media[0].url;
+      }
+    }
+    
+    // Find any user message with photo media
+    const photoMessages = userDetailsMessages.filter(
+      m => m.messageType === 'user' && m.media && m.media.length > 0
+    );
+    if (photoMessages.length > 0) {
+      return photoMessages[photoMessages.length - 1].media![0].url;
+    }
+    
+    return null;
+  };
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: (userId: number) => {
@@ -1241,9 +1283,96 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                       );
                                     }
                                     
+                                    // Проверяем наличие photoUrl - это фото ответ с загруженным URL
+                                    if (responseData?.photoUrl) {
+                                      return (
+                                        <div className="rounded-lg overflow-hidden max-w-md">
+                                          <img 
+                                            src={responseData.photoUrl}
+                                            alt="Фото ответ"
+                                            className="w-full h-auto rounded-lg border border-border"
+                                            data-testid={`photo-response-${key}`}
+                                            onError={(e) => {
+                                              const img = e.target as HTMLImageElement;
+                                              img.style.display = 'none';
+                                              const fallback = document.createElement('div');
+                                              fallback.className = 'inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800';
+                                              fallback.innerHTML = '<span class="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Фото (не удалось загрузить)</span>';
+                                              img.parentNode?.appendChild(fallback);
+                                            }}
+                                          />
+                                        </div>
+                                      );
+                                    }
+                                    
+                                    // Проверяем тип photo и пытаемся найти URL
+                                    if (responseData?.type === 'photo' || responseData?.type === 'image') {
+                                      const valueStr = String(responseData.value || '');
+                                      // Если есть URL в value
+                                      if (valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/')) {
+                                        return (
+                                          <div className="rounded-lg overflow-hidden max-w-md">
+                                            <img 
+                                              src={valueStr}
+                                              alt="Фото ответ"
+                                              className="w-full h-auto rounded-lg border border-border"
+                                              onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                              }}
+                                            />
+                                          </div>
+                                        );
+                                      }
+                                      // Если это file_id - ищем URL в сообщениях
+                                      const photoUrlFromMessages = getPhotoUrlFromMessages(valueStr);
+                                      if (photoUrlFromMessages) {
+                                        return (
+                                          <div className="rounded-lg overflow-hidden max-w-md">
+                                            <img 
+                                              src={photoUrlFromMessages}
+                                              alt="Фото ответ"
+                                              className="w-full h-auto rounded-lg border border-border"
+                                              data-testid={`photo-from-messages-${key}`}
+                                              onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                              }}
+                                            />
+                                          </div>
+                                        );
+                                      }
+                                      // Если URL нет - показываем индикатор
+                                      return (
+                                        <div className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                                          <span className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Фото (загрузка...)</span>
+                                        </div>
+                                      );
+                                    }
+                                    
                                     const valueStr = String(responseData.value);
-                                    const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://');
-                                    const isLongString = valueStr.length > 20 && /^[A-Za-z0-9_\-/+=]+$/.test(valueStr);
+                                    
+                                    // Проверяем, похоже ли значение на file_id (длинная строка с определенным форматом)
+                                    const isLikelyFileId = valueStr.length > 40 && /^[A-Za-z0-9_\-]+$/.test(valueStr);
+                                    if (isLikelyFileId) {
+                                      // Пробуем найти URL в сообщениях
+                                      const photoUrlFromMessages = getPhotoUrlFromMessages(valueStr);
+                                      if (photoUrlFromMessages) {
+                                        return (
+                                          <div className="rounded-lg overflow-hidden max-w-md">
+                                            <img 
+                                              src={photoUrlFromMessages}
+                                              alt="Фото ответ"
+                                              className="w-full h-auto rounded-lg border border-border"
+                                              data-testid={`photo-fileid-${key}`}
+                                              onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                              }}
+                                            />
+                                          </div>
+                                        );
+                                      }
+                                    }
+                                    
+                                    const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
                                     
                                     // Если это URL - загружаем как изображение
                                     if (isImageUrl) {
@@ -1257,15 +1386,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                               (e.target as HTMLImageElement).style.display = 'none';
                                             }}
                                           />
-                                        </div>
-                                      );
-                                    }
-                                    
-                                    // Если это похоже на ID фото или тип фото
-                                    if (isLongString || responseData?.type === 'photo' || responseData?.type === 'image') {
-                                      return (
-                                        <div className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                                          <span className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Ответ фото</span>
                                         </div>
                                       );
                                     }
