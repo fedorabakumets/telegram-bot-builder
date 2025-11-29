@@ -171,85 +171,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     return null;
   };
 
-  // Helper function to find question text from messages by nodeId or timestamp
-  const getQuestionTextFromMessages = (responseKey: string, nodeId?: string, responseTimestamp?: string): string | null => {
-    if (!userDetailsMessages.length) return null;
-    
-    // Sort messages by timestamp
-    const sortedMessages = [...userDetailsMessages].sort((a, b) => {
-      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return dateA - dateB;
-    });
-    
-    // If we have nodeId, try to find bot message with that nodeId
-    if (nodeId) {
-      for (const msg of sortedMessages) {
-        const msgData = msg.messageData as Record<string, any> | null;
-        if (msg.messageType === 'bot' && msgData?.nodeId === nodeId && msg.messageText) {
-          return msg.messageText;
-        }
-      }
-    }
-    
-    // If we have response timestamp, find the bot message just before it
-    if (responseTimestamp) {
-      const responseTime = new Date(responseTimestamp).getTime();
-      let closestBotMessage: string | null = null;
-      let closestTimeDiff = Infinity;
-      
-      for (const msg of sortedMessages) {
-        if (msg.messageType === 'bot' && msg.messageText && msg.createdAt) {
-          const msgTime = new Date(msg.createdAt).getTime();
-          // Bot message should be before the response
-          if (msgTime < responseTime) {
-            const diff = responseTime - msgTime;
-            if (diff < closestTimeDiff) {
-              closestTimeDiff = diff;
-              closestBotMessage = msg.messageText;
-            }
-          }
-        }
-      }
-      
-      if (closestBotMessage) {
-        return closestBotMessage;
-      }
-    }
-    
-    // Try to find by response key pattern
-    const responseMatch = responseKey.match(/response_(\d+)/);
-    if (responseMatch) {
-      const responseNum = parseInt(responseMatch[1], 10);
-      // Collect all bot messages that precede user text responses
-      const botMessagesBeforeUserInput: string[] = [];
-      
-      for (let i = 0; i < sortedMessages.length; i++) {
-        const msg = sortedMessages[i];
-        const msgData = msg.messageData as Record<string, any> | null;
-        
-        if (msg.messageType === 'bot' && msg.messageText) {
-          // Check if this is followed by a user message (text input)
-          const nextMsg = sortedMessages[i + 1];
-          if (nextMsg && nextMsg.messageType === 'user') {
-            const nextMsgData = nextMsg.messageData as Record<string, any> | null;
-            // If user message is not a button click, it's a text input
-            if (!nextMsgData?.button_clicked) {
-              botMessagesBeforeUserInput.push(msg.messageText);
-            }
-          }
-        }
-      }
-      
-      // Return the Nth bot message (1-indexed)
-      if (responseNum > 0 && responseNum <= botMessagesBeforeUserInput.length) {
-        return botMessagesBeforeUserInput[responseNum - 1];
-      }
-    }
-    
-    return null;
-  };
-
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: (userId: number) => {
@@ -1312,41 +1233,29 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                             {responseData?.value ? (
                               <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
                                 {/* Показываем вопрос если есть */}
-                                {(() => {
-                                  // Сначала проверяем prompt в responseData
-                                  const promptText = responseData.prompt 
-                                    ? String(responseData.prompt)
-                                    : getQuestionTextFromMessages(key, responseData.nodeId, responseData.timestamp);
-                                  
-                                  if (promptText) {
-                                    return (
-                                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                          <span className="font-medium text-blue-900 dark:text-blue-100">Вопрос:</span>
-                                        </div>
-                                        <div className="text-blue-800 dark:text-blue-200 leading-relaxed">
-                                          {promptText}
-                                        </div>
-                                      </div>
-                                    );
-                                  }
-                                  
-                                  // Если текст вопроса не найден
-                                  return (
-                                    <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg border border-gray-200 dark:border-gray-800">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <MessageSquare className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">Вопрос:</span>
-                                      </div>
-                                      <div className="text-gray-600 dark:text-gray-400 leading-relaxed italic">
-                                        {key.startsWith('response_') 
-                                          ? `Ответ на вопрос ${key.replace('response_', '')}`
-                                          : 'Загрузка...'}
-                                      </div>
+                                {responseData.prompt ? (
+                                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                      <span className="font-medium text-blue-900 dark:text-blue-100">Вопрос:</span>
                                     </div>
-                                  );
-                                })()}
+                                    <div className="text-blue-800 dark:text-blue-200 leading-relaxed">
+                                      {String(responseData.prompt)}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg border border-gray-200 dark:border-gray-800">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <MessageSquare className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                      <span className="font-medium text-gray-900 dark:text-gray-100">Вопрос:</span>
+                                    </div>
+                                    <div className="text-gray-600 dark:text-gray-400 leading-relaxed italic">
+                                      {key.startsWith('response_') 
+                                        ? `Ответ на вопрос ${key.replace('response_', '')}`
+                                        : 'Информация о вопросе отсутствует'}
+                                    </div>
+                                  </div>
+                                )}
                                 
                                 {/* Показываем ответ */}
                                 <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">

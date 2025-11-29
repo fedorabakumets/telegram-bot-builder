@@ -6168,16 +6168,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '            \n';
   code += '            # Сохраняем ответ для нового формата\n';
   code += '            timestamp = get_moscow_time()\n';
-  code += '            prompt_text = waiting_config.get("prompt_text", "") if isinstance(waiting_config, dict) else ""\n';
-  code += '            node_id = waiting_config.get("node_id", "unknown") if isinstance(waiting_config, dict) else "unknown"\n';
-  code += '            response_data = {\n';
-  code += '                "value": user_text,\n';
-  code += '                "type": input_type,\n';
-  code += '                "timestamp": timestamp,\n';
-  code += '                "nodeId": node_id,\n';
-  code += '                "prompt": prompt_text,\n';
-  code += '                "variable": variable_name\n';
-  code += '            }\n';
+  code += '            response_data = user_text\n';
   code += '            \n';
   code += '            # Сохраняем в пользовательские данные\n';
   code += '            user_data[user_id][variable_name] = response_data\n';
@@ -6558,7 +6549,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += `${bodyIndent}    "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
         code += `${bodyIndent}    "save_to_database": True,\n`;
         code += `${bodyIndent}    "node_id": "${targetNode.id}",\n`;
-        code += `${bodyIndent}    "prompt_text": prompt_text,\n`;
         const nextConnection = connections.find(conn => conn.source === targetNode.id);
         if (nextConnection) {
           code += `${bodyIndent}    "next_node_id": "${nextConnection.target}",\n`;
