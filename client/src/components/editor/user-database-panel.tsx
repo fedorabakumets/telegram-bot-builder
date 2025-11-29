@@ -193,12 +193,12 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     }
   };
 
-  // Auto-scroll to bottom when messages finish loading
+  // Auto-scroll to bottom when messages finish loading or user changes
   useEffect(() => {
     if (showDialog && !messagesLoading) {
       scrollToBottom();
     }
-  }, [showDialog, messagesLoading]);
+  }, [showDialog, messagesLoading, selectedUserForDialog?.userId]);
 
   // Fetch messages for user details modal (to get photo URLs)
   const { data: userDetailsMessages = [] } = useQuery<BotMessageWithMedia[]>({
