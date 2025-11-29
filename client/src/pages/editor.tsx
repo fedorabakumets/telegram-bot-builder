@@ -1243,6 +1243,7 @@ export default function Editor() {
       projectName={activeProject.name}
       projectId={activeProject.id}
       selectedNodeId={selectedNodeId}
+      onClose={handleToggleCode}
     />
   ) : null;
 
