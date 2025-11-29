@@ -191,11 +191,15 @@ export default function Editor() {
     setSelectedDialogUser(user);
     setFlexibleLayoutConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'dialog'
-          ? { ...element, visible: true }
-          : element
-      )
+      elements: prev.elements.map(element => {
+        if (element.id === 'dialog') {
+          return { ...element, visible: true };
+        }
+        if (element.id === 'properties') {
+          return { ...element, visible: false };
+        }
+        return element;
+      })
     }));
   }, []);
 
@@ -203,11 +207,15 @@ export default function Editor() {
     setSelectedDialogUser(null);
     setFlexibleLayoutConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'dialog'
-          ? { ...element, visible: false }
-          : element
-      )
+      elements: prev.elements.map(element => {
+        if (element.id === 'dialog') {
+          return { ...element, visible: false };
+        }
+        if (element.id === 'properties') {
+          return { ...element, visible: true };
+        }
+        return element;
+      })
     }));
   }, []);
 
@@ -215,11 +223,15 @@ export default function Editor() {
     setSelectedUserDetails(user);
     setFlexibleLayoutConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'userDetails'
-          ? { ...element, visible: true }
-          : element
-      )
+      elements: prev.elements.map(element => {
+        if (element.id === 'userDetails') {
+          return { ...element, visible: true };
+        }
+        if (element.id === 'sidebar') {
+          return { ...element, visible: false };
+        }
+        return element;
+      })
     }));
   }, []);
 
@@ -227,11 +239,15 @@ export default function Editor() {
     setSelectedUserDetails(null);
     setFlexibleLayoutConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'userDetails'
-          ? { ...element, visible: false }
-          : element
-      )
+      elements: prev.elements.map(element => {
+        if (element.id === 'userDetails') {
+          return { ...element, visible: false };
+        }
+        if (element.id === 'sidebar') {
+          return { ...element, visible: true };
+        }
+        return element;
+      })
     }));
   }, []);
 
