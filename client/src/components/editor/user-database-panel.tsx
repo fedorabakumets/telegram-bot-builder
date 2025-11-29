@@ -1221,9 +1221,31 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     <Edit className="w-4 h-4 text-green-600 dark:text-green-400" />
                                     <span className="font-medium text-green-900 dark:text-green-100">Ответ:</span>
                                   </div>
-                                  <div className="text-green-800 dark:text-green-200 leading-relaxed font-medium">
-                                    {String(responseData.value)}
-                                  </div>
+                                  {(() => {
+                                    const valueStr = String(responseData.value);
+                                    const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://');
+                                    const isImageId = /^[A-Za-z0-9_-]+$/.test(valueStr) && valueStr.length > 20;
+                                    
+                                    if (isImageUrl || isImageId) {
+                                      return (
+                                        <div className="rounded-lg overflow-hidden max-w-md">
+                                          <img 
+                                            src={valueStr}
+                                            alt="Ответ фото"
+                                            className="w-full h-auto rounded-lg"
+                                            onError={(e) => {
+                                              (e.target as HTMLImageElement).style.display = 'none';
+                                            }}
+                                          />
+                                        </div>
+                                      );
+                                    }
+                                    return (
+                                      <div className="text-green-800 dark:text-green-200 leading-relaxed font-medium">
+                                        {valueStr}
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
                                 
                                 {/* Дополнительная информация */}
