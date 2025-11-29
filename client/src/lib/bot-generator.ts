@@ -4147,6 +4147,45 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${replyAutoTransitionTarget}")\n`;
               }
               
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настраиваем waiting_for_input для targetNode ПЕРЕД return
+              // Это нужно потому что targetNode с reply клавиатурой ждёт ввода пользователя
+              const targetHasInputCollection = targetNode.data.collectUserInput === true || targetNode.data.enableTextInput === true;
+              const targetInputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+              const targetSaveToDb = targetNode.data.saveToDatabase !== false;
+              
+              if (targetHasInputCollection) {
+                code += '    \n';
+                code += '    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настройка waiting_for_input для узла с reply клавиатурой\n';
+                code += '    user_id = callback_query.from_user.id\n';
+                code += '    if user_id not in user_data:\n';
+                code += '        user_data[user_id] = {}\n';
+                
+                // Определяем modes для ввода
+                const modes: string[] = [];
+                if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons?.length > 0) {
+                  modes.push('button');
+                }
+                if (targetNode.data.enableTextInput !== false) {
+                  modes.push('text');
+                }
+                if (targetNode.data.enablePhotoInput) modes.push('photo');
+                if (targetNode.data.enableVideoInput) modes.push('video');
+                if (targetNode.data.enableAudioInput) modes.push('audio');
+                if (targetNode.data.enableDocumentInput) modes.push('document');
+                
+                const modesStr = modes.length > 0 ? modes.map(m => `'${m}'`).join(', ') : "'button', 'text'";
+                
+                code += `    user_data[user_id]["waiting_for_input"] = {\n`;
+                code += `        "type": "button",\n`;
+                code += `        "modes": [${modesStr}],\n`;
+                code += `        "variable": "${targetInputVariable}",\n`;
+                code += `        "save_to_database": ${targetSaveToDb ? 'True' : 'False'},\n`;
+                code += `        "node_id": "${targetNode.id}",\n`;
+                code += `        "next_node_id": ""\n`;
+                code += `    }\n`;
+                code += `    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesStr}] для переменной ${targetInputVariable} (узел ${targetNode.id})")\n`;
+              }
+              
               code += '    return  # Возвращаемся чтобы не отправить сообщение дважды\n';
             } else {
               // Генерируем inline клавиатуру (по умолчанию)
