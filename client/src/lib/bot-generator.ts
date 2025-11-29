@@ -4,6 +4,15 @@ import { z } from 'zod';
 
 type Button = z.infer<typeof buttonSchema>;
 
+// Интерфейс для опций ответа (responseOptions)
+interface ResponseOption {
+  text: string;
+  value?: string;
+  action?: string;
+  target?: string;
+  url?: string;
+}
+
 // Global variable for logging state (can be overridden by parameter)
 let globalLoggingEnabled = false;
 
@@ -1247,8 +1256,8 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
     }
     
     // Извлекаем Inline кнопки
-    const buttons: any[] = [];
-    const inlineButtonMatches = nodeContent.matchAll(/InlineKeyboardButton\s*\(\s*text\s*=\s*([^,]+)\s*,\s*callback_data\s*=\s*"([^"]+)"\s*\)/g);
+    const buttons: Button[] = [];
+    const inlineButtonMatches = Array.from(nodeContent.matchAll(/InlineKeyboardButton\s*\(\s*text\s*=\s*([^,]+)\s*,\s*callback_data\s*=\s*"([^"]+)"\s*\)/g));
     for (const btnMatch of inlineButtonMatches) {
       let btnText = btnMatch[1].replace(/["'`]/g, '').trim();
       // Убираем префиксы типа 'replace_variables_in_text('
@@ -1265,11 +1274,11 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
         action: 'goto',
         target: callbackData,
         buttonType: 'normal'
-      });
+      } as Button);
     }
     
     // Извлекаем Reply кнопки
-    const replyButtonMatches = nodeContent.matchAll(/KeyboardButton\s*\(\s*text\s*=\s*([^)]+)\s*\)/g);
+    const replyButtonMatches = Array.from(nodeContent.matchAll(/KeyboardButton\s*\(\s*text\s*=\s*([^)]+)\s*\)/g));
     for (const btnMatch of replyButtonMatches) {
       let btnText = btnMatch[1].replace(/["'`]/g, '').trim();
       // Убираем функции типа replace_variables_in_text
@@ -1279,13 +1288,13 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
           btnText = innerMatch[1];
         }
       }
-      if (!buttons.find(b => b.text === btnText)) {
+      if (!buttons.find((b: Button) => b.text === btnText)) {
         buttons.push({
           id: `btn_${nodeId}_${buttons.length}`,
           text: btnText,
           action: 'default',
           buttonType: 'normal'
-        });
+        } as Button);
       }
     }
     
@@ -3168,7 +3177,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 if (buttonType === 'reply') {
                   code += '    builder = ReplyKeyboardBuilder()\n';
                   
-                  responseOptions.forEach((option: string, index: number) => {
+                  (responseOptions as ResponseOption[]).forEach((option: ResponseOption, index: number) => {
                     code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
                   });
                   
@@ -3181,7 +3190,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 } else {
                   code += '    builder = InlineKeyboardBuilder()\n';
                   
-                  responseOptions.forEach((option: string, index: number) => {
+                  (responseOptions as ResponseOption[]).forEach((option: ResponseOption, index: number) => {
                     const optionValue = option.value || option.text;
                     code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
                   });
@@ -3211,7 +3220,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `        "allow_multiple": ${toPythonBoolean(allowMultipleSelection)},\n`;
                 code += `        "next_node_id": "${nextNodeId || ''}",\n`;
                 code += '        "options": [\n';
-                responseOptions.forEach((option: string, index: number) => {
+                (responseOptions as ResponseOption[]).forEach((option: ResponseOption, index: number) => {
                   const optionValue = option.value || option.text;
                   const optionAction = option.action || 'goto';
                   const optionTarget = option.target || '';
@@ -4953,6 +4962,43 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             
             // Добавляем замену переменных для reply кнопок
             code += '    user_id = message.from_user.id\n';
+            
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем waiting_for_input и сохраняем данные кнопки
+            // Это нужно для узлов с collectUserInput=true и reply кнопками
+            const sourceNodeInputVariable = node.data.inputVariable || `response_${node.id}`;
+            const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true;
+            
+            code += '    \n';
+            code += '    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем waiting_for_input для сохранения ответа кнопки\n';
+            code += '    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
+            code += '        waiting_config = user_data[user_id]["waiting_for_input"]\n';
+            code += '        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)\n';
+            code += '        modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []\n';
+            code += '        waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""\n';
+            code += '        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)\n';
+            code += '        if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):\n';
+            code += '            variable_name = waiting_config.get("variable", "button_response")\n';
+            code += `            button_text = "${buttonText}"\n`;
+            code += '            logging.info(f"💾 Сохраняем ответ кнопки в переменную: {variable_name} = {button_text} (modes: {modes}, waiting_node: {waiting_node_id})")\n';
+            code += '            \n';
+            code += '            # Сохраняем в пользовательские данные\n';
+            code += '            user_data[user_id][variable_name] = button_text\n';
+            code += '            \n';
+            code += '            # Сохраняем в базу данных\n';
+            code += '            saved_to_db = await update_user_data_in_db(user_id, variable_name, button_text)\n';
+            code += '            if saved_to_db:\n';
+            code += '                logging.info(f"✅ Ответ кнопки сохранён в БД: {variable_name} = {button_text} (пользователь {user_id})")\n';
+            code += '            else:\n';
+            code += '                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+            code += '            \n';
+            code += '            # Очищаем состояние ожидания после сохранения\n';
+            code += '            logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")\n';
+            code += '            del user_data[user_id]["waiting_for_input"]\n';
+            code += '        elif isinstance(waiting_config, dict):\n';
+            code += '            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)\n';
+            code += '            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")\n';
+            code += '    \n';
+            
             code += generateUniversalVariableReplacement('    ');
             
             // Handle keyboard for target node
@@ -5409,173 +5455,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     });
   }
 
-  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем reply button обработчики ПЕРЕД универсальным обработчиком текста
-  // Это гарантирует, что специфичные обработчики кнопок срабатывают раньше общего обработчика
-  const replyGotoButtons: Array<{text: string, target: string, nodeId: string, keyboardType: string, hideAfterClick?: boolean, inputVariable?: string}> = [];
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАЕМ СБОР REPLY КНОПОК С GOTO из', nodes.length, 'узлов');
-  
-  nodes.forEach(node => {
-    // Обычные кнопки узла
-    if (node.data.buttons) {
-      node.data.buttons.forEach((button: Button) => {
-        if (button.action === 'goto' && button.target && node.data.keyboardType === 'reply') {
-          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА reply goto кнопка: "${button.text}" -> ${button.target} в узле ${node.id}`);
-          replyGotoButtons.push({
-            text: button.text,
-            target: button.target,
-            nodeId: node.id,
-            keyboardType: node.data.keyboardType,
-            hideAfterClick: button.hideAfterClick || false,
-            inputVariable: node.data.inputVariable || `response_${node.id}`
-          });
-        }
-      });
-    }
-    
-    // Кнопки в условных сообщениях
-    if (node.data.conditionalMessages) {
-      node.data.conditionalMessages.forEach((condition: any) => {
-        if (condition.buttons) {
-          condition.buttons.forEach((button: Button) => {
-            // Для conditional messages берем keyboardType из condition или node
-            const keyboardType = condition.keyboardType || node.data.keyboardType || 'reply';
-            if (button.action === 'goto' && button.target && keyboardType === 'reply') {
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА reply goto кнопка в conditional message: "${button.text}" -> ${button.target} в узле ${node.id}`);
-              replyGotoButtons.push({
-                text: button.text,
-                target: button.target,
-                nodeId: node.id,
-                keyboardType: keyboardType,
-                hideAfterClick: button.hideAfterClick || false
-              });
-            }
-          });
-        }
-      });
-    }
-  });
-  
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ИТОГО найдено reply goto кнопок: ${replyGotoButtons.length}`);
-  
-  if (replyGotoButtons.length > 0) {
-    code += '\n# Обработчики для reply кнопок с переходами (goto)\n';
-    code += `# Найдено ${replyGotoButtons.length} reply goto кнопок\n`;
-    code += '# ВАЖНО: Эти обработчики должны быть ВЫШЕ универсального обработчика текста\n';
-    
-    // Группируем по тексту, чтобы избежать дубликатов
-    const uniqueButtons = new Map<string, typeof replyGotoButtons[0]>();
-    replyGotoButtons.forEach(btn => {
-      if (!uniqueButtons.has(btn.text)) {
-        uniqueButtons.set(btn.text, btn);
-      }
-    });
-    
-    uniqueButtons.forEach((button, buttonText) => {
-      const safeFunctionName = button.text.replace(/[^a-zA-Z0-9_а-яА-Я]/g, '_');
-      const safeNodeFunctionName = button.target.replace(/[^a-zA-Z0-9_]/g, '_');
-      
-      code += `\n@dp.message(lambda message: message.text == ${formatTextForPython(button.text)})\n`;
-      code += `async def handle_reply_button_${safeFunctionName}_${safeNodeFunctionName}(message: types.Message):\n`;
-      code += `    user_id = message.from_user.id\n`;
-      code += `    logging.info(f"📱 Получена reply кнопка: ${button.text} от {{user_id}}, переход к узлу ${button.target}")\n`;
-      code += `    \n`;
-      code += `    # КРИТИЧНО: Сохраняем message_id исходного reply сообщения для удаления\n`;
-      code += `    # Удаляться будет в callback обработчике ПЕРЕД отправкой нового сообщения\n`;
-      code += `    if message.reply_to_message:\n`;
-      code += `        if user_id not in user_data:\n`;
-      code += `            user_data[user_id] = {}\n`;
-      code += `        user_data[user_id]["_delete_reply_message_id"] = message.reply_to_message.message_id\n`;
-      code += `        logging.info(f"💾 Сохранили message_id для удаления: {message.reply_to_message.message_id}")\n`;
-      code += `    \n`;
-      code += `    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если есть waiting_for_input, СОХРАНЯЕМ ответ перед переходом\n`;
-      code += `    # Это нужно для узлов, которые собирают данные через кнопки (например, пол: Мальчик/Девочка)\n`;
-      code += `    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n`;
-      code += `        waiting_config = user_data[user_id]["waiting_for_input"]\n`;
-      code += `        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)\n`;
-      code += `        modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []\n`;
-      code += `        # КРИТИЧЕСКОЕ: Проверяем что ждём ввода ИМЕННО для этого узла\n`;
-      code += `        if isinstance(waiting_config, dict) and waiting_config.get("node_id") == "${button.nodeId}" and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):\n`;
-      code += `            variable_name = "${button.inputVariable}"\n`;
-      code += `            button_text = "${button.text}"\n`;
-      code += `            logging.info(f"💾 Сохраняем ответ кнопки в переменную: {variable_name} = {button_text} (modes: {modes})")\n`;
-      code += `            \n`;
-      code += `            # Сохраняем в пользовательские данные\n`;
-      code += `            user_data[user_id][variable_name] = button_text\n`;
-      code += `            \n`;
-      code += `            # Сохраняем в базу данных\n`;
-      code += `            saved_to_db = await update_user_data_in_db(user_id, variable_name, button_text)\n`;
-      code += `            if saved_to_db:\n`;
-      code += `                logging.info(f"✅ Ответ кнопки сохранён в БД: {variable_name} = {button_text} (пользователь {user_id})")\n`;
-      code += `            else:\n`;
-      code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
-      code += `            \n`;
-      code += `            # Теперь очищаем состояние ожидания\n`;
-      code += `            logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа")\n`;
-      code += `            del user_data[user_id]["waiting_for_input"]\n`;
-      code += `        elif isinstance(waiting_config, dict):\n`;
-      code += `            # Если button не в modes - просто логируем и продолжаем (пользователь нажал кнопку, но ожидался текст)\n`;
-      code += `            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")\n`;
-      code += `    \n`;
-      code += `    # Очищаем другие состояния ожидания\n`;
-      code += `    if user_id in user_data:\n`;
-      code += `        if "waiting_for_conditional_input" in user_data[user_id]:\n`;
-      code += `            logging.info(f"🧹 Очищаем waiting_for_conditional_input при нажатии reply кнопки")\n`;
-      code += `            del user_data[user_id]["waiting_for_conditional_input"]\n`;
-      code += `        if "_has_conditional_keyboard" in user_data[user_id]:\n`;
-      code += `            logging.info(f"🧹 Очищаем _has_conditional_keyboard при нажатии reply кнопки")\n`;
-      code += `            del user_data[user_id]["_has_conditional_keyboard"]\n`;
-      code += `    \n`;
-      
-      const targetNode = nodes.find(n => n.id === button.target);
-      if (targetNode) {
-        if (targetNode.type === 'start') {
-          code += `    # Вызываем start handler напрямую\n`;
-          code += `    await start_handler(message)\n`;
-        } else if (targetNode.type === 'command') {
-          const commandName = targetNode.data.command?.replace('/', '') || 'unknown';
-          code += `    # Вызываем command handler напрямую\n`;
-          code += `    await ${commandName}_handler(message)\n`;
-        } else {
-          // Для обычных message узлов создаём fake callback и вызываем callback обработчик
-          code += `    # Создаём fake callback для вызова callback обработчика\n`;
-          code += `    import types as aiogram_types\n`;
-          code += `    \n`;
-          code += `    # Функции для fake сообщения\n`;
-          code += `    async def fake_send(*args, **kwargs):\n`;
-          code += `        return await bot.send_message(message.from_user.id, *args, **kwargs)\n`;
-          code += `    async def fake_noop(*args, **kwargs):\n`;
-          code += `        return None\n`;
-          code += `    \n`;
-          code += `    # Создаём минимальный message объект\n`;
-          code += `    fake_message = aiogram_types.SimpleNamespace(\n`;
-          code += `        chat=aiogram_types.SimpleNamespace(id=message.from_user.id),\n`;
-          code += `        message_id=message.message_id,\n`;
-          code += `        delete=fake_noop,\n`;
-          code += `        edit_text=fake_send,\n`;
-          code += `        answer=fake_send\n`;
-          code += `    )\n`;
-          code += `    fake_callback = aiogram_types.SimpleNamespace(\n`;
-          code += `        id="reply_button_nav",\n`;
-          code += `        from_user=message.from_user,\n`;
-          code += `        chat_instance="",\n`;
-          code += `        data="${button.target}",\n`;
-          code += `        message=fake_message,\n`;
-          code += `        answer=fake_noop\n`;
-          code += `    )\n`;
-          code += `    \n`;
-          code += `    # Вызываем callback обработчик целевого узла\n`;
-          code += `    try:\n`;
-          code += `        await handle_callback_${safeNodeFunctionName}(fake_callback)\n`;
-          code += `    except Exception as e:\n`;
-          code += `        logging.error(f"Ошибка при вызове обработчика узла ${button.target}: {e}")\n`;
-          code += `        await message.answer("Произошла ошибка при обработке кнопки")\n`;
-        }
-      } else {
-        code += `    logging.warning(f"Целевой узел ${button.target} не найден")\n`;
-        code += `    await message.answer("Ошибка: узел не найден")\n`;
-      }
-    });
-  }
+  // ПРИМЕЧАНИЕ: Дублирующий набор обработчиков reply-кнопок был удален
+  // Теперь логика сохранения данных через waiting_for_input добавлена в первый набор обработчиков выше
+  // Это исправляет проблему когда reply-кнопки не сохраняли данные пользователя
 
   // Добавляем универсальный обработчик пользовательского ввода только если есть сбор данных
   if (hasInputCollection(nodes || [])) {
