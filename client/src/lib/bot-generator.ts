@@ -5495,7 +5495,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += `        modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []\n`;
       code += `        # КРИТИЧЕСКОЕ: Проверяем что ждём ввода ИМЕННО для этого узла\n`;
       code += `        if isinstance(waiting_config, dict) and waiting_config.get("node_id") == "${button.nodeId}" and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):\n`;
-      code += `            variable_name = waiting_config.get("variable", "button_response")\n`;
+      code += `            variable_name = "${button.inputVariable}"\n`;
       code += `            button_text = "${button.text}"\n`;
       code += `            logging.info(f"💾 Сохраняем ответ кнопки в переменную: {variable_name} = {button_text} (modes: {modes})")\n`;
       code += `            \n`;
