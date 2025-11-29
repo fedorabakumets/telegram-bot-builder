@@ -319,34 +319,56 @@ function toPythonBoolean(value: any): string {
 function generateWaitingStateCode(node: any, indentLevel: string = '    ', userIdSource: string = 'message.from_user.id'): string {
   // Определяем тип ввода и соответствующее состояние
   let waitingStateKey = 'waiting_for_input';
-  let inputType = node.data.inputType || 'text';
   let inputVariable = node.data.inputVariable || `response_${node.id}`;
   
-  // Проверяем медиа-типы и устанавливаем правильное состояние
+  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем массив modes для поддержки нескольких типов ввода
+  const modes: string[] = [];
+  
+  // Проверяем медиа-типы
   if (node.data.enablePhotoInput) {
     waitingStateKey = 'waiting_for_photo';
-    inputType = 'photo';
+    modes.push('photo');
     inputVariable = node.data.photoInputVariable || 'user_photo';
   } else if (node.data.enableVideoInput) {
     waitingStateKey = 'waiting_for_video';
-    inputType = 'video';
+    modes.push('video');
     inputVariable = node.data.videoInputVariable || 'user_video';
   } else if (node.data.enableAudioInput) {
     waitingStateKey = 'waiting_for_audio';
-    inputType = 'audio';
+    modes.push('audio');
     inputVariable = node.data.audioInputVariable || 'user_audio';
   } else if (node.data.enableDocumentInput) {
     waitingStateKey = 'waiting_for_document';
-    inputType = 'document';
+    modes.push('document');
     inputVariable = node.data.documentInputVariable || 'user_document';
+  } else {
+    // Для текстовых узлов проверяем наличие кнопок И текстового ввода
+    const hasReplyButtons = node.data.keyboardType === 'reply' && node.data.buttons && node.data.buttons.length > 0;
+    const hasTextInput = node.data.enableTextInput === true || node.data.collectUserInput === true;
+    
+    if (hasReplyButtons) {
+      modes.push('button');
+    }
+    if (hasTextInput || !hasReplyButtons) {
+      // Если нет кнопок или включен текстовый ввод - добавляем text
+      modes.push('text');
+    }
+  }
+  
+  // Если modes пустой, по умолчанию добавляем text
+  if (modes.length === 0) {
+    modes.push('text');
   }
   
   const inputTargetNodeId = node.data.inputTargetNodeId || '';
+  const modesStr = modes.map(m => `"${m}"`).join(', ');
+  const primaryType = modes[0]; // Первый тип для обратной совместимости
   
   let code = '';
   code += `${indentLevel}user_data[${userIdSource}] = user_data.get(${userIdSource}, {})\n`;
   code += `${indentLevel}user_data[${userIdSource}]["${waitingStateKey}"] = {\n`;
-  code += `${indentLevel}    "type": "${inputType}",\n`;
+  code += `${indentLevel}    "type": "${primaryType}",\n`;
+  code += `${indentLevel}    "modes": [${modesStr}],\n`;
   code += `${indentLevel}    "variable": "${inputVariable}",\n`;
   code += `${indentLevel}    "save_to_database": True,\n`;
   code += `${indentLevel}    "node_id": "${node.id}",\n`;
@@ -356,7 +378,7 @@ function generateWaitingStateCode(node: any, indentLevel: string = '    ', userI
   code += `${indentLevel}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
   code += `${indentLevel}    "success_message": ""\n`;
   code += `${indentLevel}}\n`;
-  code += `${indentLevel}logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable} (узел ${node.id})")\n`;
+  code += `${indentLevel}logging.info(f"✅ Состояние ожидания настроено: modes=[${modesStr}] для переменной ${inputVariable} (узел ${node.id})")\n`;
   
   return code;
 }
@@ -5463,12 +5485,36 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += `        user_data[user_id]["_delete_reply_message_id"] = message.reply_to_message.message_id\n`;
       code += `        logging.info(f"💾 Сохранили message_id для удаления: {message.reply_to_message.message_id}")\n`;
       code += `    \n`;
-      code += `    # ИСПРАВЛЕНИЕ: Очищаем состояние ожидания ввода при нажатии на reply кнопку\n`;
-      code += `    # Это важно для условных кнопок, которые пропускают узлы сбора данных\n`;
-      code += `    if user_id in user_data:\n`;
-      code += `        if "waiting_for_input" in user_data[user_id]:\n`;
-      code += `            logging.info(f"🧹 Очищаем waiting_for_input при нажатии reply кнопки")\n`;
+      code += `    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если есть waiting_for_input, СОХРАНЯЕМ ответ перед переходом\n`;
+      code += `    # Это нужно для узлов, которые собирают данные через кнопки (например, пол: Мальчик/Девочка)\n`;
+      code += `    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n`;
+      code += `        waiting_config = user_data[user_id]["waiting_for_input"]\n`;
+      code += `        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)\n`;
+      code += `        modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []\n`;
+      code += `        if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):\n`;
+      code += `            variable_name = waiting_config.get("variable", "button_response")\n`;
+      code += `            button_text = "${button.text}"\n`;
+      code += `            logging.info(f"💾 Сохраняем ответ кнопки в переменную: {variable_name} = {button_text} (modes: {modes})")\n`;
+      code += `            \n`;
+      code += `            # Сохраняем в пользовательские данные\n`;
+      code += `            user_data[user_id][variable_name] = button_text\n`;
+      code += `            \n`;
+      code += `            # Сохраняем в базу данных\n`;
+      code += `            saved_to_db = await update_user_data_in_db(user_id, variable_name, button_text)\n`;
+      code += `            if saved_to_db:\n`;
+      code += `                logging.info(f"✅ Ответ кнопки сохранён в БД: {variable_name} = {button_text} (пользователь {user_id})")\n`;
+      code += `            else:\n`;
+      code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
+      code += `            \n`;
+      code += `            # Теперь очищаем состояние ожидания\n`;
+      code += `            logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа")\n`;
       code += `            del user_data[user_id]["waiting_for_input"]\n`;
+      code += `        elif isinstance(waiting_config, dict):\n`;
+      code += `            # Если button не в modes - просто логируем и продолжаем (пользователь нажал кнопку, но ожидался текст)\n`;
+      code += `            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")\n`;
+      code += `    \n`;
+      code += `    # Очищаем другие состояния ожидания\n`;
+      code += `    if user_id in user_data:\n`;
       code += `        if "waiting_for_conditional_input" in user_data[user_id]:\n`;
       code += `            logging.info(f"🧹 Очищаем waiting_for_conditional_input при нажатии reply кнопки")\n`;
       code += `            del user_data[user_id]["waiting_for_conditional_input"]\n`;
@@ -5866,19 +5912,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             const inputTargetNodeId = targetNode.data.inputTargetNodeId;
             code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
             code += `                                "type": "text",\n`;
+            code += `                                "modes": ["text"],\n`;
             code += `                                "variable": "${inputVariable}",\n`;
             code += `                                "save_to_database": True,\n`;
             code += `                                "node_id": "${targetNode.id}",\n`;
             code += `                                "next_node_id": "${inputTargetNodeId || ''}"\n`;
             code += `                            }\n`;
-            code += `                            logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+            code += `                            logging.info(f"✅ Состояние ожидания настроено: modes=[\\"text\\"] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
           } else {
             const messageText = targetNode.data.messageText || 'Сообщение';
             const formattedText = formatTextForPython(messageText);
             
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их вместо ожидания ввода
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание ввода
             if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-              code += `                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их, а не ожидаем ввод\n`;
+              code += `                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа\n`;
               code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput=true")\n`;
               code += `                        text = ${formattedText}\n`;
               
@@ -5889,6 +5936,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // Генерируем inline клавиатуру
               code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
               code += `                        await message.answer(text, reply_markup=keyboard)\n`;
+              
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также настраиваем waiting_for_input для сохранения ответа кнопки
+              const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+              const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+              // Определяем modes - если есть enableTextInput, добавляем и text и button
+              const hasTextInput = targetNode.data.enableTextInput === true;
+              const btnModes = hasTextInput ? '["button", "text"]' : '["button"]';
+              code += `                        # Настраиваем ожидание ввода для сохранения ответа кнопки\n`;
+              code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
+              code += `                            "type": "button",\n`;
+              code += `                            "modes": ${btnModes},\n`;
+              code += `                            "variable": "${inputVariable}",\n`;
+              code += `                            "save_to_database": True,\n`;
+              code += `                            "node_id": "${targetNode.id}",\n`;
+              code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
+              code += `                        }\n`;
+              code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=${btnModes} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
             } else {
               // Обычное ожидание ввода если кнопок нет
               code += `                        # Узел собирает пользовательский ввод\n`;
@@ -5902,11 +5966,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `                        # Настраиваем ожидание ввода\n`;
               code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
               code += `                            "type": "text",\n`;
+              code += `                            "modes": ["text"],\n`;
               code += `                            "variable": "${inputVariable}",\n`;
               code += `                            "save_to_database": True,\n`;
               code += `                            "node_id": "${targetNode.id}",\n`;
               code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
               code += `                        }\n`;
+              code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=[\\"text\\"] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
             }
           }
         } else {
@@ -6396,10 +6462,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               // Настройка ожидания ввода для основной клавиатуры
               if (targetNode.data.enableTextInput === true || targetNode.data.collectUserInput === true) {
+                // ИСПРАВЛЕНИЕ: Используем массив modes для поддержки и кнопок и текста
+                const hasReplyButtons = targetNode.data.keyboardType === 'reply' && targetNode.data.buttons && targetNode.data.buttons.length > 0;
+                const modes: string[] = [];
+                if (hasReplyButtons) modes.push('button');
+                if (targetNode.data.enableTextInput === true || !hasReplyButtons) modes.push('text');
+                const modesStr = modes.map(m => `"${m}"`).join(', ');
+                const primaryType = modes[0];
+                
                 code += `${bodyIndent}    # Настраиваем ожидание ввода для message узла с reply кнопками\n`;
                 code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
                 code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
-                code += `${bodyIndent}        "type": "text",\n`;
+                code += `${bodyIndent}        "type": "${primaryType}",\n`;
+                code += `${bodyIndent}        "modes": [${modesStr}],\n`;
                 code += `${bodyIndent}        "variable": "${inputVariable}",\n`;
                 code += `${bodyIndent}        "save_to_database": True,\n`;
                 code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
@@ -6409,7 +6484,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `${bodyIndent}        "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
                 code += `${bodyIndent}        "success_message": ""\n`;
                 code += `${bodyIndent}    }\n`;
-                code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesStr}] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
               }
             } else {
               // Нет условных сообщений - стандартная обработка
