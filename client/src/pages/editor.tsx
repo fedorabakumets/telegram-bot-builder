@@ -188,20 +188,26 @@ export default function Editor() {
   }, []);
 
   const handleOpenDialogPanel = useCallback((user: UserBotData) => {
-    setSelectedDialogUser(user);
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element => {
-        if (element.id === 'dialog') {
-          return { ...element, visible: true };
-        }
-        if (element.id === 'properties') {
-          return { ...element, visible: false };
-        }
-        return element;
-      })
-    }));
-  }, []);
+    const isAlreadyOpen = selectedDialogUser && selectedDialogUser.id === user.id;
+    
+    if (isAlreadyOpen) {
+      handleCloseDialogPanel();
+    } else {
+      setSelectedDialogUser(user);
+      setFlexibleLayoutConfig(prev => ({
+        ...prev,
+        elements: prev.elements.map(element => {
+          if (element.id === 'dialog') {
+            return { ...element, visible: true };
+          }
+          if (element.id === 'properties') {
+            return { ...element, visible: false };
+          }
+          return element;
+        })
+      }));
+    }
+  }, [selectedDialogUser]);
 
   const handleCloseDialogPanel = useCallback(() => {
     setSelectedDialogUser(null);
@@ -220,20 +226,26 @@ export default function Editor() {
   }, []);
 
   const handleOpenUserDetailsPanel = useCallback((user: UserBotData) => {
-    setSelectedUserDetails(user);
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element => {
-        if (element.id === 'userDetails') {
-          return { ...element, visible: true };
-        }
-        if (element.id === 'sidebar') {
-          return { ...element, visible: false };
-        }
-        return element;
-      })
-    }));
-  }, []);
+    const isAlreadyOpen = selectedUserDetails && selectedUserDetails.id === user.id;
+    
+    if (isAlreadyOpen) {
+      handleCloseUserDetailsPanel();
+    } else {
+      setSelectedUserDetails(user);
+      setFlexibleLayoutConfig(prev => ({
+        ...prev,
+        elements: prev.elements.map(element => {
+          if (element.id === 'userDetails') {
+            return { ...element, visible: true };
+          }
+          if (element.id === 'sidebar') {
+            return { ...element, visible: false };
+          }
+          return element;
+        })
+      }));
+    }
+  }, [selectedUserDetails]);
 
   const handleCloseUserDetailsPanel = useCallback(() => {
     setSelectedUserDetails(null);
