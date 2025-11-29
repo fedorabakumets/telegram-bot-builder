@@ -1230,46 +1230,46 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           </div>
                           
                           <div className="text-sm">
-                            {responseData?.value ? (
+                            {(() => {
+                              // Определяем значение ответа - из объекта или напрямую
+                              const answerValue = responseData?.value !== undefined ? responseData.value : 
+                                                  (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value));
+                              
+                              // Функция для определения текста вопроса
+                              const getQuestionText = (questionKey: string, data: any) => {
+                                if (data?.prompt && data.prompt.trim()) {
+                                  return data.prompt;
+                                }
+                                // Генерируем вопрос на основе ключа
+                                if (questionKey.includes('feedback')) return 'Расскажите подробнее о своих впечатлениях. Что вам понравилось или что можно улучшить?';
+                                if (questionKey.includes('name')) return 'Как вас зовут?';
+                                if (questionKey.includes('age')) return 'Сколько вам лет?';
+                                if (questionKey.includes('city')) return 'Из какого вы города?';
+                                if (questionKey.includes('contact')) return 'Поделитесь контактом';
+                                if (questionKey.includes('email')) return 'Укажите ваш email';
+                                if (questionKey.includes('phone')) return 'Укажите ваш телефон';
+                                if (questionKey.includes('rating')) return 'Оцените нашу работу';
+                                if (questionKey.includes('review')) return 'Оставьте отзыв';
+                                if (questionKey.includes('suggestion')) return 'Поделитесь предложением';
+                                if (questionKey.startsWith('response_')) return `Вопрос ${questionKey.replace('response_', '')}`;
+                                if (questionKey.startsWith('user_')) return `Пользовательский ввод: ${questionKey.replace('user_', '').replace(/_/g, ' ')}`;
+                                return `Вопрос: ${questionKey}`;
+                              };
+                              
+                              const questionText = getQuestionText(key, responseData);
+                              
+                              return (
                               <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
-                                {/* Показываем вопрос - используем prompt или генерируем по ключу */}
-                                {(() => {
-                                  // Функция для определения текста вопроса
-                                  const getQuestionText = (questionKey: string, data: any) => {
-                                    if (data?.prompt && data.prompt.trim()) {
-                                      return data.prompt;
-                                    }
-                                    // Генерируем вопрос на основе ключа
-                                    if (questionKey.includes('feedback')) return 'Расскажите подробнее о своих впечатлениях. Что вам понравилось или что можно улучшить?';
-                                    if (questionKey.includes('name')) return 'Как вас зовут?';
-                                    if (questionKey.includes('age')) return 'Сколько вам лет?';
-                                    if (questionKey.includes('city')) return 'Из какого вы города?';
-                                    if (questionKey.includes('contact')) return 'Поделитесь контактом';
-                                    if (questionKey.includes('email')) return 'Укажите ваш email';
-                                    if (questionKey.includes('phone')) return 'Укажите ваш телефон';
-                                    if (questionKey.includes('rating')) return 'Оцените нашу работу';
-                                    if (questionKey.includes('review')) return 'Оставьте отзыв';
-                                    if (questionKey.includes('suggestion')) return 'Поделитесь предложением';
-                                    if (questionKey.startsWith('response_')) return `Вопрос ${questionKey.replace('response_', '')}`;
-                                    if (questionKey.startsWith('user_')) return `Пользовательский ввод: ${questionKey.replace('user_', '').replace(/_/g, ' ')}`;
-                                    return `Вопрос: ${questionKey}`;
-                                  };
-                                  
-                                  const questionText = getQuestionText(key, responseData);
-                                  const hasPrompt = responseData?.prompt && responseData.prompt.trim();
-                                  
-                                  return (
-                                    <div className={`mb-4 p-3 ${hasPrompt ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'} rounded-lg border`}>
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                        <span className="font-medium text-blue-900 dark:text-blue-100">Вопрос:</span>
-                                      </div>
-                                      <div className="text-blue-800 dark:text-blue-200 leading-relaxed">
-                                        {String(questionText)}
-                                      </div>
-                                    </div>
-                                  );
-                                })()}
+                                {/* Показываем вопрос */}
+                                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 rounded-lg border">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                    <span className="font-medium text-blue-900 dark:text-blue-100">Вопрос:</span>
+                                  </div>
+                                  <div className="text-blue-800 dark:text-blue-200 leading-relaxed">
+                                    {String(questionText)}
+                                  </div>
+                                </div>
                                 
                                 {/* Показываем ответ */}
                                 <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
@@ -1321,7 +1321,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     
                                     // Проверяем тип photo и пытаемся найти URL
                                     if (responseData?.type === 'photo' || responseData?.type === 'image') {
-                                      const valueStr = String(responseData.value || '');
+                                      const valueStr = String(answerValue || '');
                                       // Если есть URL в value
                                       if (valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/')) {
                                         return (
@@ -1362,7 +1362,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                       );
                                     }
                                     
-                                    const valueStr = String(responseData.value);
+                                    const valueStr = String(answerValue);
                                     
                                     // Проверяем, похоже ли значение на file_id (длинная строка с определенным форматом)
                                     const isLikelyFileId = valueStr.length > 40 && /^[A-Za-z0-9_\-]+$/.test(valueStr);
@@ -1413,7 +1413,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 </div>
                                 
                                 {/* Дополнительная информация */}
-                                {responseData.nodeId && (
+                                {responseData?.nodeId && (
                                   <div className="mt-3 pt-3 border-t border-border">
                                     <div className="text-xs text-muted-foreground flex items-center gap-1">
                                       <span className="inline-block w-2 h-2 bg-muted-foreground rounded-full"></span>
@@ -1422,29 +1422,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                   </div>
                                 )}
                               </div>
-                            ) : typeof value === 'object' && value !== null ? (
-                              <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Settings className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                                  <span className="font-medium text-orange-900 dark:text-orange-100">Системные данные:</span>
-                                </div>
-                                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 p-3">
-                                  <pre className="text-xs text-orange-800 dark:text-orange-200 overflow-auto whitespace-pre-wrap">
-                                    {String(JSON.stringify(value, null, 2))}
-                                  </pre>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Eye className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                  <span className="font-medium text-purple-900 dark:text-purple-100">Значение:</span>
-                                </div>
-                                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 p-3">
-                                  <div className="text-purple-800 dark:text-purple-200 leading-relaxed">{String(value)}</div>
-                                </div>
-                              </div>
-                            )}
+                              );
+                            })()}
                           </div>
                         </div>
                       );
