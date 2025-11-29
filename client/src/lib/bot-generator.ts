@@ -5005,8 +5005,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true;
             
             code += '    \n';
-            code += '    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем waiting_for_input для сохранения ответа кнопки\n';
-            code += '    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
+            code += '    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения\n';
+            const skipDataCollection = button.skipDataCollection === true;
+            code += `    skip_collection = ${toPythonBoolean(skipDataCollection)}\n`;
+            code += '    \n';
+            code += '    if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
             code += '        waiting_config = user_data[user_id]["waiting_for_input"]\n';
             code += '        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)\n';
             code += '        modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []\n';
@@ -5033,6 +5036,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '        elif isinstance(waiting_config, dict):\n';
             code += '            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)\n';
             code += '            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")\n';
+            code += '    elif skip_collection:\n';
+            code += `        logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")\n`;
             code += '    \n';
             
             code += generateUniversalVariableReplacement('    ');
