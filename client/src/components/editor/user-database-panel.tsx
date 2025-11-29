@@ -996,12 +996,12 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        <Badge variant={user.isActive === 1 ? "default" : "secondary"}>
-                          {user.isActive === 1 ? "Активен" : "Неактивен"}
+                        <Badge variant={Boolean(user.isActive) ? "default" : "secondary"}>
+                          {Boolean(user.isActive) ? "Активен" : "Неактивен"}
                         </Badge>
-                        {user.isPremium === 1 && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                        {user.isBlocked === 1 && <Badge variant="destructive">Заблокирован</Badge>}
-                        {user.isBot === 1 && <Badge variant="outline">Бот</Badge>}
+                        {Boolean(user.isPremium) && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                        {Boolean(user.isBlocked) && <Badge variant="destructive">Заблокирован</Badge>}
+                        {Boolean(user.isBot) && <Badge variant="outline">Бот</Badge>}
                       </div>
                     </TableCell>
                     <TableCell>{user.interactionCount || 0}</TableCell>
