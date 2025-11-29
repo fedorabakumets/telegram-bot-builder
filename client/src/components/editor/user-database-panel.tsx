@@ -181,10 +181,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     refetchOnWindowFocus: true,
   });
 
-  // Auto-scroll to bottom when dialog opens
-  useEffect(() => {
-    if (showDialog && messagesScrollRef.current) {
-      // Small delay to ensure DOM is updated
+  // Function to scroll to bottom of messages
+  const scrollToBottom = () => {
+    if (messagesScrollRef.current) {
       setTimeout(() => {
         const scrollElement = messagesScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
         if (scrollElement) {
@@ -192,7 +191,14 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
         }
       }, 100);
     }
-  }, [showDialog]);
+  };
+
+  // Auto-scroll to bottom when messages finish loading
+  useEffect(() => {
+    if (showDialog && !messagesLoading) {
+      scrollToBottom();
+    }
+  }, [showDialog, messagesLoading]);
 
   // Fetch messages for user details modal (to get photo URLs)
   const { data: userDetailsMessages = [] } = useQuery<BotMessageWithMedia[]>({
