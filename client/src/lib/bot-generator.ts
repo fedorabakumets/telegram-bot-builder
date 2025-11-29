@@ -3317,27 +3317,40 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    if callback_query.from_user.id not in user_data:\n';
                 code += '        user_data[callback_query.from_user.id] = {}\n';
                 code += '    \n';
-                // Find the next node to navigate to after successful input
-                const nextConnection = connections.find(conn => conn.source === targetNode.id);
-                const nextNodeId = nextConnection ? nextConnection.target : null;
                 
-                code += '    # Настраиваем ожидание ввода\n';
-                code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-                code += `        "type": "${inputType}",\n`;
-                code += `        "variable": "${inputVariable}",\n`;
-                code += `        "validation": "${inputValidation}",\n`;
-                code += `        "min_length": ${minLength},\n`;
-                code += `        "max_length": ${maxLength},\n`;
-                code += `        "timeout": ${inputTimeout},\n`;
-                code += `        "required": ${toPythonBoolean(inputRequired)},\n`;
-                code += `        "allow_skip": ${toPythonBoolean(allowSkip)},\n`;
-                code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
-                code += `        "retry_message": "${escapeForJsonString(inputRetryMessage)}",\n`;
-                code += `        "success_message": "${escapeForJsonString(inputSuccessMessage)}",\n`;
-                code += `        "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
-                code += `        "node_id": "${targetNode.id}",\n`;
-                code += `        "next_node_id": "${nextNodeId || ''}"\n`;
-                code += '    }\n';
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
+                const textInputCollect = targetNode.data.collectUserInput === true || 
+                                         targetNode.data.enableTextInput === true ||
+                                         targetNode.data.enablePhotoInput === true ||
+                                         targetNode.data.enableVideoInput === true ||
+                                         targetNode.data.enableAudioInput === true ||
+                                         targetNode.data.enableDocumentInput === true;
+                
+                if (textInputCollect) {
+                  // Find the next node to navigate to after successful input
+                  const nextConnection = connections.find(conn => conn.source === targetNode.id);
+                  const nextNodeId = nextConnection ? nextConnection.target : null;
+                  
+                  code += '    # Настраиваем ожидание ввода (collectUserInput=true)\n';
+                  code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+                  code += `        "type": "${inputType}",\n`;
+                  code += `        "variable": "${inputVariable}",\n`;
+                  code += `        "validation": "${inputValidation}",\n`;
+                  code += `        "min_length": ${minLength},\n`;
+                  code += `        "max_length": ${maxLength},\n`;
+                  code += `        "timeout": ${inputTimeout},\n`;
+                  code += `        "required": ${toPythonBoolean(inputRequired)},\n`;
+                  code += `        "allow_skip": ${toPythonBoolean(allowSkip)},\n`;
+                  code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
+                  code += `        "retry_message": "${escapeForJsonString(inputRetryMessage)}",\n`;
+                  code += `        "success_message": "${escapeForJsonString(inputSuccessMessage)}",\n`;
+                  code += `        "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
+                  code += `        "node_id": "${targetNode.id}",\n`;
+                  code += `        "next_node_id": "${nextNodeId || ''}"\n`;
+                  code += '    }\n';
+                } else {
+                  code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
+                }
               }
               
             } else if (targetNode.type === 'start') {
@@ -5023,19 +5036,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `    text = ${formattedPrompt}\n`;
             
             if (responseType === 'text') {
-              // Find next node through connections
-              const nextConnection = connections.find(conn => conn.source === targetNode.id);
-              const nextNodeId = nextConnection ? nextConnection.target : null;
-              
-              code += '    # Настраиваем ожидание ввода\n';
-              code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-              code += `        "type": "${inputType}",\n`;
-              code += `        "variable": "${inputVariable}",\n`;
-              code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
-              code += `        "node_id": "${targetNode.id}",\n`;
-              code += `        "next_node_id": "${nextNodeId || ''}"\n`;
-              code += '    }\n';
               code += '    await bot.send_message(callback_query.from_user.id, text)\n';
+              
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
+              const inlineTextCollect = targetNode.data.collectUserInput === true || 
+                                        targetNode.data.enableTextInput === true ||
+                                        targetNode.data.enablePhotoInput === true ||
+                                        targetNode.data.enableVideoInput === true ||
+                                        targetNode.data.enableAudioInput === true ||
+                                        targetNode.data.enableDocumentInput === true;
+              
+              if (inlineTextCollect) {
+                // Find next node through connections
+                const nextConnection = connections.find(conn => conn.source === targetNode.id);
+                const nextNodeId = nextConnection ? nextConnection.target : null;
+                
+                code += '    # Настраиваем ожидание ввода (collectUserInput=true)\n';
+                code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+                code += `        "type": "${inputType}",\n`;
+                code += `        "variable": "${inputVariable}",\n`;
+                code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
+                code += `        "node_id": "${targetNode.id}",\n`;
+                code += `        "next_node_id": "${nextNodeId || ''}"\n`;
+                code += '    }\n';
+              } else {
+                code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
+              }
             }
           }
           
@@ -6842,23 +6868,36 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         const inputPrompt = formatTextForPython(targetNode.data.messageText || "Введите ваш ответ:");
         code += `${bodyIndent}prompt_text = ${inputPrompt}\n`;
         code += `${bodyIndent}await message.answer(prompt_text)\n`;
-        code += `${bodyIndent}# Устанавливаем новое ожидание ввода\n`;
-        code += `${bodyIndent}user_data[user_id]["waiting_for_input"] = {\n`;
-        code += `${bodyIndent}    "type": "${targetNode.data.inputType || 'text'}",\n`;
-        code += `${bodyIndent}    "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
-        code += `${bodyIndent}    "save_to_database": True,\n`;
-        code += `${bodyIndent}    "node_id": "${targetNode.id}",\n`;
-        const nextConnection = connections.find(conn => conn.source === targetNode.id);
-        if (nextConnection) {
-          code += `${bodyIndent}    "next_node_id": "${nextConnection.target}",\n`;
+        
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
+        const msgNodeCollectInput = targetNode.data.collectUserInput === true || 
+                                    targetNode.data.enableTextInput === true ||
+                                    targetNode.data.enablePhotoInput === true ||
+                                    targetNode.data.enableVideoInput === true ||
+                                    targetNode.data.enableAudioInput === true ||
+                                    targetNode.data.enableDocumentInput === true;
+        
+        if (msgNodeCollectInput) {
+          code += `${bodyIndent}# Устанавливаем новое ожидание ввода (collectUserInput=true)\n`;
+          code += `${bodyIndent}user_data[user_id]["waiting_for_input"] = {\n`;
+          code += `${bodyIndent}    "type": "${targetNode.data.inputType || 'text'}",\n`;
+          code += `${bodyIndent}    "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
+          code += `${bodyIndent}    "save_to_database": True,\n`;
+          code += `${bodyIndent}    "node_id": "${targetNode.id}",\n`;
+          const nextConnection = connections.find(conn => conn.source === targetNode.id);
+          if (nextConnection) {
+            code += `${bodyIndent}    "next_node_id": "${nextConnection.target}",\n`;
+          } else {
+            code += `${bodyIndent}    "next_node_id": None,\n`;
+          }
+          code += `${bodyIndent}    "min_length": ${targetNode.data.minLength || 0},\n`;
+          code += `${bodyIndent}    "max_length": ${targetNode.data.maxLength || 0},\n`;
+          code += `${bodyIndent}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
+          code += `${bodyIndent}    "success_message": ""\n`;
+          code += `${bodyIndent}}\n`;
         } else {
-          code += `${bodyIndent}    "next_node_id": None,\n`;
+          code += `${bodyIndent}# Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
         }
-        code += `${bodyIndent}    "min_length": ${targetNode.data.minLength || 0},\n`;
-        code += `${bodyIndent}    "max_length": ${targetNode.data.maxLength || 0},\n`;
-        code += `${bodyIndent}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
-        code += `${bodyIndent}    "success_message": ""\n`;
-        code += `${bodyIndent}}\n`;
         code += `${bodyIndent}break  # Выходим из цикла после настройки ожидания ввода\n`;
       } else if (targetNode.type === 'command') {
         // Для узлов команд вызываем соответствующий обработчик
@@ -7984,30 +8023,43 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // For text input nodes, use waiting_for_input
           code += '                await message.answer(prompt_text)\n';
           code += '                \n';
-          code += '                # Настраиваем ожидание ввода\n';
-          code += '                user_data[user_id]["waiting_for_input"] = {\n';
-          code += `                    "type": "${inputType}",\n`;
-          code += `                    "variable": "${inputVariable}",\n`;
-          code += '                    "validation": "",\n';
-          code += `                    "min_length": ${minLength},\n`;
-          code += `                    "max_length": ${maxLength},\n`;
-          code += `                    "timeout": ${inputTimeout},\n`;
-          code += '                    "required": True,\n';
-          code += '                    "allow_skip": False,\n';
-          code += `                    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
-          code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-          code += '                    "success_message": "",\n';
-          code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
-          code += `                    "node_id": "${targetNode.id}",\n`;
           
-          // Находим следующий узел для этого user-input узла
-          const nextConnection = connections.find(conn => conn.source === targetNode.id);
-          if (nextConnection) {
-            code += `                    "next_node_id": "${nextConnection.target}"\n`;
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
+          const textNodeCollectInput = targetNode.data.collectUserInput === true || 
+                                       targetNode.data.enableTextInput === true ||
+                                       targetNode.data.enablePhotoInput === true ||
+                                       targetNode.data.enableVideoInput === true ||
+                                       targetNode.data.enableAudioInput === true ||
+                                       targetNode.data.enableDocumentInput === true;
+          
+          if (textNodeCollectInput) {
+            code += '                # Настраиваем ожидание ввода (collectUserInput=true)\n';
+            code += '                user_data[user_id]["waiting_for_input"] = {\n';
+            code += `                    "type": "${inputType}",\n`;
+            code += `                    "variable": "${inputVariable}",\n`;
+            code += '                    "validation": "",\n';
+            code += `                    "min_length": ${minLength},\n`;
+            code += `                    "max_length": ${maxLength},\n`;
+            code += `                    "timeout": ${inputTimeout},\n`;
+            code += '                    "required": True,\n';
+            code += '                    "allow_skip": False,\n';
+            code += `                    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
+            code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+            code += '                    "success_message": "",\n';
+            code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
+            code += `                    "node_id": "${targetNode.id}",\n`;
+            
+            // Находим следующий узел для этого user-input узла
+            const nextConnection = connections.find(conn => conn.source === targetNode.id);
+            if (nextConnection) {
+              code += `                    "next_node_id": "${nextConnection.target}"\n`;
+            } else {
+              code += '                    "next_node_id": None\n';
+            }
+            code += '                }\n';
           } else {
-            code += '                    "next_node_id": None\n';
+            code += `                # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
           }
-          code += '                }\n';
         }
       } else if (targetNode.type === 'message') {
         // Обработка узлов сообщений
