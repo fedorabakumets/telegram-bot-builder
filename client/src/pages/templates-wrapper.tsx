@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, ArrowLeft, Star, Trash2, Filter, SortAsc } from 'lucide-react';
+import { Loader2, Search, Download, ArrowLeft, Star, Trash2, Filter, SortAsc, Layers, Sparkles, Flame, Bookmark } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -344,13 +344,44 @@ export default function TemplatesPageWrapper() {
                 )}
               </div>
 
-              {/* Вкладки */}
+              {/* Вкладки - Современный дизайн */}
               <Tabs value={currentTab} onValueChange={setCurrentTab}>
-                <TabsList>
-                  <TabsTrigger value="all">Все</TabsTrigger>
-                  <TabsTrigger value="featured">Рекомендуемые</TabsTrigger>
-                  <TabsTrigger value="popular">Популярные</TabsTrigger>
-                  <TabsTrigger value="my">Мои</TabsTrigger>
+                <TabsList className="grid grid-cols-4 gap-1.5 xs:gap-2 bg-background/50 dark:bg-background/30 p-1.5 xs:p-2 h-auto rounded-xl border border-border/40 backdrop-blur-sm hover:border-border/60 transition-all">
+                  <TabsTrigger 
+                    value="all"
+                    className="flex items-center justify-center xs:justify-start gap-1.5 xs:gap-2 px-2 xs:px-3 py-2 xs:py-2.5 text-xs xs:text-sm font-semibold rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border data-[state=active]:border-blue-500/40 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300 hover:bg-muted/60 active:scale-95"
+                  >
+                    <Layers className="h-3.5 xs:h-4 w-3.5 xs:w-4 flex-shrink-0" />
+                    <span className="hidden xs:inline">Все</span>
+                    <span className="xs:hidden">Все</span>
+                  </TabsTrigger>
+                  
+                  <TabsTrigger 
+                    value="featured"
+                    className="flex items-center justify-center xs:justify-start gap-1.5 xs:gap-2 px-2 xs:px-3 py-2 xs:py-2.5 text-xs xs:text-sm font-semibold rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/20 data-[state=active]:border data-[state=active]:border-amber-500/40 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-300 hover:bg-muted/60 active:scale-95"
+                  >
+                    <Sparkles className="h-3.5 xs:h-4 w-3.5 xs:w-4 flex-shrink-0" />
+                    <span className="hidden xs:inline">Реком.</span>
+                    <span className="xs:hidden">Реком.</span>
+                  </TabsTrigger>
+                  
+                  <TabsTrigger 
+                    value="popular"
+                    className="flex items-center justify-center xs:justify-start gap-1.5 xs:gap-2 px-2 xs:px-3 py-2 xs:py-2.5 text-xs xs:text-sm font-semibold rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500/20 data-[state=active]:to-orange-500/20 data-[state=active]:border data-[state=active]:border-red-500/40 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-300 hover:bg-muted/60 active:scale-95"
+                  >
+                    <Flame className="h-3.5 xs:h-4 w-3.5 xs:w-4 flex-shrink-0" />
+                    <span className="hidden xs:inline">Популярные</span>
+                    <span className="xs:hidden">Популярные</span>
+                  </TabsTrigger>
+                  
+                  <TabsTrigger 
+                    value="my"
+                    className="flex items-center justify-center xs:justify-start gap-1.5 xs:gap-2 px-2 xs:px-3 py-2 xs:py-2.5 text-xs xs:text-sm font-semibold rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border data-[state=active]:border-purple-500/40 data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-300 hover:bg-muted/60 active:scale-95"
+                  >
+                    <Bookmark className="h-3.5 xs:h-4 w-3.5 xs:w-4 flex-shrink-0" />
+                    <span className="hidden xs:inline">Мои</span>
+                    <span className="xs:hidden">Мои</span>
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* Контент вкладок */}
