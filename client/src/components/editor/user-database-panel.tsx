@@ -1222,7 +1222,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     <span className="font-medium text-green-900 dark:text-green-100">Ответ:</span>
                                   </div>
                                   {(() => {
-                                    // Проверяем если это медиа
+                                    // Проверяем если это медиа массив
                                     if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
                                       return (
                                         <div className="rounded-lg overflow-hidden max-w-md space-y-2">
@@ -1243,14 +1243,15 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     
                                     const valueStr = String(responseData.value);
                                     const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://');
-                                    const isImageId = /^[A-Za-z0-9_\-]{20,}$/.test(valueStr);
+                                    const isLongString = valueStr.length > 20 && /^[A-Za-z0-9_\-/+=]+$/.test(valueStr);
                                     
-                                    if (isImageUrl || isImageId) {
+                                    // Если это URL - загружаем как изображение
+                                    if (isImageUrl) {
                                       return (
                                         <div className="rounded-lg overflow-hidden max-w-md">
                                           <img 
                                             src={valueStr}
-                                            alt="Ответ фото"
+                                            alt="Ответ"
                                             className="w-full h-auto rounded-lg"
                                             onError={(e) => {
                                               (e.target as HTMLImageElement).style.display = 'none';
@@ -1259,6 +1260,16 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                         </div>
                                       );
                                     }
+                                    
+                                    // Если это похоже на ID фото или тип фото
+                                    if (isLongString || responseData?.type === 'photo' || responseData?.type === 'image') {
+                                      return (
+                                        <div className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                                          <span className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Ответ фото</span>
+                                        </div>
+                                      );
+                                    }
+                                    
                                     return (
                                       <div className="text-green-800 dark:text-green-200 leading-relaxed font-medium">
                                         {valueStr}
