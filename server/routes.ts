@@ -3450,7 +3450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.is_active = 1) as "activeUsers",
           COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.is_active = 0) as "blockedUsers",
           0 as "premiumUsers",
-          COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.user_data IS NOT NULL AND bu.user_data != '{}' AND (bu.user_data::text LIKE '%response_%' OR bu.user_data::text LIKE '%feedback%' OR bu.user_data::text LIKE '%answer%' OR bu.user_data::text LIKE '%input%' OR bu.user_data::text LIKE '%user_%')) as "usersWithResponses",
+          COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.user_data IS NOT NULL AND bu.user_data != '{}') as "usersWithResponses",
           COALESCE(COUNT(bm.id), 0) as "totalInteractions",
           CASE WHEN COUNT(DISTINCT bu.user_id) > 0 THEN COALESCE(COUNT(bm.id)::float / COUNT(DISTINCT bu.user_id), 0) ELSE 0 END as "avgInteractionsPerUser"
         FROM bot_users bu
@@ -3484,7 +3484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             COUNT(*) FILTER (WHERE is_active = 1) as "activeUsers",
             COUNT(*) FILTER (WHERE is_active = 0) as "blockedUsers",
             COUNT(*) FILTER (WHERE is_premium = 1) as "premiumUsers",
-            COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}' AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%' OR user_data::text LIKE '%input%' OR user_data::text LIKE '%user_%')) as "usersWithResponses",
+            COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}') as "usersWithResponses",
             COALESCE(SUM(interaction_count), 0) as "totalInteractions",
             COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
           FROM user_bot_data
