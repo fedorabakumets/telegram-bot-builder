@@ -1050,28 +1050,30 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel }:
                               </TableCell>
                               <TableCell className="py-2 max-w-sm">
                                 {(user.userData && Object.keys(user.userData).length > 0) ? (
-                                  <div className="space-y-0.5">
-                                    {Object.entries(user.userData).slice(0, 1).map(([key, value]) => {
-                                      let responseData = value;
-                                      if (typeof value === 'string') {
-                                        try {
-                                          responseData = JSON.parse(value);
-                                        } catch {
-                                          responseData = { value: value, type: 'text' };
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      {Object.entries(user.userData).slice(0, 1).map(([key, value]) => {
+                                        let responseData = value;
+                                        if (typeof value === 'string') {
+                                          try {
+                                            responseData = JSON.parse(value);
+                                          } catch {
+                                            responseData = { value: value, type: 'text' };
+                                          }
                                         }
-                                      }
-                                      const answer = responseData?.value ? 
-                                        (responseData.value.length > 40 ? `${responseData.value.substring(0, 40)}...` : responseData.value) :
-                                        (typeof value === 'string' ? (value.length > 40 ? `${value.substring(0, 40)}...` : value) : '');
-                                      return (
-                                        <div key={key} className="text-xs text-muted-foreground truncate">
-                                          <span className="inline-block truncate max-w-full">{answer}</span>
-                                        </div>
-                                      );
-                                    })}
-                                    {Object.keys(user.userData).length > 1 && (
-                                      <div className="text-xs text-primary font-medium">+{Object.keys(user.userData).length - 1}</div>
-                                    )}
+                                        const answer = responseData?.value ? 
+                                          (responseData.value.length > 30 ? `${responseData.value.substring(0, 30)}...` : String(responseData.value)) :
+                                          (typeof value === 'string' ? (value.length > 30 ? `${value.substring(0, 30)}...` : value) : '');
+                                        return (
+                                          <div key={key} className="text-xs text-muted-foreground truncate">
+                                            <span className="inline-block truncate max-w-full">{answer}</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                    <Badge variant="secondary" className="text-xs flex-shrink-0">
+                                      {Object.keys(user.userData).length}
+                                    </Badge>
                                   </div>
                                 ) : (
                                   <span className="text-xs text-muted-foreground/60">-</span>
