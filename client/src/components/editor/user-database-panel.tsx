@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,10 +81,24 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const [showDialog, setShowDialog] = useState(false);
   const [selectedUserForDialog, setSelectedUserForDialog] = useState<UserBotData | null>(null);
   const [messageText, setMessageText] = useState('');
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
 
   const { toast } = useToast();
   const qClient = useQueryClient();
   const isMobile = useIsMobile();
+
+  // Auto-scroll to bottom when dialog opens or messages change
+  useEffect(() => {
+    if (showDialog && messagesScrollRef.current) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        const scrollElement = messagesScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollElement) {
+          scrollElement.scrollTop = scrollElement.scrollHeight;
+        }
+      }, 50);
+    }
+  }, [showDialog, messages]);
 
   // Fetch project data to get userDatabaseEnabled setting and flowData
   const { data: project } = useQuery<BotProject>({
@@ -1520,7 +1534,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           
           <div className="flex-1 flex flex-col min-h-0">
             {/* Messages Area */}
-            <ScrollArea className="h-[400px] pr-4" data-testid="messages-scroll-area">
+            <ScrollArea ref={messagesScrollRef} className="h-[400px] pr-4" data-testid="messages-scroll-area">
               {messagesLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
