@@ -361,8 +361,7 @@ export default function TemplatesPageWrapper() {
                     className="flex items-center justify-center xs:justify-start gap-1.5 xs:gap-2 px-2 xs:px-3 py-2 xs:py-2.5 text-xs xs:text-sm font-semibold rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/20 data-[state=active]:border data-[state=active]:border-amber-500/40 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-300 hover:bg-muted/60 active:scale-95"
                   >
                     <Sparkles className="h-3.5 xs:h-4 w-3.5 xs:w-4 flex-shrink-0" />
-                    <span className="hidden xs:inline">Реком.</span>
-                    <span className="xs:hidden">Реком.</span>
+                    <span>Рекомендуемые</span>
                   </TabsTrigger>
                   
                   <TabsTrigger 
