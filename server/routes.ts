@@ -3702,7 +3702,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (req.body.isActive !== undefined) {
         updateFields.push(`is_active = $${paramIndex++}`);
-        values.push(Boolean(req.body.isActive === 1 || req.body.isActive === true));
+        // Convert to integer 1 or 0 for PostgreSQL
+        values.push(req.body.isActive === 1 || req.body.isActive === true || req.body.isActive === '1' ? 1 : 0);
       }
       
       // Note: is_blocked and is_premium columns don't exist in bot_users table
