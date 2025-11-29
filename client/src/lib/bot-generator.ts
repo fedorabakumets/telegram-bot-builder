@@ -6239,6 +6239,46 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        \n';
   code += '        user_text = message.text\n';
   code += '        \n';
+  code += '        # ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n';
+  code += '        if isinstance(waiting_config, dict):\n';
+  code += '            skip_buttons = waiting_config.get("skip_buttons", [])\n';
+  code += '            for skip_btn in skip_buttons:\n';
+  code += '                if skip_btn.get("text") == user_text:\n';
+  code += '                    skip_target = skip_btn.get("target")\n';
+  code += '                    logging.info(f"⏭️ Нажата кнопка skipDataCollection в waiting_for_input: {user_text} -> {skip_target}")\n';
+  code += '                    # Очищаем состояние ожидания\n';
+  code += '                    if "waiting_for_input" in user_data[user_id]:\n';
+  code += '                        del user_data[user_id]["waiting_for_input"]\n';
+  code += '                    # Переходим к целевому узлу\n';
+  code += '                    if skip_target:\n';
+  code += '                        try:\n';
+  code += '                            logging.info(f"🚀 Переходим к узлу skipDataCollection: {skip_target}")\n';
+  code += '                            import types as aiogram_types\n';
+  code += '                            fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                                id="skip_button_nav",\n';
+  code += '                                from_user=message.from_user,\n';
+  code += '                                chat_instance="",\n';
+  code += '                                data=skip_target,\n';
+  code += '                                message=message,\n';
+  code += '                                answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                            )\n';
+
+  // Добавляем навигацию для кнопок skipDataCollection
+  if (nodes.length > 0) {
+    nodes.forEach((skipNode, skipIdx) => {
+      const skipCond = skipIdx === 0 ? 'if' : 'elif';
+      const skipFnName = skipNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `                            ${skipCond} skip_target == "${skipNode.id}":\n`;
+      code += `                                await handle_callback_${skipFnName}(fake_callback)\n`;
+    });
+    code += '                            else:\n';
+    code += '                                logging.warning(f"Неизвестный целевой узел skipDataCollection: {skip_target}")\n';
+  }
+
+  code += '                        except Exception as e:\n';
+  code += '                            logging.error(f"Ошибка при переходе к узлу skipDataCollection {skip_target}: {e}")\n';
+  code += '                    return\n';
+  code += '        \n';
   code += '        # Валидация для нового формата\n';
   code += '        if isinstance(waiting_config, dict):\n';
   code += '            # Валидация длины\n';
@@ -6464,13 +6504,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       code += `${bodyIndent}    # Настраиваем ожидание ввода для условного сообщения\n`;
                       const condInputVariable = condition.textInputVariable || condition.inputVariable || condition.variableName || targetNode.data.inputVariable || `response_${targetNode.id}`;
                       const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
+                      
+                      // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true
+                      const condSkipButtons = (condition.buttons || [])
+                        .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+                        .map((btn: any) => ({ text: btn.text, target: btn.target }));
+                      const condSkipButtonsJson = JSON.stringify(condSkipButtons);
+                      
                       code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
                       code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
                       code += `${bodyIndent}        "type": "text",\n`;
                       code += `${bodyIndent}        "variable": "${condInputVariable}",\n`;
                       code += `${bodyIndent}        "save_to_database": True,\n`;
                       code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
-                      code += `${bodyIndent}        "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                      code += `${bodyIndent}        "next_node_id": "${nextNodeAfterCondition || ''}",\n`;
+                      code += `${bodyIndent}        "skip_buttons": ${condSkipButtonsJson}\n`;
                       code += `${bodyIndent}    }\n`;
                       code += `${bodyIndent}    logging.info(f"🔧 Установлено ожидание ввода для условного сообщения: {user_data[message.from_user.id]['waiting_for_input']}")\n`;
                     } else {
