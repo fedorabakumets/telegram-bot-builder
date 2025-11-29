@@ -1164,7 +1164,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   <Label className="text-sm font-medium">Основная информация</Label>
                   <div className="mt-2 space-y-2">
                     <div><span className="text-sm text-muted-foreground">Имя:</span> {selectedUser!.firstName || 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {selectedUser!.lastName || 'Не указано'}</div>
                     <div><span className="text-sm text-muted-foreground">Username:</span> {selectedUser!.userName ? `@${selectedUser!.userName}` : 'Не указано'}</div>
                     <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {selectedUser!.userId}</div>
                     <div><span className="text-sm text-muted-foreground">Язык:</span> {selectedUser!.languageCode || 'Не указано'}</div>
