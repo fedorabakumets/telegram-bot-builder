@@ -269,7 +269,7 @@ export default function Editor() {
           type: 'dialog',
           name: 'Диалог',
           position: 'right',
-          size: 20,
+          size: 30,
           visible: false
         },
       ],
