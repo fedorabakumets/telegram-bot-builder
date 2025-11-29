@@ -150,12 +150,15 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
     },
     onSuccess: () => {
       qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users`] });
+      qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+      qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users/search`] });
       toast({
         title: "Сохранено",
         description: "Данные пользователя обновлены",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Update user error:', error);
       toast({
         title: "Ошибка",
         description: "Не удалось обновить данные",
@@ -166,8 +169,8 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
 
   const handleUserStatusToggle = (field: 'isActive') => {
     if (!user) return;
-    const currentValue = Boolean(user[field]);
-    updateUserMutation.mutate({ [field]: !currentValue ? 1 : 0 });
+    const currentValue = Boolean(user[field as keyof UserBotData]);
+    updateUserMutation.mutate({ [field]: !currentValue });
   };
 
   if (!user) {
@@ -387,9 +390,9 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                       return questionKey;
                     };
 
-                    const questionText = getQuestionText(key, responseData);
-                    const answerValue = responseData?.value !== undefined ? responseData.value : 
-                                        (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value));
+                    const questionText: string = String(getQuestionText(key, responseData));
+                    const answerValue: string = String(responseData?.value !== undefined ? responseData.value : 
+                                        (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)));
 
                     return (
                       <div key={key} className="border rounded-lg p-3 bg-muted/30 space-y-2">
@@ -414,7 +417,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                             <MessageSquare className="w-3 h-3" />
                             <span>Вопрос:</span>
                           </div>
-                          <p className="text-sm text-blue-800 dark:text-blue-200">{String(questionText)}</p>
+                          <p className="text-sm text-blue-800 dark:text-blue-200">{questionText}</p>
                         </div>
                         
                         {/* Answer */}
