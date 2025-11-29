@@ -61,12 +61,13 @@ interface UserDatabasePanelProps {
   projectId: number;
   projectName: string;
   onOpenDialogPanel?: (user: UserBotData) => void;
+  onOpenUserDetailsPanel?: (user: UserBotData) => void;
 }
 
 type SortField = 'lastInteraction' | 'interactionCount' | 'createdAt' | 'firstName' | 'userName';
 type SortDirection = 'asc' | 'desc';
 
-export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel }: UserDatabasePanelProps) {
+export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, onOpenUserDetailsPanel }: UserDatabasePanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
   const [showUserDetails, setShowUserDetails] = useState(false);
@@ -897,8 +898,12 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel }:
                                 size="sm"
                                 data-testid={`button-view-user-${index}`}
                                 onClick={() => {
-                                  setSelectedUser(user);
-                                  setShowUserDetails(true);
+                                  if (onOpenUserDetailsPanel) {
+                                    onOpenUserDetailsPanel(user);
+                                  } else {
+                                    setSelectedUser(user);
+                                    setShowUserDetails(true);
+                                  }
                                 }}
                               >
                                 <Eye className="w-3 h-3" />
@@ -1093,8 +1098,12 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel }:
                                     className="h-7 w-7 p-0"
                                     data-testid={`button-view-user-${index}`}
                                     onClick={() => {
-                                      setSelectedUser(user);
-                                      setShowUserDetails(true);
+                                      if (onOpenUserDetailsPanel) {
+                                        onOpenUserDetailsPanel(user);
+                                      } else {
+                                        setSelectedUser(user);
+                                        setShowUserDetails(true);
+                                      }
                                     }}
                                     title="Подробно"
                                   >

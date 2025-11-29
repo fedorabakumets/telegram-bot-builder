@@ -20,6 +20,7 @@ import { ConnectionVisualization } from '@/components/editor/connection-visualiz
 import { SmartConnectionCreator } from '@/components/editor/smart-connection-creator';
 import { UserDatabasePanel } from '@/components/editor/user-database-panel';
 import { DialogPanel } from '@/components/editor/dialog-panel';
+import { UserDetailsPanel } from '@/components/editor/user-details-panel';
 import { GroupsPanel } from '@/components/editor/groups-panel';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
@@ -51,6 +52,7 @@ export default function Editor() {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
   const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
+  const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
   
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
@@ -209,6 +211,30 @@ export default function Editor() {
     }));
   }, []);
 
+  const handleOpenUserDetailsPanel = useCallback((user: UserBotData) => {
+    setSelectedUserDetails(user);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element =>
+        element.id === 'userDetails'
+          ? { ...element, visible: true }
+          : element
+      )
+    }));
+  }, []);
+
+  const handleCloseUserDetailsPanel = useCallback(() => {
+    setSelectedUserDetails(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element =>
+        element.id === 'userDetails'
+          ? { ...element, visible: false }
+          : element
+      )
+    }));
+  }, []);
+
   const handleOpenMobileSidebar = useCallback(() => {
     setShowMobileSidebar(true);
   }, []);
@@ -270,6 +296,14 @@ export default function Editor() {
           name: 'Диалог',
           position: 'right',
           size: 30,
+          visible: false
+        },
+        {
+          id: 'userDetails',
+          type: 'userDetails',
+          name: 'Детали пользователя',
+          position: 'left',
+          size: 25,
           visible: false
         },
       ],
@@ -1353,6 +1387,7 @@ export default function Editor() {
               projectId={activeProject.id}
               projectName={activeProject.name}
               onOpenDialogPanel={handleOpenDialogPanel}
+              onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
             />
           </div>
         ) : currentTab === 'export' ? (
@@ -1423,6 +1458,16 @@ export default function Editor() {
                   projectId={activeProject.id}
                   user={selectedDialogUser}
                   onClose={handleCloseDialogPanel}
+                />
+              )
+            }
+            userDetailsContent={
+              selectedUserDetails && activeProject && (
+                <UserDetailsPanel
+                  projectId={activeProject.id}
+                  user={selectedUserDetails}
+                  onClose={handleCloseUserDetailsPanel}
+                  onOpenDialog={handleOpenDialogPanel}
                 />
               )
             }
@@ -1556,6 +1601,7 @@ export default function Editor() {
                     projectId={activeProject.id}
                     projectName={activeProject.name}
                     onOpenDialogPanel={handleOpenDialogPanel}
+                    onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
                   />
                 </div>
               ) : currentTab === 'groups' ? (
