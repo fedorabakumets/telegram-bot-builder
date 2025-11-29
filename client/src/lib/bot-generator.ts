@@ -5411,7 +5411,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем reply button обработчики ПЕРЕД универсальным обработчиком текста
   // Это гарантирует, что специфичные обработчики кнопок срабатывают раньше общего обработчика
-  const replyGotoButtons: Array<{text: string, target: string, nodeId: string, keyboardType: string, hideAfterClick?: boolean}> = [];
+  const replyGotoButtons: Array<{text: string, target: string, nodeId: string, keyboardType: string, hideAfterClick?: boolean, inputVariable?: string}> = [];
   if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАЕМ СБОР REPLY КНОПОК С GOTO из', nodes.length, 'узлов');
   
   nodes.forEach(node => {
@@ -5425,7 +5425,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             target: button.target,
             nodeId: node.id,
             keyboardType: node.data.keyboardType,
-            hideAfterClick: button.hideAfterClick || false
+            hideAfterClick: button.hideAfterClick || false,
+            inputVariable: node.data.inputVariable || `response_${node.id}`
           });
         }
       });
