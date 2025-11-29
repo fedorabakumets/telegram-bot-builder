@@ -5934,8 +5934,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
               code += generateUniversalVariableReplacement('                        ');
               
-              // Генерируем inline клавиатуру
-              code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в зависимости от keyboardType
+              if (targetNode.data.keyboardType === 'reply') {
+                code += '                        # Создаем reply клавиатуру\n';
+                code += '                        builder = ReplyKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach((btn: Button) => {
+                  code += `                        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                });
+                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+                code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              } else {
+                // Генерируем inline клавиатуру
+                code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+              }
               code += `                        await message.answer(text, reply_markup=keyboard)\n`;
               
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также настраиваем waiting_for_input для сохранения ответа кнопки
