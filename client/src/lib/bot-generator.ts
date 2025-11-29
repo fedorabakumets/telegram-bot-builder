@@ -362,6 +362,7 @@ function generateWaitingStateCode(node: any, indentLevel: string = '    ', userI
   
   const inputTargetNodeId = node.data.inputTargetNodeId || '';
   const modesStr = modes.map(m => `"${m}"`).join(', ');
+  const modesRepr = modes.map(m => `'${m}'`).join(', '); // Для вывода в логи - с одинарными кавычками
   const primaryType = modes[0]; // Первый тип для обратной совместимости
   
   let code = '';
@@ -378,7 +379,7 @@ function generateWaitingStateCode(node: any, indentLevel: string = '    ', userI
   code += `${indentLevel}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
   code += `${indentLevel}    "success_message": ""\n`;
   code += `${indentLevel}}\n`;
-  code += `${indentLevel}logging.info(f"✅ Состояние ожидания настроено: modes=[${modesStr}] для переменной ${inputVariable} (узел ${node.id})")\n`;
+  code += `${indentLevel}logging.info(f"✅ Состояние ожидания настроено: modes=[${modesRepr}] для переменной ${inputVariable} (узел ${node.id})")\n`;
   
   return code;
 }
