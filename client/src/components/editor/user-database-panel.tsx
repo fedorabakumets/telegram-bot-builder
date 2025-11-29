@@ -1186,6 +1186,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     <div><span className="text-sm text-muted-foreground">От пользователя:</span> {userMessageCounts.userSent}</div>
                     <div><span className="text-sm text-muted-foreground">От бота:</span> {userMessageCounts.botSent}</div>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    На основе истории диалога между пользователем и ботом
+                  </p>
                 </div>
               </div>
 
