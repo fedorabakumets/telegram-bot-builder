@@ -1028,7 +1028,13 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                           filteredAndSortedUsers.map((user, index) => (
                             <TableRow 
                               key={user.id || index} 
-                              className="border-b border-border/30 hover:bg-muted/30 transition-colors h-14"
+                              className="border-b border-border/30 hover:bg-muted/30 transition-colors h-14 cursor-pointer"
+                              onClick={() => {
+                                if (onOpenUserDetailsPanel && onOpenDialogPanel) {
+                                  onOpenUserDetailsPanel(user);
+                                  onOpenDialogPanel(user);
+                                }
+                              }}
                             >
                               <TableCell className="py-2">
                                 <div className="flex items-center gap-2 min-w-0">
@@ -1097,7 +1103,8 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                                     size="sm"
                                     className="h-7 w-7 p-0"
                                     data-testid={`button-view-user-${index}`}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       if (onOpenUserDetailsPanel) {
                                         onOpenUserDetailsPanel(user);
                                       } else {
@@ -1114,7 +1121,8 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                                     size="sm"
                                     className="h-7 w-7 p-0"
                                     data-testid={`button-show-dialog-${index}`}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       if (onOpenDialogPanel) {
                                         onOpenDialogPanel(user);
                                       } else {
@@ -1132,7 +1140,10 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                                     size="sm"
                                     className="h-7 w-7 p-0"
                                     data-testid={`button-toggle-active-${index}`}
-                                    onClick={() => handleUserStatusToggle(user, 'isActive')}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleUserStatusToggle(user, 'isActive');
+                                    }}
                                     title={user.isActive === 1 ? "Деактивировать" : "Активировать"}
                                   >
                                     {user.isActive === 1 ? 
@@ -1148,6 +1159,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                                         className="h-7 w-7 p-0 text-destructive hover:text-destructive"
                                         data-testid={`button-delete-user-${index}`}
                                         title="Удалить"
+                                        onClick={(e) => e.stopPropagation()}
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </Button>
