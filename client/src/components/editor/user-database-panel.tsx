@@ -994,196 +994,176 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel }:
                   )}
               </div>
             ) : (
-              // Desktop table layout
-              <div className="p-3 sm:p-4">
-                <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Пользователь</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Сообщения</TableHead>
-                <TableHead>Вопросы и ответы</TableHead>
-                <TableHead>Последняя активность</TableHead>
-                <TableHead>Дата регистрации</TableHead>
-                <TableHead>Действия</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAndSortedUsers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <div className="text-muted-foreground">
-                      {searchQuery ? 'Пользователи не найдены' : 'Пользователи еще не взаимодействовали с ботом'}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredAndSortedUsers.map((user, index) => (
-                  <TableRow key={user.id || index}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <div className="font-medium">{formatUserName(user)}</div>
-                          <div className="text-xs text-muted-foreground">ID: {user.id}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        <Badge variant={Boolean(user.isActive) ? "default" : "secondary"}>
-                          {Boolean(user.isActive) ? "Активен" : "Неактивен"}
-                        </Badge>
-                        {Boolean(user.isPremium) && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                        {Boolean(user.isBlocked) && <Badge variant="destructive">Заблокирован</Badge>}
-                        {Boolean(user.isBot) && <Badge variant="outline">Бот</Badge>}
-                      </div>
-                    </TableCell>
-                    <TableCell>{user.interactionCount || 0}</TableCell>
-                    <TableCell>
-                      <div className="max-w-xs">
-                        {(user.userData && Object.keys(user.userData).length > 0) ? (
-                          <div className="space-y-1">
-                            {Object.entries(user.userData).slice(0, 2).map(([key, value]) => {
-                              // Parse value if it's a string (from PostgreSQL)
-                              let responseData = value;
-                              if (typeof value === 'string') {
-                                try {
-                                  responseData = JSON.parse(value);
-                                } catch {
-                                  responseData = { value: value, type: 'text' };
-                                }
-                              }
-                              
-                              // Format the question text - use mapping from flowData
-                              const formatQuestionText = (key: string, responseData: any) => {
-                                // First check if we have the question in flowData mapping
-                                if (variableToQuestionMap[key]) {
-                                  return variableToQuestionMap[key];
-                                }
-                                
-                                // Then check if prompt is saved with response
-                                if (responseData?.prompt && responseData.prompt.trim()) {
-                                  return responseData.prompt;
-                                }
-                                
-                                // Fallback to variable name
-                                return key;
-                              };
-                              
-                              return (
-                                <div key={key} className="text-xs bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800 mb-2">
-                                  <div className="mb-2">
-                                    <div className="flex items-start gap-2 mb-1">
-                                      <MessageSquare className="w-3 h-3 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                                      <div className="font-medium text-blue-700 dark:text-blue-300 text-xs">
-                                        Вопрос:
-                                      </div>
-                                    </div>
-                                    <div className="text-xs text-gray-700 dark:text-gray-300 ml-5 leading-relaxed">
-                                      {formatQuestionText(key, responseData)}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <div className="flex items-start gap-2 mb-1">
-                                      <Edit className="w-3 h-3 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                                      <div className="font-medium text-green-700 dark:text-green-300 text-xs">
-                                        Ответ:
-                                      </div>
-                                    </div>
-                                    <div className="text-xs text-foreground font-medium ml-5 leading-relaxed">
-                                      {responseData?.value ? 
-                                        (responseData.value.length > 50 ? `${responseData.value.substring(0, 50)}...` : responseData.value) :
-                                        (typeof value === 'string' ? (value.length > 50 ? `${value.substring(0, 50)}...` : value) : JSON.stringify(value))
-                                      }
-                                    </div>
-                                  </div>
+              // Desktop table layout - modern & compact
+              <div className="p-2 sm:p-3">
+                <div className="rounded-lg border border-border bg-card/40 overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-muted/40 hover:bg-muted/50">
+                      <TableRow className="border-b border-border/50 hover:bg-transparent">
+                        <TableHead className="font-semibold h-10">Пользователь</TableHead>
+                        <TableHead className="font-semibold h-10">Статус</TableHead>
+                        <TableHead className="text-center font-semibold h-10">Сообщ.</TableHead>
+                        <TableHead className="font-semibold h-10">Q&A</TableHead>
+                        <TableHead className="text-sm font-semibold h-10">Активность</TableHead>
+                        <TableHead className="text-sm font-semibold h-10">Регистр.</TableHead>
+                        <TableHead className="text-right font-semibold h-10">Действия</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAndSortedUsers.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                            <div className="flex flex-col items-center gap-2">
+                              <Users className="w-8 h-8 opacity-30" />
+                              <span>{searchQuery ? 'Пользователи не найдены' : 'Нет пользователей'}</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredAndSortedUsers.map((user, index) => (
+                          <TableRow 
+                            key={user.id || index} 
+                            className="border-b border-border/30 hover:bg-muted/30 transition-colors h-14"
+                          >
+                            <TableCell className="py-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-sm truncate">{formatUserName(user)}</div>
+                                  <div className="text-xs text-muted-foreground truncate">ID: {user.id}</div>
                                 </div>
-                              );
-                            })}
-                            {Object.keys(user.userData).length > 2 && (
-                              <div className="text-xs text-muted-foreground">
-                                +{Object.keys(user.userData).length - 2} еще...
                               </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Нет ответов</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{formatDate(user.lastInteraction)}</TableCell>
-                    <TableCell className="text-sm">{formatDate(user.createdAt)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          data-testid={`button-view-user-${index}`}
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowUserDetails(true);
-                          }}
-                        >
-                          <Eye className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          data-testid={`button-show-dialog-${index}`}
-                          onClick={() => {
-                            if (onOpenDialogPanel) {
-                              onOpenDialogPanel(user);
-                            } else {
-                              setSelectedUserForDialog(user);
-                              setShowDialog(true);
-                              setTimeout(() => scrollToBottom(), 200);
-                            }
-                          }}
-                        >
-                          <MessageSquare className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          data-testid={`button-toggle-active-${index}`}
-                          onClick={() => handleUserStatusToggle(user, 'isActive')}
-                          className={user.isActive === 1 ? "text-red-600" : "text-green-600"}
-                        >
-                          {user.isActive === 1 ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="text-red-600"
-                              data-testid={`button-delete-user-${index}`}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Удалить пользователя?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Это действие нельзя отменить. Все данные пользователя "{formatUserName(user)}" будут удалены.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Отмена</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteUserMutation.mutate(user.id)}>
-                                Удалить
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-              </Table>
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <div className="flex flex-wrap gap-1">
+                                <Badge 
+                                  variant={Boolean(user.isActive) ? "default" : "secondary"}
+                                  className="text-xs"
+                                >
+                                  {Boolean(user.isActive) ? "Активен" : "Неактивен"}
+                                </Badge>
+                                {Boolean(user.isPremium) && <Badge variant="outline" className="text-xs h-5"><Crown className="w-2.5 h-2.5 mr-0.5" /></Badge>}
+                                {Boolean(user.isBlocked) && <Badge variant="destructive" className="text-xs">X</Badge>}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-2 text-center">
+                              <span className="text-sm font-medium">{user.interactionCount || 0}</span>
+                            </TableCell>
+                            <TableCell className="py-2 max-w-sm">
+                              {(user.userData && Object.keys(user.userData).length > 0) ? (
+                                <div className="space-y-0.5">
+                                  {Object.entries(user.userData).slice(0, 1).map(([key, value]) => {
+                                    let responseData = value;
+                                    if (typeof value === 'string') {
+                                      try {
+                                        responseData = JSON.parse(value);
+                                      } catch {
+                                        responseData = { value: value, type: 'text' };
+                                      }
+                                    }
+                                    const answer = responseData?.value ? 
+                                      (responseData.value.length > 40 ? `${responseData.value.substring(0, 40)}...` : responseData.value) :
+                                      (typeof value === 'string' ? (value.length > 40 ? `${value.substring(0, 40)}...` : value) : '');
+                                    return (
+                                      <div key={key} className="text-xs text-muted-foreground truncate">
+                                        <span className="inline-block truncate max-w-full">{answer}</span>
+                                      </div>
+                                    );
+                                  })}
+                                  {Object.keys(user.userData).length > 1 && (
+                                    <div className="text-xs text-primary font-medium">+{Object.keys(user.userData).length - 1}</div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground/60">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="py-2 text-xs text-muted-foreground">
+                              {formatDate(user.lastInteraction) || '-'}
+                            </TableCell>
+                            <TableCell className="py-2 text-xs text-muted-foreground">
+                              {formatDate(user.createdAt) || '-'}
+                            </TableCell>
+                            <TableCell className="py-2 text-right">
+                              <div className="flex items-center justify-end gap-0.5">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  data-testid={`button-view-user-${index}`}
+                                  onClick={() => {
+                                    setSelectedUser(user);
+                                    setShowUserDetails(true);
+                                  }}
+                                  title="Подробно"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  data-testid={`button-show-dialog-${index}`}
+                                  onClick={() => {
+                                    if (onOpenDialogPanel) {
+                                      onOpenDialogPanel(user);
+                                    } else {
+                                      setSelectedUserForDialog(user);
+                                      setShowDialog(true);
+                                      setTimeout(() => scrollToBottom(), 200);
+                                    }
+                                  }}
+                                  title="Чат"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  data-testid={`button-toggle-active-${index}`}
+                                  onClick={() => handleUserStatusToggle(user, 'isActive')}
+                                  title={user.isActive === 1 ? "Деактивировать" : "Активировать"}
+                                >
+                                  {user.isActive === 1 ? 
+                                    <UserX className="w-3.5 h-3.5 text-destructive" /> : 
+                                    <UserCheck className="w-3.5 h-3.5 text-green-600" />
+                                  }
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                                      data-testid={`button-delete-user-${index}`}
+                                      title="Удалить"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Удалить пользователя?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Это действие нельзя отменить. Все данные пользователя "{formatUserName(user)}" будут удалены.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Отмена</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => deleteUserMutation.mutate(user.id)}>
+                                        Удалить
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             )}
           </TabsContent>
