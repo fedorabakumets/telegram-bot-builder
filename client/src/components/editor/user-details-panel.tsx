@@ -146,7 +146,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
   const updateUserMutation = useMutation({
     mutationFn: async (updates: Partial<UserBotData>) => {
       if (!user) throw new Error('No user selected');
-      return apiRequest('PATCH', `/api/projects/${projectId}/users/${user.userId}`, updates);
+      return apiRequest('PUT', `/api/users/${user.userId}`, updates);
     },
     onSuccess: () => {
       qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users`] });
