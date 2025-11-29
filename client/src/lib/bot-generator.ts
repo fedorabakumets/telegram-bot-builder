@@ -966,12 +966,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        
+        // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
+        const skipButtons = (condition.buttons || [])
+          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+          .map((btn: any) => ({ text: btn.text, target: btn.target }));
+        const skipButtonsJson = JSON.stringify(skipButtons);
+        
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
-        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}        "source_type": "conditional_message",\n`;
+        code += `${indentLevel}        "skip_buttons": ${skipButtonsJson}\n`;
         code += `${indentLevel}    }\n`;
         
         // ИСПРАВЛЕНИЕ: Проверяем, нужно ли ждать ввода ДАЖЕ ЕСЛИ переменная существует
@@ -1024,12 +1032,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        
+        // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
+        const skipButtons2 = (condition.buttons || [])
+          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+          .map((btn: any) => ({ text: btn.text, target: btn.target }));
+        const skipButtonsJson2 = JSON.stringify(skipButtons2);
+        
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
-        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}        "source_type": "conditional_message",\n`;
+        code += `${indentLevel}        "skip_buttons": ${skipButtonsJson2}\n`;
         code += `${indentLevel}    }\n`;
         
         // Добавляем код для активации состояния условного ввода для user_data_not_exists
@@ -1089,12 +1105,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        
+        // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
+        const skipButtons3 = (condition.buttons || [])
+          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+          .map((btn: any) => ({ text: btn.text, target: btn.target }));
+        const skipButtonsJson3 = JSON.stringify(skipButtons3);
+        
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
-        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}        "source_type": "conditional_message",\n`;
+        code += `${indentLevel}        "skip_buttons": ${skipButtonsJson3}\n`;
         code += `${indentLevel}    }\n`;
         
         // Добавляем код для активации состояния условного ввода для user_data_equals
@@ -1154,12 +1178,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        
+        // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
+        const skipButtons4 = (condition.buttons || [])
+          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+          .map((btn: any) => ({ text: btn.text, target: btn.target }));
+        const skipButtonsJson4 = JSON.stringify(skipButtons4);
+        
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
-        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}        "source_type": "conditional_message",\n`;
+        code += `${indentLevel}        "skip_buttons": ${skipButtonsJson4}\n`;
         code += `${indentLevel}    }\n`;
         
         // Добавляем код для активации состояния условного ввода для user_data_contains
@@ -5542,7 +5574,50 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        config = user_data[user_id]["waiting_for_conditional_input"]\n';
   code += '        user_text = message.text\n';
   code += '        \n';
-  code += '        # Сохраняем текстовый ввод для условного сообщения\n';
+  code += '        # ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n';
+  code += '        skip_buttons = config.get("skip_buttons", [])\n';
+  code += '        skip_button_target = None\n';
+  code += '        for skip_btn in skip_buttons:\n';
+  code += '            if skip_btn.get("text") == user_text:\n';
+  code += '                skip_button_target = skip_btn.get("target")\n';
+  code += '                logging.info(f"⏭️ Нажата кнопка с skipDataCollection: {user_text} -> {skip_button_target}")\n';
+  code += '                break\n';
+  code += '        \n';
+  code += '        # Если нажата кнопка пропуска - переходим к её target без сохранения\n';
+  code += '        if skip_button_target:\n';
+  code += '            # Очищаем состояние ожидания\n';
+  code += '            del user_data[user_id]["waiting_for_conditional_input"]\n';
+  code += '            \n';
+  code += '            # Переходим к целевому узлу кнопки\n';
+  code += '            try:\n';
+  code += '                logging.info(f"🚀 Переходим к узлу кнопки skipDataCollection: {skip_button_target}")\n';
+  code += '                import types as aiogram_types\n';
+  code += '                fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                    id="skip_button_nav",\n';
+  code += '                    from_user=message.from_user,\n';
+  code += '                    chat_instance="",\n';
+  code += '                    data=skip_button_target,\n';
+  code += '                    message=message,\n';
+  code += '                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                )\n';
+  
+  // Генерируем навигацию для кнопок skipDataCollection
+  if (nodes.length > 0) {
+    nodes.forEach((targetNode, idx) => {
+      const cond = idx === 0 ? 'if' : 'elif';
+      const safeFnName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `                ${cond} skip_button_target == "${targetNode.id}":\n`;
+      code += `                    await handle_callback_${safeFnName}(fake_callback)\n`;
+    });
+    code += '                else:\n';
+    code += '                    logging.warning(f"Неизвестный целевой узел кнопки skipDataCollection: {skip_button_target}")\n';
+  }
+  
+  code += '            except Exception as e:\n';
+  code += '                logging.error(f"Ошибка при переходе к узлу кнопки skipDataCollection {skip_button_target}: {e}")\n';
+  code += '            return\n';
+  code += '        \n';
+  code += '        # Сохраняем текстовый ввод для условного сообщения (обычный случай без skipDataCollection)\n';
   code += '        condition_id = config.get("condition_id", "unknown")\n';
   code += '        next_node_id = config.get("next_node_id")\n';
   code += '        \n';
