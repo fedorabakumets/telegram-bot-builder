@@ -1232,6 +1232,7 @@ export default function Editor() {
       onButtonAdd={addButton}
       onButtonUpdate={updateButton}
       onButtonDelete={deleteButton}
+      onClose={handleToggleProperties}
     />
   ) : null;
 

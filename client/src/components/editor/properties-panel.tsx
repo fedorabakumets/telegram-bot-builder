@@ -227,6 +227,7 @@ interface PropertiesPanelProps {
   // Поддержка межлистовых соединений
   allSheets?: any[];
   currentSheetId?: string;
+  onClose?: () => void;
 }
 
 export function PropertiesPanel({ 
@@ -240,7 +241,8 @@ export function PropertiesPanel({
   onButtonUpdate, 
   onButtonDelete,
   allSheets = [],
-  currentSheetId
+  currentSheetId,
+  onClose
 }: PropertiesPanelProps) {
   const { toast } = useToast();
   const [commandInput, setCommandInput] = useState('');
@@ -1057,7 +1059,8 @@ export function PropertiesPanel({
           {/* Main Info Row */}
           <div className="space-y-3 sm:space-y-3.5">
             {/* Header with Icon and Title */}
-            <div className="flex items-center gap-3 sm:gap-3.5">
+            <div className="flex items-center gap-3 sm:gap-3.5 justify-between">
+            <div className="flex items-center gap-3 sm:gap-3.5 flex-1">
               <div className={`w-10 sm:w-11 h-10 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm transition-all ${nodeColors[selectedNode.type]}`}>
                 <i className={`${nodeIcons[selectedNode.type]} text-base sm:text-lg`}></i>
               </div>
@@ -1069,6 +1072,18 @@ export function PropertiesPanel({
                     : nodeTypeNames[selectedNode.type]}
                 </h2>
               </div>
+            {onClose && (
+              <UIButton 
+                size="icon" 
+                variant="ghost" 
+                className="h-8 w-8 flex-shrink-0" 
+                onClick={onClose}
+                title="Закрыть панель свойств"
+                data-testid="button-close-properties"
+              >
+                <X className="w-4 h-4" />
+              </UIButton>
+            )}
             </div>
 
             {/* Type Selector */}
