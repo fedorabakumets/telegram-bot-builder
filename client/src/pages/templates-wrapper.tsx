@@ -248,36 +248,42 @@ export default function TemplatesPageWrapper() {
           {/* Основной контент */}
           <div className="flex-1">
             <div className="space-y-3 xs:space-y-4 sm:space-y-4">
-              {/* Поиск и фильтры */}
-              <div className="rounded-lg border border-border/50 bg-card/50 dark:bg-card/30 p-2.5 xs:p-3 sm:p-4 space-y-2.5 xs:space-y-3">
-                {/* Поиск */}
+              {/* Поиск и фильтры - Современный дизайн */}
+              <div className="rounded-xl border border-border/40 bg-gradient-to-br from-card/60 to-card/40 dark:from-card/50 dark:to-card/30 p-3 xs:p-4 sm:p-5 space-y-3 xs:space-y-4 backdrop-blur-sm hover:border-border/60 transition-all duration-300">
+                {/* Поиск с улучшенным стилем */}
                 <div className="relative group">
-                  <Search className="absolute left-2.5 xs:left-3 top-1/2 transform -translate-y-1/2 text-blue-400/60 h-4 w-4 group-focus-within:text-blue-500 transition-colors" />
+                  <Search className="absolute left-3 xs:left-3.5 top-1/2 transform -translate-y-1/2 text-blue-500/50 h-4 w-4 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors duration-200" />
                   <Input
-                    placeholder="Поиск шаблонов..."
+                    placeholder="Поиск шаблонов по названию..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 xs:pl-9 h-9 xs:h-10 text-xs xs:text-sm border-border/50 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all"
+                    className="pl-9 xs:pl-10 h-10 xs:h-11 text-sm xs:text-base border border-border/50 rounded-lg bg-background/80 hover:bg-background hover:border-border/70 focus:border-blue-500/60 focus:ring-blue-500/15 transition-all duration-200 shadow-sm"
                   />
                 </div>
 
-                {/* Фильтры и сортировка */}
-                <div className="flex flex-col xs:flex-row gap-2 xs:gap-2.5">
+                {/* Фильтры и сортировка - Современный макет */}
+                <div className="flex flex-col xs:flex-row gap-2.5 xs:gap-3">
+                  {/* Категория */}
                   <div className="flex-1 relative z-40">
-                    <div className="flex items-center gap-1.5 mb-1.5 xs:hidden">
-                      <Filter className="h-3 xs:h-3.5 w-3 xs:w-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground">Категория</span>
+                    <div className="flex items-center gap-1.5 mb-2 xs:mb-0 xs:mb-0">
+                      <Filter className="h-3.5 xs:h-4 w-3.5 xs:w-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-xs xs:text-sm font-semibold text-foreground/70 uppercase tracking-wide">Категория</span>
+                      {selectedCategory !== 'all' && (
+                        <Badge variant="secondary" className="ml-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                          {categories.find(c => c.value === selectedCategory)?.label}
+                        </Badge>
+                      )}
                     </div>
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="w-full h-8 xs:h-9 text-xs xs:text-sm border-border/50 hover:border-border/80 transition-colors">
-                        <div className="flex items-center gap-1.5">
-                          <Filter className="h-3.5 xs:h-4 w-3.5 xs:w-4 hidden xs:block text-muted-foreground" />
-                          <SelectValue placeholder="Категория" />
+                      <SelectTrigger className="w-full h-9 xs:h-10 text-xs xs:text-sm border border-border/60 rounded-lg bg-background/80 hover:bg-background hover:border-blue-500/40 dark:hover:border-blue-400/40 focus:border-blue-500/60 focus:ring-blue-500/15 transition-all duration-200 shadow-sm">
+                        <div className="flex items-center gap-2">
+                          <Filter className="h-3.5 xs:h-4 w-3.5 xs:w-4 text-blue-600 dark:text-blue-400 hidden xs:block" />
+                          <SelectValue placeholder="Выбрать категорию" />
                         </div>
                       </SelectTrigger>
-                      <SelectContent className="z-50">
+                      <SelectContent className="z-50 rounded-lg">
                         {categories.map((category) => (
-                          <SelectItem key={category.value} value={category.value}>
+                          <SelectItem key={category.value} value={category.value} className="text-sm">
                             {category.label}
                           </SelectItem>
                         ))}
@@ -285,27 +291,57 @@ export default function TemplatesPageWrapper() {
                     </Select>
                   </div>
 
+                  {/* Сортировка */}
                   <div className="flex-1 relative z-40">
-                    <div className="flex items-center gap-1.5 mb-1.5 xs:hidden">
-                      <SortAsc className="h-3 xs:h-3.5 w-3 xs:w-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground">Сортировка</span>
+                    <div className="flex items-center gap-1.5 mb-2 xs:mb-0 xs:mb-0">
+                      <SortAsc className="h-3.5 xs:h-4 w-3.5 xs:w-4 text-amber-600 dark:text-amber-400" />
+                      <span className="text-xs xs:text-sm font-semibold text-foreground/70 uppercase tracking-wide">Сортировка</span>
+                      {sortBy !== 'popular' && (
+                        <Badge variant="secondary" className="ml-1 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                          {sortBy === 'rating' ? 'По рейтингу' : sortBy === 'recent' ? 'Новые' : 'По алфавиту'}
+                        </Badge>
+                      )}
                     </div>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                      <SelectTrigger className="w-full h-8 xs:h-9 text-xs xs:text-sm border-border/50 hover:border-border/80 transition-colors">
-                        <div className="flex items-center gap-1.5">
-                          <SortAsc className="h-3.5 xs:h-4 w-3.5 xs:w-4 hidden xs:block text-muted-foreground" />
+                      <SelectTrigger className="w-full h-9 xs:h-10 text-xs xs:text-sm border border-border/60 rounded-lg bg-background/80 hover:bg-background hover:border-amber-500/40 dark:hover:border-amber-400/40 focus:border-amber-500/60 focus:ring-amber-500/15 transition-all duration-200 shadow-sm">
+                        <div className="flex items-center gap-2">
+                          <SortAsc className="h-3.5 xs:h-4 w-3.5 xs:w-4 text-amber-600 dark:text-amber-400 hidden xs:block" />
                           <SelectValue placeholder="Сортировка" />
                         </div>
                       </SelectTrigger>
-                      <SelectContent className="z-50">
-                        <SelectItem value="popular">Популярные</SelectItem>
-                        <SelectItem value="rating">Рейтинг</SelectItem>
-                        <SelectItem value="recent">Новые</SelectItem>
-                        <SelectItem value="name">По алфавиту</SelectItem>
+                      <SelectContent className="z-50 rounded-lg">
+                        <SelectItem value="popular" className="text-sm">Популярные</SelectItem>
+                        <SelectItem value="rating" className="text-sm">По рейтингу</SelectItem>
+                        <SelectItem value="recent" className="text-sm">Новые</SelectItem>
+                        <SelectItem value="name" className="text-sm">По алфавиту</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+
+                {/* Активные фильтры - индикатор */}
+                {(searchTerm || selectedCategory !== 'all' || sortBy !== 'popular') && (
+                  <div className="pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-medium text-muted-foreground">Фильтры активны:</span>
+                      {searchTerm && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                          Поиск: {searchTerm}
+                        </Badge>
+                      )}
+                      {selectedCategory !== 'all' && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                          {categories.find(c => c.value === selectedCategory)?.label}
+                        </Badge>
+                      )}
+                      {sortBy !== 'popular' && (
+                        <Badge variant="outline" className="text-xs bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
+                          Сортировка: {sortBy === 'rating' ? 'По рейтингу' : sortBy === 'recent' ? 'Новые' : 'По алфавиту'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Вкладки */}
