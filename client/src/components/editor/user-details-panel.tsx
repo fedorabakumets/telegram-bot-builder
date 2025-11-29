@@ -23,7 +23,7 @@ import {
   UserCheck,
   UserX
 } from 'lucide-react';
-import { UserBotData, BotMessage } from '@shared/schema';
+import { UserBotData, BotMessage, BotProject } from '@shared/schema';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -48,6 +48,10 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
   const { toast } = useToast();
   const qClient = useQueryClient();
 
+  const { data: project } = useQuery<BotProject>({
+    queryKey: [`/api/projects/${projectId}`],
+  });
+
   const { data: messages = [] } = useQuery<BotMessageWithMedia[]>({
     queryKey: [`/api/projects/${projectId}/users/${user?.userId}/messages`],
     enabled: !!user?.userId,
@@ -65,17 +69,47 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
   }, [messages]);
 
   const variableToQuestionMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    messages.forEach(msg => {
-      if (msg.messageType === 'bot' && msg.messageData) {
-        const data = msg.messageData as any;
-        if (data.collectResponse && data.variableName && msg.messageText) {
-          map[data.variableName] = msg.messageText;
+    const mapping: Record<string, string> = {};
+    if (!project?.data) return mapping;
+    
+    try {
+      const flowData = typeof project.data === 'string' 
+        ? JSON.parse(project.data as string) 
+        : project.data as any;
+      
+      const sheets = flowData?.sheets || [];
+      for (const sheet of sheets) {
+        const nodes = sheet?.nodes || [];
+        for (const node of nodes) {
+          const data = node?.data;
+          if (!data) continue;
+          
+          const questionText = data.messageText;
+          if (!questionText) continue;
+          
+          if (data.inputVariable) {
+            mapping[data.inputVariable] = questionText;
+          }
+          if (data.photoInputVariable) {
+            mapping[data.photoInputVariable] = questionText;
+          }
+          if (data.videoInputVariable) {
+            mapping[data.videoInputVariable] = questionText;
+          }
+          if (data.audioInputVariable) {
+            mapping[data.audioInputVariable] = questionText;
+          }
+          if (data.documentInputVariable) {
+            mapping[data.documentInputVariable] = questionText;
+          }
         }
       }
-    });
-    return map;
-  }, [messages]);
+    } catch (e) {
+      console.error('Error parsing project data for variable mapping:', e);
+    }
+    
+    return mapping;
+  }, [project?.data]);
 
   const getPhotoUrlFromMessages = (fileId: string): string | null => {
     for (const msg of messages) {
@@ -333,7 +367,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                   </Badge>
                 </div>
                 <div className="space-y-3 pl-6">
-                  {Object.entries(user.userData as Record<string, unknown>).map(([key, value]) => {
+                  {Object.entries(user.userData as Record<string, unknown>).map(([key, value]: [string, unknown]) => {
                     let responseData: any = value;
                     if (typeof value === 'string') {
                       try {
