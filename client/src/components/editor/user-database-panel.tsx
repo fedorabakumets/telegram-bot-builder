@@ -87,19 +87,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const qClient = useQueryClient();
   const isMobile = useIsMobile();
 
-  // Auto-scroll to bottom when dialog opens or messages change
-  useEffect(() => {
-    if (showDialog && messagesScrollRef.current) {
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
-        const scrollElement = messagesScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-        if (scrollElement) {
-          scrollElement.scrollTop = scrollElement.scrollHeight;
-        }
-      }, 50);
-    }
-  }, [showDialog, messages]);
-
   // Fetch project data to get userDatabaseEnabled setting and flowData
   const { data: project } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectId}`],
@@ -193,6 +180,19 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
   });
+
+  // Auto-scroll to bottom when dialog opens
+  useEffect(() => {
+    if (showDialog && messagesScrollRef.current) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        const scrollElement = messagesScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollElement) {
+          scrollElement.scrollTop = scrollElement.scrollHeight;
+        }
+      }, 100);
+    }
+  }, [showDialog]);
 
   // Fetch messages for user details modal (to get photo URLs)
   const { data: userDetailsMessages = [] } = useQuery<BotMessageWithMedia[]>({
