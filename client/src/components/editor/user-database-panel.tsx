@@ -1232,30 +1232,44 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           <div className="text-sm">
                             {responseData?.value ? (
                               <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
-                                {/* Показываем вопрос если есть */}
-                                {responseData.prompt ? (
-                                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                      <span className="font-medium text-blue-900 dark:text-blue-100">Вопрос:</span>
+                                {/* Показываем вопрос - используем prompt или генерируем по ключу */}
+                                {(() => {
+                                  // Функция для определения текста вопроса
+                                  const getQuestionText = (questionKey: string, data: any) => {
+                                    if (data?.prompt && data.prompt.trim()) {
+                                      return data.prompt;
+                                    }
+                                    // Генерируем вопрос на основе ключа
+                                    if (questionKey.includes('feedback')) return 'Расскажите подробнее о своих впечатлениях. Что вам понравилось или что можно улучшить?';
+                                    if (questionKey.includes('name')) return 'Как вас зовут?';
+                                    if (questionKey.includes('age')) return 'Сколько вам лет?';
+                                    if (questionKey.includes('city')) return 'Из какого вы города?';
+                                    if (questionKey.includes('contact')) return 'Поделитесь контактом';
+                                    if (questionKey.includes('email')) return 'Укажите ваш email';
+                                    if (questionKey.includes('phone')) return 'Укажите ваш телефон';
+                                    if (questionKey.includes('rating')) return 'Оцените нашу работу';
+                                    if (questionKey.includes('review')) return 'Оставьте отзыв';
+                                    if (questionKey.includes('suggestion')) return 'Поделитесь предложением';
+                                    if (questionKey.startsWith('response_')) return `Вопрос ${questionKey.replace('response_', '')}`;
+                                    if (questionKey.startsWith('user_')) return `Пользовательский ввод: ${questionKey.replace('user_', '').replace(/_/g, ' ')}`;
+                                    return `Вопрос: ${questionKey}`;
+                                  };
+                                  
+                                  const questionText = getQuestionText(key, responseData);
+                                  const hasPrompt = responseData?.prompt && responseData.prompt.trim();
+                                  
+                                  return (
+                                    <div className={`mb-4 p-3 ${hasPrompt ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'} rounded-lg border`}>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                        <span className="font-medium text-blue-900 dark:text-blue-100">Вопрос:</span>
+                                      </div>
+                                      <div className="text-blue-800 dark:text-blue-200 leading-relaxed">
+                                        {String(questionText)}
+                                      </div>
                                     </div>
-                                    <div className="text-blue-800 dark:text-blue-200 leading-relaxed">
-                                      {String(responseData.prompt)}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg border border-gray-200 dark:border-gray-800">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <MessageSquare className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                      <span className="font-medium text-gray-900 dark:text-gray-100">Вопрос:</span>
-                                    </div>
-                                    <div className="text-gray-600 dark:text-gray-400 leading-relaxed italic">
-                                      {key.startsWith('response_') 
-                                        ? `Ответ на вопрос ${key.replace('response_', '')}`
-                                        : 'Информация о вопросе отсутствует'}
-                                    </div>
-                                  </div>
-                                )}
+                                  );
+                                })()}
                                 
                                 {/* Показываем ответ */}
                                 <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
