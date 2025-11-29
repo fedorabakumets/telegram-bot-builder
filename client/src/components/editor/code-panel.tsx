@@ -8,7 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { BotData, BotGroup } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import Editor from '@monaco-editor/react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 
 interface CodePanelProps {
@@ -16,9 +16,10 @@ interface CodePanelProps {
   projectName: string;
   projectId: number;
   selectedNodeId?: string | null;
+  onClose?: () => void;
 }
 
-export function CodePanel({ botData, projectName, projectId, selectedNodeId }: CodePanelProps) {
+export function CodePanel({ botData, projectName, projectId, selectedNodeId, onClose }: CodePanelProps) {
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [areAllCollapsed, setAreAllCollapsed] = useState(true);
@@ -167,14 +168,28 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
         <div className="max-w-7xl mx-auto space-y-3 xs:space-y-4 sm:space-y-5 md:space-y-6">
           {/* Header Section */}
           <div className="space-y-1.5 xs:space-y-2">
-            <div className="flex items-start gap-2 xs:gap-2.5 sm:gap-3">
-              <div className="w-7 xs:w-8 sm:w-9 h-7 xs:h-8 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/40 dark:to-blue-900/40">
-                <i className="fas fa-code text-purple-600 dark:text-purple-400 text-xs xs:text-sm"></i>
+            <div className="flex items-start justify-between gap-2 xs:gap-2.5 sm:gap-3">
+              <div className="flex items-start gap-2 xs:gap-2.5 sm:gap-3">
+                <div className="w-7 xs:w-8 sm:w-9 h-7 xs:h-8 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/40 dark:to-blue-900/40">
+                  <i className="fas fa-code text-purple-600 dark:text-purple-400 text-xs xs:text-sm"></i>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-foreground leading-tight">Код проекта</h1>
+                  <p className="text-xs xs:text-sm text-muted-foreground mt-0.5 xs:mt-1 break-words">Просмотр и загрузка сгенерированного кода</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-foreground leading-tight">Код проекта</h1>
-                <p className="text-xs xs:text-sm text-muted-foreground mt-0.5 xs:mt-1 break-words">Просмотр и загрузка сгенерированного кода</p>
-              </div>
+              {onClose && (
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-8 w-8 flex-shrink-0" 
+                  onClick={onClose}
+                  title="Закрыть панель кода"
+                  data-testid="button-close-code-panel"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           </div>
 
