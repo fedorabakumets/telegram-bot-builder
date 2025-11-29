@@ -86,10 +86,61 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const qClient = useQueryClient();
   const isMobile = useIsMobile();
 
-  // Fetch project data to get userDatabaseEnabled setting
+  // Fetch project data to get userDatabaseEnabled setting and flowData
   const { data: project } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectId}`],
   });
+
+  // Build a mapping from variable names to question texts from project data
+  const variableToQuestionMap = useMemo(() => {
+    const mapping: Record<string, string> = {};
+    if (!project?.data) return mapping;
+    
+    try {
+      const flowData = typeof project.data === 'string' 
+        ? JSON.parse(project.data as string) 
+        : project.data as any;
+      
+      // Iterate through all sheets and nodes
+      const sheets = flowData?.sheets || [];
+      for (const sheet of sheets) {
+        const nodes = sheet?.nodes || [];
+        for (const node of nodes) {
+          const data = node?.data;
+          if (!data) continue;
+          
+          // Get the question text (messageText)
+          const questionText = data.messageText;
+          if (!questionText) continue;
+          
+          // Map inputVariable to questionText
+          if (data.inputVariable) {
+            mapping[data.inputVariable] = questionText;
+          }
+          // Map photoInputVariable to questionText
+          if (data.photoInputVariable) {
+            mapping[data.photoInputVariable] = questionText;
+          }
+          // Map videoInputVariable to questionText
+          if (data.videoInputVariable) {
+            mapping[data.videoInputVariable] = questionText;
+          }
+          // Map audioInputVariable to questionText
+          if (data.audioInputVariable) {
+            mapping[data.audioInputVariable] = questionText;
+          }
+          // Map documentInputVariable to questionText
+          if (data.documentInputVariable) {
+            mapping[data.documentInputVariable] = questionText;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing project data for variable mapping:', e);
+    }
+    
+    return mapping;
+  }, [project?.data]);
 
   // Fetch user data
   const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery<UserBotData[]>({
@@ -959,26 +1010,20 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 }
                               }
                               
-                              // Format the question text
+                              // Format the question text - use mapping from flowData
                               const formatQuestionText = (key: string, responseData: any) => {
+                                // First check if we have the question in flowData mapping
+                                if (variableToQuestionMap[key]) {
+                                  return variableToQuestionMap[key];
+                                }
+                                
+                                // Then check if prompt is saved with response
                                 if (responseData?.prompt && responseData.prompt.trim()) {
                                   return responseData.prompt;
                                 }
                                 
-                                // Generate a question based on the key
-                                if (key.includes('feedback')) return 'Расскажите подробнее о своих впечатлениях. Что вам понравилось или что можно улучшить?';
-                                if (key.includes('name')) return 'Как вас зовут?';
-                                if (key.includes('age')) return 'Сколько вам лет?';
-                                if (key.includes('city')) return 'Из какого вы города?';
-                                if (key.includes('contact')) return 'Поделитесь контактом';
-                                if (key.includes('email')) return 'Укажите ваш email';
-                                if (key.includes('phone')) return 'Укажите ваш телефон';
-                                if (key.includes('rating')) return 'Оцените нашу работу';
-                                if (key.includes('review')) return 'Оставьте отзыв';
-                                if (key.includes('suggestion')) return 'Поделитесь предложением';
-                                if (key.startsWith('response_')) return `Вопрос ${key.replace('response_', '')}`;
-                                if (key.startsWith('user_')) return `Пользовательский ввод: ${key.replace('user_', '').replace('_', ' ')}`;
-                                return `Вопрос: ${key}`;
+                                // Fallback to variable name
+                                return key;
                               };
                               
                               return (
@@ -1235,25 +1280,20 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                               const answerValue = responseData?.value !== undefined ? responseData.value : 
                                                   (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value));
                               
-                              // Функция для определения текста вопроса
+                              // Функция для определения текста вопроса - берём из flowData
                               const getQuestionText = (questionKey: string, data: any) => {
+                                // First check if we have the question in flowData mapping
+                                if (variableToQuestionMap[questionKey]) {
+                                  return variableToQuestionMap[questionKey];
+                                }
+                                
+                                // Then check if prompt is saved with response
                                 if (data?.prompt && data.prompt.trim()) {
                                   return data.prompt;
                                 }
-                                // Генерируем вопрос на основе ключа
-                                if (questionKey.includes('feedback')) return 'Расскажите подробнее о своих впечатлениях. Что вам понравилось или что можно улучшить?';
-                                if (questionKey.includes('name')) return 'Как вас зовут?';
-                                if (questionKey.includes('age')) return 'Сколько вам лет?';
-                                if (questionKey.includes('city')) return 'Из какого вы города?';
-                                if (questionKey.includes('contact')) return 'Поделитесь контактом';
-                                if (questionKey.includes('email')) return 'Укажите ваш email';
-                                if (questionKey.includes('phone')) return 'Укажите ваш телефон';
-                                if (questionKey.includes('rating')) return 'Оцените нашу работу';
-                                if (questionKey.includes('review')) return 'Оставьте отзыв';
-                                if (questionKey.includes('suggestion')) return 'Поделитесь предложением';
-                                if (questionKey.startsWith('response_')) return `Вопрос ${questionKey.replace('response_', '')}`;
-                                if (questionKey.startsWith('user_')) return `Пользовательский ввод: ${questionKey.replace('user_', '').replace(/_/g, ' ')}`;
-                                return `Вопрос: ${questionKey}`;
+                                
+                                // Fallback to variable name
+                                return questionKey;
                               };
                               
                               const questionText = getQuestionText(key, responseData);
