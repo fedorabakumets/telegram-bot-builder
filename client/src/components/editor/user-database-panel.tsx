@@ -1003,7 +1003,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel }:
                         <TableHead className="font-semibold h-10">Пользователь</TableHead>
                         <TableHead className="font-semibold h-10">Статус</TableHead>
                         <TableHead className="text-center font-semibold h-10">Сообщ.</TableHead>
-                        <TableHead className="font-semibold h-10">Q&A</TableHead>
+                        <TableHead className="font-semibold h-10">Ответы</TableHead>
                         <TableHead className="text-sm font-semibold h-10">Активность</TableHead>
                         <TableHead className="text-sm font-semibold h-10">Регистр.</TableHead>
                         <TableHead className="text-right font-semibold h-10">Действия</TableHead>
