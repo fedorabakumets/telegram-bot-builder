@@ -5943,17 +5943,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const inputTargetNodeId = targetNode.data.inputTargetNodeId;
               // Определяем modes - если есть enableTextInput, добавляем и text и button
               const hasTextInput = targetNode.data.enableTextInput === true;
-              const btnModes = hasTextInput ? '["button", "text"]' : '["button"]';
+              const btnModesList = hasTextInput ? "['button', 'text']" : "['button']";
               code += `                        # Настраиваем ожидание ввода для сохранения ответа кнопки\n`;
               code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
               code += `                            "type": "button",\n`;
-              code += `                            "modes": ${btnModes},\n`;
+              code += `                            "modes": ${hasTextInput ? "['button', 'text']" : "['button']"},\n`;
               code += `                            "variable": "${inputVariable}",\n`;
               code += `                            "save_to_database": True,\n`;
               code += `                            "node_id": "${targetNode.id}",\n`;
               code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
               code += `                        }\n`;
-              code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=${btnModes} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+              code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
             } else {
               // Обычное ожидание ввода если кнопок нет
               code += `                        # Узел собирает пользовательский ввод\n`;
@@ -6485,8 +6485,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `${bodyIndent}        "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
                 code += `${bodyIndent}        "success_message": ""\n`;
                 code += `${bodyIndent}    }\n`;
-                const modesRepr = modesStr.replace(/"/g, "'");
-                code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesRepr}] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                const modesForLog = modes.map(m => `'${m}'`).join(', ');
+                code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesForLog}] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
               }
             } else {
               // Нет условных сообщений - стандартная обработка
