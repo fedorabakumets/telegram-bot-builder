@@ -54,6 +54,8 @@ interface ComponentsSidebarProps {
   onSheetSelect?: (sheetId: string) => void;
   // Мобильный режим
   isMobile?: boolean;
+  // Закрытие панели
+  onClose?: () => void;
 }
 
 const components: ComponentDefinition[] = [
@@ -512,7 +514,8 @@ export function ComponentsSidebar({
   onSheetRename,
   onSheetDuplicate,
   onSheetSelect,
-  isMobile = false
+  isMobile = false,
+  onClose
 }: ComponentsSidebarProps) {
   const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
   const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
@@ -1428,21 +1431,35 @@ export function ComponentsSidebar({
     <div className="h-full flex flex-col overflow-hidden">
       {/* Sidebar Header */}
       <div className="p-4 border-b border-border/30 bg-gradient-to-r from-slate-50/50 dark:from-slate-900/30 to-transparent">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between gap-2 mb-4">
           <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">Компоненты</h2>
-          {/* Кнопки макета отображаются когда только панель компонентов видна */}
-          {showLayoutButtons && (
-            <LayoutButtons
-              onToggleCanvas={onToggleCanvas}
-              onToggleHeader={onToggleHeader}
-              onToggleProperties={onToggleProperties}
-              onShowFullLayout={onShowFullLayout}
-              canvasVisible={canvasVisible}
-              headerVisible={headerVisible}
-              propertiesVisible={propertiesVisible}
-              className="scale-75 -mr-2"
-            />
-          )}
+          <div className="flex items-center gap-1">
+            {/* Кнопки макета отображаются когда только панель компонентов видна */}
+            {showLayoutButtons && (
+              <LayoutButtons
+                onToggleCanvas={onToggleCanvas}
+                onToggleHeader={onToggleHeader}
+                onToggleProperties={onToggleProperties}
+                onShowFullLayout={onShowFullLayout}
+                canvasVisible={canvasVisible}
+                headerVisible={headerVisible}
+                propertiesVisible={propertiesVisible}
+                className="scale-75 -mr-2"
+              />
+            )}
+            {onClose && (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-8 w-8 flex-shrink-0" 
+                onClick={onClose}
+                title="Закрыть панель компонентов"
+                data-testid="button-close-components-sidebar"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
         <div className="flex space-x-1 bg-gradient-to-r from-slate-200/40 to-slate-100/20 dark:from-slate-800/40 dark:to-slate-700/20 rounded-lg p-1 backdrop-blur-sm border border-slate-300/20 dark:border-slate-600/20">
           <button 

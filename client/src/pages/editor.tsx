@@ -1400,6 +1400,7 @@ export default function Editor() {
         onSheetDuplicate={handleSheetDuplicate}
         onSheetSelect={handleSheetSelect}
         isMobile={isMobile}
+        onClose={handleToggleSidebar}
       />
     );
 
@@ -1497,6 +1498,7 @@ export default function Editor() {
               onSheetDuplicate={handleSheetDuplicate}
               onSheetSelect={handleSheetSelect}
               isMobile={isMobile}
+              onClose={handleToggleSidebar}
             />
           }
           canvas={
@@ -1706,6 +1708,7 @@ export default function Editor() {
               onSheetDuplicate={handleSheetDuplicate}
               onSheetSelect={handleSheetSelect}
               isMobile={isMobile}
+              onClose={handleToggleSidebar}
             />
           }
           canvasContent={
@@ -1825,6 +1828,7 @@ export default function Editor() {
               onSheetDuplicate={handleSheetDuplicate}
               onSheetSelect={handleSheetSelect}
               isMobile={isMobile}
+              onClose={() => setShowMobileSidebar(false)}
             />
           </div>
         </SheetContent>
