@@ -1173,7 +1173,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   <Label className="text-sm font-medium">Статистика</Label>
                   <div className="mt-2 space-y-2">
                     <div><span className="text-sm text-muted-foreground">Сообщений:</span> {selectedUser?.interactionCount || 0}</div>
-                    <div><span className="text-sm text-muted-foreground">Сессий:</span> {selectedUser?.sessionsCount || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Отправлено:</span> {selectedUser?.totalMessagesSent || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Получено:</span> {selectedUser?.totalMessagesReceived || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Состояние:</span> {selectedUser?.currentState || 'Не установлено'}</div>
