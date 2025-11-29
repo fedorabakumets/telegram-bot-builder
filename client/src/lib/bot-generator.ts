@@ -5116,6 +5116,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
               code += '    if use_conditional_keyboard:\n';
+              code += '        # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем waiting_for_input для условной reply клавиатуры\n';
+              code += `        user_data[user_id]["waiting_for_input"] = {\n`;
+              code += `            "type": "button",\n`;
+              code += `            "modes": ["button", "text"],\n`;
+              code += `            "variable": "${targetNode.data.inputVariable || `response_${targetNode.id}`}",\n`;
+              code += `            "save_to_database": True,\n`;
+              code += `            "node_id": "${targetNode.id}"\n`;
+              code += `        }\n`;
               // Определяем режим форматирования для целевого узла
               let parseModeTarget = '';
               if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -5185,6 +5193,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    # Отправляем сообщение с учетом условной клавиатуры\n';
               code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
               code += '        # Используем условную клавиатуру\n';
+              code += '        # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем waiting_for_input для условной reply клавиатуры\n';
+              code += `        user_data[user_id]["waiting_for_input"] = {\n`;
+              code += `            "type": "button",\n`;
+              code += `            "modes": ["button", "text"],\n`;
+              code += `            "variable": "${targetNode.data.inputVariable || `response_${targetNode.id}`}",\n`;
+              code += `            "save_to_database": True,\n`;
+              code += `            "node_id": "${targetNode.id}"\n`;
+              code += `        }\n`;
               // Определяем режим форматирования для целевого узла
               let parseModeTarget = '';
               if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
