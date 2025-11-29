@@ -909,6 +909,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 onClick={() => {
                                   setSelectedUserForDialog(user);
                                   setShowDialog(true);
+                                  // Scroll to bottom after dialog opens
+                                  setTimeout(() => scrollToBottom(), 200);
                                 }}
                               >
                                 <MessageSquare className="w-3 h-3" />
@@ -1127,6 +1129,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           onClick={() => {
                             setSelectedUserForDialog(user);
                             setShowDialog(true);
+                            // Scroll to bottom after dialog opens
+                            setTimeout(() => scrollToBottom(), 200);
                           }}
                         >
                           <MessageSquare className="w-3 h-3" />
