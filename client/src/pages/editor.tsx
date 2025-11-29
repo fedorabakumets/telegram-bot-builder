@@ -264,6 +264,14 @@ export default function Editor() {
           size: 25,
           visible: false
         },
+        {
+          id: 'dialog',
+          type: 'dialog',
+          name: 'Диалог',
+          position: 'right',
+          size: 20,
+          visible: false
+        },
       ],
       compactMode: false,
       showGrid: true
