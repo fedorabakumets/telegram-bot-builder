@@ -264,14 +264,6 @@ export default function Editor() {
           size: 25,
           visible: false
         },
-        {
-          id: 'dialog',
-          type: 'dialog',
-          name: 'Диалог',
-          position: 'right',
-          size: 20,
-          visible: false
-        }
       ],
       compactMode: false,
       showGrid: true
@@ -559,8 +551,8 @@ export default function Editor() {
           ),
           connections: sheet.connections.map(conn => ({
             ...conn,
-            from: conn.from === oldId ? newId : conn.from,
-            to: conn.to === oldId ? newId : conn.to
+            source: conn.source === oldId ? newId : conn.source,
+            target: conn.target === oldId ? newId : conn.target
           }))
         };
       }

@@ -1060,30 +1060,31 @@ export function PropertiesPanel({
           <div className="space-y-3 sm:space-y-3.5">
             {/* Header with Icon and Title */}
             <div className="flex items-center gap-3 sm:gap-3.5 justify-between">
-            <div className="flex items-center gap-3 sm:gap-3.5 flex-1">
-              <div className={`w-10 sm:w-11 h-10 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm transition-all ${nodeColors[selectedNode.type]}`}>
-                <i className={`${nodeIcons[selectedNode.type]} text-base sm:text-lg`}></i>
+              <div className="flex items-center gap-3 sm:gap-3.5 flex-1">
+                <div className={`w-10 sm:w-11 h-10 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm transition-all ${nodeColors[selectedNode.type]}`}>
+                  <i className={`${nodeIcons[selectedNode.type]} text-base sm:text-lg`}></i>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Текущий элемент</p>
+                  <h2 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight truncate">
+                    {(selectedNode.type === 'start' || selectedNode.type === 'command') ? 
+                      `${selectedNode.data.command || nodeTypeNames[selectedNode.type]}` 
+                      : nodeTypeNames[selectedNode.type]}
+                  </h2>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Текущий элемент</p>
-                <h2 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight truncate">
-                  {(selectedNode.type === 'start' || selectedNode.type === 'command') ? 
-                    `${selectedNode.data.command || nodeTypeNames[selectedNode.type]}` 
-                    : nodeTypeNames[selectedNode.type]}
-                </h2>
-              </div>
-            {onClose && (
-              <UIButton 
-                size="icon" 
-                variant="ghost" 
-                className="h-8 w-8 flex-shrink-0" 
-                onClick={onClose}
-                title="Закрыть панель свойств"
-                data-testid="button-close-properties"
-              >
-                <X className="w-4 h-4" />
-              </UIButton>
-            )}
+              {onClose && (
+                <UIButton 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-8 w-8 flex-shrink-0" 
+                  onClick={onClose}
+                  title="Закрыть панель свойств"
+                  data-testid="button-close-properties"
+                >
+                  <X className="w-4 h-4" />
+                </UIButton>
+              )}
             </div>
 
             {/* Type Selector */}
