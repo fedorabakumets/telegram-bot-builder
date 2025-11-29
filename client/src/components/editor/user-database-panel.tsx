@@ -1175,7 +1175,6 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     <div><span className="text-sm text-muted-foreground">Сообщений:</span> {selectedUser?.interactionCount || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Отправлено:</span> {selectedUser?.totalMessagesSent || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Получено:</span> {selectedUser?.totalMessagesReceived || 0}</div>
-                    <div><span className="text-sm text-muted-foreground">Состояние:</span> {selectedUser?.currentState || 'Не установлено'}</div>
                   </div>
                 </div>
               </div>
