@@ -884,14 +884,28 @@ export function PropertiesPanel({
       <aside className="w-full h-full bg-background border-l border-border flex flex-col">
         {/* Empty State Header */}
         <div className="p-4 border-b border-border">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-muted/50 rounded-lg flex items-center justify-center">
-              <i className="fas fa-sliders-h text-muted-foreground text-sm"></i>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-muted/50 rounded-lg flex items-center justify-center">
+                <i className="fas fa-sliders-h text-muted-foreground text-sm"></i>
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Свойства</h2>
+                <p className="text-xs text-muted-foreground">Выберите элемент для настройки</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-semibold text-foreground">Свойства</h2>
-              <p className="text-xs text-muted-foreground">Выберите элемент для настройки</p>
-            </div>
+            {onClose && (
+              <UIButton 
+                size="icon" 
+                variant="ghost" 
+                className="h-8 w-8 flex-shrink-0" 
+                onClick={onClose}
+                title="Закрыть панель свойств"
+                data-testid="button-close-properties-empty"
+              >
+                <X className="w-4 h-4" />
+              </UIButton>
+            )}
           </div>
         </div>
 
