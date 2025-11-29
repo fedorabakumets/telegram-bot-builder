@@ -5918,7 +5918,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                                "node_id": "${targetNode.id}",\n`;
             code += `                                "next_node_id": "${inputTargetNodeId || ''}"\n`;
             code += `                            }\n`;
-            code += `                            logging.info(f"✅ Состояние ожидания настроено: modes=[\\"text\\"] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+            code += `                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
           } else {
             const messageText = targetNode.data.messageText || 'Сообщение';
             const formattedText = formatTextForPython(messageText);
@@ -5972,7 +5972,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `                            "node_id": "${targetNode.id}",\n`;
               code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
               code += `                        }\n`;
-              code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=[\\"text\\"] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+              code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
             }
           }
         } else {
@@ -6484,7 +6484,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `${bodyIndent}        "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
                 code += `${bodyIndent}        "success_message": ""\n`;
                 code += `${bodyIndent}    }\n`;
-                code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesStr}] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                const modesRepr = modesStr.replace(/"/g, "'");
+                code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesRepr}] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
               }
             } else {
               // Нет условных сообщений - стандартная обработка
