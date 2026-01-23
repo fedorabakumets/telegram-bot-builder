@@ -2,4 +2,4 @@
 # Explicitly set the Node.js version.
 
 [phases.setup]
-providers = ["node@20"]
+providers = ["node@16"]
