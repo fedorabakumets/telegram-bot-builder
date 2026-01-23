@@ -1,19 +1,22 @@
-# Используем Node.js 20 с Python
+# Используем Node.js 20 с Python (v2.0)
 FROM node:20-alpine
 
-# Обновляем пакеты и устанавливаем Python
+# Обновляем пакеты и устанавливаем Python + дополнительные инструменты
 RUN apk update && apk add --no-cache \
     python3 \
     py3-pip \
     python3-dev \
-    build-base
+    build-base \
+    gcc \
+    musl-dev
 
 # Создаем символические ссылки
 RUN ln -sf python3 /usr/bin/python && \
     ln -sf pip3 /usr/bin/pip
 
-# Проверяем установку Python
-RUN python --version && pip --version
+# Проверяем установку Python (v2.0)
+RUN python --version && pip --version && \
+    echo "Python installation verified successfully"
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
