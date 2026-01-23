@@ -1,4 +1,4 @@
-// Специализированный полифилл для Nixpacks среды
+// Специализированный полифилл для Nixpacks среды (Node.js 16 совместимость)
 // Этот файл будет использоваться только в Nixpacks сборке
 
 // Немедленно выполняемый полифилл для crypto.getRandomValues
@@ -8,29 +8,37 @@
     return;
   }
 
-  // Создаем реализацию crypto.getRandomValues
+  // Создаем реализацию crypto.getRandomValues с учетом совместимости Node.js 16
   const cryptoPolyfill = {
     getRandomValues: function(array) {
       if (typeof array === 'object' && array !== null) {
         // Для Node.js среды используем встроенный модуль crypto
         try {
-          const nodeCrypto = require('crypto');
-          if (array.buffer && array.buffer instanceof ArrayBuffer) {
-            const buffer = nodeCrypto.randomBytes(array.length);
-            for (let i = 0; i < array.length; i++) {
-              array[i] = buffer[i];
+          // Проверяем доступность require (Node.js среда)
+          if (typeof require !== 'undefined') {
+            const nodeCrypto = require('crypto');
+            if (typeof nodeCrypto.randomBytes === 'function') {
+              if (array.buffer && array.buffer instanceof ArrayBuffer) {
+                const buffer = nodeCrypto.randomBytes(array.length);
+                for (let i = 0; i < array.length; i++) {
+                  array[i] = buffer[i];
+                }
+                return array;
+              }
+              // Для обычных массивов
+              for (let i = 0; i < array.length; i++) {
+                array[i] = Math.floor(Math.random() * 256);
+              }
+              return array;
             }
-            return array;
-          }
-          // Для обычных массивов
-          for (let i = 0; i < array.length; i++) {
-            array[i] = Math.floor(Math.random() * 256);
           }
         } catch (e) {
-          // Резервная реализация, если crypto недоступен
-          for (let i = 0; i < array.length; i++) {
-            array[i] = Math.floor(Math.random() * 256);
-          }
+          // Продолжаем к резервной реализации
+        }
+        
+        // Резервная реализация, если crypto недоступен
+        for (let i = 0; i < array.length; i++) {
+          array[i] = Math.floor(Math.random() * 256);
         }
       }
       return array;
