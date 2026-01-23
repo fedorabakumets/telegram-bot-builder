@@ -27,13 +27,14 @@ RUN python --version && pip --version && \
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Устанавливаем Python библиотеки для ботов
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install pytelegrambotapi requests python-dotenv
+# Устанавливаем Python библиотеки для ботов через системные пакеты
+RUN apk add --no-cache py3-requests && \
+    pip install --break-system-packages --no-cache-dir pytelegrambotapi python-dotenv
 
 # Проверяем установку библиотек
 RUN python -c "import telebot; print('pytelegrambotapi OK')" && \
-    python -c "import requests; print('requests OK')"
+    python -c "import requests; print('requests OK')" && \
+    python -c "import dotenv; print('python-dotenv OK')"
 
 # Копируем package.json и package-lock.json
 COPY package*.json ./
