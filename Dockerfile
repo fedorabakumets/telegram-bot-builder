@@ -1,17 +1,30 @@
-# Используем Node.js 20
+# Используем Node.js 20 с Python
 FROM node:20-alpine
 
-# Устанавливаем Python и pip для запуска ботов
-RUN apk add --no-cache python3 py3-pip
+# Обновляем пакеты и устанавливаем Python
+RUN apk update && apk add --no-cache \
+    python3 \
+    py3-pip \
+    python3-dev \
+    build-base
 
-# Создаем символическую ссылку для python (если нужно)
-RUN ln -sf python3 /usr/bin/python
+# Создаем символические ссылки
+RUN ln -sf python3 /usr/bin/python && \
+    ln -sf pip3 /usr/bin/pip
+
+# Проверяем установку Python
+RUN python --version && pip --version
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
 # Устанавливаем Python библиотеки для ботов
-RUN pip3 install --no-cache-dir pytelegrambotapi requests python-dotenv
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install pytelegrambotapi requests python-dotenv
+
+# Проверяем установку библиотек
+RUN python -c "import telebot; print('pytelegrambotapi OK')" && \
+    python -c "import requests; print('requests OK')"
 
 # Копируем package.json и package-lock.json
 COPY package*.json ./
