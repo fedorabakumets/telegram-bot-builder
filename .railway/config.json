@@ -1,10 +1,16 @@
 {
   "build": {
-    "builder": "nixpacks"
+    "builder": "NIXPACKS",
+    "nodeVersion": "20",
+    "buildCommand": "npm run build",
+    "startCommand": "npm run start",
+    "nixpacksConfigPath": ".nixpacks/node"
   },
   "deploy": {
     "startCommand": "npm run start",
     "healthcheckPath": "/api/health",
-    "healthcheckTimeout": 300
+    "healthcheckTimeout": 300,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
   }
 }
