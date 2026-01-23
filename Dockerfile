@@ -1,5 +1,8 @@
-# Используем Node.js 20 с Python (v2.0)
+# FORCE REBUILD v3.0 - Используем Node.js 20 с Python
 FROM node:20-alpine
+
+# Принудительная очистка кэша - добавляем уникальный слой
+RUN echo "Build timestamp: $(date)" > /tmp/build_info
 
 # Обновляем пакеты и устанавливаем Python + дополнительные инструменты
 RUN apk update && apk add --no-cache \
@@ -14,9 +17,12 @@ RUN apk update && apk add --no-cache \
 RUN ln -sf python3 /usr/bin/python && \
     ln -sf pip3 /usr/bin/pip
 
-# Проверяем установку Python (v2.0)
+# Проверяем установку Python (v3.0) с детальной диагностикой
 RUN python --version && pip --version && \
-    echo "Python installation verified successfully"
+    echo "Python installation verified successfully" && \
+    which python && which pip && \
+    ls -la /usr/bin/python* && \
+    python -c "print('Python is working!')"
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
