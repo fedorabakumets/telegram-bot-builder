@@ -1,5 +1,5 @@
 # nixpacks.toml
-# Explicitly set the Node.js version to override caching issues.
+# Explicitly set the Node.js version.
 
-[providers]
-nodejs = "20"
+[phases.setup]
+providers = ["nodejs@20"]
