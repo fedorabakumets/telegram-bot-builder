@@ -27,23 +27,6 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    rollupOptions: {
-      external: ['crypto'],
-      plugins: [
-        {
-          name: 'polyfill-crypto',
-          renderChunk(code, chunk) {
-            if (chunk.fileName.includes('node_modules')) {
-              return code.replace(
-                /globalThis\.crypto/g,
-                '(typeof globalThis.crypto !== "undefined" ? globalThis.crypto : { getRandomValues: () => new Uint8Array(16) })'
-              );
-            }
-            return code;
-          }
-        }
-      ]
-    }
   },
   server: {
     fs: {
