@@ -39,8 +39,7 @@ export default defineConfig({
   },
   define: {
     global: 'globalThis',
-    'global.crypto': '{}',
-    'global.crypto.getRandomValues': '(array) => { const nodeCrypto = require("crypto"); if (array.buffer && array.buffer instanceof ArrayBuffer) { const buffer = nodeCrypto.randomBytes(array.length); for (let i = 0; i < array.length; i++) { array[i] = buffer[i]; } return array; } for (let i = 0; i < array.length; i++) { array[i] = Math.floor(Math.random() * 256); } return array; }'
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
   },
   optimizeDeps: {
     include: ['buffer'],
