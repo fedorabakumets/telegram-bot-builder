@@ -1,5 +1,5 @@
-# Используем Node.js 18
-FROM node:18-alpine
+# Используем Node.js 20
+FROM node:20-alpine
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Устанавливаем зависимости
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Копируем исходный код
 COPY . .
