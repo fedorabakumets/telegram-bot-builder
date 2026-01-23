@@ -1,39 +1,63 @@
 // Специализированный полифилл для Nixpacks среды
 // Этот файл будет использоваться только в Nixpacks сборке
 
-// Глобальный полифилл для crypto.getRandomValues
-globalThis.crypto = {
-  getRandomValues: function(array) {
-    if (typeof array === 'object' && array !== null) {
-      // Для Node.js среды используем встроенный модуль crypto
-      try {
-        const nodeCrypto = require('crypto');
-        if (array.buffer && array.buffer instanceof ArrayBuffer) {
-          const buffer = nodeCrypto.randomBytes(array.length);
-          for (let i = 0; i < array.length; i++) {
-            array[i] = buffer[i];
+// Немедленно выполняемый полифилл для crypto.getRandomValues
+(function() {
+  // Проверяем, существует ли уже реализация
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) {
+    return;
+  }
+
+  // Создаем реализацию crypto.getRandomValues
+  const cryptoPolyfill = {
+    getRandomValues: function(array) {
+      if (typeof array === 'object' && array !== null) {
+        // Для Node.js среды используем встроенный модуль crypto
+        try {
+          const nodeCrypto = require('crypto');
+          if (array.buffer && array.buffer instanceof ArrayBuffer) {
+            const buffer = nodeCrypto.randomBytes(array.length);
+            for (let i = 0; i < array.length; i++) {
+              array[i] = buffer[i];
+            }
+            return array;
           }
-          return array;
-        }
-        // Для обычных массивов
-        for (let i = 0; i < array.length; i++) {
-          array[i] = Math.floor(Math.random() * 256);
-        }
-      } catch (e) {
-        // Резервная реализация, если crypto недоступен
-        for (let i = 0; i < array.length; i++) {
-          array[i] = Math.floor(Math.random() * 256);
+          // Для обычных массивов
+          for (let i = 0; i < array.length; i++) {
+            array[i] = Math.floor(Math.random() * 256);
+          }
+        } catch (e) {
+          // Резервная реализация, если crypto недоступен
+          for (let i = 0; i < array.length; i++) {
+            array[i] = Math.floor(Math.random() * 256);
+          }
         }
       }
+      return array;
     }
-    return array;
-  }
-};
+  };
 
-// Для совместимости с global
-if (typeof global !== 'undefined' && !global.crypto) {
-  global.crypto = globalThis.crypto;
-}
+  // Добавляем в globalThis
+  if (typeof globalThis !== 'undefined') {
+    if (!globalThis.crypto) {
+      globalThis.crypto = cryptoPolyfill;
+    }
+  }
+
+  // Добавляем в global для Node.js совместимости
+  if (typeof global !== 'undefined') {
+    if (!global.crypto) {
+      global.crypto = cryptoPolyfill;
+    }
+  }
+
+  // Добавляем в window для браузерной совместимости
+  if (typeof window !== 'undefined') {
+    if (!window.crypto) {
+      window.crypto = cryptoPolyfill;
+    }
+  }
+})();
 
 // Экспорт для использования в модулях (ESM совместимый)
 export {};
