@@ -11,8 +11,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Bot, Edit, Trash2, Calendar, User, Download, LogOut } from 'lucide-react';
+import { Plus, Bot, Edit, Trash2, Calendar, User, Download, LogOut, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { TelegramAuth } from '@/components/telegram-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import type { BotProject } from '@shared/schema';
@@ -28,6 +29,7 @@ type CreateProjectForm = z.infer<typeof createProjectSchema>;
 export default function Home() {
   const [, setLocation] = useLocation();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -221,57 +223,63 @@ export default function Home() {
             </p>
           </div>
           
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Новый проект
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Создать новый проект</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleCreateProject)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Название проекта</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Мой новый бот" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Описание (опционально)</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} placeholder="Краткое описание бота" rows={3} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                      Отмена
-                    </Button>
-                    <Button type="submit" disabled={createProjectMutation.isPending}>
-                      {createProjectMutation.isPending ? 'Создание...' : 'Создать'}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={() => setIsAuthDialogOpen(true)}>
+              <Shield className="h-4 w-4 mr-2" />
+              Авторизация Telegram
+            </Button>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Новый проект
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Создать новый проект</DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleCreateProject)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Название проекта</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Мой новый бот" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Описание (опционально)</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="Краткое описание бота" rows={3} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex justify-end space-x-2">
+                      <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                        Отмена
+                      </Button>
+                      <Button type="submit" disabled={createProjectMutation.isPending}>
+                        {createProjectMutation.isPending ? 'Создание...' : 'Создать'}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Список проектов */}
@@ -375,6 +383,17 @@ export default function Home() {
           </div>
         )}
       </main>
+      <TelegramAuth 
+        open={isAuthDialogOpen} 
+        onOpenChange={setIsAuthDialogOpen}
+        onSuccess={() => {
+          toast({
+            title: "Авторизация успешна",
+            description: "Вы успешно авторизовали свой Telegram клиент.",
+          });
+          setIsAuthDialogOpen(false);
+        }}
+      />
     </div>
   );
 }
