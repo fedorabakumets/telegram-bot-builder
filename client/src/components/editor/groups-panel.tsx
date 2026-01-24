@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal, Hash, Link2, Sparkles, Check } from 'lucide-react';
+import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal, Hash, Link2, Sparkles, Check, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -26,19 +26,19 @@ interface GroupsPanelProps {
 // Using BotGroup type from schema instead of local interface
 
 // Компонент аватарки группы с fallback
-function GroupAvatar({ 
-  avatarUrl, 
-  groupName, 
-  size = 40, 
-  className = "" 
-}: { 
-  avatarUrl?: string | null; 
-  groupName: string; 
-  size?: number; 
-  className?: string; 
+function GroupAvatar({
+  avatarUrl,
+  groupName,
+  size = 40,
+  className = ""
+}: {
+  avatarUrl?: string | null;
+  groupName: string;
+  size?: number;
+  className?: string;
 }) {
   const [imageError, setImageError] = useState(false);
-  
+
   // Получаем первые буквы названия группы для fallback
   const initials = groupName
     .split(' ')
@@ -46,21 +46,21 @@ function GroupAvatar({
     .join('')
     .toUpperCase()
     .slice(0, 2);
-  
+
   const handleImageError = () => {
     setImageError(true);
   };
-  
+
   // Если есть аватарка и она не содержит <TOKEN>, показываем её
   const showImage = avatarUrl && !imageError && !avatarUrl.includes('<TOKEN>');
-  
+
   if (showImage) {
     return (
-      <div 
+      <div
         className={`relative rounded-lg overflow-hidden flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
       >
-        <img 
+        <img
           src={avatarUrl}
           alt={`${groupName} avatar`}
           className="w-full h-full object-cover"
@@ -69,24 +69,24 @@ function GroupAvatar({
       </div>
     );
   }
-  
+
   // Fallback: показываем инициалы или иконку
   return (
-    <div 
+    <div
       className={`bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
       style={{ width: size, height: size }}
     >
       {initials ? (
-        <span 
+        <span
           className="text-white font-semibold"
           style={{ fontSize: size * 0.4 }}
         >
           {initials}
         </span>
       ) : (
-        <Users 
-          className="text-white" 
-          size={size * 0.5} 
+        <Users
+          className="text-white"
+          size={size * 0.5}
         />
       )}
     </div>
@@ -127,14 +127,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [showSendMessage, setShowSendMessage] = useState(false);
   const [messageToSend, setMessageToSend] = useState('');
   const [selectedGroupForMessage, setSelectedGroupForMessage] = useState<BotGroup | null>(null);
-  
+
   // Состояние для поиска пользователя
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [selectedGroupForPromotion, setSelectedGroupForPromotion] = useState<BotGroup | null>(null);
   const [userToFind, setUserToFind] = useState(''); // Для универсального поиска участников
   const [showAdminSearch, setShowAdminSearch] = useState(false); // Для поиска с назначением админом
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -146,7 +146,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
   // Ensure groups is always an array
   const safeGroups = Array.isArray(groups) ? groups : [];
-  
+
   // Auto-update existing groups with missing info
   useEffect(() => {
     if (safeGroups.length > 0) {
@@ -224,10 +224,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setSelectedGroupForMessage(null);
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при отправке сообщения', 
+      toast({
+        title: 'Ошибка при отправке сообщения',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -248,23 +248,23 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       if (groupToUpdate) {
         updateGroupMutation.mutate({
           groupId: groupToUpdate.id,
-          data: { 
+          data: {
             memberCount: data.memberCount,
             chatType: data.type,
             name: data.title || groupToUpdate.name
           }
         });
       }
-      toast({ 
-        title: `Информация о группе получена`, 
+      toast({
+        title: `Информация о группе получена`,
         description: `Название: ${data.title}, Участников: ${data.memberCount}, Тип: ${data.type === 'supergroup' ? 'Супергруппа' : data.type === 'group' ? 'Группа' : 'Канал'}`
       });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при получении информации', 
+      toast({
+        title: 'Ошибка при получении информации',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -280,8 +280,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           apiRequest('GET', `/api/projects/${projectId}/bot/admin-status/${groupIdentifier}`),
           apiRequest('GET', `/api/projects/${projectId}/bot/group-members-count/${groupIdentifier}`).catch(() => ({ count: null }))
         ]);
-        return { 
-          ...groupInfo, 
+        return {
+          ...groupInfo,
           isAdmin: adminStatus.isAdmin,
           memberCount: memberCountData?.count || null
         };
@@ -296,16 +296,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       console.log('Description field:', data.description);
       console.log('Bio field:', data.bio);
       console.log('About field:', data.about);
-      
+
       // Автоматически заполняем название группы
       if (data.title && !groupName) {
         setGroupName(data.title);
       }
-      
+
       // Генерируем ссылку автоматически и определяем публичность
       let generatedUrl = '';
       let isGroupPublic = false;
-      
+
       if (data.username) {
         // Группа публичная, есть username
         generatedUrl = `https://t.me/${data.username}`;
@@ -326,10 +326,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
         setIsPublicGroup(false);
         setPublicUsername('');
       }
-      
+
       // Устанавливаем статус администратора
       setMakeAdmin(data.isAdmin || false);
-      
+
       // Обновляем уже существующую группу в базе данных
       const existingGroup = safeGroups.find(g => g.groupId === data.id?.toString());
       if (existingGroup && data.title) {
@@ -341,48 +341,48 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           isPublic: isGroupPublic ? 1 : 0,
           chatType: data.type || 'group'
         };
-        
+
         // Добавляем описание если есть
         if (data.description) {
           updateData.description = data.description;
         }
-        
+
         // Добавляем аватарку если есть
         if (data.avatarUrl) {
           updateData.avatarUrl = data.avatarUrl;
         }
-        
+
         // Добавляем количество участников если есть
         if (data.memberCount !== null && data.memberCount !== undefined) {
           updateData.memberCount = data.memberCount;
         }
-        
+
         updateGroupMutation.mutate({
           groupId: existingGroup.id,
           data: updateData
         });
       }
-      
+
       // Создаем информативное уведомление
       const infoLines = [
         `${data.title || data.id}`,
         `${data.username ? '@' + data.username : 'ID: ' + data.id}`,
         `${data.isAdmin ? 'Админ' : 'Участник'}`,
       ];
-      
+
       if (data.memberCount) {
         infoLines.push(`${data.memberCount} участников`);
       }
-      
+
       if (data.description && data.description.length > 0) {
-        const shortDescription = data.description.length > 50 
-          ? data.description.substring(0, 50) + '...' 
+        const shortDescription = data.description.length > 50
+          ? data.description.substring(0, 50) + '...'
           : data.description;
         infoLines.push(`Описание: ${shortDescription}`);
       }
-      
-      toast({ 
-        title: 'Информация о группе обновлена', 
+
+      toast({
+        title: 'Информация о группе обновлена',
         description: infoLines.join(' • ')
       });
     },
@@ -398,7 +398,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       const identifier = groupId.trim();
       if (identifier && (identifier.startsWith('-') || identifier.startsWith('@') || identifier.includes('t.me'))) {
         let groupIdentifier = identifier;
-        
+
         // Извлекаем ID из разных форматов ссылок
         if (identifier.includes('t.me/')) {
           const match = identifier.match(/t.me\/([^?\/]+)/);
@@ -406,7 +406,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             groupIdentifier = match[1].startsWith('+') ? match[1] : '@' + match[1];
           }
         }
-        
+
         parseGroupInfoMutation.mutate(groupIdentifier);
       }
     }, 1500); // Задержка 1.5 секунды после ввода
@@ -431,10 +431,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       toast({ title: `Участников в группе: ${data.count}` });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при получении количества участников', 
+      toast({
+        title: 'Ошибка при получении количества участников',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -445,16 +445,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       return apiRequest('GET', `/api/projects/${projectId}/bot/admin-status/${groupId}`);
     },
     onSuccess: (data) => {
-      toast({ 
-        title: `Статус бота в группе: ${data.isAdmin ? 'Администратор' : 'Участник'}`, 
+      toast({
+        title: `Статус бота в группе: ${data.isAdmin ? 'Администратор' : 'Участник'}`,
         description: `Права: ${data.status}`
       });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при проверке статуса', 
+      toast({
+        title: 'Ошибка при проверке статуса',
         description: error.error || 'Бот не найден в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -473,7 +473,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     can_send_polls: true,
     can_send_other_messages: true,
     can_add_web_page_previews: true,
-    
+
     // Административные разрешения
     can_change_info: false,
     can_delete_messages: false,
@@ -484,7 +484,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     can_be_anonymous: false,
     can_promote_members: false
   });
-  
+
   const getAdminsMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
       return apiRequest('GET', `/api/projects/${projectId}/bot/group-admins/${groupId}`);
@@ -494,10 +494,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       toast({ title: `Получено администраторов: ${data.administrators?.length || 0}` });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при получении администраторов', 
+      toast({
+        title: 'Ошибка при получении администраторов',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -509,23 +509,23 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     },
     onSuccess: (data) => {
       setClientApiMembers(data.members || []);
-      toast({ 
+      toast({
         title: data.isPartialList ? `Показаны администраторы: ${data.totalCount || 0}` : `Все участники: ${data.totalCount || 0}`,
         description: data.message || data.explanation || (data.isPartialList ? "Telegram API не предоставляет полный список" : "Полный список участников")
       });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при получении участников', 
+      toast({
+        title: 'Ошибка при получении участников',
         description: error.error || 'Список участников доступен только для небольших групп',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
 
   // Get saved members from database
   const [savedMembers, setSavedMembers] = React.useState<any[]>([]);
-  
+
   const getSavedMembersMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
       return apiRequest('GET', `/api/projects/${projectId}/groups/${groupId}/saved-members`);
@@ -575,7 +575,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       }
     },
     onSuccess: (data: any) => {
-      toast({ 
+      toast({
         title: 'Пользователь замучен',
         description: data.message || 'Операция выполнена успешно'
       });
@@ -585,10 +585,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при муте', 
+      toast({
+        title: 'Ошибка при муте',
         description: error.error || 'Не удалось замутить участника',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -612,7 +612,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       }
     },
     onSuccess: (data: any) => {
-      toast({ 
+      toast({
         title: 'Пользователь исключен из группы',
         description: data.message || 'Операция выполнена успешно'
       });
@@ -621,10 +621,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при исключении', 
+      toast({
+        title: 'Ошибка при исключении',
         description: error.error || 'Не удалось исключить участника',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -647,7 +647,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           can_send_polls: true,
           can_send_other_messages: true,
           can_add_web_page_previews: true,
-          
+
           // Административные разрешения (берем из текущих прав)
           can_change_info: member.can_change_info || false,
           can_delete_messages: member.can_delete_messages || false,
@@ -658,7 +658,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           can_be_anonymous: member.is_anonymous || member.can_be_anonymous || false,
           can_promote_members: member.can_promote_members || false
         });
-        
+
         console.log('Loaded member permissions from API:', {
           member,
           mappedPermissions: {
@@ -684,11 +684,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const updatePermissionsMutation = useMutation({
     mutationFn: async ({ groupId, userId, permissions }: { groupId: string | null; userId: string; permissions: any }) => {
       // Проверяем, есть ли административные права
-      const hasAdminRights = permissions.can_delete_messages || permissions.can_restrict_members || 
-                            permissions.can_promote_members || permissions.can_manage_video_chats ||
-                            permissions.can_be_anonymous || permissions.can_change_info || 
-                            permissions.can_pin_messages || permissions.can_invite_users;
-      
+      const hasAdminRights = permissions.can_delete_messages || permissions.can_restrict_members ||
+        permissions.can_promote_members || permissions.can_manage_video_chats ||
+        permissions.can_be_anonymous || permissions.can_change_info ||
+        permissions.can_pin_messages || permissions.can_invite_users;
+
       console.log('💾 Сохраняем разрешения:', {
         selectedMember: selectedMember,
         userId: userId,
@@ -697,7 +697,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
         newPermissions: permissions,
         hasAdminRights: hasAdminRights
       });
-      
+
       if (hasAdminRights) {
         // Если есть административные права, используем promote-member
         try {
@@ -779,17 +779,17 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       refetch();
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при обновлении разрешений', 
+      toast({
+        title: 'Ошибка при обновлении разрешений',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
 
   // Отслеживаем смену группы для сброса данных
   const [lastSelectedGroupId, setLastSelectedGroupId] = React.useState<string | null>(null);
-  
+
   React.useEffect(() => {
     if (selectedGroup) {
       // Если сменилась группа, сбрасываем все данные
@@ -834,7 +834,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       }
     },
     onSuccess: (data: any) => {
-      toast({ 
+      toast({
         title: 'Пользователь заблокирован',
         description: data.message || 'Операция выполнена успешно'
       });
@@ -844,10 +844,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при блокировке', 
+      toast({
+        title: 'Ошибка при блокировке',
         description: error.error || 'Не удалось заблокировать участника',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -865,10 +865,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setUserIdToUnban('');
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при разблокировке', 
+      toast({
+        title: 'Ошибка при разблокировке',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -896,10 +896,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       refetch();
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при изменении названия', 
+      toast({
+        title: 'Ошибка при изменении названия',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -916,10 +916,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setNewGroupDescription('');
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при изменении описания', 
+      toast({
+        title: 'Ошибка при изменении описания',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -944,10 +944,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       toast({ title: 'Аватарка группы обновлена' });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при обновлении аватарки', 
+      toast({
+        title: 'Ошибка при обновлении аватарки',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -973,10 +973,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       toast({ title: 'Права администратора обновлены в Telegram' });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при обновлении прав в Telegram', 
+      toast({
+        title: 'Ошибка при обновлении прав в Telegram',
         description: error.error || 'Для изменения прав бота нужны права владельца группы или администратора с правом назначения администраторов',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -994,10 +994,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setMessageIdToPin('');
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при закреплении сообщения', 
+      toast({
+        title: 'Ошибка при закреплении сообщения',
         description: error.error || 'Проверьте права бота и ID сообщения',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -1014,10 +1014,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setMessageIdToUnpin('');
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при откреплении сообщения', 
+      toast({
+        title: 'Ошибка при откреплении сообщения',
         description: error.error || 'Проверьте права бота',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -1034,20 +1034,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setMessageIdToDelete('');
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при удалении сообщения', 
+      toast({
+        title: 'Ошибка при удалении сообщения',
         description: error.error || 'Проверьте права бота и ID сообщения',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
 
   const createInviteLinkMutation = useMutation({
-    mutationFn: async ({ groupId, name, memberLimit, createsJoinRequest }: { 
-      groupId: string | null; 
-      name?: string; 
-      memberLimit?: number; 
-      createsJoinRequest: boolean 
+    mutationFn: async ({ groupId, name, memberLimit, createsJoinRequest }: {
+      groupId: string | null;
+      name?: string;
+      memberLimit?: number;
+      createsJoinRequest: boolean
     }) => {
       return apiRequest('POST', `/api/projects/${projectId}/bot/create-invite-link`, {
         groupId,
@@ -1057,7 +1057,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       });
     },
     onSuccess: (data) => {
-      toast({ 
+      toast({
         title: 'Ссылка-приглашение создана',
         description: `Новая ссылка: ${data.inviteLink.invite_link}`
       });
@@ -1065,10 +1065,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setInviteLinkLimit('');
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при создании ссылки', 
+      toast({
+        title: 'Ошибка при создании ссылки',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -1076,7 +1076,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   // Restrict member mutation (mute)
   const [userIdToMute, setUserIdToMute] = React.useState('');
   const [muteMinutes, setMuteMinutes] = React.useState('');
-  
+
   const restrictMemberMutation = useMutation({
     mutationFn: async ({ groupId, userId, untilDate }: { groupId: string | null; userId: string; untilDate?: number }) => {
       return apiRequest('POST', `/api/projects/${projectId}/bot/restrict-member`, {
@@ -1107,10 +1107,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setMuteMinutes('');
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при заглушении пользователя', 
+      toast({
+        title: 'Ошибка при заглушении пользователя',
         description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -1125,7 +1125,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       });
     },
     onSuccess: (data: any) => {
-      toast({ 
+      toast({
         title: 'Участник назначен администратором',
         description: data.message || 'Операция выполнена успешно'
       });
@@ -1134,10 +1134,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при назначении администратора', 
+      toast({
+        title: 'Ошибка при назначении администратора',
         description: error.error || 'Не удалось назначить администратора',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -1161,7 +1161,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       }
     },
     onSuccess: (data: any) => {
-      toast({ 
+      toast({
         title: 'Администраторские права сняты',
         description: data.message || 'Операция выполнена успешно'
       });
@@ -1170,10 +1170,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Ошибка при снятии прав администратора', 
+      toast({
+        title: 'Ошибка при снятии прав администратора',
         description: error.error || 'Не удалось снять права администратора',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -1188,8 +1188,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       const member = data?.member;
       if (member) {
         // Показываем уведомление
-        toast({ 
-          title: '✅ Статус участника найден', 
+        toast({
+          title: '✅ Статус участника найден',
           description: `${member.user?.first_name || 'Пользователь'} (@${member.user?.username || 'без username'}) - ${member.friendlyStatus}`,
           duration: 5000
         });
@@ -1224,14 +1224,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
         // Очищаем поле поиска после успешного нахождения
         setUserToFind('');
-        
+
         // Обновляем список сохраненных участников после добавления нового
         if (selectedGroup?.groupId) {
           getSavedMembersMutation.mutate(selectedGroup.groupId);
         }
       } else {
-        toast({ 
-          title: '❌ Участник не найден', 
+        toast({
+          title: '❌ Участник не найден',
           description: 'Пользователь не является участником этой группы',
           variant: 'destructive',
           duration: 5000
@@ -1240,8 +1240,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     },
     onError: (error: any) => {
       console.error('checkMemberMutation error:', error);
-      toast({ 
-        title: 'Ошибка проверки статуса', 
+      toast({
+        title: 'Ошибка проверки статуса',
         description: error.message || 'Не удалось проверить статус участника',
         variant: 'destructive',
         duration: 5000
@@ -1266,10 +1266,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setUserSearchQuery('');
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Пользователь не найден', 
+      toast({
+        title: 'Пользователь не найден',
         description: error.error || 'Не удалось найти пользователя по указанному username или ID',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -1284,7 +1284,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
         // Показываем диалог с подтверждением назначения
         const user = data.user;
         const confirmMessage = `Назначить ${user.first_name || user.username || 'пользователя'} (@${user.username || 'без username'}) администратором группы "${selectedGroupForPromotion.name}"?`;
-        
+
         if (confirm(confirmMessage)) {
           promoteMemberMutation.mutate({
             groupId: selectedGroupForPromotion.groupId,
@@ -1306,10 +1306,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setUserSearchQuery('');
     },
     onError: (error: any) => {
-      toast({ 
-        title: 'Пользователь не найден', 
+      toast({
+        title: 'Пользователь не найден',
         description: error.error || 'Не удалось найти пользователя по указанному username или ID',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
@@ -1320,10 +1320,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       toast({ title: 'Пожалуйста, укажите ID группы или @username', variant: 'destructive' });
       return;
     }
-    
+
     // Используем автоматически полученное название или ID по умолчанию
     const finalGroupName = groupName.trim() || identifier.replace('@', '').replace('https://t.me/', '') || 'New Group';
-    
+
     // Генерируем ссылку только для username или используем автоматически полученную
     let finalGroupUrl = groupUrl.trim();
     if (!finalGroupUrl) {
@@ -1364,7 +1364,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       language: 'ru' as const,
       tags: []
     });
-    
+
     // Закрываем модалка и очищаем форму
     setShowAddGroup(false);
     setGroupUrl('');
@@ -1381,7 +1381,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           {/* Decorative background elements */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-          
+
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
             {/* Icon and Title */}
             <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -1399,7 +1399,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             </div>
           </div>
         </div>
-        
+
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 sm:py-20">
             <div className="animate-spin w-10 h-10 border-3 border-primary border-t-transparent rounded-full mb-4"></div>
@@ -1416,8 +1416,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             <p className="text-sm sm:text-base text-muted-foreground mb-8 text-center max-w-sm">
               Добавьте первую группу для управления участниками и контентом
             </p>
-            <Button 
-              onClick={() => setShowAddGroup(true)} 
+            <Button
+              onClick={() => setShowAddGroup(true)}
               size="lg"
               className="gap-2"
             >
@@ -1435,7 +1435,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   <span className="font-semibold">{safeGroups.length}</span> {safeGroups.length === 1 ? 'группа' : 'групп'}
                 </p>
               </div>
-              <Button 
+              <Button
                 onClick={() => setShowAddGroup(true)}
                 size="sm"
                 className="gap-2 sm:gap-2 w-full sm:w-auto flex-shrink-0"
@@ -1449,20 +1449,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             {/* Groups Grid - Ultra Modern Responsive */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
               {safeGroups.map((group) => (
-                <Card 
-                  key={group.id} 
+                <Card
+                  key={group.id}
                   className="group/card relative overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-lg dark:hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 flex flex-col"
                 >
                   {/* Animated Gradient Border Top */}
                   <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover/card:opacity-100 transition-opacity" />
-                  
+
                   {/* Card Content */}
                   <div className="p-2 sm:p-4 flex flex-col flex-1 space-y-2 sm:space-y-3">
                     {/* Header Section - Modern & Convenient */}
                     <div className="flex items-start gap-2.5 sm:gap-3">
                       {/* Avatar with Status Ring */}
                       <div className="relative flex-shrink-0">
-                        <GroupAvatar 
+                        <GroupAvatar
                           avatarUrl={group.avatarUrl}
                           groupName={group.name}
                           size={40}
@@ -1475,25 +1475,25 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Title & Badges & Menu */}
                       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                         <div className="flex items-start justify-between gap-1.5 min-w-0">
                           <div className="flex-1 min-w-0">
-                            <h3 
-                              className="font-bold text-sm sm:text-base text-foreground leading-tight truncate" 
+                            <h3
+                              className="font-bold text-sm sm:text-base text-foreground leading-tight truncate"
                               data-testid={`text-group-name-${group.id}`}
                               title={group.name}
                             >
                               {group.name}
                             </h3>
                           </div>
-                          
+
                           {/* Actions Menu */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 -mt-1 -mr-1.5 rounded-md flex-shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity"
                                 data-testid={`button-menu-${group.id}`}
@@ -1502,7 +1502,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-lg">
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => getGroupInfoMutation.mutate(group.groupId)}
                                 disabled={getGroupInfoMutation.isPending}
                                 className="gap-2 py-2"
@@ -1511,7 +1511,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 <BarChart3 className="w-4 h-4 text-blue-500 flex-shrink-0" />
                                 <span className="text-sm">Информация</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => getMembersCountMutation.mutate(group.groupId)}
                                 disabled={getMembersCountMutation.isPending}
                                 className="gap-2 py-2"
@@ -1520,7 +1520,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 <Users className="w-4 h-4 text-green-500 flex-shrink-0" />
                                 <span className="text-sm">Участники</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => getAdminStatusMutation.mutate(group.groupId)}
                                 disabled={getAdminStatusMutation.isPending}
                                 className="gap-2 py-2"
@@ -1530,7 +1530,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 <span className="text-sm">Права</span>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => deleteGroupMutation.mutate(group.id)}
                                 disabled={deleteGroupMutation.isPending}
                                 className="gap-2 py-2 text-red-600 dark:text-red-400"
@@ -1542,10 +1542,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        
+
                         {/* Status Badges - Modern Inline Layout */}
                         <div className="flex gap-1 flex-wrap items-center">
-                          <Badge 
+                          <Badge
                             variant={group.isAdmin ? "default" : "secondary"}
                             className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 gap-1 whitespace-nowrap h-5"
                             data-testid={`badge-admin-${group.id}`}
@@ -1622,7 +1622,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               <span className="hidden sm:inline">Создана</span>
                             </p>
                             <p className="text-sm sm:text-base font-bold text-foreground">
-                              {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}) : '—'}
+                              {group.createdAt ? new Date(group.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '—'}
                             </p>
                           </div>
                         </div>
@@ -1634,7 +1634,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
                     {/* Action Buttons - Modern & Convenient */}
                     <div className="flex gap-2 pt-2 -mx-2 sm:-mx-4 px-2 sm:px-4 -mb-2 sm:-mb-4 pb-2 sm:pb-4 bg-gradient-to-t from-card/80 via-card/40 to-transparent">
-                      <Button 
+                      <Button
                         className="flex-1 h-9 sm:h-11 text-xs sm:text-sm font-semibold gap-1.5 sm:gap-2 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
                         onClick={() => {
                           setSelectedGroup(group);
@@ -1664,17 +1664,17 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             fetch(`/api/projects/${projectId}/bot/group-admins/${group.groupId}`)
                               .then(res => res.json())
                               .then(data => {
-                                const baseRights = {can_manage_chat: false,can_change_info: false,can_delete_messages: false,can_invite_users: false,can_restrict_members: false,can_pin_messages: false,can_promote_members: false,can_manage_video_chats: false,can_be_anonymous: false,can_manage_stories: false};
-                                const finalRights = {...baseRights,...((group.adminRights as any) || {}),...(data.botAdminRights || {})};
+                                const baseRights = { can_manage_chat: false, can_change_info: false, can_delete_messages: false, can_invite_users: false, can_restrict_members: false, can_pin_messages: false, can_promote_members: false, can_manage_video_chats: false, can_be_anonymous: false, can_manage_stories: false };
+                                const finalRights = { ...baseRights, ...((group.adminRights as any) || {}), ...(data.botAdminRights || {}) };
                                 setAdminRights(finalRights);
                               })
                               .catch(() => {
-                                const baseRights = {can_manage_chat: false,can_change_info: false,can_delete_messages: false,can_invite_users: false,can_restrict_members: false,can_pin_messages: false,can_promote_members: false,can_manage_video_chats: false,can_be_anonymous: false,can_manage_stories: false};
-                                const finalRights = {...baseRights,...((group.adminRights as any) || {})};
+                                const baseRights = { can_manage_chat: false, can_change_info: false, can_delete_messages: false, can_invite_users: false, can_restrict_members: false, can_pin_messages: false, can_promote_members: false, can_manage_video_chats: false, can_be_anonymous: false, can_manage_stories: false };
+                                const finalRights = { ...baseRights, ...((group.adminRights as any) || {}) };
                                 setAdminRights(finalRights);
                               });
                           } else {
-                            setAdminRights({can_manage_chat: false,can_change_info: false,can_delete_messages: false,can_invite_users: false,can_restrict_members: false,can_pin_messages: false,can_promote_members: false,can_manage_video_chats: false,can_be_anonymous: false,can_manage_stories: false});
+                            setAdminRights({ can_manage_chat: false, can_change_info: false, can_delete_messages: false, can_invite_users: false, can_restrict_members: false, can_pin_messages: false, can_promote_members: false, can_manage_video_chats: false, can_be_anonymous: false, can_manage_stories: false });
                           }
                           setShowGroupSettings(true);
                         }}
@@ -1683,7 +1683,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         <Settings className="w-4 h-4 sm:w-4.5 sm:h-4.5 flex-shrink-0" />
                         <span>Управление</span>
                       </Button>
-                      <Button 
+                      <Button
                         variant="secondary"
                         className="flex-1 h-9 sm:h-11 text-xs sm:text-sm font-semibold gap-1.5 sm:gap-2 shadow-sm hover:shadow-md transition-all"
                         onClick={() => {
@@ -1718,7 +1718,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 Добавьте группу для управления ботом
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-5">
               {/* Input Field */}
               <div className="space-y-3">
@@ -1731,7 +1731,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="relative group">
                   <Input
                     id="group-id"
@@ -1747,7 +1747,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Info Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
                   <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/40">
@@ -1774,17 +1774,17 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 </div>
               </div>
             </div>
-            
+
             {/* Action Buttons */}
             <div className="flex gap-2.5 pt-4 border-t border-border/40">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowAddGroup(false)}
                 className="flex-1 h-10"
               >
                 Отмена
               </Button>
-              <Button 
+              <Button
                 onClick={handleAddGroup}
                 disabled={!groupId.trim() || isParsingGroup}
                 className="flex-1 h-10 gap-2"
@@ -1812,7 +1812,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             <div className="relative overflow-hidden bg-gradient-to-br from-green-500/8 via-emerald-500/5 to-transparent dark:from-green-500/15 dark:via-emerald-500/8 dark:to-transparent px-4 sm:px-6 py-4 sm:py-5 flex-shrink-0 border-b border-border/50">
               <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-green-400/15 to-emerald-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
               <div className="absolute -bottom-10 left-0 w-32 h-32 bg-gradient-to-br from-emerald-400/10 to-teal-400/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-              
+
               <div className="relative flex items-center justify-between gap-4 min-h-12">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 shadow-md">
@@ -1820,7 +1820,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 min-w-0">
-                      <GroupAvatar 
+                      <GroupAvatar
                         avatarUrl={selectedGroup?.avatarUrl}
                         groupName={selectedGroup?.name || 'Группа'}
                         size={24}
@@ -1834,35 +1834,35 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 </div>
               </div>
             </div>
-            
+
             {selectedGroup && (
               <Tabs defaultValue="general" className="w-full flex flex-col flex-1 min-h-0">
                 {/* Modern Minimalist Tabs */}
                 <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-border/40">
                   <TabsList className="flex h-auto p-0 gap-1 sm:gap-2 bg-transparent w-full overflow-x-auto">
-                    <TabsTrigger 
-                      value="general" 
+                    <TabsTrigger
+                      value="general"
                       className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex-shrink-0 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-semibold text-muted-foreground hover:text-foreground transition-all duration-200 border border-transparent data-[state=active]:border-primary/20"
                     >
                       <Globe className="h-4 w-4 flex-shrink-0" />
                       <span>Общие</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="admin" 
+                    <TabsTrigger
+                      value="admin"
                       className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex-shrink-0 data-[state=active]:bg-purple/10 data-[state=active]:text-purple data-[state=active]:font-semibold text-muted-foreground hover:text-foreground transition-all duration-200 border border-transparent data-[state=active]:border-purple/20"
                     >
                       <Shield className="h-4 w-4 flex-shrink-0" />
                       <span>Права</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="members" 
+                    <TabsTrigger
+                      value="members"
                       className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex-shrink-0 data-[state=active]:bg-blue/10 data-[state=active]:text-blue data-[state=active]:font-semibold text-muted-foreground hover:text-foreground transition-all duration-200 border border-transparent data-[state=active]:border-blue/20"
                     >
                       <Users className="h-4 w-4 flex-shrink-0" />
                       <span>Участники</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="analytics" 
+                    <TabsTrigger
+                      value="analytics"
                       className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex-shrink-0 data-[state=active]:bg-green/10 data-[state=active]:text-green data-[state=active]:font-semibold text-muted-foreground hover:text-foreground transition-all duration-200 border border-transparent data-[state=active]:border-green/20"
                     >
                       <BarChart3 className="h-4 w-4 flex-shrink-0" />
@@ -1884,7 +1884,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           <p className="text-xs text-muted-foreground mt-0.5">Данные о группе</p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-muted/20 rounded-xl p-4 sm:p-5 border border-border/30">
                         <div className="space-y-2.5">
                           <Label htmlFor="edit-group-name" className="text-xs sm:text-sm font-semibold text-foreground">Название</Label>
@@ -1896,7 +1896,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             className="h-10 text-sm"
                           />
                         </div>
-                        
+
                         <div className="space-y-2.5">
                           <Label htmlFor="edit-group-url" className="text-xs sm:text-sm font-semibold text-foreground">Ссылка на группу</Label>
                           <Input
@@ -1908,7 +1908,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           />
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2.5 bg-blue-50/40 dark:bg-blue-950/20 rounded-lg p-3.5 sm:p-4 border border-blue-200/40 dark:border-blue-800/30">
                         <Label htmlFor="edit-group-chat-id" className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
                           Chat ID
@@ -1933,7 +1933,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           Отправьте сообщение в группу, переслайте в @userinfobot
                         </p>
                       </div>
-                      
+
                       <div className="space-y-2.5">
                         <Label htmlFor="edit-group-desc" className="text-xs sm:text-sm font-semibold text-foreground">Описание</Label>
                         <Textarea
@@ -1958,7 +1958,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           <p className="text-xs text-muted-foreground mt-0.5">Тип и внешний вид</p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-muted/20 rounded-xl p-4 sm:p-5 border border-border/30">
                         <div className="space-y-2.5">
                           <Label htmlFor="chat-type" className="text-xs sm:text-sm font-semibold text-foreground">Тип чата</Label>
@@ -1998,12 +1998,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   try {
                                     const formData = new FormData();
                                     formData.append('file', file);
-                                    
+
                                     const response = await fetch(`/api/media/upload/${projectId}`, {
                                       method: 'POST',
                                       body: formData
                                     });
-                                    
+
                                     if (response.ok) {
                                       const result = await response.json();
                                       const serverUrl = result.url || `/uploads/${result.filename}`;
@@ -2026,8 +2026,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 }
                               }}
                             />
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="icon"
                               className="h-10 w-10 flex-shrink-0"
                               onClick={() => {
@@ -2040,9 +2040,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           {groupAvatarUrl && (
                             <div className="mt-2 flex items-center gap-3">
                               <div className="w-14 h-14 rounded-xl overflow-hidden border-2 border-border/50 shadow-sm">
-                                <img 
-                                  src={groupAvatarUrl} 
-                                  alt="Предпросмотр аватарки" 
+                                <img
+                                  src={groupAvatarUrl}
+                                  alt="Предпросмотр аватарки"
                                   className="w-full h-full object-cover"
                                   onError={() => {
                                     toast({
@@ -2071,7 +2071,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           <p className="text-xs text-muted-foreground mt-0.5">Видимость группы</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-green-500/5 to-emerald-500/5 border border-green-200/40 dark:border-green-800/30">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isPublicGroup ? 'bg-green-500/15' : 'bg-muted/50'}`}>
@@ -2088,7 +2088,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             </p>
                           </div>
                         </div>
-                        <Switch 
+                        <Switch
                           id="public-group"
                           checked={isPublicGroup}
                           onCheckedChange={(checked) => {
@@ -2099,7 +2099,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           }}
                         />
                       </div>
-                      
+
                       {isPublicGroup && (
                         <div className="space-y-2.5 p-3.5 sm:p-4 rounded-lg bg-green-50/40 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/30">
                           <Label htmlFor="public-username" className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
@@ -2128,7 +2128,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         </div>
                         <h4 className="font-medium text-sm sm:text-base">Заметки</h4>
                       </div>
-                      
+
                       <div className="space-y-2.5 bg-amber-50/40 dark:bg-amber-950/20 rounded-lg p-3.5 sm:p-4 border border-amber-200/40 dark:border-amber-800/30">
                         <Label htmlFor="group-notes" className="text-xs sm:text-sm font-semibold text-foreground">Заметки</Label>
                         <Textarea
@@ -2158,7 +2158,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           <p className="text-xs text-muted-foreground mt-0.5">Права администратора</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-purple-500/5 to-blue-500/5 border border-purple-200/40 dark:border-purple-800/30">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 ${makeAdmin ? 'bg-gradient-to-br from-purple-500 to-blue-500' : 'bg-muted/50'}`}>
@@ -2175,14 +2175,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             </p>
                           </div>
                         </div>
-                        <Switch 
+                        <Switch
                           checked={makeAdmin}
                           onCheckedChange={setMakeAdmin}
                           className="scale-110"
                         />
                       </div>
                     </div>
-                    
+
                     {makeAdmin && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -2199,7 +2199,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             {Object.values(adminRights).filter(Boolean).length}/{Object.keys(adminRights).length}
                           </Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                           {Object.entries(adminRights).map(([key, value]) => {
                             const rightInfo = {
@@ -2215,20 +2215,18 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               can_manage_stories: { label: 'Управление историями', icon: Sparkles, color: 'pink' }
                             }[key] || { label: key, icon: Settings, color: 'gray' };
                             const IconComponent = rightInfo.icon;
-                            
+
                             return (
-                              <div 
-                                key={key} 
-                                className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200 ${
-                                  value 
-                                    ? 'bg-primary/5 border-primary/30' 
-                                    : 'bg-muted/30 border-border/40 hover:border-border/60'
-                                }`}
+                              <div
+                                key={key}
+                                className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200 ${value
+                                  ? 'bg-primary/5 border-primary/30'
+                                  : 'bg-muted/30 border-border/40 hover:border-border/60'
+                                  }`}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
-                                    value ? 'bg-primary/10' : 'bg-muted/50'
-                                  }`}>
+                                  <div className={`w-8 h-8 rounded-md flex items-center justify-center ${value ? 'bg-primary/10' : 'bg-muted/50'
+                                    }`}>
                                     <IconComponent className={`h-4 w-4 ${value ? 'text-primary' : 'text-muted-foreground'}`} />
                                   </div>
                                   <span className={`text-sm font-medium ${value ? 'text-foreground' : 'text-muted-foreground'}`}>
@@ -2237,7 +2235,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 </div>
                                 <Switch
                                   checked={value}
-                                  onCheckedChange={(checked) => 
+                                  onCheckedChange={(checked) =>
                                     setAdminRights(prev => ({ ...prev, [key]: checked }))
                                   }
                                 />
@@ -2245,18 +2243,18 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             );
                           })}
                         </div>
-                        
+
                         <div className="flex gap-2 pt-1">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             className="text-xs h-9"
                             onClick={() => setAdminRights(Object.fromEntries(Object.keys(adminRights).map(k => [k, true])) as typeof adminRights)}
                           >
                             Все вкл
                           </Button>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             className="text-xs h-9"
                             onClick={() => setAdminRights(Object.fromEntries(Object.keys(adminRights).map(k => [k, false])) as typeof adminRights)}
@@ -2270,7 +2268,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
                   <TabsContent value="members" className="space-y-4 mt-0">
                     <div className="space-y-4">
-                      
+
                       {/* Список членов */}
                       <div className="space-y-4">
                         <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -2280,7 +2278,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             </div>
                             <h5 className="font-semibold text-sm">Члены группы</h5>
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             {isLoadingMembers && (
                               <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/30">
@@ -2293,7 +2291,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 const totalSavedMembers = savedMembers.length;
                                 const totalApiMembers = clientApiMembers.length || administrators.length;
                                 const totalMembers = totalSavedMembers + totalApiMembers;
-                                
+
                                 if (totalMembers > 0) {
                                   return totalMembers;
                                 } else if (selectedGroup.memberCount) {
@@ -2308,7 +2306,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
                         {/* Action Buttons - Responsive Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <Button 
+                          <Button
                             variant="outline"
                             className="gap-2 h-10 text-sm"
                             onClick={() => {
@@ -2318,7 +2316,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             <Search className="h-4 w-4 flex-shrink-0" />
                             <span>Найти</span>
                           </Button>
-                          <Button 
+                          <Button
                             variant="outline"
                             className="gap-2 h-10 text-sm"
                             onClick={() => {
@@ -2331,7 +2329,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             <span className="sm:hidden">Назначить</span>
                           </Button>
                           {(clientApiMembers.length === 0 && savedMembers.length === 0 || savedMembers.length > 0 && clientApiMembers.length === 0) && (
-                            <Button 
+                            <Button
                               variant="default"
                               className="gap-2 h-10 text-sm"
                               onClick={() => setShowTelegramAuth(true)}
@@ -2341,54 +2339,52 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             </Button>
                           )}
                         </div>
-                        
+
                         {(() => {
                           // Создаем объединенный список: сначала сохраненные участники, затем API участники
                           const allMembers = [];
-                          
+
                           // Добавляем сохраненных участников из базы данных
                           if (savedMembers.length > 0) {
                             allMembers.push(...savedMembers.map(member => ({ ...member, sourceType: 'database' })));
                           }
-                          
+
                           // Добавляем участников из Client API (если нет дубликатов)
                           if (clientApiMembers.length > 0) {
                             const uniqueApiMembers = clientApiMembers.filter(apiMember => {
                               const apiUserId = apiMember.id?.toString() || apiMember.user?.id?.toString() || apiMember.userId?.toString();
-                              return !savedMembers.some(savedMember => 
+                              return !savedMembers.some(savedMember =>
                                 savedMember.user?.id?.toString() === apiUserId
                               );
                             });
                             allMembers.push(...uniqueApiMembers.map(member => ({ ...member, sourceType: 'api' })));
                           }
-                          
+
                           // Добавляем найденных через поиск администраторов (если нет Client API данных и нет дубликатов)
                           if (clientApiMembers.length === 0 && administrators.length > 0) {
                             const uniqueAdmins = administrators.filter(admin => {
                               const adminUserId = admin.id?.toString() || admin.user?.id?.toString() || admin.userId?.toString();
-                              return !savedMembers.some(savedMember => 
+                              return !savedMembers.some(savedMember =>
                                 savedMember.user?.id?.toString() === adminUserId
                               );
                             });
                             allMembers.push(...uniqueAdmins.map(admin => ({ ...admin, sourceType: 'admin_api' })));
                           }
-                          
+
                           // Показываем объединенный список если есть участники
                           if (allMembers.length > 0) {
                             return (
                               <div className="space-y-2 max-h-80 overflow-y-auto">
                                 {allMembers.map((member, index) => (
-                                  <div key={`${member.sourceType}-${index}`} className={`flex items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border transition-all hover:shadow-md ${
-                                    member.sourceType === 'database' ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/40' :
+                                  <div key={`${member.sourceType}-${index}`} className={`flex items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border transition-all hover:shadow-md ${member.sourceType === 'database' ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/40' :
                                     member.foundViaSearch ? 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40' : 'border-border/50 bg-muted/30'
-                                  }`}>
+                                    }`}>
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                        member.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900/40' :
+                                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${member.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900/40' :
                                         member.status === 'administrator' ? 'bg-blue-100 dark:bg-blue-900/40' :
-                                        member.isBot ? 'bg-slate-100 dark:bg-slate-900/40' :
-                                        'bg-green-100 dark:bg-green-900/40'
-                                      }`}>
+                                          member.isBot ? 'bg-slate-100 dark:bg-slate-900/40' :
+                                            'bg-green-100 dark:bg-green-900/40'
+                                        }`}>
                                         {member.status === 'creator' ? (
                                           <Crown className={`h-4.5 w-4.5 text-yellow-600 dark:text-yellow-400`} />
                                         ) : member.status === 'administrator' ? (
@@ -2414,16 +2410,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                       <Badge variant={
-                                        member.status === 'creator' ? 'default' : 
-                                        member.status === 'administrator' ? 'secondary' : 
-                                        'outline'
+                                        member.status === 'creator' ? 'default' :
+                                          member.status === 'administrator' ? 'secondary' :
+                                            'outline'
                                       } className="text-[10px] font-semibold whitespace-nowrap">
-                                        {member.status === 'creator' ? 'Создатель' : 
-                                         member.status === 'administrator' ? 'Админ' : 
-                                         member.isBot ? 'Бот' :
-                                         'Участник'}
+                                        {member.status === 'creator' ? 'Создатель' :
+                                          member.status === 'administrator' ? 'Админ' :
+                                            member.isBot ? 'Бот' :
+                                              'Участник'}
                                       </Badge>
-                                      
+
                                       {/* Кнопки управления участником - показываем для всех кроме создателя */}
                                       {member.status !== 'creator' && (
                                         <DropdownMenu>
@@ -2435,15 +2431,15 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                           <DropdownMenuContent align="end">
                                             {/* Показываем разрешения и назначение администратором для всех участников */}
                                             <>
-                                              <DropdownMenuItem 
+                                              <DropdownMenuItem
                                                 onClick={() => {
                                                   setSelectedMember(member);
                                                   const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
                                                   if (userId && selectedGroup?.groupId) {
                                                     // Загружаем текущие разрешения участника
-                                                    loadMemberPermissionsMutation.mutate({ 
-                                                      groupId: selectedGroup.groupId, 
-                                                      userId 
+                                                    loadMemberPermissionsMutation.mutate({
+                                                      groupId: selectedGroup.groupId,
+                                                      userId
                                                     });
                                                   } else {
                                                     // Если не удалось получить ID, используем разрешения по умолчанию
@@ -2454,7 +2450,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                       can_send_polls: true,
                                                       can_send_other_messages: true,
                                                       can_add_web_page_previews: true,
-                                                      
+
                                                       // Административные разрешения
                                                       can_change_info: false,
                                                       can_delete_messages: false,
@@ -2472,7 +2468,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                 <Settings className="h-4 w-4 mr-2" />
                                                 Разрешения
                                               </DropdownMenuItem>
-                                              <DropdownMenuItem 
+                                              <DropdownMenuItem
                                                 onClick={() => {
                                                   const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
                                                   if (!userId) {
@@ -2484,8 +2480,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                     return;
                                                   }
                                                   // Назначаем с базовыми правами администратора
-                                                  promoteMemberMutation.mutate({ 
-                                                    groupId: selectedGroup.groupId, 
+                                                  promoteMemberMutation.mutate({
+                                                    groupId: selectedGroup.groupId,
                                                     userId,
                                                     adminRights: {
                                                       can_change_info: false,
@@ -2506,9 +2502,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                               </DropdownMenuItem>
                                               <DropdownMenuSeparator />
                                             </>
-                                            
+
                                             {/* Основные действия - для всех кроме создателя */}
-                                            <DropdownMenuItem 
+                                            <DropdownMenuItem
                                               onClick={() => {
                                                 const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
                                                 if (!userId) {
@@ -2519,16 +2515,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                   });
                                                   return;
                                                 }
-                                                muteMemberMutation.mutate({ 
-                                                  groupId: selectedGroup.groupId, 
-                                                  userId 
+                                                muteMemberMutation.mutate({
+                                                  groupId: selectedGroup.groupId,
+                                                  userId
                                                 });
                                               }}
                                             >
                                               <VolumeX className="h-4 w-4 mr-2" />
                                               {member.isBot ? 'Отключить бота' : 'Замутить'}
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem 
+                                            <DropdownMenuItem
                                               onClick={() => {
                                                 const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
                                                 if (!userId) {
@@ -2539,26 +2535,26 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                   });
                                                   return;
                                                 }
-                                                kickMemberMutation.mutate({ 
-                                                  groupId: selectedGroup.groupId, 
-                                                  userId 
+                                                kickMemberMutation.mutate({
+                                                  groupId: selectedGroup.groupId,
+                                                  userId
                                                 });
                                               }}
                                             >
                                               <UserMinus className="h-4 w-4 mr-2" />
                                               {member.isBot ? 'Удалить бота' : 'Исключить'}
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem 
-                                              onClick={() => banMemberMutation.mutate({ 
-                                                groupId: selectedGroup.groupId, 
-                                                userId: member.id?.toString() || member.user?.id?.toString() 
+                                            <DropdownMenuItem
+                                              onClick={() => banMemberMutation.mutate({
+                                                groupId: selectedGroup.groupId,
+                                                userId: member.id?.toString() || member.user?.id?.toString()
                                               })}
                                               className="text-destructive"
                                             >
                                               <Ban className="h-4 w-4 mr-2" />
                                               {member.isBot ? 'Заблокировать бота' : 'Заблокировать'}
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem 
+                                            <DropdownMenuItem
                                               onClick={() => {
                                                 const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
                                                 if (!userId) {
@@ -2569,9 +2565,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                   });
                                                   return;
                                                 }
-                                                unbanMemberMutation.mutate({ 
-                                                  groupId: selectedGroup.groupId, 
-                                                  userId 
+                                                unbanMemberMutation.mutate({
+                                                  groupId: selectedGroup.groupId,
+                                                  userId
                                                 });
                                               }}
                                             >
@@ -2587,7 +2583,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               </div>
                             );
                           }
-                          
+
                           // Если нет Client API данных, показываем администраторов от Bot API
                           if (administrators.length > 0) {
                             return (
@@ -2595,11 +2591,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 {administrators.map((admin, index) => (
                                   <div key={`bot-${index}`} className={`flex items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border transition-all hover:shadow-md ${admin.foundViaSearch ? 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40' : 'border-border/50 bg-muted/30'}`}>
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                        admin.foundViaSearch ? 'bg-purple-100 dark:bg-purple-900/40' :
+                                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${admin.foundViaSearch ? 'bg-purple-100 dark:bg-purple-900/40' :
                                         admin.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900/40' :
-                                        'bg-blue-100 dark:bg-blue-900/40'
-                                      }`}>
+                                          'bg-blue-100 dark:bg-blue-900/40'
+                                        }`}>
                                         {admin.foundViaSearch ? (
                                           <Search className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
                                         ) : admin.status === 'creator' ? (
@@ -2622,15 +2617,15 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                       <Badge variant={
-                                        admin.status === 'creator' ? 'default' : 
-                                        admin.foundViaSearch ? 'outline' : 
-                                        'secondary'
+                                        admin.status === 'creator' ? 'default' :
+                                          admin.foundViaSearch ? 'outline' :
+                                            'secondary'
                                       } className="text-[10px] font-semibold whitespace-nowrap">
-                                        {admin.status === 'creator' ? 'Создатель' : 
-                                         admin.foundViaSearch ? admin.friendlyStatus || 'Участник' : 
-                                         'Админ'}
+                                        {admin.status === 'creator' ? 'Создатель' :
+                                          admin.foundViaSearch ? admin.friendlyStatus || 'Участник' :
+                                            'Админ'}
                                       </Badge>
-                                      
+
                                       {/* Кнопки управления участником - показываем для всех кроме создателя */}
                                       {admin.status !== 'creator' && (
                                         <DropdownMenu>
@@ -2642,16 +2637,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                           <DropdownMenuContent align="end">
                                             {/* Показываем разрешения для всех участников */}
                                             <>
-                                              <DropdownMenuItem 
+                                              <DropdownMenuItem
                                                 onClick={() => {
                                                   setSelectedMember(admin);
                                                   const userId = admin?.user?.id?.toString() || admin?.id?.toString();
                                                   if (userId && selectedGroup?.groupId) {
                                                     // Загружаем актуальные разрешения через API
                                                     console.log('🔍 Загружаем права через API для:', { userId, groupId: selectedGroup.groupId });
-                                                    loadMemberPermissionsMutation.mutate({ 
-                                                      groupId: selectedGroup.groupId, 
-                                                      userId 
+                                                    loadMemberPermissionsMutation.mutate({
+                                                      groupId: selectedGroup.groupId,
+                                                      userId
                                                     });
                                                   } else {
                                                     // Fallback - используем данные по умолчанию
@@ -2677,10 +2672,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                 <Settings className="h-4 w-4 mr-2" />
                                                 Разрешения
                                               </DropdownMenuItem>
-                                              
+
                                               {/* Кнопка назначения администратором для найденных через поиск участников */}
                                               {admin.foundViaSearch && admin.status !== 'administrator' && (
-                                                <DropdownMenuItem 
+                                                <DropdownMenuItem
                                                   onClick={() => {
                                                     const userId = admin?.user?.id?.toString() || admin?.id?.toString();
                                                     if (!userId) {
@@ -2692,8 +2687,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                       return;
                                                     }
                                                     // Назначаем с базовыми правами администратора
-                                                    promoteMemberMutation.mutate({ 
-                                                      groupId: selectedGroup.groupId, 
+                                                    promoteMemberMutation.mutate({
+                                                      groupId: selectedGroup.groupId,
                                                       userId,
                                                       adminRights: {
                                                         can_change_info: false,
@@ -2715,9 +2710,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                               )}
                                               <DropdownMenuSeparator />
                                             </>
-                                            
+
                                             {/* Основные действия - для всех кроме создателя */}
-                                            <DropdownMenuItem 
+                                            <DropdownMenuItem
                                               onClick={() => {
                                                 const userId = admin?.user?.id?.toString() || admin?.id?.toString();
                                                 if (!userId) {
@@ -2728,9 +2723,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                   });
                                                   return;
                                                 }
-                                                demoteMemberMutation.mutate({ 
-                                                  groupId: selectedGroup.groupId, 
-                                                  userId 
+                                                demoteMemberMutation.mutate({
+                                                  groupId: selectedGroup.groupId,
+                                                  userId
                                                 });
                                               }}
                                               className="text-orange-600"
@@ -2739,35 +2734,35 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                               Снять права администратора
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem 
-                                              onClick={() => muteMemberMutation.mutate({ 
-                                                groupId: selectedGroup.groupId, 
-                                                userId: admin?.user?.id?.toString() || admin?.id?.toString() 
+                                            <DropdownMenuItem
+                                              onClick={() => muteMemberMutation.mutate({
+                                                groupId: selectedGroup.groupId,
+                                                userId: admin?.user?.id?.toString() || admin?.id?.toString()
                                               })}
                                             >
                                               <VolumeX className="h-4 w-4 mr-2" />
                                               {admin.user?.is_bot || admin.is_bot ? 'Отключить бота' : 'Замутить'}
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem 
-                                              onClick={() => kickMemberMutation.mutate({ 
-                                                groupId: selectedGroup.groupId, 
-                                                userId: admin?.user?.id?.toString() || admin?.id?.toString() 
+                                            <DropdownMenuItem
+                                              onClick={() => kickMemberMutation.mutate({
+                                                groupId: selectedGroup.groupId,
+                                                userId: admin?.user?.id?.toString() || admin?.id?.toString()
                                               })}
                                             >
                                               <UserMinus className="h-4 w-4 mr-2" />
                                               {admin.user?.is_bot || admin.is_bot ? 'Удалить бота' : 'Исключить'}
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem 
-                                              onClick={() => banMemberMutation.mutate({ 
-                                                groupId: selectedGroup.groupId, 
-                                                userId: admin?.user?.id?.toString() || admin?.id?.toString() 
+                                            <DropdownMenuItem
+                                              onClick={() => banMemberMutation.mutate({
+                                                groupId: selectedGroup.groupId,
+                                                userId: admin?.user?.id?.toString() || admin?.id?.toString()
                                               })}
                                               className="text-destructive"
                                             >
                                               <Ban className="h-4 w-4 mr-2" />
                                               {admin.user?.is_bot || admin.is_bot ? 'Заблокировать бота' : 'Заблокировать'}
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem 
+                                            <DropdownMenuItem
                                               onClick={() => {
                                                 const userId = admin?.user?.id?.toString() || admin?.id?.toString();
                                                 if (!userId) {
@@ -2778,9 +2773,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                   });
                                                   return;
                                                 }
-                                                unbanMemberMutation.mutate({ 
-                                                  groupId: selectedGroup.groupId, 
-                                                  userId 
+                                                unbanMemberMutation.mutate({
+                                                  groupId: selectedGroup.groupId,
+                                                  userId
                                                 });
                                               }}
                                             >
@@ -2796,7 +2791,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               </div>
                             );
                           }
-                          
+
                           // Если ничего нет, показываем улучшенную подсказку
                           return (
                             <div className="space-y-4 py-6">
@@ -2817,7 +2812,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   </div>
                                 </div>
                               </div>
-                              
+
                               <div className="space-y-3">
                                 <div className="flex gap-2.5">
                                   <Input
@@ -2858,7 +2853,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                     <span className="hidden sm:inline">Найти</span>
                                   </Button>
                                 </div>
-                                
+
                                 <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40">
                                   <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
                                     <span className="font-semibold">Поиск участника:</span> Введите @username или Telegram ID для проверки членства в группе. Получить ID можно через @userinfobot
@@ -2883,7 +2878,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           </div>
                           <h5 className="font-semibold text-sm">Управление сообщениями</h5>
                         </div>
-                        
+
                         {/* Закрепление сообщения */}
                         <div className="space-y-2.5 p-3 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
                           <Label htmlFor="pin-message" className="text-xs font-semibold flex items-center gap-1.5">
@@ -2898,10 +2893,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               placeholder="ID сообщения"
                               className="flex-1 h-10"
                             />
-                            <Button 
-                              onClick={() => pinMessageMutation.mutate({ 
-                                groupId: selectedGroup.groupId, 
-                                messageId: messageIdToPin 
+                            <Button
+                              onClick={() => pinMessageMutation.mutate({
+                                groupId: selectedGroup.groupId,
+                                messageId: messageIdToPin
                               })}
                               disabled={!messageIdToPin.trim() || pinMessageMutation.isPending}
                               size="sm"
@@ -2931,10 +2926,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               placeholder="ID или оставьте пустым"
                               className="flex-1 h-10"
                             />
-                            <Button 
-                              onClick={() => unpinMessageMutation.mutate({ 
-                                groupId: selectedGroup.groupId, 
-                                messageId: messageIdToUnpin || undefined 
+                            <Button
+                              onClick={() => unpinMessageMutation.mutate({
+                                groupId: selectedGroup.groupId,
+                                messageId: messageIdToUnpin || undefined
                               })}
                               disabled={unpinMessageMutation.isPending}
                               size="sm"
@@ -2965,10 +2960,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               placeholder="ID сообщения"
                               className="flex-1 h-10"
                             />
-                            <Button 
-                              onClick={() => deleteMessageMutation.mutate({ 
-                                groupId: selectedGroup.groupId, 
-                                messageId: messageIdToDelete 
+                            <Button
+                              onClick={() => deleteMessageMutation.mutate({
+                                groupId: selectedGroup.groupId,
+                                messageId: messageIdToDelete
                               })}
                               disabled={!messageIdToDelete.trim() || deleteMessageMutation.isPending}
                               size="sm"
@@ -2996,7 +2991,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           </div>
                           <h5 className="font-semibold text-sm">Ссылки-приглашения</h5>
                         </div>
-                        
+
                         <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-25 dark:from-green-950/30 dark:to-green-900/20 border border-green-200 dark:border-green-800/40">
                           <Label className="text-xs font-semibold text-green-700 dark:text-green-300">Создать новую ссылку-приглашение</Label>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -3014,9 +3009,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               className="h-10"
                             />
                           </div>
-                          
-                          <Button 
-                            onClick={() => createInviteLinkMutation.mutate({ 
+
+                          <Button
+                            onClick={() => createInviteLinkMutation.mutate({
                               groupId: selectedGroup.groupId,
                               name: inviteLinkName || undefined,
                               memberLimit: inviteLinkLimit ? parseInt(inviteLinkLimit) : undefined,
@@ -3065,7 +3060,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-50 to-green-25 dark:from-green-950/30 dark:to-green-900/20 border border-green-200 dark:border-green-800/40 p-4 sm:p-5 hover:shadow-md transition-shadow">
                         <div className="flex items-start gap-3">
                           <div className="w-11 h-11 rounded-lg bg-green-500/15 dark:bg-green-500/25 flex items-center justify-center flex-shrink-0">
@@ -3087,7 +3082,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide mb-1">Последняя активность</p>
                           <p className="text-sm text-purple-600 dark:text-purple-300">
-                            {selectedGroup.lastActivity 
+                            {selectedGroup.lastActivity
                               ? new Date(selectedGroup.lastActivity).toLocaleString('ru-RU')
                               : 'Нет данных'
                             }
@@ -3107,9 +3102,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         {groupTags.map((tag, index) => (
                           <Badge key={index} variant="secondary" className="flex items-center gap-2 py-1.5 px-2.5 text-xs font-medium">
                             <span>{tag}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className="h-4 w-4 p-0 ml-0.5 hover:bg-destructive/20"
                               onClick={() => setGroupTags(prev => prev.filter((_, i) => i !== index))}
                             >
@@ -3135,19 +3130,19 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 </div>
               </Tabs>
             )}
-            
+
             <div className="flex gap-2.5 pt-6 border-t border-border/40">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowGroupSettings(false);
                   setSelectedGroup(null);
-                }} 
+                }}
                 className="flex-1 h-12"
               >
                 Отмена
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   if (selectedGroup) {
                     // Валидация для публичных групп
@@ -3160,7 +3155,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         });
                         return;
                       }
-                      
+
                       // Проверяем формат username
                       const cleanUsername = publicUsername.trim();
                       if (!cleanUsername.startsWith('@') && !cleanUsername.includes('t.me/')) {
@@ -3172,7 +3167,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         return;
                       }
                     }
-                    
+
                     // Определяем итоговую ссылку на основе типа группы
                     let finalUrl = groupUrl || selectedGroup.url;
                     if (isPublicGroup && publicUsername.trim()) {
@@ -3186,7 +3181,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       // Для приватных групп используем приватную ссылку-приглашение
                       finalUrl = selectedGroup.inviteLink;
                     }
-                    
+
                     // Функция для сохранения настроек в базе данных
                     const saveToDatabase = (showSuccess = true) => {
                       // Используем текущий тип чата из группы (не изменяем его)
@@ -3196,7 +3191,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       const nameChanged = (groupName || selectedGroup.name) !== selectedGroup.name;
                       const descriptionChanged = groupDescription !== selectedGroup.description;
                       const avatarChanged = groupAvatarUrl !== selectedGroup.avatarUrl;
-                      
+
                       if ((nameChanged || descriptionChanged || avatarChanged) && (groupName?.trim() || groupDescription.trim() || groupAvatarUrl?.trim())) {
                         // Функция для сохранения в базу данных после успешных обновлений в Telegram
                         const saveToDBAfterTelegram = () => {
@@ -3273,10 +3268,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         const updateAdminRightsIfNeeded = () => {
                           // Проверяем, изменились ли права администратора
                           const currentRights = selectedGroup.adminRights || {};
-                          const rightsChanged = Object.keys(adminRights).some(key => 
+                          const rightsChanged = Object.keys(adminRights).some(key =>
                             adminRights[key as keyof typeof adminRights] !== currentRights[key as keyof typeof currentRights]
                           );
-                          
+
                           if (rightsChanged && selectedGroup.isAdmin === 1) {
                             updateBotAdminRightsMutation.mutate({
                               groupId: selectedGroup.groupId,
@@ -3319,7 +3314,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     // Если изменяется публичность группы, сначала изменяем в Telegram
                     const wasPublic = Boolean(selectedGroup.isPublic);
                     const willBePublic = isPublicGroup;
-                    
+
                     if (wasPublic !== willBePublic) {
                       // Изменяем username в Telegram перед сохранением в базе
                       let usernameToSet = '';
@@ -3327,7 +3322,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         const cleanUsername = publicUsername.trim().replace('@', '').replace('t.me/', '').replace('https://', '').replace('http://', '');
                         usernameToSet = cleanUsername;
                       }
-                      
+
                       // Сначала пытаемся изменить в Telegram, потом сохраняем в базе
                       setGroupUsernameMutation.mutate({
                         groupId: selectedGroup.groupId,
@@ -3345,7 +3340,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           // Показываем ошибку и НЕ сохраняем в базе
                           toast({
                             title: "Не удалось изменить публичность группы",
-                            description: error.requiresClientApi 
+                            description: error.requiresClientApi
                               ? "Требуется авторизация через Telegram Client API для изменения публичных настроек группы"
                               : error.error || error.message || "Проверьте права бота в группе",
                             variant: "destructive"
@@ -3386,7 +3381,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 {selectedGroupForMessage?.name}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="space-y-2.5">
                 <Label htmlFor="message-text" className="text-sm font-semibold">Сообщение</Label>
@@ -3400,20 +3395,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 />
               </div>
             </div>
-            
+
             <div className="flex gap-2.5 pt-4 border-t border-border/40">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowSendMessage(false);
                   setMessageToSend('');
                   setSelectedGroupForMessage(null);
-                }} 
+                }}
                 className="flex-1 h-10"
               >
                 Отмена
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   if (selectedGroupForMessage && messageToSend.trim()) {
                     sendMessageMutation.mutate({
@@ -3452,7 +3447,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               try {
                 const response = await fetch(`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup.groupId}`);
                 const data = await response.json();
-                
+
                 if (response.ok && data.success) {
                   setClientApiMembers(data.members || []);
                   toast({
@@ -3500,7 +3495,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 )}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 {/* Основные разрешения */}
@@ -3516,7 +3511,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     <div key={key} className="flex items-center space-x-2">
                       <Switch
                         checked={memberPermissions[key as keyof typeof memberPermissions]}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           setMemberPermissions(prev => ({ ...prev, [key]: checked }))
                         }
                       />
@@ -3541,7 +3536,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     <div key={key} className="flex items-center space-x-2">
                       <Switch
                         checked={memberPermissions[key as keyof typeof memberPermissions]}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           setMemberPermissions(prev => ({ ...prev, [key]: checked }))
                         }
                       />
@@ -3555,19 +3550,19 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 <Button variant="outline" onClick={() => setShowPermissionsDialog(false)} className="flex-1 h-10">
                   Отмена
                 </Button>
-                <Button 
+                <Button
                   onClick={() => {
                     if (selectedMember && selectedGroup) {
-                      const userId = 
-                        selectedMember.id?.toString() || 
-                        selectedMember.user?.id?.toString() || 
+                      const userId =
+                        selectedMember.id?.toString() ||
+                        selectedMember.user?.id?.toString() ||
                         selectedMember.userId?.toString() ||
                         selectedMember.from?.id?.toString() ||
                         selectedMember.from_user?.id?.toString() ||
                         (selectedMember as any).user_id?.toString();
-                      
+
                       const groupId = selectedGroup.groupId;
-                      
+
                       console.log('💾 Saving permissions:', {
                         selectedMember,
                         extractedUserId: userId,
@@ -3575,7 +3570,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         currentPermissions: memberPermissions,
                         availableKeys: Object.keys(selectedMember)
                       });
-                      
+
                       if (!userId || !groupId) {
                         toast({
                           title: 'Ошибка',
@@ -3584,7 +3579,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         });
                         return;
                       }
-                      
+
                       updatePermissionsMutation.mutate({
                         groupId,
                         userId,
@@ -3626,7 +3621,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 Введите username или ID для поиска
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="space-y-2.5">
                 <Label htmlFor="user-search" className="text-sm font-semibold">Username или ID</Label>
@@ -3648,8 +3643,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               </div>
 
               <div className="flex gap-2.5 pt-2 border-t border-border/40">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setShowUserSearch(false);
                     setUserSearchQuery('');
@@ -3658,7 +3653,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 >
                   Отмена
                 </Button>
-                <Button 
+                <Button
                   onClick={() => {
                     if (userSearchQuery.trim()) {
                       simpleSearchUserMutation.mutate(userSearchQuery.trim());
@@ -3698,7 +3693,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 Введите username или ID для назначения
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="space-y-2.5">
                 <Label htmlFor="admin-search" className="text-sm font-semibold">Username или ID</Label>
@@ -3720,8 +3715,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               </div>
 
               <div className="flex gap-2.5 pt-2 border-t border-border/40">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setShowAdminSearch(false);
                     setUserSearchQuery('');
@@ -3730,7 +3725,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 >
                   Отмена
                 </Button>
-                <Button 
+                <Button
                   onClick={() => {
                     if (userSearchQuery.trim()) {
                       searchUserMutation.mutate(userSearchQuery.trim());

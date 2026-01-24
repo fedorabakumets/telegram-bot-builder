@@ -678,7 +678,7 @@ export function EnhancedMediaUploader({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleRemoveFile(file.id)}
+                    onClick={() => removeFile(file.id)}
                     className="text-red-500 hover:text-red-700"
                   >
                     <X className="w-4 h-4" />

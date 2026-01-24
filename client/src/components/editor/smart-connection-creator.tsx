@@ -7,21 +7,17 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Plus, 
-  Zap, 
-  Target, 
-  Link, 
-  ArrowRight,
+import {
+  Plus,
+  Zap,
+  Target,
   Lightbulb,
   CheckCircle,
   XCircle,
   Settings,
-  Network,
   Brain,
   Wand2,
   Sparkles
@@ -134,7 +130,7 @@ export function SmartConnectionCreator({
   const [smartSuggestions, setSmartSuggestions] = useState<ConnectionSuggestion[]>([]);
   const [isGeneratingSmartSuggestions, setIsGeneratingSmartSuggestions] = useState(false);
 
-  const connectionManager = useMemo(() => 
+  const connectionManager = useMemo(() =>
     new ConnectionManager({
       nodes,
       connections,
@@ -148,7 +144,7 @@ export function SmartConnectionCreator({
     const orphanedNodes = nodes.filter(node => {
       const hasIncoming = connections.some(conn => conn.target === node.id);
       const hasOutgoing = connections.some(conn => conn.source === node.id);
-      
+
       if (node.type === 'start') return !hasOutgoing;
       if (node.type === 'command') return !hasOutgoing;
       return !hasIncoming && !hasOutgoing;
@@ -160,11 +156,11 @@ export function SmartConnectionCreator({
   // Подходящие шаблоны для выбранного узла
   const applicableTemplates = useMemo(() => {
     if (!selectedSourceId) return connectionTemplates;
-    
+
     const sourceNode = nodes.find(n => n.id === selectedSourceId);
     if (!sourceNode) return [];
-    
-    return connectionTemplates.filter(template => 
+
+    return connectionTemplates.filter(template =>
       template.sourceTypes.includes(sourceNode.type)
     );
   }, [selectedSourceId, nodes]);
@@ -172,14 +168,14 @@ export function SmartConnectionCreator({
   // Доступные узлы для подключения
   const availableTargets = useMemo(() => {
     if (!selectedSourceId) return nodes;
-    
+
     const existingTargets = new Set(
       connections
         .filter(conn => conn.source === selectedSourceId)
         .map(conn => conn.target)
     );
-    
-    return nodes.filter(node => 
+
+    return nodes.filter(node =>
       node.id !== selectedSourceId && !existingTargets.has(node.id)
     );
   }, [selectedSourceId, nodes, connections]);
@@ -187,17 +183,36 @@ export function SmartConnectionCreator({
   const getNodeName = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return 'Неизвестный узел';
-    
-    const typeNames = {
+
+    const typeNames: Record<Node['type'], string> = {
       start: 'Старт',
       command: node.data.command || 'Команда',
       message: 'Сообщение',
       keyboard: 'Клавиатура',
       photo: 'Фото',
+      video: 'Видео',
+      audio: 'Аудио',
+      document: 'Документ',
+      sticker: 'Стикер',
+      voice: 'Голос',
+      animation: 'Анимация',
+      location: 'Геолокация',
+      contact: 'Контакт',
+      pin_message: 'Закрепить',
+      unpin_message: 'Открепить',
+      delete_message: 'Удалить',
+      ban_user: 'Заблокировать',
+      unban_user: 'Разблокировать',
+      mute_user: 'Заглушить',
+      unmute_user: 'Включить звук',
+      kick_user: 'Исключить',
+      promote_user: 'Повысить',
+      demote_user: 'Понизить',
+      admin_rights: 'Права админа',
       condition: 'Условие',
       input: 'Ввод'
     };
-    
+
     return typeNames[node.type] || node.type;
   }, [nodes]);
 
@@ -214,7 +229,7 @@ export function SmartConnectionCreator({
 
   const createManualConnection = useCallback(() => {
     if (!selectedSourceId || !selectedTargetId) return;
-    
+
     try {
       const { connection, updatedNodes } = connectionManager.createConnection(
         selectedSourceId,
@@ -225,10 +240,10 @@ export function SmartConnectionCreator({
           buttonAction: buttonAction
         }
       );
-      
+
       onConnectionAdd(connection);
       onNodesChange(updatedNodes);
-      
+
       // Сброс формы
       setSelectedTargetId('');
       setButtonText('');
@@ -249,18 +264,18 @@ export function SmartConnectionCreator({
 
   const applyTemplate = useCallback((template: ConnectionTemplate) => {
     if (!selectedSourceId) return;
-    
+
     const sourceNode = nodes.find(n => n.id === selectedSourceId);
     if (!sourceNode) return;
-    
-    const suitableTargets = availableTargets.filter(node => 
+
+    const suitableTargets = availableTargets.filter(node =>
       template.targetTypes.includes(node.type)
     );
-    
+
     if (suitableTargets.length === 0) return;
-    
+
     const targetNode = suitableTargets[0]; // Выбираем первый подходящий
-    
+
     try {
       const { connection, updatedNodes } = connectionManager.createConnection(
         selectedSourceId,
@@ -268,10 +283,12 @@ export function SmartConnectionCreator({
         {
           autoCreateButton: true,
           buttonText: template.buttonTemplate.text,
-          buttonAction: template.buttonTemplate.action
+          buttonAction: (template.buttonTemplate.action && ['goto', 'command', 'url'].includes(template.buttonTemplate.action))
+            ? template.buttonTemplate.action as 'goto' | 'command' | 'url'
+            : 'goto'
         }
       );
-      
+
       onConnectionAdd(connection);
       onNodesChange(updatedNodes);
       setIsDialogOpen(false);
@@ -288,13 +305,15 @@ export function SmartConnectionCreator({
         {
           autoCreateButton: autoButtonCreation,
           buttonText: suggestion.suggestedButton.text,
-          buttonAction: suggestion.suggestedButton.action
+          buttonAction: (suggestion.suggestedButton.action && ['goto', 'command', 'url'].includes(suggestion.suggestedButton.action))
+            ? suggestion.suggestedButton.action as 'goto' | 'command' | 'url'
+            : 'goto'
         }
       );
-      
+
       onConnectionAdd(connection);
       onNodesChange(updatedNodes);
-      
+
       // Удаляем примененное предложение
       setSmartSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
     } catch (error) {
@@ -360,7 +379,7 @@ export function SmartConnectionCreator({
                     Выберите способ создания связи между узлами
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="smart">
@@ -390,7 +409,7 @@ export function SmartConnectionCreator({
                         {isGeneratingSmartSuggestions ? 'Генерация...' : 'Обновить'}
                       </UIButton>
                     </div>
-                    
+
                     <div className="space-y-2 max-h-80 overflow-y-auto">
                       {smartSuggestions.map((suggestion) => (
                         <div
@@ -408,11 +427,11 @@ export function SmartConnectionCreator({
                               {Math.round(suggestion.confidence * 100)}%
                             </Badge>
                           </div>
-                          
+
                           <p className="text-xs text-muted-foreground">
                             {suggestion.reason}
                           </p>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="text-xs">
@@ -422,7 +441,7 @@ export function SmartConnectionCreator({
                                 {suggestion.suggestedButton.action}
                               </Badge>
                             </div>
-                            
+
                             <UIButton
                               size="sm"
                               onClick={() => applySuggestion(suggestion)}
@@ -453,7 +472,7 @@ export function SmartConnectionCreator({
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="space-y-2 max-h-80 overflow-y-auto">
                       {applicableTemplates.map((template) => (
                         <div
@@ -466,11 +485,11 @@ export function SmartConnectionCreator({
                               Приоритет: {template.priority}
                             </Badge>
                           </div>
-                          
+
                           <p className="text-sm text-muted-foreground">
                             {template.description}
                           </p>
-                          
+
                           <div className="flex items-center gap-2">
                             <Badge variant="secondary" className="text-xs">
                               {template.useCase}
@@ -479,7 +498,7 @@ export function SmartConnectionCreator({
                               {template.buttonTemplate.text}
                             </Badge>
                           </div>
-                          
+
                           <UIButton
                             size="sm"
                             onClick={() => applyTemplate(template)}
@@ -511,7 +530,7 @@ export function SmartConnectionCreator({
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="target-node">Целевой узел</Label>
                         <Select value={selectedTargetId} onValueChange={setSelectedTargetId}>
@@ -527,9 +546,9 @@ export function SmartConnectionCreator({
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <Separator />
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="button-text">Текст кнопки (необязательно)</Label>
                         <Input
@@ -539,7 +558,7 @@ export function SmartConnectionCreator({
                           placeholder="Автоматически сгенерируется"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="button-action">Тип действия кнопки</Label>
                         <Select value={buttonAction} onValueChange={(value: typeof buttonAction) => setButtonAction(value)}>
@@ -553,7 +572,7 @@ export function SmartConnectionCreator({
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <UIButton
                         onClick={createManualConnection}
                         disabled={!selectedSourceId || !selectedTargetId}
@@ -567,7 +586,7 @@ export function SmartConnectionCreator({
                 </Tabs>
               </DialogContent>
             </Dialog>
-            
+
             <UIButton
               onClick={generateSmartSuggestions}
               disabled={isGeneratingSmartSuggestions}

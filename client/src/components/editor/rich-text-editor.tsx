@@ -10,13 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  Strikethrough, 
-  Code, 
-  Link, 
+import {
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Code,
+  Link,
   Type,
   Eye,
   Copy,
@@ -33,7 +33,6 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Font,
   Search,
   Save,
   Download,
@@ -75,7 +74,7 @@ export function RichTextEditor({
   const [searchTerm, setSearchTerm] = useState('');
   const [undoStack, setUndoStack] = useState<string[]>([]);
   const [redoStack, setRedoStack] = useState<string[]>([]);
-  const [savedTemplates, setSavedTemplates] = useState<{name: string, content: string}[]>([]);
+  const [savedTemplates, setSavedTemplates] = useState<{ name: string, content: string }[]>([]);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -96,7 +95,7 @@ export function RichTextEditor({
   // Функция для рендеринга живого предпросмотра с реальными эффектами
   const renderLivePreview = (text: string) => {
     let processedText = text;
-    
+
     if (enableMarkdown) {
       // Обработка Markdown форматирования
       processedText = processedText
@@ -105,7 +104,7 @@ export function RichTextEditor({
         .replace(/__(.*?)__/g, '<u class="live-preview-underline">$1</u>') // Подчеркнутый
         .replace(/~(.*?)~/g, '<s class="live-preview-strikethrough">$1</s>') // Зачеркнутый
         .replace(/`(.*?)`/g, '<code class="live-preview-code">$1</code>') // Код
-        .replace(/```\n(.*?)\n```/gs, '<pre class="live-preview-pre"><code>$1</code></pre>') // Блок кода
+        .replace(/```\n([\s\S]*?)\n```/g, '<pre class="live-preview-pre"><code>$1</code></pre>') // Блок кода
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="live-preview-link" target="_blank" rel="noopener noreferrer">$1</a>') // Ссылка
         .replace(/^> (.*)$/gm, '<blockquote class="live-preview-quote">$1</blockquote>') // Цитата
         .replace(/^# (.*)$/gm, '<h3 class="live-preview-heading">$1</h3>') // Заголовок
@@ -123,7 +122,7 @@ export function RichTextEditor({
         .replace(/<u>(.*?)<\/u>/g, '<u class="live-preview-underline">$1</u>')
         .replace(/<s>(.*?)<\/s>/g, '<s class="live-preview-strikethrough">$1</s>')
         .replace(/<code>(.*?)<\/code>/g, '<code class="live-preview-code">$1</code>')
-        .replace(/<pre><code>(.*?)<\/code><\/pre>/gs, '<pre class="live-preview-pre"><code>$1</code></pre>')
+        .replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, '<pre class="live-preview-pre"><code>$1</code></pre>')
         .replace(/<a href="([^"]+)">(.*?)<\/a>/g, '<a href="$1" class="live-preview-link" target="_blank" rel="noopener noreferrer">$2</a>')
         .replace(/<blockquote>(.*?)<\/blockquote>/g, '<blockquote class="live-preview-quote">$1</blockquote>')
         .replace(/<h3>(.*?)<\/h3>/g, '<h3 class="live-preview-heading">$1</h3>')
@@ -132,105 +131,105 @@ export function RichTextEditor({
         .replace(/<hr>/g, '<hr class="live-preview-separator">')
         .replace(/\n/g, '<br>'); // Переносы строк
     }
-    
+
     return processedText;
   };
 
   const formatOptions = [
-    { 
-      icon: Bold, 
-      name: 'Жирный', 
-      markdown: '**текст**', 
+    {
+      icon: Bold,
+      name: 'Жирный',
+      markdown: '**текст**',
       html: '<b>текст</b>',
       description: 'Выделяет текст жирным шрифтом',
       shortcut: 'Ctrl+B',
       category: 'basic'
     },
-    { 
-      icon: Italic, 
-      name: 'Курсив', 
-      markdown: '_текст_', 
+    {
+      icon: Italic,
+      name: 'Курсив',
+      markdown: '_текст_',
       html: '<i>текст</i>',
       description: 'Выделяет текст курсивом',
       shortcut: 'Ctrl+I',
       category: 'basic'
     },
-    { 
-      icon: Underline, 
-      name: 'Подчеркнутый', 
-      markdown: '__текст__', 
+    {
+      icon: Underline,
+      name: 'Подчеркнутый',
+      markdown: '__текст__',
       html: '<u>текст</u>',
       description: 'Подчеркивает текст',
       shortcut: 'Ctrl+U',
       category: 'basic'
     },
-    { 
-      icon: Strikethrough, 
-      name: 'Зачеркнутый', 
-      markdown: '~текст~', 
+    {
+      icon: Strikethrough,
+      name: 'Зачеркнутый',
+      markdown: '~текст~',
       html: '<s>текст</s>',
       description: 'Зачеркивает текст',
       shortcut: 'Ctrl+Shift+X',
       category: 'basic'
     },
-    { 
-      icon: Code, 
-      name: 'Код', 
-      markdown: '`код`', 
+    {
+      icon: Code,
+      name: 'Код',
+      markdown: '`код`',
       html: '<code>код</code>',
       description: 'Выделяет код моноширинным шрифтом',
       shortcut: 'Ctrl+E',
       category: 'basic'
     },
-    { 
-      icon: Link, 
-      name: 'Ссылка', 
-      markdown: '[текст](url)', 
+    {
+      icon: Link,
+      name: 'Ссылка',
+      markdown: '[текст](url)',
       html: '<a href="url">текст</a>',
       description: 'Создает кликабельную ссылку',
       shortcut: 'Ctrl+K',
       category: 'basic'
     },
-    { 
-      icon: Code2, 
-      name: 'Блок кода', 
-      markdown: '```\nкод\n```', 
+    {
+      icon: Code2,
+      name: 'Блок кода',
+      markdown: '```\nкод\n```',
       html: '<pre><code>код</code></pre>',
       description: 'Создает блок кода',
       shortcut: 'Ctrl+Shift+C',
       category: 'advanced'
     },
-    { 
-      icon: Quote, 
-      name: 'Цитата', 
-      markdown: '> цитата', 
+    {
+      icon: Quote,
+      name: 'Цитата',
+      markdown: '> цитата',
       html: '<blockquote>цитата</blockquote>',
       description: 'Создает блок цитаты',
       shortcut: 'Ctrl+Shift+Q',
       category: 'advanced'
     },
-    { 
-      icon: List, 
-      name: 'Список', 
-      markdown: '• пункт\n• пункт\n• пункт', 
+    {
+      icon: List,
+      name: 'Список',
+      markdown: '• пункт\n• пункт\n• пункт',
       html: '<ul><li>пункт</li><li>пункт</li><li>пункт</li></ul>',
       description: 'Создает маркированный список',
       shortcut: 'Ctrl+Shift+L',
       category: 'advanced'
     },
-    { 
-      icon: ListOrdered, 
-      name: 'Нумерованный список', 
-      markdown: '1. пункт\n2. пункт\n3. пункт', 
+    {
+      icon: ListOrdered,
+      name: 'Нумерованный список',
+      markdown: '1. пункт\n2. пункт\n3. пункт',
       html: '<ol><li>пункт</li><li>пункт</li><li>пункт</li></ol>',
       description: 'Создает нумерованный список',
       shortcut: 'Ctrl+Shift+O',
       category: 'advanced'
     },
-    { 
-      icon: Hash, 
-      name: 'Заголовок', 
-      markdown: '# Заголовок', 
+    {
+      icon: Hash,
+      name: 'Заголовок',
+      markdown: '# Заголовок',
       html: '<h3>Заголовок</h3>',
       description: 'Создает заголовок',
       shortcut: 'Ctrl+H',
@@ -336,18 +335,18 @@ export function RichTextEditor({
       if (e.ctrlKey || e.metaKey) {
         const textarea = textareaRef.current;
         if (!textarea) return;
-        
+
         const format = formatOptions.find(f => {
           const shortcut = f.shortcut?.toLowerCase();
           if (!shortcut) return false;
-          
+
           if (shortcut.includes('shift') && !e.shiftKey) return false;
           if (!shortcut.includes('shift') && e.shiftKey) return false;
-          
+
           const key = shortcut.split('+').pop();
           return e.key.toLowerCase() === key;
         });
-        
+
         if (format) {
           e.preventDefault();
           insertFormatting(format);
@@ -373,17 +372,17 @@ export function RichTextEditor({
     if (!textarea) return;
 
     saveToUndoStack();
-    
+
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = value.substring(start, end);
-    
+
     const hasSelection = start !== end;
-    
+
     let formatPrefix = '';
     let formatSuffix = '';
     let cursorOffset = 0;
-    
+
     // Определяем символы форматирования в зависимости от режима
     if (enableMarkdown) {
       switch (format.name) {
@@ -482,27 +481,27 @@ export function RichTextEditor({
           return;
       }
     }
-    
+
     let newText = '';
     let newCursorPosition = start;
     let isToggleOff = false;
-    
+
     if (hasSelection) {
       // Проверяем, уже ли применено форматирование к выделенному тексту
       const beforeSelection = value.substring(Math.max(0, start - formatPrefix.length), start);
       const afterSelection = value.substring(end, Math.min(value.length, end + formatSuffix.length));
-      
+
       // Для цитат и заголовков проверяем только начало строки
       if (format.name === 'Цитата' || format.name === 'Заголовок') {
         const lineStart = value.lastIndexOf('\n', start - 1) + 1;
         const linePrefix = value.substring(lineStart, start);
-        
+
         if (linePrefix === formatPrefix) {
           // Убираем форматирование
           newText = selectedText;
           newCursorPosition = start - formatPrefix.length;
           isToggleOff = true;
-          
+
           // Обновляем весь текст, убирая префикс
           const newValue = value.substring(0, lineStart) + value.substring(start) + value.substring(end);
           onChange(newValue);
@@ -510,7 +509,7 @@ export function RichTextEditor({
           // Добавляем форматирование
           newText = formatPrefix + selectedText;
           newCursorPosition = start + newText.length;
-          
+
           const newValue = value.substring(0, lineStart) + formatPrefix + value.substring(lineStart);
           onChange(newValue);
         }
@@ -521,14 +520,14 @@ export function RichTextEditor({
           newText = selectedText;
           newCursorPosition = start - formatPrefix.length;
           isToggleOff = true;
-          
+
           const newValue = value.substring(0, start - formatPrefix.length) + selectedText + value.substring(end + formatSuffix.length);
           onChange(newValue);
         } else {
           // Добавляем форматирование
           newText = formatPrefix + selectedText + formatSuffix;
           newCursorPosition = start + newText.length;
-          
+
           const newValue = value.substring(0, start) + newText + value.substring(end);
           onChange(newValue);
         }
@@ -537,11 +536,11 @@ export function RichTextEditor({
       // Если текст не выделен - вставляем символы форматирования как в Telegram
       newText = formatPrefix + formatSuffix;
       newCursorPosition = start + formatPrefix.length + cursorOffset;
-      
+
       const newValue = value.substring(0, start) + newText + value.substring(end);
       onChange(newValue);
     }
-    
+
     // Устанавливаем курсор в правильную позицию
     setTimeout(() => {
       if (hasSelection && !isToggleOff) {
@@ -560,7 +559,7 @@ export function RichTextEditor({
 
     toast({
       title: isToggleOff ? "Форматирование отменено" : "Форматирование применено",
-      description: hasSelection 
+      description: hasSelection
         ? (isToggleOff ? `Убрано форматирование "${format.name}" с выделенного текста` : `Применено к выделенному тексту: ${format.name}`)
         : `Добавлены символы: ${format.name}`,
       variant: "default"
@@ -589,7 +588,7 @@ export function RichTextEditor({
         </div>
       );
     }
-    
+
     // For Markdown mode, convert common markdown to HTML for preview
     let htmlContent = value
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -599,7 +598,7 @@ export function RichTextEditor({
       .replace(/`(.*?)`/g, '<code>$1</code>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
       .replace(/\n/g, '<br>');
-    
+
     return (
       <div className="p-3 bg-muted/50 rounded-lg border min-h-[100px]">
         <div className="text-sm text-muted-foreground mb-2">Предпросмотр:</div>
@@ -609,7 +608,7 @@ export function RichTextEditor({
   };
 
   // Filter formats based on search
-  const filteredFormats = formatOptions.filter(format => 
+  const filteredFormats = formatOptions.filter(format =>
     searchTerm === '' || format.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -674,9 +673,9 @@ export function RichTextEditor({
               <RotateCw className="w-3 h-3" />
             </Button>
           </div>
-          
+
           <Separator orientation="vertical" className="h-6" />
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -688,7 +687,7 @@ export function RichTextEditor({
             <Save className="w-3 h-3 mr-1" />
             Сохранить
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -714,7 +713,7 @@ export function RichTextEditor({
           )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Message Presets */}
         {enablePresets && (
@@ -752,14 +751,14 @@ export function RichTextEditor({
               📝 Выделите → Нажмите кнопку
             </Badge>
           </div>
-          
+
           <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-2 mb-3">
             <div className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
               <span>💡</span>
               <span>Как в Telegram: сначала выделите текст, затем выберите форматирование</span>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-2">
             {basicFormats.map((format) => (
               <Button
@@ -866,9 +865,8 @@ export function RichTextEditor({
                     onChange(e.target.value);
                   }}
                   placeholder="Введите текст сообщения..."
-                  className={`min-h-[120px] resize-none transition-all duration-200 font-mono text-sm ${
-                    isExpanded ? 'min-h-[200px]' : ''
-                  }`}
+                  className={`min-h-[120px] resize-none transition-all duration-200 font-mono text-sm ${isExpanded ? 'min-h-[200px]' : ''
+                    }`}
                   rows={isExpanded ? 10 : 6}
                   onSelect={(e) => {
                     // Показываем интерактивную подсказку при выделении как в Telegram
@@ -893,14 +891,14 @@ export function RichTextEditor({
                     }
                   }}
                 />
-                
+
                 {/* Character count overlay */}
                 {charCount > 0 && (
                   <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
                     {charCount}/4096
                   </div>
                 )}
-                
+
                 {/* Selection helper overlay - показываем только если нет текста */}
                 {!value && (
                   <div className="absolute top-2 right-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-1 rounded opacity-70">
@@ -933,10 +931,9 @@ export function RichTextEditor({
                     )}
                   </div>
                 </div>
-                
-                <div className={`border rounded-md bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 min-h-[120px] ${
-                  isExpanded ? 'min-h-[200px]' : ''
-                } overflow-auto shadow-inner`}>
+
+                <div className={`border rounded-md bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 min-h-[120px] ${isExpanded ? 'min-h-[200px]' : ''
+                  } overflow-auto shadow-inner`}>
                   {value ? (
                     <div className="p-3">
                       {/* Telegram-style message bubble */}
@@ -962,7 +959,7 @@ export function RichTextEditor({
                     </div>
                   )}
                 </div>
-                
+
                 {/* Статистика и индикаторы */}
                 {value && (
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
@@ -985,7 +982,7 @@ export function RichTextEditor({
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-4">
                 <span>
@@ -997,7 +994,7 @@ export function RichTextEditor({
                 <span>⌨️ Выделение + Ctrl+B/I/U</span>
               </div>
             </div>
-            
+
             {/* Usage instructions */}
             <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 rounded-lg p-3 border border-green-200 dark:border-green-800">
               <div className="text-xs space-y-1">
@@ -1027,7 +1024,7 @@ export function RichTextEditor({
               </div>
             </div>
             {renderPreview()}
-            
+
             {charCount > 0 && (
               <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
                 <span>📊 Статистика: {wordCount} слов, {charCount} символов</span>
@@ -1048,7 +1045,7 @@ export function RichTextEditor({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => copyToClipboard(formatOptions.map(f => 
+                onClick={() => copyToClipboard(formatOptions.map(f =>
                   `${f.name}: ${enableMarkdown ? f.markdown : f.html}`
                 ).join('\n'))}
                 className="h-6 px-2"
@@ -1058,7 +1055,7 @@ export function RichTextEditor({
               </Button>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 gap-1 text-xs">
             {(searchTerm ? filteredFormats : formatOptions).slice(0, 6).map((format) => (
               <div key={format.name} className="flex items-center justify-between py-1">
@@ -1072,7 +1069,7 @@ export function RichTextEditor({
               </div>
             ))}
           </div>
-          
+
           {formatOptions.length > 6 && (
             <div className="text-center pt-1">
               <Button

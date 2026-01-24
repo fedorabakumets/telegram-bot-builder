@@ -175,8 +175,7 @@ export function InlineRichEditor({
             const walker = document.createTreeWalker(
               editorRef.current,
               NodeFilter.SHOW_TEXT,
-              null,
-              false
+              null
             );
             
             let currentOffset = 0;

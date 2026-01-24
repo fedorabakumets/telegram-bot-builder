@@ -24,7 +24,10 @@ export function создатьКнопкуДляСоединения(
     text: текстКнопки,
     action: типДействия,
     target: типДействия === 'goto' ? целевойУзел.id : undefined,
-    url: типДействия === 'command' ? целевойУзел.data.command : undefined
+    url: типДействия === 'command' ? целевойУзел.data.command : undefined,
+    buttonType: 'normal',
+    skipDataCollection: false,
+    hideAfterClick: false
   };
 }
 
@@ -122,14 +125,33 @@ function рассчитатьУверенность(исходныйУзел: No
 
 // Получение названия типа узла
 function получитьНазваниеТипа(узел: Node): string {
-  const названияТипов = {
+  const названияТипов: Record<Node['type'], string> = {
     start: 'главному меню',
     message: 'сообщению',
     photo: 'фото',
+    video: 'видео',
+    audio: 'аудио',
+    document: 'документу',
     keyboard: 'клавиатуре',
     input: 'вводу данных',
     condition: 'условию',
-    command: 'команде'
+    command: 'команде',
+    sticker: 'стикеру',
+    voice: 'голосовому сообщению',
+    animation: 'анимации',
+    location: 'геолокации',
+    contact: 'контакту',
+    pin_message: 'закреплению сообщения',
+    unpin_message: 'открепление сообщения',
+    delete_message: 'удалению сообщения',
+    ban_user: 'блокировке пользователя',
+    unban_user: 'разблокировке пользователя',
+    mute_user: 'заглушению пользователя',
+    unmute_user: 'включению звука пользователя',
+    kick_user: 'исключению пользователя',
+    promote_user: 'повышению пользователя',
+    demote_user: 'понижению пользователя',
+    admin_rights: 'правам администратора'
   };
   return названияТипов[узел.type] || 'узлу';
 }

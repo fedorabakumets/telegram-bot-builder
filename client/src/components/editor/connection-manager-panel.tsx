@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Node, Connection, Button } from '@shared/schema';
+import { Node, Connection } from '@shared/schema';
 import { Badge } from '@/components/ui/badge';
 import { Button as UIButton } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,21 +14,14 @@ import {
   ArrowRight, 
   Plus, 
   Trash2, 
-  Edit3, 
   Zap, 
   Target, 
   Link, 
-  AlertTriangle,
   CheckCircle,
   XCircle,
   Network,
   Settings,
-  Lightbulb,
-  Eye,
-  EyeOff,
-  RefreshCw,
-  Filter,
-  Search
+  Lightbulb
 } from 'lucide-react';
 import { ConnectionManager, ConnectionSuggestion } from '@/utils/connection-manager';
 import { cn } from '@/lib/utils';
@@ -128,7 +121,9 @@ export function ConnectionManagerPanel({
         {
           autoCreateButton: autoButtonCreation,
           buttonText: suggestion.suggestedButton.text,
-          buttonAction: suggestion.suggestedButton.action
+          buttonAction: (suggestion.suggestedButton.action && ['goto', 'command', 'url'].includes(suggestion.suggestedButton.action)) 
+            ? suggestion.suggestedButton.action as 'goto' | 'command' | 'url'
+            : 'goto'
         }
       );
 
@@ -172,12 +167,31 @@ export function ConnectionManagerPanel({
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return 'Неизвестный узел';
     
-    const typeNames = {
+    const typeNames: Record<Node['type'], string> = {
       start: 'Старт',
       command: node.data.command || 'Команда',
       message: 'Сообщение',
       keyboard: 'Клавиатура',
       photo: 'Фото',
+      video: 'Видео',
+      audio: 'Аудио',
+      document: 'Документ',
+      sticker: 'Стикер',
+      voice: 'Голос',
+      animation: 'Анимация',
+      location: 'Геолокация',
+      contact: 'Контакт',
+      pin_message: 'Закрепить',
+      unpin_message: 'Открепить',
+      delete_message: 'Удалить',
+      ban_user: 'Заблокировать',
+      unban_user: 'Разблокировать',
+      mute_user: 'Заглушить',
+      unmute_user: 'Включить звук',
+      kick_user: 'Исключить',
+      promote_user: 'Повысить',
+      demote_user: 'Понизить',
+      admin_rights: 'Права админа',
       condition: 'Условие',
       input: 'Ввод'
     };

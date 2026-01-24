@@ -1,17 +1,17 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-const cryptoPolyfill = {
+const cryptoPolyfill: Plugin = {
     name: 'crypto-polyfill',
     enforce: 'pre',
-    resolveId(id) {
+    resolveId(id: string) {
         if (id === 'crypto') {
             return id;
         }
     },
-    load(id) {
+    load(id: string) {
         if (id === 'crypto') {
             return `
         export const randomBytes = (length) => {
@@ -55,14 +55,14 @@ export default defineConfig(async () => {
         ].flat(),
         resolve: {
             alias: {
-                "@": path.resolve(import.meta.dirname, "client", "src"),
-                "@shared": path.resolve(import.meta.dirname, "shared"),
-                "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+                "@": path.resolve(process.cwd(), "client", "src"),
+                "@shared": path.resolve(process.cwd(), "shared"),
+                "@assets": path.resolve(process.cwd(), "attached_assets"),
             },
         },
-        root: path.resolve(import.meta.dirname, "client"),
+        root: path.resolve(process.cwd(), "client"),
         build: {
-            outDir: path.resolve(import.meta.dirname, "dist"),
+            outDir: path.resolve(process.cwd(), "dist"),
             emptyOutDir: true,
             rollupOptions: {
                 external: ['crypto'],
