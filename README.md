@@ -162,7 +162,7 @@
 <details>
 <summary><strong>📋 Подробное описание потока</strong> (нажми для раскрытия)</summary>
 
-1. **� Поlльзователь** создает схему бота в визуальном редакторе
+1. **👤 Пользователь** создает схему бота в визуальном редакторе
 2. **🎨 Frontend** отправляет изменения через WebSocket для реального времени
 3. **📡 API Server** валидирует данные и сохраняет в PostgreSQL
 4. **🤖 Generator** преобразует схему в Python код с aiogram
@@ -512,8 +512,8 @@ docker run -p 5000:5000 telegram-bot-builder
 - **Настройки группы** - изменить название, описание, права доступа для группы
 
 **Что можно настроить в группе:**
-- � **Урправление участниками** - добавлять/удалять людей в группу
-- � **Праваа доступа** - кто может писать сообщения, кто может менять настройки
+- 👥 **Управление участниками** - добавлять/удалять людей в группу
+- 🔐 **Права доступа** - кто может писать сообщения, кто может менять настройки
 - 📋 **Описание группы** - информация о группе для участников
 - ⚙️ **Параметры** - различные настройки для работы группы
 
@@ -896,6 +896,118 @@ if __name__ == "__main__":
 
 <div align="center">
   <details>
+    <summary><strong>🗂️ Полная структура документации</strong> (нажми для раскрытия)</summary>"center">
+  <img src="https://img.shields.io/badge/📚_Документация-Полная_и_структурированная-blue?style=for-the-badge&logo=gitbook" alt="Documentation"/>
+  <img src="https://img.shields.io/badge/🌍_Языки-Русский_+_English-green?style=for-the-badge&logo=translate" alt="Languages"/>
+  <img src="https://img.shields.io/badge/📖_Статус-Актуальная-success?style=for-the-badge&logo=check" alt="Status"/>
+</div>
+
+<br/>
+
+<div align="center">
+  <p><strong>Вся документация проекта организована в папке <code>docs/</code> и разделена по категориям для удобного поиска</strong></p>
+</div>
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="25%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
+          <h3>🛠️ Разработчикам</h3>
+          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+          <div style="text-align: left; font-size: 14px;">
+            <p><strong>📋 <a href="docs/development/SETUP.md" style="color: #FFE4E1;">Настройка проекта</a></strong><br/>
+            <small>Пошаговое руководство по установке</small></p>
+            
+            <p><strong>🔧 <a href="docs/development/TROUBLESHOOTING_RU.md" style="color: #FFE4E1;">Устранение неполадок</a></strong><br/>
+            <small>Решение частых проблем</small></p>
+            
+            <p><strong>🤝 <a href="docs/development/CONTRIBUTING.md" style="color: #FFE4E1;">Для контрибьюторов</a></strong><br/>
+            <small>Как участвовать в разработке</small></p>
+            
+            <p><strong>📄 <a href="docs/development/REQUIREMENTS_SPECIFICATION.md" style="color: #FFE4E1;">Спецификация</a></strong><br/>
+            <small>Техническое описание</small></p>
+          </div>
+        </div>
+      </td>
+      <td align="center" width="25%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
+          <h3>🚀 Деплой</h3>
+          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+          <div style="text-align: left; font-size: 14px;">
+            <p><strong>🚂 <a href="docs/deployment/RAILWAY_DEPLOY.md" style="color: #FFE4E1;">Railway</a></strong><br/>
+            <small>Развертывание на Railway (рекомендуется)</small></p>
+            
+            <p><strong>🐳 Docker</strong><br/>
+            <small>Контейнеризация приложения</small></p>
+            
+            <p><strong>☁️ VPS</strong><br/>
+            <small>Развертывание на собственном сервере</small></p>
+            
+            <p><strong>⚙️ CI/CD</strong><br/>
+            <small>Автоматическое развертывание</small></p>
+          </div>
+        </div>
+      </td>
+      <td align="center" width="25%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
+          <h3>📊 Анализ</h3>
+          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+          <div style="text-align: left; font-size: 14px;">
+            <p><strong>🏗️ <a href="docs/analysis/PROJECT_STRUCTURE_ANALYSIS.md" style="color: #FFE4E1;">Структура проекта</a></strong><br/>
+            <small>Детальный анализ архитектуры</small></p>
+            
+            <p><strong>🔧 <a href="docs/analysis/INFRASTRUCTURE_ANALYSIS.md" style="color: #FFE4E1;">Инфраструктура</a></strong><br/>
+            <small>Технические решения</small></p>
+            
+            <p><strong>📈 Производительность</strong><br/>
+            <small>Оптимизация и мониторинг</small></p>
+            
+            <p><strong>🧪 Тестирование</strong><br/>
+            <small>Стратегии тестирования</small></p>
+          </div>
+        </div>
+      </td>
+      <td align="center" width="25%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
+          <h3>🔒 Безопасность</h3>
+          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+          <div style="text-align: left; font-size: 14px;">
+            <p><strong>🛡️ <a href="docs/SECURITY.md" style="color: #FFE4E1;">Руководство</a></strong><br/>
+            <small>Лучшие практики безопасности</small></p>
+            
+            <p><strong>🔐 Аутентификация</strong><br/>
+            <small>Защита пользовательских данных</small></p>
+            
+            <p><strong>🚨 Мониторинг</strong><br/>
+            <small>Отслеживание угроз</small></p>
+            
+            <p><strong>📋 Аудит</strong><br/>
+            <small>Проверка безопасности</small></p>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div align="center" style="margin: 30px 0;">
+  <h3>📖 Быстрый доступ к документации</h3>
+  <div style="margin: 20px 0;">
+    <a href="docs/README.md">
+      <img src="https://img.shields.io/badge/📚_Полный_индекс-Все_документы-4285f4?style=for-the-badge&logo=gitbook" alt="Full Index"/>
+    </a>
+    <a href="docs/development/SETUP.md">
+      <img src="https://img.shields.io/badge/🚀_Быстрый_старт-Установка-ea4335?style=for-the-badge&logo=rocket" alt="Quick Start"/>
+    </a>
+    <a href="docs/development/TROUBLESHOOTING_RU.md">
+      <img src="https://img.shields.io/badge/🔧_Помощь-Решение_проблем-34a853?style=for-the-badge&logo=tools" alt="Help"/>
+    </a>
+  </div>
+</div>
+
+<div align="center">
+  <details>
     <summary><strong>🗂️ Полная структура документации</strong> (нажми для раскрытия)</summary>
     
   <div style="text-align: left; margin: 20px 0;">
@@ -937,47 +1049,128 @@ if __name__ == "__main__":
 
 ## 🛠️ Скрипты и утилиты
 
-Проект включает набор скриптов для автоматизации задач разработки:
+<div align="center">
+  <img src="https://img.shields.io/badge/🛠️_Автоматизация-Готовые_скрипты-blue?style=for-the-badge&logo=automation" alt="Automation"/>
+  <img src="https://img.shields.io/badge/⚡_Быстрый_запуск-Один_клик-green?style=for-the-badge&logo=rocket" alt="Quick Start"/>
+  <img src="https://img.shields.io/badge/🔧_Утилиты-Разработка-orange?style=for-the-badge&logo=tools" alt="Development"/>
+</div>
 
-### Быстрый запуск
-```bash
-# Windows
-scripts/start-dev.bat      # Запуск в режиме разработки
-scripts/start-prod.bat     # Запуск в продакшене
+<br/>
 
-# Настройка проекта
-scripts/setup/setup.bat    # Основная настройка
-scripts/setup/create-env.bat # Создание .env файла
-```
+<div align="center">
+  <p><strong>Проект включает набор скриптов для автоматизации задач разработки</strong></p>
+</div>
 
-### Утилиты разработки
-- **Обновление проекта** - `scripts/utils/update-project.js`
-- **Валидация данных** - `scripts/utils/validate.py`
-- **Синхронизация с GitHub** - `scripts/utils/sync-to-github.sh`
-
-**📖 Полная документация скриптов:** [scripts/README.md](scripts/README.md)
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; color: white;">
+          <h3>🚀 Быстрый запуск</h3>
+          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+          <div style="text-align: left; font-size: 14px;">
+            <p><strong>Windows:</strong></p>
+            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/start-dev.bat</code>
+            <small>Запуск в режиме разработки</small>
+            
+            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/start-prod.bat</code>
+            <small>Запуск в продакшене</small>
+            
+            <p><strong>Настройка:</strong></p>
+            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/setup/setup.bat</code>
+            <small>Основная настройка</small>
+            
+            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/setup/create-env.bat</code>
+            <small>Создание .env файла</small>
+          </div>
+        </div>
+      </td>
+      <td align="center" width="50%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 15px; color: white;">
+          <h3>🔧 Утилиты разработки</h3>
+          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+          <div style="text-align: left; font-size: 14px;">
+            <p><strong>📦 Обновление проекта</strong><br/>
+            <code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/update-project.js</code></p>
+            
+            <p><strong>✅ Валидация данных</strong><br/>
+            <code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/validate.py</code></p>
+            
+            <p><strong>🔄 Синхронизация с GitHub</strong><br/>
+            <code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/sync-to-github.sh</code></p>
+            
+            <p><strong>📖 Полная документация:</strong><br/>
+            <a href="scripts/README.md" style="color: #FFE4E1;">scripts/README.md</a></p>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 
 ## 🐛 Что-то не работает?
 
-### База данных не подключается
-```bash
-# Убедитесь что PostgreSQL запущен
-# Проверьте строку подключения в .env файле
-```
+<div align="center">
+  <img src="https://img.shields.io/badge/🆘_Помощь-Быстрое_решение-red?style=for-the-badge&logo=help" alt="Help"/>
+  <img src="https://img.shields.io/badge/🔧_Поддержка-24/7-blue?style=for-the-badge&logo=support" alt="Support"/>
+  <img src="https://img.shields.io/badge/📚_Гайды-Пошаговые-green?style=for-the-badge&logo=guide" alt="Guides"/>
+</div>
 
-Подробное руководство по устранению неполадок с подключением к базе данных смотрите в файле [docs/development/TROUBLESHOOTING_RU.md](docs/development/TROUBLESHOOTING_RU.md).
+<br/>
 
-### Порт 5000 занят
-```bash
-# Измените порт в коде или завершите процесс на этом порту
-```
-
-### Ошибка при установке
-1. Удалите папку `node_modules`
-2. Выполните `npm install` заново
-3. Попробуйте снова
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); padding: 20px; border-radius: 15px; color: white;">
+          <h3>🗄️ База данных</h3>
+          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+          <div style="text-align: left; font-size: 14px;">
+            <p><strong>Не подключается?</strong></p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+              <li>Убедитесь что PostgreSQL запущен</li>
+              <li>Проверьте строку подключения в .env</li>
+              <li>Проверьте права доступа</li>
+            </ul>
+            <p><a href="docs/development/TROUBLESHOOTING_RU.md" style="color: #FFE4E1;">📖 Подробный гайд</a></p>
+          </div>
+        </div>
+      </td>
+      <td align="center" width="33%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%); padding: 20px; border-radius: 15px; color: white;">
+          <h3>🌐 Порт занят</h3>
+          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+          <div style="text-align: left; font-size: 14px;">
+            <p><strong>Порт 5000 занят?</strong></p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+              <li>Измените порт в коде</li>
+              <li>Завершите процесс на порту</li>
+              <li>Используйте другой порт</li>
+            </ul>
+            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">netstat -ano | findstr :5000</code>
+          </div>
+        </div>
+      </td>
+      <td align="center" width="33%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #5f27cd 0%, #00d2d3 100%); padding: 20px; border-radius: 15px; color: white;">
+          <h3>📦 Установка</h3>
+          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+          <div style="text-align: left; font-size: 14px;">
+            <p><strong>Ошибка при установке?</strong></p>
+            <ol style="margin: 10px 0; padding-left: 20px;">
+              <li>Удалите папку <code>node_modules</code></li>
+              <li>Выполните <code>npm install</code> заново</li>
+              <li>Попробуйте снова</li>
+            </ol>
+            <p><small>Если не помогло - создайте Issue</small></p>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 
