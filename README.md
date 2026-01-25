@@ -752,24 +752,6 @@ if __name__ == "__main__":
 
 
 
-## 📊 Статистика проекта
-
-<div align="center">
-
-### � Метарики проекта
-| � Метрeика | 📊 Значение |
-|------------|-------------|
-| 🌟 GitHub Stars | ![GitHub stars](https://img.shields.io/github/stars/fedorabakumets/telegram-bot-builder?style=flat-square&color=yellow) |
-| 🍴 Forks | ![GitHub forks](https://img.shields.io/github/forks/fedorabakumets/telegram-bot-builder?style=flat-square&color=blue) |
-| 🐛 Issues | ![GitHub issues](https://img.shields.io/github/issues/fedorabakumets/telegram-bot-builder?style=flat-square&color=red) |
-| 📦 Размер репозитория | ![GitHub repo size](https://img.shields.io/github/repo-size/fedorabakumets/telegram-bot-builder?style=flat-square&color=green) |
-| 📝 Язык программирования | ![Top language](https://img.shields.io/github/languages/top/fedorabakumets/telegram-bot-builder?style=flat-square&color=purple) |
-| � Послeедний коммит | ![Last commit](https://img.shields.io/github/last-commit/fedorabakumets/telegram-bot-builder?style=flat-square&color=orange) |
-
-</div>
-
----
-
 ## 🛠️ Технические детали
 
 <details>
