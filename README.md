@@ -59,11 +59,8 @@
     <a href="https://github.com/fedorabakumets/telegram-bot-builder/discussions">
       <img src="https://img.shields.io/badge/GitHub-Discussions-blue?style=for-the-badge&logo=github" alt="GitHub Discussions"/>
     </a>
-    <a href="https://t.me/telegram_bot_builder_chat">
+    <a href="https://t.me/bot_builder_chat">
       <img src="https://img.shields.io/badge/Telegram-Chat-blue?style=for-the-badge&logo=telegram" alt="Telegram Chat"/>
-    </a>
-    <a href="https://discord.gg/your-invite">
-      <img src="https://img.shields.io/badge/Discord-Server-7289da?style=for-the-badge&logo=discord" alt="Discord Server"/>
     </a>
   </div>
 </div>
