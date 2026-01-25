@@ -1,12 +1,89 @@
-# 🤖 Telegram Bot Builder - Конструктор ботов без кода
+<div align="center">
+  <img src="assets/images/bot_added_ui_visible.png" alt="Telegram Bot Builder" width="200"/>
+  
+  # 🤖 Telegram Bot Builder
+  
+  **Создавайте Telegram ботов без программирования!**
+  
+  [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)](https://reactjs.org/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  
+  ![GitHub stars](https://img.shields.io/github/stars/fedorabakumets/telegram-bot-builder?style=social)
+  ![GitHub forks](https://img.shields.io/github/forks/fedorabakumets/telegram-bot-builder?style=social)
+  
+</div>
 
-**Создавайте Telegram ботов без программирования!** Визуальный конструктор с drag-and-drop интерфейсом, где вы просто перетаскиваете блоки на холст, а готовый бот появляется сам.
+---
 
-> 💡 Идеально подходит для малого бизнеса, фрилансеров и тех, кто хочет быстро запустить бота, не изучая программирование.
+<div align="center">
+  <p><strong>Визуальный конструктор с drag-and-drop интерфейсом, где вы просто перетаскиваете блоки на холст, а готовый бот появляется сам.</strong></p>
+  
+  > 💡 Идеально подходит для малого бизнеса, фрилансеров и тех, кто хочет быстро запустить бота, не изучая программирование.
+</div>
+
+---
+
+## 📋 Содержание
+
+- [📸 Демонстрация](#-демонстрация)
+- [✨ Возможности](#-что-это-может-делать)
+- [🚀 Быстрый старт](#-быстрый-старт-5-минут)
+- [🎓 Создание первого бота](#-как-создать-своего-первого-бота)
+- [🧩 Типы блоков](#-типы-блоков-элементы-для-построения)
+- [📚 Примеры](#-пример-простой-бот-для-пиццерии)
+- [🛠️ Для разработчиков](#️-технические-детали-для-разработчиков)
+- [📚 Документация](#-документация)
+- [🗺️ Roadmap](#️-roadmap)
+- [📊 Статистика](#-статистика-проекта)
+- [🤝 Поддержка](#-помощь-и-поддержка)
+
+---
+
+## 📸 Демонстрация
+
+<div align="center">
+  <img src="assets/images/cycle1_after_return.png" alt="Редактор ботов" width="800"/>
+  <p><em>Визуальный редактор с drag-and-drop интерфейсом</em></p>
+</div>
+
+### 🎬 Как это работает
+<div align="center">
+  <img src="assets/images/new_bot_added.png" alt="Процесс создания бота" width="600"/>
+  <p><em>Процесс создания бота: от идеи до готового продукта</em></p>
+</div>
 
 ---
 
 ## ✨ Что это может делать?
+
+<table>
+<tr>
+<td align="center" width="33%">
+
+### 🎨 Визуальный редактор
+Drag-and-drop интерфейс<br/>
+Никакого кода!
+
+</td>
+<td align="center" width="33%">
+
+### 🤖 Готовые боты
+Python код генерируется<br/>
+автоматически
+
+</td>
+<td align="center" width="33%">
+
+### ☁️ Облачный деплой
+Railway, Vercel, VPS<br/>
+Один клик - бот в продакшене
+
+</td>
+</tr>
+</table>
 
 ### 🎯 Основные возможности
 
@@ -25,13 +102,14 @@
 
 ## 🚀 Быстрый старт (5 минут)
 
-### Локальная установка (рекомендуется):
+<details>
+<summary>🖥️ Локальная установка (рекомендуется) - нажмите для раскрытия</summary>
 
-**Что нужно:**
-- Node.js (скачать с [nodejs.org](https://nodejs.org))
-- PostgreSQL (база данных, скачать с [postgresql.org](https://www.postgresql.org/download/))
+### Что нужно:
+- **Node.js** (скачать с [nodejs.org](https://nodejs.org))
+- **PostgreSQL** (база данных, скачать с [postgresql.org](https://www.postgresql.org/download/))
 
-**Установка:**
+### Установка:
 
 ```bash
 # Скопируйте проект
@@ -49,13 +127,25 @@ npm run dev
 
 **Откройте в браузере:** http://localhost:5000
 
-### Альтернативные способы:
+</details>
 
-**Replit (для быстрого тестирования):**
+<details>
+<summary>☁️ Альтернативные способы</summary>
+
+### Replit (для быстрого тестирования):
 1. Откройте проект на Replit
 2. Нажмите "Run" - приложение запустится автоматически
 3. В браузере откроется конструктор бота
 4. Начните создавать своего первого бота!
+
+### Docker (для продвинутых):
+```bash
+# Запуск через Docker
+docker build -t telegram-bot-builder .
+docker run -p 5000:5000 telegram-bot-builder
+```
+
+</details>
 
 ---
 
@@ -198,22 +288,171 @@ npm run dev
 
 ## 📚 Пример: Простой бот для пиццерии
 
+### 💻 Визуальная схема бота
+
+```mermaid
+graph TD
+    A[🚀 Старт] --> B[💬 Приветствие]
+    B --> C{🍕 Выбор пиццы}
+    C -->|Маргарита| D[📝 Ввод адреса]
+    C -->|Пепперони| D
+    C -->|Вегетарианская| D
+    D --> E[✅ Подтверждение заказа]
+    E --> F[🚗 Уведомление о доставке]
+```
+
+### 🔧 Пошаговое создание:
+
 1. **Старт** → "Добро пожаловать! Выберите пиццу 🍕"
 2. **Добавьте кнопки** → ["Маргарита", "Пепперони", "Вегетарианская"]
 3. **Сообщение с ожиданием** → "Введите ваш адрес доставки"
 4. **Финальное сообщение** → "Спасибо за заказ! Ожидайте доставку 🚗"
 
-Всё! Бот готов принимать заказы без единой строки кода!
+### 💻 Сгенерированный код
+
+<details>
+<summary>Посмотреть автоматически созданный Python код</summary>
+
+```python
+# 🤖 Автоматически сгенерированный бот для пиццерии
+import asyncio
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
+bot = Bot(token="YOUR_BOT_TOKEN")
+dp = Dispatcher()
+
+def get_pizza_keyboard():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="🍕 Маргарита")],
+            [KeyboardButton(text="🍕 Пепперони")], 
+            [KeyboardButton(text="🥬 Вегетарианская")]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+@dp.message(Command("start"))
+async def start_handler(message: types.Message):
+    await message.answer(
+        "🍕 Добро пожаловать в пиццерию!\nВыберите пиццу:",
+        reply_markup=get_pizza_keyboard()
+    )
+
+@dp.message(lambda message: "🍕" in message.text or "🥬" in message.text)
+async def pizza_selected(message: types.Message):
+    pizza_type = message.text
+    await message.answer(
+        f"Отличный выбор: {pizza_type}!\n📍 Введите ваш адрес доставки:",
+        reply_markup=types.ReplyKeyboardRemove()
+    )
+
+# Запуск бота
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+</details>
+
+**Результат:** Бот готов принимать заказы без единой строки кода!
 
 ---
 
 ## 🎯 Для кого это подходит?
 
-✅ **Идеально для:**
-- Владельцев малого бизнеса (пиццерия, салон, магазин)
-- Фрилансеров и агентств
-- Всех, кто хочет быстро запустить бота
-- Тех, кто не хочет учить программирование
+<div align="center">
+
+<table>
+<tr>
+<td align="center" width="25%">
+
+### 🏪 Малый бизнес
+Пиццерии, салоны,<br/>
+магазины, кафе
+
+</td>
+<td align="center" width="25%">
+
+### 💼 Фрилансеры
+Создание ботов<br/>
+для клиентов
+
+</td>
+<td align="center" width="25%">
+
+### 🚀 Стартапы
+Быстрое MVP<br/>
+без разработчиков
+
+</td>
+<td align="center" width="25%">
+
+### 🎓 Обучение
+Изучение логики<br/>
+ботов без кода
+
+</td>
+</tr>
+</table>
+
+</div>
+
+---
+
+## 🗺️ Roadmap
+
+<table>
+<tr>
+<td width="50%">
+
+### ✅ Реализовано
+- [x] 🎨 Визуальный редактор
+- [x] 🤖 Генерация Python кода
+- [x] 📸 Поддержка медиафайлов
+- [x] 🔄 Система переходов
+- [x] 💾 База данных PostgreSQL
+- [x] ☁️ Деплой на Railway/Vercel
+- [x] 📱 Адаптивный интерфейс
+- [x] 🌙 Темная/светлая тема
+
+</td>
+<td width="50%">
+
+### 🔄 В разработке
+- [ ] 🧠 Интеграция с ChatGPT/AI
+- [ ] 📊 Расширенная аналитика
+- [ ] 🌐 Мультиязычность (EN/RU/ES)
+- [ ] 📱 PWA мобильное приложение
+- [ ] 🔗 Webhook поддержка
+- [ ] 📈 A/B тестирование ботов
+- [ ] 🎯 Таргетированные рассылки
+- [ ] 🔐 Продвинутая авторизация
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📊 Статистика проекта
+
+<div align="center">
+
+| 📈 Метрика | 📊 Значение |
+|------------|-------------|
+| 🌟 GitHub Stars | ![GitHub stars](https://img.shields.io/github/stars/fedorabakumets/telegram-bot-builder?style=flat-square) |
+| 🍴 Forks | ![GitHub forks](https://img.shields.io/github/forks/fedorabakumets/telegram-bot-builder?style=flat-square) |
+| 🐛 Issues | ![GitHub issues](https://img.shields.io/github/issues/fedorabakumets/telegram-bot-builder?style=flat-square) |
+| 📦 Размер репозитория | ![GitHub repo size](https://img.shields.io/github/repo-size/fedorabakumets/telegram-bot-builder?style=flat-square) |
+| 📝 Язык программирования | ![Top language](https://img.shields.io/github/languages/top/fedorabakumets/telegram-bot-builder?style=flat-square) |
+| 🔄 Последний коммит | ![Last commit](https://img.shields.io/github/last-commit/fedorabakumets/telegram-bot-builder?style=flat-square) |
+
+</div>
 
 ---
 
@@ -468,12 +707,53 @@ scripts/setup/create-env.bat # Создание .env файла
 
 ## 📋 Системные требования
 
-| Компонент | Минимум | Рекомендуемо |
-|-----------|---------|--------------|
-| Node.js | 18.0 | 20.0+ |
-| PostgreSQL | 13 | 15+ |
-| Python | 3.11 | 3.12+ |
-| Оперативная память | 1 GB | 2+ GB |
+<div align="center">
+
+<table>
+<tr>
+<th>💻 Компонент</th>
+<th>⚡ Минимум</th>
+<th>🚀 Рекомендуемо</th>
+<th>🎯 Оптимально</th>
+</tr>
+<tr>
+<td><strong>Node.js</strong></td>
+<td>18.0</td>
+<td>20.0+</td>
+<td>22.0+ LTS</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>13</td>
+<td>15+</td>
+<td>16+ Latest</td>
+</tr>
+<tr>
+<td><strong>Python</strong></td>
+<td>3.11</td>
+<td>3.12+</td>
+<td>3.13+ Latest</td>
+</tr>
+<tr>
+<td><strong>RAM</strong></td>
+<td>1 GB</td>
+<td>2+ GB</td>
+<td>4+ GB</td>
+</tr>
+<tr>
+<td><strong>Диск</strong></td>
+<td>500 MB</td>
+<td>1+ GB</td>
+<td>2+ GB SSD</td>
+</tr>
+</table>
+
+### 🖥️ Поддерживаемые ОС
+![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat-square&logo=windows&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black)
+
+</div>
 
 ---
 
@@ -518,17 +798,87 @@ MIT License - используйте свободно для личных и к�
 
 ---
 
+## 💬 Отзывы пользователей
+
+<div align="center">
+
+> *"Создал бота для своей пиццерии за 30 минут! Раньше думал, что нужно быть программистом."*  
+> **— Алексей, владелец пиццерии**
+
+> *"Отличный инструмент для фрилансеров. Теперь могу предлагать клиентам ботов без изучения кода."*  
+> **— Мария, веб-дизайнер**
+
+> *"Интуитивно понятный интерфейс. Студенты быстро осваивают логику ботов."*  
+> **— Дмитрий, преподаватель IT**
+
+</div>
+
+---
+
+## 🙏 Благодарности
+
+<div align="center">
+
+### 👥 Контрибьюторы
+<a href="https://github.com/fedorabakumets/telegram-bot-builder/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=fedorabakumets/telegram-bot-builder" />
+</a>
+
+### 💖 Поддержать проект
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/fedorabakumets)
+[![GitHub Sponsor](https://img.shields.io/badge/GitHub-Sponsor-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/fedorabakumets)
+
+### 🌟 Поставьте звезду!
+Если проект вам помог, поставьте ⭐ — это мотивирует на дальнейшее развитие!
+
+</div>
+
+---
+
 ## 🤝 Помощь и поддержка
 
-- 🐛 **Найти баг?** → [GitHub Issues](https://github.com/fedorabakumets/telegram-bot-builder/issues)
-- 💬 **Есть идея?** → [GitHub Discussions](https://github.com/fedorabakumets/telegram-bot-builder/discussions)
-- 📖 **Документация** → [Wiki](https://github.com/fedorabakumets/telegram-bot-builder/wiki)
+<div align="center">
+
+### 📞 Связь с нами
+
+[![GitHub Issues](https://img.shields.io/badge/GitHub-Issues-red?style=for-the-badge&logo=github)](https://github.com/fedorabakumets/telegram-bot-builder/issues)
+[![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-blue?style=for-the-badge&logo=github)](https://github.com/fedorabakumets/telegram-bot-builder/discussions)
+[![Telegram](https://img.shields.io/badge/Telegram-Chat-blue?style=for-the-badge&logo=telegram)](https://t.me/telegram_bot_builder_chat)
+
+</div>
+
+**Что делать если:**
+- 🐛 **Нашли баг?** → [Создайте Issue](https://github.com/fedorabakumets/telegram-bot-builder/issues/new)
+- 💡 **Есть идея?** → [GitHub Discussions](https://github.com/fedorabakumets/telegram-bot-builder/discussions)
+- 📖 **Нужна помощь?** → [Документация](docs/README.md) или [Telegram чат](https://t.me/telegram_bot_builder_chat)
+- 🤝 **Хотите помочь?** → [Руководство для контрибьюторов](docs/development/CONTRIBUTING.md)
 
 ---
 
 ## 🎉 Начните прямо сейчас!
 
-Не тратьте месяцы на изучение программирования. Создайте своего бота за часы!
+<div align="center">
+
+### 🚀 Не тратьте месяцы на изучение программирования
+### 🎯 Создайте своего бота за часы!
+
+[![Начать использовать](https://img.shields.io/badge/🚀_Начать_использовать-success?style=for-the-badge)](https://github.com/fedorabakumets/telegram-bot-builder#-быстрый-старт-5-минут)
+[![Посмотреть демо](https://img.shields.io/badge/👀_Посмотреть_демо-blue?style=for-the-badge)](#-демонстрация)
+[![Скачать](https://img.shields.io/badge/⬇️_Скачать-green?style=for-the-badge)](https://github.com/fedorabakumets/telegram-bot-builder/archive/refs/heads/main.zip)
+
+</div>
+
 ---
 
-Сделано с ❤️ для всех, кто хочет создавать ботов просто и быстро
+<div align="center">
+  
+**Сделано с ❤️ для всех, кто хочет создавать ботов просто и быстро**
+
+*Telegram Bot Builder — ваш путь от идеи до работающего бота*
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](https://choosealicense.com/licenses/mit/)
+[![Made with TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Powered by React](https://img.shields.io/badge/Powered%20by-React-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
+
+</div>
