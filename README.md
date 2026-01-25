@@ -807,10 +807,7 @@ if __name__ == "__main__":
 
 <div align="center">
 
-### 📈 Живая статистика GitHub
-<img src="https://github-readme-activity-graph.vercel.app/graph?username=fedorabakumets&repo=telegram-bot-builder&theme=react-dark&hide_border=true" alt="Activity Graph" width="100%"/>
-
-### 📊 Метрики проекта
+### � Метарики проекта
 | � Метрeика | 📊 Значение |
 |------------|-------------|
 | 🌟 GitHub Stars | ![GitHub stars](https://img.shields.io/github/stars/fedorabakumets/telegram-bot-builder?style=flat-square&color=yellow) |
@@ -818,10 +815,7 @@ if __name__ == "__main__":
 | 🐛 Issues | ![GitHub issues](https://img.shields.io/github/issues/fedorabakumets/telegram-bot-builder?style=flat-square&color=red) |
 | 📦 Размер репозитория | ![GitHub repo size](https://img.shields.io/github/repo-size/fedorabakumets/telegram-bot-builder?style=flat-square&color=green) |
 | 📝 Язык программирования | ![Top language](https://img.shields.io/github/languages/top/fedorabakumets/telegram-bot-builder?style=flat-square&color=purple) |
-| 🔄 Последний коммит | ![Last commit](https://img.shields.io/github/last-commit/fedorabakumets/telegram-bot-builder?style=flat-square&color=orange) |
-
-### 🔥 GitHub Streak
-<img src="https://github-readme-streak-stats.herokuapp.com/?user=fedorabakumets&theme=tokyonight&hide_border=true" alt="GitHub Streak"/>
+| � Послeедний коммит | ![Last commit](https://img.shields.io/github/last-commit/fedorabakumets/telegram-bot-builder?style=flat-square&color=orange) |
 
 </div>
 
