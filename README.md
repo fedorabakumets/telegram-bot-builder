@@ -896,118 +896,6 @@ if __name__ == "__main__":
 
 <div align="center">
   <details>
-    <summary><strong>🗂️ Полная структура документации</strong> (нажми для раскрытия)</summary>"center">
-  <img src="https://img.shields.io/badge/📚_Документация-Полная_и_структурированная-blue?style=for-the-badge&logo=gitbook" alt="Documentation"/>
-  <img src="https://img.shields.io/badge/🌍_Языки-Русский_+_English-green?style=for-the-badge&logo=translate" alt="Languages"/>
-  <img src="https://img.shields.io/badge/📖_Статус-Актуальная-success?style=for-the-badge&logo=check" alt="Status"/>
-</div>
-
-<br/>
-
-<div align="center">
-  <p><strong>Вся документация проекта организована в папке <code>docs/</code> и разделена по категориям для удобного поиска</strong></p>
-</div>
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="25%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
-          <h3>🛠️ Разработчикам</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>📋 <a href="docs/development/SETUP.md" style="color: #FFE4E1;">Настройка проекта</a></strong><br/>
-            <small>Пошаговое руководство по установке</small></p>
-            
-            <p><strong>🔧 <a href="docs/development/TROUBLESHOOTING_RU.md" style="color: #FFE4E1;">Устранение неполадок</a></strong><br/>
-            <small>Решение частых проблем</small></p>
-            
-            <p><strong>🤝 <a href="docs/development/CONTRIBUTING.md" style="color: #FFE4E1;">Для контрибьюторов</a></strong><br/>
-            <small>Как участвовать в разработке</small></p>
-            
-            <p><strong>📄 <a href="docs/development/REQUIREMENTS_SPECIFICATION.md" style="color: #FFE4E1;">Спецификация</a></strong><br/>
-            <small>Техническое описание</small></p>
-          </div>
-        </div>
-      </td>
-      <td align="center" width="25%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
-          <h3>🚀 Деплой</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>🚂 <a href="docs/deployment/RAILWAY_DEPLOY.md" style="color: #FFE4E1;">Railway</a></strong><br/>
-            <small>Развертывание на Railway (рекомендуется)</small></p>
-            
-            <p><strong>🐳 Docker</strong><br/>
-            <small>Контейнеризация приложения</small></p>
-            
-            <p><strong>☁️ VPS</strong><br/>
-            <small>Развертывание на собственном сервере</small></p>
-            
-            <p><strong>⚙️ CI/CD</strong><br/>
-            <small>Автоматическое развертывание</small></p>
-          </div>
-        </div>
-      </td>
-      <td align="center" width="25%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
-          <h3>📊 Анализ</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>🏗️ <a href="docs/analysis/PROJECT_STRUCTURE_ANALYSIS.md" style="color: #FFE4E1;">Структура проекта</a></strong><br/>
-            <small>Детальный анализ архитектуры</small></p>
-            
-            <p><strong>🔧 <a href="docs/analysis/INFRASTRUCTURE_ANALYSIS.md" style="color: #FFE4E1;">Инфраструктура</a></strong><br/>
-            <small>Технические решения</small></p>
-            
-            <p><strong>📈 Производительность</strong><br/>
-            <small>Оптимизация и мониторинг</small></p>
-            
-            <p><strong>🧪 Тестирование</strong><br/>
-            <small>Стратегии тестирования</small></p>
-          </div>
-        </div>
-      </td>
-      <td align="center" width="25%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
-          <h3>🔒 Безопасность</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>🛡️ <a href="docs/SECURITY.md" style="color: #FFE4E1;">Руководство</a></strong><br/>
-            <small>Лучшие практики безопасности</small></p>
-            
-            <p><strong>🔐 Аутентификация</strong><br/>
-            <small>Защита пользовательских данных</small></p>
-            
-            <p><strong>🚨 Мониторинг</strong><br/>
-            <small>Отслеживание угроз</small></p>
-            
-            <p><strong>📋 Аудит</strong><br/>
-            <small>Проверка безопасности</small></p>
-          </div>
-        </div>
-      </td>
-    </tr>
-  </table>
-</div>
-
-<div align="center" style="margin: 30px 0;">
-  <h3>📖 Быстрый доступ к документации</h3>
-  <div style="margin: 20px 0;">
-    <a href="docs/README.md">
-      <img src="https://img.shields.io/badge/📚_Полный_индекс-Все_документы-4285f4?style=for-the-badge&logo=gitbook" alt="Full Index"/>
-    </a>
-    <a href="docs/development/SETUP.md">
-      <img src="https://img.shields.io/badge/🚀_Быстрый_старт-Установка-ea4335?style=for-the-badge&logo=rocket" alt="Quick Start"/>
-    </a>
-    <a href="docs/development/TROUBLESHOOTING_RU.md">
-      <img src="https://img.shields.io/badge/🔧_Помощь-Решение_проблем-34a853?style=for-the-badge&logo=tools" alt="Help"/>
-    </a>
-  </div>
-</div>
-
-<div align="center">
-  <details>
     <summary><strong>🗂️ Полная структура документации</strong> (нажми для раскрытия)</summary>
     
   <div style="text-align: left; margin: 20px 0;">
@@ -1250,6 +1138,49 @@ if __name__ == "__main__":
 
 ---
 
+## 📄 Лицензия
+
+MIT License - используйте свободно для личных и коммерческих целей.
+
+---
+
+## 🤝 Помощь и поддержка
+
+<div align="center">
+
+### 🆘 Быстрая помощь
+<table>
+<tr>
+<td align="center" width="25%">
+<h4>🐛 Нашли баг?</h4>
+<a href="https://github.com/fedorabakumets/telegram-bot-builder/issues/new">
+<img src="https://img.shields.io/badge/Создать_Issue-red?style=flat-square&logo=github" alt="Create Issue"/>
+</a>
+</td>
+<td align="center" width="25%">
+<h4>💡 Есть идея?</h4>
+<a href="https://github.com/fedorabakumets/telegram-bot-builder/discussions">
+<img src="https://img.shields.io/badge/Обсудить-blue?style=flat-square&logo=github" alt="Discuss"/>
+</a>
+</td>
+<td align="center" width="25%">
+<h4>📖 Нужна помощь?</h4>
+<a href="docs/README.md">
+<img src="https://img.shields.io/badge/Документация-green?style=flat-square&logo=gitbook" alt="Docs"/>
+</a>
+</td>
+<td align="center" width="25%">
+<h4>🤝 Хотите помочь?</h4>
+<a href="docs/development/CONTRIBUTING.md">
+<img src="https://img.shields.io/badge/Контрибьютинг-purple?style=flat-square&logo=git" alt="Contributing"/>
+</a>
+</td>
+</tr>
+</table>
+
+</div>
+
+---
 ## 📄 Лицензия
 
 MIT License - используйте свободно для личных и коммерческих целей.
