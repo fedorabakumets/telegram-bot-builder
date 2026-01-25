@@ -794,7 +794,8 @@ scripts/setup/create-env.bat # Создание .env файла
 
 ---
 
-## 📋 Системные требования
+<details>
+<summary><h2>📋 Системные требования</h2></summary>
 
 <div align="center">
 
@@ -843,6 +844,8 @@ scripts/setup/create-env.bat # Создание .env файла
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black)
 
 </div>
+
+</details>
 
 ---
 
