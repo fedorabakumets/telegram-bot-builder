@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-01-25T17:07:03.869Z",
+  "file": "client/src/lib/bot-generator.ts",
+  "totalFunctions": 38,
+  "totalLines": 11942,
+  "functionLines": 11681,
+  "critical": 1,
+  "veryHigh": 4,
+  "high": 13,
+  "medium": 7,
+  "low": 13,
+  "duplicates": 0
+}
