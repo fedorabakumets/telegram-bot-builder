@@ -960,44 +960,57 @@ if __name__ == "__main__":
 </div>
 
 <div align="center">
-  <table>
-    <tr>
-      <td align="center" width="50%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; color: white;">
-          <h3>🚀 Быстрый запуск</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>Windows:</strong></p>
-            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/start-dev.bat</code>
-            <small>Запуск в режиме разработки</small>
-            
-            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/start-prod.bat</code>
-            <small>Запуск в продакшене</small>
-            
-            <p><strong>Настройка:</strong></p>
-            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/setup/setup.bat</code>
-            <small>Основная настройка</small>
-            
-            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/setup/create-env.bat</code>
-            <small>Создание .env файла</small>
-          </div>
-        </div>
-      </td>
-      <td align="center" width="50%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 15px; color: white;">
-          <h3>🔧 Утилиты разработки</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>📦 Обновление проекта</strong><br/>
-            <code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/update-project.js</code></p>
-            
-            <p><strong>✅ Валидация данных</strong><br/>
-            <code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/validate.py</code></p>
-            
-            <p><strong>🔄 Синхронизация с GitHub</strong><br/>
-            <code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/sync-to-github.sh</code></p>
-            
-            <p><strong>📖 Полная документация:</strong><br/>
+
+<table>
+<tr>
+<td align="center" width="50%" style="padding: 15px;">
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; color: white;">
+<h3>🚀 Быстрый запуск</h3>
+<hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+<div style="text-align: left; font-size: 14px;">
+
+<p><strong>Windows:</strong></p>
+<code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/start-dev.bat</code>
+<small>Запуск в режиме разработки</small>
+
+<code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/start-prod.bat</code>
+<small>Запуск в продакшене</small>
+
+<p><strong>Настройка:</strong></p>
+<code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/setup/setup.bat</code>
+<small>Основная настройка</small>
+
+<code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/setup/create-env.bat</code>
+<small>Создание .env файла</small>
+
+</div>
+</div>
+</td>
+<td align="center" width="50%" style="padding: 15px;">
+<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 15px; color: white;">
+<h3>🔧 Утилиты разработки</h3>
+<hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+<div style="text-align: left; font-size: 14px;">
+
+<p><strong>📦 Обновление проекта</strong><br/>
+<code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/update-project.js</code></p>
+
+<p><strong>✅ Валидация данных</strong><br/>
+<code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/validate.py</code></p>
+
+<p><strong>🔄 Синхронизация с GitHub</strong><br/>
+<code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/sync-to-github.sh</code></p>
+
+<p><strong>📖 Полная документация:</strong><br/>
+<a href="scripts/README.md" style="color: #FFE4E1;">scripts/README.md</a></p>
+
+</div>
+</div>
+</td>
+</tr>
+</table>
+
+</div>
             <a href="scripts/README.md" style="color: #FFE4E1;">scripts/README.md</a></p>
           </div>
         </div>
