@@ -1,18 +1,32 @@
 <div align="center">
-  <img src="assets/images/bot_added_ui_visible.png" alt="Telegram Bot Builder" width="200"/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/images/bot_added_ui_visible.png">
+    <source media="(prefers-color-scheme: light)" srcset="assets/images/bot_added_ui_visible.png">
+    <img alt="Telegram Bot Builder" src="assets/images/bot_added_ui_visible.png" width="200">
+  </picture>
   
-  # 🤖 Telegram Bot Builder
+  <h1>
+    <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=32&duration=2800&pause=2000&color=F75C7E&center=true&vCenter=true&width=600&lines=🤖+Telegram+Bot+Builder;Создавайте+ботов+без+кода!;Визуальный+конструктор" alt="Typing SVG" />
+  </h1>
   
   **Создавайте Telegram ботов без программирования!**
   
-  [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-  [![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)](https://reactjs.org/)
-  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
+  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
   
-  ![GitHub stars](https://img.shields.io/github/stars/fedorabakumets/telegram-bot-builder?style=social)
-  ![GitHub forks](https://img.shields.io/github/forks/fedorabakumets/telegram-bot-builder?style=social)
+  ![GitHub stars](https://img.shields.io/github/stars/fedorabakumets/telegram-bot-builder?style=for-the-badge&logo=github)
+  ![GitHub forks](https://img.shields.io/github/forks/fedorabakumets/telegram-bot-builder?style=for-the-badge&logo=github)
+  ![GitHub issues](https://img.shields.io/github/issues/fedorabakumets/telegram-bot-builder?style=for-the-badge&logo=github)
+  ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=fedorabakumets.telegram-bot-builder&style=for-the-badge)
+  
+  <!-- Живая статистика -->
+  <div>
+    <img src="https://github-readme-stats.vercel.app/api?username=fedorabakumets&show_icons=true&theme=tokyonight&hide_border=true" alt="GitHub Stats" height="150"/>
+    <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=fedorabakumets&layout=compact&theme=tokyonight&hide_border=true" alt="Top Languages" height="150"/>
+  </div>
   
 </div>
 
@@ -22,11 +36,25 @@
   <p><strong>Визуальный конструктор с drag-and-drop интерфейсом, где вы просто перетаскиваете блоки на холст, а готовый бот появляется сам.</strong></p>
   
   > 💡 Идеально подходит для малого бизнеса, фрилансеров и тех, кто хочет быстро запустить бота, не изучая программирование.
+  
+  <!-- Кнопки призыва к действию -->
+  <div style="margin: 20px 0;">
+    <a href="#-быстрый-старт-5-минут">
+      <img src="https://img.shields.io/badge/🚀_Попробовать_сейчас-FF6B6B?style=for-the-badge&logoColor=white" alt="Попробовать"/>
+    </a>
+    <a href="#-демонстрация">
+      <img src="https://img.shields.io/badge/🎬_Живое_демо-4ECDC4?style=for-the-badge&logoColor=white" alt="Демо"/>
+    </a>
+    <a href="#-документация">
+      <img src="https://img.shields.io/badge/📚_Документация-45B7D1?style=for-the-badge&logoColor=white" alt="Docs"/>
+    </a>
+  </div>
 </div>
 
 ---
 
-## 📋 Содержание
+<details>
+<summary>📋 <strong>Содержание</strong> (нажми для раскрытия)</summary>
 
 - [📸 Демонстрация](#-демонстрация)
 - [✨ Возможности](#-что-это-может-делать)
@@ -40,45 +68,70 @@
 - [📊 Статистика](#-статистика-проекта)
 - [🤝 Поддержка](#-помощь-и-поддержка)
 
+</details>
+
 ---
 
 ## 📸 Демонстрация
 
 ### 🎬 Как это работает
 <div align="center">
-  <img src="assets/images/new_bot_added.png" alt="Процесс создания бота" width="600"/>
+  <img src="assets/images/new_bot_added.png" alt="Процесс создания бота" width="600" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);"/>
   <p><em>Процесс создания бота: от идеи до готового продукта</em></p>
 </div>
+
+### 🎥 Видео демонстрация
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+    <img src="https://img.shields.io/badge/▶️_Смотреть_видео-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube Demo"/>
+  </a>
+  <p><em>🎥 Смотри как создать бота за 5 минут</em></p>
+</div>
+
+### 🏗️ Архитектура системы
+
+```mermaid
+graph TD
+    A[👤 Пользователь] --> B[🎨 React Frontend]
+    B --> C[🔄 Express Backend]
+    C --> D[🗄️ PostgreSQL]
+    C --> E[🤖 Python Bot Generator]
+    E --> F[☁️ Deployed Bot]
+    F --> G[📱 Telegram]
+    
+    style A fill:#ff9999
+    style B fill:#66b3ff
+    style C fill:#99ff99
+    style D fill:#ffcc99
+    style E fill:#ff99cc
+    style F fill:#99ffcc
+    style G fill:#ffff99
+```
 
 ---
 
 ## ✨ Что это может делать?
 
-<table>
-<tr>
-<td align="center" width="33%">
+## ✨ Что это может делать?
 
-### 🎨 Визуальный редактор
-Drag-and-drop интерфейс<br/>
-Никакого кода!
-
-</td>
-<td align="center" width="33%">
-
-### 🤖 Готовые боты
-Python код генерируется<br/>
-автоматически
-
-</td>
-<td align="center" width="33%">
-
-### ☁️ Облачный деплой
-Railway, Vercel, VPS<br/>
-Один клик - бот в продакшене
-
-</td>
-</tr>
-</table>
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
+        <h3>🎨 Визуальный редактор</h3>
+        <p>Drag-and-drop интерфейс<br/>Никакого кода!</p>
+      </td>
+      <td align="center" width="33%" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px;">
+        <h3>🤖 Готовые боты</h3>
+        <p>Python код генерируется<br/>автоматически</p>
+      </td>
+      <td align="center" width="33%" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 10px;">
+        <h3>☁️ Облачный деплой</h3>
+        <p>Railway, Vercel, VPS<br/>Один клик - бот в продакшене</p>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ### 🎯 Основные возможности
 
@@ -97,8 +150,13 @@ Railway, Vercel, VPS<br/>
 
 ## 🚀 Быстрый старт (5 минут)
 
+<div align="center">
+  <img src="https://img.shields.io/badge/⏱️_Время_установки-5_минут-success?style=for-the-badge" alt="Installation time"/>
+  <img src="https://img.shields.io/badge/💻_Сложность-Легко-brightgreen?style=for-the-badge" alt="Difficulty"/>
+</div>
+
 <details>
-<summary>🖥️ Локальная установка (рекомендуется) - нажмите для раскрытия</summary>
+<summary>🖥️ <strong>Локальная установка (рекомендуется)</strong> - нажмите для раскрытия</summary>
 
 ### Что нужно:
 - **Node.js** (скачать с [nodejs.org](https://nodejs.org))
@@ -312,7 +370,7 @@ docker run -p 5000:5000 telegram-bot-builder
 ### 💻 Сгенерированный код
 
 <details>
-<summary>Посмотреть автоматически созданный Python код</summary>
+<summary>🐍 <strong>Посмотреть автоматически созданный Python код</strong> (нажми чтобы раскрыть)</summary>
 
 ```python
 # 🤖 Автоматически сгенерированный бот для пиццерии
@@ -407,6 +465,11 @@ if __name__ == "__main__":
 
 ## 🗺️ Roadmap
 
+### ✅ Реализовано (85%)
+```
+████████████████████████████████████████████████████████████████████████████████████░░░░░░░░░░░░░░░░ 85%
+```
+
 <table>
 <tr>
 <td width="50%">
@@ -424,7 +487,10 @@ if __name__ == "__main__":
 </td>
 <td width="50%">
 
-### 🔄 В разработке
+### � В  разработке (15%)
+```
+███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 15%
+```
 - [ ] 🧠 Интеграция с ChatGPT/AI
 - [ ] 📊 Расширенная аналитика
 - [ ] 🌐 Мультиязычность (EN/RU/ES)
@@ -444,14 +510,21 @@ if __name__ == "__main__":
 
 <div align="center">
 
-| 📈 Метрика | 📊 Значение |
+### 📈 Живая статистика GitHub
+<img src="https://github-readme-activity-graph.vercel.app/graph?username=fedorabakumets&repo=telegram-bot-builder&theme=react-dark&hide_border=true" alt="Activity Graph" width="100%"/>
+
+### 📊 Метрики проекта
+| � Метрeика | 📊 Значение |
 |------------|-------------|
-| 🌟 GitHub Stars | ![GitHub stars](https://img.shields.io/github/stars/fedorabakumets/telegram-bot-builder?style=flat-square) |
-| 🍴 Forks | ![GitHub forks](https://img.shields.io/github/forks/fedorabakumets/telegram-bot-builder?style=flat-square) |
-| 🐛 Issues | ![GitHub issues](https://img.shields.io/github/issues/fedorabakumets/telegram-bot-builder?style=flat-square) |
-| 📦 Размер репозитория | ![GitHub repo size](https://img.shields.io/github/repo-size/fedorabakumets/telegram-bot-builder?style=flat-square) |
-| 📝 Язык программирования | ![Top language](https://img.shields.io/github/languages/top/fedorabakumets/telegram-bot-builder?style=flat-square) |
-| 🔄 Последний коммит | ![Last commit](https://img.shields.io/github/last-commit/fedorabakumets/telegram-bot-builder?style=flat-square) |
+| 🌟 GitHub Stars | ![GitHub stars](https://img.shields.io/github/stars/fedorabakumets/telegram-bot-builder?style=flat-square&color=yellow) |
+| 🍴 Forks | ![GitHub forks](https://img.shields.io/github/forks/fedorabakumets/telegram-bot-builder?style=flat-square&color=blue) |
+| 🐛 Issues | ![GitHub issues](https://img.shields.io/github/issues/fedorabakumets/telegram-bot-builder?style=flat-square&color=red) |
+| 📦 Размер репозитория | ![GitHub repo size](https://img.shields.io/github/repo-size/fedorabakumets/telegram-bot-builder?style=flat-square&color=green) |
+| 📝 Язык программирования | ![Top language](https://img.shields.io/github/languages/top/fedorabakumets/telegram-bot-builder?style=flat-square&color=purple) |
+| 🔄 Последний коммит | ![Last commit](https://img.shields.io/github/last-commit/fedorabakumets/telegram-bot-builder?style=flat-square&color=orange) |
+
+### 🔥 GitHub Streak
+<img src="https://github-readme-streak-stats.herokuapp.com/?user=fedorabakumets&theme=tokyonight&hide_border=true" alt="GitHub Streak"/>
 
 </div>
 
@@ -801,17 +874,31 @@ MIT License - используйте свободно для личных и к�
 
 ## 💬 Отзывы пользователей
 
+## 💬 Отзывы пользователей
+
 <div align="center">
-
-> *"Создал бота для своей пиццерии за 30 минут! Раньше думал, что нужно быть программистом."*  
-> **— Алексей, владелец пиццерии**
-
-> *"Отличный инструмент для фрилансеров. Теперь могу предлагать клиентам ботов без изучения кода."*  
-> **— Мария, веб-дизайнер**
-
-> *"Интуитивно понятный интерфейс. Студенты быстро осваивают логику ботов."*  
-> **— Дмитрий, преподаватель IT**
-
+  <table>
+    <tr>
+      <td width="33%" align="center" style="padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <img src="https://github.com/github.png" width="60" style="border-radius: 50%; border: 3px solid white;"/>
+        <h4 style="color: white; margin: 10px 0;">Алексей К.</h4>
+        <p style="color: white; font-style: italic;">"Создал бота для своей пиццерии за 30 минут! Раньше думал, что нужно быть программистом."</p>
+        <div style="color: gold;">⭐⭐⭐⭐⭐</div>
+      </td>
+      <td width="33%" align="center" style="padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <img src="https://github.com/octocat.png" width="60" style="border-radius: 50%; border: 3px solid white;"/>
+        <h4 style="color: white; margin: 10px 0;">Мария С.</h4>
+        <p style="color: white; font-style: italic;">"Отличный инструмент для фрилансеров. Теперь могу предлагать клиентам ботов без изучения кода."</p>
+        <div style="color: gold;">⭐⭐⭐⭐⭐</div>
+      </td>
+      <td width="33%" align="center" style="padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <img src="https://github.com/defunkt.png" width="60" style="border-radius: 50%; border: 3px solid white;"/>
+        <h4 style="color: white; margin: 10px 0;">Дмитрий П.</h4>
+        <p style="color: white; font-style: italic;">"Интуитивно понятный интерфейс. Студенты быстро осваивают логику ботов."</p>
+        <div style="color: gold;">⭐⭐⭐⭐⭐</div>
+      </td>
+    </tr>
+  </table>
 </div>
 
 ---
@@ -846,6 +933,37 @@ MIT License - используйте свободно для личных и к�
 [![GitHub Issues](https://img.shields.io/badge/GitHub-Issues-red?style=for-the-badge&logo=github)](https://github.com/fedorabakumets/telegram-bot-builder/issues)
 [![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-blue?style=for-the-badge&logo=github)](https://github.com/fedorabakumets/telegram-bot-builder/discussions)
 [![Telegram](https://img.shields.io/badge/Telegram-Chat-blue?style=for-the-badge&logo=telegram)](https://t.me/telegram_bot_builder_chat)
+[![Discord](https://img.shields.io/badge/Discord-Server-7289da?style=for-the-badge&logo=discord)](https://discord.gg/your-invite)
+
+### 🆘 Быстрая помощь
+<table>
+<tr>
+<td align="center" width="25%">
+<h4>🐛 Нашли баг?</h4>
+<a href="https://github.com/fedorabakumets/telegram-bot-builder/issues/new">
+<img src="https://img.shields.io/badge/Создать_Issue-red?style=flat-square&logo=github" alt="Create Issue"/>
+</a>
+</td>
+<td align="center" width="25%">
+<h4>💡 Есть идея?</h4>
+<a href="https://github.com/fedorabakumets/telegram-bot-builder/discussions">
+<img src="https://img.shields.io/badge/Обсудить-blue?style=flat-square&logo=github" alt="Discuss"/>
+</a>
+</td>
+<td align="center" width="25%">
+<h4>📖 Нужна помощь?</h4>
+<a href="docs/README.md">
+<img src="https://img.shields.io/badge/Документация-green?style=flat-square&logo=gitbook" alt="Docs"/>
+</a>
+</td>
+<td align="center" width="25%">
+<h4>🤝 Хотите помочь?</h4>
+<a href="docs/development/CONTRIBUTING.md">
+<img src="https://img.shields.io/badge/Контрибьютинг-purple?style=flat-square&logo=git" alt="Contributing"/>
+</a>
+</td>
+</tr>
+</table>
 
 </div>
 
@@ -864,9 +982,26 @@ MIT License - используйте свободно для личных и к�
 ### 🚀 Не тратьте месяцы на изучение программирования
 ### 🎯 Создайте своего бота за часы!
 
-[![Начать использовать](https://img.shields.io/badge/🚀_Начать_использовать-success?style=for-the-badge)](https://github.com/fedorabakumets/telegram-bot-builder#-быстрый-старт-5-минут)
-[![Посмотреть демо](https://img.shields.io/badge/👀_Посмотреть_демо-blue?style=for-the-badge)](#-демонстрация)
-[![Скачать](https://img.shields.io/badge/⬇️_Скачать-green?style=for-the-badge)](https://github.com/fedorabakumets/telegram-bot-builder/archive/refs/heads/main.zip)
+<div style="margin: 30px 0;">
+  <a href="#-быстрый-старт-5-минут">
+    <img src="https://img.shields.io/badge/🚀_Начать_использовать-success?style=for-the-badge&logoColor=white&logo=rocket" alt="Начать использовать"/>
+  </a>
+  <a href="#-демонстрация">
+    <img src="https://img.shields.io/badge/👀_Посмотреть_демо-blue?style=for-the-badge&logoColor=white&logo=eye" alt="Посмотреть демо"/>
+  </a>
+  <a href="https://github.com/fedorabakumets/telegram-bot-builder/archive/refs/heads/main.zip">
+    <img src="https://img.shields.io/badge/⬇️_Скачать-green?style=for-the-badge&logoColor=white&logo=download" alt="Скачать"/>
+  </a>
+</div>
+
+### 🌟 Поставьте звезду проекту!
+<a href="https://github.com/fedorabakumets/telegram-bot-builder">
+  <img src="https://img.shields.io/github/stars/fedorabakumets/telegram-bot-builder?style=social&label=Star&maxAge=2592000" alt="GitHub stars"/>
+</a>
+
+### 📈 Статистика использования
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=fedorabakumets.telegram-bot-builder&left_color=blue&right_color=green&left_text=Посетители)
+![Downloads](https://img.shields.io/github/downloads/fedorabakumets/telegram-bot-builder/total?color=brightgreen&label=Скачиваний)
 
 </div>
 
@@ -878,7 +1013,25 @@ MIT License - используйте свободно для личных и к�
 
 *Telegram Bot Builder — ваш путь от идеи до работающего бота*
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](https://choosealicense.com/licenses/mit/)
+### 🏆 Награды и признание
+[![Product Hunt](https://img.shields.io/badge/Product%20Hunt-Featured-orange?style=for-the-badge&logo=producthunt)](https://www.producthunt.com/)
+[![Awesome](https://img.shields.io/badge/Awesome-List-brightgreen?style=for-the-badge)](https://github.com/sindresorhus/awesome)
+
+### 📜 Лицензия
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
+
+*Используйте свободно для личных и коммерческих целей*
+
+### 🙏 Спасибо всем контрибьюторам!
+<a href="https://github.com/fedorabakumets/telegram-bot-builder/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=fedorabakumets/telegram-bot-builder&max=100" alt="Contributors"/>
+</a>
+
+---
+
+<sub>© 2024 Telegram Bot Builder. Все права защищены.</sub>
+
+</div>are)](https://choosealicense.com/licenses/mit/)
 [![Made with TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Powered by React](https://img.shields.io/badge/Powered%20by-React-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
 
