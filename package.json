@@ -1,8 +1,29 @@
 {
-  "name": "rest-express",
+  "name": "telegram-bot-builder",
   "version": "1.0.0",
+  "description": "🤖 Visual Telegram Bot Builder - Create bots without coding using drag-and-drop interface",
   "type": "module",
   "license": "MIT",
+  "author": "fedorabakumets",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fedorabakumets/telegram-bot-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fedorabakumets/telegram-bot-builder/issues"
+  },
+  "homepage": "https://github.com/fedorabakumets/telegram-bot-builder#readme",
+  "keywords": [
+    "telegram",
+    "bot",
+    "builder",
+    "no-code",
+    "visual-editor",
+    "drag-and-drop",
+    "typescript",
+    "react",
+    "nodejs"
+  ],
   "engines": {
     "node": ">=16.0.0"
   },
