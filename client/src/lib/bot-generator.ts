@@ -1516,6 +1516,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'import json\n';
   code += 'import aiohttp\n\n';
   
+  // Настройка кодировки для Windows
+  code += '# Настройка кодировки для корректной работы в Windows\n';
+  code += 'if sys.platform.startswith("win"):\n';
+  code += '    import codecs\n';
+  code += '    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())\n';
+  code += '    sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())\n\n';
+  
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы
   if (hasInlineButtons(nodes || []) || hasAutoTransitions(nodes || [])) {
     code += '# Safe helper for editing messages with fallback to new message\n';
@@ -8378,7 +8385,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
   code += '        \n';
   }
-  code += '        print("🤖 Бот запущен и готов к работе!")\n';
+  code += '        print("Бот запущен и готов к работе!")\n';
   code += '        await dp.start_polling(bot)\n';
   code += '    except KeyboardInterrupt:\n';
   code += '        print("🛑 Получен сигнал остановки, завершаем работу...")\n';
@@ -8389,13 +8396,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (userDatabaseEnabled) {
     code += '        if db_pool:\n';
     code += '            await db_pool.close()\n';
-    code += '            print("🔌 Соединение с базой данных закрыто")\n';
+    code += '            print("Соединение с базой данных закрыто")\n';
   }
   code += '        \n';
   code += '        # Закрываем сессию бота\n';
   code += '        await bot.session.close()\n';
-  code += '        print("🔌 Сессия бота закрыта")\n';
-  code += '        print("✅ Бот корректно завершил работу")\n\n';
+  code += '        print("Сессия бота закрыта")\n';
+  code += '        print("Бот корректно завершил работу")\n\n';
   
   // Найдем узлы с множественным выбором для использования в обработчиках
   const multiSelectNodes = (nodes || []).filter(node => 

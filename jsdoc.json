@@ -1,0 +1,40 @@
+{
+  "source": {
+    "include": [
+      "./client/src/components/",
+      "./client/src/hooks/",
+      "./client/src/utils/",
+      "./client/src/lib/",
+      "./README.md"
+    ],
+    "includePattern": "\\.(js|jsx|ts|tsx)$",
+    "exclude": [
+      "node_modules/",
+      "dist/",
+      "build/",
+      "storybook-static/",
+      "**/*.test.{js,jsx,ts,tsx}",
+      "**/*.spec.{js,jsx,ts,tsx}",
+      "**/*.stories.{js,jsx,ts,tsx}"
+    ]
+  },
+  "opts": {
+    "destination": "./docs/",
+    "recurse": true,
+    "readme": "./README.md"
+  },
+  "plugins": [
+    "plugins/markdown"
+  ],
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false
+  },
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc", "closure"]
+  },
+  "markdown": {
+    "parser": "gfm"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./docs/types"
+  },
+  "include": [
+    "client/src/components/**/*",
+    "client/src/hooks/**/*",
+    "client/src/utils/**/*",
+    "client/src/lib/**/*"
+  ],
+  "exclude": [
+    "**/*.test.{ts,tsx}",
+    "**/*.spec.{ts,tsx}",
+    "**/*.stories.{ts,tsx}",
+    "node_modules"
+  ]
+}

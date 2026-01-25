@@ -496,7 +496,10 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
       
       // Находим все Python процессы с этим файлом
       try {
-        const allPythonProcesses = execSync(`ps aux | grep python | grep "${botFileName}" | grep -v grep`, { encoding: 'utf8' }).trim();
+        const psCommand = process.platform === 'win32' 
+          ? `tasklist /FI "IMAGENAME eq python.exe" /FO CSV | findstr "${botFileName}"`
+          : `ps aux | grep python | grep "${botFileName}" | grep -v grep`;
+        const allPythonProcesses = execSync(psCommand, { encoding: 'utf8' }).trim();
         
         if (allPythonProcesses) {
           const lines = allPythonProcesses.split('\n').filter((line: string) => line.trim());
@@ -602,7 +605,8 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     const filePath = createBotFile(botCode, projectId, tokenId);
     
     // Запускаем бота
-    const botProcess = spawn('python', [filePath], {
+    const pythonPath = process.platform === 'win32' ? '.venv\\Scripts\\python.exe' : '.venv/bin/python';
+    const botProcess = spawn(pythonPath, [filePath], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
       env: {
@@ -690,7 +694,10 @@ async function stopBot(projectId: number, tokenId: number): Promise<{ success: b
       
       // Находим все процессы с этим файлом
       try {
-        const allPythonProcesses = execSync(`ps aux | grep python | grep "${botFileName}" | grep -v grep`, { encoding: 'utf8' }).trim();
+        const psCommand = process.platform === 'win32' 
+          ? `tasklist /FI "IMAGENAME eq python.exe" /FO CSV | findstr "${botFileName}"`
+          : `ps aux | grep python | grep "${botFileName}" | grep -v grep`;
+        const allPythonProcesses = execSync(psCommand, { encoding: 'utf8' }).trim();
         
         if (allPythonProcesses) {
           const lines = allPythonProcesses.split('\n').filter((line: string) => line.trim());
@@ -1567,7 +1574,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!activeProcessInfo && instance.processId) {
         try {
           // Проверяем существование процесса (не убиваем, только проверяем)
-          process.kill(parseInt(instance.processId), 0);
+          if (process.platform === 'win32') {
+            // На Windows используем tasklist для проверки процесса
+            const { execSync } = require('child_process');
+            const result = execSync(`tasklist /FI "PID eq ${instance.processId}" /FO CSV`, { encoding: 'utf8' });
+            if (!result.includes(instance.processId)) {
+              throw new Error('Process not found');
+            }
+          } else {
+            // На Unix системах используем kill -0
+            process.kill(parseInt(instance.processId), 0);
+          }
           console.log(`Процесс ${instance.processId} для бота ${projectId} найден в системе, восстанавливаем отслеживание`);
           
           // Создаем фиктивный объект процесса для отслеживания
@@ -1597,11 +1614,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Дополнительная проверка через ps для более точного определения
+      // Дополнительная проверка через ps/tasklist для более точного определения
       if (!activeProcessInfo && instance.processId && actualStatus === 'stopped') {
         try {
           const { execSync } = require('child_process');
-          const psOutput = execSync(`ps -p ${instance.processId} -o pid,ppid,cmd --no-headers`, { encoding: 'utf8' }).trim();
+          let psOutput = '';
+          
+          if (process.platform === 'win32') {
+            psOutput = execSync(`tasklist /FI "PID eq ${instance.processId}" /FO CSV`, { encoding: 'utf8' }).trim();
+          } else {
+            psOutput = execSync(`ps -p ${instance.processId} -o pid,ppid,cmd --no-headers`, { encoding: 'utf8' }).trim();
+          }
           
           if (psOutput && psOutput.includes('python')) {
             console.log(`Процесс ${instance.processId} для бота ${projectId} найден через ps, восстанавливаем отслеживание`);
@@ -1626,7 +1649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             actualStatus = 'running';
           }
         } catch (error) {
-          // ps команда не сработала, процесс точно не существует
+          // ps/tasklist команда не сработала, процесс точно не существует
           console.log(`Процесс ${instance.processId} для бота ${projectId} не найден через ps`);
         }
       }
@@ -1638,7 +1661,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { execSync } = require('child_process');
           // Ищем процесс который запускает файл этого бота
           const botFileName = `bot_${projectId}.py`;
-          const allPythonProcesses = execSync(`ps aux | grep python | grep -v grep`, { encoding: 'utf8' }).trim();
+          const psCommand = process.platform === 'win32' 
+            ? `tasklist /FI "IMAGENAME eq python.exe" /FO CSV`
+            : `ps aux | grep python | grep -v grep`;
+          const allPythonProcesses = execSync(psCommand, { encoding: 'utf8' }).trim();
           
           // Проверяем есть ли процесс с файлом этого бота
           if (allPythonProcesses.includes(botFileName)) {

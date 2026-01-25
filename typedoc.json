@@ -1,0 +1,15 @@
+{
+  "entryPoints": [
+    "client/src/components/atoms/index.ts",
+    "client/src/components/molecules/index.ts", 
+    "client/src/components/organisms/index.ts",
+    "client/src/components/ui/index.ts",
+    "client/src/hooks/index.ts"
+  ],
+  "out": "docs/api",
+  "name": "Component Library Documentation",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "readme": "README.md"
+}
