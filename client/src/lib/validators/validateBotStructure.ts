@@ -1,6 +1,6 @@
 import { BotData } from '@shared/schema';
-import { ButtonSchema } from './bot-generator';
-import { extractNodesAndConnections } from './extractNodesAndConnections';
+import { ButtonSchema } from '../bot-generator';
+import { extractNodesAndConnections } from '../bot-generator/core/extractNodesAndConnections';
 import { validateCommand } from './validateCommand';
 
 

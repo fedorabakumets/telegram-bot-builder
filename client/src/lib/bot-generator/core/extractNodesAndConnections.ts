@@ -1,5 +1,5 @@
 import { BotData, Node, Connection } from '@shared/schema';
-import { Sheet } from './bot-generator';
+import { Sheet } from '../bot-generator';
 
 // Функция для сбора всех узлов и связей из всех листов проекта
 

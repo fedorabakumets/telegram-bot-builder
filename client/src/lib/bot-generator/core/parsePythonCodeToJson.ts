@@ -1,5 +1,5 @@
 import { Node } from '@shared/schema';
-import { Button, ButtonSchema } from './bot-generator';
+import { Button, ButtonSchema } from '../bot-generator';
 
 // Функция для парсинга Python кода обратно в JSON (улучшенная версия)
 

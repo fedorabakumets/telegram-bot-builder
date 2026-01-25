@@ -1,5 +1,5 @@
 import { BotData, Node } from '@shared/schema';
-import { generateBotFatherCommands } from './commands';
+import { generateBotFatherCommands } from '../bot-generator/core/commands';
 
 
 export function generateReadme(botData: BotData, botName: string): string {

@@ -1,5 +1,5 @@
 import { Node } from '@shared/schema';
-import { ConditionalMessage } from './bot-generator';
+import { ConditionalMessage } from '../bot-generator';
 
 // Функция для проверки наличия inline кнопок (callback)
 export function hasInlineButtons(nodes: Node[]): boolean {

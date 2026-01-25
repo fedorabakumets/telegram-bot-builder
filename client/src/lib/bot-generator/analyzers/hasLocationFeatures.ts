@@ -1,5 +1,5 @@
 import { Node } from '@shared/schema';
-import { ButtonSchema } from './bot-generator';
+import { ButtonSchema } from '../bot-generator';
 
 // Функция для проверки наличия геолокационных элементов в боте
 export function hasLocationFeatures(nodes: Node[]): boolean {

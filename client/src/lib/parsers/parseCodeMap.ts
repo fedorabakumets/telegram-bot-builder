@@ -1,5 +1,5 @@
-import { CodeNodeRange } from './CodeNodeRange';
-import { CodeWithMap } from './CodeWithMap';
+import { CodeNodeRange } from '../types/CodeNodeRange';
+import { CodeWithMap } from '../types/CodeWithMap';
 
 // Функция для парсинга маркеров и создания карты кода
 
