@@ -1334,7 +1334,6 @@ MIT License - используйте свободно для личных и к�
 
 <sub>© 2024 Telegram Bot Builder. Все права защищены.</sub>
 
-</div>are)](https://choosealicense.com/licenses/mit/)
 [![Made with TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Powered by React](https://img.shields.io/badge/Powered%20by-React-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
 
