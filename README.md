@@ -1213,50 +1213,6 @@ MIT License - используйте свободно для личных и к�
 
 ---
 
-## 🤝 Помощь и поддержка
-
-<div align="center">
-
-### 🆘 Быстрая помощь
-<table>
-<tr>
-<td align="center" width="25%">
-<h4>🐛 Нашли баг?</h4>
-<a href="https://github.com/fedorabakumets/telegram-bot-builder/issues/new">
-<img src="https://img.shields.io/badge/Создать_Issue-red?style=flat-square&logo=github" alt="Create Issue"/>
-</a>
-</td>
-<td align="center" width="25%">
-<h4>💡 Есть идея?</h4>
-<a href="https://github.com/fedorabakumets/telegram-bot-builder/discussions">
-<img src="https://img.shields.io/badge/Обсудить-blue?style=flat-square&logo=github" alt="Discuss"/>
-</a>
-</td>
-<td align="center" width="25%">
-<h4>📖 Нужна помощь?</h4>
-<a href="docs/README.md">
-<img src="https://img.shields.io/badge/Документация-green?style=flat-square&logo=gitbook" alt="Docs"/>
-</a>
-</td>
-<td align="center" width="25%">
-<h4>🤝 Хотите помочь?</h4>
-<a href="docs/development/CONTRIBUTING.md">
-<img src="https://img.shields.io/badge/Контрибьютинг-purple?style=flat-square&logo=git" alt="Contributing"/>
-</a>
-</td>
-</tr>
-</table>
-
-</div>
-
-**Что делать если:**
-- 🐛 **Нашли баг?** → [Создайте Issue](https://github.com/fedorabakumets/telegram-bot-builder/issues/new)
-- 💡 **Есть идея?** → [GitHub Discussions](https://github.com/fedorabakumets/telegram-bot-builder/discussions)
-- 📖 **Нужна помощь?** → [Документация](docs/README.md) или [Telegram чат](https://t.me/telegram_bot_builder_chat)
-- 🤝 **Хотите помочь?** → [Руководство для контрибьюторов](docs/development/CONTRIBUTING.md)
-
----
-
 ## 🎉 Начните прямо сейчас!
 
 <div align="center">
