@@ -10,13 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Link, 
-  Plus, 
-  Settings, 
-  Trash2, 
-  Edit3, 
-  Target, 
+import {
+  Link,
+  Plus,
+  Settings,
+  Trash2,
+  Edit3,
+  Target,
   ArrowRight,
   Zap,
   CheckCircle,
@@ -103,7 +103,7 @@ export function EnhancedConnectionControls({
   const [filterType, setFilterType] = useState<'all' | 'valid' | 'invalid'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const connectionManager = useMemo(() => 
+  const connectionManager = useMemo(() =>
     new ConnectionManager({
       nodes,
       connections,
@@ -117,7 +117,7 @@ export function EnhancedConnectionControls({
     const analysis = connections.map(connection => {
       const sourceNode = nodes.find(n => n.id === connection.source);
       const targetNode = nodes.find(n => n.id === connection.target);
-      
+
       if (!sourceNode || !targetNode) {
         return {
           connection,
@@ -129,10 +129,10 @@ export function EnhancedConnectionControls({
 
       const violations: string[] = [];
       const suggestions: string[] = [];
-      
+
       // Проверка по правилам
-      const applicableRules = rules.filter(rule => 
-        rule.sourceTypes.includes(sourceNode.type) && 
+      const applicableRules = rules.filter(rule =>
+        rule.sourceTypes.includes(sourceNode.type) &&
         rule.targetTypes.includes(targetNode.type)
       );
 
@@ -142,14 +142,14 @@ export function EnhancedConnectionControls({
 
       applicableRules.forEach(rule => {
         const connectionsFromSource = connections.filter(c => c.source === connection.source);
-        
+
         if (connectionsFromSource.length > rule.maxConnections) {
           violations.push(`Превышено максимальное количество связей (${rule.maxConnections})`);
         }
 
         if (rule.requiresButton) {
           const buttons = sourceNode.data.buttons || [];
-          const hasButton = buttons.some(b => 
+          const hasButton = buttons.some(b =>
             b.action === 'goto' && b.target === connection.target
           );
           if (!hasButton) {
@@ -175,19 +175,19 @@ export function EnhancedConnectionControls({
     return connectionAnalysis.filter(analysis => {
       if (filterType === 'valid' && !analysis.isValid) return false;
       if (filterType === 'invalid' && analysis.isValid) return false;
-      
+
       if (searchTerm) {
         const sourceNode = nodes.find(n => n.id === analysis.connection.source);
         const targetNode = nodes.find(n => n.id === analysis.connection.target);
         const searchLower = searchTerm.toLowerCase();
-        
+
         return (
           sourceNode?.type.toLowerCase().includes(searchLower) ||
           targetNode?.type.toLowerCase().includes(searchLower) ||
           analysis.violations.some(v => v.toLowerCase().includes(searchLower))
         );
       }
-      
+
       return true;
     });
   }, [connectionAnalysis, filterType, searchTerm, nodes]);
@@ -200,7 +200,7 @@ export function EnhancedConnectionControls({
     const withButtons = connectionAnalysis.filter(a => {
       const sourceNode = nodes.find(n => n.id === a.connection.source);
       const buttons = sourceNode?.data.buttons || [];
-      return buttons.some(b => 
+      return buttons.some(b =>
         b.action === 'goto' && b.target === a.connection.target
       );
     }).length;
@@ -211,7 +211,7 @@ export function EnhancedConnectionControls({
   const getNodeName = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return 'Неизвестный узел';
-    
+
     const typeNames = {
       start: 'Старт',
       command: node.data.command || 'Команда',
@@ -230,30 +230,41 @@ export function EnhancedConnectionControls({
       location: 'Геолокация',
       contact: 'Контакт',
       poll: 'Опрос',
-      dice: 'Кубик'
+      dice: 'Кубик',
+      pin_message: 'Закрепить сообщение',
+      unpin_message: 'Открепить сообщение',
+      delete_message: 'Удалить сообщение',
+      ban_user: 'Заблокировать пользователя',
+      unban_user: 'Разблокировать пользователя',
+      mute_user: 'Заглушить пользователя',
+      unmute_user: 'Снять заглушение',
+      kick_user: 'Исключить пользователя',
+      promote_user: 'Повысить пользователя',
+      demote_user: 'Понизить пользователя',
+      admin_rights: 'Права администратора'
     };
-    
+
     return typeNames[node.type] || node.type;
   }, [nodes]);
 
   const fixConnection = useCallback((connection: Connection) => {
     const sourceNode = nodes.find(n => n.id === connection.source);
     const targetNode = nodes.find(n => n.id === connection.target);
-    
+
     if (!sourceNode || !targetNode) return;
 
     connectionManager.updateState({ nodes, connections });
-    
+
     // Проверяем, нужна ли кнопка
-    const needsButton = rules.some(rule => 
-      rule.sourceTypes.includes(sourceNode.type) && 
+    const needsButton = rules.some(rule =>
+      rule.sourceTypes.includes(sourceNode.type) &&
       rule.targetTypes.includes(targetNode.type) &&
       rule.requiresButton
     );
 
     if (needsButton) {
       const buttons = sourceNode.data.buttons || [];
-      const hasButton = buttons.some(b => 
+      const hasButton = buttons.some(b =>
         b.action === 'goto' && b.target === connection.target
       );
 
@@ -271,11 +282,11 @@ export function EnhancedConnectionControls({
   const deleteConnection = useCallback((connectionId: string) => {
     connectionManager.updateState({ nodes, connections });
     const { removedConnection, updatedNodes } = connectionManager.removeConnection(connectionId);
-    
+
     if (removedConnection) {
       onConnectionsChange(connections.filter(c => c.id !== connectionId));
       onNodesChange(updatedNodes);
-      
+
       if (selectedConnection?.id === connectionId) {
         onConnectionSelect?.(null);
       }
@@ -284,19 +295,19 @@ export function EnhancedConnectionControls({
 
   const applyRule = useCallback((rule: ConnectionRule) => {
     connectionManager.updateState({ nodes, connections });
-    
+
     const sourceNodes = nodes.filter(n => rule.sourceTypes.includes(n.type));
     const targetNodes = nodes.filter(n => rule.targetTypes.includes(n.type));
-    
+
     const newConnections: Connection[] = [];
     let updatedNodes = [...nodes];
 
     sourceNodes.forEach(sourceNode => {
       const existingConnections = connections.filter(c => c.source === sourceNode.id);
       const availableSlots = rule.maxConnections - existingConnections.length;
-      
+
       if (availableSlots > 0) {
-        const suitableTargets = targetNodes.filter(targetNode => 
+        const suitableTargets = targetNodes.filter(targetNode =>
           targetNode.id !== sourceNode.id &&
           !existingConnections.some(c => c.target === targetNode.id)
         ).slice(0, availableSlots);
@@ -307,7 +318,7 @@ export function EnhancedConnectionControls({
             targetNode.id,
             { autoCreateButton: rule.requiresButton }
           );
-          
+
           newConnections.push(connection);
           updatedNodes = newUpdatedNodes;
         });
@@ -372,7 +383,7 @@ export function EnhancedConnectionControls({
                 <SelectItem value="invalid">Требуют внимания</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -382,7 +393,7 @@ export function EnhancedConnectionControls({
                 className="pl-10"
               />
             </div>
-            
+
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <UIButton variant="outline">
@@ -397,7 +408,7 @@ export function EnhancedConnectionControls({
                     Управление правилами валидации и автоматического создания связей
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="auto-button-creation">Автоматическое создание кнопок</Label>
@@ -407,9 +418,9 @@ export function EnhancedConnectionControls({
                       onCheckedChange={onAutoButtonCreationChange}
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-3">
                     <h4 className="font-medium">Правила валидации</h4>
                     {rules.map((rule) => (
@@ -429,7 +440,7 @@ export function EnhancedConnectionControls({
                             <Switch
                               checked={rule.autoApply}
                               onCheckedChange={(checked) => {
-                                setRules(prev => prev.map(r => 
+                                setRules(prev => prev.map(r =>
                                   r.id === rule.id ? { ...r, autoApply: checked } : r
                                 ));
                               }}
@@ -459,7 +470,7 @@ export function EnhancedConnectionControls({
               <CheckCircle className="h-4 w-4 mr-2" />
               Синхронизировать все
             </UIButton>
-            <UIButton 
+            <UIButton
               onClick={() => {
                 rules.filter(r => r.autoApply).forEach(applyRule);
               }}
@@ -494,7 +505,7 @@ export function EnhancedConnectionControls({
                         {getNodeName(connection.source)} → {getNodeName(connection.target)}
                       </span>
                     </div>
-                    
+
                     {violations.length > 0 && (
                       <div className="space-y-1">
                         {violations.map((violation, idx) => (
@@ -505,7 +516,7 @@ export function EnhancedConnectionControls({
                         ))}
                       </div>
                     )}
-                    
+
                     {suggestions.length > 0 && (
                       <div className="flex gap-1 mt-1">
                         {suggestions.map((suggestion, idx) => (
@@ -516,7 +527,7 @@ export function EnhancedConnectionControls({
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex gap-1 ml-2">
                     {!isValid && (
                       <UIButton

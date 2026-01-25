@@ -582,7 +582,7 @@ export type BotMessageMedia = typeof botMessageMedia.$inferSelect;
 export const buttonSchema = z.object({
   id: z.string(),
   text: z.string(),
-  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection']),
+  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'default']),
   target: z.string().optional(),
   url: z.string().optional(),
   requestContact: z.boolean().optional(),
@@ -594,7 +594,7 @@ export const buttonSchema = z.object({
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights']),
+  type: z.enum(['start', 'message', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition']),
   position: z.object({
     x: z.number(),
     y: z.number(),
@@ -827,7 +827,12 @@ export const nodeSchema = z.object({
     adminChatVariableName: z.string().optional(), // Имя переменной с ID чата
     
     // Прикрепленные медиапеременные (для отправки медиафайлов)
-    attachedMedia: z.array(z.string()).default([]) // Список имен медиапеременных для прикрепления к сообщению
+    attachedMedia: z.array(z.string()).default([]), // Список имен медиапеременных для прикрепления к сообщению
+    
+    // Дополнительные поля для совместимости
+    text: z.string().optional(), // Альтернативное поле для messageText
+    action: z.string().optional(), // Поле для действий (poll, dice, input и т.д.)
+    waitForTextInput: z.boolean().optional(), // Устаревшее поле для обратной совместимости
   }),
 });
 

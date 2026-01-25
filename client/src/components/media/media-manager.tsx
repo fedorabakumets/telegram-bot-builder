@@ -13,13 +13,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage } from "@/hooks/use-media";
 import { CameraCapture } from "./camera-capture";
 import { EnhancedMediaUploader } from "./enhanced-media-uploader";
-import type { MediaFile } from "@shared/schema";
+import type { MediaFile, InsertMediaFile } from "@shared/schema";
 import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Download, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap, Smartphone, Plus } from "lucide-react";
 
 interface MediaManagerProps {
   projectId: number;
   onSelectFile?: (file: MediaFile) => void;
   selectedType?: 'photo' | 'video' | 'audio' | 'document';
+  showUploader?: boolean;
 }
 
 interface UploadingFile {
@@ -54,7 +55,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
 
   // Проверяем доступность камеры
   React.useEffect(() => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       navigator.mediaDevices.enumerateDevices()
         .then(devices => {
           const hasVideoInput = devices.some(device => device.kind === 'videoinput');
@@ -204,15 +205,15 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     disabled: uploadingFiles.some(uf => uf.status === 'uploading'),
     // Better mobile support
     useFsAccessApi: false,
-    getFilesFromEvent: async (event) => {
+    getFilesFromEvent: async (event: any) => {
       const files = [];
       
-      if (event.type === 'drop') {
+      if (event.type === 'drop' && event.dataTransfer) {
         // Handle dropped files
         const items = Array.from(event.dataTransfer.items);
         for (const item of items) {
-          if (item.kind === 'file') {
-            const file = item.getAsFile();
+          if ((item as any).kind === 'file') {
+            const file = (item as any).getAsFile();
             if (file) files.push(file);
           }
         }
@@ -253,10 +254,13 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     }
   };
 
-  const handleUpdateFile = (file: MediaFile, updates: Partial<MediaFile>) => {
+  const handleUpdateFile = (file: MediaFile, updates: Partial<InsertMediaFile>) => {
     updateMutation.mutate({
       id: file.id,
-      updates
+      updates: {
+        ...updates,
+        tags: updates.tags || []
+      }
     }, {
       onSuccess: () => {
         toast({
@@ -827,7 +831,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                 </Button>
                 <Button onClick={() => handleUpdateFile(editingFile, {
                   description: editingFile.description,
-                  tags: editingFile.tags
+                  tags: editingFile.tags || []
                 })}>
                   Сохранить
                 </Button>

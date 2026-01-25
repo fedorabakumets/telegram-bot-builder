@@ -1362,7 +1362,9 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
           id: `btn_${nodeId}_${buttons.length}`,
           text: btnText,
           action: 'default',
-          buttonType: 'normal'
+          buttonType: 'normal',
+          skipDataCollection: false,
+          hideAfterClick: false
         } as Button);
       }
     }
@@ -1387,14 +1389,14 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
       position: { x: xPosition, y: 50 },
       data: {
         messageText: messageText || `Узел ${nodeId}`,
-        keyboardType: keyboardType,
+        keyboardType: (keyboardType === 'reply' || keyboardType === 'inline' || keyboardType === 'none') ? keyboardType : 'none',
         buttons: buttons,
         showInMenu: (nodeType === 'start' || nodeType === 'command') && !nodeContent.includes('showInMenu=False'),
         command: command,
         description: description,
         allowMultipleSelection: nodeContent.includes('allowMultipleSelection=True'),
         formatMode: nodeContent.includes('parse_mode=ParseMode.HTML') ? 'html' : 
-                   nodeContent.includes('parse_mode=ParseMode.MARKDOWN') ? 'markdown' : 'text',
+                   nodeContent.includes('parse_mode=ParseMode.MARKDOWN') ? 'markdown' : 'none',
         enablePhotoInput: nodeContent.includes('enablePhotoInput'),
         enableVideoInput: nodeContent.includes('enableVideoInput'),
         enableAudioInput: nodeContent.includes('enableAudioInput'),

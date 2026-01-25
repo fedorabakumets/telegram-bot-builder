@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useParams } from 'wouter';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
@@ -8,6 +8,23 @@ import { PropertiesPanel } from '@/components/editor/properties-panel';
 import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
 import { BotControl } from '@/components/editor/bot-control';
+
+// Простая реализация useMediaQuery для совместимости
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(false);
+  
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    media.addListener(listener);
+    return () => media.removeListener(listener);
+  }, [matches, query]);
+  
+  return matches;
+};
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
 
 import { ConnectionManagerPanel } from '@/components/editor/connection-manager-panel';
@@ -352,7 +369,7 @@ export default function EditorSimple() {
                 onNodesChange={updateNodes}
                 autoButtonCreation={autoButtonCreation}
                 onAutoButtonCreationChange={setAutoButtonCreation}
-                selectedConnection={selectedConnection}
+                selectedConnection={selectedConnection || undefined}
                 onConnectionSelect={setSelectedConnection}
               />
             </div>

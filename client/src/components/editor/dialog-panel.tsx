@@ -1,17 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { 
-  MessageSquare, 
-  RefreshCw, 
-  Send, 
-  Bot, 
+import {
+  MessageSquare,
+  RefreshCw,
+  Send,
+  Bot,
   User,
   X
 } from 'lucide-react';
@@ -39,7 +38,6 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
   const [messageText, setMessageText] = useState('');
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const qClient = useQueryClient();
 
   // Fetch messages for dialog
   const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
@@ -158,7 +156,7 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
             {messages.map((message, index) => {
               const isBot = message.messageType === 'bot';
               const isUser = message.messageType === 'user';
-              
+
               return (
                 <div
                   key={message.id || index}
@@ -167,26 +165,25 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
                 >
                   <div className={`flex gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
                     {/* Avatar */}
-                    <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${
-                      isBot ? 'bg-blue-100 dark:bg-blue-900' : 'bg-green-100 dark:bg-green-900'
-                    }`}>
+                    <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${isBot ? 'bg-blue-100 dark:bg-blue-900' : 'bg-green-100 dark:bg-green-900'
+                      }`}>
                       {isBot ? (
                         <Bot className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                       ) : (
                         <User className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                       )}
                     </div>
-                    
+
                     {/* Message Content */}
                     <div className="flex flex-col gap-1">
                       {/* Media files */}
                       {message.media && Array.isArray(message.media) && message.media.length > 0 && (
                         <div className="rounded-lg overflow-hidden max-w-[200px] space-y-1">
                           {message.media.map((m: any, idx: number) => (
-                            <img 
+                            <img
                               key={idx}
-                              src={m.url} 
-                              alt="Photo" 
+                              src={m.url}
+                              alt="Photo"
                               className="w-full h-auto rounded-lg"
                               data-testid={`dialog-photo-${message.id}-${idx}`}
                               onError={(e) => {
@@ -196,19 +193,18 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
                           ))}
                         </div>
                       )}
-                      
-                      <div className={`rounded-lg px-3 py-2 ${
-                        isBot 
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100' 
+
+                      <div className={`rounded-lg px-3 py-2 ${isBot
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100'
                           : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
-                      }`}>
+                        }`}>
                         <p className="text-sm whitespace-pre-wrap break-words">
                           {message?.messageText ? String(message.messageText) : ''}
                         </p>
                       </div>
-                      
+
                       {/* Buttons for bot messages */}
-                      {isBot && message.messageData && typeof message.messageData === 'object' && 'buttons' in message.messageData && Array.isArray((message.messageData as Record<string, any>).buttons) && ((message.messageData as Record<string, any>).buttons as Array<any>).length > 0 && (
+                      {isBot && message.messageData && typeof message.messageData === 'object' && 'buttons' in message.messageData && Array.isArray((message.messageData as Record<string, any>).buttons) && ((message.messageData as Record<string, any>).buttons as Array<any>).length > 0 ? (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {(Array.isArray((message.messageData as any)?.buttons) ? (message.messageData as any).buttons : []).map((button: any, btnIndex: number) => (
                             <div
@@ -220,22 +216,22 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
                             </div>
                           ))}
                         </div>
-                      )}
-                      
+                      ) : null}
+
                       {/* Button clicked info for user messages */}
-                      {isUser && message.messageData && typeof message.messageData === 'object' && 'button_clicked' in message.messageData && message.messageData.button_clicked && (
+                      {isUser && message.messageData && typeof message.messageData === 'object' && 'button_clicked' in message.messageData && message.messageData.button_clicked ? (
                         <div className="mt-1">
                           <div className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-md bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200">
-                            <span>{'button_text' in message.messageData && message.messageData.button_text 
-                              ? `Нажата: ${message.messageData.button_text}` 
+                            <span>{'button_text' in message.messageData && message.messageData.button_text
+                              ? `Нажата: ${message.messageData.button_text}`
                               : 'Нажата кнопка'}</span>
                           </div>
                         </div>
-                      )}
-                      
+                      ) : null}
+
                       {/* Timestamp */}
                       {message.createdAt && (
-                        <span className="text-xs text-muted-foreground">{String(formatDate(message.createdAt))}</span>
+                        <span className="text-xs text-muted-foreground">{formatDate(message.createdAt)}</span>
                       )}
                     </div>
                   </div>
@@ -247,7 +243,7 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
       </ScrollArea>
 
       <Separator />
-      
+
       {/* Message Input */}
       <div className="p-3 space-y-2">
         <div className="flex gap-2">

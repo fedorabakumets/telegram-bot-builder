@@ -70,7 +70,7 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      const img = new Image();
+      const img = new (window as any).Image() as HTMLImageElement;
       
       img.onload = () => {
         // Вычисляем новые размеры
