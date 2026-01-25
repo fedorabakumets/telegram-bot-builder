@@ -49,6 +49,23 @@
       <img src="https://img.shields.io/badge/📚_Документация-45B7D1?style=for-the-badge&logoColor=white" alt="Docs"/>
     </a>
   </div>
+  
+  <!-- Связь с нами -->
+  <div style="margin: 20px 0;">
+    <h3>📞 Связь с нами</h3>
+    <a href="https://github.com/fedorabakumets/telegram-bot-builder/issues">
+      <img src="https://img.shields.io/badge/GitHub-Issues-red?style=for-the-badge&logo=github" alt="GitHub Issues"/>
+    </a>
+    <a href="https://github.com/fedorabakumets/telegram-bot-builder/discussions">
+      <img src="https://img.shields.io/badge/GitHub-Discussions-blue?style=for-the-badge&logo=github" alt="GitHub Discussions"/>
+    </a>
+    <a href="https://t.me/telegram_bot_builder_chat">
+      <img src="https://img.shields.io/badge/Telegram-Chat-blue?style=for-the-badge&logo=telegram" alt="Telegram Chat"/>
+    </a>
+    <a href="https://discord.gg/your-invite">
+      <img src="https://img.shields.io/badge/Discord-Server-7289da?style=for-the-badge&logo=discord" alt="Discord Server"/>
+    </a>
+  </div>
 </div>
 
 ---
@@ -1199,13 +1216,6 @@ MIT License - используйте свободно для личных и к�
 ## 🤝 Помощь и поддержка
 
 <div align="center">
-
-### 📞 Связь с нами
-
-[![GitHub Issues](https://img.shields.io/badge/GitHub-Issues-red?style=for-the-badge&logo=github)](https://github.com/fedorabakumets/telegram-bot-builder/issues)
-[![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-blue?style=for-the-badge&logo=github)](https://github.com/fedorabakumets/telegram-bot-builder/discussions)
-[![Telegram](https://img.shields.io/badge/Telegram-Chat-blue?style=for-the-badge&logo=telegram)](https://t.me/telegram_bot_builder_chat)
-[![Discord](https://img.shields.io/badge/Discord-Server-7289da?style=for-the-badge&logo=discord)](https://discord.gg/your-invite)
 
 ### 🆘 Быстрая помощь
 <table>
