@@ -80,194 +80,27 @@
 
 ### 🏗️ Архитектура системы
 
-```mermaid
-graph TB
-    subgraph "🌐 Пользовательский интерфейс"
-        A[👤 Пользователь]
-        B[🎨 React Frontend]
-        B1[📝 Визуальный редактор]
-        B2[⚙️ Панель свойств]
-        B3[🎯 Управление проектами]
-        B4[🤖 Управление ботами]
-    end
-    
-    subgraph "🖥️ Backend сервисы"
-        C[🔄 Express API Server]
-        C1[📡 REST API Routes]
-        C2[🔌 WebSocket Server]
-        C3[📁 File Upload Handler]
-        C4[🔐 Auth Middleware]
-    end
-    
-    subgraph "🗄️ Хранилище данных"
-        D[🗄️ PostgreSQL Database]
-        D1[👥 Users Table]
-        D2[🤖 Bots Table]
-        D3[📊 Projects Table]
-        D4[📁 Media Files Table]
-        E[💾 File Storage]
-        E1[📸 Images]
-        E2[🎵 Audio]
-        E3[📄 Documents]
-    end
-    
-    subgraph "🤖 Генерация и деплой"
-        F[🐍 Python Bot Generator]
-        F1[📝 Code Templates]
-        F2[🔧 Config Generator]
-        F3[📦 Dependencies Manager]
-        G[☁️ Deployment Services]
-        G1[🚂 Railway]
-        G2[▲ Vercel]
-        G3[🐳 Docker]
-    end
-    
-    subgraph "📱 Telegram экосистема"
-        H[📱 Telegram Bot API]
-        H1[💬 Message Handler]
-        H2[⌨️ Keyboard Handler]
-        H3[📁 Media Handler]
-        I[👥 End Users]
-    end
-    
-    %% Connections
-    A --> B
-    B --> B1
-    B --> B2
-    B --> B3
-    B --> B4
-    
-    B1 --> C1
-    B2 --> C1
-    B3 --> C1
-    B4 --> C1
-    
-    C --> C1
-    C --> C2
-    C --> C3
-    C --> C4
-    
-    C1 --> D
-    C3 --> E
-    
-    D --> D1
-    D --> D2
-    D --> D3
-    D --> D4
-    
-    E --> E1
-    E --> E2
-    E --> E3
-    
-    C1 --> F
-    F --> F1
-    F --> F2
-    F --> F3
-    
-    F --> G
-    G --> G1
-    G --> G2
-    G --> G3
-    
-    G --> H
-    H --> H1
-    H --> H2
-    H --> H3
-    
-    H --> I
-    
-    %% Styling
-    style A fill:#ff6b6b,stroke:#333,stroke-width:2px
-    style B fill:#4ecdc4,stroke:#333,stroke-width:2px
-    style C fill:#45b7d1,stroke:#333,stroke-width:2px
-    style D fill:#f9ca24,stroke:#333,stroke-width:2px
-    style E fill:#f0932b,stroke:#333,stroke-width:2px
-    style F fill:#eb4d4b,stroke:#333,stroke-width:2px
-    style G fill:#6c5ce7,stroke:#333,stroke-width:2px
-    style H fill:#a29bfe,stroke:#333,stroke-width:2px
-    style I fill:#fd79a8,stroke:#333,stroke-width:2px
-```
+Система состоит из нескольких основных компонентов:
 
-#### 🔧 Компоненты системы
+**🎨 Frontend (React)** - визуальный редактор для создания ботов
+- Drag-and-drop интерфейс
+- Панель настроек блоков
+- Управление проектами
 
-<table>
-<tr>
-<th>🏗️ Слой</th>
-<th>📦 Компонент</th>
-<th>🎯 Назначение</th>
-<th>⚡ Технологии</th>
-</tr>
-<tr>
-<td rowspan="4"><strong>🌐 Frontend</strong></td>
-<td>Визуальный редактор</td>
-<td>Drag-and-drop создание ботов</td>
-<td>React, TypeScript, Tailwind</td>
-</tr>
-<tr>
-<td>Панель свойств</td>
-<td>Настройка блоков и переходов</td>
-<td>React Hook Form, Zod</td>
-</tr>
-<tr>
-<td>Управление проектами</td>
-<td>CRUD операции с проектами</td>
-<td>React Query, Zustand</td>
-</tr>
-<tr>
-<td>Управление ботами</td>
-<td>Запуск, остановка, мониторинг</td>
-<td>WebSocket, Real-time updates</td>
-</tr>
-<tr>
-<td rowspan="4"><strong>🖥️ Backend</strong></td>
-<td>REST API</td>
-<td>CRUD операции, бизнес-логика</td>
-<td>Express.js, TypeScript</td>
-</tr>
-<tr>
-<td>WebSocket Server</td>
-<td>Реальное время обновления</td>
-<td>Socket.io</td>
-</tr>
-<tr>
-<td>File Upload</td>
-<td>Загрузка медиафайлов</td>
-<td>Multer, Sharp</td>
-</tr>
-<tr>
-<td>Auth Middleware</td>
-<td>Аутентификация и авторизация</td>
-<td>JWT, bcrypt</td>
-</tr>
-<tr>
-<td rowspan="2"><strong>🗄️ Данные</strong></td>
-<td>PostgreSQL</td>
-<td>Основная база данных</td>
-<td>Drizzle ORM, Migrations</td>
-</tr>
-<tr>
-<td>File Storage</td>
-<td>Хранение медиафайлов</td>
-<td>Local FS / S3 Compatible</td>
-</tr>
-<tr>
-<td rowspan="2"><strong>🤖 Генерация</strong></td>
-<td>Code Generator</td>
-<td>Создание Python кода ботов</td>
-<td>Template Engine, AST</td>
-</tr>
-<tr>
-<td>Deployment</td>
-<td>Автоматический деплой</td>
-<td>Railway API, Docker</td>
-</tr>
-<tr>
-<td><strong>📱 Runtime</strong></td>
-<td>Telegram Bots</td>
-<td>Готовые боты в продакшене</td>
-<td>Python, aiogram, asyncpg</td>
-</tr>
-</table>
+**🖥️ Backend (Express.js)** - API сервер
+- REST API для работы с данными
+- Генерация Python кода ботов
+- Загрузка медиафайлов
+
+**�️  База данных (PostgreSQL)** - хранение данных
+- Проекты и схемы ботов
+- Пользователи и настройки
+- Медиафайлы
+
+**☁️ Деплой** - запуск ботов в облаке
+- Railway, Vercel
+- Автоматическая генерация кода
+- Готовые Python боты
 
 #### 📁 Структура проекта
 
