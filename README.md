@@ -80,90 +80,222 @@
 
 ### 🏗️ Архитектура системы
 
-Система состоит из нескольких основных компонентов:
+<div align="center">
+  <img src="https://img.shields.io/badge/Архитектура-Микросервисы-blue?style=for-the-badge&logo=architecture" alt="Architecture"/>
+  <img src="https://img.shields.io/badge/Паттерн-MVC-green?style=for-the-badge&logo=pattern" alt="Pattern"/>
+  <img src="https://img.shields.io/badge/API-REST-orange?style=for-the-badge&logo=api" alt="API"/>
+</div>
 
-**🎨 Frontend (React)** - визуальный редактор для создания ботов
-- Drag-and-drop интерфейс
-- Панель настроек блоков
-- Управление проектами
+<br/>
 
-**🖥️ Backend (Express.js)** - API сервер
-- REST API для работы с данными
-- Генерация Python кода ботов
-- Загрузка медиафайлов
-
-**🗄️ База данных (PostgreSQL)** - хранение данных
-- Проекты и схемы ботов
-- Пользователи и настройки
-- Медиафайлы
-
-**☁️ Деплой** - запуск ботов в облаке
-- Railway, VPS
-- Автоматическая генерация кода
-- Готовые Python боты
-
-#### 📁 Структура проекта
-
-```
-telegram-bot-builder/
-├── 📱 client/                    # React приложение
-│   ├── src/components/editor/    # Визуальный редактор
-│   ├── src/lib/bot-generator.ts  # 🔴 Генерация Python кода
-│   └── src/pages/               # Страницы интерфейса
-├── 🖥️ server/                   # Express сервер
-│   ├── routes.ts                # API маршруты
-│   ├── telegram-client.ts       # Управление ботами
-│   └── storage.ts               # Работа с БД
-├── 🗄️ shared/schema.ts          # Типы данных (Drizzle ORM)
-├── 🤖 bots/                     # Сгенерированные Python боты
-└── 📚 docs/                     # Документация
-```
-
-
-#### 📡 API Endpoints
-
-<details>
-<summary><strong>🔗 Основные API маршруты</strong> (нажми для раскрытия)</summary>
-
-**Проекты:**
-- `GET /api/projects` - Список проектов пользователя
-- `POST /api/projects` - Создать новый проект
-- `PUT /api/projects/{id}` - Обновить проект
-- `DELETE /api/projects/{id}` - Удалить проект
-
-**Узлы (блоки бота):**
-- `GET /api/projects/{id}/nodes` - Получить схему бота
-- `POST /api/projects/{id}/nodes` - Добавить узел
-- `PUT /api/projects/{id}/nodes/{nodeId}` - Обновить узел
-- `DELETE /api/projects/{id}/nodes/{nodeId}` - Удалить узел
-
-**Боты:**
-- `POST /api/bots/{id}/generate` - Сгенерировать Python код
-- `POST /api/bots/{id}/deploy` - Задеплоить бота
-- `GET /api/bots/{id}/status` - Статус бота
-- `POST /api/bots/{id}/stop` - Остановить бота
-
-**Медиафайлы:**
-- `POST /api/media/upload` - Загрузить файл
-- `GET /api/media/{id}` - Скачать файл
-- `DELETE /api/media/{id}` - Удалить файл
-
-**Статистика:**
-- `GET /api/bots/{id}/stats` - Статистика использования
-- `GET /api/bots/{id}/users` - Пользователи бота
-- `GET /api/bots/{id}/messages` - История сообщений
-
-</details>
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="25%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; color: white;">
+          <h3>🎨 Frontend</h3>
+          <p><strong>React + TypeScript</strong></p>
+          <p>Визуальный редактор</p>
+          <hr style="border: 1px solid rgba(255,255,255,0.3);">
+          <small>• Drag-and-drop интерфейс<br/>
+          • Панель настроек блоков<br/>
+          • Управление проектами</small>
+        </div>
+      </td>
+      <td align="center" width="25%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 15px; color: white;">
+          <h3>🖥️ Backend</h3>
+          <p><strong>Express.js + Node.js</strong></p>
+          <p>API сервер</p>
+          <hr style="border: 1px solid rgba(255,255,255,0.3);">
+          <small>• REST API для данных<br/>
+          • Генерация Python кода<br/>
+          • Загрузка медиафайлов</small>
+        </div>
+      </td>
+      <td align="center" width="25%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 15px; color: white;">
+          <h3>🗄️ База данных</h3>
+          <p><strong>PostgreSQL + Drizzle</strong></p>
+          <p>Хранение данных</p>
+          <hr style="border: 1px solid rgba(255,255,255,0.3);">
+          <small>• Проекты и схемы ботов<br/>
+          • Пользователи и настройки<br/>
+          • Медиафайлы</small>
+        </div>
+      </td>
+      <td align="center" width="25%" style="padding: 15px;">
+        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; border-radius: 15px; color: white;">
+          <h3>☁️ Деплой</h3>
+          <p><strong>Railway + Python</strong></p>
+          <p>Запуск ботов</p>
+          <hr style="border: 1px solid rgba(255,255,255,0.3);">
+          <small>• Автогенерация кода<br/>
+          • Готовые Python боты<br/>
+          • Облачный хостинг</small>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
 
 #### 🔄 Поток данных
 
-1. **👤 Пользователь** создает схему бота в визуальном редакторе
+<div align="center">
+  <img src="https://img.shields.io/badge/1-👤_Пользователь-4285f4?style=for-the-badge" alt="Step 1"/>
+  <img src="https://img.shields.io/badge/→-gray?style=for-the-badge" alt="Arrow"/>
+  <img src="https://img.shields.io/badge/2-🎨_Frontend-ea4335?style=for-the-badge" alt="Step 2"/>
+  <img src="https://img.shields.io/badge/→-gray?style=for-the-badge" alt="Arrow"/>
+  <img src="https://img.shields.io/badge/3-📡_API_Server-34a853?style=for-the-badge" alt="Step 3"/>
+  <img src="https://img.shields.io/badge/→-gray?style=for-the-badge" alt="Arrow"/>
+  <img src="https://img.shields.io/badge/4-🤖_Generator-fbbc04?style=for-the-badge" alt="Step 4"/>
+</div>
+
+<div align="center" style="margin: 20px 0;">
+  <img src="https://img.shields.io/badge/5-☁️_Deployment-9c27b0?style=for-the-badge" alt="Step 5"/>
+  <img src="https://img.shields.io/badge/→-gray?style=for-the-badge" alt="Arrow"/>
+  <img src="https://img.shields.io/badge/6-📱_Telegram-0088cc?style=for-the-badge" alt="Step 6"/>
+  <img src="https://img.shields.io/badge/→-gray?style=for-the-badge" alt="Arrow"/>
+  <img src="https://img.shields.io/badge/7-📊_Analytics-ff5722?style=for-the-badge" alt="Step 7"/>
+</div>
+
+<details>
+<summary><strong>📋 Подробное описание потока</strong> (нажми для раскрытия)</summary>
+
+1. **� Поlльзователь** создает схему бота в визуальном редакторе
 2. **🎨 Frontend** отправляет изменения через WebSocket для реального времени
 3. **📡 API Server** валидирует данные и сохраняет в PostgreSQL
 4. **🤖 Generator** преобразует схему в Python код с aiogram
 5. **☁️ Deployment** автоматически деплоит на Railway
 6. **📱 Telegram** получает webhook и начинает обрабатывать сообщения
 7. **📊 Analytics** собирает статистику использования в реальном времени
+
+</details>
+
+#### 📁 Структура проекта
+
+<div align="center">
+  <img src="https://img.shields.io/badge/Структура-Монорепозиторий-success?style=for-the-badge&logo=folder" alt="Structure"/>
+</div>
+
+```
+📦 telegram-bot-builder/
+┣ 📂 client/                     # 🎨 React Frontend
+┃ ┣ 📂 src/components/editor/    # Визуальный редактор
+┃ ┣ 📂 src/lib/bot-generator.ts  # 🔴 Генерация Python кода
+┃ ┗ 📂 src/pages/               # Страницы интерфейса
+┣ 📂 server/                     # 🖥️ Express Backend  
+┃ ┣ 📄 routes.ts                # API маршруты
+┃ ┣ 📄 telegram-client.ts       # Управление ботами
+┃ ┗ 📄 storage.ts               # Работа с БД
+┣ 📂 shared/                     # 🔗 Общие типы
+┃ ┗ 📄 schema.ts                # Drizzle ORM схемы
+┣ 📂 bots/                       # 🤖 Готовые боты
+┃ ┗ 📄 *.py                     # Сгенерированные Python боты
+┗ 📂 docs/                       # 📚 Документация
+  ┗ 📄 *.md                     # Руководства и гайды
+```
+
+#### 📡 API Endpoints
+
+<div align="center">
+  <img src="https://img.shields.io/badge/API-RESTful-blue?style=for-the-badge&logo=api" alt="API"/>
+  <img src="https://img.shields.io/badge/Формат-JSON-green?style=for-the-badge&logo=json" alt="JSON"/>
+  <img src="https://img.shields.io/badge/Аутентификация-JWT-orange?style=for-the-badge&logo=auth" alt="Auth"/>
+</div>
+
+<details>
+<summary><strong>🔗 Основные API маршруты</strong> (нажми для раскрытия)</summary>
+
+<table>
+<tr>
+<th>🎯 Категория</th>
+<th>📡 Endpoint</th>
+<th>📝 Описание</th>
+</tr>
+
+<tr>
+<td rowspan="4"><strong>📋 Проекты</strong></td>
+<td><code>GET /api/projects</code></td>
+<td>Список проектов пользователя</td>
+</tr>
+<tr>
+<td><code>POST /api/projects</code></td>
+<td>Создать новый проект</td>
+</tr>
+<tr>
+<td><code>PUT /api/projects/{id}</code></td>
+<td>Обновить проект</td>
+</tr>
+<tr>
+<td><code>DELETE /api/projects/{id}</code></td>
+<td>Удалить проект</td>
+</tr>
+
+<tr>
+<td rowspan="4"><strong>🧩 Узлы</strong></td>
+<td><code>GET /api/projects/{id}/nodes</code></td>
+<td>Получить схему бота</td>
+</tr>
+<tr>
+<td><code>POST /api/projects/{id}/nodes</code></td>
+<td>Добавить узел</td>
+</tr>
+<tr>
+<td><code>PUT /api/projects/{id}/nodes/{nodeId}</code></td>
+<td>Обновить узел</td>
+</tr>
+<tr>
+<td><code>DELETE /api/projects/{id}/nodes/{nodeId}</code></td>
+<td>Удалить узел</td>
+</tr>
+
+<tr>
+<td rowspan="4"><strong>🤖 Боты</strong></td>
+<td><code>POST /api/bots/{id}/generate</code></td>
+<td>Сгенерировать Python код</td>
+</tr>
+<tr>
+<td><code>POST /api/bots/{id}/deploy</code></td>
+<td>Задеплоить бота</td>
+</tr>
+<tr>
+<td><code>GET /api/bots/{id}/status</code></td>
+<td>Статус бота</td>
+</tr>
+<tr>
+<td><code>POST /api/bots/{id}/stop</code></td>
+<td>Остановить бота</td>
+</tr>
+
+<tr>
+<td rowspan="3"><strong>📁 Медиа</strong></td>
+<td><code>POST /api/media/upload</code></td>
+<td>Загрузить файл</td>
+</tr>
+<tr>
+<td><code>GET /api/media/{id}</code></td>
+<td>Скачать файл</td>
+</tr>
+<tr>
+<td><code>DELETE /api/media/{id}</code></td>
+<td>Удалить файл</td>
+</tr>
+
+<tr>
+<td rowspan="3"><strong>📊 Статистика</strong></td>
+<td><code>GET /api/bots/{id}/stats</code></td>
+<td>Статистика использования</td>
+</tr>
+<tr>
+<td><code>GET /api/bots/{id}/users</code></td>
+<td>Пользователи бота</td>
+</tr>
+<tr>
+<td><code>GET /api/bots/{id}/messages</code></td>
+<td>История сообщений</td>
+</tr>
+</table>
 
 </details>
 
