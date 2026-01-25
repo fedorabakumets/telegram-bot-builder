@@ -1249,11 +1249,7 @@ MIT License - используйте свободно для личных и к�
 
 </div>
 
-**Что делать если:**
-- 🐛 **Нашли баг?** → [Создайте Issue](https://github.com/fedorabakumets/telegram-bot-builder/issues/new)
-- 💡 **Есть идея?** → [GitHub Discussions](https://github.com/fedorabakumets/telegram-bot-builder/discussions)
-- 📖 **Нужна помощь?** → [Документация](docs/README.md) или [Telegram чат](https://t.me/telegram_bot_builder_chat)
-- 🤝 **Хотите помочь?** → [Руководство для контрибьюторов](docs/development/CONTRIBUTING.md)
+
 
 ---
 
