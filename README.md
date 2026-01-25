@@ -62,6 +62,9 @@
     <a href="https://t.me/bot_builder_chat">
       <img src="https://img.shields.io/badge/Telegram-Chat-blue?style=for-the-badge&logo=telegram" alt="Telegram Chat"/>
     </a>
+    <a href="https://t.me/botcraft_studio">
+      <img src="https://img.shields.io/badge/Telegram-Channel-0088cc?style=for-the-badge&logo=telegram" alt="Telegram Channel"/>
+    </a>
   </div>
 </div>
 
