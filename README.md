@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/images/bot_added_ui_visible.png">
     <source media="(prefers-color-scheme: light)" srcset="assets/images/bot_added_ui_visible.png">
@@ -92,7 +92,7 @@
 - Генерация Python кода ботов
 - Загрузка медиафайлов
 
-**�️  База данных (PostgreSQL)** - хранение данных
+**🗄️ База данных (PostgreSQL)** - хранение данных
 - Проекты и схемы ботов
 - Пользователи и настройки
 - Медиафайлы
@@ -853,8 +853,6 @@ scripts/setup/create-env.bat # Создание .env файла
 
 ---
 
-
-
 ## 🚀 Развертывание готового бота
 
 После создания бота, приложение генерирует Python файл. Вы можете:
@@ -879,10 +877,6 @@ scripts/setup/create-env.bat # Создание .env файла
 MIT License - используйте свободно для личных и коммерческих целей.
 
 ---
-
----
-
-
 
 ## 🤝 Помощь и поддержка
 
@@ -919,8 +913,6 @@ MIT License - используйте свободно для личных и к�
 </table>
 
 </div>
-
-
 
 ---
 
@@ -965,11 +957,6 @@ MIT License - используйте свободно для личных и к�
 ### 🏆 Награды и признание
 [![Product Hunt](https://img.shields.io/badge/Product%20Hunt-Featured-orange?style=for-the-badge&logo=producthunt)](https://www.producthunt.com/)
 [![Awesome](https://img.shields.io/badge/Awesome-List-brightgreen?style=for-the-badge)](https://github.com/sindresorhus/awesome)
-
-### 📜 Лицензия
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
-
-*Используйте свободно для личных и коммерческих целей*
 
 ---
 
