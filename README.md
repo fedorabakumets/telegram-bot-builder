@@ -44,11 +44,6 @@
 
 ## 📸 Демонстрация
 
-<div align="center">
-  <img src="assets/images/cycle1_after_return.png" alt="Редактор ботов" width="800"/>
-  <p><em>Визуальный редактор с drag-and-drop интерфейсом</em></p>
-</div>
-
 ### 🎬 Как это работает
 <div align="center">
   <img src="assets/images/new_bot_added.png" alt="Процесс создания бота" width="600"/>
