@@ -1151,26 +1151,7 @@ MIT License - используйте свободно для личных и к�
 
 ---
 
-## � Благводарности
 
-<div align="center">
-
-### 👥 Контрибьюторы
-<a href="https://github.com/fedorabakumets/telegram-bot-builder/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=fedorabakumets/telegram-bot-builder" />
-</a>
-
-### 💖 Поддержать проект
-
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/fedorabakumets)
-[![GitHub Sponsor](https://img.shields.io/badge/GitHub-Sponsor-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/fedorabakumets)
-
-### 🌟 Поставьте звезду!
-Если проект вам помог, поставьте ⭐ — это мотивирует на дальнейшее развитие!
-
-</div>
-
----
 
 ## 🤝 Помощь и поддержка
 
