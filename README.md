@@ -1173,38 +1173,9 @@ MIT License - используйте свободно для личных и к�
 
 ---
 
-## 💬 Отзывы пользователей
-
-## 💬 Отзывы пользователей
-
-<div align="center">
-  <table>
-    <tr>
-      <td width="33%" align="center" style="padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <img src="https://github.com/github.png" width="60" style="border-radius: 50%; border: 3px solid white;"/>
-        <h4 style="color: white; margin: 10px 0;">Алексей К.</h4>
-        <p style="color: white; font-style: italic;">"Создал бота для своей пиццерии за 30 минут! Раньше думал, что нужно быть программистом."</p>
-        <div style="color: gold;">⭐⭐⭐⭐⭐</div>
-      </td>
-      <td width="33%" align="center" style="padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-        <img src="https://github.com/octocat.png" width="60" style="border-radius: 50%; border: 3px solid white;"/>
-        <h4 style="color: white; margin: 10px 0;">Мария С.</h4>
-        <p style="color: white; font-style: italic;">"Отличный инструмент для фрилансеров. Теперь могу предлагать клиентам ботов без изучения кода."</p>
-        <div style="color: gold;">⭐⭐⭐⭐⭐</div>
-      </td>
-      <td width="33%" align="center" style="padding: 20px; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-        <img src="https://github.com/defunkt.png" width="60" style="border-radius: 50%; border: 3px solid white;"/>
-        <h4 style="color: white; margin: 10px 0;">Дмитрий П.</h4>
-        <p style="color: white; font-style: italic;">"Интуитивно понятный интерфейс. Студенты быстро осваивают логику ботов."</p>
-        <div style="color: gold;">⭐⭐⭐⭐⭐</div>
-      </td>
-    </tr>
-  </table>
-</div>
-
 ---
 
-## 🙏 Благодарности
+## � Благводарности
 
 <div align="center">
 
