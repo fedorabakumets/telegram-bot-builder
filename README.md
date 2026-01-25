@@ -797,86 +797,96 @@ if __name__ == "__main__":
 </div>
 
 <div align="center">
-  <table>
-    <tr>
-      <td align="center" width="25%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
-          <h3>🛠️ Разработчикам</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>📋 <a href="docs/development/SETUP.md" style="color: #FFE4E1;">Настройка проекта</a></strong><br/>
-            <small>Пошаговое руководство по установке</small></p>
-            
-            <p><strong>🔧 <a href="docs/development/TROUBLESHOOTING_RU.md" style="color: #FFE4E1;">Устранение неполадок</a></strong><br/>
-            <small>Решение частых проблем</small></p>
-            
-            <p><strong>🤝 <a href="docs/development/CONTRIBUTING.md" style="color: #FFE4E1;">Для контрибьюторов</a></strong><br/>
-            <small>Как участвовать в разработке</small></p>
-            
-            <p><strong>📄 <a href="docs/development/REQUIREMENTS_SPECIFICATION.md" style="color: #FFE4E1;">Спецификация</a></strong><br/>
-            <small>Техническое описание</small></p>
-          </div>
-        </div>
-      </td>
-      <td align="center" width="25%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
-          <h3>🚀 Деплой</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>🚂 <a href="docs/deployment/RAILWAY_DEPLOY.md" style="color: #FFE4E1;">Railway</a></strong><br/>
-            <small>Развертывание на Railway (рекомендуется)</small></p>
-            
-            <p><strong>🐳 Docker</strong><br/>
-            <small>Контейнеризация приложения</small></p>
-            
-            <p><strong>☁️ VPS</strong><br/>
-            <small>Развертывание на собственном сервере</small></p>
-            
-            <p><strong>⚙️ CI/CD</strong><br/>
-            <small>Автоматическое развертывание</small></p>
-          </div>
-        </div>
-      </td>
-      <td align="center" width="25%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
-          <h3>📊 Анализ</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>🏗️ <a href="docs/analysis/PROJECT_STRUCTURE_ANALYSIS.md" style="color: #FFE4E1;">Структура проекта</a></strong><br/>
-            <small>Детальный анализ архитектуры</small></p>
-            
-            <p><strong>🔧 <a href="docs/analysis/INFRASTRUCTURE_ANALYSIS.md" style="color: #FFE4E1;">Инфраструктура</a></strong><br/>
-            <small>Технические решения</small></p>
-            
-            <p><strong>📈 Производительность</strong><br/>
-            <small>Оптимизация и мониторинг</small></p>
-            
-            <p><strong>🧪 Тестирование</strong><br/>
-            <small>Стратегии тестирования</small></p>
-          </div>
-        </div>
-      </td>
-      <td align="center" width="25%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
-          <h3>🔒 Безопасность</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>🛡️ <a href="docs/SECURITY.md" style="color: #FFE4E1;">Руководство</a></strong><br/>
-            <small>Лучшие практики безопасности</small></p>
-            
-            <p><strong>🔐 Аутентификация</strong><br/>
-            <small>Защита пользовательских данных</small></p>
-            
-            <p><strong>🚨 Мониторинг</strong><br/>
-            <small>Отслеживание угроз</small></p>
-            
-            <p><strong>📋 Аудит</strong><br/>
-            <small>Проверка безопасности</small></p>
-          </div>
-        </div>
-      </td>
-    </tr>
-  </table>
+
+<table>
+<tr>
+<td align="center" width="25%" style="padding: 15px;">
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
+<h3>🛠️ Разработчикам</h3>
+<hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+<div style="text-align: left; font-size: 14px;">
+
+<p><strong>📋 <a href="docs/development/SETUP.md" style="color: #FFE4E1;">Настройка проекта</a></strong><br/>
+<small>Пошаговое руководство по установке</small></p>
+
+<p><strong>🔧 <a href="docs/development/TROUBLESHOOTING_RU.md" style="color: #FFE4E1;">Устранение неполадок</a></strong><br/>
+<small>Решение частых проблем</small></p>
+
+<p><strong>🤝 <a href="docs/development/CONTRIBUTING.md" style="color: #FFE4E1;">Для контрибьюторов</a></strong><br/>
+<small>Как участвовать в разработке</small></p>
+
+<p><strong>📄 <a href="docs/development/REQUIREMENTS_SPECIFICATION.md" style="color: #FFE4E1;">Спецификация</a></strong><br/>
+<small>Техническое описание</small></p>
+
+</div>
+</div>
+</td>
+<td align="center" width="25%" style="padding: 15px;">
+<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
+<h3>🚀 Деплой</h3>
+<hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+<div style="text-align: left; font-size: 14px;">
+
+<p><strong>🚂 <a href="docs/deployment/RAILWAY_DEPLOY.md" style="color: #FFE4E1;">Railway</a></strong><br/>
+<small>Развертывание на Railway (рекомендуется)</small></p>
+
+<p><strong>🐳 Docker</strong><br/>
+<small>Контейнеризация приложения</small></p>
+
+<p><strong>☁️ VPS</strong><br/>
+<small>Развертывание на собственном сервере</small></p>
+
+<p><strong>⚙️ CI/CD</strong><br/>
+<small>Автоматическое развертывание</small></p>
+
+</div>
+</div>
+</td>
+<td align="center" width="25%" style="padding: 15px;">
+<div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
+<h3>📊 Анализ</h3>
+<hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+<div style="text-align: left; font-size: 14px;">
+
+<p><strong>🏗️ <a href="docs/analysis/PROJECT_STRUCTURE_ANALYSIS.md" style="color: #FFE4E1;">Структура проекта</a></strong><br/>
+<small>Детальный анализ архитектуры</small></p>
+
+<p><strong>🔧 <a href="docs/analysis/INFRASTRUCTURE_ANALYSIS.md" style="color: #FFE4E1;">Инфраструктура</a></strong><br/>
+<small>Технические решения</small></p>
+
+<p><strong>📈 Производительность</strong><br/>
+<small>Оптимизация и мониторинг</small></p>
+
+<p><strong>🧪 Тестирование</strong><br/>
+<small>Стратегии тестирования</small></p>
+
+</div>
+</div>
+</td>
+<td align="center" width="25%" style="padding: 15px;">
+<div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; border-radius: 15px; color: white; min-height: 200px;">
+<h3>🔒 Безопасность</h3>
+<hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
+<div style="text-align: left; font-size: 14px;">
+
+<p><strong>🛡️ <a href="docs/SECURITY.md" style="color: #FFE4E1;">Руководство</a></strong><br/>
+<small>Лучшие практики безопасности</small></p>
+
+<p><strong>🔐 Аутентификация</strong><br/>
+<small>Защита пользовательских данных</small></p>
+
+<p><strong>🚨 Мониторинг</strong><br/>
+<small>Отслеживание угроз</small></p>
+
+<p><strong>📋 Аудит</strong><br/>
+<small>Проверка безопасности</small></p>
+
+</div>
+</div>
+</td>
+</tr>
+</table>
+
 </div>
 
 <div align="center" style="margin: 30px 0;">
