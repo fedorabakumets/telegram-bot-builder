@@ -1,0 +1,65 @@
+"""
+TestBot - Telegram Bot
+Сгенерировано для тестирования генератора
+"""
+
+import asyncio
+import logging
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+# Токен бота (замените на реальный)
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+
+# Создание бота и диспетчера
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+    """Обработчик команды /start"""
+    user_id = message.from_user.id
+    logging.info(f"🚀 Команда /start от пользователя {user_id}")
+    
+    text = "Привет! Добро пожаловать в тестовый бот!"
+    
+    # Создаем inline клавиатуру
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Нажми меня", callback_data="message-1"))
+    builder.adjust(1)
+    keyboard = builder.as_markup()
+    
+    await message.answer(text, reply_markup=keyboard)
+
+@dp.callback_query(F.data == "message-1")
+async def handle_callback_message_1(callback: types.CallbackQuery):
+    """Обработчик callback запроса message-1"""
+    await callback.answer()
+    
+    text = "Отлично! Ты нажал кнопку."
+    await callback.message.edit_text(text)
+
+# Запуск бота
+async def main():
+    try:
+        print("🤖 Бот запущен и готов к работе!")
+        print("📋 Доступные команды:")
+        print("   /start - Начать работу с ботом")
+        print("🔗 Для остановки нажмите Ctrl+C")
+        await dp.start_polling(bot)
+    except KeyboardInterrupt:
+        print("\n🛑 Получен сигнал остановки, завершаем работу...")
+    except Exception as e:
+        logging.error(f"❌ Критическая ошибка: {e}")
+    finally:
+        await bot.session.close()
+        print("✅ Бот корректно завершил работу")
+
+if __name__ == "__main__":
+    asyncio.run(main())

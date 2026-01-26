@@ -10,14 +10,15 @@ uv.lock
 .cache/
 .config/
 attached_assets/
-uploads/
 
-# Generated bot files
-bots/
-*.py
-!server/
-!client/
-!shared/
+# Uploads - exclude all files except README.md
+uploads/*
+!uploads/README.md
+
+# Generated bot files - exclude Python files but keep README.md
+bots/*.py
+bots/__pycache__/
+!bots/README.md
 
 # Environment variables
 .env
@@ -41,7 +42,6 @@ yarn-error.log*
 Thumbs.db
 
 # IDE files
-.vscode/
 .idea/
 *.swp
 *.swo
