@@ -55,15 +55,19 @@ export class DatabaseManager {
       // Test connection with a simple query
       const result = await db.execute(sql`SELECT 1 as health`);
       
-      // Update connection stats
-      this.connectionStats.totalConnections = pool.totalCount;
-      this.connectionStats.activeConnections = pool.totalCount - pool.idleCount;
-      this.connectionStats.idleConnections = pool.idleCount;
+      // Update connection stats if pool is available
+      if (pool) {
+        this.connectionStats.totalConnections = pool.totalCount || 0;
+        this.connectionStats.activeConnections = (pool.totalCount || 0) - (pool.idleCount || 0);
+        this.connectionStats.idleConnections = pool.idleCount || 0;
+      }
       this.connectionStats.lastHealthCheck = new Date();
 
+      console.log('Database health check passed');
       return true;
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
+      console.error('Database health check failed:', error?.message);
+      console.error('Detailed error:', error);
       this.connectionStats.errors++;
       return false;
     }
@@ -74,11 +78,11 @@ export class DatabaseManager {
     return {
       ...this.connectionStats,
       poolInfo: {
-        totalCount: pool.totalCount,
-        idleCount: pool.idleCount,
-        waitingCount: pool.waitingCount,
-        maxSize: 'N/A',
-        minSize: 'N/A'
+        totalCount: pool?.totalCount || 0,
+        idleCount: pool?.idleCount || 0,
+        waitingCount: pool?.waitingCount || 0,
+        maxSize: 20,
+        minSize: 2
       }
     };
   }
@@ -89,24 +93,30 @@ export class DatabaseManager {
       // Close idle connections if there are too many
       if (this.connectionStats.idleConnections > 5) {
         console.log('Optimizing database connections...');
-        // Force garbage collection on idle connections
-        await pool.query('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = \'idle\' AND query_start < NOW() - INTERVAL \'5 minutes\'');
+        // Note: pg_terminate_backend requires superuser privileges
+        // Instead, we'll just log the optimization attempt
+        console.log('Would optimize connections if superuser privileges were available');
       }
 
-      // Analyze database performance
-      const slowQueries = await db.execute(sql`
-        SELECT query, calls, total_time, mean_time
-        FROM pg_stat_statements 
-        WHERE mean_time > 1000 
-        ORDER BY mean_time DESC 
-        LIMIT 10
-      `);
+      // Try to analyze database performance (if pg_stat_statements is available)
+      try {
+        const slowQueries = await db.execute(sql`
+          SELECT query, calls, total_exec_time, mean_exec_time
+          FROM pg_stat_statements 
+          WHERE mean_exec_time > 1000 
+          ORDER BY mean_exec_time DESC 
+          LIMIT 10
+        `);
 
-      if (slowQueries.rows.length > 0) {
-        console.log('Found slow queries:', slowQueries.rows);
+        if (slowQueries.rows.length > 0) {
+          console.log('Found slow queries:', slowQueries.rows);
+        }
+      } catch (error) {
+        // pg_stat_statements might not be available, that's okay
+        console.log('pg_stat_statements not available, skipping slow query analysis');
       }
     } catch (error: any) {
-      console.warn('Detailed error:', error?.message, error?.stack);
+      console.warn('Connection optimization warning:', error?.message);
     }
   }
 

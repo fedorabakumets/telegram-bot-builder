@@ -34,7 +34,8 @@
     "build:client": "vite build",
     "build:server": "tsc --project tsconfig.server.json --outDir dist/server --noEmitOnError false",
     "check": "tsc --noEmit",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "db:test": "tsx server/test-db-connection.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
