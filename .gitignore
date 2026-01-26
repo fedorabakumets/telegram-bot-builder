@@ -15,8 +15,9 @@ attached_assets/
 uploads/*
 !uploads/README.md
 
-# Generated bot files - exclude Python files but keep README.md
+# Generated bot files - exclude Python files and backups but keep README.md
 bots/*.py
+bots/*.backup
 bots/__pycache__/
 !bots/README.md
 
