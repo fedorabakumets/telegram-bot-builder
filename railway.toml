@@ -1,7 +1,7 @@
 [build]
 builder = "DOCKERFILE"
 # Используем кэширование Docker слоев для ускорения сборки
-buildCommand = "npm run railway:build"
+buildCommand = "npm run build"
 
 [deploy]
 startCommand = "npm run start"

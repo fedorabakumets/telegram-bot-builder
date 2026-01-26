@@ -123,7 +123,9 @@
     "wouter": "^3.9.0",
     "ws": "^8.19.0",
     "zod": "^3.23.8",
-    "zod-validation-error": "^3.4.0"
+    "zod-validation-error": "^3.4.0",
+    "cross-env": "^10.1.0",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@replit/vite-plugin-cartographer": "^0.4.4",
@@ -142,12 +144,10 @@
     "@vercel/node": "^5.5.27",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.23",
-    "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.8",
     "esbuild": "^0.27.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
   },
