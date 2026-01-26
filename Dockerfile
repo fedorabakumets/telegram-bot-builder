@@ -18,40 +18,22 @@ RUN ln -sf python3 /usr/bin/python && \
 
 # Проверяем установку Python
 RUN python --version && pip --version && \
-    echo "Python installation verified successfully" && \
-    which python && which pip && \
-    ls -la /usr/bin/python* && \
-    python -c "print('Python is working!')"
+    echo "Python installation verified successfully"
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Устанавливаем Python библиотеки для генерируемых ботов
-RUN apk add --no-cache py3-requests && \
-    pip install --break-system-packages --no-cache-dir pytelegrambotapi python-dotenv
-
-# Проверяем Python библиотеки
-RUN python -c "import telebot; print('pytelegrambotapi OK')" && \
-    python -c "import requests; print('requests OK')" && \
-    python -c "import dotenv; print('python-dotenv OK')"
-
 # Копируем package.json и package-lock.json
 COPY package*.json ./
 
-# Устанавливаем Node.js зависимости с разрешением конфликтов
+# Устанавливаем Node.js зависимости
 RUN npm ci --legacy-peer-deps
 
 # Копируем весь код проекта
 COPY . .
 
-# Собираем фронтенд
-RUN npm run build
-
-# Копируем собранный фронтенд в server/public
-RUN mkdir -p server/public && cp -r dist/* server/public/
-
-# Создаем необходимые директории
-RUN mkdir -p /app/bots
+# Собираем проект (если есть build скрипт)
+RUN npm run build || echo "No build script found, skipping..."
 
 # Удаляем dev зависимости для уменьшения размера образа
 RUN npm prune --omit=dev

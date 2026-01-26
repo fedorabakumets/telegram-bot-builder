@@ -12,3 +12,8 @@ healthcheckTimeout = 300
 NODE_ENV = "production"
 # Railway will automatically set DATABASE_URL to the private URL when PostgreSQL service is connected
 # This ensures internal network communication for better performance
+
+# PostgreSQL service connection
+# Railway automatically generates these variables when PostgreSQL service is connected:
+# - DATABASE_URL (automatically set to private URL for better performance)
+# - PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD (individual connection parameters)
