@@ -614,8 +614,8 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
         PROJECT_ID: projectId.toString(),
         BOT_TOKEN: token,
         API_BASE_URL: process.env.NODE_ENV === 'production' 
-          ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost:8080'}`
-          : 'http://localhost:8080'
+          ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost:5000'}`
+          : 'http://localhost:5000'
       }
     });
 

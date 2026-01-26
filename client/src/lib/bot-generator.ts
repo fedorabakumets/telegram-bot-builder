@@ -1,5 +1,10 @@
 import { BotData, Node, BotGroup, buttonSchema } from '../../../shared/schema';
 import { generateBotFatherCommands } from './commands';
+import {
+  generateInitUserVariablesFunction,
+  generateReplaceVariablesFunction,
+  generateUniversalVariableReplacement as generateUniversalVariableReplacementUtil
+} from './utils/user-utils';
 import { z } from 'zod';
 
 type Button = z.infer<typeof buttonSchema>;
@@ -12,6 +17,75 @@ interface ResponseOption {
   target?: string;
   url?: string;
 }
+
+/*
+============================================================================
+СТРУКТУРА ФАЙЛА - НАВИГАЦИЯ ПО ГРУППАМ ФУНКЦИЙ
+============================================================================
+
+1. УТИЛИТЫ ДЛЯ РАБОТЫ С ДАННЫМИ БОТА
+   - extractNodesAndConnections()
+
+2. УТИЛИТЫ ДЛЯ ФОРМАТИРОВАНИЯ И ОБРАБОТКИ ТЕКСТА
+   - createSafeFunctionName(), escapeForPython(), stripHtmlTags()
+   - formatTextForPython(), getParseMode()
+
+3. ФУНКЦИИ АНАЛИЗА ВОЗМОЖНОСТЕЙ БОТА
+   - hasLocationFeatures(), hasMultiSelectNodes(), hasAutoTransitions()
+   - hasInlineButtons(), hasInputCollection(), hasMediaNodes()
+   - hasConditionalButtons(), hasCommandButtons()
+
+4. УТИЛИТЫ ДЛЯ РАБОТЫ С ПЕРЕМЕННЫМИ И МЕДИА
+   - collectMediaVariables(), findMediaVariablesInText()
+   - toPythonBoolean()
+
+5. ГЕНЕРАТОРЫ СОСТОЯНИЙ И ИДЕНТИФИКАТОРОВ
+   - generateWaitingStateCode(), generateUniqueShortId()
+   - escapeForJsonString()
+
+6. ГЕНЕРАТОРЫ КЛАВИАТУР И КНОПОК
+   - calculateOptimalColumns(), generateReplyKeyboardCode()
+   - generateInlineKeyboardCode(), generateButtonText()
+
+7. ГЕНЕРАТОРЫ ЗАМЕНЫ ПЕРЕМЕННЫХ
+   - generateVariableReplacement(), generateUniversalVariableReplacement()
+
+8. ГЕНЕРАТОРЫ МЕДИА И УСЛОВНЫХ СООБЩЕНИЙ
+   - generateAttachedMediaSendCode(), generateConditionalKeyboard()
+   - generateConditionalMessageLogic()
+
+9. ПАРСЕРЫ И ОСНОВНЫЕ ГЕНЕРАТОРЫ
+   - parsePythonCodeToJson(), generatePythonCode()
+
+10. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ КОМАНД И СООБЩЕНИЙ
+    - generateStartHandler(), generateCommandHandler()
+
+11. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ МЕДИА
+    - generateStickerHandler(), generateVoiceHandler()
+    - generateAnimationHandler(), generateLocationHandler()
+    - generateContactHandler()
+
+12. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ УПРАВЛЕНИЯ КОНТЕНТОМ
+    - generatePinMessageHandler(), generateUnpinMessageHandler()
+    - generateDeleteMessageHandler()
+
+13. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
+    - generateBanUserHandler(), generateUnbanUserHandler()
+    - generateMuteUserHandler(), generateUnmuteUserHandler()
+    - generateKickUserHandler(), generatePromoteUserHandler()
+    - generateDemoteUserHandler(), generateAdminRightsHandler()
+
+14. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ СИНОНИМОВ
+    - generateSynonymHandler(), generateMessageSynonymHandler()
+
+15. ГЕНЕРАТОРЫ ДОПОЛНИТЕЛЬНЫХ ФАЙЛОВ ПРОЕКТА
+    - generateRequirementsTxt(), generateReadme()
+    - generateDockerfile(), generateConfigYaml()
+
+16. ТИПЫ И ИНТЕРФЕЙСЫ
+    - CodeNodeRange, CodeWithMap
+============================================================================
+*/
 
 // Global variable for logging state (can be overridden by parameter)
 let globalLoggingEnabled = false;
@@ -27,6 +101,10 @@ const isLoggingEnabled = (): boolean => {
   }
   return false;
 };
+
+// ============================================================================
+// УТИЛИТЫ ДЛЯ РАБОТЫ С ДАННЫМИ БОТА
+// ============================================================================
 
 // Функция для сбора всех узлов и связей из всех листов проекта
 function extractNodesAndConnections(botData: BotData) {
@@ -55,6 +133,10 @@ function extractNodesAndConnections(botData: BotData) {
     };
   }
 }
+
+// ============================================================================
+// УТИЛИТЫ ДЛЯ ФОРМАТИРОВАНИЯ И ОБРАБОТКИ ТЕКСТА
+// ============================================================================
 
 // Функция для создания безопасного имени функции Python
 function createSafeFunctionName(nodeId: string): string {
@@ -99,6 +181,10 @@ function getParseMode(formatMode: string): string {
   }
   return '';
 }
+
+// ============================================================================
+// ФУНКЦИИ АНАЛИЗА ВОЗМОЖНОСТЕЙ БОТА
+// ============================================================================
 
 // Функция для проверки наличия геолокационных элементов в боте
 function hasLocationFeatures(nodes: Node[]): boolean {
@@ -247,6 +333,10 @@ function hasCommandButtons(nodes: Node[]): boolean {
   return hasRegularCommandButtons || hasConditionalCommandButtons;
 }
 
+// ============================================================================
+// УТИЛИТЫ ДЛЯ РАБОТЫ С ПЕРЕМЕННЫМИ И МЕДИА
+// ============================================================================
+
 // Функция для сбора всех медиапеременных из узлов
 function collectMediaVariables(nodes: Node[]): Map<string, { type: string; variable: string }> {
   const mediaVars = new Map<string, { type: string; variable: string }>();
@@ -322,6 +412,10 @@ function findMediaVariablesInText(text: string, mediaVariables: Map<string, { ty
 function toPythonBoolean(value: any): string {
   return value ? 'True' : 'False';
 }
+
+// ============================================================================
+// ГЕНЕРАТОРЫ СОСТОЯНИЙ И ИДЕНТИФИКАТОРОВ
+// ============================================================================
 
 // Функция для генерации кода установки состояния ожидания ввода
 // Автоматически определяет правильное состояние (waiting_for_photo, waiting_for_video и т.д.)
@@ -427,6 +521,10 @@ function escapeForJsonString(text: string): string {
   if (!text) return '';
   return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
+
+// ============================================================================
+// ГЕНЕРАТОРЫ КЛАВИАТУР И КНОПОК
+// ============================================================================
 
 // Функция для вычисления оптимального количества колонок для кнопок
 function calculateOptimalColumns(buttons: any[], nodeData?: any): number {
@@ -599,6 +697,10 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   return code;
 }
 
+// ============================================================================
+// ГЕНЕРАТОРЫ ЗАМЕНЫ ПЕРЕМЕННЫХ
+// ============================================================================
+
 // Функция для генерации замены переменных в тексте
 function generateVariableReplacement(variableName: string, indentLevel: string): string {
   let code = '';
@@ -612,51 +714,27 @@ function generateVariableReplacement(variableName: string, indentLevel: string):
   return code;
 }
 
-// Функция для генерации замены всех переменных в тексте
+// Функция для генерации замены всех переменных в тексте (рефакторенная версия)
 function generateUniversalVariableReplacement(indentLevel: string): string {
   let code = '';
-  code += `${indentLevel}# Инициализируем базовые переменные пользователя если их нет\n`;
-  code += `${indentLevel}if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):\n`;
-  code += `${indentLevel}    # Получаем объект пользователя из сообщения или callback\n`;
-  code += `${indentLevel}    user_obj = None\n`;
-  code += `${indentLevel}    if hasattr(locals().get('message'), 'from_user'):\n`;
-  code += `${indentLevel}        user_obj = message.from_user\n`;
-  code += `${indentLevel}    elif hasattr(locals().get('callback_query'), 'from_user'):\n`;
-  code += `${indentLevel}        user_obj = callback_query.from_user\n`;
-  code += `${indentLevel}    \n`;
-  code += `${indentLevel}    if user_obj:\n`;
-  code += `${indentLevel}        init_user_variables(user_id, user_obj)\n`;
+
+  // Используем утилиту для генерации кода инициализации переменных
+  code += generateUniversalVariableReplacementUtil(indentLevel);
   code += `${indentLevel}\n`;
-  code += `${indentLevel}# Подставляем все доступные переменные пользователя в текст\n`;
-  code += `${indentLevel}user_vars = await get_user_from_db(user_id)\n`;
-  code += `${indentLevel}if not user_vars:\n`;
-  code += `${indentLevel}    user_vars = user_data.get(user_id, {})\n`;
-  code += `${indentLevel}\n`;
-  code += `${indentLevel}# get_user_from_db теперь возвращает уже обработанные user_data\n`;
-  code += `${indentLevel}if not isinstance(user_vars, dict):\n`;
-  code += `${indentLevel}    user_vars = {}\n`;
-  code += `${indentLevel}\n`;
+
+  // Добавляем функцию замены переменных (если она еще не была добавлена)
   code += `${indentLevel}# Заменяем все переменные в тексте\n`;
   code += `${indentLevel}import re\n`;
-  code += `${indentLevel}def replace_variables_in_text(text_content, variables_dict):\n`;
-  code += `${indentLevel}    if not text_content or not variables_dict:\n`;
-  code += `${indentLevel}        return text_content\n`;
-  code += `${indentLevel}    \n`;
-  code += `${indentLevel}    for var_name, var_data in variables_dict.items():\n`;
-  code += `${indentLevel}        placeholder = "{" + var_name + "}"\n`;
-  code += `${indentLevel}        if placeholder in text_content:\n`;
-  code += `${indentLevel}            if isinstance(var_data, dict) and "value" in var_data:\n`;
-  code += `${indentLevel}                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name\n`;
-  code += `${indentLevel}            elif var_data is not None:\n`;
-  code += `${indentLevel}                var_value = str(var_data)\n`;
-  code += `${indentLevel}            else:\n`;
-  code += `${indentLevel}                var_value = var_name  # Показываем имя переменной если значения нет\n`;
-  code += `${indentLevel}            text_content = text_content.replace(placeholder, var_value)\n`;
-  code += `${indentLevel}    return text_content\n`;
+  code += generateReplaceVariablesFunction(indentLevel);
   code += `${indentLevel}\n`;
   code += `${indentLevel}text = replace_variables_in_text(text, user_vars)\n`;
+
   return code;
 }
+
+// ============================================================================
+// ГЕНЕРАТОРЫ МЕДИА И УСЛОВНЫХ СООБЩЕНИЙ
+// ============================================================================
 
 // Функция для генерации кода отправки медиа из attachedMedia
 function generateAttachedMediaSendCode(
@@ -1279,6 +1357,10 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   // НЕ добавляем else блок здесь - он будет добавлен основной функцией
   return code;
 }
+
+// ============================================================================
+// ПАРСЕРЫ И ОСНОВНЫЕ ГЕНЕРАТОРЫ
+// ============================================================================
 
 // Функция для парсинга Python кода обратно в JSON (улучшенная версия)
 export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; connections: any[] } {
@@ -2094,23 +2176,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    moscow_tz = timezone(timedelta(hours=3))\n';
     code += '    return datetime.now(moscow_tz).isoformat()\n\n';
 
-    // Добавляем функцию для инициализации переменных пользователя
-    code += 'def init_user_variables(user_id, user_obj):\n';
-    code += '    """Инициализирует базовые переменные пользователя"""\n';
-    code += '    if user_id not in user_data:\n';
-    code += '        user_data[user_id] = {}\n';
-    code += '    \n';
-    code += '    username = user_obj.username if hasattr(user_obj, "username") else None\n';
-    code += '    first_name = user_obj.first_name if hasattr(user_obj, "first_name") else None\n';
-    code += '    last_name = user_obj.last_name if hasattr(user_obj, "last_name") else None\n';
-    code += '    user_name = first_name or username or "Пользователь"\n';
-    code += '    \n';
-    code += '    user_data[user_id]["user_name"] = user_name\n';
-    code += '    user_data[user_id]["first_name"] = first_name\n';
-    code += '    user_data[user_id]["last_name"] = last_name\n';
-    code += '    user_data[user_id]["username"] = username\n';
-    code += '    \n';
-    code += '    return user_name\n\n';
+    // Добавляем функцию для инициализации переменных пользователя (рефакторенная версия)
+    code += generateInitUserVariablesFunction();
 
     code += 'async def save_user_to_db(user_id: int, username: Optional[str] = None, first_name: Optional[str] = None, last_name: Optional[str] = None):\n';
     code += '    """Сохраняет пользователя в базу данных"""\n';
@@ -9185,6 +9252,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   return code;
 }
 
+// ============================================================================
+// ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ КОМАНД И СООБЩЕНИЙ
+// ============================================================================
+
 function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string {
   let code = '\n@dp.message(CommandStart())\n';
   code += 'async def start_handler(message: types.Message):\n';
@@ -9547,6 +9618,10 @@ function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): strin
 // generateMessageHandler removed - message nodes are handled via callback handlers only
 // generatePhotoHandler, generateVideoHandler, generateAudioHandler, generateDocumentHandler removed
 // Media functionality is now handled as properties within message nodes
+
+// ============================================================================
+// ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ МЕДИА
+// ============================================================================
 
 function generateStickerHandler(node: Node): string {
   let code = `\n# Обработчик стикера для узла ${node.id}\n`;
@@ -9964,7 +10039,10 @@ function generateContactHandler(node: Node): string {
   return code;
 }
 
-// Функции-генераторы для управления контентом
+// ============================================================================
+// ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ УПРАВЛЕНИЯ КОНТЕНТОМ
+// ============================================================================
+
 function generatePinMessageHandler(node: Node): string {
   let code = `\n# Pin Message Handler\n`;
   const synonyms = node.data.synonyms || ['закрепить', 'прикрепить', 'зафиксировать'];
@@ -10486,7 +10564,9 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
   return code;
 }
 
-// Функции для управления пользователями
+// ============================================================================
+// ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
+// ============================================================================
 
 function generateBanUserHandler(node: Node): string {
   let code = `\n# Ban User Handler\n`;
@@ -12118,6 +12198,10 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
   return code;
 }
 
+// ============================================================================
+// ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ СИНОНИМОВ
+// ============================================================================
+
 function generateSynonymHandler(node: Node, synonym: string): string {
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
   const originalCommand = node.data.command || (node.type === 'start' ? '/start' : '/help');
@@ -12674,6 +12758,10 @@ function validateCommand(command: string): { isValid: boolean; errors: string[] 
   };
 }
 
+// ============================================================================
+// ГЕНЕРАТОРЫ ДОПОЛНИТЕЛЬНЫХ ФАЙЛОВ ПРОЕКТА
+// ============================================================================
+
 export function generateRequirementsTxt(): string {
   const lines = [
     '# Telegram Bot Requirements - Updated compatible versions',
@@ -12882,7 +12970,10 @@ export function generateConfigYaml(botName: string): string {
   return lines.join('\n');
 }
 
-// Типы для карты кода
+// ============================================================================
+// ТИПЫ И ИНТЕРФЕЙСЫ
+// ============================================================================
+
 export interface CodeNodeRange {
   nodeId: string;
   startLine: number;
@@ -12894,56 +12985,4 @@ export interface CodeWithMap {
   nodeMap: CodeNodeRange[];
 }
 
-// Функция для парсинга маркеров и создания карты кода
-export function parseCodeMap(code: string): CodeWithMap {
-  const lines = code.split('\n');
-  const nodeMap: CodeNodeRange[] = [];
-  const stack: Array<{ nodeId: string; startLine: number }> = [];
 
-  lines.forEach((line, index) => {
-    const lineNumber = index + 1;
-
-    // Проверяем маркер начала
-    const startMatch = line.match(/# @@NODE_START:(.+?)@@/);
-    if (startMatch) {
-      const nodeId = startMatch[1];
-      stack.push({ nodeId, startLine: lineNumber });
-      return;
-    }
-
-    // Проверяем маркер конца
-    const endMatch = line.match(/# @@NODE_END:(.+?)@@/);
-    if (endMatch) {
-      const nodeId = endMatch[1];
-      const startInfo = stack.pop();
-
-      if (startInfo && startInfo.nodeId === nodeId) {
-        nodeMap.push({
-          nodeId,
-          startLine: startInfo.startLine,
-          endLine: lineNumber
-        });
-      }
-    }
-  });
-
-  return { code, nodeMap };
-}
-
-// Функция для удаления маркеров из кода (опционально)
-export function removeCodeMarkers(code: string): string {
-  return code.replace(/# @@NODE_(START|END):.+?@@\n/g, '');
-}
-
-// Обновленная функция генерации с картой
-export function generatePythonCodeWithMap(
-  botData: BotData,
-  botName: string = "MyBot",
-  groups: BotGroup[] = [],
-  userDatabaseEnabled: boolean = false,
-  projectId: number | null = null,
-  enableLogging: boolean = false
-): CodeWithMap {
-  const code = generatePythonCode(botData, botName, groups, userDatabaseEnabled, projectId, enableLogging);
-  return parseCodeMap(code);
-}
