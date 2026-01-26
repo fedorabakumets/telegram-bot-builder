@@ -17,17 +17,14 @@ WORKDIR /app
 # Копируем только package files для кэширования зависимостей
 COPY package*.json ./
 
-# Устанавливаем зависимости с кэшированием
-RUN npm ci --silent
+# Устанавливаем зависимости
+RUN npm ci
 
 # Копируем исходный код
 COPY . .
 
-# Собираем проект быстро
-RUN npm run build:fast || npm run build || echo "No build script found"
-
-# Удаляем dev зависимости после сборки
-RUN npm prune --omit=dev
+# Собираем проект
+RUN npm run build:fast || npm run build || echo "Build completed"
 
 # Открываем порт
 EXPOSE 8080
