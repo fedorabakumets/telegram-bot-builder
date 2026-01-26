@@ -5,7 +5,7 @@ import { writeFileSync, existsSync, mkdirSync, unlinkSync, createWriteStream } f
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, insertBotMessageSchema, insertBotMessageMediaSchema, nodeSchema, connectionSchema, botDataSchema, sendMessageSchema } from "@shared/schema";
+import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, insertBotMessageSchema, insertBotMessageMediaSchema, nodeSchema, connectionSchema, botDataSchema, sendMessageSchema, InsertBotProject } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 import https from "https";
@@ -1056,7 +1056,7 @@ async function ensureDefaultProject() {
     const projects = await storage.getAllBotProjects();
     if (projects.length === 0) {
       // Create a default project if none exists
-      const defaultProject = {
+      const defaultProject: InsertBotProject = {
         name: "Мой первый бот",
         description: "Базовый бот с приветствием",
         userDatabaseEnabled: 1,

@@ -30,8 +30,10 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
     "start": "cross-env NODE_ENV=production tsx server/index.ts",
-    "build": "vite build",
-    "check": "tsc",
+    "build": "npm run build:client",
+    "build:client": "vite build",
+    "build:server": "tsc --project tsconfig.server.json --outDir dist/server --noEmitOnError false",
+    "check": "tsc --noEmit",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
@@ -115,7 +117,7 @@
     "vaul": "^1.1.2",
     "wouter": "^3.9.0",
     "ws": "^8.19.0",
-    "zod": "^4.3.6",
+    "zod": "^3.23.8",
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {

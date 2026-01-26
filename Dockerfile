@@ -38,8 +38,8 @@ RUN python -c "import telebot; print('pytelegrambotapi OK')" && \
 # Копируем package.json и package-lock.json
 COPY package*.json ./
 
-# Устанавливаем Node.js зависимости
-RUN npm ci
+# Устанавливаем Node.js зависимости с разрешением конфликтов
+RUN npm ci --legacy-peer-deps
 
 # Копируем весь код проекта
 COPY . .

@@ -12,3 +12,4 @@ cmd = "npm run start"
 
 [variables]
 NODE_ENV = "production"
+PORT = "8080"

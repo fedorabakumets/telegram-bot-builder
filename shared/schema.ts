@@ -269,7 +269,7 @@ export const insertBotProjectSchema = z.object({
   ownerId: z.number().nullable().optional(),
   name: z.string().min(1),
   description: z.string().optional(),
-  data: z.any(), // JSON data
+  data: z.any().default({}), // JSON data - обязательное поле с дефолтным значением
   botToken: z.string().nullish(),
   userDatabaseEnabled: z.number().min(0).max(1).default(1),
 });
