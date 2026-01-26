@@ -265,15 +265,11 @@ export const botMessageMedia = pgTable("bot_message_media", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
-  ownerId: true,
-  name: true,
-  description: true,
-  data: true,
-  botToken: true,
-  userDatabaseEnabled: true,
-}).extend({
+export const insertBotProjectSchema = z.object({
   ownerId: z.number().nullable().optional(),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  data: z.any(), // JSON data
   botToken: z.string().nullish(),
   userDatabaseEnabled: z.number().min(0).max(1).default(1),
 });
@@ -516,22 +512,14 @@ export const insertUserTelegramSettingsSchema = createInsertSchema(userTelegramS
 });
 
 // Схема для сообщений бота
-export const insertBotMessageSchema = createInsertSchema(botMessages).pick({
-  projectId: true,
-  userId: true,
-  messageType: true,
-  messageText: true,
-  messageData: true,
-  nodeId: true,
-  primaryMediaId: true,
-}).extend({
-  projectId: z.number().positive("ID проекта должен быть положительным числом"),
-  userId: z.string().min(1, "ID пользователя обязателен"),
-  messageType: z.enum(["user", "bot"]),
-  messageText: z.string().optional(),
-  messageData: z.record(z.any()).optional(),
-  nodeId: z.string().nullish(),
-  primaryMediaId: z.number().positive().optional(),
+export const insertBotMessageSchema = z.object({
+  projectId: z.number(),
+  userId: z.string(),
+  messageType: z.string(),
+  messageText: z.string().nullable().optional(),
+  messageData: z.any().nullable().optional(),
+  nodeId: z.string().nullable().optional(),
+  primaryMediaId: z.number().nullable().optional(),
 });
 
 // Схема для связи сообщений с медиафайлами
@@ -540,11 +528,6 @@ export const insertBotMessageMediaSchema = createInsertSchema(botMessageMedia).p
   mediaFileId: true,
   mediaKind: true,
   orderIndex: true,
-}).extend({
-  messageId: z.number().positive("ID сообщения должен быть положительным числом"),
-  mediaFileId: z.number().positive("ID медиафайла должен быть положительным числом"),
-  mediaKind: z.enum(["photo", "video", "audio", "document"]),
-  orderIndex: z.number().min(0).default(0),
 });
 
 // Схема для оценки шаблона
