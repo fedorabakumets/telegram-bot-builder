@@ -29,7 +29,7 @@
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx --tsconfig tsconfig.node.json server/index.ts",
-    "start": "cross-env NODE_ENV=development tsx --tsconfig tsconfig.node.json server/index.ts",
+    "start": "cross-env NODE_ENV=production tsx --tsconfig tsconfig.node.json server/index.ts",
     "build": "npm run build:client",
     "build:client": "vite build --mode production",
     "build:fast": "vite build --mode production --minify false",

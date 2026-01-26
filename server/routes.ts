@@ -605,14 +605,17 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     const filePath = createBotFile(botCode, projectId, tokenId);
     
     // Запускаем бота
-    const pythonPath = process.platform === 'win32' ? '.venv\\Scripts\\python.exe' : '.venv/bin/python';
+    const pythonPath = process.platform === 'win32' ? 'python' : 'python3';
     const botProcess = spawn(pythonPath, [filePath], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
       env: {
         ...process.env,
         PROJECT_ID: projectId.toString(),
-        BOT_TOKEN: token
+        BOT_TOKEN: token,
+        API_BASE_URL: process.env.NODE_ENV === 'production' 
+          ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost:8080'}`
+          : 'http://localhost:8080'
       }
     });
 
@@ -722,10 +725,21 @@ async function stopBot(projectId: number, tokenId: number): Promise<{ success: b
       console.log(`Ошибка при поиске процессов для бота ${projectId}:`, error);
     }
     
-    // Если процесс был в памяти - удаляем его
+    // Если процесс был в памяти - завершаем его мягко
     if (process) {
       try {
+        // Сначала пытаемся мягко завершить
         process.kill('SIGTERM');
+        
+        // Даем время на корректное завершение
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Если процесс все еще работает, принудительно завершаем
+        try {
+          process.kill('SIGKILL');
+        } catch (e) {
+          // Процесс уже завершен
+        }
       } catch (e) {
         // Процесс уже завершен
       }

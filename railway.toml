@@ -11,7 +11,7 @@ healthcheckPath = "/api/health"
 healthcheckTimeout = 60
 
 [env]
-NODE_ENV = "development"
+NODE_ENV = "production"
 # Оптимизация для быстрой сборки
 NPM_CONFIG_CACHE = "/tmp/.npm"
 NPM_CONFIG_AUDIT = "false"

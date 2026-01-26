@@ -1522,6 +1522,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '\n';
   code += 'import asyncio\n';
   code += 'import logging\n';
+  code += 'import signal\n';
   code += 'import locale\n';
   code += 'from aiogram import Bot, Dispatcher, types, F\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
@@ -1651,7 +1652,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Блок логирования сообщений генерируется только если включена БД
   if (userDatabaseEnabled) {
   code += '# API configuration для сохранения сообщений\n';
-  code += 'API_BASE_URL = os.getenv("REPLIT_DEV_DOMAIN", "http://localhost:5000")\n';
+  code += 'API_BASE_URL = os.getenv("API_BASE_URL", os.getenv("REPLIT_DEV_DOMAIN", "http://localhost:8080"))\n';
   code += `PROJECT_ID = int(os.getenv("PROJECT_ID", "${projectId || 0}"))  # ID проекта в системе\n\n`;
   
   code += '# Функция для сохранения сообщений в базу данных через API\n';
@@ -8385,6 +8386,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (userDatabaseEnabled) {
     code += '    global db_pool\n';
   }
+  code += '    \n';
+  code += '    # Обработчик сигналов для корректного завершения\n';
+  code += '    def signal_handler(signum, frame):\n';
+  code += '        print(f"🛑 Получен сигнал {signum}, начинаем корректное завершение...")\n';
+  code += '        raise KeyboardInterrupt()\n';
+  code += '    \n';
+  code += '    # Регистрируем обработчики сигналов\n';
+  code += '    signal.signal(signal.SIGTERM, signal_handler)\n';
+  code += '    signal.signal(signal.SIGINT, signal_handler)\n';
+  code += '    \n';
   code += '    try:\n';
   if (userDatabaseEnabled) {
     code += '        # Инициализируем базу данных\n';
@@ -8407,6 +8418,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        await dp.start_polling(bot)\n';
   code += '    except KeyboardInterrupt:\n';
   code += '        print("🛑 Получен сигнал остановки, завершаем работу...")\n';
+  code += '    except SystemExit:\n';
+  code += '        print("🛑 Системное завершение, завершаем работу...")\n';
   code += '    except Exception as e:\n';
   code += '        logging.error(f"Критическая ошибка: {e}")\n';
   code += '    finally:\n';

@@ -25,7 +25,7 @@ const poolConfig = {
   idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
   connectionTimeoutMillis: 20000, // Increased timeout to 20 seconds
   acquireTimeoutMillis: 60000, // Timeout acquiring connection after 60 seconds
-  ssl: process.env.NODE_ENV === 'production' ? { 
+  ssl: process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.includes('localhost') ? { 
     rejectUnauthorized: false,
     require: true 
   } : false
