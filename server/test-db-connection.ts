@@ -5,6 +5,7 @@
  * This script tests the DATABASE_URL connection to ensure it's working properly
  */
 
+import 'dotenv/config';
 import { Client } from 'pg';
 
 async function testDatabaseConnection() {
