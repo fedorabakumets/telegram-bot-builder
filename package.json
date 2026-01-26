@@ -121,8 +121,8 @@
     "vaul": "^1.1.2",
     "wouter": "^3.9.0",
     "ws": "^8.19.0",
-    "zod": "^3.23.8",
-    "zod-validation-error": "^3.4.0",
+    "zod": "^3.25.76",
+    "zod-validation-error": "^3.5.4",
     "cross-env": "^10.1.0",
     "tsx": "^4.21.0"
   },
@@ -152,6 +152,12 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.1.0"
+  },
+  "overrides": {
+    "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0",
+    "@esbuild-kit/core-utils": "npm:tsx@^4.21.0",
+    "yaeti": "npm:ws@^8.19.0",
+    "node-domexception": false
   },
   "browser": {
     "crypto": false

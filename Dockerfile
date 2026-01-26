@@ -23,8 +23,8 @@ RUN python --version && pip --version && \
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем package files
-COPY package*.json ./
+# Копируем package files и .npmrc
+COPY package*.json .npmrc ./
 
 # Устанавливаем зависимости (включая dev для сборки)
 RUN npm ci --legacy-peer-deps
