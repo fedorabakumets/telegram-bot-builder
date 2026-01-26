@@ -18,13 +18,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Устанавливаем зависимости с кэшированием
-RUN npm ci --only=production --silent
+RUN npm ci --silent
 
 # Копируем исходный код
 COPY . .
 
 # Собираем проект быстро
 RUN npm run build:fast || npm run build || echo "No build script found"
+
+# Удаляем dev зависимости после сборки
+RUN npm prune --omit=dev
 
 # Открываем порт
 EXPOSE 8080
