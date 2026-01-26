@@ -5,6 +5,7 @@
 - [Railway Deploy](deployment/README_RAILWAY.md) - Развертывание на Railway
 - [Railway CLI Guide](deployment/RAILWAY_CLI_GUIDE.md) - Руководство по Railway CLI
 - [Railway Quick Deploy](deployment/RAILWAY_QUICK_DEPLOY.md) - Быстрое развертывание на Railway
+- [Railway Troubleshooting](deployment/RAILWAY_TROUBLESHOOTING.md) - Устранение проблем на Railway
 - [Replit Setup](deployment/replit.md) - Настройка в Replit
 
 ## 🛠️ Разработка
