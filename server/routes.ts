@@ -1351,6 +1351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
       const validatedData = insertBotProjectSchema.partial().parse(req.body);
       const project = await storage.updateBotProject(projectId, validatedData);
       if (!project) {
@@ -1368,10 +1369,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(project);
     } catch (error) {
+      console.error("Error updating project:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to update project" });
+      res.status(500).json({ message: "Failed to update project", error: error.message });
     }
   });
 
@@ -3440,7 +3442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY bu.last_interaction DESC
       `, [projectId]);
       
-      await pool.end();
+      // НЕ закрываем пул - он нужен для других запросов
       
       console.log(`Found ${result.rows.length} users for project ${projectId}`);
       res.json(result.rows);
@@ -3483,7 +3485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
       `, [projectId]);
       
-      await pool.end();
+      // НЕ закрываем пул - он нужен для других запросов
       
       const stats = result.rows[0];
       // Convert strings to numbers
@@ -3517,7 +3519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           WHERE project_id = $1
         `, [req.params.id]);
         
-        await pool.end();
+        // НЕ закрываем пул - он нужен для других запросов
         
         const stats = result.rows[0];
         Object.keys(stats).forEach(key => {
@@ -3559,7 +3561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY last_interaction DESC
       `);
       
-      await pool.end();
+      // НЕ закрываем пул - он нужен для других запросов
       
       // Обрабатываем и структурируем ответы
       const processedResponses = result.rows.map(user => {
@@ -3736,7 +3738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // These fields are handled through user_data JSON field if needed
       
       if (updateFields.length === 0) {
-        await pool.end();
+        // НЕ закрываем пул - он нужен для других запросов
         return res.status(400).json({ message: "No valid fields to update" });
       }
       
@@ -3751,7 +3753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Updating user:', userId, 'with query:', query, 'values:', values);
       
       const result = await pool.query(query, values);
-      await pool.end();
+      // НЕ закрываем пул - он нужен для других запросов
       
       console.log('Update result:', result.rows.length, 'rows affected');
       
@@ -3794,14 +3796,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           [id]
         );
         
-        await pool.end();
+        // НЕ закрываем пул - он нужен для других запросов
         
         if (deleteResult.rowCount && deleteResult.rowCount > 0) {
           console.log(`Deleted user ${id} from bot_users table`);
           return res.json({ message: "User data deleted successfully" });
         }
       } catch (dbError) {
-        await pool.end();
+        // НЕ закрываем пул - он нужен для других запросов
         console.log("bot_users table not found, falling back to user_bot_data");
       }
 
@@ -3841,7 +3843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("bot_users table not found or error:", (dbError as any).message);
       }
 
-      await pool.end();
+      // НЕ закрываем пул - он нужен для других запросов
       
       // Подсчитываем количество записей в user_bot_data перед удалением
       const existingUserData = await storage.getUserBotDataByProject(projectId);

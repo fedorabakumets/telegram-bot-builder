@@ -7,5 +7,8 @@
     "startCommand": "npm run start",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
+  },
+  "env": {
+    "NODE_ENV": "production"
   }
 }

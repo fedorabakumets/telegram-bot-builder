@@ -1,0 +1,33 @@
+# Простой Dockerfile для Railway
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Устанавливаем системные зависимости
+RUN apk add --no-cache python3 py3-pip py3-requests
+
+# Создаем символические ссылки
+RUN ln -sf python3 /usr/bin/python && ln -sf pip3 /usr/bin/pip
+
+# Устанавливаем Python библиотеки
+RUN pip install --break-system-packages pytelegrambotapi python-dotenv
+
+# Копируем package.json
+COPY package*.json ./
+
+# Устанавливаем зависимости
+RUN npm install --production
+
+# Копируем код
+COPY . .
+
+# Создаем директории
+RUN mkdir -p bots uploads
+
+# Переменные окружения
+ENV NODE_ENV=production
+ENV PORT=5000
+
+EXPOSE 5000
+
+CMD ["npm", "start"]

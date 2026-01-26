@@ -1,5 +1,14 @@
-# nixpacks.toml
-# Explicitly set the Node.js version.
-
 [phases.setup]
-providers = ["node@18"]
+nixPkgs = ["nodejs-18_x", "npm-9_x", "python3", "python3Packages.pip"]
+
+[phases.install]
+cmds = ["npm install --production"]
+
+[phases.build]
+cmds = ["npm run build || echo 'No build script found'"]
+
+[start]
+cmd = "npm run start"
+
+[variables]
+NODE_ENV = "production"
