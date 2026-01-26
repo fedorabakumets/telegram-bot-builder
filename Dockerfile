@@ -1,30 +1,19 @@
 FROM node:20-alpine
 
-# Устанавливаем системные зависимости для сборки (кэшируем слой)
-RUN apk update && apk add --no-cache \
-    python3 \
-    py3-pip \
-    python3-dev \
-    build-base \
-    gcc \
-    musl-dev && \
-    ln -sf python3 /usr/bin/python && \
-    ln -sf pip3 /usr/bin/pip
-
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем только package files для кэширования зависимостей
+# Копируем package files
 COPY package*.json ./
 
 # Устанавливаем зависимости
-RUN npm ci
+RUN npm install --production
 
 # Копируем исходный код
 COPY . .
 
-# Собираем проект
-RUN npm run build:fast || npm run build || echo "Build completed"
+# Собираем проект (если есть build скрипт)
+RUN npm run build || echo "No build script found"
 
 # Открываем порт
 EXPOSE 8080
