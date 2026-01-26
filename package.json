@@ -38,8 +38,7 @@
     "db:push": "drizzle-kit push",
     "db:test": "tsx server/test-db-connection.ts",
     "railway:setup": "node scripts/setup-railway-db.js",
-    "railway:build": "npm run build:fast",
-    "postinstall": "npm run build:fast || echo 'Build failed, continuing...'"
+    "railway:build": "npm run build:fast"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
