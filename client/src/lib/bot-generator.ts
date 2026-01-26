@@ -1,81 +1,11 @@
-import { BotData, Node, BotGroup, buttonSchema, Connection } from '../../../shared/schema';
-// Импорты из модульной структуры bot-generator
-import { generateBotFatherCommands } from './bot-generator/core/commands';
-import { extractNodesAndConnections } from './bot-generator/core/extractNodesAndConnections';
-import { generateUniversalVariableReplacement } from './bot-generator/core/generateUniversalVariableReplacement';
-import { parsePythonCodeToJson } from './bot-generator/core/parsePythonCodeToJson';
-
-// Утилиты форматирования
-import { stripHtmlTags } from './bot-generator/utils/stripHtmlTags';
-import { createSafeFunctionName } from './bot-generator/utils/createSafeFunctionName';
-import { formatTextForPython } from './bot-generator/utils/formatTextForPython';
-import { getParseMode } from './bot-generator/utils/getParseMode';
-import { generateButtonText } from './bot-generator/utils/generateButtonText';
-
-// Анализаторы
-import { hasLocationFeatures } from './bot-generator/analyzers/hasLocationFeatures';
-import { hasInlineButtons } from './bot-generator/analyzers/hasInlineButtons';
-import { hasMultiSelectNodes } from './bot-generator/analyzers/hasMultiSelectNodes';
-import { hasAutoTransitions } from './bot-generator/analyzers/hasAutoTransitions';
-import { hasInputCollection } from './bot-generator/analyzers/hasInputCollection';
-import { hasMediaNodes } from './bot-generator/analyzers/hasMediaNodes';
-
-// Обработчики
-import { generateBanUserHandler } from './bot-generator/handlers/generateBanUserHandler';
-import { generatePinMessageHandler } from './bot-generator/handlers/generatePinMessageHandler';
-
+import { BotData, Node, BotGroup, buttonSchema } from '@shared/schema';
+import { generateBotFatherCommands } from './commands';
 import { z } from 'zod';
 
-export type Button = z.infer<typeof buttonSchema>;
-
-// Интерфейс ButtonSchema для явной типизации кнопок (соответствует buttonSchema из shared/schema.ts)
-export interface ButtonSchema {
-  id: string;
-  text: string;
-  action: 'goto' | 'command' | 'url' | 'contact' | 'location' | 'selection' | 'default';
-  target?: string;
-  url?: string;
-  requestContact?: boolean;
-  requestLocation?: boolean;
-  buttonType: 'normal' | 'option' | 'complete'; // Убираем optional, делаем обязательным с default
-  skipDataCollection?: boolean;
-  hideAfterClick?: boolean;
-}
-
-// Интерфейс для условных сообщений (основан на схеме из shared/schema.ts)
-export interface ConditionalMessage {
-  id: string;
-  condition: 'user_data_exists' | 'user_data_equals' | 'user_data_not_exists' | 'user_data_contains' | 'first_time' | 'returning_user';
-  variableName?: string;
-  variableNames: string[];
-  logicOperator: 'AND' | 'OR';
-  expectedValue?: string;
-  messageText: string;
-  formatMode: 'text' | 'markdown' | 'html';
-  keyboardType: 'reply' | 'inline' | 'none';
-  buttons: ButtonSchema[];
-  resizeKeyboard?: boolean;
-  oneTimeKeyboard?: boolean;
-  collectUserInput: boolean;
-  enableTextInput: boolean;
-  enablePhotoInput: boolean;
-  enableVideoInput: boolean;
-  enableAudioInput: boolean;
-  enableDocumentInput: boolean;
-  inputVariable?: string;
-  photoInputVariable?: string;
-  videoInputVariable?: string;
-  audioInputVariable?: string;
-  documentInputVariable?: string;
-  waitForTextInput: boolean;
-  textInputVariable?: string;
-  nextNodeAfterInput?: string;
-  priority: number;
-}
+type Button = z.infer<typeof buttonSchema>;
 
 // Интерфейс для опций ответа (responseOptions)
 interface ResponseOption {
-  id: string; // Добавляем обязательное поле id
   text: string;
   value?: string;
   action?: string;
@@ -83,30 +13,14 @@ interface ResponseOption {
   url?: string;
 }
 
-// Интерфейс для листа (sheet) в многолистовом проекте
-export interface Sheet {
-  id: string;
-  name: string;
-  nodes: Node[];
-  connections: Connection[];
-  viewState?: {
-    pan: { x: number; y: number };
-    zoom: number;
-  };
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
 // Global variable for logging state (can be overridden by parameter)
 let globalLoggingEnabled = false;
-
-
 
 // Utility function to check if debug logging is enabled
 const isLoggingEnabled = (): boolean => {
   // First check if global logging was explicitly set (from enableLogging parameter)
   if (globalLoggingEnabled) return true;
-
+  
   // Otherwise check localStorage
   if (typeof window !== 'undefined') {
     return localStorage.getItem('botcraft-generator-logs') === 'true';
@@ -114,18 +28,192 @@ const isLoggingEnabled = (): boolean => {
   return false;
 };
 
+// Функция для сбора всех узлов и связей из всех листов проекта
+function extractNodesAndConnections(botData: BotData) {
+  if (!botData) return { nodes: [], connections: [] };
+  
+  if ((botData as any).sheets && Array.isArray((botData as any).sheets)) {
+    // Многолистовой проект - собираем узлы и связи из всех листов
+    let allNodes: any[] = [];
+    let allConnections: any[] = [];
+    
+    (botData as any).sheets.forEach((sheet: any) => {
+      if (sheet.nodes && Array.isArray(sheet.nodes)) {
+        allNodes = allNodes.concat(sheet.nodes);
+      }
+      if (sheet.connections && Array.isArray(sheet.connections)) {
+        allConnections = allConnections.concat(sheet.connections);
+      }
+    });
+    
+    return { nodes: allNodes, connections: allConnections };
+  } else {
+    // Обычный проект
+    return { 
+      nodes: botData.nodes || [], 
+      connections: botData.connections || [] 
+    };
+  }
+}
+
+// Функция для создания безопасного имени функции Python
+function createSafeFunctionName(nodeId: string): string {
+  let safeName = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
+  // Python функции не могут начинаться с цифры
+  if (/^\d/.test(safeName)) {
+    safeName = 'node_' + safeName;
+  }
+  return safeName;
+}
+
+// Функция для правильного экранирования строк в Python коде
+function escapeForPython(text: string): string {
+  return text.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+}
+
+// Функция для удаления HTML тегов из текста
+function stripHtmlTags(text: string): string {
+  if (!text) return text;
+  return text.replace(/<[^>]*>/g, '');
+}
+
+// Функция для правильного форматирования текста с поддержкой многострочности
+function formatTextForPython(text: string): string {
+  if (!text) return '""';
+  
+  // Для многострочного текста используем тройные кавычки
+  if (text.includes('\n')) {
+    return `"""${text}"""`;
+  } else {
+    // Для однострочного текста экранируем только кавычки
+    return `"${text.replace(/"/g, '\\"')}"`;
+  }
+}
+
+// Функция для получения режима парсинга
+function getParseMode(formatMode: string): string {
+  if (formatMode === 'html') {
+    return ', parse_mode=ParseMode.HTML';
+  } else if (formatMode === 'markdown') {
+    return ', parse_mode=ParseMode.MARKDOWN';
+  }
+  return '';
+}
+
+// Функция для проверки наличия геолокационных элементов в боте
+function hasLocationFeatures(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  
+  // Проверяем наличие узлов типа location
+  const hasLocationNode = nodes.some(node => node.type === 'location');
+  
+  // Проверяем наличие кнопок с requestLocation
+  const hasLocationButton = nodes.some(node => {
+    const buttons = node.data.buttons;
+    if (!buttons || !Array.isArray(buttons)) return false;
+    return buttons.some((button: Button) => 
+      button.action === 'location' && button.requestLocation
+    );
+  });
+  
+  return hasLocationNode || hasLocationButton;
+}
+
+// Функция для генерации текста кнопки с поддержкой переменных
+function generateButtonText(buttonText: string): string {
+  // Проверяем, есть ли в тексте переменные (паттерн {переменная})
+  if (buttonText.includes('{') && buttonText.includes('}')) {
+    // Экранируем текст для Python и оборачиваем в replace_variables_in_text
+    const escapedText = escapeForPython(buttonText);
+    return `replace_variables_in_text("${escapedText}", user_vars)`;
+  } else {
+    // Обычный текст без переменных
+    return `"${escapeForPython(buttonText)}"`;
+  }
+}
+
+// Функция для проверки наличия узлов с множественным выбором
+function hasMultiSelectNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => node.data.allowMultipleSelection);
+}
+
+// Функция для проверки наличия автопереходов
+function hasAutoTransitions(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => node.data.enableAutoTransition && node.data.autoTransitionTo);
+}
+
+// Функция для проверки наличия inline кнопок (callback)
+function hasInlineButtons(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  
+  return nodes.some(node => {
+    // Проверяем основные inline кнопки
+    const hasMainInlineButtons = node.data.keyboardType === 'inline' && node.data.buttons && node.data.buttons.length > 0;
+    
+    // Проверяем inline кнопки в conditionalMessages (любые кнопки с callback действиями)
+    const hasConditionalInlineButtons = node.data.conditionalMessages && 
+      node.data.conditionalMessages.some((condition: any) => 
+        condition.buttons && condition.buttons.length > 0
+      );
+    
+    return hasMainInlineButtons || hasConditionalInlineButtons;
+  });
+}
+
+// Функция для проверки наличия узлов со сбором пользовательского ввода
+function hasInputCollection(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  
+  // Проверяем узлы с collectUserInput
+  const hasCollectInput = nodes.some(node => node.data.collectUserInput);
+  
+  // Проверяем узлы с enableTextInput
+  const hasTextInput = nodes.some(node => node.data.enableTextInput);
+  
+  // Проверяем узлы с enablePhotoInput
+  const hasPhotoInput = nodes.some(node => node.data.enablePhotoInput);
+  
+  // Проверяем узлы с enableVideoInput
+  const hasVideoInput = nodes.some(node => node.data.enableVideoInput);
+  
+  // Проверяем узлы с enableAudioInput
+  const hasAudioInput = nodes.some(node => node.data.enableAudioInput);
+  
+  // Проверяем узлы с enableDocumentInput
+  const hasDocumentInput = nodes.some(node => node.data.enableDocumentInput);
+  
+  // Проверяем условные сообщения с waitForTextInput
+  const hasConditionalInput = nodes.some(node => {
+    const conditions = node.data.conditionalMessages;
+    if (!conditions || !Array.isArray(conditions)) return false;
+    return conditions.some((cond: any) => cond.waitForTextInput);
+  });
+  
+  return hasCollectInput || hasTextInput || hasPhotoInput || hasVideoInput || hasAudioInput || hasDocumentInput || hasConditionalInput;
+}
+
+// Функция для проверки наличия медиа-файлов
+function hasMediaNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => 
+    node.type === 'animation'
+  );
+}
+
 // Функция для проверки наличия условных кнопок с callback_data формата "conditional_"
 function hasConditionalButtons(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
-
+  
   return nodes.some(node => {
     const conditions = node.data.conditionalMessages;
     if (!conditions || !Array.isArray(conditions)) return false;
-
-    return conditions.some((cond: ConditionalMessage) => {
+    
+    return conditions.some((cond: any) => {
       if (!cond.buttons || !Array.isArray(cond.buttons)) return false;
       // Проверяем, есть ли кнопки команд в условных сообщениях с переменными
-      return cond.buttons.some((button: ButtonSchema) =>
+      return cond.buttons.some((button: Button) => 
         button.action === 'command' && (cond.variableName || cond.variableNames)
       );
     });
@@ -135,37 +223,37 @@ function hasConditionalButtons(nodes: Node[]): boolean {
 // Функция для проверки наличия кнопок команд
 function hasCommandButtons(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
-
+  
   // Проверяем обычные кнопки
   const hasRegularCommandButtons = nodes.some(node => {
     if (!node.data.buttons || !Array.isArray(node.data.buttons)) return false;
-    return node.data.buttons.some((button: ButtonSchema) => button.action === 'command');
+    return node.data.buttons.some((button: Button) => button.action === 'command');
   });
-
+  
   // Проверяем кнопки в условных сообщениях (но не те, что создают conditional_ callbacks)
   const hasConditionalCommandButtons = nodes.some(node => {
     const conditions = node.data.conditionalMessages;
     if (!conditions || !Array.isArray(conditions)) return false;
-
-    return conditions.some((cond: ConditionalMessage) => {
+    
+    return conditions.some((cond: any) => {
       if (!cond.buttons || !Array.isArray(cond.buttons)) return false;
       // Только кнопки команд БЕЗ переменных (они не создают conditional_ callbacks)
-      return cond.buttons.some((button: ButtonSchema) =>
+      return cond.buttons.some((button: Button) => 
         button.action === 'command' && !cond.variableName && !cond.variableNames
       );
     });
   });
-
+  
   return hasRegularCommandButtons || hasConditionalCommandButtons;
 }
 
 // Функция для сбора всех медиапеременных из узлов
 function collectMediaVariables(nodes: Node[]): Map<string, { type: string; variable: string }> {
   const mediaVars = new Map<string, { type: string; variable: string }>();
-
+  
   if (!nodes || nodes.length === 0) return mediaVars;
-
-  nodes.forEach((node: Node) => {
+  
+  nodes.forEach(node => {
     // Собираем переменные из узлов с фото
     if (node.data.enablePhotoInput && node.data.photoInputVariable) {
       mediaVars.set(node.data.photoInputVariable, {
@@ -173,7 +261,7 @@ function collectMediaVariables(nodes: Node[]): Map<string, { type: string; varia
         variable: node.data.photoInputVariable
       });
     }
-
+    
     // Собираем переменные из узлов с видео
     if (node.data.enableVideoInput && node.data.videoInputVariable) {
       mediaVars.set(node.data.videoInputVariable, {
@@ -181,7 +269,7 @@ function collectMediaVariables(nodes: Node[]): Map<string, { type: string; varia
         variable: node.data.videoInputVariable
       });
     }
-
+    
     // Собираем переменные из узлов с аудио
     if (node.data.enableAudioInput && node.data.audioInputVariable) {
       mediaVars.set(node.data.audioInputVariable, {
@@ -189,7 +277,7 @@ function collectMediaVariables(nodes: Node[]): Map<string, { type: string; varia
         variable: node.data.audioInputVariable
       });
     }
-
+    
     // Собираем переменные из узлов с документами
     if (node.data.enableDocumentInput && node.data.documentInputVariable) {
       mediaVars.set(node.data.documentInputVariable, {
@@ -198,24 +286,24 @@ function collectMediaVariables(nodes: Node[]): Map<string, { type: string; varia
       });
     }
   });
-
+  
   return mediaVars;
 }
 
 // Функция для поиска медиапеременных в тексте сообщения
 function findMediaVariablesInText(text: string, mediaVariables: Map<string, { type: string; variable: string }>): Array<{ variable: string; type: string }> {
   if (!text || mediaVariables.size === 0) return [];
-
+  
   const foundMedia: Array<{ variable: string; type: string }> = [];
-
+  
   // Регулярное выражение для поиска переменных формата {variable_name}
   const variableRegex = /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
   let match;
-
+  
   while ((match = variableRegex.exec(text)) !== null) {
     const variableName = match[1];
     const mediaInfo = mediaVariables.get(variableName);
-
+    
     if (mediaInfo) {
       // Проверяем, не добавили ли мы уже эту переменную
       if (!foundMedia.some(m => m.variable === variableName)) {
@@ -226,7 +314,7 @@ function findMediaVariablesInText(text: string, mediaVariables: Map<string, { ty
       }
     }
   }
-
+  
   return foundMedia;
 }
 
@@ -237,14 +325,14 @@ function toPythonBoolean(value: any): string {
 
 // Функция для генерации кода установки состояния ожидания ввода
 // Автоматически определяет правильное состояние (waiting_for_photo, waiting_for_video и т.д.)
-function generateWaitingStateCode(node: Node, indentLevel: string = '    ', userIdSource: string = 'message.from_user.id'): string {
+function generateWaitingStateCode(node: any, indentLevel: string = '    ', userIdSource: string = 'message.from_user.id'): string {
   // Определяем тип ввода и соответствующее состояние
   let waitingStateKey = 'waiting_for_input';
   let inputVariable = node.data.inputVariable || `response_${node.id}`;
-
+  
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем массив modes для поддержки нескольких типов ввода
   const modes: string[] = [];
-
+  
   // Проверяем медиа-типы
   if (node.data.enablePhotoInput) {
     waitingStateKey = 'waiting_for_photo';
@@ -264,9 +352,9 @@ function generateWaitingStateCode(node: Node, indentLevel: string = '    ', user
     inputVariable = node.data.documentInputVariable || 'user_document';
   } else {
     // Для текстовых узлов проверяем наличие кнопок И текстового ввода
-    const hasReplyButtons = node.data.keyboardType === 'reply' && node.data.buttons && node.data.buttons?.length > 0;
+    const hasReplyButtons = node.data.keyboardType === 'reply' && node.data.buttons && node.data.buttons.length > 0;
     const hasTextInput = node.data.enableTextInput === true || node.data.collectUserInput === true;
-
+    
     if (hasReplyButtons) {
       modes.push('button');
     }
@@ -275,17 +363,17 @@ function generateWaitingStateCode(node: Node, indentLevel: string = '    ', user
       modes.push('text');
     }
   }
-
+  
   // Если modes пустой, по умолчанию добавляем text
   if (modes.length === 0) {
     modes.push('text');
   }
-
+  
   const inputTargetNodeId = node.data.inputTargetNodeId || '';
-  const modesStr = modes.map((m: string) => `"${m}"`).join(', ');
-  const modesRepr = modes.map((m: string) => `'${m}'`).join(', '); // Для вывода в логи - с одинарными кавычками
+  const modesStr = modes.map(m => `"${m}"`).join(', ');
+  const modesRepr = modes.map(m => `'${m}'`).join(', '); // Для вывода в логи - с одинарными кавычками
   const primaryType = modes[0]; // Первый тип для обратной совместимости
-
+  
   let code = '';
   code += `${indentLevel}user_data[${userIdSource}] = user_data.get(${userIdSource}, {})\n`;
   code += `${indentLevel}user_data[${userIdSource}]["${waitingStateKey}"] = {\n`;
@@ -301,63 +389,56 @@ function generateWaitingStateCode(node: Node, indentLevel: string = '    ', user
   code += `${indentLevel}    "success_message": ""\n`;
   code += `${indentLevel}}\n`;
   code += `${indentLevel}logging.info(f"✅ Состояние ожидания настроено: modes=[${modesRepr}] для переменной ${inputVariable} (узел ${node.id})")\n`;
-
+  
   return code;
 }
 
 // Функция для создания уникальных коротких ID для узлов
 function generateUniqueShortId(nodeId: string, allNodeIds: string[]): string {
   if (!nodeId) return 'node';
-
+  
   // Особая обработка для узлов интересов
   if (nodeId.endsWith('_interests')) {
     const prefix = nodeId.replace('_interests', '');
     // Возвращаем первые 5-6 символов префикса для уникальности
     return prefix.substring(0, Math.min(6, prefix.length));
   }
-
+  
   // Для метро и других узлов используем старую логику
   const baseShortId = nodeId.slice(-10).replace(/^_+/, '');
-
+  
   // Проверяем уникальность среди всех узлов
-  const conflicts = allNodeIds.filter((id: string) => {
+  const conflicts = allNodeIds.filter(id => {
     const otherShortId = id.slice(-10).replace(/^_+/, '');
     return otherShortId === baseShortId && id !== nodeId;
   });
-
+  
   // Если конфликтов нет, возвращаем базовый ID
   if (conflicts.length === 0) {
     return baseShortId;
   }
-
+  
   // Если есть конфликты, берем более уникальную часть
   return nodeId.replace(/[^a-zA-Z0-9]/g, '').slice(-8);
 }
 
-// Функция для правильного экранирования строк в JSON контексте с поддержкой UTF-8
+// Функция для правильного экранирования строк в JSON контексте
 function escapeForJsonString(text: string): string {
   if (!text) return '';
-  return text
-    .replace(/\\/g, '\\\\')  // Экранируем обратные слеши первыми
-    .replace(/"/g, '\\"')    // Экранируем двойные кавычки
-    .replace(/\n/g, '\\n')   // Экранируем переводы строк
-    .replace(/\r/g, '\\r')   // Экранируем возврат каретки
-    .replace(/\t/g, '\\t')   // Экранируем табуляции
-    .replace(/\f/g, '\\f')   // Экранируем form feed
-    .replace(/\b/g, '\\b');  // Экранируем backspace
+  return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
 
 // Функция для вычисления оптимального количества колонок для кнопок
-function calculateOptimalColumns(buttons: ButtonSchema[], nodeData?: any): number {
+function calculateOptimalColumns(buttons: any[], nodeData?: any): number {
   if (!buttons || buttons.length === 0) return 1;
-
+  
   const totalButtons = buttons.length;
-
+  
   // Если это множественный выбор, всегда используем 2 колонки для красивого вида
   if (nodeData?.allowMultipleSelection) {
     return 2;
   }
-
+  
   // Стандартная логика для обычных кнопок
   if (totalButtons >= 6) {
     return 2; // Для 6+ кнопок - 2 колонки
@@ -369,13 +450,13 @@ function calculateOptimalColumns(buttons: ButtonSchema[], nodeData?: any): numbe
 }
 
 // Функция для генерации reply клавиатуры
-function generateReplyKeyboardCode(buttons: ButtonSchema[], indentLevel: string, nodeId?: string, nodeData?: any): string {
+function generateReplyKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any): string {
   if (!buttons || buttons.length === 0) return '';
-
+  
   let code = '';
   code += `${indentLevel}builder = ReplyKeyboardBuilder()\n`;
-
-  buttons.forEach((button: ButtonSchema, index: number) => {
+  
+  buttons.forEach((button, index) => {
     if (button.action === "contact" && button.requestContact) {
       code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
     } else if (button.action === "location" && button.requestLocation) {
@@ -384,38 +465,38 @@ function generateReplyKeyboardCode(buttons: ButtonSchema[], indentLevel: string,
       code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
     }
   });
-
+  
   const resizeKeyboard = toPythonBoolean(nodeData?.resizeKeyboard !== false);
   const oneTimeKeyboard = toPythonBoolean(nodeData?.oneTimeKeyboard === true);
   code += `${indentLevel}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-
+  
   return code;
 }
 
 // Функция для генерации inline клавиатуры с автоматической настройкой колонок
 function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any, allNodeIds?: string[]): string {
   if (!buttons || buttons.length === 0) return '';
-
+  
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем keyboardType и делегируем на правильную функцию
   const keyboardType = nodeData?.keyboardType || 'reply';
   if (keyboardType === 'reply') {
     // Для reply клавиатуры вызываем специальную функцию
     return generateReplyKeyboardCode(buttons, indentLevel, nodeId, nodeData);
   }
-
+  
   // Продолжаем генерацию inline клавиатуры только если keyboardType === 'inline'
   let code = '';
-
+  
   // Проверяем, есть ли кнопки выбора (selection) - если да, то это множественный выбор
-  const hasSelectionButtons = buttons.some((button: ButtonSchema) => button.action === 'selection');
+  const hasSelectionButtons = buttons.some(button => button.action === 'selection');
   const isMultipleSelection = nodeData?.allowMultipleSelection === true;
-
+  
   // Если есть множественный выбор, добавляем инициализацию состояния
   if (hasSelectionButtons && isMultipleSelection) {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИНИЦИАЛИЗИРУЕМ состояние множественного выбора для узла ${nodeId}`);
     const multiSelectVariable = nodeData?.multiSelectVariable || 'user_interests';
     const multiSelectKeyboardType = nodeData?.keyboardType || 'reply';
-
+    
     code += `${indentLevel}# Инициализация состояния множественного выбора\n`;
     code += `${indentLevel}if user_id not in user_data:\n`;
     code += `${indentLevel}    user_data[user_id] = {}\n`;
@@ -444,9 +525,9 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
     code += `${indentLevel}logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")\n`;
     code += `${indentLevel}\n`;
   }
-
+  
   code += `${indentLevel}builder = InlineKeyboardBuilder()\n`;
-
+  
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: generateInlineKeyboardCode для узла ${nodeId}`);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: nodeData.allowMultipleSelection = ${nodeData?.allowMultipleSelection}`);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons = ${hasSelectionButtons}, isMultipleSelection = ${isMultipleSelection}`);
@@ -454,8 +535,8 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Полный объект nodeData:`, JSON.stringify(nodeData, null, 2));
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Проверяем условие инициализации: hasSelectionButtons=${hasSelectionButtons} && isMultipleSelection=${isMultipleSelection}`);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Результат проверки: ${hasSelectionButtons && isMultipleSelection}`);
-
-  buttons.forEach((button: ButtonSchema, index: number) => {
+  
+  buttons.forEach((button, index) => {
     if (button.action === "url") {
       code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
     } else if (button.action === 'goto') {
@@ -472,7 +553,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       const shortTarget = button.target || button.id || 'btn'; // Используем полный target без обрезки для совместимости с обработчиком
       const callbackData = `ms_${shortNodeId}_${shortTarget}`;
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
-
+      
       // Добавляем галочки для множественного выбора
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: 🔍 ПРОВЕРЯЕМ галочки для ${button.text}: isMultipleSelection=${isMultipleSelection}`);
       if (isMultipleSelection) {
@@ -495,7 +576,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
     }
   });
-
+  
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: ДОБАВЛЯЕМ кнопку "Готово" для множественного выбора
   if (hasSelectionButtons && isMultipleSelection) {
     const continueText = nodeData?.continueButtonText || 'Готово';
@@ -504,7 +585,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
     code += `${indentLevel}# Добавляем кнопку "Готово" для множественного выбора\n`;
     code += `${indentLevel}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${callbackData}"))\n`;
   }
-
+  
   // Автоматическое распределение колонок с учетом данных узла и кнопки "Готово"
   let allButtons = [...buttons];
   if (hasSelectionButtons && isMultipleSelection) {
@@ -514,7 +595,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   const columns = calculateOptimalColumns(allButtons, nodeData);
   code += `${indentLevel}builder.adjust(${columns})\n`;
   code += `${indentLevel}keyboard = builder.as_markup()\n`;
-
+  
   return code;
 }
 
@@ -528,6 +609,40 @@ function generateVariableReplacement(variableName: string, indentLevel: string):
   code += `${indentLevel}        else:\n`;
   code += `${indentLevel}            # Если переменная не найдена, отображаем как простой текст\n`;
   code += `${indentLevel}            text = text.replace("{${variableName}}", "${variableName}")\n`;
+  return code;
+}
+
+// Функция для генерации замены всех переменных в тексте
+function generateUniversalVariableReplacement(indentLevel: string): string {
+  let code = '';
+  code += `${indentLevel}# Подставляем все доступные переменные пользователя в текст\n`;
+  code += `${indentLevel}user_vars = await get_user_from_db(user_id)\n`;
+  code += `${indentLevel}if not user_vars:\n`;
+  code += `${indentLevel}    user_vars = user_data.get(user_id, {})\n`;
+  code += `${indentLevel}\n`;
+  code += `${indentLevel}# get_user_from_db теперь возвращает уже обработанные user_data\n`;
+  code += `${indentLevel}if not isinstance(user_vars, dict):\n`;
+  code += `${indentLevel}    user_vars = {}\n`;
+  code += `${indentLevel}\n`;
+  code += `${indentLevel}# Заменяем все переменные в тексте\n`;
+  code += `${indentLevel}import re\n`;
+  code += `${indentLevel}def replace_variables_in_text(text_content, variables_dict):\n`;
+  code += `${indentLevel}    if not text_content or not variables_dict:\n`;
+  code += `${indentLevel}        return text_content\n`;
+  code += `${indentLevel}    \n`;
+  code += `${indentLevel}    for var_name, var_data in variables_dict.items():\n`;
+  code += `${indentLevel}        placeholder = "{" + var_name + "}"\n`;
+  code += `${indentLevel}        if placeholder in text_content:\n`;
+  code += `${indentLevel}            if isinstance(var_data, dict) and "value" in var_data:\n`;
+  code += `${indentLevel}                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name\n`;
+  code += `${indentLevel}            elif var_data is not None:\n`;
+  code += `${indentLevel}                var_value = str(var_data)\n`;
+  code += `${indentLevel}            else:\n`;
+  code += `${indentLevel}                var_value = var_name  # Показываем имя переменной если значения нет\n`;
+  code += `${indentLevel}            text_content = text_content.replace(placeholder, var_value)\n`;
+  code += `${indentLevel}    return text_content\n`;
+  code += `${indentLevel}\n`;
+  code += `${indentLevel}text = replace_variables_in_text(text, user_vars)\n`;
   return code;
 }
 
@@ -549,14 +664,14 @@ function generateAttachedMediaSendCode(
   // Пока поддерживаем только первую медиапеременную
   const firstMediaVar = attachedMedia[0];
   const mediaInfo = mediaVariablesMap.get(firstMediaVar);
-
+  
   if (!mediaInfo) {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Медиапеременная ${firstMediaVar} не найдена в mediaVariablesMap`);
     return '';
   }
 
   const { type: mediaType, variable: mediaVariable } = mediaInfo;
-
+  
   let code = '';
   code += `${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable}\n`;
   code += `${indentLevel}attached_media = None\n`;
@@ -571,11 +686,11 @@ function generateAttachedMediaSendCode(
   code += `${indentLevel}if attached_media and str(attached_media).strip():\n`;
   code += `${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")\n`;
   code += `${indentLevel}    try:\n`;
-
+  
   // Генерируем код отправки в зависимости от типа медиа
   const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
   const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
-
+  
   switch (mediaType) {
     case 'photo':
       code += `${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media, caption=text${parseModeParam}${keyboardParam})\n`;
@@ -592,9 +707,9 @@ function generateAttachedMediaSendCode(
     default:
       code += `${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение\n`;
       const autoTransitionFlagDefault = autoTransitionTo ? ', is_auto_transition=True' : '';
-      code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseModeParam})\n`;
+      code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseMode})\n`;
   }
-
+  
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
   if (autoTransitionTo) {
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -605,17 +720,17 @@ function generateAttachedMediaSendCode(
     code += `${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
     code += `${indentLevel}        return\n`;
   }
-
+  
   code += `${indentLevel}    except Exception as e:\n`;
   code += `${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")\n`;
   code += `${indentLevel}        # Fallback на обычное сообщение при ошибке\n`;
   const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
-  code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseModeParam})\n`;
+  code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
   code += `${indentLevel}else:\n`;
   code += `${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение\n`;
   code += `${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")\n`;
-  code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseModeParam})\n`;
-
+  code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
+  
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход и для случая без медиа
   if (autoTransitionTo) {
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -626,23 +741,23 @@ function generateAttachedMediaSendCode(
     code += `${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
     code += `${indentLevel}    return\n`;
   }
-
+  
   return code;
 }
 
 // Функция для генерации клавиатуры для условного сообщения
-function generateConditionalKeyboard(condition: ConditionalMessage, indentLevel: string, nodeData?: any): string {
+function generateConditionalKeyboard(condition: any, indentLevel: string, nodeData?: any): string {
   if (!condition.keyboardType || condition.keyboardType === 'none' || !condition.buttons || condition.buttons.length === 0) {
     return '';
   }
 
   let code = '';
-
+  
   if (condition.keyboardType === 'inline') {
     code += `${indentLevel}# Создаем inline клавиатуру для условного сообщения\n`;
     code += `${indentLevel}builder = InlineKeyboardBuilder()\n`;
-
-    condition.buttons.forEach((button: ButtonSchema) => {
+    
+    condition.buttons.forEach((button: Button) => {
       if (button.action === "url") {
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
       } else if (button.action === 'goto') {
@@ -664,18 +779,18 @@ function generateConditionalKeyboard(condition: ConditionalMessage, indentLevel:
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
       }
     });
-
+    
     // Автоматическое распределение колонок для inline клавиатуры
     const columns = calculateOptimalColumns(condition.buttons, nodeData);
     code += `${indentLevel}builder.adjust(${columns})\n`;
     code += `${indentLevel}keyboard = builder.as_markup()\n`;
     code += `${indentLevel}conditional_keyboard = keyboard\n`;
-
+    
   } else if (condition.keyboardType === 'reply') {
     code += `${indentLevel}# Создаем reply клавиатуру для условного сообщения\n`;
     code += `${indentLevel}builder = ReplyKeyboardBuilder()\n`;
-
-    condition.buttons.forEach((button: ButtonSchema) => {
+    
+    condition.buttons.forEach((button: Button) => {
       if (button.action === "contact" && button.requestContact) {
         code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
       } else if (button.action === "location" && button.requestLocation) {
@@ -684,13 +799,13 @@ function generateConditionalKeyboard(condition: ConditionalMessage, indentLevel:
         code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
       }
     });
-
+    
     // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
     const conditionOneTimeKb = toPythonBoolean(condition.oneTimeKeyboard === true);
     code += `${indentLevel}keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKb})\n`;
     code += `${indentLevel}conditional_keyboard = keyboard\n`;
   }
-
+  
   return code;
 }
 
@@ -701,11 +816,11 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   }
 
   let code = '';
-  const sortedConditions = [...conditionalMessages].sort((a: ConditionalMessage, b: ConditionalMessage) => (b.priority || 0) - (a.priority || 0));
-
+  const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+  
   // НЕ инициализируем conditional_parse_mode и conditional_keyboard здесь
   // Они должны быть инициализированы вызывающей функцией ПЕРЕД вызовом generateConditionalMessageLogic
-
+  
   // Получаем user_vars для подстановки в кнопки условных сообщений
   code += `${indentLevel}# Подставляем все доступные переменные пользователя в текст кнопок\n`;
   code += `${indentLevel}user_vars = await get_user_from_db(user_id)\n`;
@@ -734,7 +849,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   code += `${indentLevel}            text_content = text_content.replace(placeholder, var_value)\n`;
   code += `${indentLevel}    return text_content\n`;
   code += `${indentLevel}\n`;
-
+  
   // Генерируем единую функцию проверки переменных
   code += `${indentLevel}# Функция для проверки переменных пользователя\n`;
   code += `${indentLevel}def check_user_variable(var_name, user_data_dict):\n`;
@@ -771,7 +886,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   code += `${indentLevel}    \n`;
   code += `${indentLevel}    return False, None\n`;
   code += `${indentLevel}\n`;
-
+  
   // Создаем единую if/elif/else структуру для всех условий
   for (let i = 0; i < sortedConditions.length; i++) {
     const condition = sortedConditions[i];
@@ -788,16 +903,16 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
     }
     const conditionText = formatTextForPython(finalMessageText);
     const conditionKeyword = i === 0 ? 'if' : 'elif';
-
+    
     // Get variable names - support both new array format and legacy single variable
-    const variableNames = condition.variableNames && condition.variableNames?.length > 0
-      ? condition.variableNames
+    const variableNames = condition.variableNames && condition.variableNames.length > 0 
+      ? condition.variableNames 
       : (condition.variableName ? [condition.variableName] : []);
-
+    
     const logicOperator = condition.logicOperator || 'AND';
-
+    
     code += `${indentLevel}# Условие ${i + 1}: ${condition.condition} для переменных: ${variableNames.join(', ')}\n`;
-
+    
     switch (condition.condition) {
       case 'user_data_exists':
         if (variableNames.length === 0) {
@@ -805,7 +920,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}    pass\n`;
           break;
         }
-
+        
         // Создаем единый блок условия с проверками ВНУТРИ
         code += `${indentLevel}${conditionKeyword} (\n`;
         for (let j = 0; j < variableNames.length; j++) {
@@ -814,14 +929,14 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}    check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
         }
         code += `${indentLevel}):\n`;
-
+        
         // Внутри блока условия собираем значения переменных
         code += `${indentLevel}    # Собираем значения переменных\n`;
         code += `${indentLevel}    variable_values = {}\n`;
         for (const varName of variableNames) {
           code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
         }
-
+        
         // Только переопределяем text если условное сообщение не пустое
         const conditionTextValue = finalMessageText.trim();
         if (conditionTextValue) {
@@ -829,7 +944,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         } else {
           code += `${indentLevel}    # Условное сообщение пустое, используем основной текст узла (text уже инициализирован)\n`;
         }
-
+        
         // Устанавливаем parse_mode для условного сообщения
         const parseMode1 = getParseMode(condition.formatMode || 'text');
         if (parseMode1) {
@@ -837,27 +952,27 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         } else {
           code += `${indentLevel}    conditional_parse_mode = None\n`;
         }
-
+        
         // Заменяем переменные в тексте
         for (const varName of variableNames) {
           code += `${indentLevel}    if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
           code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
         }
-
+        
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
         code += `${indentLevel}    # ВАЖНО: Логируем состояние условной клавиатуры для отладки\n`;
         code += `${indentLevel}    logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")\n`;
-
+        
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-
+        
         // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
         const skipButtons = (condition.buttons || [])
-          .filter((btn: ButtonSchema) => btn.skipDataCollection === true && btn.target)
-          .map((btn: ButtonSchema) => ({ text: btn.text, target: btn.target }));
+          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+          .map((btn: any) => ({ text: btn.text, target: btn.target }));
         const skipButtonsJson = JSON.stringify(skipButtons);
-
+        
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
@@ -866,7 +981,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "source_type": "conditional_message",\n`;
         code += `${indentLevel}        "skip_buttons": ${skipButtonsJson}\n`;
         code += `${indentLevel}    }\n`;
-
+        
         // ИСПРАВЛЕНИЕ: Проверяем, нужно ли ждать ввода ДАЖЕ ЕСЛИ переменная существует
         code += `${indentLevel}    # Настраиваем ожидание ввода для условного сообщения с waitForTextInput\n`;
         if (condition.waitForTextInput) {
@@ -879,27 +994,27 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}        # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода\n`;
           code += `${indentLevel}        # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break\n`;
         }
-
+        
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
         // Это нужно чтобы текстовый обработчик мог обработать кнопки даже когда ожидается фото/видео
-        if (skipButtons?.length > 0) {
+        if (skipButtons.length > 0) {
           code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
           code += `${indentLevel}    if user_id not in user_data:\n`;
           code += `${indentLevel}        user_data[user_id] = {}\n`;
           code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson}\n`;
           code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
         }
-
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} (${logicOperator})")\n`;
         break;
-
+        
       case 'user_data_not_exists':
         if (variableNames.length === 0) {
           code += `${indentLevel}${conditionKeyword} False:  # Нет переменных для проверки\n`;
           code += `${indentLevel}    pass\n`;
           break;
         }
-
+        
         // Создаем единый блок условия с проверками ВНУТРИ (инвертированными)
         code += `${indentLevel}${conditionKeyword} (\n`;
         for (let j = 0; j < variableNames.length; j++) {
@@ -912,7 +1027,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           }
         }
         code += `${indentLevel}):\n`;
-
+        
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Устанавливаем parse_mode для условного сообщения
         const parseMode2 = getParseMode(condition.formatMode || 'text');
@@ -921,19 +1036,19 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         } else {
           code += `${indentLevel}    conditional_parse_mode = None\n`;
         }
-
+        
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
-
+        
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-
+        
         // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
         const skipButtons2 = (condition.buttons || [])
-          .filter((btn: ButtonSchema) => btn.skipDataCollection === true && btn.target)
-          .map((btn: ButtonSchema) => ({ text: btn.text, target: btn.target }));
+          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+          .map((btn: any) => ({ text: btn.text, target: btn.target }));
         const skipButtonsJson2 = JSON.stringify(skipButtons2);
-
+        
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
@@ -942,7 +1057,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "source_type": "conditional_message",\n`;
         code += `${indentLevel}        "skip_buttons": ${skipButtonsJson2}\n`;
         code += `${indentLevel}    }\n`;
-
+        
         // Добавляем код для активации состояния условного ввода для user_data_not_exists
         if (condition.waitForTextInput) {
           code += `${indentLevel}    \n`;
@@ -953,26 +1068,26 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
           code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
-
+        
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
-        if (skipButtons2?.length > 0) {
+        if (skipButtons2.length > 0) {
           code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
           code += `${indentLevel}    if user_id not in user_data:\n`;
           code += `${indentLevel}        user_data[user_id] = {}\n`;
           code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson2}\n`;
           code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
         }
-
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
         break;
-
+        
       case 'user_data_equals':
         if (variableNames.length === 0) {
           code += `${indentLevel}${conditionKeyword} False:  # Нет переменных для проверки\n`;
           code += `${indentLevel}    pass\n`;
           break;
         }
-
+        
         // Создаем единый блок условия с проверками равенства ВНУТРИ
         code += `${indentLevel}${conditionKeyword} (\n`;
         for (let j = 0; j < variableNames.length; j++) {
@@ -981,14 +1096,14 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}    check_user_variable("${varName}", user_data_dict)[1] == "${condition.expectedValue || ''}"${operator}\n`;
         }
         code += `${indentLevel}):\n`;
-
+        
         // Внутри блока условия собираем значения переменных
         code += `${indentLevel}    # Собираем значения переменных\n`;
         code += `${indentLevel}    variable_values = {}\n`;
         for (const varName of variableNames) {
           code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
         }
-
+        
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Устанавливаем parse_mode для условного сообщения
         const parseMode3 = getParseMode(condition.formatMode || 'text');
@@ -997,25 +1112,25 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         } else {
           code += `${indentLevel}    conditional_parse_mode = None\n`;
         }
-
+        
         // Заменяем переменные в тексте
         for (const varName of variableNames) {
           code += `${indentLevel}    if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
           code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
         }
-
+        
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
-
+        
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-
+        
         // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
         const skipButtons3 = (condition.buttons || [])
-          .filter((btn: ButtonSchema) => btn.skipDataCollection === true && btn.target)
-          .map((btn: ButtonSchema) => ({ text: btn.text, target: btn.target }));
+          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+          .map((btn: any) => ({ text: btn.text, target: btn.target }));
         const skipButtonsJson3 = JSON.stringify(skipButtons3);
-
+        
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
@@ -1024,7 +1139,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "source_type": "conditional_message",\n`;
         code += `${indentLevel}        "skip_buttons": ${skipButtonsJson3}\n`;
         code += `${indentLevel}    }\n`;
-
+        
         // Добавляем код для активации состояния условного ввода для user_data_equals
         if (condition.waitForTextInput) {
           code += `${indentLevel}    \n`;
@@ -1035,26 +1150,26 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
           code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
-
+        
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
-        if (skipButtons3?.length > 0) {
+        if (skipButtons3.length > 0) {
           code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
           code += `${indentLevel}    if user_id not in user_data:\n`;
           code += `${indentLevel}        user_data[user_id] = {}\n`;
           code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson3}\n`;
           code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
         }
-
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} равны '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
-
+        
       case 'user_data_contains':
         if (variableNames.length === 0) {
           code += `${indentLevel}${conditionKeyword} False:  # Нет переменных для проверки\n`;
           code += `${indentLevel}    pass\n`;
           break;
         }
-
+        
         // Создаем единый блок условия с проверками содержания ВНУТРИ
         code += `${indentLevel}${conditionKeyword} (\n`;
         for (let j = 0; j < variableNames.length; j++) {
@@ -1063,14 +1178,14 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}    (check_user_variable("${varName}", user_data_dict)[1] is not None and "${condition.expectedValue || ''}" in str(check_user_variable("${varName}", user_data_dict)[1]))${operator}\n`;
         }
         code += `${indentLevel}):\n`;
-
+        
         // Внутри блока условия собираем значения переменных
         code += `${indentLevel}    # Собираем значения переменных\n`;
         code += `${indentLevel}    variable_values = {}\n`;
         for (const varName of variableNames) {
           code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
         }
-
+        
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Устанавливаем parse_mode для условного сообщения
         const parseMode4 = getParseMode(condition.formatMode || 'text');
@@ -1079,25 +1194,25 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         } else {
           code += `${indentLevel}    conditional_parse_mode = None\n`;
         }
-
+        
         // Заменяем переменные в тексте
         for (const varName of variableNames) {
           code += `${indentLevel}    if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
           code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
         }
-
+        
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
-
+        
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-
+        
         // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
         const skipButtons4 = (condition.buttons || [])
-          .filter((btn: ButtonSchema) => btn.skipDataCollection === true && btn.target)
-          .map((btn: ButtonSchema) => ({ text: btn.text, target: btn.target }));
+          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+          .map((btn: any) => ({ text: btn.text, target: btn.target }));
         const skipButtonsJson4 = JSON.stringify(skipButtons4);
-
+        
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
@@ -1106,7 +1221,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "source_type": "conditional_message",\n`;
         code += `${indentLevel}        "skip_buttons": ${skipButtonsJson4}\n`;
         code += `${indentLevel}    }\n`;
-
+        
         // Добавляем код для активации состояния условного ввода для user_data_contains
         if (condition.waitForTextInput) {
           code += `${indentLevel}    \n`;
@@ -1117,93 +1232,275 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
           code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
-
+        
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
-        if (skipButtons4?.length > 0) {
+        if (skipButtons4.length > 0) {
           code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
           code += `${indentLevel}    if user_id not in user_data:\n`;
           code += `${indentLevel}        user_data[user_id] = {}\n`;
           code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson4}\n`;
           code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
         }
-
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} содержат '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
-
+        
       default:
         code += `${indentLevel}${conditionKeyword} False:  # Неизвестное условие: ${condition.condition}\n`;
         code += `${indentLevel}    pass\n`;
         break;
     }
   }
-
+  
   // НЕ добавляем else блок здесь - он будет добавлен основной функцией
   return code;
+}
+
+// Функция для парсинга Python кода обратно в JSON (улучшенная версия)
+export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; connections: any[] } {
+  const nodes: Node[] = [];
+  const nodeIdMap = new Map<string, Node>();
+  
+  // Ищем все NODE_START и NODE_END блоки
+  const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@\n([\s\S]*?)# @@NODE_END:\1@@/g;
+  let match;
+  let xPosition = 50;
+  
+  while ((match = nodePattern.exec(pythonCode)) !== null) {
+    const nodeId = match[1];
+    const nodeContent = match[2];
+    
+    // Определяем тип узла по декораторам и контексту
+    let nodeType = 'message';
+    if (nodeId === 'start') {
+      nodeType = 'start';
+    } else if (nodeContent.includes('F.photo') || nodeContent.includes('@dp.message(F.photo)')) {
+      nodeType = 'photo';
+    } else if (nodeContent.includes('F.video') || nodeContent.includes('@dp.message(F.video)')) {
+      nodeType = 'video';
+    } else if (nodeContent.includes('F.audio') || nodeContent.includes('@dp.message(F.audio)')) {
+      nodeType = 'audio';
+    } else if (nodeContent.includes('F.voice') || nodeContent.includes('@dp.message(F.voice)')) {
+      nodeType = 'voice';
+    } else if (nodeContent.includes('F.document') || nodeContent.includes('@dp.message(F.document)')) {
+      nodeType = 'document';
+    } else if (nodeContent.includes('F.sticker') || nodeContent.includes('@dp.message(F.sticker)')) {
+      nodeType = 'sticker';
+    } else if (nodeContent.includes('F.animation') || nodeContent.includes('@dp.message(F.animation)')) {
+      nodeType = 'animation';
+    } else if (nodeContent.includes('commands=') || nodeContent.includes('F.command')) {
+      nodeType = 'command';
+    }
+    
+    // Извлекаем текст сообщения (поддержка многострочного текста)
+    let messageText = '';
+    // Сначала пробуем найти многострочный текст в тройных кавычках
+    let textMatch = /text\s*=\s*"""([\s\S]*?)"""/m.exec(nodeContent);
+    if (!textMatch) {
+      // Потом пробуем однострочный текст
+      textMatch = /text\s*=\s*"([^"]*)"/.exec(nodeContent);
+    }
+    if (!textMatch) {
+      // Пробуем текст с экранированием
+      textMatch = /text\s*=\s*'([^']*)'/.exec(nodeContent);
+    }
+    if (textMatch) {
+      messageText = textMatch[1]
+        .replace(/\\n/g, '\n')
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\t/g, '\t');
+    }
+    
+    // Извлекаем команду и описание для command узлов
+    let command = '';
+    let description = '';
+    const commandMatch = /commands?\s*=\s*\["([^"]+)"\]/.exec(nodeContent);
+    if (commandMatch) {
+      command = commandMatch[1].startsWith('/') ? commandMatch[1] : '/' + commandMatch[1];
+    }
+    const descriptionMatch = /description\s*=\s*"([^"]*)"/.exec(nodeContent);
+    if (descriptionMatch) {
+      description = descriptionMatch[1];
+    }
+    
+    // Извлекаем Inline кнопки
+    const buttons: Button[] = [];
+    const inlineButtonMatches = Array.from(nodeContent.matchAll(/InlineKeyboardButton\s*\(\s*text\s*=\s*([^,]+)\s*,\s*callback_data\s*=\s*"([^"]+)"\s*\)/g));
+    for (const btnMatch of inlineButtonMatches) {
+      let btnText = btnMatch[1].replace(/["'`]/g, '').trim();
+      // Убираем префиксы типа 'replace_variables_in_text('
+      if (btnText.includes('(')) {
+        const innerMatch = /\("([^"]+)"\)/.exec(btnText);
+        if (innerMatch) {
+          btnText = innerMatch[1];
+        }
+      }
+      const callbackData = btnMatch[2];
+      buttons.push({
+        id: `btn_${nodeId}_${buttons.length}`,
+        text: btnText,
+        action: 'goto',
+        target: callbackData,
+        buttonType: 'normal'
+      } as Button);
+    }
+    
+    // Извлекаем Reply кнопки
+    const replyButtonMatches = Array.from(nodeContent.matchAll(/KeyboardButton\s*\(\s*text\s*=\s*([^)]+)\s*\)/g));
+    for (const btnMatch of replyButtonMatches) {
+      let btnText = btnMatch[1].replace(/["'`]/g, '').trim();
+      // Убираем функции типа replace_variables_in_text
+      if (btnText.includes('(')) {
+        const innerMatch = /\("([^"]+)"\)/.exec(btnText);
+        if (innerMatch) {
+          btnText = innerMatch[1];
+        }
+      }
+      if (!buttons.find((b: Button) => b.text === btnText)) {
+        buttons.push({
+          id: `btn_${nodeId}_${buttons.length}`,
+          text: btnText,
+          action: 'default',
+          buttonType: 'normal',
+          skipDataCollection: false,
+          hideAfterClick: false
+        } as Button);
+      }
+    }
+    
+    // Определяем тип клавиатуры
+    let keyboardType = 'none';
+    if (nodeContent.includes('InlineKeyboardMarkup')) {
+      keyboardType = 'inline';
+    } else if (nodeContent.includes('ReplyKeyboardMarkup')) {
+      keyboardType = 'reply';
+    }
+    
+    // Извлекаем настройки ввода текста
+    const collectUserInput = nodeContent.includes('collect_user_input') || nodeContent.includes('enableTextInput');
+    const waitForTextInput = nodeContent.includes('input_variable') || nodeContent.includes('waiting_for_input');
+    const inputVariable = /input_variable\s*=\s*"([^"]*)"/.exec(nodeContent)?.[1] || '';
+    
+    // Создаем узел
+    const node: Node = {
+      id: nodeId,
+      type: nodeType as any,
+      position: { x: xPosition, y: 50 },
+      data: {
+        messageText: messageText || `Узел ${nodeId}`,
+        keyboardType: (keyboardType === 'reply' || keyboardType === 'inline' || keyboardType === 'none') ? keyboardType : 'none',
+        buttons: buttons,
+        showInMenu: (nodeType === 'start' || nodeType === 'command') && !nodeContent.includes('showInMenu=False'),
+        command: command,
+        description: description,
+        allowMultipleSelection: nodeContent.includes('allowMultipleSelection=True'),
+        formatMode: nodeContent.includes('parse_mode=ParseMode.HTML') ? 'html' : 
+                   nodeContent.includes('parse_mode=ParseMode.MARKDOWN') ? 'markdown' : 'none',
+        enablePhotoInput: nodeContent.includes('enablePhotoInput'),
+        enableVideoInput: nodeContent.includes('enableVideoInput'),
+        enableAudioInput: nodeContent.includes('enableAudioInput'),
+        enableDocumentInput: nodeContent.includes('enableDocumentInput'),
+        waitForTextInput: waitForTextInput,
+        inputVariable: inputVariable,
+        collectUserInput: collectUserInput,
+        conditionalMessages: [],
+        synonyms: [],
+        attachedMedia: []
+      }
+    };
+    
+    nodes.push(node);
+    nodeIdMap.set(nodeId, node);
+    xPosition += 280;
+  }
+  
+  // Восстанавливаем connections на основе кнопок и контекста
+  const connections: any[] = [];
+  const addedConnections = new Set<string>();
+  
+  nodes.forEach(node => {
+    if (node.data.buttons && Array.isArray(node.data.buttons)) {
+      node.data.buttons.forEach(button => {
+        if (button.target && button.action === 'goto') {
+          const connectionId = `${node.id}-${button.target}`;
+          if (!addedConnections.has(connectionId) && nodeIdMap.has(button.target)) {
+            connections.push({
+              id: connectionId,
+              source: node.id,
+              target: button.target
+            });
+            addedConnections.add(connectionId);
+          }
+        }
+      });
+    }
+  });
+  
+  return { nodes, connections };
 }
 
 export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false): string {
   // Set global logging flag for this generation run
   globalLoggingEnabled = enableLogging;
-
+  
   const { nodes, connections } = extractNodesAndConnections(botData);
-
+  
   // Собираем все ID узлов для генерации уникальных коротких ID
   const allNodeIds = nodes ? nodes.map(node => node.id) : [];
-
+  
   // Собираем все медиапеременные из узлов для поддержки attachedMedia
   const mediaVariablesMap = collectMediaVariables(nodes || []);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Собрано медиапеременных: ${mediaVariablesMap.size}`);
   if (mediaVariablesMap.size > 0) {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Медиапеременные:', Array.from(mediaVariablesMap.entries()));
   }
-
+  
   // ЛОГИРОВАНИЕ ГЕНЕРАТОРА: Подробная информация о данных бота
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
-
+  
   // Логируем все узлы с их свойствами
-  if (nodes && nodes?.length > 0) {
+  if (nodes && nodes.length > 0) {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем все узлы:');
-    nodes.forEach((node: Node, index: number) => {
+    nodes.forEach((node, index) => {
       const hasMultiSelect = node.data.allowMultipleSelection;
-      const hasButtons = node.data.buttons && node.data.buttons?.length > 0;
+      const hasButtons = node.data.buttons && node.data.buttons.length > 0;
       const continueTarget = node.data.continueButtonTarget;
-
+      
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: "${node.id}" (тип: ${node.type})`);
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - hasMultiSelect: ${hasMultiSelect}`);
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - кнопок: ${node.data.buttons?.length || 0}`);
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - continueButtonTarget: ${continueTarget || 'нет'}`);
-
+      
       if (node.id === 'interests_result') {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: НАЙДЕН interests_result!`);
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
       }
     });
-
+    
     // Проверим связи
-    if (connections && connections?.length > 0) {
+    if (connections && connections.length > 0) {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем связи:');
-      connections.forEach((conn: Connection, index: number) => {
+      connections.forEach((conn, index) => {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Связь ${index + 1}: ${conn.source} -> ${conn.target}`);
       });
     }
   }
-
-  let code = '#!/usr/bin/env python3\n';
-  code += '# -*- coding: utf-8 -*-\n';
-  code += '"""\n';
+  
+  let code = '"""\n';
   code += `${botName} - Telegram Bot\n`;
   code += 'Сгенерировано с помощью TelegramBot Builder\n';
-
+  
   const botFatherCommands = generateBotFatherCommands(nodes);
   if (botFatherCommands) {
     code += '\nКоманды для @BotFather:\n';
     code += botFatherCommands;
   }
-
+  
   code += '"""\n\n';
-
+  
   code += 'import asyncio\n';
   code += 'import logging\n';
   code += 'import os\n';
@@ -1220,25 +1517,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'from datetime import datetime, timezone, timedelta\n';
   code += 'import json\n';
   code += 'import aiohttp\n\n';
-
-  // Добавляем настройку UTF-8 кодировки
-  code += '# Настройка UTF-8 кодировки\n';
-  code += 'import sys\n';
-  code += 'if sys.platform.startswith("win"):\n';
-  code += '    # Для Windows устанавливаем UTF-8 кодировку\n';
-  code += '    import codecs\n';
-  code += '    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())\n';
-  code += '    sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())\n';
-  code += 'else:\n';
-  code += '    # Для Unix-систем устанавливаем локаль\n';
-  code += '    try:\n';
-  code += '        locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")\n';
-  code += '    except locale.Error:\n';
-  code += '        try:\n';
-  code += '            locale.setlocale(locale.LC_ALL, "C.UTF-8")\n';
-  code += '        except locale.Error:\n';
-  code += '            pass  # Используем системную локаль по умолчанию\n\n';
-
+  
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы
   if (hasInlineButtons(nodes || []) || hasAutoTransitions(nodes || [])) {
     code += '# Safe helper for editing messages with fallback to new message\n';
@@ -1332,356 +1611,356 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    \n';
     code += '    return result\n\n';
   }
-
+  
   code += '# Токен вашего бота (получите у @BotFather)\n';
   code += 'BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"\n\n';
-
+  
   code += '# Настройка логирования\n';
   code += 'logging.basicConfig(level=logging.INFO)\n\n';
-
+  
   code += '# Создание бота и диспетчера\n';
   code += 'bot = Bot(token=BOT_TOKEN)\n';
   code += 'dp = Dispatcher()\n\n';
-
+  
   code += '# Список администраторов (добавьте свой Telegram ID)\n';
   code += 'ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов\n\n';
-
+  
   // Блок логирования сообщений генерируется только если включена БД
   if (userDatabaseEnabled) {
-    code += '# API configuration для сохранения сообщений\n';
-    code += 'API_BASE_URL = os.getenv("REPLIT_DEV_DOMAIN", "http://localhost:5000")\n';
-    code += `PROJECT_ID = int(os.getenv("PROJECT_ID", "${projectId || 0}"))  # ID проекта в системе\n\n`;
-
-    code += '# Функция для сохранения сообщений в базу данных через API\n';
-    code += 'async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):\n';
-    code += '    """Сохраняет сообщение в базу данных через API"""\n';
+  code += '# API configuration для сохранения сообщений\n';
+  code += 'API_BASE_URL = os.getenv("REPLIT_DEV_DOMAIN", "http://localhost:5000")\n';
+  code += `PROJECT_ID = int(os.getenv("PROJECT_ID", "${projectId || 0}"))  # ID проекта в системе\n\n`;
+  
+  code += '# Функция для сохранения сообщений в базу данных через API\n';
+  code += 'async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):\n';
+  code += '    """Сохраняет сообщение в базу данных через API"""\n';
+  code += '    try:\n';
+  code += '        # Формируем полный URL для API\n';
+  code += '        if API_BASE_URL.startswith("http"):\n';
+  code += '            api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/messages"\n';
+  code += '        else:\n';
+  code += '            api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/messages"\n';
+  code += '        \n';
+  code += '        payload = {\n';
+  code += '            "userId": str(user_id),\n';
+  code += '            "messageType": message_type,\n';
+  code += '            "messageText": message_text,\n';
+  code += '            "nodeId": node_id,\n';
+  code += '            "messageData": message_data or {}\n';
+  code += '        }\n';
+  code += '        \n';
+  code += '        logging.debug(f"💾 Отправка сообщения в API: {payload}")\n';
+  code += '        async with aiohttp.ClientSession() as session:\n';
+  code += '            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=5)) as response:\n';
+  code += '                if response.status == 200:\n';
+  code += '                    logging.info(f"✅ Сообщение сохранено: {message_type} от {user_id}")\n';
+  code += '                    response_data = await response.json()\n';
+  code += '                    return response_data.get("data")  # Возвращаем сохраненное сообщение с id\n';
+  code += '                else:\n';
+  code += '                    error_text = await response.text()\n';
+  code += '                    logging.error(f"❌ Не удалось сохранить сообщение: {response.status} - {error_text}")\n';
+  code += '                    logging.error(f"Отправленный payload: {payload}")\n';
+  code += '                    return None\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка при сохранении сообщения: {e}")\n';
+  code += '        return None\n\n';
+  
+  code += '# Middleware для сохранения входящих сообщений\n';
+  code += 'async def message_logging_middleware(handler, event: types.Message, data: dict):\n';
+  code += '    """Middleware для автоматического сохранения входящих сообщений от пользователей"""\n';
+  code += '    try:\n';
+  code += '        # Сохраняем входящее сообщение от пользователя\n';
+  code += '        user_id = str(event.from_user.id)\n';
+  code += '        message_text = event.text or event.caption or "[медиа]"\n';
+  code += '        message_data = {"message_id": event.message_id}\n';
+  code += '        \n';
+  code += '        # Проверяем наличие фото\n';
+  code += '        photo_file_id = None\n';
+  code += '        if event.photo:\n';
+  code += '            # Берем фото наибольшего размера (последнее в списке)\n';
+  code += '            largest_photo = event.photo[-1]\n';
+  code += '            photo_file_id = largest_photo.file_id\n';
+  code += '            message_data["photo"] = {\n';
+  code += '                "file_id": largest_photo.file_id,\n';
+  code += '                "file_unique_id": largest_photo.file_unique_id,\n';
+  code += '                "width": largest_photo.width,\n';
+  code += '                "height": largest_photo.height,\n';
+  code += '                "file_size": largest_photo.file_size if hasattr(largest_photo, "file_size") else None\n';
+  code += '            }\n';
+  code += '            if not message_text or message_text == "[медиа]":\n';
+  code += '                message_text = "[Фото]"\n';
+  code += '        \n';
+  code += '        # Сохраняем сообщение в базу данных\n';
+  code += '        saved_message = await save_message_to_api(\n';
+  code += '            user_id=user_id,\n';
+  code += '            message_type="user",\n';
+  code += '            message_text=message_text,\n';
+  code += '            message_data=message_data\n';
+  code += '        )\n';
+  code += '        \n';
+  code += '        # Если есть фото и сообщение сохранено, регистрируем медиа\n';
+  code += '        if photo_file_id and saved_message and "id" in saved_message:\n';
+  code += '            try:\n';
+  code += '                if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):\n';
+  code += '                    media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
+  code += '                else:\n';
+  code += '                    media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
+  code += '                \n';
+  code += '                media_payload = {\n';
+  code += '                    "messageId": saved_message["id"],\n';
+  code += '                    "fileId": photo_file_id,\n';
+  code += '                    "botToken": BOT_TOKEN,\n';
+  code += '                    "mediaType": "photo"\n';
+  code += '                }\n';
+  code += '                \n';
+  code += '                async with aiohttp.ClientSession() as session:\n';
+  code += '                    async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:\n';
+  code += '                        if response.status == 200:\n';
+  code += '                            message_id = saved_message.get("id")\n';
+  code += '                            logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")\n';
+  code += '                        else:\n';
+  code += '                            error_text = await response.text()\n';
+  code += '                            logging.warning(f"⚠️ Не удалось зарегистрировать медиа: {response.status} - {error_text}")\n';
+  code += '            except Exception as media_error:\n';
+  code += '                logging.warning(f"Ошибка при регистрации медиа: {media_error}")\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка в middleware сохранения сообщений: {e}")\n';
+  code += '    \n';
+  code += '    # Продолжаем обработку сообщения\n';
+  code += '    return await handler(event, data)\n\n';
+  
+  // Добавляем callback_query middleware только если в боте есть inline кнопки
+  if (hasInlineButtons(nodes || [])) {
+    code += '# Middleware для сохранения нажатий на кнопки\n';
+    code += 'async def callback_query_logging_middleware(handler, event: types.CallbackQuery, data: dict):\n';
+    code += '    """Middleware для автоматического сохранения нажатий на кнопки"""\n';
     code += '    try:\n';
-    code += '        # Формируем полный URL для API\n';
-    code += '        if API_BASE_URL.startswith("http"):\n';
-    code += '            api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/messages"\n';
-    code += '        else:\n';
-    code += '            api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/messages"\n';
-    code += '        \n';
-    code += '        payload = {\n';
-    code += '            "userId": str(user_id),\n';
-    code += '            "messageType": message_type,\n';
-    code += '            "messageText": message_text,\n';
-    code += '            "nodeId": node_id,\n';
-    code += '            "messageData": message_data or {}\n';
-    code += '        }\n';
-    code += '        \n';
-    code += '        logging.debug(f"💾 Отправка сообщения в API: {payload}")\n';
-    code += '        async with aiohttp.ClientSession() as session:\n';
-    code += '            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=5)) as response:\n';
-    code += '                if response.status == 200:\n';
-    code += '                    logging.info(f"✅ Сообщение сохранено: {message_type} от {user_id}")\n';
-    code += '                    response_data = await response.json()\n';
-    code += '                    return response_data.get("data")  # Возвращаем сохраненное сообщение с id\n';
-    code += '                else:\n';
-    code += '                    error_text = await response.text()\n';
-    code += '                    logging.error(f"❌ Не удалось сохранить сообщение: {response.status} - {error_text}")\n';
-    code += '                    logging.error(f"Отправленный payload: {payload}")\n';
-    code += '                    return None\n';
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"Ошибка при сохранении сообщения: {e}")\n';
-    code += '        return None\n\n';
-
-    code += '# Middleware для сохранения входящих сообщений\n';
-    code += 'async def message_logging_middleware(handler, event: types.Message, data: dict):\n';
-    code += '    """Middleware для автоматического сохранения входящих сообщений от пользователей"""\n';
-    code += '    try:\n';
-    code += '        # Сохраняем входящее сообщение от пользователя\n';
     code += '        user_id = str(event.from_user.id)\n';
-    code += '        message_text = event.text or event.caption or "[медиа]"\n';
-    code += '        message_data = {"message_id": event.message_id}\n';
+    code += '        callback_data = event.data or ""\n';
     code += '        \n';
-    code += '        # Проверяем наличие фото\n';
-    code += '        photo_file_id = None\n';
-    code += '        if event.photo:\n';
-    code += '            # Берем фото наибольшего размера (последнее в списке)\n';
-    code += '            largest_photo = event.photo[-1]\n';
-    code += '            photo_file_id = largest_photo.file_id\n';
-    code += '            message_data["photo"] = {\n';
-    code += '                "file_id": largest_photo.file_id,\n';
-    code += '                "file_unique_id": largest_photo.file_unique_id,\n';
-    code += '                "width": largest_photo.width,\n';
-    code += '                "height": largest_photo.height,\n';
-    code += '                "file_size": largest_photo.file_size if hasattr(largest_photo, "file_size") else None\n';
-    code += '            }\n';
-    code += '            if not message_text or message_text == "[медиа]":\n';
-    code += '                message_text = "[Фото]"\n';
+    code += '        # Пытаемся найти текст кнопки из сообщения\n';
+    code += '        button_text = None\n';
+    code += '        if event.message and hasattr(event.message, "reply_markup"):\n';
+    code += '            reply_markup = event.message.reply_markup\n';
+    code += '            if hasattr(reply_markup, "inline_keyboard"):\n';
+    code += '                for row in reply_markup.inline_keyboard:\n';
+    code += '                    for btn in row:\n';
+    code += '                        if hasattr(btn, "callback_data") and btn.callback_data == callback_data:\n';
+    code += '                            button_text = btn.text\n';
+    code += '                            break\n';
+    code += '                    if button_text:\n';
+    code += '                        break\n';
     code += '        \n';
-    code += '        # Сохраняем сообщение в базу данных\n';
-    code += '        saved_message = await save_message_to_api(\n';
+    code += '        # Сохраняем информацию о нажатии кнопки\n';
+    code += '        message_text_to_save = f"[Нажата кнопка: {button_text}]" if button_text else "[Нажата кнопка]"\n';
+    code += '        await save_message_to_api(\n';
     code += '            user_id=user_id,\n';
     code += '            message_type="user",\n';
-    code += '            message_text=message_text,\n';
-    code += '            message_data=message_data\n';
-    code += '        )\n';
-    code += '        \n';
-    code += '        # Если есть фото и сообщение сохранено, регистрируем медиа\n';
-    code += '        if photo_file_id and saved_message and "id" in saved_message:\n';
-    code += '            try:\n';
-    code += '                if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):\n';
-    code += '                    media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
-    code += '                else:\n';
-    code += '                    media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
-    code += '                \n';
-    code += '                media_payload = {\n';
-    code += '                    "messageId": saved_message["id"],\n';
-    code += '                    "fileId": photo_file_id,\n';
-    code += '                    "botToken": BOT_TOKEN,\n';
-    code += '                    "mediaType": "photo"\n';
-    code += '                }\n';
-    code += '                \n';
-    code += '                async with aiohttp.ClientSession() as session:\n';
-    code += '                    async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:\n';
-    code += '                        if response.status == 200:\n';
-    code += '                            message_id = saved_message.get("id")\n';
-    code += '                            logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")\n';
-    code += '                        else:\n';
-    code += '                            error_text = await response.text()\n';
-    code += '                            logging.warning(f"⚠️ Не удалось зарегистрировать медиа: {response.status} - {error_text}")\n';
-    code += '            except Exception as media_error:\n';
-    code += '                logging.warning(f"Ошибка при регистрации медиа: {media_error}")\n';
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"Ошибка в middleware сохранения сообщений: {e}")\n';
-    code += '    \n';
-    code += '    # Продолжаем обработку сообщения\n';
-    code += '    return await handler(event, data)\n\n';
-
-    // Добавляем callback_query middleware только если в боте есть inline кнопки
-    if (hasInlineButtons(nodes || [])) {
-      code += '# Middleware для сохранения нажатий на кнопки\n';
-      code += 'async def callback_query_logging_middleware(handler, event: types.CallbackQuery, data: dict):\n';
-      code += '    """Middleware для автоматического сохранения нажатий на кнопки"""\n';
-      code += '    try:\n';
-      code += '        user_id = str(event.from_user.id)\n';
-      code += '        callback_data = event.data or ""\n';
-      code += '        \n';
-      code += '        # Пытаемся найти текст кнопки из сообщения\n';
-      code += '        button_text = None\n';
-      code += '        if event.message and hasattr(event.message, "reply_markup"):\n';
-      code += '            reply_markup = event.message.reply_markup\n';
-      code += '            if hasattr(reply_markup, "inline_keyboard"):\n';
-      code += '                for row in reply_markup.inline_keyboard:\n';
-      code += '                    for btn in row:\n';
-      code += '                        if hasattr(btn, "callback_data") and btn.callback_data == callback_data:\n';
-      code += '                            button_text = btn.text\n';
-      code += '                            break\n';
-      code += '                    if button_text:\n';
-      code += '                        break\n';
-      code += '        \n';
-      code += '        # Сохраняем информацию о нажатии кнопки\n';
-      code += '        message_text_to_save = f"[Нажата кнопка: {button_text}]" if button_text else "[Нажата кнопка]"\n';
-      code += '        await save_message_to_api(\n';
-      code += '            user_id=user_id,\n';
-      code += '            message_type="user",\n';
-      code += '            message_text=message_text_to_save,\n';
-      code += '            message_data={\n';
-      code += '                "button_clicked": True,\n';
-      code += '                "button_text": button_text,\n';
-      code += '                "callback_data": callback_data\n';
-      code += '            }\n';
-      code += '        )\n';
-      code += '    except Exception as e:\n';
-      code += '        logging.error(f"Ошибка в middleware сохранения нажатий кнопок: {e}")\n';
-      code += '    \n';
-      code += '    # Продолжаем обработку callback query\n';
-      code += '    return await handler(event, data)\n\n';
-    }
-
-    code += '# Обертка для сохранения исходящих сообщений\n';
-    code += 'original_send_message = bot.send_message\n';
-    code += 'async def send_message_with_logging(chat_id, text, *args, node_id=None, **kwargs):\n';
-    code += '    """Обертка для bot.send_message с автоматическим сохранением"""\n';
-    code += '    result = await original_send_message(chat_id, text, *args, **kwargs)\n';
-    code += '    \n';
-    code += '    # Извлекаем информацию о кнопках из reply_markup\n';
-    code += '    message_data_obj = {"message_id": result.message_id if result else None}\n';
-    code += '    if "reply_markup" in kwargs:\n';
-    code += '        try:\n';
-    code += '            reply_markup = kwargs["reply_markup"]\n';
-    code += '            buttons_data = []\n';
-    code += '            # Обработка inline клавиатуры\n';
-    code += '            if hasattr(reply_markup, "inline_keyboard"):\n';
-    code += '                for row in reply_markup.inline_keyboard:\n';
-    code += '                    for btn in row:\n';
-    code += '                        button_info = {"text": btn.text}\n';
-    code += '                        if hasattr(btn, "url") and btn.url:\n';
-    code += '                            button_info["url"] = btn.url\n';
-    code += '                        if hasattr(btn, "callback_data") and btn.callback_data:\n';
-    code += '                            button_info["callback_data"] = btn.callback_data\n';
-    code += '                        buttons_data.append(button_info)\n';
-    code += '                if buttons_data:\n';
-    code += '                    message_data_obj["buttons"] = buttons_data\n';
-    code += '                    message_data_obj["keyboard_type"] = "inline"\n';
-    code += '            # Обработка reply клавиатуры\n';
-    code += '            elif hasattr(reply_markup, "keyboard"):\n';
-    code += '                for row in reply_markup.keyboard:\n';
-    code += '                    for btn in row:\n';
-    code += '                        button_info = {"text": btn.text}\n';
-    code += '                        if hasattr(btn, "request_contact") and btn.request_contact:\n';
-    code += '                            button_info["request_contact"] = True\n';
-    code += '                        if hasattr(btn, "request_location") and btn.request_location:\n';
-    code += '                            button_info["request_location"] = True\n';
-    code += '                        buttons_data.append(button_info)\n';
-    code += '                if buttons_data:\n';
-    code += '                    message_data_obj["buttons"] = buttons_data\n';
-    code += '                    message_data_obj["keyboard_type"] = "reply"\n';
-    code += '        except Exception as e:\n';
-    code += '            logging.warning(f"Не удалось извлечь кнопки: {e}")\n';
-    code += '    \n';
-    code += '    # Сохраняем синхронно для гарантии доставки\n';
-    code += '    await save_message_to_api(\n';
-    code += '        user_id=str(chat_id),\n';
-    code += '        message_type="bot",\n';
-    code += '        message_text=text,\n';
-    code += '        node_id=node_id,\n';
-    code += '        message_data=message_data_obj\n';
-    code += '    )\n';
-    code += '    return result\n\n';
-    code += 'bot.send_message = send_message_with_logging\n\n';
-
-    code += '# Обертка для message.answer с сохранением\n';
-    code += 'original_answer = types.Message.answer\n';
-    code += 'async def answer_with_logging(self, text, *args, node_id=None, **kwargs):\n';
-    code += '    """Обертка для message.answer с автоматическим сохранением"""\n';
-    code += '    result = await original_answer(self, text, *args, **kwargs)\n';
-    code += '    \n';
-    code += '    # Извлекаем информацию о кнопках из reply_markup\n';
-    code += '    message_data_obj = {"message_id": result.message_id if result else None}\n';
-    code += '    if "reply_markup" in kwargs:\n';
-    code += '        try:\n';
-    code += '            reply_markup = kwargs["reply_markup"]\n';
-    code += '            buttons_data = []\n';
-    code += '            # Обработка inline клавиатуры\n';
-    code += '            if hasattr(reply_markup, "inline_keyboard"):\n';
-    code += '                for row in reply_markup.inline_keyboard:\n';
-    code += '                    for btn in row:\n';
-    code += '                        button_info = {"text": btn.text}\n';
-    code += '                        if hasattr(btn, "url") and btn.url:\n';
-    code += '                            button_info["url"] = btn.url\n';
-    code += '                        if hasattr(btn, "callback_data") and btn.callback_data:\n';
-    code += '                            button_info["callback_data"] = btn.callback_data\n';
-    code += '                        buttons_data.append(button_info)\n';
-    code += '                if buttons_data:\n';
-    code += '                    message_data_obj["buttons"] = buttons_data\n';
-    code += '                    message_data_obj["keyboard_type"] = "inline"\n';
-    code += '            # Обработка reply клавиатуры\n';
-    code += '            elif hasattr(reply_markup, "keyboard"):\n';
-    code += '                for row in reply_markup.keyboard:\n';
-    code += '                    for btn in row:\n';
-    code += '                        button_info = {"text": btn.text}\n';
-    code += '                        if hasattr(btn, "request_contact") and btn.request_contact:\n';
-    code += '                            button_info["request_contact"] = True\n';
-    code += '                        if hasattr(btn, "request_location") and btn.request_location:\n';
-    code += '                            button_info["request_location"] = True\n';
-    code += '                        buttons_data.append(button_info)\n';
-    code += '                if buttons_data:\n';
-    code += '                    message_data_obj["buttons"] = buttons_data\n';
-    code += '                    message_data_obj["keyboard_type"] = "reply"\n';
-    code += '        except Exception as e:\n';
-    code += '            logging.warning(f"Не удалось извлечь кнопки: {e}")\n';
-    code += '    \n';
-    code += '    # Сохраняем синхронно для гарантии доставки\n';
-    code += '    await save_message_to_api(\n';
-    code += '        user_id=str(self.chat.id),\n';
-    code += '        message_type="bot",\n';
-    code += '        message_text=text if isinstance(text, str) else str(text),\n';
-    code += '        node_id=node_id,\n';
-    code += '        message_data=message_data_obj\n';
-    code += '    )\n';
-    code += '    return result\n\n';
-    code += 'types.Message.answer = answer_with_logging\n\n';
-
-    code += '# Обертка для bot.send_photo с сохранением\n';
-    code += 'original_send_photo = bot.send_photo\n';
-    code += 'async def send_photo_with_logging(chat_id, photo, *args, caption=None, node_id=None, **kwargs):\n';
-    code += '    """Обертка для bot.send_photo с автоматическим сохранением"""\n';
-    code += '    result = await original_send_photo(chat_id, photo, *args, caption=caption, **kwargs)\n';
-    code += '    \n';
-    code += '    # Создаем message_data с информацией о фото\n';
-    code += '    message_data_obj = {"message_id": result.message_id if result else None}\n';
-    code += '    \n';
-    code += '    # Сохраняем информацию о фото\n';
-    code += '    if result and hasattr(result, "photo") and result.photo:\n';
-    code += '        largest_photo = result.photo[-1]\n';
-    code += '        message_data_obj["photo"] = {\n';
-    code += '            "file_id": largest_photo.file_id,\n';
-    code += '            "file_unique_id": largest_photo.file_unique_id,\n';
-    code += '            "width": largest_photo.width,\n';
-    code += '            "height": largest_photo.height\n';
-    code += '        }\n';
-    code += '    # Если photo это строка (URL), сохраняем URL\n';
-    code += '    elif isinstance(photo, str):\n';
-    code += '        message_data_obj["photo_url"] = photo\n';
-    code += '    \n';
-    code += '    # Извлекаем информацию о кнопках из reply_markup\n';
-    code += '    if "reply_markup" in kwargs:\n';
-    code += '        try:\n';
-    code += '            reply_markup = kwargs["reply_markup"]\n';
-    code += '            buttons_data = []\n';
-    code += '            if hasattr(reply_markup, "inline_keyboard"):\n';
-    code += '                for row in reply_markup.inline_keyboard:\n';
-    code += '                    for btn in row:\n';
-    code += '                        button_info = {"text": btn.text}\n';
-    code += '                        if hasattr(btn, "url") and btn.url:\n';
-    code += '                            button_info["url"] = btn.url\n';
-    code += '                        if hasattr(btn, "callback_data") and btn.callback_data:\n';
-    code += '                            button_info["callback_data"] = btn.callback_data\n';
-    code += '                        buttons_data.append(button_info)\n';
-    code += '                if buttons_data:\n';
-    code += '                    message_data_obj["buttons"] = buttons_data\n';
-    code += '                    message_data_obj["keyboard_type"] = "inline"\n';
-    code += '        except Exception as e:\n';
-    code += '            logging.warning(f"Не удалось извлечь кнопки из send_photo: {e}")\n';
-    code += '    \n';
-    code += '    # Сохраняем сообщение в базу данных\n';
-    code += '    saved_message = await save_message_to_api(\n';
-    code += '        user_id=str(chat_id),\n';
-    code += '        message_type="bot",\n';
-    code += '        message_text=caption or "[Фото]",\n';
-    code += '        node_id=node_id,\n';
-    code += '        message_data=message_data_obj\n';
-    code += '    )\n';
-    code += '    \n';
-    code += '    # Если фото отправлено от бота с file_id, регистрируем медиа\n';
-    code += '    if result and hasattr(result, "photo") and result.photo and saved_message and "id" in saved_message:\n';
-    code += '        try:\n';
-    code += '            largest_photo = result.photo[-1]\n';
-    code += '            if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):\n';
-    code += '                media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
-    code += '            else:\n';
-    code += '                media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
-    code += '            \n';
-    code += '            media_payload = {\n';
-    code += '                "messageId": saved_message["id"],\n';
-    code += '                "fileId": largest_photo.file_id,\n';
-    code += '                "botToken": BOT_TOKEN,\n';
-    code += '                "mediaType": "photo"\n';
+    code += '            message_text=message_text_to_save,\n';
+    code += '            message_data={\n';
+    code += '                "button_clicked": True,\n';
+    code += '                "button_text": button_text,\n';
+    code += '                "callback_data": callback_data\n';
     code += '            }\n';
-    code += '            \n';
-    code += '            async with aiohttp.ClientSession() as session:\n';
-    code += '                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:\n';
-    code += '                    if response.status == 200:\n';
-    code += '                        bot_message_id = saved_message.get("id")\n';
-    code += '                        logging.info(f"✅ Медиа бота зарегистрировано для сообщения {bot_message_id}")\n';
-    code += '                    else:\n';
-    code += '                        error_text = await response.text()\n';
-    code += '                        logging.warning(f"⚠️ Не удалось зарегистрировать медиа бота: {response.status} - {error_text}")\n';
-    code += '        except Exception as media_error:\n';
-    code += '            logging.warning(f"Ошибка при регистрации медиа бота: {media_error}")\n';
+    code += '        )\n';
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка в middleware сохранения нажатий кнопок: {e}")\n';
     code += '    \n';
-    code += '    return result\n\n';
-    code += 'bot.send_photo = send_photo_with_logging\n\n';
+    code += '    # Продолжаем обработку callback query\n';
+    code += '    return await handler(event, data)\n\n';
+  }
+  
+  code += '# Обертка для сохранения исходящих сообщений\n';
+  code += 'original_send_message = bot.send_message\n';
+  code += 'async def send_message_with_logging(chat_id, text, *args, node_id=None, **kwargs):\n';
+  code += '    """Обертка для bot.send_message с автоматическим сохранением"""\n';
+  code += '    result = await original_send_message(chat_id, text, *args, **kwargs)\n';
+  code += '    \n';
+  code += '    # Извлекаем информацию о кнопках из reply_markup\n';
+  code += '    message_data_obj = {"message_id": result.message_id if result else None}\n';
+  code += '    if "reply_markup" in kwargs:\n';
+  code += '        try:\n';
+  code += '            reply_markup = kwargs["reply_markup"]\n';
+  code += '            buttons_data = []\n';
+  code += '            # Обработка inline клавиатуры\n';
+  code += '            if hasattr(reply_markup, "inline_keyboard"):\n';
+  code += '                for row in reply_markup.inline_keyboard:\n';
+  code += '                    for btn in row:\n';
+  code += '                        button_info = {"text": btn.text}\n';
+  code += '                        if hasattr(btn, "url") and btn.url:\n';
+  code += '                            button_info["url"] = btn.url\n';
+  code += '                        if hasattr(btn, "callback_data") and btn.callback_data:\n';
+  code += '                            button_info["callback_data"] = btn.callback_data\n';
+  code += '                        buttons_data.append(button_info)\n';
+  code += '                if buttons_data:\n';
+  code += '                    message_data_obj["buttons"] = buttons_data\n';
+  code += '                    message_data_obj["keyboard_type"] = "inline"\n';
+  code += '            # Обработка reply клавиатуры\n';
+  code += '            elif hasattr(reply_markup, "keyboard"):\n';
+  code += '                for row in reply_markup.keyboard:\n';
+  code += '                    for btn in row:\n';
+  code += '                        button_info = {"text": btn.text}\n';
+  code += '                        if hasattr(btn, "request_contact") and btn.request_contact:\n';
+  code += '                            button_info["request_contact"] = True\n';
+  code += '                        if hasattr(btn, "request_location") and btn.request_location:\n';
+  code += '                            button_info["request_location"] = True\n';
+  code += '                        buttons_data.append(button_info)\n';
+  code += '                if buttons_data:\n';
+  code += '                    message_data_obj["buttons"] = buttons_data\n';
+  code += '                    message_data_obj["keyboard_type"] = "reply"\n';
+  code += '        except Exception as e:\n';
+  code += '            logging.warning(f"Не удалось извлечь кнопки: {e}")\n';
+  code += '    \n';
+  code += '    # Сохраняем синхронно для гарантии доставки\n';
+  code += '    await save_message_to_api(\n';
+  code += '        user_id=str(chat_id),\n';
+  code += '        message_type="bot",\n';
+  code += '        message_text=text,\n';
+  code += '        node_id=node_id,\n';
+  code += '        message_data=message_data_obj\n';
+  code += '    )\n';
+  code += '    return result\n\n';
+  code += 'bot.send_message = send_message_with_logging\n\n';
+  
+  code += '# Обертка для message.answer с сохранением\n';
+  code += 'original_answer = types.Message.answer\n';
+  code += 'async def answer_with_logging(self, text, *args, node_id=None, **kwargs):\n';
+  code += '    """Обертка для message.answer с автоматическим сохранением"""\n';
+  code += '    result = await original_answer(self, text, *args, **kwargs)\n';
+  code += '    \n';
+  code += '    # Извлекаем информацию о кнопках из reply_markup\n';
+  code += '    message_data_obj = {"message_id": result.message_id if result else None}\n';
+  code += '    if "reply_markup" in kwargs:\n';
+  code += '        try:\n';
+  code += '            reply_markup = kwargs["reply_markup"]\n';
+  code += '            buttons_data = []\n';
+  code += '            # Обработка inline клавиатуры\n';
+  code += '            if hasattr(reply_markup, "inline_keyboard"):\n';
+  code += '                for row in reply_markup.inline_keyboard:\n';
+  code += '                    for btn in row:\n';
+  code += '                        button_info = {"text": btn.text}\n';
+  code += '                        if hasattr(btn, "url") and btn.url:\n';
+  code += '                            button_info["url"] = btn.url\n';
+  code += '                        if hasattr(btn, "callback_data") and btn.callback_data:\n';
+  code += '                            button_info["callback_data"] = btn.callback_data\n';
+  code += '                        buttons_data.append(button_info)\n';
+  code += '                if buttons_data:\n';
+  code += '                    message_data_obj["buttons"] = buttons_data\n';
+  code += '                    message_data_obj["keyboard_type"] = "inline"\n';
+  code += '            # Обработка reply клавиатуры\n';
+  code += '            elif hasattr(reply_markup, "keyboard"):\n';
+  code += '                for row in reply_markup.keyboard:\n';
+  code += '                    for btn in row:\n';
+  code += '                        button_info = {"text": btn.text}\n';
+  code += '                        if hasattr(btn, "request_contact") and btn.request_contact:\n';
+  code += '                            button_info["request_contact"] = True\n';
+  code += '                        if hasattr(btn, "request_location") and btn.request_location:\n';
+  code += '                            button_info["request_location"] = True\n';
+  code += '                        buttons_data.append(button_info)\n';
+  code += '                if buttons_data:\n';
+  code += '                    message_data_obj["buttons"] = buttons_data\n';
+  code += '                    message_data_obj["keyboard_type"] = "reply"\n';
+  code += '        except Exception as e:\n';
+  code += '            logging.warning(f"Не удалось извлечь кнопки: {e}")\n';
+  code += '    \n';
+  code += '    # Сохраняем синхронно для гарантии доставки\n';
+  code += '    await save_message_to_api(\n';
+  code += '        user_id=str(self.chat.id),\n';
+  code += '        message_type="bot",\n';
+  code += '        message_text=text if isinstance(text, str) else str(text),\n';
+  code += '        node_id=node_id,\n';
+  code += '        message_data=message_data_obj\n';
+  code += '    )\n';
+  code += '    return result\n\n';
+  code += 'types.Message.answer = answer_with_logging\n\n';
+  
+  code += '# Обертка для bot.send_photo с сохранением\n';
+  code += 'original_send_photo = bot.send_photo\n';
+  code += 'async def send_photo_with_logging(chat_id, photo, *args, caption=None, node_id=None, **kwargs):\n';
+  code += '    """Обертка для bot.send_photo с автоматическим сохранением"""\n';
+  code += '    result = await original_send_photo(chat_id, photo, *args, caption=caption, **kwargs)\n';
+  code += '    \n';
+  code += '    # Создаем message_data с информацией о фото\n';
+  code += '    message_data_obj = {"message_id": result.message_id if result else None}\n';
+  code += '    \n';
+  code += '    # Сохраняем информацию о фото\n';
+  code += '    if result and hasattr(result, "photo") and result.photo:\n';
+  code += '        largest_photo = result.photo[-1]\n';
+  code += '        message_data_obj["photo"] = {\n';
+  code += '            "file_id": largest_photo.file_id,\n';
+  code += '            "file_unique_id": largest_photo.file_unique_id,\n';
+  code += '            "width": largest_photo.width,\n';
+  code += '            "height": largest_photo.height\n';
+  code += '        }\n';
+  code += '    # Если photo это строка (URL), сохраняем URL\n';
+  code += '    elif isinstance(photo, str):\n';
+  code += '        message_data_obj["photo_url"] = photo\n';
+  code += '    \n';
+  code += '    # Извлекаем информацию о кнопках из reply_markup\n';
+  code += '    if "reply_markup" in kwargs:\n';
+  code += '        try:\n';
+  code += '            reply_markup = kwargs["reply_markup"]\n';
+  code += '            buttons_data = []\n';
+  code += '            if hasattr(reply_markup, "inline_keyboard"):\n';
+  code += '                for row in reply_markup.inline_keyboard:\n';
+  code += '                    for btn in row:\n';
+  code += '                        button_info = {"text": btn.text}\n';
+  code += '                        if hasattr(btn, "url") and btn.url:\n';
+  code += '                            button_info["url"] = btn.url\n';
+  code += '                        if hasattr(btn, "callback_data") and btn.callback_data:\n';
+  code += '                            button_info["callback_data"] = btn.callback_data\n';
+  code += '                        buttons_data.append(button_info)\n';
+  code += '                if buttons_data:\n';
+  code += '                    message_data_obj["buttons"] = buttons_data\n';
+  code += '                    message_data_obj["keyboard_type"] = "inline"\n';
+  code += '        except Exception as e:\n';
+  code += '            logging.warning(f"Не удалось извлечь кнопки из send_photo: {e}")\n';
+  code += '    \n';
+  code += '    # Сохраняем сообщение в базу данных\n';
+  code += '    saved_message = await save_message_to_api(\n';
+  code += '        user_id=str(chat_id),\n';
+  code += '        message_type="bot",\n';
+  code += '        message_text=caption or "[Фото]",\n';
+  code += '        node_id=node_id,\n';
+  code += '        message_data=message_data_obj\n';
+  code += '    )\n';
+  code += '    \n';
+  code += '    # Если фото отправлено от бота с file_id, регистрируем медиа\n';
+  code += '    if result and hasattr(result, "photo") and result.photo and saved_message and "id" in saved_message:\n';
+  code += '        try:\n';
+  code += '            largest_photo = result.photo[-1]\n';
+  code += '            if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):\n';
+  code += '                media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
+  code += '            else:\n';
+  code += '                media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
+  code += '            \n';
+  code += '            media_payload = {\n';
+  code += '                "messageId": saved_message["id"],\n';
+  code += '                "fileId": largest_photo.file_id,\n';
+  code += '                "botToken": BOT_TOKEN,\n';
+  code += '                "mediaType": "photo"\n';
+  code += '            }\n';
+  code += '            \n';
+  code += '            async with aiohttp.ClientSession() as session:\n';
+  code += '                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:\n';
+  code += '                    if response.status == 200:\n';
+  code += '                        bot_message_id = saved_message.get("id")\n';
+  code += '                        logging.info(f"✅ Медиа бота зарегистрировано для сообщения {bot_message_id}")\n';
+  code += '                    else:\n';
+  code += '                        error_text = await response.text()\n';
+  code += '                        logging.warning(f"⚠️ Не удалось зарегистрировать медиа бота: {response.status} - {error_text}")\n';
+  code += '        except Exception as media_error:\n';
+  code += '            logging.warning(f"Ошибка при регистрации медиа бота: {media_error}")\n';
+  code += '    \n';
+  code += '    return result\n\n';
+  code += 'bot.send_photo = send_photo_with_logging\n\n';
   }  // Закрываем if (userDatabaseEnabled) для блока логирования
-
+  
   // Добавляем конфигурацию групп
-  if (groups && groups?.length > 0) {
+  if (groups && groups.length > 0) {
     code += '# Подключенные группы\n';
     code += 'CONNECTED_GROUPS = {\n';
-    groups.forEach((group: BotGroup, index: number) => {
+    groups.forEach((group, index) => {
       const groupId = group.groupId || 'None';
       const isLast = index === groups.length - 1;
       code += `    "${group.name}": {\n`;
@@ -1697,7 +1976,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     });
     code += '}\n\n';
   }
-
+  
   // user_data всегда нужен для временного хранения состояний даже при включенной БД
   // ИСПРАВЛЕНИЕ: Создаем user_data всегда, так как он используется в callback handlers
   code += '# Хранилище пользователей (временное состояние)\n';
@@ -1707,154 +1986,154 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (userDatabaseEnabled) {
     code += '# Настройки базы данных\n';
     code += 'DATABASE_URL = os.getenv("DATABASE_URL")\n\n';
-
+    
     code += '# Пул соединений с базой данных\n';
     code += 'db_pool = None\n\n';
 
     code += '\n# Функции для работы с базой данных\n';
     code += 'async def init_database():\n';
-    code += '    """Инициализация подключения к базе данных и создание таблиц"""\n';
-    code += '    global db_pool\n';
-    code += '    try:\n';
-    code += '        db_pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=10)\n';
-    code += '        # Создаем таблицу пользователей если её нет\n';
-    code += '        async with db_pool.acquire() as conn:\n';
-    code += '            await conn.execute("""\n';
-    code += '                CREATE TABLE IF NOT EXISTS bot_users (\n';
-    code += '                    user_id BIGINT PRIMARY KEY,\n';
-    code += '                    username TEXT,\n';
-    code += '                    first_name TEXT,\n';
-    code += '                    last_name TEXT,\n';
-    code += '                    registered_at TIMESTAMP DEFAULT NOW(),\n';
-    code += '                    last_interaction TIMESTAMP DEFAULT NOW(),\n';
-    code += '                    interaction_count INTEGER DEFAULT 0,\n';
-    code += '                    user_data JSONB DEFAULT \'{}\',\n';
-    code += '                    is_active BOOLEAN DEFAULT TRUE\n';
-    code += '                );\n';
-    code += '            """)\n';
-    code += '            # Создаем таблицу сообщений если её нет\n';
-    code += '            await conn.execute("""\n';
-    code += '                CREATE TABLE IF NOT EXISTS bot_messages (\n';
-    code += '                    id SERIAL PRIMARY KEY,\n';
-    code += '                    project_id INTEGER,\n';
-    code += '                    user_id TEXT NOT NULL,\n';
-    code += '                    message_type TEXT NOT NULL,\n';
-    code += '                    message_text TEXT,\n';
-    code += '                    message_data JSONB,\n';
-    code += '                    node_id TEXT,\n';
-    code += '                    created_at TIMESTAMP DEFAULT NOW()\n';
-    code += '                );\n';
-    code += '            """)\n';
-    code += '        logging.info("✅ База данных инициализирована")\n';
-    code += '    except Exception as e:\n';
-    code += '        logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")\n';
-    code += '        db_pool = None\n\n';
+  code += '    """Инициализация подключения к базе данных и создание таблиц"""\n';
+  code += '    global db_pool\n';
+  code += '    try:\n';
+  code += '        db_pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=10)\n';
+  code += '        # Создаем таблицу пользователей если её нет\n';
+  code += '        async with db_pool.acquire() as conn:\n';
+  code += '            await conn.execute("""\n';
+  code += '                CREATE TABLE IF NOT EXISTS bot_users (\n';
+  code += '                    user_id BIGINT PRIMARY KEY,\n';
+  code += '                    username TEXT,\n';
+  code += '                    first_name TEXT,\n';
+  code += '                    last_name TEXT,\n';
+  code += '                    registered_at TIMESTAMP DEFAULT NOW(),\n';
+  code += '                    last_interaction TIMESTAMP DEFAULT NOW(),\n';
+  code += '                    interaction_count INTEGER DEFAULT 0,\n';
+  code += '                    user_data JSONB DEFAULT \'{}\',\n';
+  code += '                    is_active BOOLEAN DEFAULT TRUE\n';
+  code += '                );\n';
+  code += '            """)\n';
+  code += '            # Создаем таблицу сообщений если её нет\n';
+  code += '            await conn.execute("""\n';
+  code += '                CREATE TABLE IF NOT EXISTS bot_messages (\n';
+  code += '                    id SERIAL PRIMARY KEY,\n';
+  code += '                    project_id INTEGER,\n';
+  code += '                    user_id TEXT NOT NULL,\n';
+  code += '                    message_type TEXT NOT NULL,\n';
+  code += '                    message_text TEXT,\n';
+  code += '                    message_data JSONB,\n';
+  code += '                    node_id TEXT,\n';
+  code += '                    created_at TIMESTAMP DEFAULT NOW()\n';
+  code += '                );\n';
+  code += '            """)\n';
+  code += '        logging.info("✅ База данных инициализирована")\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")\n';
+  code += '        db_pool = None\n\n';
 
-    // Добавляем функцию для получения московского времени
-    code += 'def get_moscow_time():\n';
-    code += '    """Возвращает текущее время в московском часовом поясе"""\n';
-    code += '    from datetime import datetime, timezone, timedelta\n';
-    code += '    moscow_tz = timezone(timedelta(hours=3))\n';
-    code += '    return datetime.now(moscow_tz).isoformat()\n\n';
+  // Добавляем функцию для получения московского времени
+  code += 'def get_moscow_time():\n';
+  code += '    """Возвращает текущее время в московском часовом поясе"""\n';
+  code += '    from datetime import datetime, timezone, timedelta\n';
+  code += '    moscow_tz = timezone(timedelta(hours=3))\n';
+  code += '    return datetime.now(moscow_tz).isoformat()\n\n';
 
-    code += 'async def save_user_to_db(user_id: int, username: Optional[str] = None, first_name: Optional[str] = None, last_name: Optional[str] = None):\n';
-    code += '    """Сохраняет пользователя в базу данных"""\n';
-    code += '    if not db_pool:\n';
-    code += '        return False\n';
-    code += '    try:\n';
-    code += '        async with db_pool.acquire() as conn:\n';
-    code += '            await conn.execute("""\n';
-    code += '                INSERT INTO bot_users (user_id, username, first_name, last_name)\n';
-    code += '                VALUES ($1, $2, $3, $4)\n';
-    code += '                ON CONFLICT (user_id) DO UPDATE SET\n';
-    code += '                    username = EXCLUDED.username,\n';
-    code += '                    first_name = EXCLUDED.first_name,\n';
-    code += '                    last_name = EXCLUDED.last_name,\n';
-    code += '                    last_interaction = NOW(),\n';
-    code += '                    interaction_count = bot_users.interaction_count + 1\n';
-    code += '            """, user_id, username, first_name, last_name)\n';
-    code += '        return True\n';
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"Ошибка сохранения пользователя в БД: {e}")\n';
-    code += '        return False\n\n';
+  code += 'async def save_user_to_db(user_id: int, username: Optional[str] = None, first_name: Optional[str] = None, last_name: Optional[str] = None):\n';
+  code += '    """Сохраняет пользователя в базу данных"""\n';
+  code += '    if not db_pool:\n';
+  code += '        return False\n';
+  code += '    try:\n';
+  code += '        async with db_pool.acquire() as conn:\n';
+  code += '            await conn.execute("""\n';
+  code += '                INSERT INTO bot_users (user_id, username, first_name, last_name)\n';
+  code += '                VALUES ($1, $2, $3, $4)\n';
+  code += '                ON CONFLICT (user_id) DO UPDATE SET\n';
+  code += '                    username = EXCLUDED.username,\n';
+  code += '                    first_name = EXCLUDED.first_name,\n';
+  code += '                    last_name = EXCLUDED.last_name,\n';
+  code += '                    last_interaction = NOW(),\n';
+  code += '                    interaction_count = bot_users.interaction_count + 1\n';
+  code += '            """, user_id, username, first_name, last_name)\n';
+  code += '        return True\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка сохранения пользователя в БД: {e}")\n';
+  code += '        return False\n\n';
 
-    code += 'async def get_user_from_db(user_id: int):\n';
-    code += '    """Получает данные пользователя из базы данных"""\n';
-    code += '    if not db_pool:\n';
-    code += '        return None\n';
-    code += '    try:\n';
-    code += '        async with db_pool.acquire() as conn:\n';
-    code += '            row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1", user_id)\n';
-    code += '            if row:\n';
-    code += '                # Преобразуем Record в словарь\n';
-    code += '                row_dict = {key: row[key] for key in row.keys()}\n';
-    code += '                # Если есть user_data, возвращаем его содержимое\n';
-    code += '                if "user_data" in row_dict and row_dict["user_data"]:\n';
-    code += '                    user_data = row_dict["user_data"]\n';
-    code += '                    if isinstance(user_data, str):\n';
-    code += '                        try:\n';
-    code += '                            import json\n';
-    code += '                            return json.loads(user_data)\n';
-    code += '                        except (json.JSONDecodeError, TypeError):\n';
-    code += '                            return {}\n';
-    code += '                    elif isinstance(user_data, dict):\n';
-    code += '                        return user_data\n';
-    code += '                    else:\n';
-    code += '                        return {}\n';
-    code += '                # Если нет user_data, возвращаем полную запись\n';
-    code += '                return row_dict\n';
-    code += '        return None\n';
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"Ошибка получения пользователя из БД: {e}")\n';
-    code += '        return None\n\n';
+  code += 'async def get_user_from_db(user_id: int):\n';
+  code += '    """Получает данные пользователя из базы данных"""\n';
+  code += '    if not db_pool:\n';
+  code += '        return None\n';
+  code += '    try:\n';
+  code += '        async with db_pool.acquire() as conn:\n';
+  code += '            row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1", user_id)\n';
+  code += '            if row:\n';
+  code += '                # Преобразуем Record в словарь\n';
+  code += '                row_dict = {key: row[key] for key in row.keys()}\n';
+  code += '                # Если есть user_data, возвращаем его содержимое\n';
+  code += '                if "user_data" in row_dict and row_dict["user_data"]:\n';
+  code += '                    user_data = row_dict["user_data"]\n';
+  code += '                    if isinstance(user_data, str):\n';
+  code += '                        try:\n';
+  code += '                            import json\n';
+  code += '                            return json.loads(user_data)\n';
+  code += '                        except (json.JSONDecodeError, TypeError):\n';
+  code += '                            return {}\n';
+  code += '                    elif isinstance(user_data, dict):\n';
+  code += '                        return user_data\n';
+  code += '                    else:\n';
+  code += '                        return {}\n';
+  code += '                # Если нет user_data, возвращаем полную запись\n';
+  code += '                return row_dict\n';
+  code += '        return None\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка получения пользователя из БД: {e}")\n';
+  code += '        return None\n\n';
 
-    // Добавляем функции handle_command_ как алиасы для handlers
-    code += '# Алиас функции для callback обработчиков\n';
-    code += 'async def handle_command_start(message):\n';
-    code += '    """Алиас для start_handler, используется в callback обработчиках"""\n';
-    code += '    await start_handler(message)\n\n';
+  // Добавляем функции handle_command_ как алиасы для handlers
+  code += '# Алиас функции для callback обработчиков\n';
+  code += 'async def handle_command_start(message):\n';
+  code += '    """Алиас для start_handler, используется в callback обработчиках"""\n';
+  code += '    await start_handler(message)\n\n';
+  
+  // Добавляем алиасы для всех команд
+  const commandAliasNodes = (nodes || []).filter(node => node.type === 'command' && node.data.command);
+  commandAliasNodes.forEach(node => {
+    const command = node.data.command.replace('/', '');
+    const functionName = command.replace(/[^a-zA-Z0-9_]/g, '_');
+    code += `async def handle_command_${functionName}(message):\n`;
+    code += `    """Алиас для ${functionName}_handler, используется в callback обработчиках"""\n`;
+    code += `    await ${functionName}_handler(message)\n\n`;
+  });
 
-    // Добавляем алиасы для всех команд
-    const commandAliasNodes = (nodes || []).filter(node => node.type === 'command' && node.data.command);
-    commandAliasNodes.forEach((node: Node) => {
-      const command = node.data?.command?.replace('/', '') || 'unknown';
-      const functionName = command.replace(/[^a-zA-Z0-9_]/g, '_');
-      code += `async def handle_command_${functionName}(message):\n`;
-      code += `    """Алиас для ${functionName}_handler, используется в callback обработчиках"""\n`;
-      code += `    await ${functionName}_handler(message)\n\n`;
-    });
+  code += 'async def update_user_data_in_db(user_id: int, data_key: str, data_value):\n';
+  code += '    """Обновляет пользовательские данные в базе данных"""\n';
+  code += '    if not db_pool:\n';
+  code += '        return False\n';
+  code += '    try:\n';
+  code += '        import json\n';
+  code += '        async with db_pool.acquire() as conn:\n';
+  code += '            # Сначала создаём или получаем существующую запись\n';
+  code += '            await conn.execute("""\n';
+  code += '                INSERT INTO bot_users (user_id) \n';
+  code += '                VALUES ($1) \n';
+  code += '                ON CONFLICT (user_id) DO NOTHING\n';
+  code += '            """, user_id)\n';
+  code += '            \n';
+  code += '            # Обновляем данные пользователя\n';
+  code += '            update_data = {data_key: data_value}\n';
+  code += '            await conn.execute("""\n';
+  code += '                UPDATE bot_users \n';
+  code += '                SET user_data = COALESCE(user_data, \'{}\'::jsonb) || $2::jsonb,\n';
+  code += '                    last_interaction = NOW()\n';
+  code += '                WHERE user_id = $1\n';
+  code += '            """, user_id, json.dumps(update_data))\n';
+  code += '        return True\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка обновления данных пользователя: {e}")\n';
+  code += '        return False\n\n';
 
-    code += 'async def update_user_data_in_db(user_id: int, data_key: str, data_value):\n';
-    code += '    """Обновляет пользовательские данные в базе данных"""\n';
-    code += '    if not db_pool:\n';
-    code += '        return False\n';
-    code += '    try:\n';
-    code += '        import json\n';
-    code += '        async with db_pool.acquire() as conn:\n';
-    code += '            # Сначала создаём или получаем существующую запись\n';
-    code += '            await conn.execute("""\n';
-    code += '                INSERT INTO bot_users (user_id) \n';
-    code += '                VALUES ($1) \n';
-    code += '                ON CONFLICT (user_id) DO NOTHING\n';
-    code += '            """, user_id)\n';
-    code += '            \n';
-    code += '            # Обновляем данные пользователя\n';
-    code += '            update_data = {data_key: data_value}\n';
-    code += '            await conn.execute("""\n';
-    code += '                UPDATE bot_users \n';
-    code += '                SET user_data = COALESCE(user_data, \'{}\'::jsonb) || $2::jsonb,\n';
-    code += '                    last_interaction = NOW()\n';
-    code += '                WHERE user_id = $1\n';
-    code += '            """, user_id, json.dumps(update_data))\n';
-    code += '        return True\n';
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"Ошибка обновления данных пользователя: {e}")\n';
-    code += '        return False\n\n';
-
-    // Добавляем алиас функции для обратной совместимости
-    code += 'async def save_user_data_to_db(user_id: int, data_key: str, data_value):\n';
-    code += '    """Алиас для update_user_data_in_db для обратной совместимости"""\n';
-    code += '    return await update_user_data_in_db(user_id, data_key, data_value)\n\n';
+  // Добавляем алиас функции для обратной совместимости
+  code += 'async def save_user_data_to_db(user_id: int, data_key: str, data_value):\n';
+  code += '    """Алиас для update_user_data_in_db для обратной совместимости"""\n';
+  code += '    return await update_user_data_in_db(user_id, data_key, data_value)\n\n';
 
     code += 'async def update_user_variable_in_db(user_id: int, variable_name: str, variable_value: str):\n';
     code += '    """Сохраняет переменную пользователя в базу данных"""\n';
@@ -1904,10 +2183,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '\n# Утилитарные функции\n';
   code += 'async def is_admin(user_id: int) -> bool:\n';
   code += '    return user_id in ADMIN_IDS\n\n';
-
+  
   code += 'async def is_private_chat(message: types.Message) -> bool:\n';
   code += '    return message.chat.type == "private"\n\n';
-
+  
   if (userDatabaseEnabled) {
     code += 'async def check_auth(user_id: int) -> bool:\n';
     code += '    # Проверяем наличие пользователя в БД или локальном хранилище\n';
@@ -1920,13 +2199,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += 'async def check_auth(user_id: int) -> bool:\n';
     code += '    return user_id in user_data\n\n';
   }
-
+  
   // Функции для работы с файлами - только если есть медиа
   if (hasMediaNodes(nodes || [])) {
     code += 'def is_local_file(url: str) -> bool:\n';
     code += '    """Проверяет, является ли URL локальным загруженным файлом"""\n';
     code += '    return url.startswith("/uploads/") or url.startswith("uploads/")\n\n';
-
+    
     code += 'def get_local_file_path(url: str) -> str:\n';
     code += '    """Получает локальный путь к файлу из URL"""\n';
     code += '    if url.startswith("/"):\n';
@@ -1991,23 +2270,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   // Настройка меню команд для BotFather
-  const menuCommands = (nodes || []).filter(node =>
-    (node.type === 'start' || node.type === 'command') &&
-    node.data.showInMenu &&
+  const menuCommands = (nodes || []).filter(node => 
+    (node.type === 'start' || node.type === 'command') && 
+    node.data.showInMenu && 
     node.data.command
   );
 
-  if (menuCommands?.length > 0) {
+  if (menuCommands.length > 0) {
     code += '\n# Настройка меню команд\n';
     code += 'async def set_bot_commands():\n';
     code += '    commands = [\n';
-
-    menuCommands.forEach((node: Node) => {
+    
+    menuCommands.forEach(node => {
       const command = node.data.command?.replace('/', '') || '';
       const description = node.data.description || 'Команда бота';
       code += `        BotCommand(command="${command}", description="${description}"),\n`;
     });
-
+    
     code += '    ]\n';
     code += '    await bot.set_my_commands(commands)\n\n';
   }
@@ -2016,7 +2295,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   (nodes || []).forEach((node: Node) => {
     // Добавляем маркер начала узла для отслеживания позиции в коде
     code += `\n# @@NODE_START:${node.id}@@\n`;
-
+    
     if (node.type === "start") {
       code += generateStartHandler(node, userDatabaseEnabled);
     } else if (node.type === "command") {
@@ -2055,34 +2334,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += generateAdminRightsHandler(node);
     }
     // Note: user-input and message nodes are handled via callback handlers, not as separate command handlers
-
+    
     // Добавляем маркер конца узла
     code += `# @@NODE_END:${node.id}@@\n`;
   });
 
   // Generate synonym handlers for all nodes
-  const nodesWithSynonyms = (nodes || []).filter(node =>
-    node.data.synonyms &&
-    node.data.synonyms?.length > 0
+  const nodesWithSynonyms = (nodes || []).filter(node => 
+    node.data.synonyms && 
+    node.data.synonyms.length > 0
   );
 
-  if (nodesWithSynonyms?.length > 0) {
+  if (nodesWithSynonyms.length > 0) {
     code += '\n# Обработчики синонимов\n';
-    nodesWithSynonyms.forEach((node: Node) => {
+    nodesWithSynonyms.forEach(node => {
       if (node.data.synonyms) {
         node.data.synonyms.forEach((synonym: string) => {
           // Добавляем маркер для синонимов того же узла
           code += `# @@NODE_START:${node.id}@@\n`;
-
+          
           if (node.type === 'start' || node.type === 'command') {
             code += generateSynonymHandler(node, synonym);
-          } else if (node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || node.type === 'unmute_user' ||
-            node.type === 'kick_user' || node.type === 'promote_user' || node.type === 'demote_user' || node.type === 'admin_rights') {
+          } else if (node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || node.type === 'unmute_user' || 
+                     node.type === 'kick_user' || node.type === 'promote_user' || node.type === 'demote_user' || node.type === 'admin_rights') {
             code += generateUserManagementSynonymHandler(node, synonym);
           } else {
             code += generateMessageSynonymHandler(node, synonym);
           }
-
+          
           code += `# @@NODE_END:${node.id}@@\n`;
         });
       }
@@ -2090,13 +2369,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   // Generate callback handlers for inline buttons AND input target nodes
-  const inlineNodes = (nodes || []).filter(node =>
-    node.data.keyboardType === 'inline' && node.data.buttons && node.data.buttons?.length > 0
+  const inlineNodes = (nodes || []).filter(node => 
+    node.data.keyboardType === 'inline' && node.data.buttons && node.data.buttons.length > 0
   );
 
   // Also collect all target nodes from user input collections
   const inputTargetNodeIds = new Set<string>();
-  (nodes || []).forEach((node: Node) => {
+  (nodes || []).forEach(node => {
     if (node.data.inputTargetNodeId) {
       inputTargetNodeIds.add(node.data.inputTargetNodeId);
     }
@@ -2105,27 +2384,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Collect all referenced node IDs and conditional message buttons
   const allReferencedNodeIds = new Set<string>();
   const allConditionalButtons = new Set<string>();
-
+  
   // Add nodes from inline buttons
-  inlineNodes.forEach((node: Node) => {
-    node.data.buttons.forEach((button: ButtonSchema) => {
+  inlineNodes.forEach(node => {
+    node.data.buttons.forEach(button => {
       if (button.action === 'goto' && button.target) {
         allReferencedNodeIds.add(button.target);
       }
     });
-
+    
     // Also add continueButtonTarget for multi-select nodes
     if (node.data.continueButtonTarget) {
       allReferencedNodeIds.add(node.data.continueButtonTarget);
     }
   });
-
+  
   // Collect buttons from conditional messages
-  (nodes || []).forEach((node: Node) => {
+  (nodes || []).forEach(node => {
     if (node.data.conditionalMessages) {
-      node.data.conditionalMessages.forEach((condition: ConditionalMessage) => {
+      node.data.conditionalMessages.forEach((condition: any) => {
         if (condition.buttons) {
-          condition.buttons.forEach((button: ButtonSchema) => {
+          condition.buttons.forEach((button: Button) => {
             if (button.action === 'goto' && button.target) {
               allConditionalButtons.add(button.target);
             }
@@ -2134,14 +2413,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       });
     }
   });
-
+  
   // Add input target nodes
-  inputTargetNodeIds.forEach((nodeId: string) => {
+  inputTargetNodeIds.forEach(nodeId => {
     allReferencedNodeIds.add(nodeId);
   });
-
+  
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Add nodes that are targets of auto-transitions
-  (nodes || []).forEach((node: Node) => {
+  (nodes || []).forEach(node => {
     if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
       allReferencedNodeIds.add(node.data.autoTransitionTo);
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);
@@ -2150,7 +2429,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // Add all connection targets to ensure every connected node gets a handler
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Обрабатываем ${connections.length} соединений`);
-  connections.forEach((connection: Connection, index: number) => {
+  connections.forEach((connection, index) => {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Соединение ${index}: source=${connection.source} -> target=${connection.target}`);
     if (connection.target) {
       allReferencedNodeIds.add(connection.target);
@@ -2160,55 +2439,55 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: Финальный allReferencedNodeIds: ${Array.from(allReferencedNodeIds).join(', ')}`);
 
   // Генерируем обработчики только если есть inline кнопки или условные кнопки
-  if (inlineNodes?.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
+  if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
     // Комментарий "Обработчики inline кнопок" только если действительно есть inline кнопки
-    if (inlineNodes?.length > 0 || allConditionalButtons.size > 0) {
+    if (inlineNodes.length > 0 || allConditionalButtons.size > 0) {
       code += '\n# Обработчики inline кнопок\n';
     } else {
       // Для автопереходов используем специальный комментарий
       code += '\n# Обработчики автопереходов\n';
     }
     const processedCallbacks = new Set<string>();
-
+    
     // Skip conditional placeholder handlers - they conflict with main handlers
     // Main callback handlers below will handle all button interactions properly
-
+    
     // Then, handle inline button nodes - create handlers for each unique button ID
-    inlineNodes.forEach((node: Node) => {
-      node.data.buttons.forEach((button: ButtonSchema) => {
+    inlineNodes.forEach(node => {
+      node.data.buttons.forEach(button => {
         if (button.action === 'goto' && button.id) {
           const callbackData = button.id; // Use button ID as callback_data
-
+          
           // Avoid duplicate handlers for button IDs (not target IDs)
           if (processedCallbacks.has(callbackData)) return;
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Избегаем дублированных обработчиков для target узлов
           if (button.target && processedCallbacks.has(button.target)) {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
             return;
           }
-
+          
           // Find target node (может быть null если нет target)
           const targetNode = button.target ? nodes.find(n => n.id === button.target) : null;
-
+          
           // Создаем обработчик для каждой кнопки используя target как callback_data
           const actualCallbackData = button.target || callbackData;
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем target узел перед созданием обработчика
           if (button.target && processedCallbacks.has(button.target)) {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
             return;
           }
-
+          
           // Mark this button ID as processed
           processedCallbacks.add(callbackData);
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем target в processedCallbacks СРАЗУ, чтобы избежать дублирования
           if (button.target) {
             processedCallbacks.add(button.target);
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${button.target} добавлен в processedCallbacks ДО создания обработчика`);
           }
-
+          
           // ОТЛАДКА: Проверяем если это interests_result или metro_selection
           if (button.target === 'interests_result') {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР DEBUG: Создаем ПЕРВЫЙ обработчик для interests_result в основном цикле');
@@ -2218,17 +2497,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР DEBUG: Создаем ПЕРВЫЙ обработчик для metro_selection в основном цикле');
             if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР DEBUG: processedCallbacks до добавления:', Array.from(processedCallbacks));
           }
-
+          
           // Если целевой узел имеет множественный выбор, добавляем обработку кнопки "done_"
           const isDoneHandlerNeeded = targetNode && targetNode.data.allowMultipleSelection && targetNode.data.continueButtonTarget;
           const shortNodeIdForDone = isDoneHandlerNeeded ? actualCallbackData.slice(-10).replace(/^_+/, '') : '';
-
+          
           // ЛОГИРОВАНИЕ: Отслеживаем создание обработчиков для interests_result
           if (actualCallbackData === 'interests_result') {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log('🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: Создаем обработчик для interests_result!');
             if (isLoggingEnabled()) isLoggingEnabled() && console.log('🚨 ГЕНЕРАТОР: Текущие processedCallbacks:', Array.from(processedCallbacks));
           }
-
+          
           if (isDoneHandlerNeeded) {
             code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_") or c.data == "multi_select_done_${shortNodeIdForDone}")\n`;
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавлен обработчик кнопки "multi_select_done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
@@ -2237,11 +2516,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           }
           // Создаем безопасное имя функции на основе target или button ID
           const safeFunctionName = actualCallbackData.replace(/[^a-zA-Z0-9_]/g, '_');
-
+          
           if (actualCallbackData === 'interests_result') {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log('🚨 ГЕНЕРАТОР: Создаем функцию handle_callback_interests_result в ОСНОВНОМ ЦИКЛЕ');
           }
-
+          
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    # Безопасное получение данных из callback_query\n';
           code += '    try:\n';
@@ -2258,14 +2537,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    except Exception:\n';
           code += '        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)\n';
           code += '    \n';
-
+          
           // Добавляем обработку кнопки "done_" для множественного выбора
           if (isDoneHandlerNeeded) {
             code += '    # Проверяем, является ли это кнопкой "Готово" для множественного выбора\n';
             code += `    if callback_data == "multi_select_done_${shortNodeIdForDone}":\n`;
             code += '        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")\n';
             code += '        \n';
-
+            
             // Сохраняем выбранные значения в базу данных
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
             code += '        # Сохраняем выбранные значения в базу данных\n';
@@ -2286,7 +2565,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `            await update_user_data_in_db(user_id, "${multiSelectVariable}", final_text)\n`;
             code += `            logging.info(f"✅ Аккумулировано в переменную ${multiSelectVariable}: {final_text}")\n`;
             code += '        \n';
-
+            
             // Очищаем состояние множественного выбора
             code += '        # Очищаем состояние множественного выбора\n';
             code += '        if user_id in user_data:\n';
@@ -2295,22 +2574,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '            user_data[user_id].pop("multi_select_type", None)\n';
             code += '            user_data[user_id].pop("multi_select_variable", None)\n';
             code += '        \n';
-
+            
             // Переход к следующему узлу
             if (targetNode.data.continueButtonTarget) {
               const nextNodeId = targetNode.data.continueButtonTarget;
-
+              
               // КРИТИЧЕСКАЯ ОТЛАДКА
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР CONTINUEBUTTON DEBUG:`);
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: targetNode.id = "${targetNode.id}"`);
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: targetNode.data.continueButtonTarget = "${targetNode.data.continueButtonTarget}"`);
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: nextNodeId = "${nextNodeId}"`);
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: actualCallbackData = "${actualCallbackData}"`);
-
+              
               code += '        # Переход к следующему узлу\n';
               code += `        next_node_id = "${nextNodeId}"\n`;
               code += `        logging.info(f"🚀 DEBUG: targetNode.id=${targetNode.id}, continueButtonTarget=${targetNode.data.continueButtonTarget}, nextNodeId=${nextNodeId}")\n`;
-
+              
               // ИСПРАВЛЕНИЕ: Специальная логика для metro_selection -> interests_result
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Проверяем metro_selection -> interests_result: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
               if (targetNode.id.includes('metro_selection') && nextNodeId === 'interests_result') {
@@ -2327,7 +2606,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else {
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ Не применяем специальную логику: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
               }
-
+              
               code += '        try:\n';
               code += `            await handle_callback_${nextNodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
               code += '        except Exception as e:\n';
@@ -2340,32 +2619,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '        return\n';
             code += '    \n';
           }
-
+          
           // Специальная обработка для кнопок "Изменить выбор" и "Начать заново"
           // Эти кнопки должны обрабатываться как обычные goto кнопки к start узлу
-
+          
           // Правильная логика сохранения переменной на основе кнопки
           code += `    button_text = "${button.text}"\n`;
           code += '    \n';
-
+          
           // Определяем переменную для сохранения на основе родительского узла
           const parentNode = node; // Используем текущий узел как родительский
-
+          
           // Проверяем настройку skipDataCollection для кнопки
           const shouldSkipDataCollection = button.skipDataCollection === true;
-
+          
           if (!shouldSkipDataCollection) {
             if (parentNode && parentNode.data.inputVariable) {
               const variableName = parentNode.data.inputVariable;
-
+              
               // Используем текст кнопки как значение переменной
               const variableValue = 'button_text';
-
+              
               code += '    # Сохраняем правильную переменную в базу данных\n';
               code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
               code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
               code += '    \n';
-
+              
               // КРИТИЧЕСКИ ВАЖНО: Очищаем состояние ожидания после сохранения переменной
               code += '    # Очищаем состояние ожидания ввода для этой переменной\n';
               code += '    if user_id in user_data:\n';
@@ -2388,54 +2667,54 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `    logging.info(f"Кнопка пропущена: {button_text} (не сохраняется из-за skipDataCollection)")\n`;
           }
           code += '    \n';
-
+          
           if (targetNode) {
-
+            
             // Handle message nodes with variable saving action
-            if ((targetNode.type as any) === 'message' && targetNode.data.action === 'save_variable') {
+            if (targetNode.type === 'message' && targetNode.data.action === 'save_variable') {
               const action = targetNode.data.action || 'none';
               const variableName = targetNode.data.variableName || '';
-              const variableValue = targetNode.data.variableName || '';
-              const successMessage = 'Успешно сохранено!';
-
+              const variableValue = targetNode.data.variableValue || '';
+              const successMessage = targetNode.data.successMessage || 'Успешно сохранено!';
+              
               if (action === 'save_variable' && variableName && variableValue) {
                 code += `    # Сохраняем переменную "${variableName}" = "${variableValue}"\n`;
                 code += `    user_data[user_id]["${variableName}"] = "${variableValue}"\n`;
                 code += `    await update_user_variable_in_db(user_id, "${variableName}", "${variableValue}")\n`;
                 code += `    logging.info(f"Переменная сохранена: ${variableName} = ${variableValue} (пользователь {user_id})")\n`;
                 code += '    \n';
-
+                
                 if (successMessage.includes('\n')) {
                   code += `    success_text = """${successMessage}"""\n`;
                 } else {
                   const escapedMessage = successMessage.replace(/"/g, '\\"');
                   code += `    success_text = "${escapedMessage}"\n`;
                 }
-
+                
                 // Добавляем замену переменных в сообщении об успехе
                 code += `    # Подставляем значения переменных в текст сообщения\n`;
                 code += `    if "{${variableName}}" in success_text:\n`;
                 code += `        success_text = success_text.replace("{${variableName}}", "${variableValue}")\n`;
-
+                
                 code += '    await callback_query.message.edit_text(success_text)\n';
               }
             }
             // Handle regular message nodes (like source_friends, source_search, etc.)
-            else if ((targetNode.type as any) === 'message') {
+            else if (targetNode.type === 'message') {
               const messageText = targetNode.data.messageText || "Сообщение";
               const cleanedMessageText = stripHtmlTags(messageText);
               const formattedText = formatTextForPython(cleanedMessageText);
               const parseMode = getParseMode(targetNode.data.formatMode);
-
+              
               code += `    # Отправляем сообщение для узла ${targetNode.id}\n`;
               code += `    text = ${formattedText}\n`;
-
+              
               // Применяем универсальную замену переменных
               code += '    \n';
               code += generateUniversalVariableReplacement('    ');
-
+              
               // Добавляем поддержку условных сообщений
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений\n';
                 code += '    conditional_parse_mode = None\n';
@@ -2446,7 +2725,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
                 code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                 code += '    \n';
-
+                
                 // Use conditional message if available, otherwise use default
                 code += '    # Используем условное сообщение если есть подходящее условие\n';
                 code += '    if "text" not in locals():\n';
@@ -2462,13 +2741,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    # Без условных сообщений - используем обычную клавиатуру\n';
                 code += '    keyboard = None\n';
               }
-
+              
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем тип клавиатуры и генерируем правильный код
-              const hasButtons = targetNode.data.buttons && targetNode.data.buttons?.length > 0;
+              const hasButtons = targetNode.data.buttons && targetNode.data.buttons.length > 0;
               const keyboardType = targetNode.data.keyboardType;
-
+              
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} - кнопок: ${targetNode.data.buttons?.length}, keyboardType: ${keyboardType}`);
-
+              
               if (hasButtons) {
                 code += '    # Проверяем, есть ли условная клавиатура\n';
                 code += '    if keyboard is None:\n';
@@ -2484,9 +2763,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += keyboardCode;
                 }
               }
-
+              
               // Добавляем настройку ожидания текстового ввода для условных сообщений
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    # Настраиваем ожидание текстового ввода для условных сообщений\n';
                 code += '    if "conditional_message_config" in locals():\n';
                 code += '        # Проверяем, включено ли ожидание текстового ввода\n';
@@ -2498,7 +2777,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '                next_node_id = conditional_next_node\n';
                 code += '            else:\n';
                 const currentNodeConnections = connections.filter(conn => conn.source === targetNode.id);
-                if (currentNodeConnections?.length > 0) {
+                if (currentNodeConnections.length > 0) {
                   const nextNodeId = currentNodeConnections[0].target;
                   code += `                next_node_id = "${nextNodeId}"\n`;
                 } else {
@@ -2523,12 +2802,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '            logging.info(f"Установлено ожидание ввода для условного сообщения: {conditional_message_config}")\n';
                 code += '    \n';
               }
-
+              
               // Отправляем сообщение с учетом всех условий
               // Проверяем наличие прикрепленных медиа
               const attachedMedia = targetNode.data.attachedMedia || [];
-
-              if (attachedMedia?.length > 0) {
+              
+              if (attachedMedia.length > 0) {
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} имеет attachedMedia:`, attachedMedia);
                 // Генерируем код отправки с медиа
                 const parseModeStr = targetNode.data.formatMode || '';
@@ -2543,7 +2822,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   '    ',
                   targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo ? targetNode.data.autoTransitionTo : undefined
                 );
-
+                
                 if (mediaCode) {
                   code += '    # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового\n';
                   code += '    if user_id in user_data and "_delete_reply_message_id" in user_data[user_id]:\n';
@@ -2560,15 +2839,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   // Fallback если не удалось сгенерировать код медиа
                   code += '    # Отправляем сообщение (обычное)\n';
                   const autoFlag1 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
-                  code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${autoFlag1}${parseMode})\n`;
-
+                  code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag1}${parseMode})\n`;
+                  
                   // АВТОПЕРЕХОД для fallback случая
                   if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                     const autoTargetId = targetNode.data.autoTransitionTo;
-                    const safeAutoTargetId = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
+                    const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                     code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
                     code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                    code += `    await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+                    code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
                     code += `    return\n`;
                   }
                 }
@@ -2585,13 +2864,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    \n';
                 code += '    # Отправляем сообщение\n';
                 const autoFlag2 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
-                code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${autoFlag2}${parseMode})\n`;
-
+                code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag2}${parseMode})\n`;
+                
                 // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
                 // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
                 if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                   const autoTargetId = targetNode.data.autoTransitionTo;
-                  const safeAutoTargetId = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
+                  const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                   code += '    \n';
                   code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
                   code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
@@ -2599,24 +2878,24 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    else:\n';
                   code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
                   code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                  code += `        await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+                  code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
                   code += `        return\n`;
                 }
               }
-
+              
               // КРИТИЧЕСКИ ВАЖНАЯ ЛОГИКА: Если этот узел имеет collectUserInput, настраиваем состояние ожидания
               if (targetNode.data.collectUserInput === true) {
                 const inputType = targetNode.data.inputType || 'text';
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 const inputTargetNodeId = targetNode.data.inputTargetNodeId;
-
+                
                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть inline кнопки И НЕТ текстового/медиа ввода, НЕ настраиваем ожидание ввода
                 // Для reply кнопок ВСЕГДА настраиваем ожидание ввода если enableTextInput === true
-                const hasInputEnabled = targetNode.data.enableTextInput || targetNode.data.enablePhotoInput ||
-                  targetNode.data.enableVideoInput || targetNode.data.enableAudioInput ||
-                  targetNode.data.enableDocumentInput;
-
-                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0 && !hasInputEnabled) {
+                const hasInputEnabled = targetNode.data.enableTextInput || targetNode.data.enablePhotoInput || 
+                                         targetNode.data.enableVideoInput || targetNode.data.enableAudioInput || 
+                                         targetNode.data.enableDocumentInput;
+                
+                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0 && !hasInputEnabled) {
                   code += '    \n';
                   code += `    logging.info(f"✅ Узел ${targetNode.id} имеет inline кнопки БЕЗ текстового/медиа ввода - НЕ настраиваем ожидание ввода")\n`;
                   code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового/медиа ввода\n`;
@@ -2632,7 +2911,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Handle different target node types
             else if (targetNode.type === 'sticker') {
               const stickerUrl = targetNode.data.stickerUrl || "CAACAgIAAxkBAAICGGXm2KvQAAG2X8cxTmZHJkRnYwYlAAJGAANWnb0KmgiEKEZDKVQeBA";
-
+              
               code += `    sticker_url = "${stickerUrl}"\n`;
               code += '    try:\n';
               code += '        # Проверяем, является ли это локальным файлом\n';
@@ -2647,8 +2926,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '            # Используем URL или file_id для стикеров\n';
               code += '            sticker_file = sticker_url\n';
               code += '        \n';
-
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons?.length > 0) {
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn: Button, index: number) => {
                   if (btn.action === "url") {
@@ -2668,15 +2947,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else {
                 code += '        await bot.send_sticker(callback_query.from_user.id, sticker_file)\n';
               }
-
+              
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки стикера: {e}")\n';
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось отправить стикер")\n';
-
+              
             } else if (targetNode.type === 'voice') {
               const voiceUrl = targetNode.data.voiceUrl || "https://www.soundjay.com/misc/beep-07a.wav";
               const duration = targetNode.data.duration || 30;
-
+              
               code += `    voice_url = "${voiceUrl}"\n`;
               code += `    duration = ${duration}\n`;
               code += '    try:\n';
@@ -2692,8 +2971,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '            # Используем URL для внешних файлов\n';
               code += '            voice_file = voice_url\n';
               code += '        \n';
-
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons?.length > 0) {
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn: Button, index: number) => {
                   if (btn.action === "url") {
@@ -2713,22 +2992,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else {
                 code += '        await bot.send_voice(callback_query.from_user.id, voice_file, duration=duration)\n';
               }
-
+              
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки голосового сообщения: {e}")\n';
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось отправить голосовое сообщение")\n';
-
+              
             } else if (targetNode.type === 'animation') {
               const caption = targetNode.data.mediaCaption || "🎬 Анимация";
               const animationUrl = targetNode.data.animationUrl || "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif";
-
+              
               if (caption.includes('\n')) {
                 code += `    caption = """${caption}"""\n`;
               } else {
                 const escapedCaption = caption.replace(/"/g, '\\"');
                 code += `    caption = "${escapedCaption}"\n`;
               }
-
+              
               code += `    animation_url = "${animationUrl}"\n`;
               code += '    try:\n';
               code += '        # Проверяем, является ли это локальным файлом\n';
@@ -2743,8 +3022,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '            # Используем URL для внешних файлов\n';
               code += '            animation_file = animation_url\n';
               code += '        \n';
-
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons?.length > 0) {
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn: Button, index: number) => {
                   if (btn.action === "url") {
@@ -2764,11 +3043,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else {
                 code += '        await bot.send_animation(callback_query.from_user.id, animation_file, caption=caption)\n';
               }
-
+              
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки анимации: {e}")\n';
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось отправить анимацию\\n{caption}")\n';
-
+              
             } else if (targetNode.type === 'location') {
               let latitude = targetNode.data.latitude || 55.7558;
               let longitude = targetNode.data.longitude || 37.6176;
@@ -2778,9 +3057,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const country = targetNode.data.country || "";
               const mapService = targetNode.data.mapService || 'custom';
               const generateMapPreview = targetNode.data.generateMapPreview !== false;
-
+              
               code += '    # Определяем координаты на основе выбранного сервиса карт\n';
-
+              
               if (mapService === 'yandex' && targetNode.data.yandexMapUrl) {
                 code += `    yandex_url = "${targetNode.data.yandexMapUrl}"\n`;
                 code += '    extracted_lat, extracted_lon = extract_coordinates_from_yandex(yandex_url)\n';
@@ -2805,13 +3084,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else {
                 code += `    latitude, longitude = ${latitude}, ${longitude}\n`;
               }
-
+              
               if (title) code += `    title = "${title}"\n`;
               if (address) code += `    address = "${address}"\n`;
-
+              
               code += '    try:\n';
               code += '        # Удаляем старое сообщение\n';
-
+              
               code += '        # Отправляем геолокацию\n';
               if (title || address) {
                 code += '        await bot.send_venue(\n';
@@ -2828,11 +3107,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '            longitude=longitude\n';
                 code += '        )\n';
               }
-
+              
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки геолокации: {e}")\n';
               code += '        await bot.send_message(callback_query.from_user.id, f"❌ Не удалось отправить геолокацию")\n';
-
+              
               // Генерируем кнопки для картографических сервисов если включено
               if (generateMapPreview) {
                 code += '        \n';
@@ -2845,13 +3124,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '        map_builder.add(InlineKeyboardButton(text="🌍 Google Maps", url=map_urls["google"]))\n';
                 code += '        map_builder.add(InlineKeyboardButton(text="📍 2ГИС", url=map_urls["2gis"]))\n';
                 code += '        map_builder.add(InlineKeyboardButton(text="🌐 OpenStreetMap", url=map_urls["openstreetmap"]))\n';
-
+                
                 if (targetNode.data.showDirections) {
                   code += '        # Добавляем кнопки для построения маршрута\n';
                   code += '        map_builder.add(InlineKeyboardButton(text="🧭 Маршрут (Яндекс)", url=f"https://yandex.ru/maps/?rtext=~{latitude},{longitude}"))\n';
                   code += '        map_builder.add(InlineKeyboardButton(text="🚗 Маршрут (Google)", url=f"https://maps.google.com/maps/dir//{latitude},{longitude}"))\n';
                 }
-
+                
                 code += '        map_builder.adjust(2)  # Размещаем кнопки в 2 столбца\n';
                 code += '        map_keyboard = map_builder.as_markup()\n';
                 code += '        \n';
@@ -2865,9 +3144,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '            reply_markup=map_keyboard\n';
                 code += '        )\n';
               }
-
+              
               // Добавляем дополнительные кнопки если они есть
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons?.length > 0) {
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        \n';
                 code += '        # Отправляем дополнительные кнопки\n';
                 code += '        builder = InlineKeyboardBuilder()\n';
@@ -2882,27 +3161,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '        keyboard = builder.as_markup()\n';
                 code += '        await bot.send_message(callback_query.from_user.id, "Выберите действие:", reply_markup=keyboard)\n';
               }
-
+              
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки местоположения: {e}")\n';
               code += '        await bot.send_message(callback_query.from_user.id, f"❌ Не удалось отправить местоположение")\n';
-
+              
             } else if (targetNode.type === 'contact') {
               const phoneNumber = targetNode.data.phoneNumber || "+7 999 123 45 67";
               const firstName = targetNode.data.firstName || "Контакт";
               const lastName = targetNode.data.lastName || "";
               const userId = targetNode.data.userId || null;
               const vcard = targetNode.data.vcard || "";
-
+              
               code += `    phone_number = "${phoneNumber}"\n`;
               code += `    first_name = "${firstName}"\n`;
               if (lastName) code += `    last_name = "${lastName}"\n`;
               if (userId) code += `    user_id = ${userId}\n`;
               if (vcard) code += `    vcard = """${vcard}"""\n`;
-
+              
               code += '    try:\n';
-
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons?.length > 0) {
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn: Button, index: number) => {
                   if (btn.action === "url") {
@@ -2929,12 +3208,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name)\n';
                 }
               }
-
+              
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки контакта: {e}")\n';
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось отправить контакт")\n';
-
-            } else if ((targetNode.type as any) === 'user-input') {
+              
+            } else if (targetNode.type === 'user-input') {
               // Handle user-input nodes
               const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
               const responseType = targetNode.data.responseType || 'text';
@@ -2952,45 +3231,45 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const inputRetryMessage = targetNode.data.inputRetryMessage || "Пожалуйста, попробуйте еще раз.";
               const inputSuccessMessage = targetNode.data.inputSuccessMessage || "";
               const placeholder = targetNode.data.placeholder || "";
-
+              
               code += '    # Удаляем старое сообщение\n';
               code += '    \n';
-
+              
               // Отправляем запрос пользователю
               const formattedPrompt = formatTextForPython(inputPrompt);
               code += `    text = ${formattedPrompt}\n`;
-
-              if (responseType === 'buttons' && responseOptions?.length > 0) {
+              
+              if (responseType === 'buttons' && responseOptions.length > 0) {
                 // Обработка кнопочного ответа
-                const buttonType = 'inline';
+                const buttonType = targetNode.data.buttonType || 'inline';
                 code += '    \n';
                 code += '    # Создаем кнопки для выбора ответа\n';
-
-                if (buttonType !== 'inline') {
+                
+                if (buttonType === 'reply') {
                   code += '    builder = ReplyKeyboardBuilder()\n';
-
+                  
                   (responseOptions as ResponseOption[]).forEach((option: ResponseOption, index: number) => {
                     code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
                   });
-
+                  
                   if (allowSkip) {
                     code += `    builder.add(KeyboardButton(text="⏭️ Пропустить"))\n`;
                   }
-
+                  
                   code += '    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=True)\n';
                   code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
                 } else {
                   code += '    builder = InlineKeyboardBuilder()\n';
-
+                  
                   (responseOptions as ResponseOption[]).forEach((option: ResponseOption, index: number) => {
                     const optionValue = option.value || option.text;
                     code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
                   });
-
+                  
                   if (allowSkip) {
                     code += `    builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="skip_${targetNode.id}"))\n`;
                   }
-
+                  
                   code += '    keyboard = builder.as_markup()\n';
                   code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
                 }
@@ -3002,7 +3281,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 // Find the next node to navigate to after successful input
                 const nextConnection = connections.find(conn => conn.source === targetNode.id);
                 const nextNodeId = nextConnection ? nextConnection.target : null;
-
+                
                 code += '    # Сохраняем настройки для обработки ответа\n';
                 code += '    user_data[callback_query.from_user.id]["button_response_config"] = {\n';
                 code += `        "node_id": "${targetNode.id}",\n`;
@@ -3022,38 +3301,38 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '        ],\n';
                 code += `        "selected": []\n`;
                 code += '    }\n';
-
+                
               } else {
                 // Обработка текстового ввода (оригинальная логика)
                 if (placeholder) {
                   code += `    placeholder_text = "${placeholder}"\n`;
                   code += '    text += f"\\n\\n💡 {placeholder_text}"\n';
                 }
-
+                
                 if (allowSkip) {
                   code += '    text += "\\n\\n⏭️ Нажмите /skip чтобы пропустить"\n';
                 }
-
+                
                 code += '    await bot.send_message(callback_query.from_user.id, text)\n';
                 code += '    \n';
                 code += '    # Инициализируем пользовательские данные если их нет\n';
                 code += '    if callback_query.from_user.id not in user_data:\n';
                 code += '        user_data[callback_query.from_user.id] = {}\n';
                 code += '    \n';
-
+                
                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
-                const textInputCollect = targetNode.data.collectUserInput === true ||
-                  targetNode.data.enableTextInput === true ||
-                  targetNode.data.enablePhotoInput === true ||
-                  targetNode.data.enableVideoInput === true ||
-                  targetNode.data.enableAudioInput === true ||
-                  targetNode.data.enableDocumentInput === true;
-
+                const textInputCollect = targetNode.data.collectUserInput === true || 
+                                         targetNode.data.enableTextInput === true ||
+                                         targetNode.data.enablePhotoInput === true ||
+                                         targetNode.data.enableVideoInput === true ||
+                                         targetNode.data.enableAudioInput === true ||
+                                         targetNode.data.enableDocumentInput === true;
+                
                 if (textInputCollect) {
                   // Find the next node to navigate to after successful input
                   const nextConnection = connections.find(conn => conn.source === targetNode.id);
                   const nextNodeId = nextConnection ? nextConnection.target : null;
-
+                  
                   code += '    # Настраиваем ожидание ввода (collectUserInput=true)\n';
                   code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
                   code += `        "type": "${inputType}",\n`;
@@ -3075,23 +3354,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
                 }
               }
-
+              
             } else if (targetNode.type === 'start') {
               // Handle start nodes in callback queries - show start message with buttons
               const messageText = targetNode.data.messageText || "Добро пожаловать!";
               const cleanedMessageText = stripHtmlTags(messageText);
               const formattedText = formatTextForPython(cleanedMessageText);
               const parseMode = getParseMode(targetNode.data.formatMode);
-
+              
               code += `    # Обрабатываем узел start: ${targetNode.id}\n`;
               code += `    text = ${formattedText}\n`;
-
+              
               // Применяем универсальную замену переменных
               code += '    \n';
               code += generateUniversalVariableReplacement('    ');
-
+              
               // Добавляем поддержку условных сообщений для start узлов
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений для start узла\n';
                 code += '    user_record = await get_user_from_db(user_id)\n';
@@ -3100,7 +3379,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
                 code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                 code += '    \n';
-
+                
                 // Use conditional message if available, otherwise use default
                 code += '    # Используем условное сообщение если есть подходящее условие\n';
                 code += '    if "text" not in locals():\n';
@@ -3116,9 +3395,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    # Без условных сообщений - используем обычную клавиатуру\n';
                 code += '    keyboard = None\n';
               }
-
+              
               // Создаем inline клавиатуру для start узла (только если нет условной клавиатуры)
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += '    # Проверяем, есть ли условная клавиатура\n';
                 code += '    if keyboard is None:\n';
                 code += '        # Создаем inline клавиатуру для start узла\n';
@@ -3142,7 +3421,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `        builder.adjust(${columns})\n`;
                 code += '        keyboard = builder.as_markup()\n';
               }
-
+              
               // Отправляем сообщение start узла
               code += '    # Отправляем сообщение start узла\n';
               code += '    try:\n';
@@ -3155,7 +3434,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
               code += '        else:\n';
               code += `            await callback_query.message.answer(text${parseMode})\n`;
-
+              
             } else if (targetNode.type === 'command') {
               // Handle command nodes in callback queries
               const command = targetNode.data.command || '/start';
@@ -3163,16 +3442,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const cleanedCommandMessage = stripHtmlTags(commandMessage);
               const formattedCommandText = formatTextForPython(cleanedCommandMessage);
               const parseMode = getParseMode(targetNode.data.formatMode);
-
+              
               code += `    # Обрабатываем узел command: ${targetNode.id}\n`;
               code += `    text = ${formattedCommandText}\n`;
-
+              
               // Применяем универсальную замену переменных
               code += '    \n';
               code += generateUniversalVariableReplacement('    ');
-
+              
               // Создаем inline клавиатуру для command узла если есть кнопки
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += '    # Создаем inline клавиатуру для command узла\n';
                 code += '    builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn: Button, index: number) => {
@@ -3203,25 +3482,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    except Exception:\n';
                 code += `        await callback_query.message.answer(text${parseMode})\n`;
               }
-
+              
             } else {
               // Universal handler for message and other text-based nodes
               code += `    # Обрабатываем узел типа ${targetNode.type}: ${targetNode.id}\n`;
-
-              if ((targetNode.type as any) === 'message') {
+              
+              if (targetNode.type === 'message') {
                 // Handle message and other text-based nodes
                 const targetText = targetNode.data.messageText || "Сообщение";
                 const cleanedText = stripHtmlTags(targetText);
                 const formattedTargetText = formatTextForPython(cleanedText);
                 const parseMode = getParseMode(targetNode.data.formatMode);
-
+                
                 code += `    text = ${formattedTargetText}\n`;
-
+                
                 // Добавляем замену переменных в тексте
                 code += generateUniversalVariableReplacement('    ');
-
+                
                 // Добавляем поддержку условных сообщений для keyboard узлов с collectUserInput
-                if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
+                if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                   code += '    \n';
                   code += '    # Проверка условных сообщений для keyboard узла\n';
                   code += '    user_record = await get_user_from_db(callback_query.from_user.id)\n';
@@ -3230,7 +3509,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})\n';
                   code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                   code += '    \n';
-
+                  
                   // Use conditional message if available, otherwise use default
                   code += '    # Используем условное сообщение если есть подходящее условие\n';
                   code += '    if "text" not in locals():\n';
@@ -3244,7 +3523,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    \n';
                 }
               }
-
+            
               // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла (основной цикл)
               if (targetNode.data.collectUserInput === true) {
                 // Настраиваем сбор пользовательского ввода
@@ -3255,9 +3534,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 // Используем helper функцию с правильным контекстом callback_query
                 code += generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
                 code += '    \n';
-
+                
                 // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок с проверкой условной клавиатуры
-                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
+                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                   code += '    # Проверяем, есть ли условная клавиатуря для этого узла\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
@@ -3288,7 +3567,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
                   code += `    await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
-                } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
+                } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                   code += '    # Проверяем, есть ли условная клавиатура для этого узла\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # Создаем reply клавиатуру (+ сбор ввода включен)\n';
@@ -3307,11 +3586,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    \n';
               } else {
                 // Обычное отображение сообщения без сбора ввода
-
+                
                 // Handle keyboard for target node
-                code += `    # DEBUG: Узел ${targetNode.id} - hasRegularButtons=${toPythonBoolean(targetNode.data.buttons && targetNode.data.buttons?.length > 0)}, hasInputCollection=False\n`;
+                code += `    # DEBUG: Узел ${targetNode.id} - hasRegularButtons=${toPythonBoolean(targetNode.data.buttons && targetNode.data.buttons.length > 0)}, hasInputCollection=False\n`;
                 code += `    logging.info(f"DEBUG: Узел ${targetNode.id} обработка кнопок - keyboardType=${targetNode.data.keyboardType}, buttons=${targetNode.data.buttons ? targetNode.data.buttons.length : 0}")\n`;
-                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons?.length > 0) {
+                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                   code += `    logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${targetNode.id} с ${targetNode.data.buttons.length} кнопками")\n`;
                   code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
@@ -3327,7 +3606,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
                   code += `    await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
-                } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons?.length > 0) {
+                } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
                   code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # Создаем reply клавиатуру\n';
@@ -3362,11 +3641,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         } else if (button.action === 'command' && button.id) {
           // Обработка кнопок с действием "command"
           const callbackData = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-
+          
           // Avoid duplicate handlers
           if (processedCallbacks.has(callbackData)) return;
           processedCallbacks.add(callbackData);
-
+          
           code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
           const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
@@ -3380,13 +3659,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
           code += `    logging.info(f"Команда ${button.target || 'неизвестная'} выполнена через callback кнопку (пользователь {user_id})")\n`;
           code += '    \n';
-
+          
           // Создаем правильный вызов команды для callback кнопок
           if (button.target) {
             // Определяем команду - убираем ведущий слеш если есть
             const command = button.target.startsWith('/') ? button.target.replace('/', '') : button.target;
             const handlerName = `${command}_handler`;
-
+            
             code += `    # Вызываем ${handlerName} правильно через edit_text\n`;
             code += '    # Создаем специальный объект для редактирования сообщения\n';
             code += '    class FakeMessageEdit:\n';
@@ -3411,15 +3690,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         }
       });
     });
-
+    
     // CRITICAL FIX: Ensure interests_result gets a handler BUT avoid duplicates
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР CRITICAL FIX: Проверяем interests_result обработчик');
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: processedCallbacks перед check:', Array.from(processedCallbacks));
-
+    
     // Проверяем, был ли interests_result уже обработан в основном цикле
     const wasInterestsResultProcessed = processedCallbacks.has('interests_result');
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле?', wasInterestsResultProcessed);
-
+    
     // ИСПРАВЛЕНИЕ: НЕ создаем дублирующий обработчик если он уже есть
     if (wasInterestsResultProcessed) {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: ПРОПУСКАЕМ создание дублирующего обработчика для interests_result');
@@ -3435,16 +3714,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '    await callback_query.answer()\n';
         code += '    # Handle interests_result node\n';
         code += '    user_id = callback_query.from_user.id\n';
-
+        
         // Add the full message handling for interests_result node
         const messageText = interestsResultNode.data.messageText || "Результат";
         const cleanedMessageText = stripHtmlTags(messageText);
         const formattedText = formatTextForPython(cleanedMessageText);
-
+        
         code += `    text = ${formattedText}\n`;
         code += '    \n';
         code += generateUniversalVariableReplacement('    ');
-
+        
         // ИСПРАВЛЕНИЕ: Специальная логика для interests_result - показываем метро клавиатуру
         if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Обрабатываем interests_result узел - добавляем метро клавиатуру');
         code += '    # ИСПРАВЛЕНИЕ: Проверяем, нужно ли показать метро клавиатуру\n';
@@ -3471,7 +3750,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '    saved_metro = user_data.get(user_id, {}).get("saved_metro_selection", [])\n';
         code += '    logging.info(f"🚇 interests_result: show_metro_keyboard={show_metro_keyboard}, saved_metro={saved_metro}")\n';
         code += '    \n';
-
+        
         // Находим узел metro_selection для восстановления его кнопок
         const metroNode = nodes.find(n => n.id.includes('metro_selection'));
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Поиск узла metro_selection - найден: ${metroNode ? 'да' : 'нет'}`);
@@ -3481,7 +3760,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    if show_metro_keyboard:\n';
           code += '        logging.info("🚇 ПОКАЗЫВАЕМ метро клавиатуру в interests_result")\n';
           code += '        builder = InlineKeyboardBuilder()\n';
-
+          
           // Добавляем кнопки метро
           metroNode.data.buttons.forEach((btn: Button, index: number) => {
             const shortNodeId = metroNode.id.slice(-10).replace(/^_+/, '');
@@ -3491,17 +3770,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `        button_text = "✅ " + "${btn.text}" if selected_metro else "${btn.text}"\n`;
             code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
           });
-
+          
           // Добавляем кнопку "Готово" с правильным callback_data для handle_multi_select_done
           const metroCallbackData = `multi_select_done_${metroNode.id}`;
           code += `        builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="${metroCallbackData}"))\n`;
           code += '        builder.adjust(2)  # 2 кнопки в ряд\n';
           code += '        metro_keyboard = builder.as_markup()\n';
           code += '        \n';
-
+          
           // Обычные кнопки interests_result
           code += '        # Добавляем обычные кнопки interests_result\n';
-          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons?.length > 0) {
+          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
             code += '        result_builder = InlineKeyboardBuilder()\n';
             interestsResultNode.data.buttons.forEach((btn: Button, index: number) => {
               if (btn.action === "goto" && btn.target) {
@@ -3522,14 +3801,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           } else {
             code += '        await bot.send_message(user_id, text, reply_markup=metro_keyboard)\n';
           }
-
+          
           code += '        # НЕ сбрасываем флаг show_metro_keyboard, чтобы клавиатура оставалась активной\n';
           code += '        logging.info("🚇 Клавиатура метро показана и остается активной")\n';
           code += '    else:\n';
           code += '        # Обычная логика без метро клавиатуры\n';
-
+          
           // Handle buttons if any (без метро клавиатуры)
-          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons?.length > 0) {
+          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
             code += '        builder = InlineKeyboardBuilder()\n';
             interestsResultNode.data.buttons.forEach((btn: Button, index: number) => {
               if (btn.action === "goto" && btn.target) {
@@ -3551,7 +3830,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Узел metro_selection НЕ найден или у него нет кнопок');
           // Обычная логика если узла метро нет
           code += '    logging.info("🚇 Узел metro_selection не найден, используем обычную логику")\n';
-          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons?.length > 0) {
+          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
             code += '    builder = InlineKeyboardBuilder()\n';
             interestsResultNode.data.buttons.forEach((btn: Button, index: number) => {
               if (btn.action === "goto" && btn.target) {
@@ -3577,8 +3856,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     // Now generate callback handlers for all remaining referenced nodes that don't have inline buttons
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Обработка allReferencedNodeIds: ${Array.from(allReferencedNodeIds).join(', ')}`);
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Уже обработанные callbacks: ${Array.from(processedCallbacks).join(', ')}`);
-
-    allReferencedNodeIds.forEach((nodeId: string) => {
+    
+    allReferencedNodeIds.forEach(nodeId => {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 ГЕНЕРАТОР: Проверяем узел ${nodeId}`);
       if (!processedCallbacks.has(nodeId)) {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} НЕ был обработан ранее, создаем обработчик`);
@@ -3589,33 +3868,33 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: keyboardType: ${targetNode.data.keyboardType}`);
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: кнопок: ${targetNode.data.buttons?.length || 0}`);
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: continueButtonTarget: ${targetNode.data.continueButtonTarget || 'нет'}`);
-
+          
           if (nodeId === 'interests_result') {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: СОЗДАЕМ ТРЕТИЙ ОБРАБОТЧИК ДЛЯ interests_result!`);
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: interests_result данные:`, JSON.stringify(targetNode.data, null, 2));
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: ЭТО МОЖЕТ БЫТЬ ИСТОЧНИКОМ КОНФЛИКТА КЛАВИАТУР!`);
           }
-
+          
           // ВАЖНО: Не создаваем обработчик для "start", если он уже был создан ранее (избегаем дублирования)
           if (nodeId === 'start') {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`Пропускаем создание дублированной функции для узла ${nodeId} - уже создана ранее`);
             return; // Пропускаем создание дублированной функции
           }
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также проверяем interests_result и metro_selection
           if (nodeId === 'interests_result') {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для interests_result - уже создан в основном цикле`);
             return; // Избегаем дублирования обработчика interests_result
           }
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Пропускаем дублирующий обработчик для metro_selection
           if (nodeId === 'metro_selection') {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для metro_selection - уже создан в основном цикле`);
             return; // Избегаем дублирования обработчика metro_selection
           }
-
+          
           processedCallbacks.add(nodeId);
-
+          
           // Create callback handler for this node that can handle multiple buttons AND multi-select "done" button
           const safeFunctionName = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
           const shortNodeIdForDone = nodeId.slice(-10).replace(/^_+/, ''); // Такой же как в генерации кнопки
@@ -3636,14 +3915,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    except Exception:\n';
           code += '        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)\n';
           code += '    \n';
-
+          
           // Добавляем обработку кнопки "Готово" для множественного выбора
           if (targetNode.data.allowMultipleSelection) {
             code += '    # Проверяем, является ли это кнопкой "Готово"\n';
             code += `    if callback_data == "done_${shortNodeIdForDone}":\n`;
             code += '        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")\n';
             code += '        \n';
-
+            
             // Сохраняем выбранные значения в базу данных
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
             code += '        # Сохраняем выбранные значения в базу данных\n';
@@ -3664,7 +3943,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `            await update_user_data_in_db(user_id, "${multiSelectVariable}", final_text)\n`;
             code += `            logging.info(f"✅ Аккумулировано в переменную ${multiSelectVariable}: {final_text}")\n`;
             code += '        \n';
-
+            
             // Очищаем состояние множественного выбора
             code += '        # Очищаем состояние множественного выбора\n';
             code += '        if user_id in user_data:\n';
@@ -3673,7 +3952,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '            user_data[user_id].pop("multi_select_type", None)\n';
             code += '            user_data[user_id].pop("multi_select_variable", None)\n';
             code += '        \n';
-
+            
             // Переход к следующему узлу
             if (targetNode.data.continueButtonTarget) {
               const nextNodeId = targetNode.data.continueButtonTarget;
@@ -3691,29 +3970,29 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '        return\n';
             code += '    \n';
           }
-
+          
           // Обычная обработка узлов без специальной логики
-
+          
           // Определяем переменную для сохранения на основе родительского узла  
           if (targetNode && targetNode.data.inputVariable) {
             const variableName = targetNode.data.inputVariable;
             const variableValue = 'callback_query.data';
-
+            
             code += '    # Сохраняем правильную переменную в базу данных\n';
             code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
             code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
             code += '    \n';
           }
-
+          
           code += `    # Обрабатываем узел ${nodeId}: ${nodeId}\n`;
           const messageText = targetNode.data.messageText || "Сообщение не задано";
           const formattedText = formatTextForPython(messageText);
           code += `    text = ${formattedText}\n`;
           code += '    \n';
           code += generateUniversalVariableReplacement('    ');
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем поддержку условных сообщений
-          if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
+          if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
             code += '    \n';
             code += '    # Проверка условных сообщений для навигации\n';
             code += '    conditional_parse_mode = None\n';
@@ -3725,13 +4004,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
             code += '    \n';
           }
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, есть ли условная клавиатура
           // Не оборачиваем код в if - вместо этого просто используем условную клавиатуру при отправке
-
+          
           // ИСПРАВЛЕНИЕ: Добавляем специальную обработку для узлов с множественным выбором
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Все узлы с кнопками selection обрабатываются как множественный выбор
-          const hasSelectionButtons = targetNode.data.buttons && targetNode.data.buttons.some((btn: Button) => btn.action === 'selection');
+          const hasSelectionButtons = targetNode.data.buttons && targetNode.data.buttons.some(btn => btn.action === 'selection');
           if (targetNode.data.allowMultipleSelection || hasSelectionButtons) {
             // Узел с множественным выбором - создаем специальную клавиатуру
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: ========================================`);
@@ -3743,11 +4022,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: multiSelectVariable для ${nodeId}: ${targetNode.data.multiSelectVariable}`);
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons: ${hasSelectionButtons}`);
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: ========================================`);
-
+            
             // Добавляем логику инициализации множественного выбора
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
             const multiSelectKeyboardType = targetNode.data.keyboardType || 'reply';
-
+            
             code += '    # Инициализация состояния множественного выбора\n';
             code += '    if user_id not in user_data:\n';
             code += '        user_data[user_id] = {}\n';
@@ -3775,36 +4054,36 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `    user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
             code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")\n';
             code += '    \n';
-
+            
             // ИСПРАВЛЕНИЕ: Проверяем тип клавиатуры и генерируем соответствующий код
             if (multiSelectKeyboardType === 'reply') {
               // Reply клавиатура для множественного выбора
               code += '    # Создаем reply клавиатуру с поддержкой множественного выбора\n';
               code += '    builder = ReplyKeyboardBuilder()\n';
-
+              
               // Разделяем кнопки на опции выбора и обычные кнопки
               let buttonsToUse = targetNode.data.buttons || [];
-              const selectionButtons = buttonsToUse.filter((button: Button) => button.action === 'selection');
-              const regularButtons = buttonsToUse.filter((button: Button) => button.action !== 'selection');
-
+              const selectionButtons = buttonsToUse.filter(button => button.action === 'selection');
+              const regularButtons = buttonsToUse.filter(button => button.action !== 'selection');
+              
               // Добавляем кнопки выбора с отметками о состоянии
-              selectionButtons.forEach((button: Button, index: number) => {
+              selectionButtons.forEach((button, index) => {
                 code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
                 code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
                 code += `    builder.add(KeyboardButton(text=f"{selected_mark}${button.text}"))\n`;
               });
-
+              
               // Добавляем кнопку "Готово"
-              if (selectionButtons?.length > 0) {
+              if (selectionButtons.length > 0) {
                 const continueText = targetNode.data.continueButtonText || 'Готово';
                 code += `    builder.add(KeyboardButton(text="${continueText}"))\n`;
               }
-
+              
               // Добавляем обычные кнопки
               regularButtons.forEach((btn: Button) => {
                 code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
               });
-
+              
               const resizeKeyboard = targetNode.data.resizeKeyboard !== false;
               const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true;
               code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -3812,19 +4091,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // Inline клавиатура для множественного выбора
               code += '    # Создаем inline клавиатуру с поддержкой множественного выбора\n';
               code += '    builder = InlineKeyboardBuilder()\n';
-
+              
               // Разделяем кнопки на опции выбора и обычные кнопки
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: targetNode.data.buttons:`, targetNode.data.buttons);
-
+              
               let buttonsToUse = targetNode.data.buttons || [];
-
-              const selectionButtons = buttonsToUse.filter((button: Button) => button.action === 'selection');
-              const regularButtons = buttonsToUse.filter((button: Button) => button.action !== 'selection');
+              
+              const selectionButtons = buttonsToUse.filter(button => button.action === 'selection');
+              const regularButtons = buttonsToUse.filter(button => button.action !== 'selection');
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Найдено ${selectionButtons.length} кнопок выбора и ${regularButtons.length} обычных кнопок`);
-
+              
               // Добавляем кнопки выбора с отметками о состоянии
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
-              selectionButtons.forEach((button: Button, index: number) => {
+              selectionButtons.forEach((button, index) => {
                 // Используем короткие callback_data
                 const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []); // Используем новую функцию
                 const shortTarget = (button.target || button.id || 'btn').slice(-8);
@@ -3835,30 +4114,30 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
                 code += `    builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
               });
-
+              
               // Добавляем кнопку "Готово" для множественного выбора
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: НАЧИНАЕМ создание кнопки "Готово" для узла ${nodeId}`);
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: allowMultipleSelection = ${targetNode.data.allowMultipleSelection}`);
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${targetNode.data.continueButtonTarget}`);
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: selectionButtons.length = ${selectionButtons.length}`);
-
+              
               // ВСЕГДА добавляем кнопку "Готово" если есть кнопки выбора
-              if (selectionButtons?.length > 0) {
+              if (selectionButtons.length > 0) {
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "Готово" (есть ${selectionButtons.length} кнопок выбора)`);
                 code += '    # Кнопка "Готово" для множественного выбора\n';
                 const shortNodeIdDone = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
                 const doneCallbackData = `done_${shortNodeIdDone}`;
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ГЕНЕРИРУЕМ код кнопки "Готово"!`);
-
+                
                 code += `    logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
                 code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="${doneCallbackData}"))\n`;
-
+                
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ УСПЕШНО добавили кнопку "Готово" в код генерации`);
               } else {
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем кнопку "Готово" - нет кнопок выбора`);
-              }
-
+              }  
+              
               // Добавляем обычные кнопки (navigation и другие)
               regularButtons.forEach((btn: Button, index: number) => {
                 if (btn.action === "goto" && btn.target) {
@@ -3871,7 +4150,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
                 }
               });
-
+              
               // Автоматическое распределение колонок для множественного выбора
               const totalButtons = selectionButtons.length + (targetNode.data.continueButtonTarget ? 1 : 0) + regularButtons.length;
               // Для множественного выбора всегда используем nodeData с включенным флагом
@@ -3880,17 +4159,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `    builder.adjust(${columns})\n`;
               code += '    keyboard = builder.as_markup()\n';
             }
-
-          } else if (targetNode.data.keyboardType !== 'none' && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
+            
+          } else if (targetNode.data.keyboardType !== 'none' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             // Обычные кнопки без множественного выбора
             // ИСПРАВЛЕНИЕ: Проверяем keyboardType узла и генерируем соответствующую клавиатуру
             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: НЕ генерируем клавиатуру если keyboardType === 'none'
             if (targetNode.data.keyboardType === 'reply') {
               // Генерируем reply клавиатуру
               code += '    # Create reply keyboard\n';
-
+              
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли уже создана условная клавиатура
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    # Проверяем, есть ли условная клавиатура\n';
                 code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
                 code += '        keyboard = conditional_keyboard\n';
@@ -3930,7 +4209,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               code += '    # Для reply клавиатуры нужно отправить новое сообщение\n';
               code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
-
+              
               // Проверяем автопереход для reply клавиатуры
               const currentNodeForReplyAutoTransition = nodes.find(n => n.id === nodeId);
               let replyAutoTransitionTarget: string | null = null;
@@ -3942,7 +4221,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   replyAutoTransitionTarget = outgoingConnections[0].target;
                 }
               }
-
+              
               if (replyAutoTransitionTarget) {
                 const safeFunctionName = replyAutoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
                 code += '    \n';
@@ -3951,25 +4230,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `    await handle_callback_${safeFunctionName}(callback_query)\n`;
                 code += `    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${replyAutoTransitionTarget}")\n`;
               }
-
+              
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настраиваем waiting_for_input для targetNode ТОЛЬКО если collectUserInput=true
-              const targetCollectInputReply = targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true;
-
+              const targetCollectInputReply = targetNode.data.collectUserInput === true || 
+                                              targetNode.data.enableTextInput === true ||
+                                              targetNode.data.enablePhotoInput === true ||
+                                              targetNode.data.enableVideoInput === true ||
+                                              targetNode.data.enableAudioInput === true ||
+                                              targetNode.data.enableDocumentInput === true;
+              
               if (targetCollectInputReply) {
                 const targetInputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 const targetSaveToDb = targetNode.data.saveToDatabase !== false;
-
+                
                 code += '    \n';
                 code += '    # Настройка waiting_for_input для узла с reply клавиатурой (collectUserInput=true)\n';
                 code += '    user_id = callback_query.from_user.id\n';
                 code += '    if user_id not in user_data:\n';
                 code += '        user_data[user_id] = {}\n';
-
+                
                 // Определяем modes для ввода
                 const modes: string[] = [];
                 if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons?.length > 0) {
@@ -3982,9 +4261,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 if (targetNode.data.enableVideoInput) modes.push('video');
                 if (targetNode.data.enableAudioInput) modes.push('audio');
                 if (targetNode.data.enableDocumentInput) modes.push('document');
-
-                const modesStr = modes?.length > 0 ? modes.map(m => `'${m}'`).join(', ') : "'button', 'text'";
-
+                
+                const modesStr = modes.length > 0 ? modes.map(m => `'${m}'`).join(', ') : "'button', 'text'";
+                
                 code += `    user_data[user_id]["waiting_for_input"] = {\n`;
                 code += `        "type": "button",\n`;
                 code += `        "modes": [${modesStr}],\n`;
@@ -3999,7 +4278,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
                 code += `    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
               }
-
+              
               code += '    return  # Возвращаемся чтобы не отправить сообщение дважды\n';
             } else {
               // Генерируем inline клавиатуру (по умолчанию)
@@ -4027,7 +4306,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           } else {
             code += '    keyboard = None\n';
           }
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем условную клавиатуру и используем её если есть
           code += '    \n';
           code += '    # Проверяем, есть ли условная клавиатура для использования\n';
@@ -4041,11 +4320,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    else:\n';
           code += '        user_data[user_id]["_has_conditional_keyboard"] = False\n';
           code += '    \n';
-
+          
           // ИСПРАВЛЕНИЕ: Проверяем наличие прикрепленных медиа перед отправкой
           const attachedMedia = targetNode.data.attachedMedia || [];
-
-          if (attachedMedia?.length > 0) {
+          
+          if (attachedMedia.length > 0) {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} имеет attachedMedia:`, attachedMedia);
             // Генерируем код отправки с медиа
             const parseModeStr = targetNode.data.formatMode || '';
@@ -4060,7 +4339,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               '    ',
               undefined // автопереход обрабатывается отдельно ниже
             );
-
+            
             if (mediaCode) {
               code += '    # Отправляем сообщение (с проверкой прикрепленного медиа)\n';
               code += mediaCode;
@@ -4100,18 +4379,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '            await callback_query.message.answer(text)\n';
             code += '    \n';
           }
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем автопереход сразу после отправки сообщения
           const currentNodeForAutoTransition = nodes.find(n => n.id === nodeId);
-
+          
           // Для узлов без кнопок проверяем автопереход либо по флагу enableAutoTransition, либо по единственному соединению
           let autoTransitionTarget: string | null = null;
-
+          
           // Сначала проверяем явный автопереход через флаг
           if (currentNodeForAutoTransition?.data.enableAutoTransition && currentNodeForAutoTransition?.data.autoTransitionTo) {
             autoTransitionTarget = currentNodeForAutoTransition.data.autoTransitionTo;
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} имеет явный автопереход к ${autoTransitionTarget}`);
-          }
+          } 
           // Если узел не имеет кнопок и имеет ровно одно исходящее соединение, делаем автопереход
           else if (currentNodeForAutoTransition && (!currentNodeForAutoTransition.data.buttons || currentNodeForAutoTransition.data.buttons.length === 0)) {
             const outgoingConnections = connections.filter(conn => conn.source === nodeId);
@@ -4121,7 +4400,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Узел ${nodeId} без кнопок имеет одно соединение к ${autoTransitionTarget}, делаем автопереход`);
             }
           }
-
+          
           if (autoTransitionTarget) {
             const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем код автоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
@@ -4141,27 +4420,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `        return\n`;
             code += '    \n';
           }
-
+          
           // Сохраняем нажатие кнопки в базу данных ТОЛЬКО если это реальная кнопка
           code += '    user_id = callback_query.from_user.id\n';
           code += '    \n';
-
+          
           // Генерируем код для поиска текста кнопки
-          const sourceNode = nodes.find(n =>
-            n.data.buttons && n.data.buttons.some((btn: Button) => btn.target === nodeId)
+          const sourceNode = nodes.find(n => 
+            n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
           );
-
+          
           // Если к узлу ведут несколько кнопок, нужно определить, какую именно нажали
-          let buttonsToTargetNode: any[] = [];
+          let buttonsToTargetNode = [];
           if (sourceNode) {
-            buttonsToTargetNode = sourceNode.data.buttons.filter((btn: Button) => btn.target === nodeId);
+            buttonsToTargetNode = sourceNode.data.buttons.filter(btn => btn.target === nodeId);
           }
-
+          
           // Сохраняем button_click ТОЛЬКО если есть sourceNode (реальная кнопка, а не автопереход)
           if (sourceNode) {
             code += '    # Сохраняем нажатие кнопки в базу данных\n';
             code += '    # Ищем текст кнопки по callback_data\n';
-
+            
             if (buttonsToTargetNode.length > 1) {
               // Несколько кнопок ведут к одному узлу - создаем логику определения по callback_data
               code += `    # Определяем текст кнопки по callback_data\n`;
@@ -4171,7 +4450,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `    if callback_query.data.endswith("_btn_${index}"):\n`;
                 code += `        button_display_text = "${button.text}"\n`;
               });
-
+              
               // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ищем кнопку по точному соответствию callback_data с nodeId
               code += `    # Дополнительная проверка по точному соответствию callback_data\n`;
               buttonsToTargetNode.forEach((button) => {
@@ -4180,7 +4459,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `        button_display_text = "${button.text}"\n`;
               });
             } else {
-              const button = sourceNode.data.buttons.find((btn: Button) => btn.target === nodeId);
+              const button = sourceNode.data.buttons.find(btn => btn.target === nodeId);
               if (button) {
                 code += `    button_display_text = "${button.text}"\n`;
               } else {
@@ -4199,7 +4478,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '        user_data[user_id] = {}\n';
             code += '    user_data[user_id]["button_click"] = button_display_text\n';
           }
-
+          
           // Определяем переменную для сохранения на основе кнопки (ТОЛЬКО если есть sourceNode)
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: НЕ сохраняем переменную если показана условная клавиатура
           // Нужно дождаться, пока пользователь нажмёт кнопку на условной клавиатуре
@@ -4209,14 +4488,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя\n';
             code += '    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)\n';
             code += '    if not has_conditional_keyboard_for_save:\n';
-
-            const parentNode = nodes.find(n =>
-              n.data.buttons && n.data.buttons.some((btn: Button) => btn.target === nodeId)
+            
+            const parentNode = nodes.find(n => 
+              n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
             );
-
+            
             let variableName = 'button_click';
             let variableValue = 'button_display_text';
-
+            
             // КРИТИЧЕСКИ ВАЖНО: специальная логика для шаблона "Федя"
             if (nodeId === 'source_search') {
               variableName = 'источник';
@@ -4229,9 +4508,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               variableValue = '"📱 Реклама"';
             } else if (parentNode && parentNode.data.inputVariable) {
               variableName = parentNode.data.inputVariable;
-
+              
               // Ищем конкретную кнопку и её значение
-              const button = parentNode.data.buttons.find((btn: Button) => btn.target === nodeId);
+              const button = parentNode.data.buttons.find(btn => btn.target === nodeId);
               if (button) {
                 // Определяем значение переменной в зависимости от кнопки
                 if (button.id === 'btn_search' || nodeId === 'source_search') {
@@ -4254,7 +4533,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 }
               }
             }
-
+            
             code += '        # Сохраняем в базу данных с правильным именем переменной\n';
             code += `        await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
             code += `        logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
@@ -4262,18 +4541,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")\n';
             code += '    \n';
           }
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Для узлов с множественным выбором НЕ делаем автоматической переадресации
           const currentNode = nodes.find(n => n.id === nodeId);
-
+          
           // Для узлов с множественным выбором - НЕ делаем автоматический переход при первичном заходе в узел
           // ИСПРАВЛЕНИЕ: редирект только для узлов с кнопками, чтобы избежать дублирования сообщений при автопереходах
-          const hasButtons = currentNode && currentNode.data.buttons && currentNode.data.buttons?.length > 0;
+          const hasButtons = currentNode && currentNode.data.buttons && currentNode.data.buttons.length > 0;
           const shouldRedirect = hasButtons && !(currentNode && currentNode.data.allowMultipleSelection);
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Узел ${nodeId} hasButtons: ${hasButtons}, allowMultipleSelection: ${currentNode?.data.allowMultipleSelection}, shouldRedirect: ${shouldRedirect}`);
-
+          
           let redirectTarget = nodeId; // По умолчанию остаемся в том же узле
-
+          
           if (shouldRedirect) {
             if (currentNode && currentNode.data.continueButtonTarget) {
               // Для обычных узлов используем continueButtonTarget если есть
@@ -4282,7 +4561,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             } else {
               // Для обычных узлов ищем следующий узел через соединения
               const nodeConnections = connections.filter(conn => conn.source === nodeId);
-              if (nodeConnections?.length > 0) {
+              if (nodeConnections.length > 0) {
                 redirectTarget = nodeConnections[0].target;
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит через соединение к ${redirectTarget}`);
               } else {
@@ -4292,19 +4571,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           } else {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} без кнопок или с множественным выбором - НЕ делаем автоматическую переадресацию`);
           }
-
+          
           if (shouldRedirect && redirectTarget && redirectTarget !== nodeId) {
             code += '    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных\n';
             code += `    next_node_id = "${redirectTarget}"\n`;
             code += '    try:\n';
             code += '        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")\n';
-
+            
             // Добавляем навигацию для каждого узла
-            if (nodes?.length > 0) {
+            if (nodes.length > 0) {
               nodes.forEach((navTargetNode, index) => {
                 const condition = index === 0 ? 'if' : 'elif';
                 code += `        ${condition} next_node_id == "${navTargetNode.id}":\n`;
-
+                
                 if (navTargetNode.type === 'message') {
                   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
                   if (navTargetNode.data.allowMultipleSelection === true) {
@@ -4315,21 +4594,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
                   } else {
                     // Проверяем, есть ли условные сообщения для этого узла
-                    const hasConditionalMessages = navTargetNode.data.enableConditionalMessages &&
-                      navTargetNode.data.conditionalMessages &&
-                      navTargetNode.data.conditionalMessages?.length > 0;
-
+                    const hasConditionalMessages = navTargetNode.data.enableConditionalMessages && 
+                                                  navTargetNode.data.conditionalMessages && 
+                                                  navTargetNode.data.conditionalMessages.length > 0;
+                    
                     if (hasConditionalMessages && navTargetNode.data.collectUserInput === true) {
                       // Для узлов с условными сообщениями вызываем полноценный обработчик
                       const safeFunctionName = navTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
                       code += `            # Узел с условными сообщениями - вызываем полноценный обработчик\n`;
                       code += `            logging.info(f"🔧 Callback навигация к узлу с условными сообщениями: ${navTargetNode.id}")\n`;
-                      code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
+                      code += `            await handle_node_${safeFunctionName}(callback_query.message)\n`;
                     } else {
                       const messageText = navTargetNode.data.messageText || 'Сообщение';
                       const formattedText = formatTextForPython(messageText);
                       code += `            nav_text = ${formattedText}\n`;
-
+                      
                       // Добавляем замену переменных в nav_text
                       code += '            # Подставляем переменные пользователя в текст\n';
                       code += '            nav_user_vars = await get_user_from_db(callback_query.from_user.id)\n';
@@ -4348,10 +4627,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       code += '                    else:\n';
                       code += '                        var_value = var_name\n';
                       code += '                    nav_text = nav_text.replace(placeholder, var_value)\n';
-
+                      
                       // Проверяем, есть ли прикрепленные медиа
-                      const hasAttachedMedia = navTargetNode.data.attachedMedia && navTargetNode.data.attachedMedia?.length > 0;
-
+                      const hasAttachedMedia = navTargetNode.data.attachedMedia && navTargetNode.data.attachedMedia.length > 0;
+                      
                       if (hasAttachedMedia) {
                         // Генерируем код для отправки медиа
                         const attachedMedia = navTargetNode.data.attachedMedia;
@@ -4371,10 +4650,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         code += `                await callback_query.message.edit_text(nav_text)\n`;
                       } else {
                         // Проверяем, есть ли reply кнопки
-                        if (navTargetNode.data.keyboardType === 'reply' && navTargetNode.data.buttons && navTargetNode.data.buttons?.length > 0) {
+                        if (navTargetNode.data.keyboardType === 'reply' && navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                           code += '            # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
                           code += '            builder = ReplyKeyboardBuilder()\n';
-                          navTargetNode.data.buttons.forEach((button: ButtonSchema) => {
+                          navTargetNode.data.buttons.forEach((button: Button) => {
                             if (button.action === "contact" && button.requestContact) {
                               code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
                             } else if (button.action === "location" && button.requestLocation) {
@@ -4391,14 +4670,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                           code += '            await callback_query.message.edit_text(nav_text)\n';
                         }
                       }
-
+                      
                       // Если узел message собирает ввод, настраиваем ожидание
                       if (navTargetNode.data.collectUserInput === true) {
                         const inputType = navTargetNode.data.inputType || 'text';
                         // ИСПРАВЛЕНИЕ: Берем inputVariable именно из целевого узла, а не из родительского
                         const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                         const inputTargetNodeId = navTargetNode.data.inputTargetNodeId;
-
+                        
                         code += '            # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n';
                         code += '            user_id = callback_query.from_user.id\n';
                         code += '            if user_id not in user_data:\n';
@@ -4411,7 +4690,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         code += '            else:\n';
                         code += `                logging.info(f"⏭️ Переменная ${inputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
                       }
-
+                      
                       // АВТОПЕРЕХОД: Если у узла есть enableAutoTransition, переходим к следующему узлу
                       if (navTargetNode.data.enableAutoTransition && navTargetNode.data.autoTransitionTo) {
                         const autoTargetId = navTargetNode.data.autoTransitionTo;
@@ -4441,28 +4720,28 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '            fake_message.date = callback_query.message.date\n';
                   code += '            fake_message.answer = callback_query.message.answer\n';
                   code += `            await ${handlerName}(fake_message)\n`;
-                } else if ((navTargetNode.type as any) === 'message' && (navTargetNode.data.enableTextInput ||
-                  navTargetNode.data.enablePhotoInput ||
-                  navTargetNode.data.enableVideoInput ||
-                  navTargetNode.data.enableAudioInput ||
-                  navTargetNode.data.enableDocumentInput)) {
+                } else if (navTargetNode.type === 'message' && (navTargetNode.data.enableTextInput || 
+                                                                  navTargetNode.data.enablePhotoInput || 
+                                                                  navTargetNode.data.enableVideoInput || 
+                                                                  navTargetNode.data.enableAudioInput || 
+                                                                  navTargetNode.data.enableDocumentInput)) {
                   // Обрабатываем узлы ввода текста/медиа с поддержкой условных сообщений
                   const messageText = navTargetNode.data.messageText || 'Введите ваш ответ:';
                   const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                   const inputTargetNodeId = navTargetNode.data.inputTargetNodeId || '';
-
+                  
                   // Проверяем, есть ли условные сообщения для этого узла
-                  const hasConditionalMessages = navTargetNode.data.enableConditionalMessages &&
-                    navTargetNode.data.conditionalMessages &&
-                    navTargetNode.data.conditionalMessages?.length > 0;
-
+                  const hasConditionalMessages = navTargetNode.data.enableConditionalMessages && 
+                                                navTargetNode.data.conditionalMessages && 
+                                                navTargetNode.data.conditionalMessages.length > 0;
+                  
                   if (hasConditionalMessages) {
                     // Если есть условные сообщения, генерируем их обработку
                     code += '            # Узел с условными сообщениями - проверяем условия\n';
                     code += '            user_id = callback_query.from_user.id\n';
                     code += '            user_data_dict = await get_user_from_db(user_id) or {}\n';
                     code += '            user_data_dict.update(user_data.get(user_id, {}))\n\n';
-
+                    
                     // Добавляем определение функции check_user_variable в локальную область видимости
                     code += '            # Функция для проверки переменных пользователя\n';
                     code += '            def check_user_variable(var_name, user_data_dict):\n';
@@ -4498,27 +4777,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += '                        return True, str(variable_data)\n';
                     code += '                \n';
                     code += '                return False, None\n\n';
-
+                    
                     // Генерируем условную логику для этого узла
-                    const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a: ConditionalMessage, b: ConditionalMessage) => (b.priority || 0) - (a.priority || 0));
-
+                    const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+                    
                     // Создаем единую if/elif/else структуру для всех условий
                     for (let i = 0; i < conditionalMessages.length; i++) {
                       const condition = conditionalMessages[i];
                       const cleanedConditionText = stripHtmlTags(condition.messageText);
                       const conditionText = formatTextForPython(cleanedConditionText);
                       const conditionKeyword = i === 0 ? 'if' : 'elif';
-
+                      
                       // Get variable names - support both new array format and legacy single variable
-                      const variableNames = condition.variableNames && condition.variableNames?.length > 0
-                        ? condition.variableNames
+                      const variableNames = condition.variableNames && condition.variableNames.length > 0 
+                        ? condition.variableNames 
                         : (condition.variableName ? [condition.variableName] : []);
-
+                      
                       const logicOperator = condition.logicOperator || 'AND';
-
+                      
                       code += `            # Условие ${i + 1}: ${condition.condition} для переменных: ${variableNames.join(', ')}\n`;
-
-                      if (condition.condition === 'user_data_exists' && variableNames?.length > 0) {
+                      
+                      if (condition.condition === 'user_data_exists' && variableNames.length > 0) {
                         // Создаем единый блок условия с проверками ВНУТРИ
                         code += `            ${conditionKeyword} (\n`;
                         for (let j = 0; j < variableNames.length; j++) {
@@ -4527,31 +4806,31 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                           code += `                check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
                         }
                         code += `            ):\n`;
-
+                        
                         // Внутри блока условия собираем значения переменных
                         code += `                # Собираем значения переменных\n`;
                         code += `                variable_values = {}\n`;
                         for (const varName of variableNames) {
                           code += `                _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
                         }
-
+                        
                         code += `                text = ${conditionText}\n`;
-
+                        
                         // Заменяем переменные в тексте
                         for (const varName of variableNames) {
                           code += `                if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
                           code += `                    text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
                         }
-
+                        
                         // Генерируем клавиатуру для условного сообщения если она есть
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, не установлено ли keyboardType="none" на РОДИТЕЛЬСКОМ узле
-                        const shouldGenerateKeyboard = navTargetNode.data.keyboardType !== 'none' && condition.keyboardType && condition.keyboardType !== 'none' && condition.buttons && condition.buttons?.length > 0;
+                        const shouldGenerateKeyboard = navTargetNode.data.keyboardType !== 'none' && condition.keyboardType && condition.keyboardType !== 'none' && condition.buttons && condition.buttons.length > 0;
                         if (shouldGenerateKeyboard) {
                           code += '                # Создаем клавиатуру для условного сообщения\n';
-
+                          
                           if (condition.keyboardType === 'inline') {
                             code += '                builder = InlineKeyboardBuilder()\n';
-                            condition.buttons.forEach((button: ButtonSchema) => {
+                            condition.buttons.forEach((button: Button) => {
                               if (button.action === "url") {
                                 code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
                               } else if (button.action === 'goto') {
@@ -4570,7 +4849,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                             code += '                await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n';
                           } else if (condition.keyboardType === 'reply') {
                             code += '                builder = ReplyKeyboardBuilder()\n';
-                            condition.buttons.forEach((button: ButtonSchema) => {
+                            condition.buttons.forEach((button: Button) => {
                               if (button.action === "contact" && button.requestContact) {
                                 code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
                               } else if (button.action === "location" && button.requestLocation) {
@@ -4588,7 +4867,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                           // Нет клавиатуры - отправляем только текст
                           code += '                await bot.send_message(user_id, text)\n';
                         }
-
+                        
                         // Настраиваем ожидание текстового ввода для условного сообщения (если нужно)
                         if (condition.waitForTextInput) {
                           // ИСПРАВЛЕНИЕ: Используем переменную из условия или из целевого узла
@@ -4605,7 +4884,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         }
                       }
                     }
-
+                    
                     // Fallback сообщение
                     code += `            else:\n`;
                     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
@@ -4616,11 +4895,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       code += `                # Прямая навигация к узлу с множественным выбором ${navTargetNode.id}\n`;
                       code += `                logging.info(f"🔧 Fallback переход к узлу с множественным выбором: ${navTargetNode.id}")\n`;
                       code += `                text = ${formattedText}\n`;
-
+                      
                       // Замена переменных
                       code += '                user_data[user_id] = user_data.get(user_id, {})\n';
                       code += generateUniversalVariableReplacement('                ');
-
+                      
                       // Инициализируем состояние множественного выбора
                       code += `                # Инициализируем состояние множественного выбора\n`;
                       code += `                user_data[user_id]["multi_select_${navTargetNode.id}"] = []\n`;
@@ -4629,9 +4908,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       if (navTargetNode.data.multiSelectVariable) {
                         code += `                user_data[user_id]["multi_select_variable"] = "${navTargetNode.data.multiSelectVariable}"\n`;
                       }
-
+                      
                       // Создаем inline клавиатуру с кнопками выбора
-                      if (navTargetNode.data.buttons && navTargetNode.data.buttons?.length > 0) {
+                      if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                         code += generateInlineKeyboardCode(navTargetNode.data.buttons, '                ', navTargetNode.id, navTargetNode.data, allNodeIds);
                         code += `                await bot.send_message(user_id, text, reply_markup=keyboard)\n`;
                       } else {
@@ -4646,18 +4925,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       code += `                nav_text = ${formattedText}\n`;
                       // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
                       if (navTargetNode.data.collectUserInput === true) {
-                        code += `                # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n`;
-                        code += `                if "${fallbackInputVariable}" not in user_data[user_id] or not user_data[user_id]["${fallbackInputVariable}"]:\n`;
-                        code += `                    # Настраиваем ожидание ввода\n`;
-                        code += `                    user_data[user_id]["waiting_for_input"] = {\n`;
-                        code += `                        "type": "text",\n`;
-                        code += `                        "variable": "${fallbackInputVariable}",\n`;
-                        code += `                        "save_to_database": True,\n`;
-                        code += `                        "node_id": "${navTargetNode.id}",\n`;
-                        code += `                        "next_node_id": "${inputTargetNodeId}"\n`;
-                        code += `                    }\n`;
-                        code += `                    logging.info(f"🔧 Настроено fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
-                        code += `                else:\n`;
+                      code += `                # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n`;
+                      code += `                if "${fallbackInputVariable}" not in user_data[user_id] or not user_data[user_id]["${fallbackInputVariable}"]:\n`;
+                      code += `                    # Настраиваем ожидание ввода\n`;
+                      code += `                    user_data[user_id]["waiting_for_input"] = {\n`;
+                      code += `                        "type": "text",\n`;
+                      code += `                        "variable": "${fallbackInputVariable}",\n`;
+                      code += `                        "save_to_database": True,\n`;
+                      code += `                        "node_id": "${navTargetNode.id}",\n`;
+                      code += `                        "next_node_id": "${inputTargetNodeId}"\n`;
+                      code += `                    }\n`;
+                      code += `                    logging.info(f"🔧 Настроено fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
+                      code += `                else:\n`;
                         code += `                    logging.info(f"⏭️ Переменная ${fallbackInputVariable} уже сохранена, пропускаем fallback ожидание ввода")\n`;
                       } else {
                         code += `                logging.info(f"Fallback переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
@@ -4674,11 +4953,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       code += `            # Прямая навигация к узлу с множественным выбором ${navTargetNode.id}\n`;
                       code += `            logging.info(f"🔧 Переходим к узлу с множественным выбором: ${navTargetNode.id}")\n`;
                       code += `            text = ${formattedText}\n`;
-
+                      
                       // Замена переменных
                       code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
                       code += generateUniversalVariableReplacement('            ');
-
+                      
                       // Инициализируем состояние множественного выбора
                       code += `            # Инициализируем состояние множественного выбора\n`;
                       code += `            user_data[callback_query.from_user.id]["multi_select_${navTargetNode.id}"] = []\n`;
@@ -4687,9 +4966,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       if (navTargetNode.data.multiSelectVariable) {
                         code += `            user_data[callback_query.from_user.id]["multi_select_variable"] = "${navTargetNode.data.multiSelectVariable}"\n`;
                       }
-
+                      
                       // Создаем inline клавиатуру с кнопками выбора
-                      if (navTargetNode.data.buttons && navTargetNode.data.buttons?.length > 0) {
+                      if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                         code += generateInlineKeyboardCode(navTargetNode.data.buttons, '            ', navTargetNode.id, navTargetNode.data, allNodeIds);
                         code += `            await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n`;
                       } else {
@@ -4699,7 +4978,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     } else {
                       const formattedText = formatTextForPython(messageText);
                       code += `            nav_text = ${formattedText}\n`;
-
+                    
                       // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
                       if (navTargetNode.data.collectUserInput === true) {
                         // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
@@ -4728,52 +5007,52 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `            logging.info("Переход к узлу ${navTargetNode.id}")\n`;
                 }
               });
-
+              
               code += '        else:\n';
               code += '            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
             } else {
               code += '        # No nodes available for navigation\n';
               code += '        logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
             }
-
+            
             code += '    except Exception as e:\n';
             code += '        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
             code += '    \n';
             code += '    return  # Завершаем обработку после переадресации\n';
           }
           code += '    \n';
-
+          
           // Generate response based on node type
-          if ((targetNode.type as any) === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
+          if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
             // Handle input collection nodes
             const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
             const responseType = targetNode.data.responseType || 'text';
             const inputType = targetNode.data.inputType || 'text';
             const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
             const saveToDatabase = targetNode.data.saveToDatabase || false;
-
+            
             code += '    # Удаляем старое сообщение\n';
             code += '    \n';
-
+            
             const formattedPrompt = formatTextForPython(inputPrompt);
             code += `    text = ${formattedPrompt}\n`;
-
+            
             if (responseType === 'text') {
               code += '    await bot.send_message(callback_query.from_user.id, text)\n';
-
+              
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
-              const inlineTextCollect = targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true;
-
+              const inlineTextCollect = targetNode.data.collectUserInput === true || 
+                                        targetNode.data.enableTextInput === true ||
+                                        targetNode.data.enablePhotoInput === true ||
+                                        targetNode.data.enableVideoInput === true ||
+                                        targetNode.data.enableAudioInput === true ||
+                                        targetNode.data.enableDocumentInput === true;
+              
               if (inlineTextCollect) {
                 // Find next node through connections
                 const nextConnection = connections.find(conn => conn.source === targetNode.id);
                 const nextNodeId = nextConnection ? nextConnection.target : null;
-
+                
                 code += '    # Настраиваем ожидание ввода (collectUserInput=true)\n';
                 code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
                 code += `        "type": "${inputType}",\n`;
@@ -4787,32 +5066,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
             }
           }
-
+          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем обязательный return в конец функции
           code += '    return\n';
         }
       }
     });
   }
-
+  
   // Generate handlers for reply keyboard buttons
-  const replyNodes = (nodes || []).filter(node =>
-    node.data.keyboardType === 'reply' && node.data.buttons && node.data.buttons?.length > 0
+  const replyNodes = (nodes || []).filter(node => 
+    node.data.keyboardType === 'reply' && node.data.buttons && node.data.buttons.length > 0
   );
-
-  if (replyNodes?.length > 0) {
+  
+  if (replyNodes.length > 0) {
     code += '\n# Обработчики reply кнопок\n';
     const processedReplyButtons = new Set<string>();
-
-    replyNodes.forEach((node: Node) => {
-      node.data.buttons.forEach((button: ButtonSchema) => {
+    
+    replyNodes.forEach(node => {
+      node.data.buttons.forEach(button => {
         if (button.action === 'goto' && button.target) {
           const buttonText = button.text;
-
+          
           // Avoid duplicate handlers
           if (processedReplyButtons.has(buttonText)) return;
           processedReplyButtons.add(buttonText);
-
+          
           // Find target node
           const targetNode = nodes.find(n => n.id === button.target);
           if (targetNode) {
@@ -4820,20 +5099,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Создаем безопасное имя функции на основе button ID
             const safeFunctionName = button.id.replace(/[^a-zA-Z0-9_]/g, '_');
             code += `async def handle_reply_${safeFunctionName}(message: types.Message):\n`;
-
+            
             // Generate response for target node
             const targetText = targetNode.data.messageText || "Сообщение";
             const formattedTargetText = formatTextForPython(targetText);
             code += `    text = ${formattedTargetText}\n`;
-
+            
             // Добавляем замену переменных для reply кнопок
             code += '    user_id = message.from_user.id\n';
-
+            
             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем waiting_for_input и сохраняем данные кнопки
             // Это нужно для узлов с collectUserInput=true и reply кнопками
             const sourceNodeInputVariable = node.data.inputVariable || `response_${node.id}`;
             const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true;
-
+            
             code += '    \n';
             code += '    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения\n';
             const skipDataCollection = button.skipDataCollection === true;
@@ -4869,59 +5148,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '    elif skip_collection:\n';
             code += `        logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")\n`;
             code += '    \n';
-
+            
             code += generateUniversalVariableReplacement('    ');
-
+            
             // Handle keyboard for target node
-            if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons?.length > 0) {
-              // Добавляем поддержку условных сообщений для reply клавиатуры
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
-                code += '    # Проверка условных сообщений для целевого узла (reply клавиатура)\n';
-                code += '    conditional_parse_mode = None\n';
-                code += '    conditional_keyboard = None\n';
-                code += '    user_record = await get_user_from_db(user_id)\n';
-                code += '    if not user_record:\n';
-                code += '        user_record = user_data.get(user_id, {})\n';
-                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-                code += '    \n';
-                code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
-                code += '    use_conditional_keyboard = conditional_keyboard is not None\n';
-                code += '    \n';
-                code += '    if use_conditional_keyboard:\n';
-                code += '        # Используем условную клавиатуру\n';
-                code += '        keyboard = conditional_keyboard\n';
-                code += '    else:\n';
-                code += '        # Создаем обычную reply клавиатуру\n';
-                code += '        builder = ReplyKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                  code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                });
-                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-              } else {
-                code += '    # Инициализируем переменную для проверки условной клавиатуры\n';
-                code += '    use_conditional_keyboard = False\n';
-                code += '    conditional_keyboard = None\n';
-                code += '    \n';
-                code += '    builder = ReplyKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                  code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                });
-                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-              }
-
+            if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
+              code += '    builder = ReplyKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+              });
+              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+              code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем waiting_for_input ТОЛЬКО если у целевого узла включен сбор ответов
-              const targetCollectInput = targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true;
-
+              const targetCollectInput = targetNode.data.collectUserInput === true || 
+                                         targetNode.data.enableTextInput === true ||
+                                         targetNode.data.enablePhotoInput === true ||
+                                         targetNode.data.enableVideoInput === true ||
+                                         targetNode.data.enableAudioInput === true ||
+                                         targetNode.data.enableDocumentInput === true;
+              
               if (targetCollectInput) {
                 const targetVarName = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 code += '    \n';
@@ -4939,7 +5186,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
                 code += `    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
               }
-
+              
               // Определяем режим форматирования для целевого узла
               let parseModeTarget = '';
               if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -4948,35 +5195,33 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 parseModeTarget = ', parse_mode=ParseMode.HTML';
               }
               code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
-
-              // Дополнительно: сохраняем нажатие reply кнопки если включен сбор ответов
-              code += '    \n';
-              code += '    # Сохраняем нажатие reply кнопки если включен сбор ответов\n';
-              code += '    user_id = message.from_user.id\n';
-              code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
-              code += '        import datetime\n';
-              code += '        timestamp = get_moscow_time()\n';
-              code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
-              code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
-              code += '        \n';
-              code += '        response_data = {\n';
-              code += `            "value": "${buttonText}",\n`;
-              code += '            "type": "reply_button",\n';
-              code += '            "timestamp": timestamp,\n';
-              code += '            "nodeId": input_node_id,\n';
-              code += '            "variable": input_variable,\n';
-              code += '            "source": "reply_button_click"\n';
-              code += '        }\n';
-              code += '        \n';
-              code += '        user_data[user_id][f"{input_variable}_button"] = response_data\n';
-              code += '        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")\n';
-
-            } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons?.length > 0) {
+            
+            // Дополнительно: сохраняем нажатие reply кнопки если включен сбор ответов
+            code += '    \n';
+            code += '    # Сохраняем нажатие reply кнопки если включен сбор ответов\n';
+            code += '    user_id = message.from_user.id\n';
+            code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
+            code += '        import datetime\n';
+            code += '        timestamp = get_moscow_time()\n';
+            code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
+            code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
+            code += '        \n';
+            code += '        response_data = {\n';
+            code += `            "value": "${buttonText}",\n`;
+            code += '            "type": "reply_button",\n';
+            code += '            "timestamp": timestamp,\n';
+            code += '            "nodeId": input_node_id,\n';
+            code += '            "variable": input_variable,\n';
+            code += '            "source": "reply_button_click"\n';
+            code += '        }\n';
+            code += '        \n';
+            code += '        user_data[user_id][f"{input_variable}_button"] = response_data\n';
+            code += '        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")\n';
+            
+            } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               // Добавляем поддержку условных сообщений для целевого узла
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    # Проверка условных сообщений для целевого узла\n';
-                code += '    conditional_parse_mode = None\n';
-                code += '    conditional_keyboard = None\n';
                 code += '    user_record = await get_user_from_db(user_id)\n';
                 code += '    if not user_record:\n';
                 code += '        user_record = user_data.get(user_id, {})\n';
@@ -4990,15 +5235,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    use_conditional_keyboard = False\n';
                 code += '    conditional_keyboard = None\n';
               }
-
+              
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput для целевого узла
-              const targetCollectInputInline = targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true;
-
+              const targetCollectInputInline = targetNode.data.collectUserInput === true || 
+                                               targetNode.data.enableTextInput === true ||
+                                               targetNode.data.enablePhotoInput === true ||
+                                               targetNode.data.enableVideoInput === true ||
+                                               targetNode.data.enableAudioInput === true ||
+                                               targetNode.data.enableDocumentInput === true;
+              
               code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
               code += '    if use_conditional_keyboard:\n';
               if (targetCollectInputInline) {
@@ -5043,32 +5288,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `        builder.adjust(${columns})\n`;
               code += '        keyboard = builder.as_markup()\n';
               code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
-
-              // Дополнительно: сохраняем нажатие reply кнопки если включен сбор ответов
-              code += '    \n';
-              code += '    # Сохраняем нажатие reply кнопки если включен сбор ответов\n';
-              code += '    user_id = message.from_user.id\n';
-              code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
-              code += '        import datetime\n';
-              code += '        timestamp = get_moscow_time()\n';
-              code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
-              code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
-              code += '        \n';
-              code += '        response_data = {\n';
-              code += `            "value": "${buttonText}",\n`;
-              code += '            "type": "reply_button",\n';
-              code += '            "timestamp": timestamp,\n';
-              code += '            "nodeId": input_node_id,\n';
-              code += '            "variable": input_variable,\n';
-              code += '            "source": "reply_button_click"\n';
-              code += '        }\n';
-              code += '        \n';
-              code += '        user_data[user_id][f"{input_variable}_button"] = response_data\n';
-              code += '        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")\n';
-
+            
+            // Дополнительно: сохраняем нажатие reply кнопки если включен сбор ответов
+            code += '    \n';
+            code += '    # Сохраняем нажатие reply кнопки если включен сбор ответов\n';
+            code += '    user_id = message.from_user.id\n';
+            code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
+            code += '        import datetime\n';
+            code += '        timestamp = get_moscow_time()\n';
+            code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
+            code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
+            code += '        \n';
+            code += '        response_data = {\n';
+            code += `            "value": "${buttonText}",\n`;
+            code += '            "type": "reply_button",\n';
+            code += '            "timestamp": timestamp,\n';
+            code += '            "nodeId": input_node_id,\n';
+            code += '            "variable": input_variable,\n';
+            code += '            "source": "reply_button_click"\n';
+            code += '        }\n';
+            code += '        \n';
+            code += '        user_data[user_id][f"{input_variable}_button"] = response_data\n';
+            code += '        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")\n';
+            
             } else {
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем проверку условных сообщений для узлов без кнопок
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    # Проверка условных сообщений для целевого узла\n';
                 code += '    conditional_parse_mode = None\n';
                 code += '    conditional_keyboard = None\n';
@@ -5079,15 +5324,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                 code += '    \n';
               }
-
+              
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
-              const targetCollectInputCond = targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true;
-
+              const targetCollectInputCond = targetNode.data.collectUserInput === true || 
+                                             targetNode.data.enableTextInput === true ||
+                                             targetNode.data.enablePhotoInput === true ||
+                                             targetNode.data.enableVideoInput === true ||
+                                             targetNode.data.enableAudioInput === true ||
+                                             targetNode.data.enableDocumentInput === true;
+              
               code += '    # Отправляем сообщение с учетом условной клавиатуры\n';
               code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
               code += '        # Используем условную клавиатуру\n';
@@ -5114,14 +5359,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    else:\n';
               code += '        # Удаляем предыдущие reply клавиатуры если они были\n';
               code += `        await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
-
+              
               // CRITICAL FIX: Если целевой узел требует пользовательского ввода (любого типа: text/photo/video/audio/document), устанавливаем состояние ожидания
-              if (targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true) {
+              if (targetNode.data.collectUserInput === true || 
+                  targetNode.data.enableTextInput === true || 
+                  targetNode.data.enablePhotoInput === true || 
+                  targetNode.data.enableVideoInput === true || 
+                  targetNode.data.enableAudioInput === true || 
+                  targetNode.data.enableDocumentInput === true) {
                 code += '    \n';
                 code += '    # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)\n';
                 code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
@@ -5134,18 +5379,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   // Generate handlers for contact and location buttons
-  const contactButtons = replyNodes.flatMap(node =>
-    node.data.buttons.filter((button: Button) => button.action === 'contact')
+  const contactButtons = replyNodes.flatMap(node => 
+    node.data.buttons.filter(button => button.action === 'contact')
   );
-
-  const locationButtons = replyNodes.flatMap(node =>
-    node.data.buttons.filter((button: Button) => button.action === 'location')
+  
+  const locationButtons = replyNodes.flatMap(node => 
+    node.data.buttons.filter(button => button.action === 'location')
   );
-
-  if (contactButtons?.length > 0 || locationButtons?.length > 0) {
+  
+  if (contactButtons.length > 0 || locationButtons.length > 0) {
     code += '\n# Обработчики специальных кнопок\n';
-
-    if (contactButtons?.length > 0) {
+    
+    if (contactButtons.length > 0) {
       code += '\n@dp.message(F.contact)\n';
       code += 'async def handle_contact(message: types.Message):\n';
       code += '    contact = message.contact\n';
@@ -5154,8 +5399,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += '    text += f"Телефон: {contact.phone_number}"\n';
       code += '    await message.answer(text)\n';
     }
-
-    if (locationButtons?.length > 0) {
+    
+    if (locationButtons.length > 0) {
       code += '\n@dp.message(F.location)\n';
       code += 'async def handle_location(message: types.Message):\n';
       code += '    location = message.location\n';
@@ -5167,21 +5412,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   // Добавляем обработчики кнопочных ответов для узлов сбора ввода
-  const userInputNodes = (nodes || []).filter(node =>
-    node.type === 'message' &&
-    node.data.responseType === 'buttons' &&
-    Array.isArray(node.data.responseOptions) &&
-    node.data.responseOptions?.length > 0
+  const userInputNodes = (nodes || []).filter(node => 
+    node.type === 'message' && 
+    node.data.responseType === 'buttons' && 
+    Array.isArray(node.data.responseOptions) && 
+    node.data.responseOptions.length > 0
   );
 
-  if (userInputNodes?.length > 0) {
+  if (userInputNodes.length > 0) {
     code += '\n# Обработчики кнопочных ответов для сбора пользовательского ввода\n';
-
-    userInputNodes.forEach((node: Node) => {
+    
+    userInputNodes.forEach(node => {
       const responseOptions = node.data.responseOptions || [];
-
+      
       // Обработчики для каждого варианта ответа
-      responseOptions.forEach((option: ResponseOption, index: number) => {
+      responseOptions.forEach((option: string, index: number) => {
         code += `\n@dp.callback_query(F.data == "response_${node.id}_${index}")\n`;
         const safeFunctionName = `${node.id}_${index}`.replace(/[^a-zA-Z0-9_]/g, '_');
         code += `async def handle_response_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
@@ -5245,16 +5490,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '                if next_node_id:\n';
         code += '                    try:\n';
         code += '                        # Вызываем обработчик для следующего узла\n';
-
+        
         // Add navigation for done button
-        if (nodes?.length > 0) {
+        if (nodes.length > 0) {
           nodes.forEach((btnNode, btnIndex) => {
             const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
             const condition = btnIndex === 0 ? 'if' : 'elif';
             code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
             code += `                            await handle_callback_${safeFunctionName}(callback_query)\n`;
           });
-
+          
           code += '                        else:\n';
           code += '                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
         } else {
@@ -5350,7 +5595,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '                message_id=callback_query.message.message_id\n';
         code += '            )\n';
         code += '            \n';
-
+        
         // Добавляем обработку различных команд для button responses
         const commandNodes = (nodes || []).filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
         commandNodes.forEach((cmdNode, cmdIndex) => {
@@ -5361,7 +5606,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `                except Exception as e:\n`;
           code += `                    logging.error(f"Ошибка выполнения команды ${cmdNode.data.command}: {e}")\n`;
         });
-        if (commandNodes?.length > 0) {
+        if (commandNodes.length > 0) {
           code += `            else:\n`;
           code += `                logging.warning(f"Неизвестная команда: {command}")\n`;
         }
@@ -5370,9 +5615,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '            target_node_id = option_target\n';
         code += '            try:\n';
         code += '                # Вызываем обработчик для целевого узла\n';
-
+        
         // Generate navigation logic for button responses  
-        if (nodes?.length > 0) {
+        if (nodes.length > 0) {
           nodes.forEach((btnNode, btnIndex) => {
             const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
             const condition = btnIndex === 0 ? 'if' : 'elif';
@@ -5392,23 +5637,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '        if next_node_id:\n';
         code += '            try:\n';
         code += '                # Вызываем обработчик для следующего узла\n';
-
-        if (nodes?.length > 0) {
-          nodes.forEach((btnNode, btnIndex) => {
-            const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-            const condition = btnIndex === 0 ? 'if' : 'elif';
-            code += `                ${condition} next_node_id == "${btnNode.id}":\n`;
-            code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
-          });
-          code += '                else:\n';
-          code += '                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-        } else {
-          code += '                pass  # No nodes to handle\n';
-        }
-        code += '            except Exception as e:\n';
-        code += '                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+          
+          if (nodes.length > 0) {
+            nodes.forEach((btnNode, btnIndex) => {
+              const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+              const condition = btnIndex === 0 ? 'if' : 'elif';
+              code += `                ${condition} next_node_id == "${btnNode.id}":\n`;
+              code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
+            });
+            code += '                else:\n';
+            code += '                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+          } else {
+            code += '                pass  # No nodes to handle\n';
+          }
+          code += '            except Exception as e:\n';
+          code += '                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
       });
-
+      
       // Обработчик для кнопки "Пропустить"
       if (node.data.allowSkip) {
         code += `\n@dp.callback_query(F.data == "skip_${node.id}")\n`;
@@ -5437,2160 +5682,2160 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '\n\n# Универсальный обработчик пользовательского ввода\n';
     code += '@dp.message(F.text)\n';
     code += 'async def handle_user_input(message: types.Message):\n';
-    code += '    user_id = message.from_user.id\n';
-    code += '    \n';
-    code += '    # Проверяем, ожидаем ли мы ввод для условного сообщения\n';
-    code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
-    code += '        config = user_data[user_id]["waiting_for_conditional_input"]\n';
-    code += '        user_text = message.text\n';
-    code += '        \n';
-    code += '        # ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n';
-    code += '        skip_buttons = config.get("skip_buttons", [])\n';
-    code += '        skip_button_target = None\n';
-    code += '        for skip_btn in skip_buttons:\n';
-    code += '            if skip_btn.get("text") == user_text:\n';
-    code += '                skip_button_target = skip_btn.get("target")\n';
-    code += '                logging.info(f"⏭️ Нажата кнопка с skipDataCollection: {user_text} -> {skip_button_target}")\n';
-    code += '                break\n';
-    code += '        \n';
-    code += '        # Если нажата кнопка пропуска - переходим к её target без сохранения\n';
-    code += '        if skip_button_target:\n';
-    code += '            # Очищаем состояние ожидания\n';
-    code += '            del user_data[user_id]["waiting_for_conditional_input"]\n';
-    code += '            \n';
-    code += '            # Переходим к целевому узлу кнопки\n';
-    code += '            try:\n';
-    code += '                logging.info(f"🚀 Переходим к узлу кнопки skipDataCollection: {skip_button_target}")\n';
-    code += '                import types as aiogram_types\n';
-    code += '                fake_callback = aiogram_types.SimpleNamespace(\n';
-    code += '                    id="skip_button_nav",\n';
-    code += '                    from_user=message.from_user,\n';
-    code += '                    chat_instance="",\n';
-    code += '                    data=skip_button_target,\n';
-    code += '                    message=message,\n';
-    code += '                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
-    code += '                )\n';
-
-    // Генерируем навигацию для кнопок skipDataCollection
-    if (nodes?.length > 0) {
-      nodes.forEach((targetNode, idx) => {
-        const cond = idx === 0 ? 'if' : 'elif';
-        const safeFnName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `                ${cond} skip_button_target == "${targetNode.id}":\n`;
-        code += `                    await handle_callback_${safeFnName}(fake_callback)\n`;
-      });
-      code += '                else:\n';
-      code += '                    logging.warning(f"Неизвестный целевой узел кнопки skipDataCollection: {skip_button_target}")\n';
-    }
-
-    code += '            except Exception as e:\n';
-    code += '                logging.error(f"Ошибка при переходе к узлу кнопки skipDataCollection {skip_button_target}: {e}")\n';
-    code += '            return\n';
-    code += '        \n';
-    code += '        # Сохраняем текстовый ввод для условного сообщения (обычный случай без skipDataCollection)\n';
-    code += '        condition_id = config.get("condition_id", "unknown")\n';
-    code += '        next_node_id = config.get("next_node_id")\n';
-    code += '        \n';
-    code += '        # Сохраняем ответ пользователя\n';
-    code += '        timestamp = get_moscow_time()\n';
-    code += '        # Используем переменную из конфигурации или создаем автоматическую\n';
-    code += '        input_variable = config.get("input_variable", "")\n';
-    code += '        if input_variable:\n';
-    code += '            variable_name = input_variable\n';
-    code += '        else:\n';
-    code += '            variable_name = f"conditional_response_{condition_id}"\n';
-    code += '        \n';
-    code += '        # Сохраняем в пользовательские данные\n';
-    code += '        user_data[user_id][variable_name] = user_text\n';
-    code += '        \n';
-    code += '        # Сохраняем в базу данных\n';
-    code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)\n';
-    code += '        if saved_to_db:\n';
-    code += '            logging.info(f"✅ Условный ответ сохранен в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
-    code += '        else:\n';
-    code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
-    code += '        \n';
-    code += '        # Очищаем состояние ожидания\n';
-    code += '        del user_data[user_id]["waiting_for_conditional_input"]\n';
-    code += '        \n';
-    code += '        logging.info(f"Получен ответ на условное сообщение: {variable_name} = {user_text}")\n';
-    code += '        \n';
-    code += '        # Переходим к следующему узлу если указан\n';
-    code += '        if next_node_id:\n';
-    code += '            try:\n';
-    code += '                logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-    code += '                \n';
-    code += '                # Проверяем, является ли это командой\n';
-    code += '                if next_node_id == "profile_command":\n';
-    code += '                    logging.info("Переход к команде /profile")\n';
-    code += '                    await profile_handler(message)\n';
+  code += '    user_id = message.from_user.id\n';
+  code += '    \n';
+  code += '    # Проверяем, ожидаем ли мы ввод для условного сообщения\n';
+  code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
+  code += '        config = user_data[user_id]["waiting_for_conditional_input"]\n';
+  code += '        user_text = message.text\n';
+  code += '        \n';
+  code += '        # ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n';
+  code += '        skip_buttons = config.get("skip_buttons", [])\n';
+  code += '        skip_button_target = None\n';
+  code += '        for skip_btn in skip_buttons:\n';
+  code += '            if skip_btn.get("text") == user_text:\n';
+  code += '                skip_button_target = skip_btn.get("target")\n';
+  code += '                logging.info(f"⏭️ Нажата кнопка с skipDataCollection: {user_text} -> {skip_button_target}")\n';
+  code += '                break\n';
+  code += '        \n';
+  code += '        # Если нажата кнопка пропуска - переходим к её target без сохранения\n';
+  code += '        if skip_button_target:\n';
+  code += '            # Очищаем состояние ожидания\n';
+  code += '            del user_data[user_id]["waiting_for_conditional_input"]\n';
+  code += '            \n';
+  code += '            # Переходим к целевому узлу кнопки\n';
+  code += '            try:\n';
+  code += '                logging.info(f"🚀 Переходим к узлу кнопки skipDataCollection: {skip_button_target}")\n';
+  code += '                import types as aiogram_types\n';
+  code += '                fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                    id="skip_button_nav",\n';
+  code += '                    from_user=message.from_user,\n';
+  code += '                    chat_instance="",\n';
+  code += '                    data=skip_button_target,\n';
+  code += '                    message=message,\n';
+  code += '                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                )\n';
+  
+  // Генерируем навигацию для кнопок skipDataCollection
+  if (nodes.length > 0) {
+    nodes.forEach((targetNode, idx) => {
+      const cond = idx === 0 ? 'if' : 'elif';
+      const safeFnName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `                ${cond} skip_button_target == "${targetNode.id}":\n`;
+      code += `                    await handle_callback_${safeFnName}(fake_callback)\n`;
+    });
     code += '                else:\n';
-    code += '                    # Создаем фиктивный callback для навигации к обычному узлу\n';
-    code += '                    import types as aiogram_types\n';
-    code += '                    fake_callback = aiogram_types.SimpleNamespace(\n';
-    code += '                        id="conditional_nav",\n';
-    code += '                        from_user=message.from_user,\n';
-    code += '                        chat_instance="",\n';
-    code += '                        data=next_node_id,\n';
-    code += '                        message=message,\n';
-    code += '                        answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
-    code += '                    )\n';
-    code += '                    \n';
+    code += '                    logging.warning(f"Неизвестный целевой узел кнопки skipDataCollection: {skip_button_target}")\n';
+  }
+  
+  code += '            except Exception as e:\n';
+  code += '                logging.error(f"Ошибка при переходе к узлу кнопки skipDataCollection {skip_button_target}: {e}")\n';
+  code += '            return\n';
+  code += '        \n';
+  code += '        # Сохраняем текстовый ввод для условного сообщения (обычный случай без skipDataCollection)\n';
+  code += '        condition_id = config.get("condition_id", "unknown")\n';
+  code += '        next_node_id = config.get("next_node_id")\n';
+  code += '        \n';
+  code += '        # Сохраняем ответ пользователя\n';
+  code += '        timestamp = get_moscow_time()\n';
+  code += '        # Используем переменную из конфигурации или создаем автоматическую\n';
+  code += '        input_variable = config.get("input_variable", "")\n';
+  code += '        if input_variable:\n';
+  code += '            variable_name = input_variable\n';
+  code += '        else:\n';
+  code += '            variable_name = f"conditional_response_{condition_id}"\n';
+  code += '        \n';
+  code += '        # Сохраняем в пользовательские данные\n';
+  code += '        user_data[user_id][variable_name] = user_text\n';
+  code += '        \n';
+  code += '        # Сохраняем в базу данных\n';
+  code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)\n';
+  code += '        if saved_to_db:\n';
+  code += '            logging.info(f"✅ Условный ответ сохранен в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+  code += '        else:\n';
+  code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '        \n';
+  code += '        # Очищаем состояние ожидания\n';
+  code += '        del user_data[user_id]["waiting_for_conditional_input"]\n';
+  code += '        \n';
+  code += '        logging.info(f"Получен ответ на условное сообщение: {variable_name} = {user_text}")\n';
+  code += '        \n';
+  code += '        # Переходим к следующему узлу если указан\n';
+  code += '        if next_node_id:\n';
+  code += '            try:\n';
+  code += '                logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+  code += '                \n';
+  code += '                # Проверяем, является ли это командой\n';
+  code += '                if next_node_id == "profile_command":\n';
+  code += '                    logging.info("Переход к команде /profile")\n';
+  code += '                    await profile_handler(message)\n';
+  code += '                else:\n';
+  code += '                    # Создаем фиктивный callback для навигации к обычному узлу\n';
+  code += '                    import types as aiogram_types\n';
+  code += '                    fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                        id="conditional_nav",\n';
+  code += '                        from_user=message.from_user,\n';
+  code += '                        chat_instance="",\n';
+  code += '                        data=next_node_id,\n';
+  code += '                        message=message,\n';
+  code += '                        answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                    )\n';
+  code += '                    \n';
+  
+  if (nodes.length > 0) {
+    nodes.forEach((targetNode, index) => {
+      const condition = index === 0 ? 'if' : 'elif';
+      const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
+      
+      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
+      if (targetNode.data.allowMultipleSelection === true) {
+        // Для узлов с множественным выбором создаем прямую навигацию
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        code += `                        # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
+        code += `                        logging.info(f"🔧 Условная навигация к узлу с множественным выбором: ${targetNode.id}")\n`;
+        code += `                        text = ${formattedText}\n`;
+        
+        // Замена переменных
+        code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
+        code += generateUniversalVariableReplacement('                        ');
+        
+        // Инициализируем состояние множественного выбора
+        code += `                        # Инициализируем состояние множественного выбора\n`;
+        code += `                        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+        code += `                        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+        code += `                        user_data[user_id]["multi_select_type"] = "selection"\n`;
+        if (targetNode.data.multiSelectVariable) {
+          code += `                        user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
+        }
+        
+        // Создаем inline клавиатуру с кнопками выбора
+        if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+          code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+          code += `                        await message.answer(text, reply_markup=keyboard)\n`;
+        } else {
+          code += `                        await message.answer(text)\n`;
+        }
+        code += `                        logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
+      } else {
+        // Для обычных узлов проверяем сначала, собирают ли они ввод
+        if (targetNode.data.collectUserInput === true) {
+          // Проверяем, есть ли условные сообщения для этого узла
+          const hasConditionalMessages = targetNode.data.enableConditionalMessages && 
+                                        targetNode.data.conditionalMessages && 
+                                        targetNode.data.conditionalMessages.length > 0;
+          
+          if (hasConditionalMessages) {
+            // Для узлов с условными сообщениями генерируем встроенную логику проверки
+            code += `                        # Узел с условными сообщениями - проверяем условия\n`;
+            code += `                        logging.info(f"🔧 Условная навигация к узлу с условными сообщениями: ${targetNode.id}")\n`;
+            code += `                        user_data_dict = await get_user_from_db(user_id) or {}\n`;
+            code += `                        user_data_dict.update(user_data.get(user_id, {}))\n`;
+            
+            // Генерируем логику проверки условий встроенно
+            const conditionalMessages = targetNode.data.conditionalMessages.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+            
+            code += `                        # Функция для проверки переменных пользователя\n`;
+            code += `                        def check_user_variable_inline(var_name, user_data_dict):\n`;
+            code += `                            if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
+            code += `                                try:\n`;
+            code += `                                    import json\n`;
+            code += `                                    parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
+            code += `                                    if var_name in parsed_data:\n`;
+            code += `                                        raw_value = parsed_data[var_name]\n`;
+            code += `                                        if isinstance(raw_value, dict) and "value" in raw_value:\n`;
+            code += `                                            var_value = raw_value["value"]\n`;
+            code += `                                            if var_value is not None and str(var_value).strip() != "":\n`;
+            code += `                                                return True, str(var_value)\n`;
+            code += `                                        else:\n`;
+            code += `                                            if raw_value is not None and str(raw_value).strip() != "":\n`;
+            code += `                                                return True, str(raw_value)\n`;
+            code += `                                except (json.JSONDecodeError, TypeError):\n`;
+            code += `                                    pass\n`;
+            code += `                            if var_name in user_data_dict:\n`;
+            code += `                                variable_data = user_data_dict.get(var_name)\n`;
+            code += `                                if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+            code += `                                    var_value = variable_data["value"]\n`;
+            code += `                                    if var_value is not None and str(var_value).strip() != "":\n`;
+            code += `                                        return True, str(var_value)\n`;
+            code += `                                elif variable_data is not None and str(variable_data).strip() != "":\n`;
+            code += `                                    return True, str(variable_data)\n`;
+            code += `                            return False, None\n`;
+            code += `                        \n`;
+            
+            // Генерируем условия
+            code += `                        conditional_met = False\n`;
+            for (let i = 0; i < conditionalMessages.length; i++) {
+              const condition = conditionalMessages[i];
+              const variableNames = condition.variableNames && condition.variableNames.length > 0 
+                ? condition.variableNames 
+                : (condition.variableName ? [condition.variableName] : []);
+              const logicOperator = condition.logicOperator || 'AND';
+              const conditionKeyword = i === 0 ? 'if' : 'elif';
+              
+              if (condition.condition === 'user_data_exists' && variableNames.length > 0) {
+                code += `                        ${conditionKeyword} (\n`;
+                for (let j = 0; j < variableNames.length; j++) {
+                  const varName = variableNames[j];
+                  const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
+                  code += `                            check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
+                }
+                code += `                        ):\n`;
+                code += `                            conditional_met = True\n`;
+                
+                // Генерируем текст и клавиатуру для условия
+                const cleanedText = stripHtmlTags(condition.messageText);
+                const formattedText = formatTextForPython(cleanedText);
+                code += `                            text = ${formattedText}\n`;
+                
+                // Заменяем переменные
+                for (const varName of variableNames) {
+                  code += `                            _, var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = check_user_variable_inline("${varName}", user_data_dict)\n`;
+                  code += `                            if "{${varName}}" in text and var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} is not None:\n`;
+                  code += `                                text = text.replace("{${varName}}", var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
+                }
+                
+                // Когда условие выполнено (переменная уже есть), отмечаем это
+                code += `                            conditional_met = True\n`;
+                code += `                            logging.info(f"✅ Условие выполнено: переменная существует")\n`;
+                
+                // ИСПРАВЛЕНИЕ: Проверяем, нужно ли ждать ввода
+                const shouldWaitForInput = condition.waitForTextInput === true;
+                
+                if (shouldWaitForInput) {
+                  // Показываем сообщение и настраиваем ожидание ввода
+                  code += `                            # waitForTextInput=true: показываем сообщение и ждем ввода\n`;
+                  
+                  const inputVariable = condition.textInputVariable || targetNode.data.inputVariable || `response_${targetNode.id}`;
+                  const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
+                  
+                  // Проверяем, есть ли кнопки в условном сообщении
+                  const hasConditionalButtons = condition.buttons && condition.buttons.length > 0;
+                  
+                  if (hasConditionalButtons) {
+                    // Генерируем клавиатуру с кнопками из условного сообщения
+                    code += `                            # Генерируем клавиатуру с кнопками из условного сообщения\n`;
+                    code += `                            builder = ReplyKeyboardBuilder()\n`;
+                    
+                    for (const button of condition.buttons) {
+                      let buttonText = button.text || 'Кнопка';
+                      const safeButtonId = button.id.replace(/[^a-zA-Z0-9]/g, '_');
+                      
+                      // Заменяем переменные в тексте кнопки
+                      let hasVariable = false;
+                      for (const varName of variableNames) {
+                        if (buttonText.includes(`{${varName}}`)) {
+                          code += `                            btn_text_${safeButtonId} = "${buttonText}"\n`;
+                          code += `                            _, btn_var_value = check_user_variable_inline("${varName}", user_data_dict)\n`;
+                          code += `                            if btn_var_value is not None:\n`;
+                          code += `                                btn_text_${safeButtonId} = btn_text_${safeButtonId}.replace("{${varName}}", btn_var_value)\n`;
+                          buttonText = `btn_text_${safeButtonId}`;
+                          hasVariable = true;
+                          break;
+                        }
+                      }
+                      
+                      if (!hasVariable) {
+                        buttonText = `"${buttonText}"`;
+                      }
+                      
+                      code += `                            builder.add(KeyboardButton(text=${buttonText}))\n`;
+                    }
+                    
+                    code += `                            builder.adjust(1)\n`;
+                    // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
+                    const conditionOneTimeKeyboard1 = toPythonBoolean(condition.oneTimeKeyboard === true);
+                    code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard1})\n`;
+                    
+                    // Отправляем сообщение с клавиатурой
+                    const mainMessageText = targetNode.data.messageText || 'Выберите действие';
+                    const mainFormattedText = formatTextForPython(mainMessageText);
+                    code += `                            main_text = ${mainFormattedText}\n`;
+                    code += `                            await message.answer(main_text, reply_markup=keyboard)\n`;
+                    
+                    // Устанавливаем ожидание ввода, даже если есть клавиатура
+                    // Пользователь может ввести текст вместо нажатия кнопки
+                    code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
+                    code += `                                "type": "text",\n`;
+                    code += `                                "variable": "${inputVariable}",\n`;
+                    code += `                                "save_to_database": True,\n`;
+                    code += `                                "node_id": "${targetNode.id}",\n`;
+                    code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                    code += `                            }\n`;
+                    code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}")\n`;
+                  } else {
+                    // Нет кнопок - показываем сообщение и ждем текстового ввода
+                    code += `                            # Если условный текст пустой, используем основное сообщение узла\n`;
+                    code += `                            if text and text.strip():\n`;
+                    code += `                                await message.answer(text)\n`;
+                    code += `                            else:\n`;
+                    
+                    // Используем основное сообщение узла
+                    const mainMessageText = targetNode.data.messageText || 'Введите данные';
+                    const mainFormattedText = formatTextForPython(mainMessageText);
+                    code += `                                main_text = ${mainFormattedText}\n`;
+                    code += `                                await message.answer(main_text)\n`;
+                    code += `                            \n`;
+                    
+                    code += `                            # Настраиваем ожидание ввода для условного сообщения\n`;
+                    code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
+                    code += `                                "type": "text",\n`;
+                    code += `                                "variable": "${inputVariable}",\n`;
+                    code += `                                "save_to_database": True,\n`;
+                    code += `                                "node_id": "${targetNode.id}",\n`;
+                    code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                    code += `                            }\n`;
+                    code += `                            logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (условное сообщение, узел ${targetNode.id})")\n`;
+                  }
+                } else {
+                  // ИСПРАВЛЕНИЕ: Проверяем, есть ли кнопки в условном сообщении
+                  const hasConditionalButtons = condition.buttons && condition.buttons.length > 0;
+                  
+                  if (hasConditionalButtons) {
+                    // Если есть условные кнопки - показываем их и НЕ делаем автопереход
+                    // Кнопки сами ведут к целевым узлам
+                    code += `                            # Условное сообщение с кнопками: показываем клавиатуру\n`;
+                    code += `                            builder = ReplyKeyboardBuilder()\n`;
+                    
+                    for (const button of condition.buttons) {
+                      let buttonText = button.text || 'Кнопка';
+                      const safeButtonId = button.id.replace(/[^a-zA-Z0-9]/g, '_');
+                      
+                      // Заменяем переменные в тексте кнопки
+                      let hasVariable = false;
+                      for (const varName of variableNames) {
+                        if (buttonText.includes(`{${varName}}`)) {
+                          code += `                            btn_text_${safeButtonId} = "${buttonText}"\n`;
+                          code += `                            _, btn_var_value = check_user_variable_inline("${varName}", user_data_dict)\n`;
+                          code += `                            if btn_var_value is not None:\n`;
+                          code += `                                btn_text_${safeButtonId} = btn_text_${safeButtonId}.replace("{${varName}}", btn_var_value)\n`;
+                          buttonText = `btn_text_${safeButtonId}`;
+                          hasVariable = true;
+                          break;
+                        }
+                      }
+                      
+                      if (!hasVariable) {
+                        buttonText = `"${buttonText}"`;
+                      }
+                      
+                      code += `                            builder.add(KeyboardButton(text=${buttonText}))\n`;
+                    }
+                    
+                    code += `                            builder.adjust(1)\n`;
+                    // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
+                    const conditionOneTimeKeyboard2 = toPythonBoolean(condition.oneTimeKeyboard === true);
+                    code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard2})\n`;
+                    code += `                            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, node_id="${targetNode.id}")\n`;
+                    code += `                            logging.info(f"✅ Показана условная клавиатура (кнопки ведут напрямую, автопереход НЕ выполняется)")\n`;
+                  } else {
+                    // Нет кнопок - автоматически переходим к следующему узлу
+                    const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
+                    if (nextNodeAfterCondition) {
+                      code += `                            # Переменная уже существует, автоматически переходим к узлу: ${nextNodeAfterCondition}\n`;
+                      code += `                            logging.info(f"✅ Условие выполнено: переменная существует, автоматически переходим к следующему узлу")\n`;
+                      code += `                            # Рекурсивно обрабатываем следующий узел через ту же систему навигации\n`;
+                      code += `                            next_node_id_auto = "${nextNodeAfterCondition}"\n`;
+                      code += `                            logging.info(f"🔄 Автоматический переход к узлу: {next_node_id_auto}")\n`;
+                    } else {
+                      code += `                            # Переменная существует, но следующий узел не указан - завершаем обработку\n`;
+                    }
+                  }
+                }
+              }
+            }
+            
+            // Fallback если условия не выполнены
+            code += `                        if not conditional_met:\n`;
+            code += `                            # Условие не выполнено - показываем основное сообщение\n`;
+            const messageText = targetNode.data.messageText || 'Сообщение';
+            const formattedText = formatTextForPython(messageText);
+            code += `                            text = ${formattedText}\n`;
+            code += `                            await message.answer(text)\n`;
+            
+            const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+            const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+            code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
+            code += `                                "type": "text",\n`;
+            code += `                                "modes": ["text"],\n`;
+            code += `                                "variable": "${inputVariable}",\n`;
+            code += `                                "save_to_database": True,\n`;
+            code += `                                "node_id": "${targetNode.id}",\n`;
+            code += `                                "next_node_id": "${inputTargetNodeId || ''}"\n`;
+            code += `                            }\n`;
+            code += `                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+          } else {
+            const messageText = targetNode.data.messageText || 'Сообщение';
+            const formattedText = formatTextForPython(messageText);
+            
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание ввода
+            if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              code += `                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа\n`;
+              code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput=true")\n`;
+              code += `                        text = ${formattedText}\n`;
+              
+              // Добавляем замену переменных
+              code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
+              code += generateUniversalVariableReplacement('                        ');
+              
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в зависимости от keyboardType
+              if (targetNode.data.keyboardType === 'reply') {
+                code += '                        # Создаем reply клавиатуру\n';
+                code += '                        builder = ReplyKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach((btn: Button) => {
+                  code += `                        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                });
+                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+                code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              } else {
+                // Генерируем inline клавиатуру
+                code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+              }
+              code += `                        await message.answer(text, reply_markup=keyboard)\n`;
+              
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также настраиваем waiting_for_input для сохранения ответа кнопки
+              const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+              const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+              // Определяем modes - если есть enableTextInput, добавляем и text и button
+              const hasTextInput = targetNode.data.enableTextInput === true;
+              const btnModesList = hasTextInput ? "['button', 'text']" : "['button']";
+              code += `                        # Настраиваем ожидание ввода для сохранения ответа кнопки\n`;
+              code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
+              code += `                            "type": "button",\n`;
+              code += `                            "modes": ${hasTextInput ? "['button', 'text']" : "['button']"},\n`;
+              code += `                            "variable": "${inputVariable}",\n`;
+              code += `                            "save_to_database": True,\n`;
+              code += `                            "node_id": "${targetNode.id}",\n`;
+              code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
+              code += `                        }\n`;
+              code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+            } else {
+              // Обычное ожидание ввода если кнопок нет
+              code += `                        # Узел собирает пользовательский ввод\n`;
+              code += `                        logging.info(f"🔧 Условная навигация к узлу с вводом: ${targetNode.id}")\n`;
+              code += `                        text = ${formattedText}\n`;
+              
+              // Настраиваем ожидание ввода
+              const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+              const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+              code += `                        await message.answer(text)\n`;
+              code += `                        # Настраиваем ожидание ввода\n`;
+              code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
+              code += `                            "type": "text",\n`;
+              code += `                            "modes": ["text"],\n`;
+              code += `                            "variable": "${inputVariable}",\n`;
+              code += `                            "save_to_database": True,\n`;
+              code += `                            "node_id": "${targetNode.id}",\n`;
+              code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
+              code += `                        }\n`;
+              code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+            }
+          }
+        } else {
+          // Обычная навигация с простым сообщением
+          const messageText = targetNode.data.messageText || 'Сообщение';
+          const formattedText = formatTextForPython(messageText);
+          code += `                        # Обычный узел - отправляем сообщение\n`;
+          code += `                        text = ${formattedText}\n`;
+          
+          // Добавляем замену переменных
+          code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
+          code += generateUniversalVariableReplacement('                        ');
+          
+          // Проверяем, есть ли reply кнопки
+          if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += '                        # Создаем reply клавиатуру\n';
+            code += '                        builder = ReplyKeyboardBuilder()\n';
+            targetNode.data.buttons.forEach((btn: Button) => {
+              code += `                        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+            });
+            const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+            const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+            code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+            code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
+            code += '                        await message.answer(text, reply_markup=keyboard)\n';
+          } else if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += '                        # Создаем inline клавиатуру\n';
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+            code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
+            code += '                        await message.answer(text, reply_markup=keyboard)\n';
+          } else {
+            code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
+            code += '                        await message.answer(text)\n';
+          }
+        }
+      }
+    });
+    code += '                    else:\n';
+    code += '                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  } else {
+    code += '                    # No nodes available for navigation\n';
+    code += '                    logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+  }
+  
+  code += '            except Exception as e:\n';
+  code += '                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+  code += '        \n';
+  code += '        return  # Завершаем обработку для условного сообщения\n';
+  code += '    \n';
+  code += '    # Проверяем, ожидаем ли мы кнопочный ответ через reply клавиатуру\n';
+  code += '    if user_id in user_data and "button_response_config" in user_data[user_id]:\n';
+  code += '        config = user_data[user_id]["button_response_config"]\n';
+  code += '        user_text = message.text\n';
+  code += '        \n';
+  code += '        # Ищем выбранный вариант среди доступных опций\n';
+  code += '        selected_option = None\n';
+  code += '        for option in config.get("options", []):\n';
+  code += '            if option["text"] == user_text:\n';
+  code += '                selected_option = option\n';
+  code += '                break\n';
+  code += '        \n';
+  code += '        if selected_option:\n';
+  code += '            selected_value = selected_option["value"]\n';
+  code += '            selected_text = selected_option["text"]\n';
+  code += '            \n';
+  code += '            # Сохраняем ответ пользователя\n';
+  code += '            variable_name = config.get("variable", "button_response")\n';
+  code += '            timestamp = get_moscow_time()\n';
+  code += '            node_id = config.get("node_id", "unknown")\n';
+  code += '            \n';
+  code += '            # Создаем структурированный ответ\n';
+  code += '            response_data = {\n';
+  code += '                "value": selected_value,\n';
+  code += '                "text": selected_text,\n';
+  code += '                "type": "button_choice",\n';
+  code += '                "timestamp": timestamp,\n';
+  code += '                "nodeId": node_id,\n';
+  code += '                "variable": variable_name\n';
+  code += '            }\n';
+  code += '            \n';
+  code += '            # Сохраняем в пользовательские данные\n';
+  code += '            user_data[user_id][variable_name] = response_data\n';
+  code += '            \n';
+  code += '            # Сохраняем в базу данных если включено\n';
+  code += '            if config.get("save_to_database"):\n';
+  code += '                saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
+  code += '                if saved_to_db:\n';
+  code += '                    logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")\n';
+  code += '                else:\n';
+  code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '            \n';
+  code += '            # Отправляем сообщение об успехе\n';
+  code += '            success_message = config.get("success_message", "Спасибо за ваш выбор!")\n';
+  code += '            await message.answer(f"{success_message}\\n\\n✅ Ваш выбор: {selected_text}", reply_markup=ReplyKeyboardRemove())\n';
+  code += '            \n';
+  code += '            # Очищаем состояние\n';
+  code += '            del user_data[user_id]["button_response_config"]\n';
+  code += '            \n';
+  code += '            logging.info(f"Получен кнопочный ответ через reply клавиатуру: {variable_name} = {selected_text}")\n';
+  code += '            \n';
+  code += '            # Навигация на основе действия кнопки\n';
+  code += '            option_action = selected_option.get("action", "goto")\n';
+  code += '            option_target = selected_option.get("target", "")\n';
+  code += '            option_url = selected_option.get("url", "")\n';
+  code += '            \n';
+  code += '            if option_action == "url" and option_url:\n';
+  code += '                # Открытие ссылки\n';
+  code += '                url = option_url\n';
+  code += '                keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
+  code += '                    [InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]\n';
+  code += '                ])\n';
+  code += '                await message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)\n';
+  code += '            elif option_action == "command" and option_target:\n';
+  code += '                # Выполнение команды\n';
+  code += '                command = option_target\n';
+  code += '                # Создаем фиктивное сообщение для выполнения команды\n';
+  code += '                import types as aiogram_types\n';
+  code += '                fake_message = aiogram_types.SimpleNamespace(\n';
+  code += '                    from_user=message.from_user,\n';
+  code += '                    chat=message.chat,\n';
+  code += '                    text=command,\n';
+  code += '                    message_id=message.message_id\n';
+  code += '                )\n';
+  code += '                \n';
+  
+  // Добавляем обработку различных команд для reply клавиатур
+  const commandNodes = (nodes || []).filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
+  commandNodes.forEach((cmdNode, cmdIndex) => {
+    const condition = cmdIndex === 0 ? 'if' : 'elif';
+    code += `                ${condition} command == "${cmdNode.data.command}":\n`;
+    code += `                    try:\n`;
+    code += `                        await ${cmdNode.type === 'start' ? 'start_handler' : `${cmdNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`}(fake_message)\n`;
+    code += `                    except Exception as e:\n`;
+    code += `                        logging.error(f"Ошибка выполнения команды ${cmdNode.data.command}: {e}")\n`;
+  });
+  if (commandNodes.length > 0) {
+    code += `                else:\n`;
+    code += `                    logging.warning(f"Неизвестная команда: {command}")\n`;
+  }
+  
+  code += '            elif option_action == "goto" and option_target:\n';
+  code += '                # Переход к узлу\n';
+  code += '                target_node_id = option_target\n';
+  code += '                try:\n';
+  code += '                    # Вызываем обработчик для целевого узла\n';
 
-    if (nodes?.length > 0) {
-      nodes.forEach((targetNode, index) => {
-        const condition = index === 0 ? 'if' : 'elif';
-        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
+  // Generate navigation logic for reply button responses  
+  if (nodes.length > 0) {
+    nodes.forEach((btnNode, btnIndex) => {
+      const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      const condition = btnIndex === 0 ? 'if' : 'elif';
+      code += `                    ${condition} target_node_id == "${btnNode.id}":\n`;
+      code += `                        await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))\n`;
+    });
+    code += '                    else:\n';
+    code += '                        logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
+  } else {
+    code += '                    pass  # No nodes to handle\n';
+  }
+  code += '                except Exception as e:\n';
+  code += '                    logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")\n';
+  code += '            else:\n';
+  code += '                # Fallback к старой системе next_node_id если нет action\n';
+  code += '                next_node_id = config.get("next_node_id")\n';
+  code += '                if next_node_id:\n';
+  code += '                    try:\n';
+  code += '                        # Вызываем обработчик для следующего узла\n';
+  
+  if (nodes.length > 0) {
+    nodes.forEach((btnNode, btnIndex) => {
+      const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      const condition = btnIndex === 0 ? 'if' : 'elif';
+      code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
+      code += `                            await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+    });
+    code += '                        else:\n';
+    code += '                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  } else {
+    code += '                        pass  # No nodes to handle\n';
+  }
+  code += '                    except Exception as e:\n';
+  code += '                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+  code += '            return\n';
+  code += '        else:\n';
+  code += '            # Неверный выбор - показываем доступные варианты\n';
+  code += '            available_options = [option["text"] for option in config.get("options", [])]\n';
+  code += '            options_text = "\\n".join([f"• {opt}" for opt in available_options])\n';
+  code += '            await message.answer(f"❌ Неверный выбор. Пожалуйста, выберите один из предложенных вариантов:\\n\\n{options_text}")\n';
+  code += '            return\n';
+  code += '    \n';
+  code += '    # ИСПРАВЛЕНИЕ: Проверяем pending_skip_buttons для медиа-узлов (фото/видео/аудио)\n';
+  code += '    # Эта проверка нужна когда узел ожидает медиа, но пользователь нажал reply-кнопку с skipDataCollection\n';
+  code += '    if user_id in user_data and "pending_skip_buttons" in user_data[user_id]:\n';
+  code += '        pending_buttons = user_data[user_id]["pending_skip_buttons"]\n';
+  code += '        user_text = message.text\n';
+  code += '        for skip_btn in pending_buttons:\n';
+  code += '            if skip_btn.get("text") == user_text:\n';
+  code += '                skip_target = skip_btn.get("target")\n';
+  code += '                logging.info(f"⏭️ Нажата кнопка skipDataCollection для медиа-узла: {user_text} -> {skip_target}")\n';
+  code += '                # Очищаем pending_skip_buttons и любые медиа-ожидания\n';
+  code += '                if "pending_skip_buttons" in user_data[user_id]:\n';
+  code += '                    del user_data[user_id]["pending_skip_buttons"]\n';
+  code += '                for media_wait in ["waiting_for_photo", "waiting_for_video", "waiting_for_audio", "waiting_for_document"]:\n';
+  code += '                    if media_wait in user_data[user_id]:\n';
+  code += '                        del user_data[user_id][media_wait]\n';
+  code += '                # Переходим к целевому узлу\n';
+  code += '                if skip_target:\n';
+  code += '                    try:\n';
+  code += '                        logging.info(f"🚀 Переходим к узлу skipDataCollection медиа: {skip_target}")\n';
+  code += '                        import types as aiogram_types\n';
+  code += '                        fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                            id="skip_media_nav",\n';
+  code += '                            from_user=message.from_user,\n';
+  code += '                            chat_instance="",\n';
+  code += '                            data=skip_target,\n';
+  code += '                            message=message,\n';
+  code += '                            answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                        )\n';
 
+  // Добавляем навигацию для skip_buttons медиа-узлов
+  if (nodes.length > 0) {
+    nodes.forEach((mediaSkipNode, mediaSkipIdx) => {
+      const mediaSkipCond = mediaSkipIdx === 0 ? 'if' : 'elif';
+      const mediaSkipFnName = mediaSkipNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `                        ${mediaSkipCond} skip_target == "${mediaSkipNode.id}":\n`;
+      code += `                            await handle_callback_${mediaSkipFnName}(fake_callback)\n`;
+    });
+    code += '                        else:\n';
+    code += '                            logging.warning(f"Неизвестный целевой узел skipDataCollection медиа: {skip_target}")\n';
+  }
+
+  code += '                    except Exception as e:\n';
+  code += '                        logging.error(f"Ошибка при переходе к узлу skipDataCollection медиа {skip_target}: {e}")\n';
+  code += '                return\n';
+  code += '    \n';
+  code += '    # Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)\n';
+  code += '    has_waiting_state = user_id in user_data and "waiting_for_input" in user_data[user_id]\n';
+  code += '    logging.info(f"DEBUG: Получен текст {message.text}, состояние ожидания: {has_waiting_state}")\n';
+  code += '    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
+  code += '        # Обрабатываем ввод через универсальную систему\n';
+  code += '        waiting_config = user_data[user_id]["waiting_for_input"]\n';
+  code += '        \n';
+  code += '        # Проверяем, что пользователь все еще находится в состоянии ожидания ввода\n';
+  code += '        if not waiting_config:\n';
+  code += '            return  # Состояние ожидания пустое, игнорируем\n';
+  code += '        \n';
+  code += '        # Проверяем формат конфигурации - новый (словарь) или старый (строка)\n';
+  code += '        if isinstance(waiting_config, dict):\n';
+  code += '            # Новый формат - извлекаем данные из словаря\n';
+  code += '            waiting_node_id = waiting_config.get("node_id")\n';
+  code += '            input_type = waiting_config.get("type", "text")\n';
+  code += '            variable_name = waiting_config.get("variable", "user_response")\n';
+  code += '            save_to_database = waiting_config.get("save_to_database", False)\n';
+  code += '            min_length = waiting_config.get("min_length", 0)\n';
+  code += '            max_length = waiting_config.get("max_length", 0)\n';
+  code += '            next_node_id = waiting_config.get("next_node_id")\n';
+  code += '        else:\n';
+  code += '            # Старый формат - waiting_config это строка с node_id\n';
+  code += '            waiting_node_id = waiting_config\n';
+  code += '            input_type = user_data[user_id].get("input_type", "text")\n';
+  code += '            variable_name = user_data[user_id].get("input_variable", "user_response")\n';
+  code += '            save_to_database = user_data[user_id].get("save_to_database", False)\n';
+  code += '            min_length = 0\n';
+  code += '            max_length = 0\n';
+  code += '            next_node_id = user_data[user_id].get("waiting_input_target_node_id") or user_data[user_id].get("input_target_node_id")\n';
+  code += '        \n';
+  code += '        user_text = message.text\n';
+  code += '        \n';
+  code += '        # ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n';
+  code += '        if isinstance(waiting_config, dict):\n';
+  code += '            skip_buttons = waiting_config.get("skip_buttons", [])\n';
+  code += '            for skip_btn in skip_buttons:\n';
+  code += '                if skip_btn.get("text") == user_text:\n';
+  code += '                    skip_target = skip_btn.get("target")\n';
+  code += '                    logging.info(f"⏭️ Нажата кнопка skipDataCollection в waiting_for_input: {user_text} -> {skip_target}")\n';
+  code += '                    # Очищаем состояние ожидания\n';
+  code += '                    if "waiting_for_input" in user_data[user_id]:\n';
+  code += '                        del user_data[user_id]["waiting_for_input"]\n';
+  code += '                    # Переходим к целевому узлу\n';
+  code += '                    if skip_target:\n';
+  code += '                        try:\n';
+  code += '                            logging.info(f"🚀 Переходим к узлу skipDataCollection: {skip_target}")\n';
+  code += '                            import types as aiogram_types\n';
+  code += '                            fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                                id="skip_button_nav",\n';
+  code += '                                from_user=message.from_user,\n';
+  code += '                                chat_instance="",\n';
+  code += '                                data=skip_target,\n';
+  code += '                                message=message,\n';
+  code += '                                answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                            )\n';
+
+  // Добавляем навигацию для кнопок skipDataCollection
+  if (nodes.length > 0) {
+    nodes.forEach((skipNode, skipIdx) => {
+      const skipCond = skipIdx === 0 ? 'if' : 'elif';
+      const skipFnName = skipNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `                            ${skipCond} skip_target == "${skipNode.id}":\n`;
+      code += `                                await handle_callback_${skipFnName}(fake_callback)\n`;
+    });
+    code += '                            else:\n';
+    code += '                                logging.warning(f"Неизвестный целевой узел skipDataCollection: {skip_target}")\n';
+  }
+
+  code += '                        except Exception as e:\n';
+  code += '                            logging.error(f"Ошибка при переходе к узлу skipDataCollection {skip_target}: {e}")\n';
+  code += '                    return\n';
+  code += '        \n';
+  code += '        # Валидация для нового формата\n';
+  code += '        if isinstance(waiting_config, dict):\n';
+  code += '            # Валидация длины\n';
+  code += '            if min_length > 0 and len(user_text) < min_length:\n';
+  code += '                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")\n';
+  code += '                return\n';
+  code += '            \n';
+  code += '            if max_length > 0 and len(user_text) > max_length:\n';
+  code += '                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")\n';
+  code += '                return\n';
+  code += '            \n';
+  code += '            # Валидация типа ввода\n';
+  code += '            if input_type == "email":\n';
+  code += '                import re\n';
+  code += '                email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n';
+  code += '                if not re.match(email_pattern, user_text):\n';
+  code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                    await message.answer(f"❌ Неверный формат email. {retry_message}")\n';
+  code += '                    return\n';
+  code += '            elif input_type == "number":\n';
+  code += '                try:\n';
+  code += '                    float(user_text)\n';
+  code += '                except ValueError:\n';
+  code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                    await message.answer(f"❌ Введите корректное число. {retry_message}")\n';
+  code += '                    return\n';
+  code += '            elif input_type == "phone":\n';
+  code += '                import re\n';
+  code += '                phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n';
+  code += '                if not re.match(phone_pattern, user_text):\n';
+  code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                    await message.answer(f"❌ Неверный формат телефона. {retry_message}")\n';
+  code += '                    return\n';
+  code += '            \n';
+  code += '            # Сохраняем ответ для нового формата\n';
+  code += '            timestamp = get_moscow_time()\n';
+  code += '            response_data = user_text\n';
+  code += '            \n';
+  code += '            # Сохраняем в пользовательские данные\n';
+  code += '            user_data[user_id][variable_name] = response_data\n';
+  code += '            \n';
+  code += '            # Сохраняем в базу данных если включено\n';
+  code += '            if save_to_database:\n';
+  code += '                saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
+  code += '                if saved_to_db:\n';
+  code += '                    logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+  code += '                else:\n';
+  code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '            \n';
+  code += '            # Отправляем подтверждающее сообщение только если оно задано\n';
+  code += '            success_message = waiting_config.get("success_message", "")\n';
+  code += '            if success_message:\n';
+  code += '                logging.info(f"DEBUG: Отправляем подтверждение с текстом: {success_message}")\n';
+  code += '                await message.answer(success_message)\n';
+  code += '                logging.info(f"✅ Отправлено подтверждение: {success_message}")\n';
+  code += '            \n';
+  code += '            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем старое состояние ожидания перед навигацией\n';
+  code += '            if "waiting_for_input" in user_data[user_id]:\n';
+  code += '                del user_data[user_id]["waiting_for_input"]\n';
+  code += '            \n';
+  code += '            logging.info(f"✅ Переход к следующему узлу выполнен успешно")\n';
+  code += '            logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")\n';
+  code += '            \n';
+  code += '            # Навигация к следующему узлу для нового формата\n';
+  code += '            if next_node_id:\n';
+  code += '                try:\n';
+  code += '                    # Цикл для поддержки автопереходов\n';
+  code += '                    while next_node_id:\n';
+  code += '                        logging.info(f"🚀 Переходим к узлу: {next_node_id}")\n';
+  code += '                        current_node_id = next_node_id\n';
+  code += '                        next_node_id = None  # Сбрасываем, будет установлен при автопереходе\n';
+  code += '                        # Проверяем навигацию к узлам\n';
+  
+  // Функция для генерации отступов (решение архитектора)
+  const indent = (level: number) => '    '.repeat(level);
+  const BASE_INDENT_LEVEL = 6; // Базовый уровень (внутри try блока)
+  const whileIndent = indent(BASE_INDENT_LEVEL);      // 24 пробела - уровень while
+  const conditionIndent = indent(BASE_INDENT_LEVEL);  // 24 пробела - уровень if/elif
+  const bodyIndent = indent(BASE_INDENT_LEVEL + 1);   // 28 пробелов - тело if/elif
+  
+  // Добавляем навигацию для каждого узла
+  if (nodes.length > 0) {
+    nodes.forEach((targetNode, index) => {
+      const condition = index === 0 ? 'if' : 'elif';
+      code += `${conditionIndent}${condition} current_node_id == "${targetNode.id}":\n`;
+      
+      if (targetNode.type === 'message') {
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
         if (targetNode.data.allowMultipleSelection === true) {
           // Для узлов с множественным выбором создаем прямую навигацию
           const messageText = targetNode.data.messageText || 'Сообщение';
           const formattedText = formatTextForPython(messageText);
-          code += `                        # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
-          code += `                        logging.info(f"🔧 Условная навигация к узлу с множественным выбором: ${targetNode.id}")\n`;
-          code += `                        text = ${formattedText}\n`;
-
+          code += `${bodyIndent}# Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
+          code += `${bodyIndent}logging.info(f"🔧 Переходим к узлу с множественным выбором: ${targetNode.id}")\n`;
+          code += `${bodyIndent}text = ${formattedText}\n`;
+          
           // Замена переменных
-          code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
-          code += generateUniversalVariableReplacement('                        ');
-
+          code += `${bodyIndent}user_data[user_id] = user_data.get(user_id, {})\n`;
+          code += generateUniversalVariableReplacement(bodyIndent);
+          
           // Инициализируем состояние множественного выбора
-          code += `                        # Инициализируем состояние множественного выбора\n`;
-          code += `                        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
-          code += `                        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
-          code += `                        user_data[user_id]["multi_select_type"] = "selection"\n`;
+          code += `${bodyIndent}# Инициализируем состояние множественного выбора\n`;
+          code += `${bodyIndent}user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+          code += `${bodyIndent}user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+          code += `${bodyIndent}user_data[user_id]["multi_select_type"] = "selection"\n`;
           if (targetNode.data.multiSelectVariable) {
-            code += `                        user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
+            code += `${bodyIndent}user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
           }
-
+          
           // Создаем inline клавиатуру с кнопками выбора
-          if (targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-            code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
-            code += `                        await message.answer(text, reply_markup=keyboard)\n`;
+          if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += generateInlineKeyboardCode(targetNode.data.buttons, bodyIndent, targetNode.id, targetNode.data, allNodeIds);
+            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
           } else {
-            code += `                        await message.answer(text)\n`;
+            code += `${bodyIndent}await message.answer(text)\n`;
           }
-          code += `                        logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
+          code += `${bodyIndent}logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
         } else {
-          // Для обычных узлов проверяем сначала, собирают ли они ввод
+          const messageText = targetNode.data.messageText || 'Сообщение';
+          const cleanedMessageText = stripHtmlTags(messageText);
+          const formattedText = formatTextForPython(cleanedMessageText);
+          code += `${bodyIndent}text = ${formattedText}\n`;
+          
+          // Применяем замену переменных
+          code += `${bodyIndent}# Замена переменных в тексте\n`;
+          code += generateUniversalVariableReplacement(bodyIndent);
+          
+          // Если узел message собирает ввод, настраиваем ожидание
           if (targetNode.data.collectUserInput === true) {
-            // Проверяем, есть ли условные сообщения для этого узла
-            const hasConditionalMessages = targetNode.data.enableConditionalMessages &&
-              targetNode.data.conditionalMessages &&
-              targetNode.data.conditionalMessages?.length > 0;
-
-            if (hasConditionalMessages) {
-              // Для узлов с условными сообщениями генерируем встроенную логику проверки
-              code += `                        # Узел с условными сообщениями - проверяем условия\n`;
-              code += `                        logging.info(f"🔧 Условная навигация к узлу с условными сообщениями: ${targetNode.id}")\n`;
-              code += `                        user_data_dict = await get_user_from_db(user_id) or {}\n`;
-              code += `                        user_data_dict.update(user_data.get(user_id, {}))\n`;
-
-              // Генерируем логику проверки условий встроенно
-              const conditionalMessages = targetNode.data.conditionalMessages.sort((a: ConditionalMessage, b: ConditionalMessage) => (b.priority || 0) - (a.priority || 0));
-
-              code += `                        # Функция для проверки переменных пользователя\n`;
-              code += `                        def check_user_variable_inline(var_name, user_data_dict):\n`;
-              code += `                            if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
-              code += `                                try:\n`;
-              code += `                                    import json\n`;
-              code += `                                    parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
-              code += `                                    if var_name in parsed_data:\n`;
-              code += `                                        raw_value = parsed_data[var_name]\n`;
-              code += `                                        if isinstance(raw_value, dict) and "value" in raw_value:\n`;
-              code += `                                            var_value = raw_value["value"]\n`;
-              code += `                                            if var_value is not None and str(var_value).strip() != "":\n`;
-              code += `                                                return True, str(var_value)\n`;
-              code += `                                        else:\n`;
-              code += `                                            if raw_value is not None and str(raw_value).strip() != "":\n`;
-              code += `                                                return True, str(raw_value)\n`;
-              code += `                                except (json.JSONDecodeError, TypeError):\n`;
-              code += `                                    pass\n`;
-              code += `                            if var_name in user_data_dict:\n`;
-              code += `                                variable_data = user_data_dict.get(var_name)\n`;
-              code += `                                if isinstance(variable_data, dict) and "value" in variable_data:\n`;
-              code += `                                    var_value = variable_data["value"]\n`;
-              code += `                                    if var_value is not None and str(var_value).strip() != "":\n`;
-              code += `                                        return True, str(var_value)\n`;
-              code += `                                elif variable_data is not None and str(variable_data).strip() != "":\n`;
-              code += `                                    return True, str(variable_data)\n`;
-              code += `                            return False, None\n`;
-              code += `                        \n`;
-
-              // Генерируем условия
-              code += `                        conditional_met = False\n`;
-              for (let i = 0; i < conditionalMessages.length; i++) {
-                const condition = conditionalMessages[i];
-                const variableNames = condition.variableNames && condition.variableNames?.length > 0
-                  ? condition.variableNames
-                  : (condition.variableName ? [condition.variableName] : []);
-                const logicOperator = condition.logicOperator || 'AND';
-                const conditionKeyword = i === 0 ? 'if' : 'elif';
-
-                if (condition.condition === 'user_data_exists' && variableNames?.length > 0) {
-                  code += `                        ${conditionKeyword} (\n`;
-                  for (let j = 0; j < variableNames.length; j++) {
-                    const varName = variableNames[j];
-                    const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-                    code += `                            check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
-                  }
-                  code += `                        ):\n`;
-                  code += `                            conditional_met = True\n`;
-
-                  // Генерируем текст и клавиатуру для условия
-                  const cleanedText = stripHtmlTags(condition.messageText);
-                  const formattedText = formatTextForPython(cleanedText);
-                  code += `                            text = ${formattedText}\n`;
-
-                  // Заменяем переменные
-                  for (const varName of variableNames) {
-                    code += `                            _, var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = check_user_variable_inline("${varName}", user_data_dict)\n`;
-                    code += `                            if "{${varName}}" in text and var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} is not None:\n`;
-                    code += `                                text = text.replace("{${varName}}", var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
-                  }
-
-                  // Когда условие выполнено (переменная уже есть), отмечаем это
-                  code += `                            conditional_met = True\n`;
-                  code += `                            logging.info(f"✅ Условие выполнено: переменная существует")\n`;
-
-                  // ИСПРАВЛЕНИЕ: Проверяем, нужно ли ждать ввода
-                  const shouldWaitForInput = condition.waitForTextInput === true;
-
-                  if (shouldWaitForInput) {
-                    // Показываем сообщение и настраиваем ожидание ввода
-                    code += `                            # waitForTextInput=true: показываем сообщение и ждем ввода\n`;
-
-                    const inputVariable = condition.textInputVariable || targetNode.data.inputVariable || `response_${targetNode.id}`;
-                    const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
-
-                    // Проверяем, есть ли кнопки в условном сообщении
-                    const hasConditionalButtons = condition.buttons && condition.buttons?.length > 0;
-
-                    if (hasConditionalButtons) {
-                      // Генерируем клавиатуру с кнопками из условного сообщения
-                      code += `                            # Генерируем клавиатуру с кнопками из условного сообщения\n`;
-                      code += `                            builder = ReplyKeyboardBuilder()\n`;
-
-                      for (const button of condition.buttons) {
-                        let buttonText = button.text || 'Кнопка';
-                        const safeButtonId = button.id.replace(/[^a-zA-Z0-9]/g, '_');
-
-                        // Заменяем переменные в тексте кнопки
-                        let hasVariable = false;
-                        for (const varName of variableNames) {
-                          if (buttonText.includes(`{${varName}}`)) {
-                            code += `                            btn_text_${safeButtonId} = "${buttonText}"\n`;
-                            code += `                            _, btn_var_value = check_user_variable_inline("${varName}", user_data_dict)\n`;
-                            code += `                            if btn_var_value is not None:\n`;
-                            code += `                                btn_text_${safeButtonId} = btn_text_${safeButtonId}.replace("{${varName}}", btn_var_value)\n`;
-                            buttonText = `btn_text_${safeButtonId}`;
-                            hasVariable = true;
-                            break;
-                          }
-                        }
-
-                        if (!hasVariable) {
-                          buttonText = `"${buttonText}"`;
-                        }
-
-                        code += `                            builder.add(KeyboardButton(text=${buttonText}))\n`;
-                      }
-
-                      code += `                            builder.adjust(1)\n`;
-                      // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
-                      const conditionOneTimeKeyboard1 = toPythonBoolean(condition.oneTimeKeyboard === true);
-                      code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard1})\n`;
-
-                      // Отправляем сообщение с клавиатурой
-                      const mainMessageText = targetNode.data.messageText || 'Выберите действие';
-                      const mainFormattedText = formatTextForPython(mainMessageText);
-                      code += `                            main_text = ${mainFormattedText}\n`;
-                      code += `                            await message.answer(main_text, reply_markup=keyboard)\n`;
-
-                      // Устанавливаем ожидание ввода, даже если есть клавиатура
-                      // Пользователь может ввести текст вместо нажатия кнопки
-                      code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
-                      code += `                                "type": "text",\n`;
-                      code += `                                "variable": "${inputVariable}",\n`;
-                      code += `                                "save_to_database": True,\n`;
-                      code += `                                "node_id": "${targetNode.id}",\n`;
-                      code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
-                      code += `                            }\n`;
-                      code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}")\n`;
-                    } else {
-                      // Нет кнопок - показываем сообщение и ждем текстового ввода
-                      code += `                            # Если условный текст пустой, используем основное сообщение узла\n`;
-                      code += `                            if text and text.strip():\n`;
-                      code += `                                await message.answer(text)\n`;
-                      code += `                            else:\n`;
-
-                      // Используем основное сообщение узла
-                      const mainMessageText = targetNode.data.messageText || 'Введите данные';
-                      const mainFormattedText = formatTextForPython(mainMessageText);
-                      code += `                                main_text = ${mainFormattedText}\n`;
-                      code += `                                await message.answer(main_text)\n`;
-                      code += `                            \n`;
-
-                      code += `                            # Настраиваем ожидание ввода для условного сообщения\n`;
-                      code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
-                      code += `                                "type": "text",\n`;
-                      code += `                                "variable": "${inputVariable}",\n`;
-                      code += `                                "save_to_database": True,\n`;
-                      code += `                                "node_id": "${targetNode.id}",\n`;
-                      code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
-                      code += `                            }\n`;
-                      code += `                            logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (условное сообщение, узел ${targetNode.id})")\n`;
-                    }
-                  } else {
-                    // ИСПРАВЛЕНИЕ: Проверяем, есть ли кнопки в условном сообщении
-                    const hasConditionalButtons = condition.buttons && condition.buttons?.length > 0;
-
-                    if (hasConditionalButtons) {
-                      // Если есть условные кнопки - показываем их и НЕ делаем автопереход
-                      // Кнопки сами ведут к целевым узлам
-                      code += `                            # Условное сообщение с кнопками: показываем клавиатуру\n`;
-                      code += `                            builder = ReplyKeyboardBuilder()\n`;
-
-                      for (const button of condition.buttons) {
-                        let buttonText = button.text || 'Кнопка';
-                        const safeButtonId = button.id.replace(/[^a-zA-Z0-9]/g, '_');
-
-                        // Заменяем переменные в тексте кнопки
-                        let hasVariable = false;
-                        for (const varName of variableNames) {
-                          if (buttonText.includes(`{${varName}}`)) {
-                            code += `                            btn_text_${safeButtonId} = "${buttonText}"\n`;
-                            code += `                            _, btn_var_value = check_user_variable_inline("${varName}", user_data_dict)\n`;
-                            code += `                            if btn_var_value is not None:\n`;
-                            code += `                                btn_text_${safeButtonId} = btn_text_${safeButtonId}.replace("{${varName}}", btn_var_value)\n`;
-                            buttonText = `btn_text_${safeButtonId}`;
-                            hasVariable = true;
-                            break;
-                          }
-                        }
-
-                        if (!hasVariable) {
-                          buttonText = `"${buttonText}"`;
-                        }
-
-                        code += `                            builder.add(KeyboardButton(text=${buttonText}))\n`;
-                      }
-
-                      code += `                            builder.adjust(1)\n`;
-                      // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
-                      const conditionOneTimeKeyboard2 = toPythonBoolean(condition.oneTimeKeyboard === true);
-                      code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard2})\n`;
-                      code += `                            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, node_id="${targetNode.id}")\n`;
-                      code += `                            logging.info(f"✅ Показана условная клавиатура (кнопки ведут напрямую, автопереход НЕ выполняется)")\n`;
-                    } else {
-                      // Нет кнопок - автоматически переходим к следующему узлу
+          const inputType = targetNode.data.inputType || 'text';
+          const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+          const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки, показываем их ВМЕСТО ожидания текста
+          if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += `${bodyIndent}# ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания текста\n`;
+            code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
+            
+            // Добавляем кнопки для узла с collectUserInput + buttons
+            targetNode.data.buttons.forEach((btn: Button, btnIndex: number) => {
+              if (btn.action === "goto" && btn.target) {
+                const callbackData = `${btn.target}`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
+              } else if (btn.action === "url" && btn.url) {
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url}"))\n`;
+              } else if (btn.action === "command" && btn.target) {
+                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
+              }
+            });
+            
+            const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+            code += `${bodyIndent}builder.adjust(${columns})\n`;
+            code += `${bodyIndent}keyboard = builder.as_markup()\n`;
+            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+            code += `${bodyIndent}logging.info(f"✅ Показаны inline кнопки для узла ${targetNode.id} с collectUserInput")\n`;
+          } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            // Проверяем, есть ли условные сообщения
+            if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+              code += `${bodyIndent}# Узел с условными сообщениями - проверяем условия\n`;
+              code += `${bodyIndent}logging.info(f"🔧 Обработка узла с условными сообщениями: ${targetNode.id}")\n`;
+              code += `${bodyIndent}user_data_dict = await get_user_from_db(user_id) or {}\n`;
+              code += `${bodyIndent}user_data_dict.update(user_data.get(user_id, {}))\n`;
+              code += `${bodyIndent}# Функция для проверки переменных пользователя\n`;
+              code += `${bodyIndent}def check_user_variable_inline(var_name, user_data_dict):\n`;
+              code += `${bodyIndent}    if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
+              code += `${bodyIndent}        try:\n`;
+              code += `${bodyIndent}            import json\n`;
+              code += `${bodyIndent}            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
+              code += `${bodyIndent}            if var_name in parsed_data:\n`;
+              code += `${bodyIndent}                raw_value = parsed_data[var_name]\n`;
+              code += `${bodyIndent}                if isinstance(raw_value, dict) and "value" in raw_value:\n`;
+              code += `${bodyIndent}                    var_value = raw_value["value"]\n`;
+              code += `${bodyIndent}                    if var_value is not None and str(var_value).strip() != "":\n`;
+              code += `${bodyIndent}                        return True, str(var_value)\n`;
+              code += `${bodyIndent}                else:\n`;
+              code += `${bodyIndent}                    if raw_value is not None and str(raw_value).strip() != "":\n`;
+              code += `${bodyIndent}                        return True, str(raw_value)\n`;
+              code += `${bodyIndent}        except (json.JSONDecodeError, TypeError):\n`;
+              code += `${bodyIndent}            pass\n`;
+              code += `${bodyIndent}    if var_name in user_data_dict:\n`;
+              code += `${bodyIndent}        variable_data = user_data_dict.get(var_name)\n`;
+              code += `${bodyIndent}        if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+              code += `${bodyIndent}            var_value = variable_data["value"]\n`;
+              code += `${bodyIndent}            if var_value is not None and str(var_value).strip() != "":\n`;
+              code += `${bodyIndent}                return True, str(var_value)\n`;
+              code += `${bodyIndent}        elif variable_data is not None and str(variable_data).strip() != "":\n`;
+              code += `${bodyIndent}            return True, str(variable_data)\n`;
+              code += `${bodyIndent}    return False, None\n`;
+              code += `${bodyIndent}\n`;
+              
+              // Генерируем проверку условий
+              code += `${bodyIndent}conditional_met = False\n`;
+              
+              const sortedConditions = [...targetNode.data.conditionalMessages].sort((a: any, b: any) => (b.priority || 0) - (a.priority || 0));
+              sortedConditions.forEach((condition: any, condIndex: number) => {
+                const ifKeyword = condIndex === 0 ? 'if' : 'if';
+                
+                if (condition.condition === 'user_data_exists' && condition.variableName) {
+                  code += `${bodyIndent}${ifKeyword} (\n`;
+                  code += `${bodyIndent}    check_user_variable_inline("${condition.variableName}", user_data_dict)[0]\n`;
+                  code += `${bodyIndent}):\n`;
+                  code += `${bodyIndent}    conditional_met = True\n`;
+                  
+                  // Условная клавиатура
+                  if (condition.buttons && condition.buttons.length > 0) {
+                    code += `${bodyIndent}    builder = ReplyKeyboardBuilder()\n`;
+                    condition.buttons.forEach((btn: Button) => {
+                      code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                    });
+                    const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+                    const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+                    code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                    code += `${bodyIndent}    main_text = text\n`;
+                    code += `${bodyIndent}    await message.answer(main_text, reply_markup=keyboard)\n`;
+                    
+                    // Проверяем, нужно ли собирать ввод для условного сообщения
+                    const condCollectInput = condition.collectUserInput === true || condition.waitForTextInput === true || condition.enableTextInput === true;
+                    if (condCollectInput) {
+                      code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id} (сбор ответов НАСТРОЕН)")\n`;
+                      code += `${bodyIndent}    # Настраиваем ожидание ввода для условного сообщения\n`;
+                      const condInputVariable = condition.textInputVariable || condition.inputVariable || condition.variableName || targetNode.data.inputVariable || `response_${targetNode.id}`;
                       const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
-                      if (nextNodeAfterCondition) {
-                        code += `                            # Переменная уже существует, автоматически переходим к узлу: ${nextNodeAfterCondition}\n`;
-                        code += `                            logging.info(f"✅ Условие выполнено: переменная существует, автоматически переходим к следующему узлу")\n`;
-                        code += `                            # Рекурсивно обрабатываем следующий узел через ту же систему навигации\n`;
-                        code += `                            next_node_id_auto = "${nextNodeAfterCondition}"\n`;
-                        code += `                            logging.info(f"🔄 Автоматический переход к узлу: {next_node_id_auto}")\n`;
-                      } else {
-                        code += `                            # Переменная существует, но следующий узел не указан - завершаем обработку\n`;
-                      }
+                      
+                      // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true
+                      const condSkipButtons = (condition.buttons || [])
+                        .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+                        .map((btn: any) => ({ text: btn.text, target: btn.target }));
+                      const condSkipButtonsJson = JSON.stringify(condSkipButtons);
+                      
+                      code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
+                      code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
+                      code += `${bodyIndent}        "type": "text",\n`;
+                      code += `${bodyIndent}        "variable": "${condInputVariable}",\n`;
+                      code += `${bodyIndent}        "save_to_database": True,\n`;
+                      code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
+                      code += `${bodyIndent}        "next_node_id": "${nextNodeAfterCondition || ''}",\n`;
+                      code += `${bodyIndent}        "skip_buttons": ${condSkipButtonsJson}\n`;
+                      code += `${bodyIndent}    }\n`;
+                      code += `${bodyIndent}    logging.info(f"🔧 Установлено ожидание ввода для условного сообщения: {user_data[message.from_user.id]['waiting_for_input']}")\n`;
+                    } else {
+                      code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id} (сбор ответов НЕ настроен - кнопки ведут напрямую)")\n`;
                     }
                   }
                 }
-              }
-
-              // Fallback если условия не выполнены
-              code += `                        if not conditional_met:\n`;
-              code += `                            # Условие не выполнено - показываем основное сообщение\n`;
-              const messageText = targetNode.data.messageText || 'Сообщение';
-              const formattedText = formatTextForPython(messageText);
-              code += `                            text = ${formattedText}\n`;
-              code += `                            await message.answer(text)\n`;
-
-              const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-              const inputTargetNodeId = targetNode.data.inputTargetNodeId;
-              code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
-              code += `                                "type": "text",\n`;
-              code += `                                "modes": ["text"],\n`;
-              code += `                                "variable": "${inputVariable}",\n`;
-              code += `                                "save_to_database": True,\n`;
-              code += `                                "node_id": "${targetNode.id}",\n`;
-              code += `                                "next_node_id": "${inputTargetNodeId || ''}"\n`;
-              code += `                            }\n`;
-              code += `                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
-            } else {
-              const messageText = targetNode.data.messageText || 'Сообщение';
-              const formattedText = formatTextForPython(messageText);
-
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание ввода
-              if (targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-                code += `                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа\n`;
-                code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput=true")\n`;
-                code += `                        text = ${formattedText}\n`;
-
-                // Добавляем замену переменных
-                code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
-                code += generateUniversalVariableReplacement('                        ');
-
-                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в зависимости от keyboardType
-                if (targetNode.data.keyboardType === 'reply') {
-                  code += '                        # Создаем reply клавиатуру\n';
-                  code += '                        builder = ReplyKeyboardBuilder()\n';
-                  targetNode.data.buttons.forEach((btn: Button) => {
-                    code += `                        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                  });
-                  const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                  const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                  code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                } else {
-                  // Генерируем inline клавиатуру
-                  code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
-                }
-                code += `                        await message.answer(text, reply_markup=keyboard)\n`;
-
-                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также настраиваем waiting_for_input для сохранения ответа кнопки
-                const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                const inputTargetNodeId = targetNode.data.inputTargetNodeId;
-                // Определяем modes - если есть enableTextInput, добавляем и text и button
-                const hasTextInput = targetNode.data.enableTextInput === true;
-                const btnModesList = hasTextInput ? "['button', 'text']" : "['button']";
-                code += `                        # Настраиваем ожидание ввода для сохранения ответа кнопки\n`;
-                code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
-                code += `                            "type": "button",\n`;
-                code += `                            "modes": ${hasTextInput ? "['button', 'text']" : "['button']"},\n`;
-                code += `                            "variable": "${inputVariable}",\n`;
-                code += `                            "save_to_database": True,\n`;
-                code += `                            "node_id": "${targetNode.id}",\n`;
-                code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
-                code += `                        }\n`;
-                code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
-              } else {
-                // Обычное ожидание ввода если кнопок нет
-                code += `                        # Узел собирает пользовательский ввод\n`;
-                code += `                        logging.info(f"🔧 Условная навигация к узлу с вводом: ${targetNode.id}")\n`;
-                code += `                        text = ${formattedText}\n`;
-
-                // Настраиваем ожидание ввода
-                const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                const inputTargetNodeId = targetNode.data.inputTargetNodeId;
-                code += `                        await message.answer(text)\n`;
-                code += `                        # Настраиваем ожидание ввода\n`;
-                code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
-                code += `                            "type": "text",\n`;
-                code += `                            "modes": ["text"],\n`;
-                code += `                            "variable": "${inputVariable}",\n`;
-                code += `                            "save_to_database": True,\n`;
-                code += `                            "node_id": "${targetNode.id}",\n`;
-                code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
-                code += `                        }\n`;
-                code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
-              }
-            }
-          } else {
-            // Обычная навигация с простым сообщением
-            const messageText = targetNode.data.messageText || 'Сообщение';
-            const formattedText = formatTextForPython(messageText);
-            code += `                        # Обычный узел - отправляем сообщение\n`;
-            code += `                        text = ${formattedText}\n`;
-
-            // Добавляем замену переменных
-            code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
-            code += generateUniversalVariableReplacement('                        ');
-
-            // Проверяем, есть ли reply кнопки
-            if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-              code += '                        # Создаем reply клавиатуру\n';
-              code += '                        builder = ReplyKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn: Button) => {
-                code += `                        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
               });
+              
+              // Если условие не выполнено - показываем основную клавиатуру
+              code += `${bodyIndent}if not conditional_met:\n`;
+              code += `${bodyIndent}    # Условие не выполнено - показываем основное сообщение\n`;
+              code += `${bodyIndent}    # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n`;
+              code += `${bodyIndent}    builder = ReplyKeyboardBuilder()\n`;
+              
+              // Добавляем кнопки для reply клавиатуры
+              targetNode.data.buttons.forEach((btn: Button) => {
+                if (btn.action === "contact" && btn.requestContact) {
+                  code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
+                } else if (btn.action === "location" && btn.requestLocation) {
+                  code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
+                } else {
+                  code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                }
+              });
+              
               const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
               const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-              code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-              code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
-              code += '                        await message.answer(text, reply_markup=keyboard)\n';
-            } else if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-              code += '                        # Создаем inline клавиатуру\n';
-              code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
-              code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
-              code += '                        await message.answer(text, reply_markup=keyboard)\n';
+              code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              code += `${bodyIndent}    await message.answer(text, reply_markup=keyboard)\n`;
+              code += `${bodyIndent}    logging.info(f"✅ Показана основная reply клавиатура для узла ${targetNode.id}")\n`;
+              
+              // Настройка ожидания ввода для основной клавиатуры
+              if (targetNode.data.enableTextInput === true || targetNode.data.collectUserInput === true) {
+                // ИСПРАВЛЕНИЕ: Используем массив modes для поддержки и кнопок и текста
+                const hasReplyButtons = targetNode.data.keyboardType === 'reply' && targetNode.data.buttons && targetNode.data.buttons.length > 0;
+                const modes: string[] = [];
+                if (hasReplyButtons) modes.push('button');
+                if (targetNode.data.enableTextInput === true || !hasReplyButtons) modes.push('text');
+                const modesStr = modes.map(m => `"${m}"`).join(', ');
+                const primaryType = modes[0];
+                
+                code += `${bodyIndent}    # Настраиваем ожидание ввода для message узла с reply кнопками\n`;
+                code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
+                code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
+                code += `${bodyIndent}        "type": "${primaryType}",\n`;
+                code += `${bodyIndent}        "modes": [${modesStr}],\n`;
+                code += `${bodyIndent}        "variable": "${inputVariable}",\n`;
+                code += `${bodyIndent}        "save_to_database": True,\n`;
+                code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
+                code += `${bodyIndent}        "next_node_id": "${inputTargetNodeId}",\n`;
+                code += `${bodyIndent}        "min_length": 0,\n`;
+                code += `${bodyIndent}        "max_length": 0,\n`;
+                code += `${bodyIndent}        "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
+                code += `${bodyIndent}        "success_message": ""\n`;
+                code += `${bodyIndent}    }\n`;
+                const modesForLog = modes.map(m => `'${m}'`).join(', ');
+                code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesForLog}] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+              }
             } else {
-              code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
-              code += '                        await message.answer(text)\n';
+              // Нет условных сообщений - стандартная обработка
+              code += `${bodyIndent}# ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n`;
+              code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
+              
+              // Добавляем кнопки для reply клавиатуры
+              targetNode.data.buttons.forEach((btn: Button) => {
+                if (btn.action === "contact" && btn.requestContact) {
+                  code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
+                } else if (btn.action === "location" && btn.requestLocation) {
+                  code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
+                } else {
+                  code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                }
+              });
+              
+              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+              code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+              code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
+              
+              // ИСПРАВЛЕНИЕ: Если включен сбор ввода, настраиваем ожидание даже при наличии кнопок
+              if (targetNode.data.enableTextInput === true || targetNode.data.enablePhotoInput === true || 
+                  targetNode.data.enableVideoInput === true || targetNode.data.enableAudioInput === true || 
+                  targetNode.data.enableDocumentInput === true || targetNode.data.collectUserInput === true) {
+                code += `${bodyIndent}# Настраиваем ожидание ввода для message узла с reply кнопками (используем универсальную функцию)\n`;
+                code += generateWaitingStateCode(targetNode, bodyIndent);
+              }
             }
+          } else {
+            code += `${bodyIndent}await message.answer(text)\n`;
+            
+            // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок (используем универсальную функцию)
+            code += `${bodyIndent}# Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)\n`;
+            code += generateWaitingStateCode(targetNode, bodyIndent);
+          }
+        } else {
+          // Если узел не собирает ввод, проверяем есть ли inline или reply кнопки
+          if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += `${bodyIndent}# Создаем inline клавиатуру\n`;
+            code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
+            
+            // Добавляем кнопки
+            targetNode.data.buttons.forEach((btn: Button, btnIndex: number) => {
+              if (btn.action === "goto" && btn.target) {
+                const callbackData = `${btn.target}`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
+              } else if (btn.action === "url" && btn.url) {
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url}"))\n`;
+              } else if (btn.action === "command" && btn.target) {
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд
+                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                code += `${bodyIndent}logging.info(f"Создана кнопка команды: ${btn.text} -> ${commandCallback}")\n`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
+              }
+            });
+            
+            // ВОССТАНОВЛЕНИЕ: Добавляем умное расположение кнопок по колонкам
+            const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+            code += `${bodyIndent}builder.adjust(${columns})\n`;
+            code += `${bodyIndent}keyboard = builder.as_markup()\n`;
+            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+          } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += `${bodyIndent}# Создаем reply клавиатуру\n`;
+            code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
+            
+            // Добавляем кнопки для reply клавиатуры
+            targetNode.data.buttons.forEach((btn: Button) => {
+              if (btn.action === "contact" && btn.requestContact) {
+                code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
+              } else if (btn.action === "location" && btn.requestLocation) {
+                code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
+              } else {
+                code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+              }
+            });
+            
+            const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+            const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+            code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+            code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для переходного узла")\n`;
+          } else {
+            code += `${bodyIndent}await message.answer(text)\n`;
+          }
+          
+          // Очищаем состояние ожидания ввода после успешного перехода для message узлов без сбора ввода
+          if (!targetNode.data.collectUserInput) {
+            code += `${bodyIndent}# НЕ отправляем сообщение об успехе здесь - это делается в старом формате\n`;
+            code += `${bodyIndent}# Очищаем состояние ожидания ввода после успешного перехода\n`;
+            code += `${bodyIndent}if "waiting_for_input" in user_data[user_id]:\n`;
+            code += `${bodyIndent}    del user_data[user_id]["waiting_for_input"]\n`;
+            code += `${bodyIndent}\n`;
+            code += `${bodyIndent}logging.info("✅ Переход к следующему узлу выполнен успешно")\n`;
+          }
+          
+          // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу вызываем callback обработчик
+          if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
+            const autoTargetId = targetNode.data.autoTransitionTo;
+            const autoSafeFunctionName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
+            code += `${bodyIndent}\n`;
+            code += `${bodyIndent}# ⚡ Автопереход к узлу ${autoTargetId}\n`;
+            code += `${bodyIndent}logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+            code += `${bodyIndent}import types as aiogram_types\n`;
+            code += `${bodyIndent}async def noop(*args, **kwargs):\n`;
+            code += `${bodyIndent}    return None\n`;
+            code += `${bodyIndent}fake_message = aiogram_types.SimpleNamespace(\n`;
+            code += `${bodyIndent}    chat=aiogram_types.SimpleNamespace(id=message.from_user.id),\n`;
+            code += `${bodyIndent}    message_id=message.message_id,\n`;
+            code += `${bodyIndent}    delete=noop,\n`;
+            code += `${bodyIndent}    edit_text=noop,\n`;
+            code += `${bodyIndent}    answer=lambda text, **kwargs: bot.send_message(message.from_user.id, text, **kwargs)\n`;
+            code += `${bodyIndent})\n`;
+            code += `${bodyIndent}fake_callback = aiogram_types.SimpleNamespace(\n`;
+            code += `${bodyIndent}    id="auto_transition",\n`;
+            code += `${bodyIndent}    from_user=message.from_user,\n`;
+            code += `${bodyIndent}    chat_instance="",\n`;
+            code += `${bodyIndent}    data="${autoTargetId}",\n`;
+            code += `${bodyIndent}    message=fake_message,\n`;
+            code += `${bodyIndent}    answer=noop\n`;
+            code += `${bodyIndent})\n`;
+            code += `${bodyIndent}await handle_callback_${autoSafeFunctionName}(fake_callback)\n`;
+          } else {
+            code += `${bodyIndent}break  # Нет автоперехода, завершаем цикл\n`;
           }
         }
-      });
-      code += '                    else:\n';
-      code += '                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-    } else {
-      code += '                    # No nodes available for navigation\n';
-      code += '                    logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
-    }
-
-    code += '            except Exception as e:\n';
-    code += '                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-    code += '        \n';
-    code += '        return  # Завершаем обработку для условного сообщения\n';
-    code += '    \n';
-    code += '    # Проверяем, ожидаем ли мы кнопочный ответ через reply клавиатуру\n';
-    code += '    if user_id in user_data and "button_response_config" in user_data[user_id]:\n';
-    code += '        config = user_data[user_id]["button_response_config"]\n';
-    code += '        user_text = message.text\n';
-    code += '        \n';
-    code += '        # Ищем выбранный вариант среди доступных опций\n';
-    code += '        selected_option = None\n';
-    code += '        for option in config.get("options", []):\n';
-    code += '            if option["text"] == user_text:\n';
-    code += '                selected_option = option\n';
-    code += '                break\n';
-    code += '        \n';
-    code += '        if selected_option:\n';
-    code += '            selected_value = selected_option["value"]\n';
-    code += '            selected_text = selected_option["text"]\n';
-    code += '            \n';
-    code += '            # Сохраняем ответ пользователя\n';
-    code += '            variable_name = config.get("variable", "button_response")\n';
-    code += '            timestamp = get_moscow_time()\n';
-    code += '            node_id = config.get("node_id", "unknown")\n';
-    code += '            \n';
-    code += '            # Создаем структурированный ответ\n';
-    code += '            response_data = {\n';
-    code += '                "value": selected_value,\n';
-    code += '                "text": selected_text,\n';
-    code += '                "type": "button_choice",\n';
-    code += '                "timestamp": timestamp,\n';
-    code += '                "nodeId": node_id,\n';
-    code += '                "variable": variable_name\n';
-    code += '            }\n';
-    code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
-    code += '            user_data[user_id][variable_name] = response_data\n';
-    code += '            \n';
-    code += '            # Сохраняем в базу данных если включено\n';
-    code += '            if config.get("save_to_database"):\n';
-    code += '                saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
-    code += '                if saved_to_db:\n';
-    code += '                    logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")\n';
-    code += '                else:\n';
-    code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
-    code += '            \n';
-    code += '            # Отправляем сообщение об успехе\n';
-    code += '            success_message = config.get("success_message", "Спасибо за ваш выбор!")\n';
-    code += '            await message.answer(f"{success_message}\\n\\n✅ Ваш выбор: {selected_text}", reply_markup=ReplyKeyboardRemove())\n';
-    code += '            \n';
-    code += '            # Очищаем состояние\n';
-    code += '            del user_data[user_id]["button_response_config"]\n';
-    code += '            \n';
-    code += '            logging.info(f"Получен кнопочный ответ через reply клавиатуру: {variable_name} = {selected_text}")\n';
-    code += '            \n';
-    code += '            # Навигация на основе действия кнопки\n';
-    code += '            option_action = selected_option.get("action", "goto")\n';
-    code += '            option_target = selected_option.get("target", "")\n';
-    code += '            option_url = selected_option.get("url", "")\n';
-    code += '            \n';
-    code += '            if option_action == "url" and option_url:\n';
-    code += '                # Открытие ссылки\n';
-    code += '                url = option_url\n';
-    code += '                keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
-    code += '                    [InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]\n';
-    code += '                ])\n';
-    code += '                await message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)\n';
-    code += '            elif option_action == "command" and option_target:\n';
-    code += '                # Выполнение команды\n';
-    code += '                command = option_target\n';
-    code += '                # Создаем фиктивное сообщение для выполнения команды\n';
-    code += '                import types as aiogram_types\n';
-    code += '                fake_message = aiogram_types.SimpleNamespace(\n';
-    code += '                    from_user=message.from_user,\n';
-    code += '                    chat=message.chat,\n';
-    code += '                    text=command,\n';
-    code += '                    message_id=message.message_id\n';
-    code += '                )\n';
-    code += '                \n';
-
-    // Добавляем обработку различных команд для reply клавиатур
-    const commandNodes = (nodes || []).filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
-    commandNodes.forEach((cmdNode, cmdIndex) => {
-      const condition = cmdIndex === 0 ? 'if' : 'elif';
-      code += `                ${condition} command == "${cmdNode.data.command}":\n`;
-      code += `                    try:\n`;
-      code += `                        await ${cmdNode.type === 'start' ? 'start_handler' : `${cmdNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`}(fake_message)\n`;
-      code += `                    except Exception as e:\n`;
-      code += `                        logging.error(f"Ошибка выполнения команды ${cmdNode.data.command}: {e}")\n`;
+        } // Закрываем блок else для allowMultipleSelection
+      } else if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
+        const inputPrompt = formatTextForPython(targetNode.data.messageText || "Введите ваш ответ:");
+        code += `${bodyIndent}prompt_text = ${inputPrompt}\n`;
+        code += `${bodyIndent}await message.answer(prompt_text)\n`;
+        
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
+        const msgNodeCollectInput = targetNode.data.collectUserInput === true || 
+                                    targetNode.data.enableTextInput === true ||
+                                    targetNode.data.enablePhotoInput === true ||
+                                    targetNode.data.enableVideoInput === true ||
+                                    targetNode.data.enableAudioInput === true ||
+                                    targetNode.data.enableDocumentInput === true;
+        
+        if (msgNodeCollectInput) {
+          code += `${bodyIndent}# Устанавливаем новое ожидание ввода (collectUserInput=true)\n`;
+          code += `${bodyIndent}user_data[user_id]["waiting_for_input"] = {\n`;
+          code += `${bodyIndent}    "type": "${targetNode.data.inputType || 'text'}",\n`;
+          code += `${bodyIndent}    "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
+          code += `${bodyIndent}    "save_to_database": True,\n`;
+          code += `${bodyIndent}    "node_id": "${targetNode.id}",\n`;
+          const nextConnection = connections.find(conn => conn.source === targetNode.id);
+          if (nextConnection) {
+            code += `${bodyIndent}    "next_node_id": "${nextConnection.target}",\n`;
+          } else {
+            code += `${bodyIndent}    "next_node_id": None,\n`;
+          }
+          code += `${bodyIndent}    "min_length": ${targetNode.data.minLength || 0},\n`;
+          code += `${bodyIndent}    "max_length": ${targetNode.data.maxLength || 0},\n`;
+          code += `${bodyIndent}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
+          code += `${bodyIndent}    "success_message": ""\n`;
+          code += `${bodyIndent}}\n`;
+        } else {
+          code += `${bodyIndent}# Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
+        }
+        code += `${bodyIndent}break  # Выходим из цикла после настройки ожидания ввода\n`;
+      } else if (targetNode.type === 'command') {
+        // Для узлов команд вызываем соответствующий обработчик
+        const commandName = targetNode.data.command?.replace('/', '') || 'unknown';
+        const handlerName = `${commandName}_handler`;
+        code += `${bodyIndent}# Выполняем команду ${targetNode.data.command}\n`;
+        code += `${bodyIndent}from types import SimpleNamespace\n`;
+        code += `${bodyIndent}fake_message = SimpleNamespace()\n`;
+        code += `${bodyIndent}fake_message.from_user = message.from_user\n`;
+        code += `${bodyIndent}fake_message.chat = message.chat\n`;
+        code += `${bodyIndent}fake_message.date = message.date\n`;
+        code += `${bodyIndent}fake_message.answer = message.answer\n`;
+        code += `${bodyIndent}await ${handlerName}(fake_message)\n`;
+        code += `${bodyIndent}break  # Выходим из цикла после выполнения команды\n`;
+      } else {
+        code += `${bodyIndent}logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
+        code += `${bodyIndent}break  # Выходим из цикла для неизвестного типа узла\n`;
+      }
     });
-    if (commandNodes?.length > 0) {
-      code += `                else:\n`;
-      code += `                    logging.warning(f"Неизвестная команда: {command}")\n`;
+    
+    code += '                        else:\n';
+    code += '                            logging.warning(f"Неизвестный узел: {current_node_id}")\n';
+    code += '                            break  # Выходим из цикла при неизвестном узле\n';
+  } else {
+    code += '                        # No nodes available for navigation\n';
+    code += '                        logging.warning(f"Нет доступных узлов для навигации")\n';
+    code += '                        break\n';
+  }
+  
+  code += '                except Exception as e:\n';
+  code += '                    logging.error(f"Ошибка при переходе к узлу: {e}")\n';
+  code += '            \n';
+  code += '            return  # Завершаем обработку для нового формата\n';
+  code += '        \n';
+  code += '        # Обработка старого формата (для совместимости)\n';
+  code += '        # Находим узел для получения настроек\n';
+  
+  // Генерируем проверку для каждого узла с универсальным сбором ввода (старый формат)
+  const inputNodes = (nodes || []).filter(node => node.data.collectUserInput);
+  code += `        logging.info(f"DEBUG old format: checking inputNodes: ${inputNodes.map(n => n.id).join(', ')}")\n`;
+  inputNodes.forEach((node, index) => {
+    const condition = index === 0 ? 'if' : 'elif';
+    code += `        ${condition} waiting_node_id == "${node.id}":\n`;
+    
+    // Добавляем валидацию если есть
+    if (node.data.inputValidation) {
+      if (node.data.minLength && node.data.minLength > 0) {
+        code += `            if len(user_text) < ${node.data.minLength}:\n`;
+        code += `                await message.answer("❌ Слишком короткий ответ (минимум ${node.data.minLength} символов). Попробуйте еще раз.")\n`;
+        code += `                return\n`;
+      }
+      if (node.data.maxLength && node.data.maxLength > 0) {
+        code += `            if len(user_text) > ${node.data.maxLength}:\n`;
+        code += `                await message.answer("❌ Слишком длинный ответ (максимум ${node.data.maxLength} символов). Попробуйте еще раз.")\n`;
+        code += `                return\n`;
+      }
     }
-
-    code += '            elif option_action == "goto" and option_target:\n';
-    code += '                # Переход к узлу\n';
-    code += '                target_node_id = option_target\n';
-    code += '                try:\n';
-    code += '                    # Вызываем обработчик для целевого узла\n';
-
-    // Generate navigation logic for reply button responses  
-    if (nodes?.length > 0) {
-      nodes.forEach((btnNode, btnIndex) => {
-        const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        const condition = btnIndex === 0 ? 'if' : 'elif';
-        code += `                    ${condition} target_node_id == "${btnNode.id}":\n`;
-        code += `                        await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))\n`;
-      });
-      code += '                    else:\n';
-      code += '                        logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
-    } else {
-      code += '                    pass  # No nodes to handle\n';
+    
+    // Валидация типа ввода
+    if (node.data.inputType === 'email') {
+      code += `            import re\n`;
+      code += `            email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n`;
+      code += `            if not re.match(email_pattern, user_text):\n`;
+      code += `                await message.answer("❌ Неверный формат email. Попробуйте еще раз.")\n`;
+      code += `                return\n`;
+    } else if (node.data.inputType === 'number') {
+      code += `            try:\n`;
+      code += `                float(user_text)\n`;
+      code += `            except ValueError:\n`;
+      code += `                await message.answer("❌ Введите корректное число. Попробуйте еще раз.")\n`;
+      code += `                return\n`;
+    } else if (node.data.inputType === 'phone') {
+      code += `            import re\n`;
+      code += `            phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n`;
+      code += `            if not re.match(phone_pattern, user_text):\n`;
+      code += `                await message.answer("❌ Неверный формат телефона. Попробуйте еще раз.")\n`;
+      code += `                return\n`;
     }
-    code += '                except Exception as e:\n';
-    code += '                    logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")\n';
-    code += '            else:\n';
-    code += '                # Fallback к старой системе next_node_id если нет action\n';
-    code += '                next_node_id = config.get("next_node_id")\n';
-    code += '                if next_node_id:\n';
-    code += '                    try:\n';
-    code += '                        # Вызываем обработчик для следующего узла\n';
-
-    if (nodes?.length > 0) {
-      nodes.forEach((btnNode, btnIndex) => {
-        const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        const condition = btnIndex === 0 ? 'if' : 'elif';
-        code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
-        code += `                            await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
-      });
-      code += '                        else:\n';
-      code += '                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-    } else {
-      code += '                        pass  # No nodes to handle\n';
-    }
-    code += '                    except Exception as e:\n';
-    code += '                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-    code += '            return\n';
-    code += '        else:\n';
-    code += '            # Неверный выбор - показываем доступные варианты\n';
-    code += '            available_options = [option["text"] for option in config.get("options", [])]\n';
-    code += '            options_text = "\\n".join([f"• {opt}" for opt in available_options])\n';
-    code += '            await message.answer(f"❌ Неверный выбор. Пожалуйста, выберите один из предложенных вариантов:\\n\\n{options_text}")\n';
-    code += '            return\n';
-    code += '    \n';
-    code += '    # ИСПРАВЛЕНИЕ: Проверяем pending_skip_buttons для медиа-узлов (фото/видео/аудио)\n';
-    code += '    # Эта проверка нужна когда узел ожидает медиа, но пользователь нажал reply-кнопку с skipDataCollection\n';
-    code += '    if user_id in user_data and "pending_skip_buttons" in user_data[user_id]:\n';
-    code += '        pending_buttons = user_data[user_id]["pending_skip_buttons"]\n';
-    code += '        user_text = message.text\n';
-    code += '        for skip_btn in pending_buttons:\n';
-    code += '            if skip_btn.get("text") == user_text:\n';
-    code += '                skip_target = skip_btn.get("target")\n';
-    code += '                logging.info(f"⏭️ Нажата кнопка skipDataCollection для медиа-узла: {user_text} -> {skip_target}")\n';
-    code += '                # Очищаем pending_skip_buttons и любые медиа-ожидания\n';
-    code += '                if "pending_skip_buttons" in user_data[user_id]:\n';
-    code += '                    del user_data[user_id]["pending_skip_buttons"]\n';
-    code += '                for media_wait in ["waiting_for_photo", "waiting_for_video", "waiting_for_audio", "waiting_for_document"]:\n';
-    code += '                    if media_wait in user_data[user_id]:\n';
-    code += '                        del user_data[user_id][media_wait]\n';
-    code += '                # Переходим к целевому узлу\n';
-    code += '                if skip_target:\n';
-    code += '                    try:\n';
-    code += '                        logging.info(f"🚀 Переходим к узлу skipDataCollection медиа: {skip_target}")\n';
-    code += '                        import types as aiogram_types\n';
-    code += '                        fake_callback = aiogram_types.SimpleNamespace(\n';
-    code += '                            id="skip_media_nav",\n';
-    code += '                            from_user=message.from_user,\n';
-    code += '                            chat_instance="",\n';
-    code += '                            data=skip_target,\n';
-    code += '                            message=message,\n';
-    code += '                            answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
-    code += '                        )\n';
-
-    // Добавляем навигацию для skip_buttons медиа-узлов
-    if (nodes?.length > 0) {
-      nodes.forEach((mediaSkipNode, mediaSkipIdx) => {
-        const mediaSkipCond = mediaSkipIdx === 0 ? 'if' : 'elif';
-        const mediaSkipFnName = mediaSkipNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `                        ${mediaSkipCond} skip_target == "${mediaSkipNode.id}":\n`;
-        code += `                            await handle_callback_${mediaSkipFnName}(fake_callback)\n`;
-      });
-      code += '                        else:\n';
-      code += '                            logging.warning(f"Неизвестный целевой узел skipDataCollection медиа: {skip_target}")\n';
-    }
-
-    code += '                    except Exception as e:\n';
-    code += '                        logging.error(f"Ошибка при переходе к узлу skipDataCollection медиа {skip_target}: {e}")\n';
-    code += '                return\n';
-    code += '    \n';
-    code += '    # Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)\n';
-    code += '    has_waiting_state = user_id in user_data and "waiting_for_input" in user_data[user_id]\n';
-    code += '    logging.info(f"DEBUG: Получен текст {message.text}, состояние ожидания: {has_waiting_state}")\n';
-    code += '    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
-    code += '        # Обрабатываем ввод через универсальную систему\n';
-    code += '        waiting_config = user_data[user_id]["waiting_for_input"]\n';
-    code += '        \n';
-    code += '        # Проверяем, что пользователь все еще находится в состоянии ожидания ввода\n';
-    code += '        if not waiting_config:\n';
-    code += '            return  # Состояние ожидания пустое, игнорируем\n';
-    code += '        \n';
-    code += '        # Проверяем формат конфигурации - новый (словарь) или старый (строка)\n';
-    code += '        if isinstance(waiting_config, dict):\n';
-    code += '            # Новый формат - извлекаем данные из словаря\n';
-    code += '            waiting_node_id = waiting_config.get("node_id")\n';
-    code += '            input_type = waiting_config.get("type", "text")\n';
-    code += '            variable_name = waiting_config.get("variable", "user_response")\n';
-    code += '            save_to_database = waiting_config.get("save_to_database", False)\n';
-    code += '            min_length = waiting_config.get("min_length", 0)\n';
-    code += '            max_length = waiting_config.get("max_length", 0)\n';
-    code += '            next_node_id = waiting_config.get("next_node_id")\n';
-    code += '        else:\n';
-    code += '            # Старый формат - waiting_config это строка с node_id\n';
-    code += '            waiting_node_id = waiting_config\n';
-    code += '            input_type = user_data[user_id].get("input_type", "text")\n';
-    code += '            variable_name = user_data[user_id].get("input_variable", "user_response")\n';
-    code += '            save_to_database = user_data[user_id].get("save_to_database", False)\n';
-    code += '            min_length = 0\n';
-    code += '            max_length = 0\n';
-    code += '            next_node_id = user_data[user_id].get("waiting_input_target_node_id") or user_data[user_id].get("input_target_node_id")\n';
-    code += '        \n';
-    code += '        user_text = message.text\n';
-    code += '        \n';
-    code += '        # ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n';
-    code += '        if isinstance(waiting_config, dict):\n';
-    code += '            skip_buttons = waiting_config.get("skip_buttons", [])\n';
-    code += '            for skip_btn in skip_buttons:\n';
-    code += '                if skip_btn.get("text") == user_text:\n';
-    code += '                    skip_target = skip_btn.get("target")\n';
-    code += '                    logging.info(f"⏭️ Нажата кнопка skipDataCollection в waiting_for_input: {user_text} -> {skip_target}")\n';
-    code += '                    # Очищаем состояние ожидания\n';
-    code += '                    if "waiting_for_input" in user_data[user_id]:\n';
-    code += '                        del user_data[user_id]["waiting_for_input"]\n';
-    code += '                    # Переходим к целевому узлу\n';
-    code += '                    if skip_target:\n';
-    code += '                        try:\n';
-    code += '                            logging.info(f"🚀 Переходим к узлу skipDataCollection: {skip_target}")\n';
-    code += '                            import types as aiogram_types\n';
-    code += '                            fake_callback = aiogram_types.SimpleNamespace(\n';
-    code += '                                id="skip_button_nav",\n';
-    code += '                                from_user=message.from_user,\n';
-    code += '                                chat_instance="",\n';
-    code += '                                data=skip_target,\n';
-    code += '                                message=message,\n';
-    code += '                                answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
-    code += '                            )\n';
-
-    // Добавляем навигацию для кнопок skipDataCollection
-    if (nodes?.length > 0) {
-      nodes.forEach((skipNode, skipIdx) => {
-        const skipCond = skipIdx === 0 ? 'if' : 'elif';
-        const skipFnName = skipNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `                            ${skipCond} skip_target == "${skipNode.id}":\n`;
-        code += `                                await handle_callback_${skipFnName}(fake_callback)\n`;
-      });
-      code += '                            else:\n';
-      code += '                                logging.warning(f"Неизвестный целевой узел skipDataCollection: {skip_target}")\n';
-    }
-
-    code += '                        except Exception as e:\n';
-    code += '                            logging.error(f"Ошибка при переходе к узлу skipDataCollection {skip_target}: {e}")\n';
-    code += '                    return\n';
-    code += '        \n';
-    code += '        # Валидация для нового формата\n';
-    code += '        if isinstance(waiting_config, dict):\n';
-    code += '            # Валидация длины\n';
-    code += '            if min_length > 0 and len(user_text) < min_length:\n';
-    code += '                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")\n';
-    code += '                return\n';
-    code += '            \n';
-    code += '            if max_length > 0 and len(user_text) > max_length:\n';
-    code += '                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")\n';
-    code += '                return\n';
-    code += '            \n';
-    code += '            # Валидация типа ввода\n';
-    code += '            if input_type == "email":\n';
-    code += '                import re\n';
-    code += '                email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n';
-    code += '                if not re.match(email_pattern, user_text):\n';
-    code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                    await message.answer(f"❌ Неверный формат email. {retry_message}")\n';
-    code += '                    return\n';
-    code += '            elif input_type == "number":\n';
-    code += '                try:\n';
-    code += '                    float(user_text)\n';
-    code += '                except ValueError:\n';
-    code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                    await message.answer(f"❌ Введите корректное число. {retry_message}")\n';
-    code += '                    return\n';
-    code += '            elif input_type == "phone":\n';
-    code += '                import re\n';
-    code += '                phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n';
-    code += '                if not re.match(phone_pattern, user_text):\n';
-    code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                    await message.answer(f"❌ Неверный формат телефона. {retry_message}")\n';
-    code += '                    return\n';
-    code += '            \n';
-    code += '            # Сохраняем ответ для нового формата\n';
-    code += '            timestamp = get_moscow_time()\n';
-    code += '            response_data = user_text\n';
-    code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
-    code += '            user_data[user_id][variable_name] = response_data\n';
-    code += '            \n';
-    code += '            # Сохраняем в базу данных если включено\n';
-    code += '            if save_to_database:\n';
-    code += '                saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
-    code += '                if saved_to_db:\n';
-    code += '                    logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
-    code += '                else:\n';
-    code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
-    code += '            \n';
-    code += '            # Отправляем подтверждающее сообщение только если оно задано\n';
-    code += '            success_message = waiting_config.get("success_message", "")\n';
-    code += '            if success_message:\n';
-    code += '                logging.info(f"DEBUG: Отправляем подтверждение с текстом: {success_message}")\n';
-    code += '                await message.answer(success_message)\n';
-    code += '                logging.info(f"✅ Отправлено подтверждение: {success_message}")\n';
-    code += '            \n';
-    code += '            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем старое состояние ожидания перед навигацией\n';
-    code += '            if "waiting_for_input" in user_data[user_id]:\n';
-    code += '                del user_data[user_id]["waiting_for_input"]\n';
-    code += '            \n';
-    code += '            logging.info(f"✅ Переход к следующему узлу выполнен успешно")\n';
-    code += '            logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")\n';
-    code += '            \n';
-    code += '            # Навигация к следующему узлу для нового формата\n';
-    code += '            if next_node_id:\n';
-    code += '                try:\n';
-    code += '                    # Цикл для поддержки автопереходов\n';
-    code += '                    while next_node_id:\n';
-    code += '                        logging.info(f"🚀 Переходим к узлу: {next_node_id}")\n';
-    code += '                        current_node_id = next_node_id\n';
-    code += '                        next_node_id = None  # Сбрасываем, будет установлен при автопереходе\n';
-    code += '                        # Проверяем навигацию к узлам\n';
-
-    // Функция для генерации отступов (решение архитектора)
-    const indent = (level: number) => '    '.repeat(level);
-    const BASE_INDENT_LEVEL = 6; // Базовый уровень (внутри try блока)
-    const whileIndent = indent(BASE_INDENT_LEVEL);      // 24 пробела - уровень while
-    const conditionIndent = indent(BASE_INDENT_LEVEL);  // 24 пробела - уровень if/elif
-    const bodyIndent = indent(BASE_INDENT_LEVEL + 1);   // 28 пробелов - тело if/elif
-
-    // Добавляем навигацию для каждого узла
-    if (nodes?.length > 0) {
-      nodes.forEach((targetNode, index) => {
-        const condition = index === 0 ? 'if' : 'elif';
-        code += `${conditionIndent}${condition} current_node_id == "${targetNode.id}":\n`;
-
-        if ((targetNode.type as any) === 'message') {
+    
+    // Сохранение ответа
+    const variableName = node.data.inputVariable || 'user_response';
+    code += `            \n`;
+    code += `            # Сохраняем ответ пользователя\n`;
+    code += `            import datetime\n`;
+    code += `            timestamp = get_moscow_time()\n`;
+    code += `            \n`;
+    code += `            # Сохраняем простое значение для совместимости с логикой профиля\n`;
+    code += `            response_data = user_text  # Простое значение вместо сложного объекта\n`;
+    code += `            \n`;
+    code += `            # Сохраняем в пользовательские данные\n`;
+    code += `            user_data[user_id]["${variableName}"] = response_data\n`;
+    code += `            \n`;
+    
+    // Сохранение в базу данных (всегда включено для collectUserInput)
+    code += `            # Сохраняем в базу данных\n`;
+    code += `            saved_to_db = await update_user_data_in_db(user_id, "${variableName}", response_data)\n`;
+    code += `            if saved_to_db:\n`;
+    code += `                logging.info(f"✅ Данные сохранены в БД: ${variableName} = {user_text} (пользователь {user_id})")\n`;
+    code += `            else:\n`;
+    code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
+    code += `            \n`;
+    
+    code += `            \n`;
+    code += `            logging.info(f"Получен пользовательский ввод: ${variableName} = {user_text}")\n`;
+    code += `            \n`;
+    
+    // Навигация к следующему узлу
+    if (node.data.inputTargetNodeId) {
+      code += `            # Переходим к следующему узлу\n`;
+      code += `            try:\n`;
+      
+      // Найдем целевой узел для навигации
+      const targetNode = nodes.find(n => n.id === node.data.inputTargetNodeId);
+      if (targetNode) {
+        if (targetNode.type === 'message') {
+          // Для message узлов отправляем сообщение напрямую
+          const messageText = targetNode.data.messageText || 'Выберите действие';
+          const formattedText = formatTextForPython(messageText);
+          code += `                # Отправляем сообщение для узла ${targetNode.id}\n`;
+          code += `                text = ${formattedText}\n`;
+          
+          // Если целевой узел тоже собирает ввод, настраиваем новое ожидание
+          if (targetNode.data.collectUserInput === true) {
+            const nextInputType = targetNode.data.inputType || 'text';
+            const nextInputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+            const nextInputTargetNodeId = targetNode.data.inputTargetNodeId;
+            
+            code += `                # Настраиваем новое ожидание ввода для узла ${targetNode.id}\n`;
+            code += `                user_data[user_id]["waiting_for_input"] = {\n`;
+            code += `                    "type": "${nextInputType}",\n`;
+            code += `                    "variable": "${nextInputVariable}",\n`;
+            code += `                    "save_to_database": True,\n`;
+            code += `                    "node_id": "${targetNode.id}",\n`;
+            code += `                    "next_node_id": "${nextInputTargetNodeId || ''}",\n`;
+            code += `                    "min_length": 0,\n`;
+            code += `                    "max_length": 0,\n`;
+            code += `                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
+            code += `                    "success_message": ""\n`;
+            code += `                }\n`;
+            code += `                \n`;
+          }
+          
+          if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            // Используем универсальную функцию для создания inline клавиатуры
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
+            code += `                await message.answer(text, reply_markup=keyboard)\n`;
+          } else {
+            code += `                await message.answer(text)\n`;
+          }
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем состояние ТОЛЬКО если целевой узел НЕ собирает ввод
+          if (!targetNode.data.collectUserInput) {
+            code += `                # Очищаем состояние ожидания ввода после успешного перехода\n`;
+            code += `                if "waiting_for_input" in user_data[user_id]:\n`;
+            code += `                    del user_data[user_id]["waiting_for_input"]\n`;
+            if (node.data.inputType) {
+              code += `                if "input_type" in user_data[user_id]:\n`;
+              code += `                    del user_data[user_id]["input_type"]\n`;
+            }
+          }
+          code += `                \n`;
+          code += `                logging.info("✅ Переход к следующему узлу выполнен успешно")\n`;
+        } else {
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
           if (targetNode.data.allowMultipleSelection === true) {
             // Для узлов с множественным выбором создаем прямую навигацию
             const messageText = targetNode.data.messageText || 'Сообщение';
             const formattedText = formatTextForPython(messageText);
-            code += `${bodyIndent}# Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
-            code += `${bodyIndent}logging.info(f"🔧 Переходим к узлу с множественным выбором: ${targetNode.id}")\n`;
-            code += `${bodyIndent}text = ${formattedText}\n`;
-
-            // Замена переменных
-            code += `${bodyIndent}user_data[user_id] = user_data.get(user_id, {})\n`;
-            code += generateUniversalVariableReplacement(bodyIndent);
-
-            // Инициализируем состояние множественного выбора
-            code += `${bodyIndent}# Инициализируем состояние множественного выбора\n`;
-            code += `${bodyIndent}user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
-            code += `${bodyIndent}user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
-            code += `${bodyIndent}user_data[user_id]["multi_select_type"] = "selection"\n`;
-            if (targetNode.data.multiSelectVariable) {
-              code += `${bodyIndent}user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
-            }
-
-            // Создаем inline клавиатуру с кнопками выбора
-            if (targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-              code += generateInlineKeyboardCode(targetNode.data.buttons, bodyIndent, targetNode.id, targetNode.data, allNodeIds);
-              code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
-            } else {
-              code += `${bodyIndent}await message.answer(text)\n`;
-            }
-            code += `${bodyIndent}logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
-          } else {
-            const messageText = targetNode.data.messageText || 'Сообщение';
-            const cleanedMessageText = stripHtmlTags(messageText);
-            const formattedText = formatTextForPython(cleanedMessageText);
-            code += `${bodyIndent}text = ${formattedText}\n`;
-
-            // Применяем замену переменных
-            code += `${bodyIndent}# Замена переменных в тексте\n`;
-            code += generateUniversalVariableReplacement(bodyIndent);
-
-            // Если узел message собирает ввод, настраиваем ожидание
-            if (targetNode.data.collectUserInput === true) {
-              const inputType = targetNode.data.inputType || 'text';
-              const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-              const inputTargetNodeId = targetNode.data.inputTargetNodeId;
-
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки, показываем их ВМЕСТО ожидания текста
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-                code += `${bodyIndent}# ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания текста\n`;
-                code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
-
-                // Добавляем кнопки для узла с collectUserInput + buttons
-                targetNode.data.buttons.forEach((btn: Button, btnIndex: number) => {
-                  if (btn.action === "goto" && btn.target) {
-                    const callbackData = `${btn.target}`;
-                    code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                  } else if (btn.action === "url" && btn.url) {
-                    code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url}"))\n`;
-                  } else if (btn.action === "command" && btn.target) {
-                    const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                    code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                  }
-                });
-
-                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-                code += `${bodyIndent}builder.adjust(${columns})\n`;
-                code += `${bodyIndent}keyboard = builder.as_markup()\n`;
-                code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
-                code += `${bodyIndent}logging.info(f"✅ Показаны inline кнопки для узла ${targetNode.id} с collectUserInput")\n`;
-              } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-                // Проверяем, есть ли условные сообщения
-                if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
-                  code += `${bodyIndent}# Узел с условными сообщениями - проверяем условия\n`;
-                  code += `${bodyIndent}logging.info(f"🔧 Обработка узла с условными сообщениями: ${targetNode.id}")\n`;
-                  code += `${bodyIndent}user_data_dict = await get_user_from_db(user_id) or {}\n`;
-                  code += `${bodyIndent}user_data_dict.update(user_data.get(user_id, {}))\n`;
-                  code += `${bodyIndent}# Функция для проверки переменных пользователя\n`;
-                  code += `${bodyIndent}def check_user_variable_inline(var_name, user_data_dict):\n`;
-                  code += `${bodyIndent}    if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
-                  code += `${bodyIndent}        try:\n`;
-                  code += `${bodyIndent}            import json\n`;
-                  code += `${bodyIndent}            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
-                  code += `${bodyIndent}            if var_name in parsed_data:\n`;
-                  code += `${bodyIndent}                raw_value = parsed_data[var_name]\n`;
-                  code += `${bodyIndent}                if isinstance(raw_value, dict) and "value" in raw_value:\n`;
-                  code += `${bodyIndent}                    var_value = raw_value["value"]\n`;
-                  code += `${bodyIndent}                    if var_value is not None and str(var_value).strip() != "":\n`;
-                  code += `${bodyIndent}                        return True, str(var_value)\n`;
-                  code += `${bodyIndent}                else:\n`;
-                  code += `${bodyIndent}                    if raw_value is not None and str(raw_value).strip() != "":\n`;
-                  code += `${bodyIndent}                        return True, str(raw_value)\n`;
-                  code += `${bodyIndent}        except (json.JSONDecodeError, TypeError):\n`;
-                  code += `${bodyIndent}            pass\n`;
-                  code += `${bodyIndent}    if var_name in user_data_dict:\n`;
-                  code += `${bodyIndent}        variable_data = user_data_dict.get(var_name)\n`;
-                  code += `${bodyIndent}        if isinstance(variable_data, dict) and "value" in variable_data:\n`;
-                  code += `${bodyIndent}            var_value = variable_data["value"]\n`;
-                  code += `${bodyIndent}            if var_value is not None and str(var_value).strip() != "":\n`;
-                  code += `${bodyIndent}                return True, str(var_value)\n`;
-                  code += `${bodyIndent}        elif variable_data is not None and str(variable_data).strip() != "":\n`;
-                  code += `${bodyIndent}            return True, str(variable_data)\n`;
-                  code += `${bodyIndent}    return False, None\n`;
-                  code += `${bodyIndent}\n`;
-
-                  // Генерируем проверку условий
-                  code += `${bodyIndent}conditional_met = False\n`;
-
-                  const sortedConditions = [...targetNode.data.conditionalMessages].sort((a: ConditionalMessage, b: ConditionalMessage) => (b.priority || 0) - (a.priority || 0));
-                  sortedConditions.forEach((condition: ConditionalMessage, condIndex: number) => {
-                    const ifKeyword = condIndex === 0 ? 'if' : 'if';
-
-                    if (condition.condition === 'user_data_exists' && condition.variableName) {
-                      code += `${bodyIndent}${ifKeyword} (\n`;
-                      code += `${bodyIndent}    check_user_variable_inline("${condition.variableName}", user_data_dict)[0]\n`;
-                      code += `${bodyIndent}):\n`;
-                      code += `${bodyIndent}    conditional_met = True\n`;
-
-                      // Условная клавиатура
-                      if (condition.buttons && condition.buttons?.length > 0) {
-                        code += `${bodyIndent}    builder = ReplyKeyboardBuilder()\n`;
-                        condition.buttons.forEach((btn: ButtonSchema) => {
-                          code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                        });
-                        const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                        const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                        code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                        code += `${bodyIndent}    main_text = text\n`;
-                        code += `${bodyIndent}    await message.answer(main_text, reply_markup=keyboard)\n`;
-
-                        // Проверяем, нужно ли собирать ввод для условного сообщения
-                        const condCollectInput = condition.collectUserInput === true || condition.waitForTextInput === true || condition.enableTextInput === true;
-                        if (condCollectInput) {
-                          code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id} (сбор ответов НАСТРОЕН)")\n`;
-                          code += `${bodyIndent}    # Настраиваем ожидание ввода для условного сообщения\n`;
-                          const condInputVariable = condition.textInputVariable || condition.inputVariable || condition.variableName || targetNode.data.inputVariable || `response_${targetNode.id}`;
-                          const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
-
-                          // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true
-                          const condSkipButtons = (condition.buttons || [])
-                            .filter((btn: ButtonSchema) => btn.skipDataCollection === true && btn.target)
-                            .map((btn: ButtonSchema) => ({ text: btn.text, target: btn.target }));
-                          const condSkipButtonsJson = JSON.stringify(condSkipButtons);
-
-                          code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
-                          code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
-                          code += `${bodyIndent}        "type": "text",\n`;
-                          code += `${bodyIndent}        "variable": "${condInputVariable}",\n`;
-                          code += `${bodyIndent}        "save_to_database": True,\n`;
-                          code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
-                          code += `${bodyIndent}        "next_node_id": "${nextNodeAfterCondition || ''}",\n`;
-                          code += `${bodyIndent}        "skip_buttons": ${condSkipButtonsJson}\n`;
-                          code += `${bodyIndent}    }\n`;
-                          code += `${bodyIndent}    logging.info(f"🔧 Установлено ожидание ввода для условного сообщения: {user_data[message.from_user.id]['waiting_for_input']}")\n`;
-                        } else {
-                          code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id} (сбор ответов НЕ настроен - кнопки ведут напрямую)")\n`;
-                        }
-                      }
-                    }
-                  });
-
-                  // Если условие не выполнено - показываем основную клавиатуру
-                  code += `${bodyIndent}if not conditional_met:\n`;
-                  code += `${bodyIndent}    # Условие не выполнено - показываем основное сообщение\n`;
-                  code += `${bodyIndent}    # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n`;
-                  code += `${bodyIndent}    builder = ReplyKeyboardBuilder()\n`;
-
-                  // Добавляем кнопки для reply клавиатуры
-                  targetNode.data.buttons.forEach((btn: Button) => {
-                    if (btn.action === "contact" && btn.requestContact) {
-                      code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-                    } else if (btn.action === "location" && btn.requestLocation) {
-                      code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-                    } else {
-                      code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                    }
-                  });
-
-                  const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                  const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                  code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                  code += `${bodyIndent}    await message.answer(text, reply_markup=keyboard)\n`;
-                  code += `${bodyIndent}    logging.info(f"✅ Показана основная reply клавиатура для узла ${targetNode.id}")\n`;
-
-                  // Настройка ожидания ввода для основной клавиатуры
-                  if (targetNode.data.enableTextInput === true || targetNode.data.collectUserInput === true) {
-                    // ИСПРАВЛЕНИЕ: Используем массив modes для поддержки и кнопок и текста
-                    const hasReplyButtons = targetNode.data.keyboardType === 'reply' && targetNode.data.buttons && targetNode.data.buttons?.length > 0;
-                    const modes: string[] = [];
-                    if (hasReplyButtons) modes.push('button');
-                    if (targetNode.data.enableTextInput === true || !hasReplyButtons) modes.push('text');
-                    const modesStr = modes.map(m => `"${m}"`).join(', ');
-                    const primaryType = modes[0];
-
-                    code += `${bodyIndent}    # Настраиваем ожидание ввода для message узла с reply кнопками\n`;
-                    code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
-                    code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
-                    code += `${bodyIndent}        "type": "${primaryType}",\n`;
-                    code += `${bodyIndent}        "modes": [${modesStr}],\n`;
-                    code += `${bodyIndent}        "variable": "${inputVariable}",\n`;
-                    code += `${bodyIndent}        "save_to_database": True,\n`;
-                    code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
-                    code += `${bodyIndent}        "next_node_id": "${inputTargetNodeId}",\n`;
-                    code += `${bodyIndent}        "min_length": 0,\n`;
-                    code += `${bodyIndent}        "max_length": 0,\n`;
-                    code += `${bodyIndent}        "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
-                    code += `${bodyIndent}        "success_message": ""\n`;
-                    code += `${bodyIndent}    }\n`;
-                    const modesForLog = modes.map(m => `'${m}'`).join(', ');
-                    code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesForLog}] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
-                  }
-                } else {
-                  // Нет условных сообщений - стандартная обработка
-                  code += `${bodyIndent}# ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n`;
-                  code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
-
-                  // Добавляем кнопки для reply клавиатуры
-                  targetNode.data.buttons.forEach((btn: Button) => {
-                    if (btn.action === "contact" && btn.requestContact) {
-                      code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-                    } else if (btn.action === "location" && btn.requestLocation) {
-                      code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-                    } else {
-                      code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                    }
-                  });
-
-                  const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                  const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                  code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                  code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
-                  code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
-
-                  // ИСПРАВЛЕНИЕ: Если включен сбор ввода, настраиваем ожидание даже при наличии кнопок
-                  if (targetNode.data.enableTextInput === true || targetNode.data.enablePhotoInput === true ||
-                    targetNode.data.enableVideoInput === true || targetNode.data.enableAudioInput === true ||
-                    targetNode.data.enableDocumentInput === true || targetNode.data.collectUserInput === true) {
-                    code += `${bodyIndent}# Настраиваем ожидание ввода для message узла с reply кнопками (используем универсальную функцию)\n`;
-                    code += generateWaitingStateCode(targetNode, bodyIndent);
-                  }
-                }
-              } else {
-                code += `${bodyIndent}await message.answer(text)\n`;
-
-                // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок (используем универсальную функцию)
-                code += `${bodyIndent}# Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)\n`;
-                code += generateWaitingStateCode(targetNode, bodyIndent);
-              }
-            } else {
-              // Если узел не собирает ввод, проверяем есть ли inline или reply кнопки
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-                code += `${bodyIndent}# Создаем inline клавиатуру\n`;
-                code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
-
-                // Добавляем кнопки
-                targetNode.data.buttons.forEach((btn: Button, btnIndex: number) => {
-                  if (btn.action === "goto" && btn.target) {
-                    const callbackData = `${btn.target}`;
-                    code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                  } else if (btn.action === "url" && btn.url) {
-                    code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url}"))\n`;
-                  } else if (btn.action === "command" && btn.target) {
-                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд
-                    const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                    code += `${bodyIndent}logging.info(f"Создана кнопка команды: ${btn.text} -> ${commandCallback}")\n`;
-                    code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                  }
-                });
-
-                // ВОССТАНОВЛЕНИЕ: Добавляем умное расположение кнопок по колонкам
-                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-                code += `${bodyIndent}builder.adjust(${columns})\n`;
-                code += `${bodyIndent}keyboard = builder.as_markup()\n`;
-                code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
-              } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-                code += `${bodyIndent}# Создаем reply клавиатуру\n`;
-                code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
-
-                // Добавляем кнопки для reply клавиатуры
-                targetNode.data.buttons.forEach((btn: Button) => {
-                  if (btn.action === "contact" && btn.requestContact) {
-                    code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-                  } else if (btn.action === "location" && btn.requestLocation) {
-                    code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-                  } else {
-                    code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                  }
-                });
-
-                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
-                code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для переходного узла")\n`;
-              } else {
-                code += `${bodyIndent}await message.answer(text)\n`;
-              }
-
-              // Очищаем состояние ожидания ввода после успешного перехода для message узлов без сбора ввода
-              if (!targetNode.data.collectUserInput) {
-                code += `${bodyIndent}# НЕ отправляем сообщение об успехе здесь - это делается в старом формате\n`;
-                code += `${bodyIndent}# Очищаем состояние ожидания ввода после успешного перехода\n`;
-                code += `${bodyIndent}if "waiting_for_input" in user_data[user_id]:\n`;
-                code += `${bodyIndent}    del user_data[user_id]["waiting_for_input"]\n`;
-                code += `${bodyIndent}\n`;
-                code += `${bodyIndent}logging.info("✅ Переход к следующему узлу выполнен успешно")\n`;
-              }
-
-              // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу вызываем callback обработчик
-              if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-                const autoTargetId = targetNode.data.autoTransitionTo;
-                const autoSafeFunctionName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
-                code += `${bodyIndent}\n`;
-                code += `${bodyIndent}# ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `${bodyIndent}logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `${bodyIndent}import types as aiogram_types\n`;
-                code += `${bodyIndent}async def noop(*args, **kwargs):\n`;
-                code += `${bodyIndent}    return None\n`;
-                code += `${bodyIndent}fake_message = aiogram_types.SimpleNamespace(\n`;
-                code += `${bodyIndent}    chat=aiogram_types.SimpleNamespace(id=message.from_user.id),\n`;
-                code += `${bodyIndent}    message_id=message.message_id,\n`;
-                code += `${bodyIndent}    delete=noop,\n`;
-                code += `${bodyIndent}    edit_text=noop,\n`;
-                code += `${bodyIndent}    answer=lambda text, **kwargs: bot.send_message(message.from_user.id, text, **kwargs)\n`;
-                code += `${bodyIndent})\n`;
-                code += `${bodyIndent}fake_callback = aiogram_types.SimpleNamespace(\n`;
-                code += `${bodyIndent}    id="auto_transition",\n`;
-                code += `${bodyIndent}    from_user=message.from_user,\n`;
-                code += `${bodyIndent}    chat_instance="",\n`;
-                code += `${bodyIndent}    data="${autoTargetId}",\n`;
-                code += `${bodyIndent}    message=fake_message,\n`;
-                code += `${bodyIndent}    answer=noop\n`;
-                code += `${bodyIndent})\n`;
-                code += `${bodyIndent}await handle_callback_${autoSafeFunctionName}(fake_callback)\n`;
-              } else {
-                code += `${bodyIndent}break  # Нет автоперехода, завершаем цикл\n`;
-              }
-            }
-          } // Закрываем блок else для allowMultipleSelection
-        } else if ((targetNode.type as any) === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
-          const inputPrompt = formatTextForPython(targetNode.data.messageText || "Введите ваш ответ:");
-          code += `${bodyIndent}prompt_text = ${inputPrompt}\n`;
-          code += `${bodyIndent}await message.answer(prompt_text)\n`;
-
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
-          const msgNodeCollectInput = targetNode.data.collectUserInput === true ||
-            targetNode.data.enableTextInput === true ||
-            targetNode.data.enablePhotoInput === true ||
-            targetNode.data.enableVideoInput === true ||
-            targetNode.data.enableAudioInput === true ||
-            targetNode.data.enableDocumentInput === true;
-
-          if (msgNodeCollectInput) {
-            code += `${bodyIndent}# Устанавливаем новое ожидание ввода (collectUserInput=true)\n`;
-            code += `${bodyIndent}user_data[user_id]["waiting_for_input"] = {\n`;
-            code += `${bodyIndent}    "type": "${targetNode.data.inputType || 'text'}",\n`;
-            code += `${bodyIndent}    "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
-            code += `${bodyIndent}    "save_to_database": True,\n`;
-            code += `${bodyIndent}    "node_id": "${targetNode.id}",\n`;
-            const nextConnection = connections.find(conn => conn.source === targetNode.id);
-            if (nextConnection) {
-              code += `${bodyIndent}    "next_node_id": "${nextConnection.target}",\n`;
-            } else {
-              code += `${bodyIndent}    "next_node_id": None,\n`;
-            }
-            code += `${bodyIndent}    "min_length": ${targetNode.data.minLength || 0},\n`;
-            code += `${bodyIndent}    "max_length": ${targetNode.data.maxLength || 0},\n`;
-            code += `${bodyIndent}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
-            code += `${bodyIndent}    "success_message": ""\n`;
-            code += `${bodyIndent}}\n`;
-          } else {
-            code += `${bodyIndent}# Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
-          }
-          code += `${bodyIndent}break  # Выходим из цикла после настройки ожидания ввода\n`;
-        } else if (targetNode.type === 'command') {
-          // Для узлов команд вызываем соответствующий обработчик
-          const commandName = targetNode.data.command?.replace('/', '') || 'unknown';
-          const handlerName = `${commandName}_handler`;
-          code += `${bodyIndent}# Выполняем команду ${targetNode.data.command}\n`;
-          code += `${bodyIndent}from types import SimpleNamespace\n`;
-          code += `${bodyIndent}fake_message = SimpleNamespace()\n`;
-          code += `${bodyIndent}fake_message.from_user = message.from_user\n`;
-          code += `${bodyIndent}fake_message.chat = message.chat\n`;
-          code += `${bodyIndent}fake_message.date = message.date\n`;
-          code += `${bodyIndent}fake_message.answer = message.answer\n`;
-          code += `${bodyIndent}await ${handlerName}(fake_message)\n`;
-          code += `${bodyIndent}break  # Выходим из цикла после выполнения команды\n`;
-        } else {
-          code += `${bodyIndent}logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
-          code += `${bodyIndent}break  # Выходим из цикла для неизвестного типа узла\n`;
-        }
-      });
-
-      code += '                        else:\n';
-      code += '                            logging.warning(f"Неизвестный узел: {current_node_id}")\n';
-      code += '                            break  # Выходим из цикла при неизвестном узле\n';
-    } else {
-      code += '                        # No nodes available for navigation\n';
-      code += '                        logging.warning(f"Нет доступных узлов для навигации")\n';
-      code += '                        break\n';
-    }
-
-    code += '                except Exception as e:\n';
-    code += '                    logging.error(f"Ошибка при переходе к узлу: {e}")\n';
-    code += '            \n';
-    code += '            return  # Завершаем обработку для нового формата\n';
-    code += '        \n';
-    code += '        # Обработка старого формата (для совместимости)\n';
-    code += '        # Находим узел для получения настроек\n';
-
-    // Генерируем проверку для каждого узла с универсальным сбором ввода (старый формат)
-    const inputNodes = (nodes || []).filter(node => node.data.collectUserInput);
-    code += `        logging.info(f"DEBUG old format: checking inputNodes: ${inputNodes.map(n => n.id).join(', ')}")\n`;
-    inputNodes.forEach((node, index) => {
-      const condition = index === 0 ? 'if' : 'elif';
-      code += `        ${condition} waiting_node_id == "${node.id}":\n`;
-
-      // Добавляем валидацию если есть
-      if (node.data.inputValidation) {
-        if (node.data.minLength && node.data.minLength > 0) {
-          code += `            if len(user_text) < ${node.data.minLength}:\n`;
-          code += `                await message.answer("❌ Слишком короткий ответ (минимум ${node.data.minLength} символов). Попробуйте еще раз.")\n`;
-          code += `                return\n`;
-        }
-        if (node.data.maxLength && node.data.maxLength > 0) {
-          code += `            if len(user_text) > ${node.data.maxLength}:\n`;
-          code += `                await message.answer("❌ Слишком длинный ответ (максимум ${node.data.maxLength} символов). Попробуйте еще раз.")\n`;
-          code += `                return\n`;
-        }
-      }
-
-      // Валидация типа ввода
-      if (node.data.inputType === 'email') {
-        code += `            import re\n`;
-        code += `            email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n`;
-        code += `            if not re.match(email_pattern, user_text):\n`;
-        code += `                await message.answer("❌ Неверный формат email. Попробуйте еще раз.")\n`;
-        code += `                return\n`;
-      } else if (node.data.inputType === 'number') {
-        code += `            try:\n`;
-        code += `                float(user_text)\n`;
-        code += `            except ValueError:\n`;
-        code += `                await message.answer("❌ Введите корректное число. Попробуйте еще раз.")\n`;
-        code += `                return\n`;
-      } else if (node.data.inputType === 'phone') {
-        code += `            import re\n`;
-        code += `            phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n`;
-        code += `            if not re.match(phone_pattern, user_text):\n`;
-        code += `                await message.answer("❌ Неверный формат телефона. Попробуйте еще раз.")\n`;
-        code += `                return\n`;
-      }
-
-      // Сохранение ответа
-      const variableName = node.data.inputVariable || 'user_response';
-      code += `            \n`;
-      code += `            # Сохраняем ответ пользователя\n`;
-      code += `            import datetime\n`;
-      code += `            timestamp = get_moscow_time()\n`;
-      code += `            \n`;
-      code += `            # Сохраняем простое значение для совместимости с логикой профиля\n`;
-      code += `            response_data = user_text  # Простое значение вместо сложного объекта\n`;
-      code += `            \n`;
-      code += `            # Сохраняем в пользовательские данные\n`;
-      code += `            user_data[user_id]["${variableName}"] = response_data\n`;
-      code += `            \n`;
-
-      // Сохранение в базу данных (всегда включено для collectUserInput)
-      code += `            # Сохраняем в базу данных\n`;
-      code += `            saved_to_db = await update_user_data_in_db(user_id, "${variableName}", response_data)\n`;
-      code += `            if saved_to_db:\n`;
-      code += `                logging.info(f"✅ Данные сохранены в БД: ${variableName} = {user_text} (пользователь {user_id})")\n`;
-      code += `            else:\n`;
-      code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
-      code += `            \n`;
-
-      code += `            \n`;
-      code += `            logging.info(f"Получен пользовательский ввод: ${variableName} = {user_text}")\n`;
-      code += `            \n`;
-
-      // Навигация к следующему узлу
-      if (node.data.inputTargetNodeId) {
-        code += `            # Переходим к следующему узлу\n`;
-        code += `            try:\n`;
-
-        // Найдем целевой узел для навигации
-        const targetNode = nodes.find(n => n.id === node.data.inputTargetNodeId);
-        if (targetNode) {
-          if ((targetNode.type as any) === 'message') {
-            // Для message узлов отправляем сообщение напрямую
-            const messageText = targetNode.data.messageText || 'Выберите действие';
-            const formattedText = formatTextForPython(messageText);
-            code += `                # Отправляем сообщение для узла ${targetNode.id}\n`;
+            code += `                # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
             code += `                text = ${formattedText}\n`;
-
-            // Если целевой узел тоже собирает ввод, настраиваем новое ожидание
-            if (targetNode.data.collectUserInput === true) {
-              const nextInputType = targetNode.data.inputType || 'text';
-              const nextInputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-              const nextInputTargetNodeId = targetNode.data.inputTargetNodeId;
-
-              code += `                # Настраиваем новое ожидание ввода для узла ${targetNode.id}\n`;
-              code += `                user_data[user_id]["waiting_for_input"] = {\n`;
-              code += `                    "type": "${nextInputType}",\n`;
-              code += `                    "variable": "${nextInputVariable}",\n`;
-              code += `                    "save_to_database": True,\n`;
-              code += `                    "node_id": "${targetNode.id}",\n`;
-              code += `                    "next_node_id": "${nextInputTargetNodeId || ''}",\n`;
-              code += `                    "min_length": 0,\n`;
-              code += `                    "max_length": 0,\n`;
-              code += `                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
-              code += `                    "success_message": ""\n`;
-              code += `                }\n`;
-              code += `                \n`;
+            
+            // Замена переменных
+            code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+            code += generateUniversalVariableReplacement('                ');
+            
+            // Инициализируем состояние множественного выбора
+            code += `                # Инициализируем состояние множественного выбора\n`;
+            code += `                user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+            code += `                user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+            code += `                user_data[user_id]["multi_select_type"] = "selection"\n`;
+            if (targetNode.data.multiSelectVariable) {
+              code += `                user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
             }
-
-            if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-              // Используем универсальную функцию для создания inline клавиатуры
+            
+            // Создаем inline клавиатуру с кнопками выбора
+            if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
               code += `                await message.answer(text, reply_markup=keyboard)\n`;
             } else {
               code += `                await message.answer(text)\n`;
             }
-
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем состояние ТОЛЬКО если целевой узел НЕ собирает ввод
-            if (!targetNode.data.collectUserInput) {
-              code += `                # Очищаем состояние ожидания ввода после успешного перехода\n`;
-              code += `                if "waiting_for_input" in user_data[user_id]:\n`;
-              code += `                    del user_data[user_id]["waiting_for_input"]\n`;
-              if (node.data.inputType) {
-                code += `                if "input_type" in user_data[user_id]:\n`;
-                code += `                    del user_data[user_id]["input_type"]\n`;
-              }
-            }
-            code += `                \n`;
-            code += `                logging.info("✅ Переход к следующему узлу выполнен успешно")\n`;
+            code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
           } else {
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
-            if (targetNode.data.allowMultipleSelection === true) {
-              // Для узлов с множественным выбором создаем прямую навигацию
-              const messageText = targetNode.data.messageText || 'Сообщение';
-              const formattedText = formatTextForPython(messageText);
-              code += `                # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
-              code += `                text = ${formattedText}\n`;
-
-              // Замена переменных
-              code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-              code += generateUniversalVariableReplacement('                ');
-
-              // Инициализируем состояние множественного выбора
-              code += `                # Инициализируем состояние множественного выбора\n`;
-              code += `                user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
-              code += `                user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
-              code += `                user_data[user_id]["multi_select_type"] = "selection"\n`;
-              if (targetNode.data.multiSelectVariable) {
-                code += `                user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
-              }
-
-              // Создаем inline клавиатуру с кнопками выбора
-              if (targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-                code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-                code += `                await message.answer(text, reply_markup=keyboard)\n`;
-              } else {
-                code += `                await message.answer(text)\n`;
-              }
-              code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
+            // Для обычных узлов используем обычную навигацию
+            const messageText = targetNode.data.messageText || 'Сообщение';
+            const formattedText = formatTextForPython(messageText);
+            code += `                # Обычный узел - отправляем сообщение\n`;
+            code += `                text = ${formattedText}\n`;
+            
+            // Добавляем замену переменных
+            code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+            code += generateUniversalVariableReplacement('                ');
+            
+            // Создаем inline клавиатуру если есть кнопки
+            if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
+              code += `                await message.answer(text, reply_markup=keyboard)\n`;
             } else {
-              // Для обычных узлов используем обычную навигацию
-              const messageText = targetNode.data.messageText || 'Сообщение';
-              const formattedText = formatTextForPython(messageText);
-              code += `                # Обычный узел - отправляем сообщение\n`;
-              code += `                text = ${formattedText}\n`;
-
-              // Добавляем замену переменных
-              code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-              code += generateUniversalVariableReplacement('                ');
-
-              // Создаем inline клавиатуру если есть кнопки
-              if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-                code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-                code += `                await message.answer(text, reply_markup=keyboard)\n`;
-              } else {
-                code += '                await message.answer(text)\n';
-              }
-              code += `                logging.info(f"✅ Ввод навигация к обычному узлу: ${targetNode.id}")\n`;
+              code += '                await message.answer(text)\n';
             }
+            code += `                logging.info(f"✅ Ввод навигация к обычному узлу: ${targetNode.id}")\n`;
           }
-        } else {
-          // Если целевой узел не найден, добавляем заглушку
-          code += `                logging.warning(f"Целевой узел {node.data.inputTargetNodeId} не найден")\n`;
-          code += `                await message.answer("❌ Ошибка перехода: целевой узел не найден")\n`;
         }
-
-        code += `            except Exception as e:\n`;
-        code += `                logging.error(f"Ошибка при переходе к следующему узлу: {e}")\n`;
-        code += `            return\n`;
       } else {
-        // Если inputTargetNodeId равен null, это конец цепочки - это нормально
-        code += `            # Конец цепочки ввода - завершаем обработку\n`;
-        code += `            logging.info("Завершена цепочка сбора пользовательских данных")\n`;
-        code += `            return\n`;
+        // Если целевой узел не найден, добавляем заглушку
+        code += `                logging.warning(f"Целевой узел {node.data.inputTargetNodeId} не найден")\n`;
+        code += `                await message.answer("❌ Ошибка перехода: целевой узел не найден")\n`;
       }
-    });
-
-    code += '        \n';
-    code += '        # Если узел не найден\n';
-    code += '        logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")\n';
-    code += '        del user_data[user_id]["waiting_for_input"]\n';
-    code += '        return\n';
-    code += '    \n';
-    code += '    # НОВАЯ ЛОГИКА: Проверяем, включен ли дополнительный сбор ответов для обычных кнопок\n';
-    code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
-    code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
-    code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
-    code += '        input_target_node_id = user_data[user_id].get("input_target_node_id")\n';
-    code += '        user_text = message.text\n';
-    code += '        \n';
-    code += '        # Если есть целевой узел для перехода - это основной ввод, а не дополнительный\n';
-    code += '        if input_target_node_id:\n';
-    code += '            # Это основной ввод с переходом к следующему узлу\n';
-    code += '            timestamp = get_moscow_time()\n';
-    code += '            response_data = user_text\n';
-    code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
-    code += '            user_data[user_id][input_variable] = response_data\n';
-    code += '            \n';
-    code += '            # Сохраняем в базу данных\n';
-    code += '            saved_to_db = await update_user_data_in_db(user_id, input_variable, response_data)\n';
-    code += '            if saved_to_db:\n';
-    code += '                logging.info(f"✅ Данные сохранены в БД: {input_variable} = {user_text} (пользователь {user_id})")\n';
-    code += '            else:\n';
-    code += '                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
-    code += '            \n';
-    code += '            logging.info(f"Получен основной пользовательский ввод: {input_variable} = {user_text}")\n';
-    code += '            \n';
-    code += '            # Переходим к целевому узлу\n';
-    code += '            # Очищаем состояние сбора ввода\n';
-    code += '            del user_data[user_id]["input_collection_enabled"]\n';
-    code += '            if "input_node_id" in user_data[user_id]:\n';
-    code += '                del user_data[user_id]["input_node_id"]\n';
-    code += '            if "input_variable" in user_data[user_id]:\n';
-    code += '                del user_data[user_id]["input_variable"]\n';
-    code += '            if "input_target_node_id" in user_data[user_id]:\n';
-    code += '                del user_data[user_id]["input_target_node_id"]\n';
-    code += '            \n';
-    code += '            # Находим и вызываем обработчик целевого узла\n';
-
-    // Добавляем навигацию к целевому узлу
-    nodes.forEach((targetNode) => {
-      code += `            if input_target_node_id == "${targetNode.id}":\n`;
-      if ((targetNode.type as any) === 'message') {
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-        code += `                # Переход к узлу ${targetNode.id}\n`;
-        code += `                text = ${formattedText}\n`;
-
-        // Замена переменных
-        code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-        code += generateUniversalVariableReplacement('                ');
-
-        // Отправляем сообщение с кнопками если есть
-        if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-          code += `                await message.answer(text, reply_markup=keyboard)\n`;
-        } else {
-          code += `                await message.answer(text)\n`;
-        }
-        code += `                logging.info(f"Переход к узлу ${targetNode.id} выполнен")\n`;
-      } else if (targetNode.data.allowMultipleSelection) {
-        // Для узлов с множественным выбором создаем прямую навигацию
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-        code += `                # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
-        code += `                text = ${formattedText}\n`;
-
-        // Замена переменных
-        code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-        code += generateUniversalVariableReplacement('                ');
-
-        // Инициализируем состояние множественного выбора
-        code += `                # Инициализируем состояние множественного выбора\n`;
-        code += `                user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
-        code += `                user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
-        code += `                user_data[user_id]["multi_select_type"] = "selection"\n`;
-        if (targetNode.data.multiSelectVariable) {
-          code += `                user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
-        }
-
-        // Создаем inline клавиатуру с кнопками выбора
-        if (targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-          code += `                await message.answer(text, reply_markup=keyboard)\n`;
-        } else {
-          code += `                await message.answer(text)\n`;
-        }
-        code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
+      
+      code += `            except Exception as e:\n`;
+      code += `                logging.error(f"Ошибка при переходе к следующему узлу: {e}")\n`;
+      code += `            return\n`;
+    } else {
+      // Если inputTargetNodeId равен null, это конец цепочки - это нормально
+      code += `            # Конец цепочки ввода - завершаем обработку\n`;
+      code += `            logging.info("Завершена цепочка сбора пользовательских данных")\n`;
+      code += `            return\n`;
+    }
+  });
+  
+  code += '        \n';
+  code += '        # Если узел не найден\n';
+  code += '        logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")\n';
+  code += '        del user_data[user_id]["waiting_for_input"]\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    # НОВАЯ ЛОГИКА: Проверяем, включен ли дополнительный сбор ответов для обычных кнопок\n';
+  code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
+  code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
+  code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
+  code += '        input_target_node_id = user_data[user_id].get("input_target_node_id")\n';
+  code += '        user_text = message.text\n';
+  code += '        \n';
+  code += '        # Если есть целевой узел для перехода - это основной ввод, а не дополнительный\n';
+  code += '        if input_target_node_id:\n';
+  code += '            # Это основной ввод с переходом к следующему узлу\n';
+  code += '            timestamp = get_moscow_time()\n';
+  code += '            response_data = user_text\n';
+  code += '            \n';
+  code += '            # Сохраняем в пользовательские данные\n';
+  code += '            user_data[user_id][input_variable] = response_data\n';
+  code += '            \n';
+  code += '            # Сохраняем в базу данных\n';
+  code += '            saved_to_db = await update_user_data_in_db(user_id, input_variable, response_data)\n';
+  code += '            if saved_to_db:\n';
+  code += '                logging.info(f"✅ Данные сохранены в БД: {input_variable} = {user_text} (пользователь {user_id})")\n';
+  code += '            else:\n';
+  code += '                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '            \n';
+  code += '            logging.info(f"Получен основной пользовательский ввод: {input_variable} = {user_text}")\n';
+  code += '            \n';
+  code += '            # Переходим к целевому узлу\n';
+  code += '            # Очищаем состояние сбора ввода\n';
+  code += '            del user_data[user_id]["input_collection_enabled"]\n';
+  code += '            if "input_node_id" in user_data[user_id]:\n';
+  code += '                del user_data[user_id]["input_node_id"]\n';
+  code += '            if "input_variable" in user_data[user_id]:\n';
+  code += '                del user_data[user_id]["input_variable"]\n';
+  code += '            if "input_target_node_id" in user_data[user_id]:\n';
+  code += '                del user_data[user_id]["input_target_node_id"]\n';
+  code += '            \n';
+  code += '            # Находим и вызываем обработчик целевого узла\n';
+  
+  // Добавляем навигацию к целевому узлу
+  nodes.forEach((targetNode) => {
+    code += `            if input_target_node_id == "${targetNode.id}":\n`;
+    if (targetNode.type === 'message') {
+      const messageText = targetNode.data.messageText || 'Сообщение';
+      const formattedText = formatTextForPython(messageText);
+      code += `                # Переход к узлу ${targetNode.id}\n`;
+      code += `                text = ${formattedText}\n`;
+      
+      // Замена переменных
+      code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+      code += generateUniversalVariableReplacement('                ');
+      
+      // Отправляем сообщение с кнопками если есть
+      if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
+        code += `                await message.answer(text, reply_markup=keyboard)\n`;
       } else {
-        // Для обычных узлов отправляем простое сообщение
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-        code += `                # Обычный узел - отправляем сообщение ${targetNode.id}\n`;
-        code += `                text = ${formattedText}\n`;
-
-        // Замена переменных
-        code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-        code += generateUniversalVariableReplacement('                ');
-
-        if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-          code += `                await message.answer(text, reply_markup=keyboard)\n`;
-        } else {
-          code += `                await message.answer(text)\n`;
-        }
-        code += `                logging.info(f"✅ Навигация к обычному узлу ${targetNode.id} выполнена")\n`;
+        code += `                await message.answer(text)\n`;
       }
-    });
-    code += '            return\n';
+      code += `                logging.info(f"Переход к узлу ${targetNode.id} выполнен")\n`;
+    } else if (targetNode.data.allowMultipleSelection) {
+      // Для узлов с множественным выбором создаем прямую навигацию
+      const messageText = targetNode.data.messageText || 'Сообщение';
+      const formattedText = formatTextForPython(messageText);
+      code += `                # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
+      code += `                text = ${formattedText}\n`;
+      
+      // Замена переменных
+      code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+      code += generateUniversalVariableReplacement('                ');
+      
+      // Инициализируем состояние множественного выбора
+      code += `                # Инициализируем состояние множественного выбора\n`;
+      code += `                user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+      code += `                user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+      code += `                user_data[user_id]["multi_select_type"] = "selection"\n`;
+      if (targetNode.data.multiSelectVariable) {
+        code += `                user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
+      }
+      
+      // Создаем inline клавиатуру с кнопками выбора
+      if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
+        code += `                await message.answer(text, reply_markup=keyboard)\n`;
+      } else {
+        code += `                await message.answer(text)\n`;
+      }
+      code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
+    } else {
+      // Для обычных узлов отправляем простое сообщение
+      const messageText = targetNode.data.messageText || 'Сообщение';
+      const formattedText = formatTextForPython(messageText);
+      code += `                # Обычный узел - отправляем сообщение ${targetNode.id}\n`;
+      code += `                text = ${formattedText}\n`;
+      
+      // Замена переменных
+      code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+      code += generateUniversalVariableReplacement('                ');
+      
+      if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
+        code += `                await message.answer(text, reply_markup=keyboard)\n`;
+      } else {
+        code += `                await message.answer(text)\n`;
+      }
+      code += `                logging.info(f"✅ Навигация к обычному узлу ${targetNode.id} выполнена")\n`;
+    }
+  });
+  code += '            return\n';
+  code += '        else:\n';
+  code += '            # Это дополнительный комментарий (нет целевого узла)\n';
+  code += '            timestamp = get_moscow_time()\n';
+  code += '            response_data = user_text\n';
+  code += '            \n';
+  code += '            # Сохраняем в пользовательские данные\n';
+  code += '            user_data[user_id][f"{input_variable}_additional"] = response_data\n';
+  code += '            \n';
+  code += '            # Уведомляем пользователя\n';
+  code += '            await message.answer("✅ Дополнительный комментарий сохранен!")\n';
+  code += '            \n';
+  code += '            logging.info(f"Дополнительный текстовый ввод: {input_variable}_additional = {user_text} (пользователь {user_id})")\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
+  code += '    return\n';
+  
+  // Добавляем обработчик для фото
+  const hasPhotoInput = (nodes || []).some(node => node.data.enablePhotoInput);
+  if (hasPhotoInput) {
+    code += '\n\n# Обработчик получения фото от пользователя\n';
+    code += '@dp.message(F.photo)\n';
+    code += 'async def handle_photo_input(message: types.Message):\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    logging.info(f"📸 Получено фото от пользователя {user_id}")\n';
+    code += '    \n';
+    code += '    # Проверяем, ожидаем ли мы ввод фото\n';
+    code += '    if user_id not in user_data or "waiting_for_photo" not in user_data[user_id]:\n';
+    code += '        logging.info(f"Фото от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
+    code += '        return\n';
+    code += '    \n';
+    code += '    # Получаем конфигурацию ожидания\n';
+    code += '    photo_config = user_data[user_id]["waiting_for_photo"]\n';
+    code += '    photo_variable = photo_config.get("variable", "user_photo")\n';
+    code += '    node_id = photo_config.get("node_id", "unknown")\n';
+    code += '    next_node_id = photo_config.get("next_node_id")\n';
+    code += '    \n';
+    code += '    # Получаем file_id фото (берем последнее - лучшее качество)\n';
+    code += '    photo_file_id = message.photo[-1].file_id\n';
+    code += '    logging.info(f"Получен file_id фото: {photo_file_id}")\n';
+    code += '    \n';
+    code += '    # Регистрируем фото через API для получения URL\n';
+    code += '    photo_url = None\n';
+    code += '    try:\n';
+    code += '        if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):\n';
+    code += '            media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
     code += '        else:\n';
-    code += '            # Это дополнительный комментарий (нет целевого узла)\n';
-    code += '            timestamp = get_moscow_time()\n';
-    code += '            response_data = user_text\n';
+    code += '            media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
+    code += '        \n';
+    code += '        # Сначала сохраняем сообщение чтобы получить message_id\n';
+    code += '        saved_msg = await save_message_to_api(\n';
+    code += '            user_id=str(user_id),\n';
+    code += '            message_type="user",\n';
+    code += '            message_text="[Фото ответ]",\n';
+    code += '            node_id=node_id,\n';
+    code += '            message_data={"photo": {"file_id": photo_file_id}, "is_photo_answer": True}\n';
+    code += '        )\n';
+    code += '        \n';
+    code += '        if saved_msg and "id" in saved_msg:\n';
+    code += '            media_payload = {\n';
+    code += '                "messageId": saved_msg["id"],\n';
+    code += '                "fileId": photo_file_id,\n';
+    code += '                "botToken": BOT_TOKEN,\n';
+    code += '                "mediaType": "photo"\n';
+    code += '            }\n';
     code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
-    code += '            user_data[user_id][f"{input_variable}_additional"] = response_data\n';
-    code += '            \n';
-    code += '            # Уведомляем пользователя\n';
-    code += '            await message.answer("✅ Дополнительный комментарий сохранен!")\n';
-    code += '            \n';
-    code += '            logging.info(f"Дополнительный текстовый ввод: {input_variable}_additional = {user_text} (пользователь {user_id})")\n';
-    code += '        return\n';
+    code += '            async with aiohttp.ClientSession() as session:\n';
+    code += '                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:\n';
+    code += '                    if response.status == 200:\n';
+    code += '                        result = await response.json()\n';
+    code += '                        photo_url = result.get("url")\n';
+    code += '                        logging.info(f"Фото зарегистрировано, URL: {photo_url}")\n';
+    code += '                    else:\n';
+    code += '                        error_text = await response.text()\n';
+    code += '                        logging.warning(f"Не удалось зарегистрировать фото: {response.status} - {error_text}")\n';
+    code += '    except Exception as reg_error:\n';
+    code += '        logging.warning(f"Ошибка при регистрации фото: {reg_error}")\n';
     code += '    \n';
-    code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
-    code += '    return\n';
-
-    // Добавляем обработчик для фото
-    const hasPhotoInput = (nodes || []).some(node => node.data.enablePhotoInput);
-    if (hasPhotoInput) {
-      code += '\n\n# Обработчик получения фото от пользователя\n';
-      code += '@dp.message(F.photo)\n';
-      code += 'async def handle_photo_input(message: types.Message):\n';
-      code += '    user_id = message.from_user.id\n';
-      code += '    logging.info(f"📸 Получено фото от пользователя {user_id}")\n';
-      code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод фото\n';
-      code += '    if user_id not in user_data or "waiting_for_photo" not in user_data[user_id]:\n';
-      code += '        logging.info(f"Фото от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    # Получаем конфигурацию ожидания\n';
-      code += '    photo_config = user_data[user_id]["waiting_for_photo"]\n';
-      code += '    photo_variable = photo_config.get("variable", "user_photo")\n';
-      code += '    node_id = photo_config.get("node_id", "unknown")\n';
-      code += '    next_node_id = photo_config.get("next_node_id")\n';
-      code += '    \n';
-      code += '    # Получаем file_id фото (берем последнее - лучшее качество)\n';
-      code += '    photo_file_id = message.photo[-1].file_id\n';
-      code += '    logging.info(f"Получен file_id фото: {photo_file_id}")\n';
-      code += '    \n';
-      code += '    # Регистрируем фото через API для получения URL\n';
-      code += '    photo_url = None\n';
-      code += '    try:\n';
-      code += '        if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):\n';
-      code += '            media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
-      code += '        else:\n';
-      code += '            media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
-      code += '        \n';
-      code += '        # Сначала сохраняем сообщение чтобы получить message_id\n';
-      code += '        saved_msg = await save_message_to_api(\n';
-      code += '            user_id=str(user_id),\n';
-      code += '            message_type="user",\n';
-      code += '            message_text="[Фото ответ]",\n';
-      code += '            node_id=node_id,\n';
-      code += '            message_data={"photo": {"file_id": photo_file_id}, "is_photo_answer": True}\n';
-      code += '        )\n';
-      code += '        \n';
-      code += '        if saved_msg and "id" in saved_msg:\n';
-      code += '            media_payload = {\n';
-      code += '                "messageId": saved_msg["id"],\n';
-      code += '                "fileId": photo_file_id,\n';
-      code += '                "botToken": BOT_TOKEN,\n';
-      code += '                "mediaType": "photo"\n';
-      code += '            }\n';
-      code += '            \n';
-      code += '            async with aiohttp.ClientSession() as session:\n';
-      code += '                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:\n';
-      code += '                    if response.status == 200:\n';
-      code += '                        result = await response.json()\n';
-      code += '                        photo_url = result.get("url")\n';
-      code += '                        logging.info(f"Фото зарегистрировано, URL: {photo_url}")\n';
-      code += '                    else:\n';
-      code += '                        error_text = await response.text()\n';
-      code += '                        logging.warning(f"Не удалось зарегистрировать фото: {response.status} - {error_text}")\n';
-      code += '    except Exception as reg_error:\n';
-      code += '        logging.warning(f"Ошибка при регистрации фото: {reg_error}")\n';
-      code += '    \n';
-      code += '    # Сохраняем в пользовательские данные как объект с URL\n';
-      code += '    photo_data = {\n';
-      code += '        "value": photo_file_id,\n';
-      code += '        "type": "photo",\n';
-      code += '        "photoUrl": photo_url,\n';
-      code += '        "timestamp": datetime.now(timezone.utc).isoformat()\n';
-      code += '    }\n';
-      code += '    user_data[user_id][photo_variable] = photo_data\n';
-      code += '    \n';
-      code += '    # Сохраняем в базу данных\n';
-      code += '    saved_to_db = await update_user_data_in_db(user_id, photo_variable, photo_data)\n';
-      code += '    if saved_to_db:\n';
-      code += '        logging.info(f"Фото сохранено в БД: {photo_variable} (пользователь {user_id})")\n';
-      code += '    else:\n';
-      code += '        logging.warning(f"Не удалось сохранить фото в БД, данные сохранены локально")\n';
-      code += '    \n';
-      code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_photo"]\n';
-      code += '    \n';
-      code += '    logging.info(f"Фото сохранено: {photo_variable} = {photo_file_id}, URL = {photo_url}")\n';
-      code += '    \n';
-      code += '    # Переходим к следующему узлу если указан\n';
-      code += '    if next_node_id:\n';
-      code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-      code += '        try:\n';
-      code += '            # Получаем данные пользователя для замены переменных\n';
-      code += '            user_record = await get_user_from_db(user_id)\n';
-      code += '            if user_record and "user_data" in user_record:\n';
-      code += '                user_vars = user_record["user_data"]\n';
-      code += '            else:\n';
-      code += '                user_vars = user_data.get(user_id, {})\n';
-      code += '            \n';
-
-      // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
-      if (nodes?.length > 0) {
-        nodes.forEach((targetNode, index) => {
-          const condition = index === 0 ? 'if' : 'elif';
-          code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-
-          // Получаем текст сообщения
-          const messageText = targetNode.data.messageText || targetNode.data.text || '';
-          const formattedText = formatTextForPython(messageText);
-          code += `                text = ${formattedText}\n`;
-
-          // Добавляем замену переменных
-          code += '                # Замена переменных\n';
-          code += generateUniversalVariableReplacement('                ');
-
-          // Проверяем attachedMedia
-          const attachedMedia = targetNode.data.attachedMedia || [];
-          if (attachedMedia?.length > 0 && attachedMedia.includes('photo')) {
-            // Отправляем фото с текстом
-            code += '                # Отправляем сохраненное фото с текстом узла\n';
-            code += `                if "${attachedMedia[0]}" in user_vars:\n`;
-            code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
-            code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
-            code += '                        media_file_id = media_file_id["value"]\n';
-            code += '                    await message.answer_photo(media_file_id, caption=text)\n';
-            code += `                    logging.info(f"✅ Отправлено фото из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
-            code += '                else:\n';
-            code += '                    await message.answer(text)\n';
-            code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
-          } else {
-            // Обычное сообщение
-            code += '                await message.answer(text)\n';
-          }
-
-          // Проверяем автопереход
-          if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-            code += `                \n`;
-            code += `                # Автопереход к следующему узлу\n`;
-            code += `                auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
-            code += `                logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")\n`;
-            code += `                # Создаем искусственный callback для вызова обработчика\n`;
-            code += `                import types as aiogram_types\n`;
-            code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
-            code += `                    id="auto_transition",\n`;
-            code += `                    from_user=message.from_user,\n`;
-            code += `                    chat_instance="",\n`;
-            code += `                    data=auto_next_node_id,\n`;
-            code += `                    message=message,\n`;
-            code += `                    answer=lambda: None\n`;
-            code += `                )\n`;
-
-            // Вызываем callback-обработчик вместо инлайн-отправки
-            const autoTargetNode = nodes.find(n => n.id === targetNode.data.autoTransitionTo);
-            if (autoTargetNode) {
-              const safeFuncName = autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-              code += `                await handle_callback_${safeFuncName}(fake_callback)\n`;
-            }
-            code += `                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")\n`;
-          }
-        });
-        code += '            else:\n';
-        code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-      }
-
-      code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-      code += '    \n';
-      code += '    return\n';
-    }
-
-    // Добавляем обработчик для видео
-    const hasVideoInput = (nodes || []).some(node => node.data.enableVideoInput);
-    if (hasVideoInput) {
-      code += '\n\n# Обработчик получения видео от пользователя\n';
-      code += '@dp.message(F.video)\n';
-      code += 'async def handle_video_input(message: types.Message):\n';
-      code += '    user_id = message.from_user.id\n';
-      code += '    logging.info(f"🎥 Получено видео от пользователя {user_id}")\n';
-      code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод видео\n';
-      code += '    if user_id not in user_data or "waiting_for_video" not in user_data[user_id]:\n';
-      code += '        logging.info(f"Видео от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    # Получаем конфигурацию ожидания\n';
-      code += '    video_config = user_data[user_id]["waiting_for_video"]\n';
-      code += '    video_variable = video_config.get("variable", "user_video")\n';
-      code += '    node_id = video_config.get("node_id", "unknown")\n';
-      code += '    next_node_id = video_config.get("next_node_id")\n';
-      code += '    \n';
-      code += '    # Получаем file_id видео\n';
-      code += '    video_file_id = message.video.file_id\n';
-      code += '    logging.info(f"🎥 Получен file_id видео: {video_file_id}")\n';
-      code += '    \n';
-      code += '    # Сохраняем в пользовательские данные\n';
-      code += '    user_data[user_id][video_variable] = video_file_id\n';
-      code += '    \n';
-      code += '    # Сохраняем в базу данных\n';
-      code += '    saved_to_db = await update_user_data_in_db(user_id, video_variable, video_file_id)\n';
-      code += '    if saved_to_db:\n';
-      code += '        logging.info(f"✅ Видео сохранено в БД: {video_variable} = {video_file_id} (пользователь {user_id})")\n';
-      code += '    else:\n';
-      code += '        logging.warning(f"⚠️ Не удалось сохранить видео в БД, данные сохранены локально")\n';
-      code += '    \n';
-      code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_video"]\n';
-      code += '    \n';
-      code += '    logging.info(f"🎥 Видео сохранено: {video_variable} = {video_file_id}")\n';
-      code += '    \n';
-      code += '    # Переходим к следующему узлу если указан\n';
-      code += '    if next_node_id:\n';
-      code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-      code += '        try:\n';
-      code += '            # Получаем данные пользователя для замены переменных\n';
-      code += '            user_record = await get_user_from_db(user_id)\n';
-      code += '            if user_record and "user_data" in user_record:\n';
-      code += '                user_vars = user_record["user_data"]\n';
-      code += '            else:\n';
-      code += '                user_vars = user_data.get(user_id, {})\n';
-      code += '            \n';
-
-      // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
-      if (nodes?.length > 0) {
-        nodes.forEach((targetNode, index) => {
-          const condition = index === 0 ? 'if' : 'elif';
-          code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-
-          // Получаем текст сообщения
-          const messageText = targetNode.data.messageText || targetNode.data.text || '';
-          const formattedText = formatTextForPython(messageText);
-          code += `                text = ${formattedText}\n`;
-
-          // Добавляем замену переменных
-          code += '                # Замена переменных\n';
-          code += generateUniversalVariableReplacement('                ');
-
-          // Проверяем attachedMedia
-          const attachedMedia = targetNode.data.attachedMedia || [];
-          if (attachedMedia?.length > 0 && attachedMedia.includes('video')) {
-            // Отправляем видео с текстом
-            code += '                # Отправляем сохраненное видео с текстом узла\n';
-            code += `                if "${attachedMedia[0]}" in user_vars:\n`;
-            code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
-            code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
-            code += '                        media_file_id = media_file_id["value"]\n';
-            code += '                    await message.answer_video(media_file_id, caption=text)\n';
-            code += `                    logging.info(f"✅ Отправлено видео из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
-            code += '                else:\n';
-            code += '                    await message.answer(text)\n';
-            code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
-          } else {
-            // Обычное сообщение
-            code += '                await message.answer(text)\n';
-          }
-        });
-        code += '            else:\n';
-        code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-      }
-
-      code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-      code += '    \n';
-      code += '    return\n';
-    }
-
-    // Добавляем обработчик для аудио
-    const hasAudioInput = (nodes || []).some(node => node.data.enableAudioInput);
-    if (hasAudioInput) {
-      code += '\n\n# Обработчик получения аудио от пользователя\n';
-      code += '@dp.message(F.audio | F.voice)\n';
-      code += 'async def handle_audio_input(message: types.Message):\n';
-      code += '    user_id = message.from_user.id\n';
-      code += '    logging.info(f"🎵 Получено аудио от пользователя {user_id}")\n';
-      code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод аудио\n';
-      code += '    if user_id not in user_data or "waiting_for_audio" not in user_data[user_id]:\n';
-      code += '        logging.info(f"Аудио от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    # Получаем конфигурацию ожидания\n';
-      code += '    audio_config = user_data[user_id]["waiting_for_audio"]\n';
-      code += '    audio_variable = audio_config.get("variable", "user_audio")\n';
-      code += '    node_id = audio_config.get("node_id", "unknown")\n';
-      code += '    next_node_id = audio_config.get("next_node_id")\n';
-      code += '    \n';
-      code += '    # Получаем file_id аудио (поддерживаем и audio, и voice)\n';
-      code += '    if message.audio:\n';
-      code += '        audio_file_id = message.audio.file_id\n';
-      code += '    elif message.voice:\n';
-      code += '        audio_file_id = message.voice.file_id\n';
-      code += '    else:\n';
-      code += '        logging.error("Не удалось получить file_id аудио")\n';
-      code += '        return\n';
-      code += '    logging.info(f"🎵 Получен file_id аудио: {audio_file_id}")\n';
-      code += '    \n';
-      code += '    # Сохраняем в пользовательские данные\n';
-      code += '    user_data[user_id][audio_variable] = audio_file_id\n';
-      code += '    \n';
-      code += '    # Сохраняем в базу данных\n';
-      code += '    saved_to_db = await update_user_data_in_db(user_id, audio_variable, audio_file_id)\n';
-      code += '    if saved_to_db:\n';
-      code += '        logging.info(f"✅ Аудио сохранено в БД: {audio_variable} = {audio_file_id} (пользователь {user_id})")\n';
-      code += '    else:\n';
-      code += '        logging.warning(f"⚠️ Не удалось сохранить аудио в БД, данные сохранены локально")\n';
-      code += '    \n';
-      code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_audio"]\n';
-      code += '    \n';
-      code += '    logging.info(f"🎵 Аудио сохранено: {audio_variable} = {audio_file_id}")\n';
-      code += '    \n';
-      code += '    # Переходим к следующему узлу если указан\n';
-      code += '    if next_node_id:\n';
-      code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-      code += '        try:\n';
-      code += '            # Получаем данные пользователя для замены переменных\n';
-      code += '            user_record = await get_user_from_db(user_id)\n';
-      code += '            if user_record and "user_data" in user_record:\n';
-      code += '                user_vars = user_record["user_data"]\n';
-      code += '            else:\n';
-      code += '                user_vars = user_data.get(user_id, {})\n';
-      code += '            \n';
-
-      // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
-      if (nodes?.length > 0) {
-        nodes.forEach((targetNode, index) => {
-          const condition = index === 0 ? 'if' : 'elif';
-          code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-
-          // Получаем текст сообщения
-          const messageText = targetNode.data.messageText || targetNode.data.text || '';
-          const formattedText = formatTextForPython(messageText);
-          code += `                text = ${formattedText}\n`;
-
-          // Добавляем замену переменных
-          code += '                # Замена переменных\n';
-          code += generateUniversalVariableReplacement('                ');
-
-          // Проверяем attachedMedia
-          const attachedMedia = targetNode.data.attachedMedia || [];
-          if (attachedMedia?.length > 0 && attachedMedia.includes('audio')) {
-            // Отправляем аудио с текстом
-            code += '                # Отправляем сохраненное аудио с текстом узла\n';
-            code += `                if "${attachedMedia[0]}" in user_vars:\n`;
-            code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
-            code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
-            code += '                        media_file_id = media_file_id["value"]\n';
-            code += '                    await message.answer_audio(media_file_id, caption=text)\n';
-            code += `                    logging.info(f"✅ Отправлено аудио из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
-            code += '                else:\n';
-            code += '                    await message.answer(text)\n';
-            code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
-          } else {
-            // Обычное сообщение
-            code += '                await message.answer(text)\n';
-          }
-        });
-        code += '            else:\n';
-        code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-      }
-
-      code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-      code += '    \n';
-      code += '    return\n';
-    }
-
-    // Добавляем обработчик для документов
-    const hasDocumentInput = (nodes || []).some(node => node.data.enableDocumentInput);
-    if (hasDocumentInput) {
-      code += '\n\n# Обработчик получения документа от пользователя\n';
-      code += '@dp.message(F.document)\n';
-      code += 'async def handle_document_input(message: types.Message):\n';
-      code += '    user_id = message.from_user.id\n';
-      code += '    logging.info(f"📄 Получен документ от пользователя {user_id}")\n';
-      code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод документа\n';
-      code += '    if user_id not in user_data or "waiting_for_document" not in user_data[user_id]:\n';
-      code += '        logging.info(f"Документ от пользователя {user_id} проигнорирован - не ожидается ввод")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    # Получаем конфигурацию ожидания\n';
-      code += '    document_config = user_data[user_id]["waiting_for_document"]\n';
-      code += '    document_variable = document_config.get("variable", "user_document")\n';
-      code += '    node_id = document_config.get("node_id", "unknown")\n';
-      code += '    next_node_id = document_config.get("next_node_id")\n';
-      code += '    \n';
-      code += '    # Получаем file_id документа\n';
-      code += '    document_file_id = message.document.file_id\n';
-      code += '    logging.info(f"📄 Получен file_id документа: {document_file_id}")\n';
-      code += '    \n';
-      code += '    # Сохраняем в пользовательские данные\n';
-      code += '    user_data[user_id][document_variable] = document_file_id\n';
-      code += '    \n';
-      code += '    # Сохраняем в базу данных\n';
-      code += '    saved_to_db = await update_user_data_in_db(user_id, document_variable, document_file_id)\n';
-      code += '    if saved_to_db:\n';
-      code += '        logging.info(f"✅ Документ сохранен в БД: {document_variable} = {document_file_id} (пользователь {user_id})")\n';
-      code += '    else:\n';
-      code += '        logging.warning(f"⚠️ Не удалось сохранить документ в БД, данные сохранены локально")\n';
-      code += '    \n';
-      code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_document"]\n';
-      code += '    \n';
-      code += '    logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}")\n';
-      code += '    \n';
-      code += '    # Переходим к следующему узлу если указан\n';
-      code += '    if next_node_id:\n';
-      code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-      code += '        try:\n';
-      code += '            # Получаем данные пользователя для замены переменных\n';
-      code += '            user_record = await get_user_from_db(user_id)\n';
-      code += '            if user_record and "user_data" in user_record:\n';
-      code += '                user_vars = user_record["user_data"]\n';
-      code += '            else:\n';
-      code += '                user_vars = user_data.get(user_id, {})\n';
-      code += '            \n';
-
-      // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
-      if (nodes?.length > 0) {
-        nodes.forEach((targetNode, index) => {
-          const condition = index === 0 ? 'if' : 'elif';
-          code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-
-          // Получаем текст сообщения
-          const messageText = targetNode.data.messageText || targetNode.data.text || '';
-          const formattedText = formatTextForPython(messageText);
-          code += `                text = ${formattedText}\n`;
-
-          // Добавляем замену переменных
-          code += '                # Замена переменных\n';
-          code += generateUniversalVariableReplacement('                ');
-
-          // Проверяем attachedMedia
-          const attachedMedia = targetNode.data.attachedMedia || [];
-          if (attachedMedia?.length > 0 && attachedMedia.includes('document')) {
-            // Отправляем документ с текстом
-            code += '                # Отправляем сохраненный документ с текстом узла\n';
-            code += `                if "${attachedMedia[0]}" in user_vars:\n`;
-            code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
-            code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
-            code += '                        media_file_id = media_file_id["value"]\n';
-            code += '                    await message.answer_document(media_file_id, caption=text)\n';
-            code += `                    logging.info(f"✅ Отправлен документ из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
-            code += '                else:\n';
-            code += '                    await message.answer(text)\n';
-            code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
-          } else {
-            // Обычное сообщение
-            code += '                await message.answer(text)\n';
-          }
-        });
-        code += '            else:\n';
-        code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-      }
-
-      code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-      code += '    \n';
-      code += '    return\n';
-    }
-
-    code += '    # Валидация длины текста\n';
-    code += '    min_length = input_config.get("min_length", 0)\n';
-    code += '    max_length = input_config.get("max_length", 0)\n';
+    code += '    # Сохраняем в пользовательские данные как объект с URL\n';
+    code += '    photo_data = {\n';
+    code += '        "value": photo_file_id,\n';
+    code += '        "type": "photo",\n';
+    code += '        "photoUrl": photo_url,\n';
+    code += '        "timestamp": datetime.now(timezone.utc).isoformat()\n';
+    code += '    }\n';
+    code += '    user_data[user_id][photo_variable] = photo_data\n';
     code += '    \n';
-    code += '    if min_length > 0 and len(user_text) < min_length:\n';
-    code += '        retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '        await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")\n';
-    code += '        return\n';
+    code += '    # Сохраняем в базу данных\n';
+    code += '    saved_to_db = await update_user_data_in_db(user_id, photo_variable, photo_data)\n';
+    code += '    if saved_to_db:\n';
+    code += '        logging.info(f"Фото сохранено в БД: {photo_variable} (пользователь {user_id})")\n';
+    code += '    else:\n';
+    code += '        logging.warning(f"Не удалось сохранить фото в БД, данные сохранены локально")\n';
     code += '    \n';
-    code += '    if max_length > 0 and len(user_text) > max_length:\n';
-    code += '        retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '        await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")\n';
-    code += '        return\n';
+    code += '    # Очищаем состояние ожидания\n';
+    code += '    del user_data[user_id]["waiting_for_photo"]\n';
     code += '    \n';
-    code += '    # Валидация типа ввода\n';
-    code += '    input_type = input_config.get("type", "text")\n';
+    code += '    logging.info(f"Фото сохранено: {photo_variable} = {photo_file_id}, URL = {photo_url}")\n';
     code += '    \n';
-    code += '    if input_type == "email":\n';
-    code += '        import re\n';
-    code += '        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n';
-    code += '        if not re.match(email_pattern, user_text):\n';
-    code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '            await message.answer(f"❌ Неверный формат email. {retry_message}")\n';
-    code += '            return\n';
-    code += '    \n';
-    code += '    elif input_type == "number":\n';
-    code += '        try:\n';
-    code += '            float(user_text)\n';
-    code += '        except ValueError:\n';
-    code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '            await message.answer(f"❌ Введите корректное число. {retry_message}")\n';
-    code += '            return\n';
-    code += '    \n';
-    code += '    elif input_type == "phone":\n';
-    code += '        import re\n';
-    code += '        phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n';
-    code += '        if not re.match(phone_pattern, user_text):\n';
-    code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '            await message.answer(f"❌ Неверный формат телефона. {retry_message}")\n';
-    code += '            return\n';
-    code += '    \n';
-    code += '    # Сохраняем ответ пользователя простым значением\n';
-    code += '    variable_name = input_config.get("variable", "user_response")\n';
-    code += '    timestamp = get_moscow_time()\n';
-    code += '    node_id = input_config.get("node_id", "unknown")\n';
-    code += '    \n';
-    code += '    # Простое значение вместо сложного объекта\n';
-    code += '    response_data = user_text\n';
-    code += '    \n';
-    code += '    # Сохраняем в пользовательские данные\n';
-    code += '    user_data[user_id][variable_name] = response_data\n';
-    code += '    \n';
-    code += '    # Сохраняем в базу данных если включено\n';
-    code += '    if input_config.get("save_to_database"):\n';
-    code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
-    code += '        if saved_to_db:\n';
-    code += '            logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
-    code += '        else:\n';
-    code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
-    code += '    \n';
-    code += '    # Отправляем сообщение об успехе только если оно задано\n';
-    code += '    success_message = input_config.get("success_message", "")\n';
-    code += '    if success_message:\n';
-    code += '        await message.answer(success_message)\n';
-    code += '    \n';
-    code += '    # Очищаем состояние ожидания ввода\n';
-    code += '    del user_data[user_id]["waiting_for_input"]\n';
-    code += '    \n';
-    code += '    logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")\n';
-    code += '    \n';
-    code += '    # Автоматическая навигация к следующему узлу после успешного ввода\n';
-    code += '    next_node_id = input_config.get("next_node_id")\n';
-    code += '    logging.info(f"🔄 Проверяем навигацию: next_node_id = {next_node_id}")\n';
+    code += '    # Переходим к следующему узлу если указан\n';
     code += '    if next_node_id:\n';
+    code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
     code += '        try:\n';
-    code += '            logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+    code += '            # Получаем данные пользователя для замены переменных\n';
+    code += '            user_record = await get_user_from_db(user_id)\n';
+    code += '            if user_record and "user_data" in user_record:\n';
+    code += '                user_vars = user_record["user_data"]\n';
+    code += '            else:\n';
+    code += '                user_vars = user_data.get(user_id, {})\n';
     code += '            \n';
-    code += '            # Создаем фейковое сообщение для навигации\n';
-    code += '            fake_message = type("FakeMessage", (), {})()\n';
-    code += '            fake_message.from_user = message.from_user\n';
-    code += '            fake_message.answer = message.answer\n';
-    code += '            fake_message.delete = lambda: None\n';
-    code += '            \n';
-    code += '            # Находим узел по ID и выполняем соответствующее действие\n';
-
-    // Generate navigation logic for each node type
-    if (nodes?.length > 0) {
+    
+    // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
+    if (nodes.length > 0) {
       nodes.forEach((targetNode, index) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-
-        if ((targetNode.type as any) === 'message' && targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-          // Обработка узлов сообщений с inline клавиатурой
-          const messageText = targetNode.data.messageText || 'Сообщение';
-          const formattedText = formatTextForPython(messageText);
-
-          code += `                text = ${formattedText}\n`;
-          code += '                builder = InlineKeyboardBuilder()\n';
-          targetNode.data.buttons.forEach((button: Button, buttonIndex: number) => {
-            if (button.action === "url") {
-              code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-            } else if (button.action === 'goto') {
-              const callbackData = button.target || button.id || 'no_action';
-              code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-            } else if (button.action === 'command') {
-              const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-              code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
-            } else {
-              const callbackData = button.target || button.id || 'no_action';
-              code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-            }
-          });
-          code += '                keyboard = builder.as_markup()\n';
-          code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
-        } else if ((targetNode.type as any) === 'message' && targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-          const messageText = targetNode.data.messageText || 'Сообщение';
-          const formattedText = formatTextForPython(messageText);
-
-          code += `                text = ${formattedText}\n`;
+        
+        // Получаем текст сообщения
+        const messageText = targetNode.data.messageText || targetNode.data.text || '';
+        const formattedText = formatTextForPython(messageText);
+        code += `                text = ${formattedText}\n`;
+        
+        // Добавляем замену переменных
+        code += '                # Замена переменных\n';
+        code += generateUniversalVariableReplacement('                ');
+        
+        // Проверяем attachedMedia
+        const attachedMedia = targetNode.data.attachedMedia || [];
+        if (attachedMedia.length > 0 && attachedMedia.includes('photo')) {
+          // Отправляем фото с текстом
+          code += '                # Отправляем сохраненное фото с текстом узла\n';
+          code += `                if "${attachedMedia[0]}" in user_vars:\n`;
+          code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
+          code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
+          code += '                        media_file_id = media_file_id["value"]\n';
+          code += '                    await message.answer_photo(media_file_id, caption=text)\n';
+          code += `                    logging.info(f"✅ Отправлено фото из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
+          code += '                else:\n';
+          code += '                    await message.answer(text)\n';
+          code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
+        } else {
+          // Обычное сообщение
+          code += '                await message.answer(text)\n';
+        }
+        
+        // Проверяем автопереход
+        if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
+          code += `                \n`;
+          code += `                # Автопереход к следующему узлу\n`;
+          code += `                auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
+          code += `                logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")\n`;
+          code += `                # Создаем искусственный callback для вызова обработчика\n`;
+          code += `                import types as aiogram_types\n`;
+          code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
+          code += `                    id="auto_transition",\n`;
+          code += `                    from_user=message.from_user,\n`;
+          code += `                    chat_instance="",\n`;
+          code += `                    data=auto_next_node_id,\n`;
+          code += `                    message=message,\n`;
+          code += `                    answer=lambda: None\n`;
+          code += `                )\n`;
+          
+          // Вызываем callback-обработчик вместо инлайн-отправки
+          const autoTargetNode = nodes.find(n => n.id === targetNode.data.autoTransitionTo);
+          if (autoTargetNode) {
+            const safeFuncName = autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            code += `                await handle_callback_${safeFuncName}(fake_callback)\n`;
+          }
+          code += `                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")\n`;
+        }
+      });
+      code += '            else:\n';
+      code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    }
+    
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+    code += '    \n';
+    code += '    return\n';
+  }
+  
+  // Добавляем обработчик для видео
+  const hasVideoInput = (nodes || []).some(node => node.data.enableVideoInput);
+  if (hasVideoInput) {
+    code += '\n\n# Обработчик получения видео от пользователя\n';
+    code += '@dp.message(F.video)\n';
+    code += 'async def handle_video_input(message: types.Message):\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    logging.info(f"🎥 Получено видео от пользователя {user_id}")\n';
+    code += '    \n';
+    code += '    # Проверяем, ожидаем ли мы ввод видео\n';
+    code += '    if user_id not in user_data or "waiting_for_video" not in user_data[user_id]:\n';
+    code += '        logging.info(f"Видео от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
+    code += '        return\n';
+    code += '    \n';
+    code += '    # Получаем конфигурацию ожидания\n';
+    code += '    video_config = user_data[user_id]["waiting_for_video"]\n';
+    code += '    video_variable = video_config.get("variable", "user_video")\n';
+    code += '    node_id = video_config.get("node_id", "unknown")\n';
+    code += '    next_node_id = video_config.get("next_node_id")\n';
+    code += '    \n';
+    code += '    # Получаем file_id видео\n';
+    code += '    video_file_id = message.video.file_id\n';
+    code += '    logging.info(f"🎥 Получен file_id видео: {video_file_id}")\n';
+    code += '    \n';
+    code += '    # Сохраняем в пользовательские данные\n';
+    code += '    user_data[user_id][video_variable] = video_file_id\n';
+    code += '    \n';
+    code += '    # Сохраняем в базу данных\n';
+    code += '    saved_to_db = await update_user_data_in_db(user_id, video_variable, video_file_id)\n';
+    code += '    if saved_to_db:\n';
+    code += '        logging.info(f"✅ Видео сохранено в БД: {video_variable} = {video_file_id} (пользователь {user_id})")\n';
+    code += '    else:\n';
+    code += '        logging.warning(f"⚠️ Не удалось сохранить видео в БД, данные сохранены локально")\n';
+    code += '    \n';
+    code += '    # Очищаем состояние ожидания\n';
+    code += '    del user_data[user_id]["waiting_for_video"]\n';
+    code += '    \n';
+    code += '    logging.info(f"🎥 Видео сохранено: {video_variable} = {video_file_id}")\n';
+    code += '    \n';
+    code += '    # Переходим к следующему узлу если указан\n';
+    code += '    if next_node_id:\n';
+    code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+    code += '        try:\n';
+    code += '            # Получаем данные пользователя для замены переменных\n';
+    code += '            user_record = await get_user_from_db(user_id)\n';
+    code += '            if user_record and "user_data" in user_record:\n';
+    code += '                user_vars = user_record["user_data"]\n';
+    code += '            else:\n';
+    code += '                user_vars = user_data.get(user_id, {})\n';
+    code += '            \n';
+    
+    // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
+    if (nodes.length > 0) {
+      nodes.forEach((targetNode, index) => {
+        const condition = index === 0 ? 'if' : 'elif';
+        code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
+        
+        // Получаем текст сообщения
+        const messageText = targetNode.data.messageText || targetNode.data.text || '';
+        const formattedText = formatTextForPython(messageText);
+        code += `                text = ${formattedText}\n`;
+        
+        // Добавляем замену переменных
+        code += '                # Замена переменных\n';
+        code += generateUniversalVariableReplacement('                ');
+        
+        // Проверяем attachedMedia
+        const attachedMedia = targetNode.data.attachedMedia || [];
+        if (attachedMedia.length > 0 && attachedMedia.includes('video')) {
+          // Отправляем видео с текстом
+          code += '                # Отправляем сохраненное видео с текстом узла\n';
+          code += `                if "${attachedMedia[0]}" in user_vars:\n`;
+          code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
+          code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
+          code += '                        media_file_id = media_file_id["value"]\n';
+          code += '                    await message.answer_video(media_file_id, caption=text)\n';
+          code += `                    logging.info(f"✅ Отправлено видео из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
+          code += '                else:\n';
+          code += '                    await message.answer(text)\n';
+          code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
+        } else {
+          // Обычное сообщение
+          code += '                await message.answer(text)\n';
+        }
+      });
+      code += '            else:\n';
+      code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    }
+    
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+    code += '    \n';
+    code += '    return\n';
+  }
+  
+  // Добавляем обработчик для аудио
+  const hasAudioInput = (nodes || []).some(node => node.data.enableAudioInput);
+  if (hasAudioInput) {
+    code += '\n\n# Обработчик получения аудио от пользователя\n';
+    code += '@dp.message(F.audio | F.voice)\n';
+    code += 'async def handle_audio_input(message: types.Message):\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    logging.info(f"🎵 Получено аудио от пользователя {user_id}")\n';
+    code += '    \n';
+    code += '    # Проверяем, ожидаем ли мы ввод аудио\n';
+    code += '    if user_id not in user_data or "waiting_for_audio" not in user_data[user_id]:\n';
+    code += '        logging.info(f"Аудио от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
+    code += '        return\n';
+    code += '    \n';
+    code += '    # Получаем конфигурацию ожидания\n';
+    code += '    audio_config = user_data[user_id]["waiting_for_audio"]\n';
+    code += '    audio_variable = audio_config.get("variable", "user_audio")\n';
+    code += '    node_id = audio_config.get("node_id", "unknown")\n';
+    code += '    next_node_id = audio_config.get("next_node_id")\n';
+    code += '    \n';
+    code += '    # Получаем file_id аудио (поддерживаем и audio, и voice)\n';
+    code += '    if message.audio:\n';
+    code += '        audio_file_id = message.audio.file_id\n';
+    code += '    elif message.voice:\n';
+    code += '        audio_file_id = message.voice.file_id\n';
+    code += '    else:\n';
+    code += '        logging.error("Не удалось получить file_id аудио")\n';
+    code += '        return\n';
+    code += '    logging.info(f"🎵 Получен file_id аудио: {audio_file_id}")\n';
+    code += '    \n';
+    code += '    # Сохраняем в пользовательские данные\n';
+    code += '    user_data[user_id][audio_variable] = audio_file_id\n';
+    code += '    \n';
+    code += '    # Сохраняем в базу данных\n';
+    code += '    saved_to_db = await update_user_data_in_db(user_id, audio_variable, audio_file_id)\n';
+    code += '    if saved_to_db:\n';
+    code += '        logging.info(f"✅ Аудио сохранено в БД: {audio_variable} = {audio_file_id} (пользователь {user_id})")\n';
+    code += '    else:\n';
+    code += '        logging.warning(f"⚠️ Не удалось сохранить аудио в БД, данные сохранены локально")\n';
+    code += '    \n';
+    code += '    # Очищаем состояние ожидания\n';
+    code += '    del user_data[user_id]["waiting_for_audio"]\n';
+    code += '    \n';
+    code += '    logging.info(f"🎵 Аудио сохранено: {audio_variable} = {audio_file_id}")\n';
+    code += '    \n';
+    code += '    # Переходим к следующему узлу если указан\n';
+    code += '    if next_node_id:\n';
+    code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+    code += '        try:\n';
+    code += '            # Получаем данные пользователя для замены переменных\n';
+    code += '            user_record = await get_user_from_db(user_id)\n';
+    code += '            if user_record and "user_data" in user_record:\n';
+    code += '                user_vars = user_record["user_data"]\n';
+    code += '            else:\n';
+    code += '                user_vars = user_data.get(user_id, {})\n';
+    code += '            \n';
+    
+    // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
+    if (nodes.length > 0) {
+      nodes.forEach((targetNode, index) => {
+        const condition = index === 0 ? 'if' : 'elif';
+        code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
+        
+        // Получаем текст сообщения
+        const messageText = targetNode.data.messageText || targetNode.data.text || '';
+        const formattedText = formatTextForPython(messageText);
+        code += `                text = ${formattedText}\n`;
+        
+        // Добавляем замену переменных
+        code += '                # Замена переменных\n';
+        code += generateUniversalVariableReplacement('                ');
+        
+        // Проверяем attachedMedia
+        const attachedMedia = targetNode.data.attachedMedia || [];
+        if (attachedMedia.length > 0 && attachedMedia.includes('audio')) {
+          // Отправляем аудио с текстом
+          code += '                # Отправляем сохраненное аудио с текстом узла\n';
+          code += `                if "${attachedMedia[0]}" in user_vars:\n`;
+          code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
+          code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
+          code += '                        media_file_id = media_file_id["value"]\n';
+          code += '                    await message.answer_audio(media_file_id, caption=text)\n';
+          code += `                    logging.info(f"✅ Отправлено аудио из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
+          code += '                else:\n';
+          code += '                    await message.answer(text)\n';
+          code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
+        } else {
+          // Обычное сообщение
+          code += '                await message.answer(text)\n';
+        }
+      });
+      code += '            else:\n';
+      code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    }
+    
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+    code += '    \n';
+    code += '    return\n';
+  }
+  
+  // Добавляем обработчик для документов
+  const hasDocumentInput = (nodes || []).some(node => node.data.enableDocumentInput);
+  if (hasDocumentInput) {
+    code += '\n\n# Обработчик получения документа от пользователя\n';
+    code += '@dp.message(F.document)\n';
+    code += 'async def handle_document_input(message: types.Message):\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    logging.info(f"📄 Получен документ от пользователя {user_id}")\n';
+    code += '    \n';
+    code += '    # Проверяем, ожидаем ли мы ввод документа\n';
+    code += '    if user_id not in user_data or "waiting_for_document" not in user_data[user_id]:\n';
+    code += '        logging.info(f"Документ от пользователя {user_id} проигнорирован - не ожидается ввод")\n';
+    code += '        return\n';
+    code += '    \n';
+    code += '    # Получаем конфигурацию ожидания\n';
+    code += '    document_config = user_data[user_id]["waiting_for_document"]\n';
+    code += '    document_variable = document_config.get("variable", "user_document")\n';
+    code += '    node_id = document_config.get("node_id", "unknown")\n';
+    code += '    next_node_id = document_config.get("next_node_id")\n';
+    code += '    \n';
+    code += '    # Получаем file_id документа\n';
+    code += '    document_file_id = message.document.file_id\n';
+    code += '    logging.info(f"📄 Получен file_id документа: {document_file_id}")\n';
+    code += '    \n';
+    code += '    # Сохраняем в пользовательские данные\n';
+    code += '    user_data[user_id][document_variable] = document_file_id\n';
+    code += '    \n';
+    code += '    # Сохраняем в базу данных\n';
+    code += '    saved_to_db = await update_user_data_in_db(user_id, document_variable, document_file_id)\n';
+    code += '    if saved_to_db:\n';
+    code += '        logging.info(f"✅ Документ сохранен в БД: {document_variable} = {document_file_id} (пользователь {user_id})")\n';
+    code += '    else:\n';
+    code += '        logging.warning(f"⚠️ Не удалось сохранить документ в БД, данные сохранены локально")\n';
+    code += '    \n';
+    code += '    # Очищаем состояние ожидания\n';
+    code += '    del user_data[user_id]["waiting_for_document"]\n';
+    code += '    \n';
+    code += '    logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}")\n';
+    code += '    \n';
+    code += '    # Переходим к следующему узлу если указан\n';
+    code += '    if next_node_id:\n';
+    code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+    code += '        try:\n';
+    code += '            # Получаем данные пользователя для замены переменных\n';
+    code += '            user_record = await get_user_from_db(user_id)\n';
+    code += '            if user_record and "user_data" in user_record:\n';
+    code += '                user_vars = user_record["user_data"]\n';
+    code += '            else:\n';
+    code += '                user_vars = user_data.get(user_id, {})\n';
+    code += '            \n';
+    
+    // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
+    if (nodes.length > 0) {
+      nodes.forEach((targetNode, index) => {
+        const condition = index === 0 ? 'if' : 'elif';
+        code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
+        
+        // Получаем текст сообщения
+        const messageText = targetNode.data.messageText || targetNode.data.text || '';
+        const formattedText = formatTextForPython(messageText);
+        code += `                text = ${formattedText}\n`;
+        
+        // Добавляем замену переменных
+        code += '                # Замена переменных\n';
+        code += generateUniversalVariableReplacement('                ');
+        
+        // Проверяем attachedMedia
+        const attachedMedia = targetNode.data.attachedMedia || [];
+        if (attachedMedia.length > 0 && attachedMedia.includes('document')) {
+          // Отправляем документ с текстом
+          code += '                # Отправляем сохраненный документ с текстом узла\n';
+          code += `                if "${attachedMedia[0]}" in user_vars:\n`;
+          code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
+          code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
+          code += '                        media_file_id = media_file_id["value"]\n';
+          code += '                    await message.answer_document(media_file_id, caption=text)\n';
+          code += `                    logging.info(f"✅ Отправлен документ из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
+          code += '                else:\n';
+          code += '                    await message.answer(text)\n';
+          code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
+        } else {
+          // Обычное сообщение
+          code += '                await message.answer(text)\n';
+        }
+      });
+      code += '            else:\n';
+      code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    }
+    
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+    code += '    \n';
+    code += '    return\n';
+  }
+  
+  code += '    # Валидация длины текста\n';
+  code += '    min_length = input_config.get("min_length", 0)\n';
+  code += '    max_length = input_config.get("max_length", 0)\n';
+  code += '    \n';
+  code += '    if min_length > 0 and len(user_text) < min_length:\n';
+  code += '        retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '        await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    if max_length > 0 and len(user_text) > max_length:\n';
+  code += '        retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '        await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    # Валидация типа ввода\n';
+  code += '    input_type = input_config.get("type", "text")\n';
+  code += '    \n';
+  code += '    if input_type == "email":\n';
+  code += '        import re\n';
+  code += '        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n';
+  code += '        if not re.match(email_pattern, user_text):\n';
+  code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '            await message.answer(f"❌ Неверный формат email. {retry_message}")\n';
+  code += '            return\n';
+  code += '    \n';
+  code += '    elif input_type == "number":\n';
+  code += '        try:\n';
+  code += '            float(user_text)\n';
+  code += '        except ValueError:\n';
+  code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '            await message.answer(f"❌ Введите корректное число. {retry_message}")\n';
+  code += '            return\n';
+  code += '    \n';
+  code += '    elif input_type == "phone":\n';
+  code += '        import re\n';
+  code += '        phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n';
+  code += '        if not re.match(phone_pattern, user_text):\n';
+  code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '            await message.answer(f"❌ Неверный формат телефона. {retry_message}")\n';
+  code += '            return\n';
+  code += '    \n';
+  code += '    # Сохраняем ответ пользователя простым значением\n';
+  code += '    variable_name = input_config.get("variable", "user_response")\n';
+  code += '    timestamp = get_moscow_time()\n';
+  code += '    node_id = input_config.get("node_id", "unknown")\n';
+  code += '    \n';
+  code += '    # Простое значение вместо сложного объекта\n';
+  code += '    response_data = user_text\n';
+  code += '    \n';
+  code += '    # Сохраняем в пользовательские данные\n';
+  code += '    user_data[user_id][variable_name] = response_data\n';
+  code += '    \n';
+  code += '    # Сохраняем в базу данных если включено\n';
+  code += '    if input_config.get("save_to_database"):\n';
+  code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
+  code += '        if saved_to_db:\n';
+  code += '            logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+  code += '        else:\n';
+  code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '    \n';
+  code += '    # Отправляем сообщение об успехе только если оно задано\n';
+  code += '    success_message = input_config.get("success_message", "")\n';
+  code += '    if success_message:\n';
+  code += '        await message.answer(success_message)\n';
+  code += '    \n';
+  code += '    # Очищаем состояние ожидания ввода\n';
+  code += '    del user_data[user_id]["waiting_for_input"]\n';
+  code += '    \n';
+  code += '    logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")\n';
+  code += '    \n';
+  code += '    # Автоматическая навигация к следующему узлу после успешного ввода\n';
+  code += '    next_node_id = input_config.get("next_node_id")\n';
+  code += '    logging.info(f"🔄 Проверяем навигацию: next_node_id = {next_node_id}")\n';
+  code += '    if next_node_id:\n';
+  code += '        try:\n';
+  code += '            logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+  code += '            \n';
+  code += '            # Создаем фейковое сообщение для навигации\n';
+  code += '            fake_message = type("FakeMessage", (), {})()\n';
+  code += '            fake_message.from_user = message.from_user\n';
+  code += '            fake_message.answer = message.answer\n';
+  code += '            fake_message.delete = lambda: None\n';
+  code += '            \n';
+  code += '            # Находим узел по ID и выполняем соответствующее действие\n';
+  
+  // Generate navigation logic for each node type
+  if (nodes.length > 0) {
+    nodes.forEach((targetNode, index) => {
+      const condition = index === 0 ? 'if' : 'elif';
+      code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
+      
+      if (targetNode.type === 'message' && targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        // Обработка узлов сообщений с inline клавиатурой
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        
+        code += `                text = ${formattedText}\n`;
+        code += '                builder = InlineKeyboardBuilder()\n';
+        targetNode.data.buttons.forEach((button: Button, buttonIndex: number) => {
+          if (button.action === "url") {
+            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+          } else if (button.action === 'goto') {
+            const callbackData = button.target || button.id || 'no_action';
+            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+          } else if (button.action === 'command') {
+            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+          } else {
+            const callbackData = button.target || button.id || 'no_action';
+            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+          }
+        });
+        code += '                keyboard = builder.as_markup()\n';
+        code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
+      } else if (targetNode.type === 'message' && targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        
+        code += `                text = ${formattedText}\n`;
           code += '                builder = ReplyKeyboardBuilder()\n';
-          targetNode.data.buttons.forEach((button: ButtonSchema) => {
+          targetNode.data.buttons.forEach((button: Button) => {
             if (button.action === "contact" && button.requestContact) {
               code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
             } else if (button.action === "location" && button.requestLocation) {
@@ -7603,172 +7848,210 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
           code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
           code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
-
-          // Проверяем, нужно ли настроить ожидание текстового ввода
-          // ИСПРАВЛЕНИЕ: Используем универсальную функцию для настройки ожидания ввода
-          if (targetNode.data.enableTextInput || targetNode.data.collectUserInput ||
-            targetNode.data.enablePhotoInput || targetNode.data.enableVideoInput ||
+        
+        // Проверяем, нужно ли настроить ожидание текстового ввода
+        // ИСПРАВЛЕНИЕ: Используем универсальную функцию для настройки ожидания ввода
+        if (targetNode.data.enableTextInput || targetNode.data.collectUserInput || 
+            targetNode.data.enablePhotoInput || targetNode.data.enableVideoInput || 
             targetNode.data.enableAudioInput || targetNode.data.enableDocumentInput) {
-            code += generateWaitingStateCode(targetNode, '                ');
-          }
-        } else if ((targetNode.type as any) === 'message') {
-          // Добавляем поддержку условных сообщений для узлов сообщений
-          const messageText = targetNode.data.messageText || 'Сообщение';
-          const formattedText = formatTextForPython(messageText);
-
-          if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages?.length > 0) {
-            code += '                # Проверяем условные сообщения\n';
-            code += '                text = None\n';
-            code += '                \n';
-            code += '                # Получаем данные пользователя для проверки условий\n';
-            code += '                user_record = await get_user_from_db(user_id)\n';
-            code += '                if not user_record:\n';
-            code += '                    user_record = user_data.get(user_id, {})\n';
-            code += '                \n';
-            code += '                # Безопасно извлекаем user_data\n';
-            code += '                if isinstance(user_record, dict):\n';
-            code += '                    if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
-            code += '                        user_data_dict = user_record["user_data"]\n';
-            code += '                    else:\n';
-            code += '                        user_data_dict = user_record\n';
-            code += '                else:\n';
-            code += '                    user_data_dict = {}\n';
-            code += '                \n';
-
-            // Generate conditional logic using helper function
-            code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '                ');
-
-            // Add fallback
-            code += '                else:\n';
-
-            if (targetNode.data.fallbackMessage) {
-              const fallbackText = formatTextForPython(targetNode.data.fallbackMessage);
-              code += `                    text = ${fallbackText}\n`;
-              code += '                    logging.info("Используется запасное сообщение")\n';
-            } else {
-              code += `                    text = ${formattedText}\n`;
-              code += '                    logging.info("Используется основное сообщение узла")\n';
-            }
-
-            code += '                \n';
-          } else {
-            code += `                text = ${formattedText}\n`;
-          }
-
-          // Определяем режим форматирования (приоритет у условного сообщения)
-          code += '                # Используем parse_mode условного сообщения если он установлен\n';
-          code += '                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:\n';
-          code += '                    parse_mode = conditional_parse_mode\n';
+          code += generateWaitingStateCode(targetNode, '                ');
+        }
+      } else if (targetNode.type === 'message') {
+        // Добавляем поддержку условных сообщений для узлов сообщений
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        
+        if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+          code += '                # Проверяем условные сообщения\n';
+          code += '                text = None\n';
+          code += '                \n';
+          code += '                # Получаем данные пользователя для проверки условий\n';
+          code += '                user_record = await get_user_from_db(user_id)\n';
+          code += '                if not user_record:\n';
+          code += '                    user_record = user_data.get(user_id, {})\n';
+          code += '                \n';
+          code += '                # Безопасно извлекаем user_data\n';
+          code += '                if isinstance(user_record, dict):\n';
+          code += '                    if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
+          code += '                        user_data_dict = user_record["user_data"]\n';
+          code += '                    else:\n';
+          code += '                        user_data_dict = user_record\n';
           code += '                else:\n';
-          if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-            code += '                    parse_mode = ParseMode.MARKDOWN\n';
-          } else if (targetNode.data.formatMode === 'html') {
-            code += '                    parse_mode = ParseMode.HTML\n';
+          code += '                    user_data_dict = {}\n';
+          code += '                \n';
+          
+          // Generate conditional logic using helper function
+          code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '                ');
+          
+          // Add fallback
+          code += '                else:\n';
+          
+          if (targetNode.data.fallbackMessage) {
+            const fallbackText = formatTextForPython(targetNode.data.fallbackMessage);
+            code += `                    text = ${fallbackText}\n`;
+            code += '                    logging.info("Используется запасное сообщение")\n';
           } else {
-            code += '                    parse_mode = None\n';
+            code += `                    text = ${formattedText}\n`;
+            code += '                    logging.info("Используется основное сообщение узла")\n';
           }
-
-          // Добавляем кнопки если есть
-          if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons?.length > 0) {
-            // Используем универсальную функцию для создания inline клавиатуры
-            code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-            code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
-          } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons?.length > 0) {
-            code += '                builder = ReplyKeyboardBuilder()\n';
-            targetNode.data.buttons.forEach((button: ButtonSchema) => {
-              code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
-            });
-            const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-            const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-            code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-            code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
-          } else {
-            code += '                await message.answer(text, parse_mode=parse_mode)\n';
-          }
-        } else if ((targetNode.type as any) === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
-          const inputPrompt = formatTextForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
-          const responseType = targetNode.data.responseType || 'text';
-          const inputType = targetNode.data.inputType || 'text';
-          const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-          const minLength = targetNode.data.minLength || 0;
-          const maxLength = targetNode.data.maxLength || 0;
-          const inputTimeout = targetNode.data.inputTimeout || 60;
-          const saveToDatabase = targetNode.data.saveToDatabase || false;
-          const placeholder = targetNode.data.placeholder || "";
-          const responseOptions = targetNode.data.responseOptions || [];
-          const allowMultipleSelection = targetNode.data.allowMultipleSelection || false;
-          const allowSkip = targetNode.data.allowSkip || false;
-
-          code += `                prompt_text = "${escapeForJsonString(inputPrompt)}"\n`;
-          if (placeholder) {
-            code += `                placeholder_text = "${placeholder}"\n`;
-            code += '                prompt_text += f"\\n\\n💡 {placeholder_text}"\n';
-          }
-
-          // Check if this is a button response node
-          if (responseType === 'buttons' && responseOptions?.length > 0) {
-            // For button response nodes, set up button_response_config
-            code += '                \n';
-            code += '                # Создаем кнопки для выбора ответа\n';
-            code += '                builder = InlineKeyboardBuilder()\n';
-
-            // Создаем кнопки для вариантов ответа
-            const responseButtons = responseOptions.map((option: ResponseOption, index: number) => ({
-              text: option.text,
+          
+          code += '                \n';
+        } else {
+          code += `                text = ${formattedText}\n`;
+        }
+        
+        // Определяем режим форматирования (приоритет у условного сообщения)
+        code += '                # Используем parse_mode условного сообщения если он установлен\n';
+        code += '                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:\n';
+        code += '                    parse_mode = conditional_parse_mode\n';
+        code += '                else:\n';
+        if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+          code += '                    parse_mode = ParseMode.MARKDOWN\n';
+        } else if (targetNode.data.formatMode === 'html') {
+          code += '                    parse_mode = ParseMode.HTML\n';
+        } else {
+          code += '                    parse_mode = None\n';
+        }
+        
+        // Добавляем кнопки если есть
+        if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+          // Используем универсальную функцию для создания inline клавиатуры
+          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
+          code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
+        } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
+          code += '                builder = ReplyKeyboardBuilder()\n';
+          targetNode.data.buttons.forEach(button => {
+            code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+          });
+          const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+          const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+          code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+          code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
+        } else {
+          code += '                await message.answer(text, parse_mode=parse_mode)\n';
+        }
+      } else if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
+        const inputPrompt = formatTextForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
+        const responseType = targetNode.data.responseType || 'text';
+        const inputType = targetNode.data.inputType || 'text';
+        const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+        const minLength = targetNode.data.minLength || 0;
+        const maxLength = targetNode.data.maxLength || 0;
+        const inputTimeout = targetNode.data.inputTimeout || 60;
+        const saveToDatabase = targetNode.data.saveToDatabase || false;
+        const placeholder = targetNode.data.placeholder || "";
+        const responseOptions = targetNode.data.responseOptions || [];
+        const allowMultipleSelection = targetNode.data.allowMultipleSelection || false;
+        const allowSkip = targetNode.data.allowSkip || false;
+        
+        code += `                prompt_text = "${escapeForJsonString(inputPrompt)}"\n`;
+        if (placeholder) {
+          code += `                placeholder_text = "${placeholder}"\n`;
+          code += '                prompt_text += f"\\n\\n💡 {placeholder_text}"\n';
+        }
+        
+        // Check if this is a button response node
+        if (responseType === 'buttons' && responseOptions.length > 0) {
+          // For button response nodes, set up button_response_config
+          code += '                \n';
+          code += '                # Создаем кнопки для выбора ответа\n';
+          code += '                builder = InlineKeyboardBuilder()\n';
+          
+          // Создаем кнопки для вариантов ответа
+          const responseButtons = responseOptions.map((option: string, index: number) => ({
+            text: option.text,
+            action: 'goto',
+            target: `response_${targetNode.id}_${index}`,
+            id: `response_${targetNode.id}_${index}`
+          }));
+          
+          if (allowSkip) {
+            responseButtons.push({
+              text: "⏭️ Пропустить",
               action: 'goto',
-              target: `response_${targetNode.id}_${index}`,
-              id: `response_${targetNode.id}_${index}`
-            }));
-
-            if (allowSkip) {
-              responseButtons.push({
-                text: "⏭️ Пропустить",
-                action: 'goto',
-                target: `skip_${targetNode.id}`,
-                id: `skip_${targetNode.id}`
-              });
+              target: `skip_${targetNode.id}`,
+              id: `skip_${targetNode.id}`
+            });
+          }
+          
+          // Используем универсальную функцию для создания inline клавиатуры
+          code += generateInlineKeyboardCode(responseButtons, '                ', targetNode.id, targetNode.data, allNodeIds);
+          code += '                await message.answer(prompt_text, reply_markup=keyboard)\n';
+          code += '                \n';
+          code += '                # Настраиваем конфигурацию кнопочного ответа\n';
+          code += '                user_data[user_id]["button_response_config"] = {\n';
+          code += `                    "variable": "${inputVariable}",\n`;
+          code += `                    "node_id": "${targetNode.id}",\n`;
+          code += `                    "timeout": ${inputTimeout},\n`;
+          code += `                    "allow_multiple": ${toPythonBoolean(allowMultipleSelection)},\n`;
+          code += `                    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
+          code += '                    "selected": [],\n';
+          code += '                    "success_message": "",\n';
+          code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
+          code += '                    "options": [\n';
+          
+          // Добавляем каждый вариант ответа с индивидуальными настройками навигации
+          responseOptions.forEach((option: string, index: number) => {
+            const optionValue = option.value || option.text;
+            const action = option.action || 'goto';
+            const target = option.target || '';
+            const url = option.url || '';
+            
+            code += '                        {\n';
+            code += `                            "text": "${escapeForJsonString(option.text)}",\n`;
+            code += `                            "value": "${escapeForJsonString(optionValue)}",\n`;
+            code += `                            "action": "${action}",\n`;
+            code += `                            "target": "${target}",\n`;
+            code += `                            "url": "${url}",\n`;
+            code += `                            "callback_data": "response_${targetNode.id}_${index}"\n`;
+            code += '                        }';
+            if (index < responseOptions.length - 1) {
+              code += ',';
             }
-
-            // Используем универсальную функцию для создания inline клавиатуры
-            code += generateInlineKeyboardCode(responseButtons, '                ', targetNode.id, targetNode.data, allNodeIds);
-            code += '                await message.answer(prompt_text, reply_markup=keyboard)\n';
-            code += '                \n';
-            code += '                # Настраиваем конфигурацию кнопочного ответа\n';
-            code += '                user_data[user_id]["button_response_config"] = {\n';
+            code += '\n';
+          });
+          
+          code += '                    ],\n';
+          
+          // Находим следующий узел для этого user-input узла (fallback)
+          const nextConnection = connections.find(conn => conn.source === targetNode.id);
+          if (nextConnection) {
+            code += `                    "next_node_id": "${nextConnection.target}"\n`;
+          } else {
+            code += '                    "next_node_id": None\n';
+          }
+          code += '                }\n';
+        } else {
+          // For text input nodes, use waiting_for_input
+          code += '                await message.answer(prompt_text)\n';
+          code += '                \n';
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
+          const textNodeCollectInput = targetNode.data.collectUserInput === true || 
+                                       targetNode.data.enableTextInput === true ||
+                                       targetNode.data.enablePhotoInput === true ||
+                                       targetNode.data.enableVideoInput === true ||
+                                       targetNode.data.enableAudioInput === true ||
+                                       targetNode.data.enableDocumentInput === true;
+          
+          if (textNodeCollectInput) {
+            code += '                # Настраиваем ожидание ввода (collectUserInput=true)\n';
+            code += '                user_data[user_id]["waiting_for_input"] = {\n';
+            code += `                    "type": "${inputType}",\n`;
             code += `                    "variable": "${inputVariable}",\n`;
-            code += `                    "node_id": "${targetNode.id}",\n`;
+            code += '                    "validation": "",\n';
+            code += `                    "min_length": ${minLength},\n`;
+            code += `                    "max_length": ${maxLength},\n`;
             code += `                    "timeout": ${inputTimeout},\n`;
-            code += `                    "allow_multiple": ${toPythonBoolean(allowMultipleSelection)},\n`;
+            code += '                    "required": True,\n';
+            code += '                    "allow_skip": False,\n';
             code += `                    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
-            code += '                    "selected": [],\n';
+            code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
             code += '                    "success_message": "",\n';
             code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
-            code += '                    "options": [\n';
-
-            // Добавляем каждый вариант ответа с индивидуальными настройками навигации
-            responseOptions.forEach((option: ResponseOption, index: number) => {
-              const optionValue = option.value || option.text;
-              const action = option.action || 'goto';
-              const target = option.target || '';
-              const url = option.url || '';
-
-              code += '                        {\n';
-              code += `                            "text": "${escapeForJsonString(option.text)}",\n`;
-              code += `                            "value": "${escapeForJsonString(optionValue)}",\n`;
-              code += `                            "action": "${action}",\n`;
-              code += `                            "target": "${target}",\n`;
-              code += `                            "url": "${url}",\n`;
-              code += `                            "callback_data": "response_${targetNode.id}_${index}"\n`;
-              code += '                        }';
-              if (index < responseOptions.length - 1) {
-                code += ',';
-              }
-              code += '\n';
-            });
-
-            code += '                    ],\n';
-
-            // Находим следующий узел для этого user-input узла (fallback)
+            code += `                    "node_id": "${targetNode.id}",\n`;
+            
+            // Находим следующий узел для этого user-input узла
             const nextConnection = connections.find(conn => conn.source === targetNode.id);
             if (nextConnection) {
               code += `                    "next_node_id": "${nextConnection.target}"\n`;
@@ -7777,139 +8060,101 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             }
             code += '                }\n';
           } else {
-            // For text input nodes, use waiting_for_input
-            code += '                await message.answer(prompt_text)\n';
-            code += '                \n';
-
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
-            const textNodeCollectInput = targetNode.data.collectUserInput === true ||
-              targetNode.data.enableTextInput === true ||
-              targetNode.data.enablePhotoInput === true ||
-              targetNode.data.enableVideoInput === true ||
-              targetNode.data.enableAudioInput === true ||
-              targetNode.data.enableDocumentInput === true;
-
-            if (textNodeCollectInput) {
-              code += '                # Настраиваем ожидание ввода (collectUserInput=true)\n';
-              code += '                user_data[user_id]["waiting_for_input"] = {\n';
-              code += `                    "type": "${inputType}",\n`;
-              code += `                    "variable": "${inputVariable}",\n`;
-              code += '                    "validation": "",\n';
-              code += `                    "min_length": ${minLength},\n`;
-              code += `                    "max_length": ${maxLength},\n`;
-              code += `                    "timeout": ${inputTimeout},\n`;
-              code += '                    "required": True,\n';
-              code += '                    "allow_skip": False,\n';
-              code += `                    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
-              code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-              code += '                    "success_message": "",\n';
-              code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
-              code += `                    "node_id": "${targetNode.id}",\n`;
-
-              // Находим следующий узел для этого user-input узла
-              const nextConnection = connections.find(conn => conn.source === targetNode.id);
-              if (nextConnection) {
-                code += `                    "next_node_id": "${nextConnection.target}"\n`;
-              } else {
-                code += '                    "next_node_id": None\n';
-              }
-              code += '                }\n';
-            } else {
-              code += `                # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
-            }
+            code += `                # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
           }
-        } else if ((targetNode.type as any) === 'message') {
-          // Обработка узлов сообщений
-          const messageText = targetNode.data.messageText || 'Сообщение';
-          const formattedText = formatTextForPython(messageText);
-          code += `                await fake_message.answer(${formattedText})\n`;
-          code += `                logging.info(f"Отправлено сообщение узла ${targetNode.id}")\n`;
-        } else {
-          // Для других типов узлов просто логируем
-          code += `                logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
         }
-      });
-
-      code += '            else:\n';
-      code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-    } else {
-      code += '            # No nodes available for navigation\n';
-      code += '            logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
-    }
-    code += '        except Exception as e:\n';
-    code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-    code += '\n';
+      } else if (targetNode.type === 'message') {
+        // Обработка узлов сообщений
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        code += `                await fake_message.answer(${formattedText})\n`;
+        code += `                logging.info(f"Отправлено сообщение узла ${targetNode.id}")\n`;
+      } else {
+        // Для других типов узлов просто логируем
+        code += `                logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
+      }
+    });
+    
+    code += '            else:\n';
+    code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  } else {
+    code += '            # No nodes available for navigation\n';
+    code += '            logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+  }
+  code += '        except Exception as e:\n';
+  code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+  code += '\n';
   }
 
   // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
   if (hasConditionalButtons(nodes)) {
-    code += '\n# Обработчик для условных кнопок\n';
-    code += '@dp.callback_query(lambda c: c.data.startswith("conditional_"))\n';
-    code += 'async def handle_conditional_button(callback_query: types.CallbackQuery):\n';
-    code += '    await callback_query.answer()\n';
-    code += '    \n';
-    code += '    # Парсим callback_data: conditional_variableName_value\n';
-    code += '    callback_parts = callback_query.data.split("_", 2)\n';
-    code += '    if len(callback_parts) >= 3:\n';
-    code += '        variable_name = callback_parts[1]\n';
-    code += '        variable_value = callback_parts[2]\n';
-    code += '        \n';
-    code += '        user_id = callback_query.from_user.id\n';
-    code += '        \n';
-    code += '        # Сохраняем значение в базу данных\n';
-    code += '        await update_user_data_in_db(user_id, variable_name, variable_value)\n';
-    code += '        \n';
-    code += '        # Сохраняем в локальные данные\n';
-    code += '        if user_id not in user_data:\n';
-    code += '            user_data[user_id] = {}\n';
-    code += '        user_data[user_id][variable_name] = variable_value\n';
-    code += '        \n';
-    code += '        logging.info(f"Условная кнопка: {variable_name} = {variable_value} (пользователь {user_id})")\n';
-    code += '        \n';
-    code += '        # После обновления значения автоматически вызываем профиль\n';
-    code += '        await callback_query.answer(f"✅ {variable_name} обновлено")\n';
-    code += '        \n';
-    code += '        # Создаем имитацию сообщения для вызова команды профиль\n';
-    code += '        class FakeMessage:\n';
-    code += '            def __init__(self, callback_query):\n';
-    code += '                self.from_user = callback_query.from_user\n';
-    code += '                self.chat = callback_query.message.chat\n';
-    code += '                self.date = callback_query.message.date\n';
-    code += '                self.message_id = callback_query.message.message_id\n';
-    code += '            \n';
-    code += '            async def answer(self, text, parse_mode=None, reply_markup=None):\n';
-    code += '                if reply_markup:\n';
-    code += '                    await bot.send_message(self.chat.id, text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
-    code += '                else:\n';
-    code += '                    await bot.send_message(self.chat.id, text, parse_mode=parse_mode)\n';
-    code += '            \n';
-    code += '            async def edit_text(self, text, parse_mode=None, reply_markup=None):\n';
-    code += '                try:\n';
-    code += '                    await bot.edit_message_text(text, self.chat.id, self.message_id, parse_mode=parse_mode, reply_markup=reply_markup)\n';
-    code += '                except Exception:\n';
-    code += '                    await self.answer(text, parse_mode, reply_markup)\n';
-    code += '        \n';
-    code += '        fake_message = FakeMessage(callback_query)\n';
-    code += '        \n';
-    code += '        # Вызываем обработчик профиля\n';
-    code += '        try:\n';
-    code += '            await profile_handler(fake_message)\n';
-    code += '        except Exception as e:\n';
-    code += '            logging.error(f"Ошибка вызова profile_handler: {e}")\n';
-    code += '            await callback_query.message.answer(f"✅ Значение {variable_name} обновлено на: {variable_value}")\n';
-    code += '    else:\n';
-    code += '        logging.warning(f"Неверный формат условной кнопки: {callback_query.data}")\n';
-    code += '        await callback_query.answer("❌ Ошибка обработки кнопки", show_alert=True)\n';
-    code += '\n';
+  code += '\n# Обработчик для условных кнопок\n';
+  code += '@dp.callback_query(lambda c: c.data.startswith("conditional_"))\n';
+  code += 'async def handle_conditional_button(callback_query: types.CallbackQuery):\n';
+  code += '    await callback_query.answer()\n';
+  code += '    \n';
+  code += '    # Парсим callback_data: conditional_variableName_value\n';
+  code += '    callback_parts = callback_query.data.split("_", 2)\n';
+  code += '    if len(callback_parts) >= 3:\n';
+  code += '        variable_name = callback_parts[1]\n';
+  code += '        variable_value = callback_parts[2]\n';
+  code += '        \n';
+  code += '        user_id = callback_query.from_user.id\n';
+  code += '        \n';
+  code += '        # Сохраняем значение в базу данных\n';
+  code += '        await update_user_data_in_db(user_id, variable_name, variable_value)\n';
+  code += '        \n';
+  code += '        # Сохраняем в локальные данные\n';
+  code += '        if user_id not in user_data:\n';
+  code += '            user_data[user_id] = {}\n';
+  code += '        user_data[user_id][variable_name] = variable_value\n';
+  code += '        \n';
+  code += '        logging.info(f"Условная кнопка: {variable_name} = {variable_value} (пользователь {user_id})")\n';
+  code += '        \n';
+  code += '        # После обновления значения автоматически вызываем профиль\n';
+  code += '        await callback_query.answer(f"✅ {variable_name} обновлено")\n';
+  code += '        \n';
+  code += '        # Создаем имитацию сообщения для вызова команды профиль\n';
+  code += '        class FakeMessage:\n';
+  code += '            def __init__(self, callback_query):\n';
+  code += '                self.from_user = callback_query.from_user\n';
+  code += '                self.chat = callback_query.message.chat\n';
+  code += '                self.date = callback_query.message.date\n';
+  code += '                self.message_id = callback_query.message.message_id\n';
+  code += '            \n';
+  code += '            async def answer(self, text, parse_mode=None, reply_markup=None):\n';
+  code += '                if reply_markup:\n';
+  code += '                    await bot.send_message(self.chat.id, text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
+  code += '                else:\n';
+  code += '                    await bot.send_message(self.chat.id, text, parse_mode=parse_mode)\n';
+  code += '            \n';
+  code += '            async def edit_text(self, text, parse_mode=None, reply_markup=None):\n';
+  code += '                try:\n';
+  code += '                    await bot.edit_message_text(text, self.chat.id, self.message_id, parse_mode=parse_mode, reply_markup=reply_markup)\n';
+  code += '                except Exception:\n';
+  code += '                    await self.answer(text, parse_mode, reply_markup)\n';
+  code += '        \n';
+  code += '        fake_message = FakeMessage(callback_query)\n';
+  code += '        \n';
+  code += '        # Вызываем обработчик профиля\n';
+  code += '        try:\n';
+  code += '            await profile_handler(fake_message)\n';
+  code += '        except Exception as e:\n';
+  code += '            logging.error(f"Ошибка вызова profile_handler: {e}")\n';
+  code += '            await callback_query.message.answer(f"✅ Значение {variable_name} обновлено на: {variable_value}")\n';
+  code += '    else:\n';
+  code += '        logging.warning(f"Неверный формат условной кнопки: {callback_query.data}")\n';
+  code += '        await callback_query.answer("❌ Ошибка обработки кнопки", show_alert=True)\n';
+  code += '\n';
   }
 
   // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логированием
   const commandButtons = new Set<string>();
   if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАЕМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
-
-  nodes.forEach((node: Node) => {
+  
+  nodes.forEach(node => {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
-
+    
     // Обычные кнопки узла
     if (node.data.buttons) {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
@@ -7924,13 +8169,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     } else {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`❌ Узел ${node.id} не имеет кнопок`);
     }
-
+    
     // Кнопки в условных сообщениях
     if (node.data.conditionalMessages) {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
-      node.data.conditionalMessages.forEach((condition: ConditionalMessage) => {
+      node.data.conditionalMessages.forEach((condition: any) => {
         if (condition.buttons) {
-          condition.buttons.forEach((button: ButtonSchema) => {
+          condition.buttons.forEach((button: Button) => {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
             if (button.action === 'command' && button.target) {
               const commandCallback = `cmd_${button.target.replace('/', '')}`;
@@ -7942,14 +8187,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       });
     }
   });
-
+  
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log('📝 Список найденных кнопок команд:', Array.from(commandButtons));
-
+  
   if (commandButtons.size > 0) {
     code += '\n# Обработчики для кнопок команд\n';
     code += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
-
+    
     commandButtons.forEach(commandCallback => {
       const command = commandCallback.replace('cmd_', '');
       code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
@@ -7967,7 +8212,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += '    fake_message.answer = callback_query.message.answer\n';
       code += '    fake_message.edit_text = callback_query.message.edit_text\n';
       code += '    \n';
-
+      
       // Найти соответствующий обработчик команды
       const commandNode = nodes.find(n => n.data.command === `/${command}` || n.data.command === command);
       if (commandNode) {
@@ -8005,7 +8250,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '\n';
 
   // Добавляем обработчики для групп
-  if (groups && groups?.length > 0) {
+  if (groups && groups.length > 0) {
     code += '\n# Обработчики для работы с группами\n';
     code += '@dp.message(F.chat.type.in_(["group", "supergroup"]))\n';
     code += 'async def handle_group_message(message: types.Message):\n';
@@ -8055,7 +8300,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '        except Exception as e:\n';
     code += '            logging.error(f"Ошибка при сохранении статистики группы: {e}")\n';
     code += '    \n';
-
+    
     // Добавляем обработчик новых участников
     code += '# Обработчик новых участников в группе\n';
     code += '@dp.message(F.new_chat_members)\n';
@@ -8081,7 +8326,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '            # await message.answer(f"Добро пожаловать в группу, @{username}!")\n';
     code += '    \n';
   }
-
+  
   // Добавляем универсальный fallback-обработчик для всех текстовых сообщений
   // Этот обработчик ОБЯЗАТЕЛЬНО нужен, чтобы middleware сохранял ВСЕ сообщения
   // Middleware вызывается только для зарегистрированных обработчиков!
@@ -8098,7 +8343,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    logging.info(f"💬 Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")\n';
     code += '    # Можно отправить ответ пользователю (опционально)\n';
     code += '    # await message.answer("Извините, я не понимаю эту команду. Используйте /start для начала.")\n\n';
-
+    
     // Добавляем универсальный обработчик для фотографий
     code += '\n# Универсальный обработчик для необработанных фото\n';
     code += '@dp.message(F.photo)\n';
@@ -8111,7 +8356,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    # Middleware автоматически сохранит фото\n';
     code += '\n';
   }
-
+  
   code += '\n\n# Запуск бота\n';
   code += 'async def main():\n';
   if (userDatabaseEnabled) {
@@ -8122,18 +8367,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '        # Инициализируем базу данных\n';
     code += '        await init_database()\n';
   }
-  if (menuCommands?.length > 0) {
+  if (menuCommands.length > 0) {
     code += '        await set_bot_commands()\n';
   }
   code += '        \n';
   if (userDatabaseEnabled) {
-    code += '        # Регистрация middleware для сохранения сообщений\n';
-    code += '        dp.message.middleware(message_logging_middleware)\n';
-    // Регистрируем callback_query middleware только если в боте есть inline кнопки
-    if (hasInlineButtons(nodes || [])) {
-      code += '        dp.callback_query.middleware(callback_query_logging_middleware)\n';
-    }
-    code += '        \n';
+  code += '        # Регистрация middleware для сохранения сообщений\n';
+  code += '        dp.message.middleware(message_logging_middleware)\n';
+  // Регистрируем callback_query middleware только если в боте есть inline кнопки
+  if (hasInlineButtons(nodes || [])) {
+    code += '        dp.callback_query.middleware(callback_query_logging_middleware)\n';
+  }
+  code += '        \n';
   }
   code += '        print("🤖 Бот запущен и готов к работе!")\n';
   code += '        await dp.start_polling(bot)\n';
@@ -8153,76 +8398,76 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        await bot.session.close()\n';
   code += '        print("🔌 Сессия бота закрыта")\n';
   code += '        print("✅ Бот корректно завершил работу")\n\n';
-
+  
   // Найдем узлы с множественным выбором для использования в обработчиках
-  const multiSelectNodes = (nodes || []).filter(node =>
+  const multiSelectNodes = (nodes || []).filter(node => 
     node.data.allowMultipleSelection
   );
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
-
+  
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узлы с множественным выбором
-  if (multiSelectNodes?.length > 0) {
-    code += '\n# Обработчики для множественного выбора\n';
-
-    // Обработчик для inline кнопок множественного выбора
-    code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
-    code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
-    code += '    await callback_query.answer()\n';
-    code += '    user_id = callback_query.from_user.id\n';
-    code += '    callback_data = callback_query.data\n';
-    code += '    \n';
-    code += '    # Обработка кнопки "Готово"\n';
-    code += '    if callback_data.startswith("done_"):\n';
-    code += '        # Завершение множественного выбора (новый формат)\n';
-    code += '        logging.info(f"🏁 Обработка кнопки Готово: {callback_data}")\n';
-    code += '        short_node_id = callback_data.replace("done_", "")\n';
-    code += '        # Находим полный node_id по короткому суффиксу\n';
-    code += '        node_id = None\n';
-    multiSelectNodes.forEach(node => {
-      const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
-      code += `        if short_node_id == "${shortNodeId}":\n`;
-      code += `            node_id = "${node.id}"\n`;
-      code += `            logging.info(f"✅ Найден узел: ${node.id}")\n`;
-    });
-    code += '    elif callback_data.startswith("multi_select_done_"):\n';
-    code += '        # Завершение множественного выбора (старый формат)\n';
-    code += '        node_id = callback_data.replace("multi_select_done_", "")\n';
-    code += '        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n';
-    code += '        \n';
-    code += '        # Сохраняем выбранные опции в базу данных\n';
-    code += '        if selected_options:\n';
-    code += '            selected_text = ", ".join(selected_options)\n';
-
-    // Генерируем сохранение для каждого узла с его переменной
-    multiSelectNodes.forEach(node => {
-      const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
-      code += `            if node_id == "${node.id}":\n`;
-      code += `                await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
-    });
-
-    code += '            # Резервное сохранение если узел не найден\n';
-    code += '            if not any(node_id == node for node in [' + multiSelectNodes.map(n => `"${n.id}"`).join(', ') + ']):\n';
-    code += '                await save_user_data_to_db(user_id, f"multi_select_{node_id}", selected_text)\n';
-    code += '        \n';
-    code += '        # Очищаем состояние множественного выбора\n';
-    code += '        if user_id in user_data:\n';
-    code += '            user_data[user_id].pop(f"multi_select_{node_id}", None)\n';
-    code += '            user_data[user_id].pop("multi_select_node", None)\n';
-    code += '        \n';
-    code += '        # Переходим к следующему узлу, если указан\n';
-
-    // Добавим переходы для узлов с множественным выбором
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
-    code += '        # Определяем следующий узел для каждого node_id\n';
-    multiSelectNodes.forEach(node => {
+  if (multiSelectNodes.length > 0) {
+  code += '\n# Обработчики для множественного выбора\n';
+  
+  // Обработчик для inline кнопок множественного выбора
+  code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
+  code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
+  code += '    await callback_query.answer()\n';
+  code += '    user_id = callback_query.from_user.id\n';
+  code += '    callback_data = callback_query.data\n';
+  code += '    \n';
+  code += '    # Обработка кнопки "Готово"\n';
+  code += '    if callback_data.startswith("done_"):\n';
+  code += '        # Завершение множественного выбора (новый формат)\n';
+  code += '        logging.info(f"🏁 Обработка кнопки Готово: {callback_data}")\n';
+  code += '        short_node_id = callback_data.replace("done_", "")\n';
+  code += '        # Находим полный node_id по короткому суффиксу\n';
+  code += '        node_id = None\n';
+  multiSelectNodes.forEach(node => {
+    const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
+    code += `        if short_node_id == "${shortNodeId}":\n`;
+    code += `            node_id = "${node.id}"\n`;
+    code += `            logging.info(f"✅ Найден узел: ${node.id}")\n`;
+  });
+  code += '    elif callback_data.startswith("multi_select_done_"):\n';
+  code += '        # Завершение множественного выбора (старый формат)\n';
+  code += '        node_id = callback_data.replace("multi_select_done_", "")\n';
+  code += '        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n';
+  code += '        \n';
+  code += '        # Сохраняем выбранные опции в базу данных\n';
+  code += '        if selected_options:\n';
+  code += '            selected_text = ", ".join(selected_options)\n';
+  
+  // Генерируем сохранение для каждого узла с его переменной
+  multiSelectNodes.forEach(node => {
+    const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
+    code += `            if node_id == "${node.id}":\n`;
+    code += `                await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
+  });
+  
+  code += '            # Резервное сохранение если узел не найден\n';
+  code += '            if not any(node_id == node for node in [' + multiSelectNodes.map(n => `"${n.id}"`).join(', ') + ']):\n';
+  code += '                await save_user_data_to_db(user_id, f"multi_select_{node_id}", selected_text)\n';
+  code += '        \n';
+  code += '        # Очищаем состояние множественного выбора\n';
+  code += '        if user_id in user_data:\n';
+  code += '            user_data[user_id].pop(f"multi_select_{node_id}", None)\n';
+  code += '            user_data[user_id].pop("multi_select_node", None)\n';
+  code += '        \n';
+  code += '        # Переходим к следующему узлу, если указан\n';
+  
+  // Добавим переходы для узлов с множественным выбором
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
+  code += '        # Определяем следующий узел для каждого node_id\n';
+  multiSelectNodes.forEach(node => {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Создаем блок if для узла ${node.id}`);
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget: ${node.data.continueButtonTarget}`);
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: соединения из узла: ${connections.filter(conn => conn.source === node.id).map(c => c.target).join(', ')}`);
-
+      
       code += `        if node_id == "${node.id}":\n`;
-
+      
       let hasContent = false;
-
+      
       // Сначала проверяем continueButtonTarget
       if (node.data.continueButtonTarget) {
         const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
@@ -8231,15 +8476,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Тип целевого узла: ${targetNode.type}`);
           code += `            # Переход к узлу ${targetNode.id}\n`;
           code += `            logging.info(f"🔄 Переходим к узлу ${targetNode.id} (тип: ${targetNode.type})")\n`;
-          if ((targetNode.type as any) === 'message') {
+          if (targetNode.type === 'message') {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик, отправляем сообщение`);
             const messageText = targetNode.data.messageText || "Продолжение...";
             const formattedText = formatTextForPython(messageText);
             code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
             code += `            text = ${formattedText}\n`;
-
+            
             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла
-            if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
+            if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
               code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для целевого узла\n`;
               code += `            # Загружаем пользовательские данные для клавиатуры\n`;
@@ -8283,20 +8528,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       } else {
         // Если нет continueButtonTarget, ищем соединения
         const nodeConnections = connections.filter(conn => conn.source === node.id);
-        if (nodeConnections?.length > 0) {
+        if (nodeConnections.length > 0) {
           const targetNode = nodes.find(n => n.id === nodeConnections[0].target);
           if (targetNode) {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Найден целевой узел ${targetNode.id} через соединение`);
             code += `            # Переход к узлу ${targetNode.id} через соединение\n`;
-            if ((targetNode.type as any) === 'message') {
+            if (targetNode.type === 'message') {
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик через соединение`);
               const messageText = targetNode.data.messageText || "Продолжение...";
               const formattedText = formatTextForPython(messageText);
               code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
               code += `            text = ${formattedText}\n`;
-
+              
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для соединения ${targetNode.id}`);
                 code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для соединения\n`;
                 code += `            # Загружаем пользовательские данные для клавиатуры\n`;
@@ -8319,7 +8564,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           }
         }
       }
-
+      
       // Если блок if остался пустым, добавляем return
       if (!hasContent) {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Блок if для узла ${node.id} остался пустым, добавляем return`);
@@ -8329,489 +8574,489 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       }
     });
   }
-
+  
   code += '        return\n';
   code += '    \n';
-
+  
   // Весь следующий блок генерируется только если есть узлы с множественным выбором
-  if (multiSelectNodes?.length > 0) {
-    code += '    # Обработка выбора опции\n';
-    code += '    logging.info(f"📱 Обрабатываем callback_data: {callback_data}")\n';
-    code += '    \n';
-    code += '    # Поддерживаем и новый формат ms_ и старый multi_select_\n';
-    code += '    if callback_data.startswith("ms_"):\n';
-    code += '        # Новый короткий формат: ms_shortNodeId_shortTarget\n';
-    code += '        parts = callback_data.split("_")\n';
-    code += '        if len(parts) >= 3:\n';
-    code += '            short_node_id = parts[1]\n';
-    code += '            button_id = "_".join(parts[2:])\n';
-    code += '            # Находим полный node_id по короткому суффиксу\n';
-    code += '            node_id = None\n';
-    code += '            logging.info(f"🔍 Ищем узел по короткому ID: {short_node_id}")\n';
-    code += '            \n';
-    code += '            # Для станций метро ищем по содержимому кнопки, а не по короткому ID\n';
-    code += '            if short_node_id == "stations":\n';
-    code += '                # Проверяем каждый узел станций на наличие нужной кнопки\n';
-
-    let hasStationsCode = false;
-    multiSelectNodes.forEach(node => {
-      const shortNodeId = generateUniqueShortId(node.id, allNodeIds);
-      if (shortNodeId === 'stations') {
-        const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
-        code += `                # Проверяем узел ${node.id}\n`;
-        selectionButtons.forEach((button: ButtonSchema) => {
-          const buttonValue = button.target || button.id || button.text;
-          code += `                if button_id == "${buttonValue}":\n`;
-          code += `                    node_id = "${node.id}"\n`;
-          code += `                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")\n`;
-          hasStationsCode = true;
-        });
-      }
-    });
-
-    // Добавляем pass если в if блоке нет кода
-    if (!hasStationsCode) {
-      code += '                pass\n';
-    }
-
-    code += '            else:\n';
-    code += '                # Обычная логика для других узлов\n';
-
-    let hasElseCode = false;
-    multiSelectNodes.forEach(node => {
-      const shortNodeId = generateUniqueShortId(node.id, allNodeIds);
-      if (shortNodeId !== 'stations') {
-        code += `                if short_node_id == "${shortNodeId}":\n`;
+  if (multiSelectNodes.length > 0) {
+  code += '    # Обработка выбора опции\n';
+  code += '    logging.info(f"📱 Обрабатываем callback_data: {callback_data}")\n';
+  code += '    \n';
+  code += '    # Поддерживаем и новый формат ms_ и старый multi_select_\n';
+  code += '    if callback_data.startswith("ms_"):\n';
+  code += '        # Новый короткий формат: ms_shortNodeId_shortTarget\n';
+  code += '        parts = callback_data.split("_")\n';
+  code += '        if len(parts) >= 3:\n';
+  code += '            short_node_id = parts[1]\n';
+  code += '            button_id = "_".join(parts[2:])\n';
+  code += '            # Находим полный node_id по короткому суффиксу\n';
+  code += '            node_id = None\n';
+  code += '            logging.info(f"🔍 Ищем узел по короткому ID: {short_node_id}")\n';
+  code += '            \n';
+  code += '            # Для станций метро ищем по содержимому кнопки, а не по короткому ID\n';
+  code += '            if short_node_id == "stations":\n';
+  code += '                # Проверяем каждый узел станций на наличие нужной кнопки\n';
+  
+  let hasStationsCode = false;
+  multiSelectNodes.forEach(node => {
+    const shortNodeId = generateUniqueShortId(node.id, allNodeIds);
+    if (shortNodeId === 'stations') {
+      const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
+      code += `                # Проверяем узел ${node.id}\n`;
+      selectionButtons.forEach(button => {
+        const buttonValue = button.target || button.id || button.text;
+        code += `                if button_id == "${buttonValue}":\n`;
         code += `                    node_id = "${node.id}"\n`;
-        code += `                    logging.info(f"✅ Найден узел: {node_id}")\n`;
-        hasElseCode = true;
-      }
-    });
-
-    // Добавляем pass если в else блоке нет кода
-    if (!hasElseCode) {
-      code += '                pass\n';
+        code += `                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")\n`;
+        hasStationsCode = true;
+      });
     }
-    code += '    elif callback_data.startswith("multi_select_"):\n';
-    code += '        # Старый формат для обратной совместимости\n';
-    code += '        parts = callback_data.split("_")\n';
-    code += '        if len(parts) >= 3:\n';
-    code += '            node_id = parts[2]\n';
-    code += '            button_id = "_".join(parts[3:]) if len(parts) > 3 else parts[2]\n';
-    code += '    else:\n';
-    code += '        logging.warning(f"⚠️ Неизвестный формат callback_data: {callback_data}")\n';
-    code += '        return\n';
-    code += '    \n';
-    code += '    if not node_id:\n';
-    code += '        logging.warning(f"⚠️ Не удалось найти node_id для callback_data: {callback_data}")\n';
-    code += '        return\n';
-    code += '    \n';
-    code += '    logging.info(f"📱 Определили node_id: {node_id}, button_id: {button_id}")\n';
-    code += '    \n';
-    code += '    # Инициализируем список выбранных опций с восстановлением из БД\n';
-    code += '    if user_id not in user_data:\n';
-    code += '        user_data[user_id] = {}\n';
-    code += '    \n';
-    code += '    # Восстанавливаем ранее выбранные опции из базы данных\n';
-    code += '    if f"multi_select_{node_id}" not in user_data[user_id]:\n';
-    code += '        # Загружаем сохраненные данные из базы\n';
-    code += '        user_vars = await get_user_from_db(user_id)\n';
-    code += '        saved_selections = []\n';
-    code += '        \n';
-    code += '        if user_vars:\n';
-    code += '            # Ищем переменную с интересами\n';
-    code += '            for var_name, var_data in user_vars.items():\n';
-    code += '                if "интерес" in var_name.lower() or var_name == "interests" or var_name.startswith("multi_select_"):\n';
-    code += '                    if isinstance(var_data, dict) and "value" in var_data:\n';
-    code += '                        saved_str = var_data["value"]\n';
-    code += '                    elif isinstance(var_data, str):\n';
-    code += '                        saved_str = var_data\n';
-    code += '                    else:\n';
-    code += '                        saved_str = str(var_data) if var_data else ""\n';
-    code += '                    \n';
-    code += '                    if saved_str:\n';
-    code += '                        saved_selections = [item.strip() for item in saved_str.split(",")]\n';
-    code += '                        break\n';
-    code += '        \n';
-    code += '        user_data[user_id][f"multi_select_{node_id}"] = saved_selections\n';
-    code += '    \n';
-    code += '    # Находим текст кнопки по button_id\n';
-    code += '    button_text = None\n';
-
-    // Добавляем маппинг кнопок для каждого узла с множественным выбором
-    multiSelectNodes.forEach(node => {
-      const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
-      if (selectionButtons?.length > 0) {
-        code += `    if node_id == "${node.id}":\n`;
-        selectionButtons.forEach((button: ButtonSchema) => {
-          // Используем target или id для маппинга, как в генераторе клавиатуры
-          const buttonValue = button.target || button.id || button.text;
-          code += `        if button_id == "${buttonValue}":\n`;
-          code += `            button_text = "${button.text}"\n`;
-        });
-      }
-    });
-
-    code += '    \n';
-    code += '    if button_text:\n';
-    code += '        logging.info(f"🔘 Обрабатываем кнопку: {button_text}")\n';
-    code += '        selected_list = user_data[user_id][f"multi_select_{node_id}"]\n';
-    code += '        if button_text in selected_list:\n';
-    code += '            # Убираем из выбранных\n';
-    code += '            selected_list.remove(button_text)\n';
-    code += '            logging.info(f"➖ Убрали выбор: {button_text}")\n';
-    code += '        else:\n';
-    code += '            # Добавляем к выбранным\n';
-    code += '            selected_list.append(button_text)\n';
-    code += '            logging.info(f"➕ Добавили выбор: {button_text}")\n';
-    code += '        \n';
-    code += '        logging.info(f"📋 Текущие выборы: {selected_list}")\n';
-    code += '        \n';
-    code += '        # Обновляем клавиатуру с галочками\n';
-    code += '        builder = InlineKeyboardBuilder()\n';
-
-    // Генерируем обновление клавиатуры для каждого узла
-    multiSelectNodes.forEach(node => {
-      const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
-      const regularButtons = node.data.buttons?.filter(btn => btn.action !== 'selection') || [];
-
-      if (selectionButtons?.length > 0) {
-        code += `        if node_id == "${node.id}":\n`;
-
-        // Добавляем кнопки выбора с галочками
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
-        selectionButtons.forEach((button, index) => {
-          // ИСПРАВЛЕНИЕ: используем тот же формат callback_data как при создании кнопок
-          const shortNodeId = generateUniqueShortId(node.id, allNodeIds || []);
-          const shortTarget = button.target || button.id || 'btn';
-          const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> callback_data: ${callbackData}`);
-          code += `            selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
-          code += `            builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
-        });
-
-        // Добавляем обычные кнопки
-        regularButtons.forEach(button => {
-          if (button.action === 'goto') {
-            const callbackData = button.target || button.id || 'no_action';
-            code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-          } else if (button.action === 'url') {
-            code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-          } else if (button.action === 'command') {
-            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-            code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
-          }
-        });
-
-        // Добавляем кнопку завершения  
-        const continueText = node.data.continueButtonText || 'Готово';
-        const doneCallbackData = `multi_select_done_${node.id}`;
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
-        code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
-        code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла ${node.id} (multi-select)")\n`;
-        code += `            builder.adjust(2)\n`;
-      }
-    });
-
-    code += '        \n';
-    code += '        keyboard = builder.as_markup()\n';
-    code += '        logging.info(f"🔄 ОБНОВЛЯЕМ клавиатуру для узла {node_id} с галочками")\n';
-    code += '        await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
-    code += '\n';
-  }  // Закрываем if (multiSelectNodes?.length > 0) для блока обработки выбора опций
-
-  // Генерируем обработчик для кнопок "Готово" многомерного выбора ТОЛЬКО если есть узлы с множественным выбором
-  if (multiSelectNodes?.length > 0) {
-    code += '# Обработчик для кнопок завершения множественного выбора\n';
-    code += '@dp.callback_query(lambda callback_query: callback_query.data and callback_query.data.startswith("multi_select_done_"))\n';
-    code += 'async def handle_multi_select_done(callback_query: types.CallbackQuery):\n';
-    code += '    logging.info(f"🏁 ОБРАБОТЧИК ГОТОВО АКТИВИРОВАН! callback_data: {callback_query.data}")\n';
-    code += '    await callback_query.answer()\n';
-    code += '    user_id = callback_query.from_user.id\n';
-    code += '    callback_data = callback_query.data\n';
-    code += '    \n';
-    code += '    logging.info(f"🏁 Завершение множественного выбора: {callback_data}")\n';
-    code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущее сообщение ID: {callback_query.message.message_id}")\n';
-    code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущий текст сообщения: {callback_query.message.text}")\n';
-    code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Есть ли клавиатура: {bool(callback_query.message.reply_markup)}")\n';
-    code += '    \n';
-    code += '    # Извлекаем node_id из callback_data\n';
-    code += '    node_id = callback_data.replace("multi_select_done_", "")\n';
-    code += '    logging.info(f"🎯 Node ID для завершения: {node_id}")\n';
-    code += '    \n';
-
-    multiSelectNodes.forEach(node => {
-      const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
-      const continueButtonTarget = node.data.continueButtonTarget;
-
+  });
+  
+  // Добавляем pass если в if блоке нет кода
+  if (!hasStationsCode) {
+    code += '                pass\n';
+  }
+  
+  code += '            else:\n';
+  code += '                # Обычная логика для других узлов\n';
+  
+  let hasElseCode = false;
+  multiSelectNodes.forEach(node => {
+    const shortNodeId = generateUniqueShortId(node.id, allNodeIds);
+    if (shortNodeId !== 'stations') {
+      code += `                if short_node_id == "${shortNodeId}":\n`;
+      code += `                    node_id = "${node.id}"\n`;
+      code += `                    logging.info(f"✅ Найден узел: {node_id}")\n`;
+      hasElseCode = true;
+    }
+  });
+  
+  // Добавляем pass если в else блоке нет кода
+  if (!hasElseCode) {
+    code += '                pass\n';
+  }
+  code += '    elif callback_data.startswith("multi_select_"):\n';
+  code += '        # Старый формат для обратной совместимости\n';
+  code += '        parts = callback_data.split("_")\n';
+  code += '        if len(parts) >= 3:\n';
+  code += '            node_id = parts[2]\n';
+  code += '            button_id = "_".join(parts[3:]) if len(parts) > 3 else parts[2]\n';
+  code += '    else:\n';
+  code += '        logging.warning(f"⚠️ Неизвестный формат callback_data: {callback_data}")\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    if not node_id:\n';
+  code += '        logging.warning(f"⚠️ Не удалось найти node_id для callback_data: {callback_data}")\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    logging.info(f"📱 Определили node_id: {node_id}, button_id: {button_id}")\n';
+  code += '    \n';
+  code += '    # Инициализируем список выбранных опций с восстановлением из БД\n';
+  code += '    if user_id not in user_data:\n';
+  code += '        user_data[user_id] = {}\n';
+  code += '    \n';
+  code += '    # Восстанавливаем ранее выбранные опции из базы данных\n';
+  code += '    if f"multi_select_{node_id}" not in user_data[user_id]:\n';
+  code += '        # Загружаем сохраненные данные из базы\n';
+  code += '        user_vars = await get_user_from_db(user_id)\n';
+  code += '        saved_selections = []\n';
+  code += '        \n';
+  code += '        if user_vars:\n';
+  code += '            # Ищем переменную с интересами\n';
+  code += '            for var_name, var_data in user_vars.items():\n';
+  code += '                if "интерес" in var_name.lower() or var_name == "interests" or var_name.startswith("multi_select_"):\n';
+  code += '                    if isinstance(var_data, dict) and "value" in var_data:\n';
+  code += '                        saved_str = var_data["value"]\n';
+  code += '                    elif isinstance(var_data, str):\n';
+  code += '                        saved_str = var_data\n';
+  code += '                    else:\n';
+  code += '                        saved_str = str(var_data) if var_data else ""\n';
+  code += '                    \n';
+  code += '                    if saved_str:\n';
+  code += '                        saved_selections = [item.strip() for item in saved_str.split(",")]\n';
+  code += '                        break\n';
+  code += '        \n';
+  code += '        user_data[user_id][f"multi_select_{node_id}"] = saved_selections\n';
+  code += '    \n';
+  code += '    # Находим текст кнопки по button_id\n';
+  code += '    button_text = None\n';
+  
+  // Добавляем маппинг кнопок для каждого узла с множественным выбором
+  multiSelectNodes.forEach(node => {
+    const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
+    if (selectionButtons.length > 0) {
       code += `    if node_id == "${node.id}":\n`;
-      code += `        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Обрабатываем завершение для узла ${node.id}")\n`;
-      code += `        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: continueButtonTarget = ${continueButtonTarget || 'НЕТ'}")\n`;
-      code += `        # Получаем выбранные опции для узла ${node.id}\n`;
-      code += `        selected_options = user_data.get(user_id, {}).get("multi_select_${node.id}", [])\n`;
-      code += `        logging.info(f"📋 ГЕНЕРАТОР DEBUG: Выбранные опции для ${node.id}: {selected_options}")\n`;
-      code += `        \n`;
-      code += `        if selected_options:\n`;
-      code += `            selected_text = ", ".join(selected_options)\n`;
-      code += `            await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
-      code += `            logging.info(f"💾 ГЕНЕРАТОР DEBUG: Сохранили в БД: ${variableName} = {selected_text}")\n`;
-      code += `        else:\n`;
-      code += `            logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций для сохранения")\n`;
-      code += `        \n`;
-
-      if (continueButtonTarget) {
-        const targetNode = nodes.find(n => n.id === continueButtonTarget);
-        if (targetNode) {
-          code += `        # Переход к следующему узлу: ${continueButtonTarget}\n`;
-          const safeFunctionName = continueButtonTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Переходим к узлу '${continueButtonTarget}'")\n`;
-          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Тип целевого узла: ${targetNode?.type || 'неизвестно'}")\n`;
-          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: allowMultipleSelection: ${targetNode?.data?.allowMultipleSelection || false}")\n`;
-          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Есть ли кнопки: ${targetNode?.data?.buttons?.length || 0}")\n`;
-          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: keyboardType: ${targetNode?.data?.keyboardType || 'нет'}")\n`;
-
-          // Специальная обработка для узлов с множественным выбором
-          if (targetNode.data.allowMultipleSelection) {
-            const multiSelectKeyboardType = targetNode.data.keyboardType || "inline";
-            code += `        # Узел ${continueButtonTarget} поддерживает множественный выбор - сохраняем состояние\n`;
-            code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Инициализируем множественный выбор для узла ${targetNode.id}")\n`;
+      selectionButtons.forEach(button => {
+        // Используем target или id для маппинга, как в генераторе клавиатуры
+        const buttonValue = button.target || button.id || button.text;
+        code += `        if button_id == "${buttonValue}":\n`;
+        code += `            button_text = "${button.text}"\n`;
+      });
+    }
+  });
+  
+  code += '    \n';
+  code += '    if button_text:\n';
+  code += '        logging.info(f"🔘 Обрабатываем кнопку: {button_text}")\n';
+  code += '        selected_list = user_data[user_id][f"multi_select_{node_id}"]\n';
+  code += '        if button_text in selected_list:\n';
+  code += '            # Убираем из выбранных\n';
+  code += '            selected_list.remove(button_text)\n';
+  code += '            logging.info(f"➖ Убрали выбор: {button_text}")\n';
+  code += '        else:\n';
+  code += '            # Добавляем к выбранным\n';
+  code += '            selected_list.append(button_text)\n';
+  code += '            logging.info(f"➕ Добавили выбор: {button_text}")\n';
+  code += '        \n';
+  code += '        logging.info(f"📋 Текущие выборы: {selected_list}")\n';
+  code += '        \n';
+  code += '        # Обновляем клавиатуру с галочками\n';
+  code += '        builder = InlineKeyboardBuilder()\n';
+  
+  // Генерируем обновление клавиатуры для каждого узла
+  multiSelectNodes.forEach(node => {
+    const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
+    const regularButtons = node.data.buttons?.filter(btn => btn.action !== 'selection') || [];
+    
+    if (selectionButtons.length > 0) {
+      code += `        if node_id == "${node.id}":\n`;
+      
+      // Добавляем кнопки выбора с галочками
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
+      selectionButtons.forEach((button, index) => {
+        // ИСПРАВЛЕНИЕ: используем тот же формат callback_data как при создании кнопок
+        const shortNodeId = generateUniqueShortId(node.id, allNodeIds || []);
+        const shortTarget = button.target || button.id || 'btn';
+        const callbackData = `ms_${shortNodeId}_${shortTarget}`;
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> callback_data: ${callbackData}`);
+        code += `            selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
+        code += `            builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
+      });
+      
+      // Добавляем обычные кнопки
+      regularButtons.forEach(button => {
+        if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+        } else if (button.action === 'url') {
+          code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'command') {
+          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+          code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+        }
+      });
+      
+      // Добавляем кнопку завершения  
+      const continueText = node.data.continueButtonText || 'Готово';
+      const doneCallbackData = `multi_select_done_${node.id}`;
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
+      code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
+      code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла ${node.id} (multi-select)")\n`;
+      code += `            builder.adjust(2)\n`;
+    }
+  });
+  
+  code += '        \n';
+  code += '        keyboard = builder.as_markup()\n';
+  code += '        logging.info(f"🔄 ОБНОВЛЯЕМ клавиатуру для узла {node_id} с галочками")\n';
+  code += '        await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
+  code += '\n';
+  }  // Закрываем if (multiSelectNodes.length > 0) для блока обработки выбора опций
+  
+  // Генерируем обработчик для кнопок "Готово" многомерного выбора ТОЛЬКО если есть узлы с множественным выбором
+  if (multiSelectNodes.length > 0) {
+  code += '# Обработчик для кнопок завершения множественного выбора\n';
+  code += '@dp.callback_query(lambda callback_query: callback_query.data and callback_query.data.startswith("multi_select_done_"))\n';
+  code += 'async def handle_multi_select_done(callback_query: types.CallbackQuery):\n';
+  code += '    logging.info(f"🏁 ОБРАБОТЧИК ГОТОВО АКТИВИРОВАН! callback_data: {callback_query.data}")\n';
+  code += '    await callback_query.answer()\n';
+  code += '    user_id = callback_query.from_user.id\n';
+  code += '    callback_data = callback_query.data\n';
+  code += '    \n';
+  code += '    logging.info(f"🏁 Завершение множественного выбора: {callback_data}")\n';
+  code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущее сообщение ID: {callback_query.message.message_id}")\n';
+  code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущий текст сообщения: {callback_query.message.text}")\n';
+  code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Есть ли клавиатура: {bool(callback_query.message.reply_markup)}")\n';
+  code += '    \n';
+  code += '    # Извлекаем node_id из callback_data\n';
+  code += '    node_id = callback_data.replace("multi_select_done_", "")\n';
+  code += '    logging.info(f"🎯 Node ID для завершения: {node_id}")\n';
+  code += '    \n';
+  
+  multiSelectNodes.forEach(node => {
+    const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
+    const continueButtonTarget = node.data.continueButtonTarget;
+    
+    code += `    if node_id == "${node.id}":\n`;
+    code += `        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Обрабатываем завершение для узла ${node.id}")\n`;
+    code += `        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: continueButtonTarget = ${continueButtonTarget || 'НЕТ'}")\n`;
+    code += `        # Получаем выбранные опции для узла ${node.id}\n`;
+    code += `        selected_options = user_data.get(user_id, {}).get("multi_select_${node.id}", [])\n`;
+    code += `        logging.info(f"📋 ГЕНЕРАТОР DEBUG: Выбранные опции для ${node.id}: {selected_options}")\n`;
+    code += `        \n`;
+    code += `        if selected_options:\n`;
+    code += `            selected_text = ", ".join(selected_options)\n`;
+    code += `            await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
+    code += `            logging.info(f"💾 ГЕНЕРАТОР DEBUG: Сохранили в БД: ${variableName} = {selected_text}")\n`;
+    code += `        else:\n`;
+    code += `            logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций для сохранения")\n`;
+    code += `        \n`;
+    
+    if (continueButtonTarget) {
+      const targetNode = nodes.find(n => n.id === continueButtonTarget);
+      if (targetNode) {
+        code += `        # Переход к следующему узлу: ${continueButtonTarget}\n`;
+        const safeFunctionName = continueButtonTarget.replace(/[^a-zA-Z0-9_]/g, '_');
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Переходим к узлу '${continueButtonTarget}'")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Тип целевого узла: ${targetNode?.type || 'неизвестно'}")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: allowMultipleSelection: ${targetNode?.data?.allowMultipleSelection || false}")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Есть ли кнопки: ${targetNode?.data?.buttons?.length || 0}")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: keyboardType: ${targetNode?.data?.keyboardType || 'нет'}")\n`;
+        
+        // Специальная обработка для узлов с множественным выбором
+        if (targetNode.data.allowMultipleSelection) {
+          const multiSelectKeyboardType = targetNode.data.keyboardType || "inline";
+          code += `        # Узел ${continueButtonTarget} поддерживает множественный выбор - сохраняем состояние\n`;
+          code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Инициализируем множественный выбор для узла ${targetNode.id}")\n`;
+          code += `        if user_id not in user_data:\n`;
+          code += `            user_data[user_id] = {}\n`;
+          code += `        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+          code += `        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+          code += `        user_data[user_id]["multi_select_type"] = "${multiSelectKeyboardType}"\n`;
+          code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Состояние множественного выбора установлено для узла ${targetNode.id}")\n`;
+        }
+        
+        // ИСПРАВЛЕНИЕ: НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!
+        // Пользователь должен сам выбрать продолжение
+        
+        // Отправляем сообщение для следующего узла с ожиданием пользовательского ввода
+        if (targetNode.type === 'message') {
+          // Показываем сообщение следующего узла
+          const messageText = targetNode.data.messageText || "Выберите опции:";
+          const formattedText = formatTextForPython(messageText);
+          
+          code += `        # Отправляем сообщение для следующего узла с ожиданием пользовательского ввода\n`;
+          code += `        text = ${formattedText}\n`;
+          code += `        \n`;
+          code += `        # Инициализируем состояние множественного выбора для следующего узла\n`;
+          
+          // Генерируем клавиатуру для следующего узла
+          if (targetNode.data.allowMultipleSelection && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
+            
+            code += `        # Инициализируем состояние множественного выбора\n`;
             code += `        if user_id not in user_data:\n`;
             code += `            user_data[user_id] = {}\n`;
-            code += `        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+            code += `        \n`;
+            code += `        # Загружаем ранее выбранные варианты из БД\n`;
+            code += `        saved_selections = []\n`;
+            code += `        user_record = await get_user_from_db(user_id)\n`;
+            code += `        if user_record and isinstance(user_record, dict):\n`;
+            code += `            user_data_field = user_record.get("user_data", {})\n`;
+            code += `            if isinstance(user_data_field, str):\n`;
+            code += `                import json\n`;
+            code += `                try:\n`;
+            code += `                    user_vars = json.loads(user_data_field)\n`;
+            code += `                except:\n`;
+            code += `                    user_vars = {}\n`;
+            code += `            elif isinstance(user_data_field, dict):\n`;
+            code += `                user_vars = user_data_field\n`;
+            code += `            else:\n`;
+            code += `                user_vars = {}\n`;
+            code += `            \n`;
+            code += `            if "${multiSelectVariable}" in user_vars:\n`;
+            code += `                var_data = user_vars["${multiSelectVariable}"]\n`;
+            code += `                if isinstance(var_data, str) and var_data.strip():\n`;
+            code += `                    saved_selections = [sel.strip() for sel in var_data.split(",") if sel.strip()]\n`;
+            code += `        \n`;
+            const multiSelectKeyboardType = targetNode.data.keyboardType || "reply";
+            code += `        # Инициализируем состояние с восстановленными значениями\n`;
+            code += `        user_data[user_id]["multi_select_${targetNode.id}"] = saved_selections.copy()\n`;
             code += `        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
             code += `        user_data[user_id]["multi_select_type"] = "${multiSelectKeyboardType}"\n`;
-            code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Состояние множественного выбора установлено для узла ${targetNode.id}")\n`;
-          }
-
-          // ИСПРАВЛЕНИЕ: НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!
-          // Пользователь должен сам выбрать продолжение
-
-          // Отправляем сообщение для следующего узла с ожиданием пользовательского ввода
-          if ((targetNode.type as any) === 'message') {
-            // Показываем сообщение следующего узла
-            const messageText = targetNode.data.messageText || "Выберите опции:";
-            const formattedText = formatTextForPython(messageText);
-
-            code += `        # Отправляем сообщение для следующего узла с ожиданием пользовательского ввода\n`;
-            code += `        text = ${formattedText}\n`;
+            code += `        user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
             code += `        \n`;
-            code += `        # Инициализируем состояние множественного выбора для следующего узла\n`;
-
-            // Генерируем клавиатуру для следующего узла
-            if (targetNode.data.allowMultipleSelection && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-              const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
-
-              code += `        # Инициализируем состояние множественного выбора\n`;
-              code += `        if user_id not in user_data:\n`;
-              code += `            user_data[user_id] = {}\n`;
+            
+            // ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в зависимости от keyboardType
+            if (multiSelectKeyboardType === 'reply') {
+              // Reply клавиатура для множественного выбора
+              code += `        builder = ReplyKeyboardBuilder()\n`;
+              
+              // Добавляем кнопки выбора с учетом ранее сохраненных значений
+              targetNode.data.buttons.forEach((button, index) => {
+                if (button.action === 'selection') {
+                  const cleanText = button.text.replace(/"/g, '\\"');
+                  code += `        # Кнопка выбора: ${cleanText}\n`;
+                  code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
+                  code += `        button_text = f"{selected_mark}${cleanText}"\n`;
+                  code += `        builder.add(KeyboardButton(text=button_text))\n`;
+                }
+              });
+              
+              // Добавляем кнопку "Готово"
+              const continueText = targetNode.data.continueButtonText || 'Готово';
+              code += `        builder.add(KeyboardButton(text="${continueText}"))\n`;
+              const resizeKeyboard = targetNode.data.resizeKeyboard !== false;
+              const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true;
+              code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
               code += `        \n`;
-              code += `        # Загружаем ранее выбранные варианты из БД\n`;
-              code += `        saved_selections = []\n`;
-              code += `        user_record = await get_user_from_db(user_id)\n`;
-              code += `        if user_record and isinstance(user_record, dict):\n`;
-              code += `            user_data_field = user_record.get("user_data", {})\n`;
-              code += `            if isinstance(user_data_field, str):\n`;
-              code += `                import json\n`;
-              code += `                try:\n`;
-              code += `                    user_vars = json.loads(user_data_field)\n`;
-              code += `                except:\n`;
-              code += `                    user_vars = {}\n`;
-              code += `            elif isinstance(user_data_field, dict):\n`;
-              code += `                user_vars = user_data_field\n`;
-              code += `            else:\n`;
-              code += `                user_vars = {}\n`;
-              code += `            \n`;
-              code += `            if "${multiSelectVariable}" in user_vars:\n`;
-              code += `                var_data = user_vars["${multiSelectVariable}"]\n`;
-              code += `                if isinstance(var_data, str) and var_data.strip():\n`;
-              code += `                    saved_selections = [sel.strip() for sel in var_data.split(",") if sel.strip()]\n`;
-              code += `        \n`;
-              const multiSelectKeyboardType = targetNode.data.keyboardType || "reply";
-              code += `        # Инициализируем состояние с восстановленными значениями\n`;
-              code += `        user_data[user_id]["multi_select_${targetNode.id}"] = saved_selections.copy()\n`;
-              code += `        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
-              code += `        user_data[user_id]["multi_select_type"] = "${multiSelectKeyboardType}"\n`;
-              code += `        user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
-              code += `        \n`;
-
-              // ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в зависимости от keyboardType
-              if (multiSelectKeyboardType === 'reply') {
-                // Reply клавиатура для множественного выбора
-                code += `        builder = ReplyKeyboardBuilder()\n`;
-
-                // Добавляем кнопки выбора с учетом ранее сохраненных значений
-                targetNode.data.buttons.forEach((button: Button, index: number) => {
-                  if (button.action === 'selection') {
-                    const cleanText = button.text.replace(/"/g, '\\"');
-                    code += `        # Кнопка выбора: ${cleanText}\n`;
-                    code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
-                    code += `        button_text = f"{selected_mark}${cleanText}"\n`;
-                    code += `        builder.add(KeyboardButton(text=button_text))\n`;
-                  }
-                });
-
-                // Добавляем кнопку "Готово"
-                const continueText = targetNode.data.continueButtonText || 'Готово';
-                code += `        builder.add(KeyboardButton(text="${continueText}"))\n`;
-                const resizeKeyboard = targetNode.data.resizeKeyboard !== false;
-                const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true;
-                code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                code += `        \n`;
-                code += `        await bot.send_message(user_id, text, reply_markup=keyboard)\n`;
-              } else {
-                // Inline клавиатура для множественного выбора
-                code += `        builder = InlineKeyboardBuilder()\n`;
-
-                // Добавляем кнопки выбора с учетом ранее сохраненных значений
-                targetNode.data.buttons.forEach((button: Button, index: number) => {
-                  if (button.action === 'selection') {
-                    const cleanText = button.text.replace(/"/g, '\\"');
-                    const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
-                    code += `        # Кнопка с галочкой: ${cleanText}\n`;
-                    code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
-                    code += `        button_text = f"{selected_mark}${cleanText}"\n`;
-                    code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
-                  }
-                });
-
-                // Добавляем кнопку "Готово"
-                code += `        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${targetNode.id}"))\n`;
-                code += `        builder.adjust(2)\n`;
-                code += `        keyboard = builder.as_markup()\n`;
-                code += `        \n`;
-                code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
-              }
-              code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено, ЗАВЕРШАЕМ функцию")\n`;
-              code += `        return\n`;
+              code += `        await bot.send_message(user_id, text, reply_markup=keyboard)\n`;
             } else {
-              // Обычная клавиатура без множественного выбора
-              code += `        # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, нужна ли клавиатура для целевого узла\n`;
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
-                code += `        # Добавляем клавиатуру для целевого узла\n`;
-                code += `        # Загружаем пользовательские данные для клавиатуры\n`;
-                code += `        user_vars = await get_user_from_db(user_id)\n`;
-                code += `        if not user_vars:\n`;
-                code += `            user_vars = user_data.get(user_id, {})\n`;
-                code += `        if not isinstance(user_vars, dict):\n`;
-                code += `            user_vars = {}\n`;
-                code += `        \n`;
-                code += generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
-                code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
-                code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено С КЛАВИАТУРОЙ для узла ${targetNode.id}")\n`;
-              } else {
-                code += `        # Отправляем только сообщение без клавиатуры\n`;
-                code += `        await callback_query.message.answer(text)\n`;
-                code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено БЕЗ КЛАВИАТУРЫ для узла ${targetNode.id}")\n`;
-              }
-              code += `        return\n`;
+              // Inline клавиатура для множественного выбора
+              code += `        builder = InlineKeyboardBuilder()\n`;
+              
+              // Добавляем кнопки выбора с учетом ранее сохраненных значений
+              targetNode.data.buttons.forEach((button, index) => {
+                if (button.action === 'selection') {
+                  const cleanText = button.text.replace(/"/g, '\\"');
+                  const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
+                  code += `        # Кнопка с галочкой: ${cleanText}\n`;
+                  code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
+                  code += `        button_text = f"{selected_mark}${cleanText}"\n`;
+                  code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
+                }
+              });
+              
+              // Добавляем кнопку "Готово"
+              code += `        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${targetNode.id}"))\n`;
+              code += `        builder.adjust(2)\n`;
+              code += `        keyboard = builder.as_markup()\n`;
+              code += `        \n`;
+              code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
             }
+            code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено, ЗАВЕРШАЕМ функцию")\n`;
+            code += `        return\n`;
           } else {
-            // Узел не найден - отправляем простое сообщение
-            code += `        logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Целевой узел не найден, отправляем простое сообщение")\n`;
-            code += `        await callback_query.message.answer("Переход завершен")\n`;
+            // Обычная клавиатура без множественного выбора
+            code += `        # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, нужна ли клавиатура для целевого узла\n`;
+            if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
+              code += `        # Добавляем клавиатуру для целевого узла\n`;
+              code += `        # Загружаем пользовательские данные для клавиатуры\n`;
+              code += `        user_vars = await get_user_from_db(user_id)\n`;
+              code += `        if not user_vars:\n`;
+              code += `            user_vars = user_data.get(user_id, {})\n`;
+              code += `        if not isinstance(user_vars, dict):\n`;
+              code += `            user_vars = {}\n`;
+              code += `        \n`;
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
+              code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+              code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено С КЛАВИАТУРОЙ для узла ${targetNode.id}")\n`;
+            } else {
+              code += `        # Отправляем только сообщение без клавиатуры\n`;
+              code += `        await callback_query.message.answer(text)\n`;
+              code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено БЕЗ КЛАВИАТУРЫ для узла ${targetNode.id}")\n`;
+            }
             code += `        return\n`;
           }
+        } else {
+          // Узел не найден - отправляем простое сообщение
+          code += `        logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Целевой узел не найден, отправляем простое сообщение")\n`;
+          code += `        await callback_query.message.answer("Переход завершен")\n`;
+          code += `        return\n`;
         }
       }
-
-      code += `        return\n`;
-      code += `    \n`;
-    });
-
-    code += '\n';
-  }  // Закрываем if (multiSelectNodes?.length > 0)
+    }
+    
+    code += `        return\n`;
+    code += `    \n`;
+  });
+  
+  code += '\n';
+  }  // Закрываем if (multiSelectNodes.length > 0)
 
   // Обработчик для reply кнопок множественного выбора - только если есть узлы с множественным выбором
   if (hasMultiSelectNodes(nodes || [])) {
     code += '# Обработчик для reply кнопок множественного выбора\n';
     code += '@dp.message()\n';
     code += 'async def handle_multi_select_reply(message: types.Message):\n';
-    code += '    user_id = message.from_user.id\n';
-    code += '    user_input = message.text\n';
-    code += '    \n';
-    code += '    # Проверяем, находится ли пользователь в режиме множественного выбора reply\n';
-    code += '    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":\n';
-    code += '        node_id = user_data[user_id]["multi_select_node"]\n';
-    code += '        \n';
-
-    // Проверяем, является ли это кнопкой завершения
-    multiSelectNodes.forEach(node => {
-      const continueText = node.data.continueButtonText || 'Готово';
-      const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
-      code += `        if node_id == "${node.id}" and user_input == "${continueText}":\n`;
-      code += `            # Завершение множественного выбора для узла ${node.id}\n`;
-      code += `            selected_options = user_data.get(user_id, {}).get("multi_select_{node_id}", [])\n`;
-      code += `            if selected_options:\n`;
-      code += `                selected_text = ", ".join(selected_options)\n`;
-      code += `                await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
-      code += `            \n`;
-      code += `            # Очищаем состояние\n`;
-      code += `            user_data[user_id].pop("multi_select_{node_id}", None)\n`;
-      code += `            user_data[user_id].pop("multi_select_node", None)\n`;
-      code += `            user_data[user_id].pop("multi_select_type", None)\n`;
-      code += `            \n`;
-
-      if (node.data.continueButtonTarget) {
-        const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
-        if (targetNode) {
-          code += `            # Переход к следующему узлу\n`;
-          if ((targetNode.type as any) === 'message') {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик в reply mode`);
-            const messageText = targetNode.data.messageText || "Продолжение...";
-            const formattedText = formatTextForPython(messageText);
-            code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
-            code += `            text = ${formattedText}\n`;
-
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла в reply mode
-            if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons?.length > 0) {
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для reply mode ${targetNode.id}`);
-              code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для reply mode\n`;
-              code += `            # Загружаем пользовательские данные для клавиатуры\n`;
-              code += `            user_vars = await get_user_from_db(user_id)\n`;
-              code += `            if not user_vars:\n`;
-              code += `                user_vars = user_data.get(user_id, {})\n`;
-              code += `            if not isinstance(user_vars, dict):\n`;
-              code += `                user_vars = {}\n`;
-              code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data, allNodeIds);
-              code += `            await message.answer(text, reply_markup=keyboard)\n`;
-            } else {
-              code += `            await message.answer(text)\n`;
-            };
-          } else if (targetNode.type === 'command') {
-            const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
-            code += `            await handle_command_${safeCommandName}(message)\n`;
-          }
+  code += '    user_id = message.from_user.id\n';
+  code += '    user_input = message.text\n';
+  code += '    \n';
+  code += '    # Проверяем, находится ли пользователь в режиме множественного выбора reply\n';
+  code += '    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":\n';
+  code += '        node_id = user_data[user_id]["multi_select_node"]\n';
+  code += '        \n';
+  
+  // Проверяем, является ли это кнопкой завершения
+  multiSelectNodes.forEach(node => {
+    const continueText = node.data.continueButtonText || 'Готово';
+    const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
+    code += `        if node_id == "${node.id}" and user_input == "${continueText}":\n`;
+    code += `            # Завершение множественного выбора для узла ${node.id}\n`;
+    code += `            selected_options = user_data.get(user_id, {}).get("multi_select_{node_id}", [])\n`;
+    code += `            if selected_options:\n`;
+    code += `                selected_text = ", ".join(selected_options)\n`;
+    code += `                await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
+    code += `            \n`;
+    code += `            # Очищаем состояние\n`;
+    code += `            user_data[user_id].pop("multi_select_{node_id}", None)\n`;
+    code += `            user_data[user_id].pop("multi_select_node", None)\n`;
+    code += `            user_data[user_id].pop("multi_select_type", None)\n`;
+    code += `            \n`;
+    
+    if (node.data.continueButtonTarget) {
+      const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
+      if (targetNode) {
+        code += `            # Переход к следующему узлу\n`;
+        if (targetNode.type === 'message') {
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик в reply mode`);
+          const messageText = targetNode.data.messageText || "Продолжение...";
+          const formattedText = formatTextForPython(messageText);
+          code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
+          code += `            text = ${formattedText}\n`;
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла в reply mode
+          if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для reply mode ${targetNode.id}`);
+            code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для reply mode\n`;
+            code += `            # Загружаем пользовательские данные для клавиатуры\n`;
+            code += `            user_vars = await get_user_from_db(user_id)\n`;
+            code += `            if not user_vars:\n`;
+            code += `                user_vars = user_data.get(user_id, {})\n`;
+            code += `            if not isinstance(user_vars, dict):\n`;
+            code += `                user_vars = {}\n`;
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data, allNodeIds);
+            code += `            await message.answer(text, reply_markup=keyboard)\n`;
+          } else {
+            code += `            await message.answer(text)\n`;
+          };
+        } else if (targetNode.type === 'command') {
+          const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
+          code += `            await handle_command_${safeCommandName}(message)\n`;
         }
       }
-      code += `            return\n`;
-      code += `        \n`;
-    });
-
-    code += '        # Обработка выбора опции\n';
-    multiSelectNodes.forEach(node => {
-      const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
-
-      if (selectionButtons?.length > 0) {
-        code += `        if node_id == "${node.id}":\n`;
-        selectionButtons.forEach((button: ButtonSchema) => {
-          code += `            if user_input == "${button.text}":\n`;
-          code += `                if "multi_select_{node_id}" not in user_data[user_id]:\n`;
-          code += `                    user_data[user_id]["multi_select_{node_id}"] = []\n`;
-          code += `                \n`;
-          code += `                selected_list = user_data[user_id]["multi_select_{node_id}"]\n`;
-          code += `                if "${button.text}" in selected_list:\n`;
-          code += `                    selected_list.remove("${button.text}")\n`;
-          code += `                    await message.answer("❌ Убрано: ${button.text}")\n`;
-          code += `                else:\n`;
-          code += `                    selected_list.append("${button.text}")\n`;
-          code += `                    await message.answer("✅ Выбрано: ${button.text}")\n`;
-          code += `                return\n`;
-          code += `            \n`;
-        });
-      }
-    });
-
+    }
+    code += `            return\n`;
+    code += `        \n`;
+  });
+  
+  code += '        # Обработка выбора опции\n';
+  multiSelectNodes.forEach(node => {
+    const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
+    
+    if (selectionButtons.length > 0) {
+      code += `        if node_id == "${node.id}":\n`;
+      selectionButtons.forEach(button => {
+        code += `            if user_input == "${button.text}":\n`;
+        code += `                if "multi_select_{node_id}" not in user_data[user_id]:\n`;
+        code += `                    user_data[user_id]["multi_select_{node_id}"] = []\n`;
+        code += `                \n`;
+        code += `                selected_list = user_data[user_id]["multi_select_{node_id}"]\n`;
+        code += `                if "${button.text}" in selected_list:\n`;
+        code += `                    selected_list.remove("${button.text}")\n`;
+        code += `                    await message.answer("❌ Убрано: ${button.text}")\n`;
+        code += `                else:\n`;
+        code += `                    selected_list.append("${button.text}")\n`;
+        code += `                    await message.answer("✅ Выбрано: ${button.text}")\n`;
+        code += `                return\n`;
+        code += `            \n`;
+      });
+    }
+  });
+  
     code += '    \n';
     code += '    # Если не множественный выбор, передаем дальше по цепочке обработчиков\n';
     code += '    pass\n';
@@ -8855,7 +9100,7 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
     code += '    first_name = message.from_user.first_name\n';
     code += '    last_name = message.from_user.last_name\n';
     code += '    \n';
-
+    
     if (userDatabaseEnabled) {
       code += '    # Сохраняем пользователя в базу данных\n';
       code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
@@ -8878,12 +9123,12 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
       code += '        user_data[user_id] = {}\n\n';
     }
   }
-
+  
   // Восстанавливаем состояние множественного выбора ТОЛЬКО если он включен
   if (node.data.allowMultipleSelection) {
     code += '    saved_interests = []\n';
     code += '    \n';
-
+    
     if (userDatabaseEnabled) {
       code += '    # Восстанавливаем состояние множественного выбора из БД\n';
       code += '    user_record = await get_user_from_db(user_id)\n';
@@ -8922,7 +9167,7 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
       code += '                    logging.info(f"Восстановлены интересы: {saved_interests}")\n';
       code += '                    break\n';
     }
-
+    
     code += '    \n';
     code += '    # Инициализируем состояние множественного выбора\n';
     code += '    if user_id not in user_data:\n';
@@ -8933,7 +9178,7 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
     code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n';
     code += '    \n';
   }
-
+  
   // Создаем клавиатуру с восстановленными галочками для множественного выбора
   if (node.data.allowMultipleSelection) {
     code += '    # Создаем клавиатуру с восстановленными галочками\n';
@@ -8952,11 +9197,11 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
     code += '                return True\n';
     code += '        return False\n';
     code += '    \n';
-
+    
     // Добавляем кнопки интересов с галочками
     const buttons = node.data.buttons || [];
     const interestButtons = buttons.filter(btn => btn.action === 'selection');
-
+    
     interestButtons.forEach(button => {
       const buttonText = button.text || 'Неизвестно';
       const buttonTarget = button.target || button.id;
@@ -8965,12 +9210,12 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
       code += `    builder.add(InlineKeyboardButton(text=${buttonTarget}_text, callback_data="multi_select_${node.id}_${buttonTarget}"))\n`;
       code += '    \n';
     });
-
+    
     // Добавляем кнопки команд и другие кнопки ПЕРЕД кнопкой "Готово"
     const allButtons = node.data.buttons || [];
     const nonSelectionButtons = allButtons.filter(btn => btn.action !== 'selection');
-
-    nonSelectionButtons.forEach((button: ButtonSchema) => {
+    
+    nonSelectionButtons.forEach(button => {
       if (button.action === 'command') {
         const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
         code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
@@ -8981,7 +9226,7 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
         code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
       }
     });
-
+    
     // Добавляем кнопку "Готово"
     const continueTarget = node.data.continueButtonTarget || 'next';
     const continueText = node.data.continueButtonText || 'Готово';
@@ -8990,12 +9235,12 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
     code += '    keyboard = builder.as_markup()\n';
     code += '    \n';
   }
-
+  
   // Добавляем обработку условных сообщений
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
   const formattedText = formatTextForPython(messageText);
-
-  if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages?.length > 0) {
+  
+  if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
     // Инициализируем text основным сообщением ПЕРЕД проверкой условий
     code += '    # Проверяем условные сообщения\n';
     code += `    text = ${formattedText}  # Основной текст узла как fallback\n`;
@@ -9016,30 +9261,30 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
     code += '    else:\n';
     code += '        user_data_dict = {}\n';
     code += '    \n';
-
+    
     // Generate conditional logic using helper function - условия теперь переопределят text если нужно
     code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ', node.data);
-
+    
     // Не нужен else блок - text уже инициализирован основным сообщением
     code += '    \n';
   } else {
     code += `    text = ${formattedText}\n`;
   }
-
+  
   // Для множественного выбора используем уже созданную клавиатуру
   if (node.data.allowMultipleSelection) {
     code += '    await message.answer(text, reply_markup=keyboard)\n';
     return code;
   }
-
+  
   // Генерируем клавиатуру
   const keyboardCode = generateKeyboard(node);
-
+  
   // ИСПРАВЛЕНИЕ: Добавляем автопереход для узлов start, если он настроен
   if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
     const autoTransitionTarget = node.data.autoTransitionTo;
     const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-
+    
     code += keyboardCode;
     code += '\n    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически\n';
     code += `    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTransitionTarget}")\n`;
@@ -9056,7 +9301,7 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
     code += `    logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")\n`;
     return code;  // Возвращаем без добавления keyboardCode повторно
   }
-
+  
   // Если не было автоперехода, добавляем клавиатуру
   return code + keyboardCode;
 }
@@ -9064,7 +9309,7 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
 function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): string {
   const command = node.data.command || "/help";
   const functionName = command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
-
+  
   let code = `\n@dp.message(Command("${command.replace('/', '')}"))\n`;
   code += `async def ${functionName}_handler(message: types.Message):\n`;
 
@@ -9097,7 +9342,7 @@ function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): strin
   code += '    first_name = message.from_user.first_name\n';
   code += '    last_name = message.from_user.last_name\n';
   code += '    \n';
-
+  
   if (userDatabaseEnabled) {
     code += '    # Сохраняем пользователя в базу данных\n';
     code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
@@ -9107,7 +9352,7 @@ function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): strin
     code += `        await update_user_data_in_db(user_id, "command_${command.replace('/', '')}", datetime.now().isoformat())\n`;
     code += '    \n';
   }
-
+  
   code += '    # Сохранение в локальное хранилище\n';
   code += '    if user_id not in user_data:\n';
   code += '        user_data[user_id] = {}\n';
@@ -9120,8 +9365,8 @@ function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): strin
   const cleanedMessageText = stripHtmlTags(messageText); // Удаляем HTML теги
   const formattedText = formatTextForPython(cleanedMessageText);
   const parseMode = getParseMode(node.data.formatMode || (node.data.markdown ? 'markdown' : ''));
-
-  if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages?.length > 0) {
+  
+  if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
     code += '\n    # Проверяем условные сообщения\n';
     code += '    text = None\n';
     code += '    \n';
@@ -9143,13 +9388,13 @@ function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): strin
     code += '    else:\n';
     code += '        user_data_dict = {}\n';
     code += '    \n';
-
+    
     // Generate conditional logic using helper function
     code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
-
+    
     // Add fallback
     code += '    else:\n';
-
+    
     if (node.data.fallbackMessage) {
       const cleanedFallbackText = stripHtmlTags(node.data.fallbackMessage);
       const fallbackText = formatTextForPython(cleanedFallbackText);
@@ -9159,16 +9404,16 @@ function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): strin
       code += `        text = ${formattedText}\n`;
       code += '        logging.info("Используется основное сообщение узла")\n';
     }
-
+    
     code += '    \n';
   } else {
     code += `\n    text = ${formattedText}\n`;
-
+    
     // Добавляем замену переменных для обычных команд
     code += '    \n';
     code += generateUniversalVariableReplacement('    ');
   }
-
+  
   return code + generateKeyboard(node);
 }
 
@@ -9178,16 +9423,16 @@ function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): strin
 
 function generateStickerHandler(node: Node): string {
   let code = `\n# Обработчик стикера для узла ${node.id}\n`;
-
+  
   if (node.data.command) {
-    const command = node.data?.command?.replace('/', '');
+    const command = node.data.command.replace('/', '');
     const functionName = `sticker_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-
+    
     code += `@dp.message(Command("${command}"))\n`;
     code += `async def ${functionName}(message: types.Message):\n`;
-
+    
     code += `    logging.info(f"Команда стикера ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
-
+    
     if (node.data.isPrivateOnly) {
       code += '    if not await is_private_chat(message):\n';
       code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
@@ -9201,10 +9446,10 @@ function generateStickerHandler(node: Node): string {
     }
 
     const stickerUrl = node.data.stickerUrl || node.data.stickerFileId || "CAACAgIAAxkBAAICGGXm2KvQAAG2X8cxTmZHJkRnYwYlAAJGAANWnb0KmgiEKEZDKVQeBA";
-
+    
     code += '    try:\n';
     code += '        # Отправляем стикер\n';
-
+    
     if (node.data.stickerFileId) {
       code += `        sticker_file_id = "${node.data.stickerFileId}"\n`;
       code += '        await message.answer_sticker(sticker_file_id)\n';
@@ -9212,13 +9457,13 @@ function generateStickerHandler(node: Node): string {
       code += `        sticker_url = "${stickerUrl}"\n`;
       code += '        await message.answer_sticker(sticker_url)\n';
     }
-
+    
     // Добавляем кнопки после стикера если они есть
-    if (node.data.keyboardType === "inline" && node.data.buttons?.length > 0) {
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        \n';
       code += '        # Отправляем кнопки отдельно после стикера\n';
       code += '        builder = InlineKeyboardBuilder()\n';
-      node.data.buttons.forEach((button: ButtonSchema) => {
+      node.data.buttons.forEach(button => {
         if (button.action === "url") {
           code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
         } else if (button.action === 'goto') {
@@ -9229,27 +9474,27 @@ function generateStickerHandler(node: Node): string {
       code += '        keyboard = builder.as_markup()\n';
       code += '        await message.answer("Выберите действие:", reply_markup=keyboard)\n';
     }
-
+    
     code += '    except Exception as e:\n';
     code += '        logging.error(f"Ошибка отправки стикера: {e}")\n';
     code += '        await message.answer("❌ Не удалось отправить стикер")\n';
   }
-
+  
   return code;
 }
 
 function generateVoiceHandler(node: Node): string {
   let code = `\n# Обработчик голосового сообщения для узла ${node.id}\n`;
-
+  
   if (node.data.command) {
-    const command = node.data?.command?.replace('/', '');
+    const command = node.data.command.replace('/', '');
     const functionName = `voice_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-
+    
     code += `@dp.message(Command("${command}"))\n`;
     code += `async def ${functionName}(message: types.Message):\n`;
-
+    
     code += `    logging.info(f"Команда голосового сообщения ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
-
+    
     if (node.data.isPrivateOnly) {
       code += '    if not await is_private_chat(message):\n';
       code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
@@ -9264,20 +9509,20 @@ function generateVoiceHandler(node: Node): string {
 
     const voiceUrl = node.data.voiceUrl || "https://www.soundjay.com/misc/beep-07a.wav";
     const duration = node.data.duration || 10;
-
+    
     code += `    voice_url = "${voiceUrl}"\n`;
     code += `    duration = ${duration}\n`;
     code += '    \n';
     code += '    try:\n';
     code += '        # Отправляем голосовое сообщение\n';
     code += '        await message.answer_voice(voice_url, duration=duration)\n';
-
+    
     // Добавляем кнопки после голосового сообщения если они есть
-    if (node.data.keyboardType === "inline" && node.data.buttons?.length > 0) {
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        \n';
       code += '        # Отправляем кнопки отдельно после голосового сообщения\n';
       code += '        builder = InlineKeyboardBuilder()\n';
-      node.data.buttons.forEach((button: ButtonSchema) => {
+      node.data.buttons.forEach(button => {
         if (button.action === "url") {
           code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
         } else if (button.action === 'goto') {
@@ -9288,27 +9533,27 @@ function generateVoiceHandler(node: Node): string {
       code += '        keyboard = builder.as_markup()\n';
       code += '        await message.answer("Выберите действие:", reply_markup=keyboard)\n';
     }
-
+    
     code += '    except Exception as e:\n';
     code += '        logging.error(f"Ошибка отправки голосового сообщения: {e}")\n';
     code += '        await message.answer("❌ Не удалось отправить голосовое сообщение")\n';
   }
-
+  
   return code;
 }
 
 function generateAnimationHandler(node: Node): string {
   let code = `\n# Обработчик GIF анимации для узла ${node.id}\n`;
-
+  
   if (node.data.command) {
-    const command = node.data?.command?.replace('/', '');
+    const command = node.data.command.replace('/', '');
     const functionName = `animation_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-
+    
     code += `@dp.message(Command("${command}"))\n`;
     code += `async def ${functionName}(message: types.Message):\n`;
-
+    
     code += `    logging.info(f"Команда анимации ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
-
+    
     if (node.data.isPrivateOnly) {
       code += '    if not await is_private_chat(message):\n';
       code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
@@ -9326,14 +9571,14 @@ function generateAnimationHandler(node: Node): string {
     const duration = node.data.duration || 0;
     const width = node.data.width || 0;
     const height = node.data.height || 0;
-
+    
     if (caption.includes('\n')) {
       code += `    caption = """${caption}"""\n`;
     } else {
       const escapedCaption = caption.replace(/"/g, '\\"');
       code += `    caption = "${escapedCaption}"\n`;
     }
-
+    
     code += `    animation_url = "${animationUrl}"\n`;
     if (duration > 0) code += `    duration = ${duration}\n`;
     if (width > 0) code += `    width = ${width}\n`;
@@ -9341,10 +9586,10 @@ function generateAnimationHandler(node: Node): string {
     code += '    \n';
     code += '    try:\n';
     code += '        # Отправляем GIF анимацию\n';
-
-    if (node.data.keyboardType === "inline" && node.data.buttons?.length > 0) {
+    
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        builder = InlineKeyboardBuilder()\n';
-      node.data.buttons.forEach((button: ButtonSchema) => {
+      node.data.buttons.forEach(button => {
         if (button.action === "url") {
           code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
         } else if (button.action === 'goto') {
@@ -9365,27 +9610,27 @@ function generateAnimationHandler(node: Node): string {
       if (height > 0) code += ', height=height';
       code += ')\n';
     }
-
+    
     code += '    except Exception as e:\n';
     code += '        logging.error(f"Ошибка отправки анимации: {e}")\n';
     code += '        await message.answer(f"❌ Не удалось загрузить анимацию\\n{caption}")\n';
   }
-
+  
   return code;
 }
 
 function generateLocationHandler(node: Node): string {
   let code = `\n# Обработчик геолокации для узла ${node.id}\n`;
-
+  
   if (node.data.command) {
-    const command = node.data?.command?.replace('/', '');
+    const command = node.data.command.replace('/', '');
     const functionName = `location_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-
+    
     code += `@dp.message(Command("${command}"))\n`;
     code += `async def ${functionName}(message: types.Message):\n`;
-
+    
     code += `    logging.info(f"Команда геолокации ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
-
+    
     if (node.data.isPrivateOnly) {
       code += '    if not await is_private_chat(message):\n';
       code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
@@ -9411,7 +9656,7 @@ function generateLocationHandler(node: Node): string {
     const generateMapPreview = node.data.generateMapPreview !== false;
 
     code += '    # Определяем координаты на основе выбранного сервиса карт\n';
-
+    
     if (mapService === 'yandex' && node.data.yandexMapUrl) {
       code += `    yandex_url = "${node.data.yandexMapUrl}"\n`;
       code += '    extracted_lat, extracted_lon = extract_coordinates_from_yandex(yandex_url)\n';
@@ -9436,7 +9681,7 @@ function generateLocationHandler(node: Node): string {
     } else {
       code += `    latitude, longitude = ${latitude}, ${longitude}\n`;
     }
-
+    
     if (title) code += `    title = "${title}"\n`;
     if (address) code += `    address = "${address}"\n`;
     if (city) code += `    city = "${city}"\n`;
@@ -9446,7 +9691,7 @@ function generateLocationHandler(node: Node): string {
     code += '    \n';
     code += '    try:\n';
     code += '        # Отправляем геолокацию\n';
-
+    
     if (title || address) {
       code += '        await message.answer_venue(\n';
       code += '            latitude=latitude,\n';
@@ -9459,11 +9704,11 @@ function generateLocationHandler(node: Node): string {
     } else {
       code += '        await message.answer_location(latitude=latitude, longitude=longitude)\n';
     }
-
+    
     code += '    except Exception as e:\n';
     code += '        logging.error(f"Ошибка отправки геолокации: {e}")\n';
     code += '        await message.answer(f"❌ Не удалось отправить геолокацию")\n';
-
+    
     // Генерируем кнопки для картографических сервисов если включено
     if (generateMapPreview) {
       code += '        \n';
@@ -9476,13 +9721,13 @@ function generateLocationHandler(node: Node): string {
       code += '        map_builder.add(InlineKeyboardButton(text="🌍 Google Maps", url=map_urls["google"]))\n';
       code += '        map_builder.add(InlineKeyboardButton(text="📍 2ГИС", url=map_urls["2gis"]))\n';
       code += '        map_builder.add(InlineKeyboardButton(text="🌐 OpenStreetMap", url=map_urls["openstreetmap"]))\n';
-
+      
       if (node.data.showDirections) {
         code += '        # Добавляем кнопки для построения маршрута\n';
         code += '        map_builder.add(InlineKeyboardButton(text="🧭 Маршрут (Яндекс)", url=f"https://yandex.ru/maps/?rtext=~{latitude},{longitude}"))\n';
         code += '        map_builder.add(InlineKeyboardButton(text="🚗 Маршрут (Google)", url=f"https://maps.google.com/maps/dir//{latitude},{longitude}"))\n';
       }
-
+      
       code += '        map_builder.adjust(2)  # Размещаем кнопки в 2 столбца\n';
       code += '        map_keyboard = map_builder.as_markup()\n';
       code += '        \n';
@@ -9495,13 +9740,13 @@ function generateLocationHandler(node: Node): string {
       code += '            reply_markup=map_keyboard\n';
       code += '        )\n';
     }
-
+    
     // Добавляем дополнительные кнопки после геолокации если они есть
-    if (node.data.keyboardType === "inline" && node.data.buttons?.length > 0) {
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        \n';
       code += '        # Отправляем дополнительные кнопки\n';
       code += '        builder = InlineKeyboardBuilder()\n';
-      node.data.buttons.forEach((button: ButtonSchema) => {
+      node.data.buttons.forEach(button => {
         if (button.action === "url") {
           code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
         } else if (button.action === 'goto') {
@@ -9512,27 +9757,27 @@ function generateLocationHandler(node: Node): string {
       code += '        keyboard = builder.as_markup()\n';
       code += '        await message.answer("Выберите действие:", reply_markup=keyboard)\n';
     }
-
+    
     code += '    except Exception as e:\n';
     code += '        logging.error(f"Ошибка отправки геолокации: {e}")\n';
     code += '        await message.answer("❌ Не удалось отправить геолокацию")\n';
   }
-
+  
   return code;
 }
 
 function generateContactHandler(node: Node): string {
   let code = `\n# Обработчик контакта для узла ${node.id}\n`;
-
+  
   if (node.data.command) {
-    const command = node.data?.command?.replace('/', '');
+    const command = node.data.command.replace('/', '');
     const functionName = `contact_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-
+    
     code += `@dp.message(Command("${command}"))\n`;
     code += `async def ${functionName}(message: types.Message):\n`;
-
+    
     code += `    logging.info(f"Команда контакта ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
-
+    
     if (node.data.isPrivateOnly) {
       code += '    if not await is_private_chat(message):\n';
       code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
@@ -9550,7 +9795,7 @@ function generateContactHandler(node: Node): string {
     const lastName = node.data.lastName || "";
     const userId = node.data.userId || 0;
     const vcard = node.data.vcard || "";
-
+    
     code += `    phone_number = "${phoneNumber}"\n`;
     code += `    first_name = "${firstName}"\n`;
     if (lastName) code += `    last_name = "${lastName}"\n`;
@@ -9566,13 +9811,13 @@ function generateContactHandler(node: Node): string {
     if (userId > 0) code += ',\n            user_id=user_id';
     if (vcard) code += ',\n            vcard=vcard';
     code += '\n        )\n';
-
+    
     // Добавляем кнопки после контакта если они есть
-    if (node.data.keyboardType === "inline" && node.data.buttons?.length > 0) {
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        \n';
       code += '        # Отправляем кнопки отдельно после контакта\n';
       code += '        builder = InlineKeyboardBuilder()\n';
-      node.data.buttons.forEach((button: ButtonSchema) => {
+      node.data.buttons.forEach(button => {
         if (button.action === "url") {
           code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
         } else if (button.action === 'goto') {
@@ -9583,12 +9828,139 @@ function generateContactHandler(node: Node): string {
       code += '        keyboard = builder.as_markup()\n';
       code += '        await message.answer("Выберите действие:", reply_markup=keyboard)\n';
     }
-
+    
     code += '    except Exception as e:\n';
     code += '        logging.error(f"Ошибка отправки контакта: {e}")\n';
     code += '        await message.answer("❌ Не удалось отправить контакт")\n';
   }
+  
+  return code;
+}
 
+// Функции-генераторы для управления контентом
+function generatePinMessageHandler(node: Node): string {
+  let code = `\n# Pin Message Handler\n`;
+  const synonyms = node.data.synonyms || ['закрепить', 'прикрепить', 'зафиксировать'];
+  const disableNotification = node.data.disableNotification || false;
+  const targetGroupId = node.data.targetGroupId;
+  const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  
+  // Генерируем обработчик команды /pin_message
+  code += `@dp.message(Command("pin_message"))\n`;
+  code += `async def pin_message_${sanitizedNodeId}_command_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик команды /pin_message\n`;
+  code += `    Работает в группах где бот имеет права администратора\n`;
+  code += `    Использование: ответ на сообщение или указание ID сообщения\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Проверяем, что это группа\n`;
+  code += `    if message.chat.type not in ['group', 'supergroup']:\n`;
+  code += `        await message.answer("❌ Команда работает только в группах")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    # Определяем целевое сообщение\n`;
+  code += `    target_message_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_message_id = message.reply_to_message.message_id\n`;
+  code += `    else:\n`;
+  code += `        text_parts = message.text.split()\n`;
+  code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+  code += `            target_message_id = int(text_parts[1])\n`;
+  code += `        else:\n`;
+  code += `            await message.answer("❌ Ответьте на сообщение или напишите /pin_message ID_сообщения")\n`;
+  code += `            return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        await bot.pin_chat_message(\n`;
+  code += `            chat_id=chat_id,\n`;
+  code += `            message_id=target_message_id,\n`;
+  code += `            disable_notification=${disableNotification ? 'True' : 'False'}\n`;
+  code += `        )\n`;
+  code += `        await message.answer("✅ Сообщение закреплено")\n`;
+  code += `        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "message to pin not found" in str(e) or "message not found" in str(e):\n`;
+  code += `            await message.answer("❌ Сообщение не найдено")\n`;
+  code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для закрепления сообщения")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка закрепления сообщения: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при закреплении: {e}")\n`;
+  code += `\n`;
+  
+  // Создаем универсальный обработчик, который работает в любых группах
+  synonyms.forEach((synonym, index) => {
+    const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+    
+    // Условие: проверяем синоним и что сообщение пришло из группы
+    let condition = `lambda message: message.text and message.text.lower().startswith("${synonym.toLowerCase()}") and message.chat.type in ['group', 'supergroup']`;
+    
+    // Если указана конкретная группа, добавляем проверку ID группы
+    if (targetGroupId) {
+      condition += ` and str(message.chat.id) == "${targetGroupId}"`;
+    }
+    
+    code += `\n@dp.message(${condition})\n`;
+    code += `async def pin_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
+    code += `    """\n`;
+    code += `    Обработчик для закрепления сообщения по команде '${synonym}'\n`;
+    if (targetGroupId) {
+      code += `    Работает только в группе ${targetGroupId}\n`;
+    } else {
+      code += `    Работает в любых группах где бот имеет права администратора\n`;
+    }
+    code += `    """\n`;
+    code += `    user_id = message.from_user.id\n`;
+    code += `    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста\n`;
+    code += `    \n`;
+    code += `    # Определяем целевое сообщение\n`;
+    code += `    target_message_id = None\n`;
+    code += `    \n`;
+    code += `    if message.reply_to_message:\n`;
+    code += `        # Если есть ответ на сообщение - используем его\n`;
+    code += `        target_message_id = message.reply_to_message.message_id\n`;
+    code += `        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} в группе {chat_id}")\n`;
+    code += `    else:\n`;
+    code += `        # Если нет ответа, проверяем текст на наличие ID сообщения\n`;
+    code += `        text_parts = message.text.split()\n`;
+    code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+    code += `            target_message_id = int(text_parts[1])\n`;
+    code += `            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")\n`;
+    code += `        else:\n`;
+    code += `            logging.info(f"DEBUG: Получен текст ${synonym} без ID сообщения в группе {chat_id}")\n`;
+    code += `            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите '${synonym} ID_сообщения'")\n`;
+    code += `            return\n`;
+    code += `    \n`;
+    code += `    try:\n`;
+    code += `        # Закрепляем сообщение в текущей группе\n`;
+    code += `        await bot.pin_chat_message(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            message_id=target_message_id,\n`;
+    code += `            disable_notification=${disableNotification ? 'True' : 'False'}\n`;
+    code += `        )\n`;
+    code += `        await message.answer("✅ Сообщение закреплено")\n`;
+    code += `        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")\n`;
+    code += `    except TelegramBadRequest as e:\n`;
+    code += `        if "message to pin not found" in str(e) or "message not found" in str(e):\n`;
+    code += `            await message.answer("❌ Сообщение не найдено")\n`;
+    code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+    code += `            await message.answer("❌ Недостаточно прав для закрепления сообщения")\n`;
+    code += `        else:\n`;
+    code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+    code += `        logging.error(f"Ошибка закрепления сообщения: {e}")\n`;
+    code += `    except Exception as e:\n`;
+    code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+    code += `        logging.error(f"Неожиданная ошибка при закреплении: {e}")\n`;
+    code += `\n`;
+  });
+  
   return code;
 }
 
@@ -9597,7 +9969,7 @@ function generateUnpinMessageHandler(node: Node): string {
   const synonyms = node.data.synonyms || ['открепить', 'отцепить', 'убрать закрепление'];
   const targetGroupId = node.data.targetGroupId;
   const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
-
+  
   // Генерируем обработчик команды /unpin_message
   code += `@dp.message(Command("unpin_message"))\n`;
   code += `async def unpin_message_${sanitizedNodeId}_command_handler(message: types.Message):\n`;
@@ -9651,19 +10023,19 @@ function generateUnpinMessageHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при откреплении: {e}")\n`;
   code += `\n`;
-
+  
   // Создаем универсальный обработчик, который работает в любых группах
-  synonyms.forEach((synonym: string, index: number) => {
+  synonyms.forEach((synonym, index) => {
     const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
-
+    
     // Условие: проверяем синоним и что сообщение пришло из группы
     let condition = `lambda message: message.text and message.text.lower().startswith("${synonym.toLowerCase()}") and message.chat.type in ['group', 'supergroup']`;
-
+    
     // Если указана конкретная группа, добавляем проверку ID группы
     if (targetGroupId) {
       condition += ` and str(message.chat.id) == "${targetGroupId}"`;
     }
-
+    
     code += `\n@dp.message(${condition})\n`;
     code += `async def unpin_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
     code += `    """\n`;
@@ -9721,7 +10093,7 @@ function generateUnpinMessageHandler(node: Node): string {
     code += `        logging.error(f"Неожиданная ошибка при откреплении: {e}")\n`;
     code += `\n`;
   });
-
+  
   return code;
 }
 
@@ -9730,12 +10102,12 @@ function generateDeleteMessageHandler(node: Node): string {
   const synonyms = node.data.synonyms || ['удалить', 'стереть', 'убрать сообщение'];
   const targetGroupId = node.data.targetGroupId;
   const messageText = node.data.messageText || "🗑️ Сообщение успешно удалено!";
-
+  
   // Если указан конкретный ID группы, генерируем обработчик для этой группы
   if (targetGroupId) {
     const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
-
-    synonyms.forEach((synonym: string, index: number) => {
+    
+    synonyms.forEach((synonym, index) => {
       const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
       code += `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
       code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
@@ -9790,9 +10162,9 @@ function generateDeleteMessageHandler(node: Node): string {
     code += `# Обработчик для удаления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
     code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
     code += `# Работает в любых группах где бот имеет права администратора\n`;
-
+    
     const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
-
+    
     // Генерируем обработчик команды
     code += `\n@dp.message(Command("delete_message"))\n`;
     code += `async def delete_message_${sanitizedNodeId}_command_handler(message: types.Message):\n`;
@@ -9846,9 +10218,9 @@ function generateDeleteMessageHandler(node: Node): string {
     code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
     code += `        logging.error(f"Неожиданная ошибка при удалении: {e}")\n`;
     code += `\n`;
-
+    
     // Генерируем обработчики для синонимов
-    synonyms.forEach((synonym: string, index: number) => {
+    synonyms.forEach((synonym, index) => {
       const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
       code += `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
       code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
@@ -9899,7 +10271,7 @@ function generateDeleteMessageHandler(node: Node): string {
       code += `\n`;
     });
   }
-
+  
   return code;
 }
 
@@ -9908,11 +10280,11 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
   const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
   const messageText = node.data.messageText || (
     node.type === 'pin_message' ? "✅ Сообщение закреплено" :
-      node.type === 'unpin_message' ? "✅ Сообщение откреплено" :
-        node.type === 'delete_message' ? "🗑️ Сообщение успешно удалено!" :
-          "✅ Действие выполнено"
+    node.type === 'unpin_message' ? "✅ Сообщение откреплено" :
+    node.type === 'delete_message' ? "🗑️ Сообщение успешно удалено!" :
+    "✅ Действие выполнено"
   );
-
+  
   let code = `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
   code += `async def ${node.type}_${sanitizedNodeId}_synonym_${sanitizedSynonym}_handler(message: types.Message):\n`;
   code += `    """\n`;
@@ -9941,7 +10313,7 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
   code += `    \n`;
   code += `    \n`;
   code += `    try:\n`;
-
+  
   if (node.type === 'pin_message') {
     const disableNotification = node.data.disableNotification || false;
     code += `        # Закрепляем сообщение\n`;
@@ -9969,7 +10341,7 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
     code += `        await message.answer("${messageText}")\n`;
     code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id}")\n`;
   }
-
+  
   code += `    \n`;
   code += `    except TelegramBadRequest as e:\n`;
   code += `        if "message to pin not found" in str(e) or "message not found" in str(e):\n`;
@@ -9983,7 +10355,154 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")\n`;
   code += `\n`;
+  
+  return code;
+}
 
+// Функции для управления пользователями
+
+function generateBanUserHandler(node: Node): string {
+  let code = `\n# Ban User Handler\n`;
+  const reason = node.data.reason || 'Нарушение правил группы';
+  const untilDate = node.data.untilDate || 0;
+  const synonyms = node.data.synonyms || ['забанить', 'бан', 'заблокировать'];
+  
+  // Создаем список синонимов для проверки
+  const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : (synonyms as string).split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
+  
+  // Генерируем обработчик команды /ban_user
+  code += `@dp.message(Command("ban_user"))\n`;
+  code += `async def ban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_command_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик команды /ban_user\n`;
+  code += `    Работает в группах где бот имеет права администратора\n`;
+  code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Проверяем, что это группа\n`;
+  code += `    if message.chat.type not in ['group', 'supergroup']:\n`;
+  code += `        await message.answer("❌ Команда работает только в группах")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `        target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name\n`;
+  code += `    else:\n`;
+  code += `        text_parts = message.text.split()\n`;
+  code += `        # Пробуем найти упоминание пользователя в сообщении\n`;
+  code += `        if message.entities:\n`;
+  code += `            for entity in message.entities:\n`;
+  code += `                if entity.type == "text_mention":\n`;
+  code += `                    target_user_id = entity.user.id\n`;
+  code += `                    break\n`;
+  code += `        if not target_user_id:\n`;
+  code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
+  code += `            return\n`;
+  code += `    \n`;
+  code += `    if not target_user_id:\n`;
+  code += `        await message.answer("❌ Не удалось определить пользователя для блокировки")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Баним пользователя\n`;
+  if (untilDate && untilDate > 0) {
+    code += `        await bot.ban_chat_member(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            user_id=target_user_id,\n`;
+    code += `            until_date=${untilDate}\n`;
+    code += `        )\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} заблокирован до {untilDate}\\nПричина: ${reason}")\n`;
+  } else {
+    code += `        await bot.ban_chat_member(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            user_id=target_user_id\n`;
+    code += `        )\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\\nПричина: ${reason}")\n`;
+  }
+  code += `        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для блокировки пользователя")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка блокировки пользователя: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при блокировке: {e}")\n`;
+  code += `\n`;
+  
+  // Генерируем условие для работы в любых группах (синонимы)
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}]) and message.chat.type in ['group', 'supergroup']`;
+  
+  code += `@dp.message(${condition})\n`;
+  code += `async def ban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик для блокировки пользователя\n`;
+  code += `    Синонимы: ${synonymsList.join(', ')}\n`;
+  code += `    Работает в любых группах где бот имеет права администратора\n`;
+  code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `        target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name\n`;
+  code += `    else:\n`;
+  code += `        text_parts = message.text.split()\n`;
+    // Автоматическое определение пользователя из упоминаний
+    code += `        # Пробуем найти упоминание пользователя в сообщении\n`;
+    code += `        if message.entities:\n`;
+    code += `            for entity in message.entities:\n`;
+    code += `                if entity.type == "text_mention":\n`;
+    code += `                    target_user_id = entity.user.id\n`;
+    code += `                    break\n`;
+    code += `        if not target_user_id:\n`;
+    code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
+    code += `            return\n`;
+  
+  code += `    \n`;
+  code += `    if not target_user_id:\n`;
+  code += `        await message.answer("❌ Не удалось определить пользователя для блокировки")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Баним пользователя\n`;
+  if (untilDate && untilDate > 0) {
+    code += `        await bot.ban_chat_member(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            user_id=target_user_id,\n`;
+    code += `            until_date=${untilDate}\n`;
+    code += `        )\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} заблокирован до {untilDate}\\nПричина: ${reason}")\n`;
+  } else {
+    code += `        await bot.ban_chat_member(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            user_id=target_user_id\n`;
+    code += `        )\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\\nПричина: ${reason}")\n`;
+  }
+  code += `        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для блокировки пользователя")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка блокировки пользователя: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при блокировке: {e}")\n`;
+  code += `\n`;
+  
   return code;
 }
 
@@ -9991,11 +10510,11 @@ function generateUnbanUserHandler(node: Node): string {
   let code = `\n# Unban User Handler\n`;
   const synonyms = node.data.synonyms || ['разбанить', 'разблокировать', 'unban'];
   const targetGroupId = node.data.targetGroupId || '';
-
+  
   // Создаем список синонимов для проверки
   const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : (synonyms as string).split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
-
+  
   // Генерируем обработчик команды /unban_user
   code += `@dp.message(Command("unban_user"))\n`;
   code += `async def unban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_command_handler(message: types.Message):\n`;
@@ -10049,10 +10568,10 @@ function generateUnbanUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при разблокировке: {e}")\n`;
   code += `\n`;
-
+  
   // Генерируем условие для работы в любых группах (синонимы)
   let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}]) and message.chat.type in ['group', 'supergroup']`;
-
+  
   code += `@dp.message(${condition})\n`;
   code += `async def unban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
@@ -10084,7 +10603,7 @@ function generateUnbanUserHandler(node: Node): string {
   code += `        if not target_user_id:\n`;
   code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для разблокировки")\n`;
   code += `            return\n`;
-
+  
   code += `    \n`;
   code += `    try:\n`;
   code += `        # Разбаниваем пользователя\n`;
@@ -10105,7 +10624,7 @@ function generateUnbanUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при разблокировке: {e}")\n`;
   code += `\n`;
-
+  
   return code;
 }
 
@@ -10115,7 +10634,7 @@ function generateMuteUserHandler(node: Node): string {
   const reason = node.data.reason || 'Нарушение правил группы';
   const targetGroupId = node.data.targetGroupId || '';
   const synonyms = node.data.synonyms || 'замутить, мут, заткнуть';
-
+  
   // Permissions для мута
   const canSendMessages = node.data.canSendMessages || false;
   const canSendMediaMessages = node.data.canSendMediaMessages || false;
@@ -10125,11 +10644,11 @@ function generateMuteUserHandler(node: Node): string {
   const canChangeGroupInfo = node.data.canChangeGroupInfo || false;
   const canInviteUsers2 = node.data.canInviteUsers2 || false;
   const canPinMessages2 = node.data.canPinMessages2 || false;
-
+  
   // Создаем список синонимов для проверки
   const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : (synonyms as string).split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
-
+  
   // Генерируем обработчик команды /mute_user
   code += `@dp.message(Command("mute_user"))\n`;
   code += `async def mute_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_command_handler(message: types.Message):\n`;
@@ -10204,7 +10723,7 @@ function generateMuteUserHandler(node: Node): string {
   code += `        await message.answer(\"❌ Произошла неожиданная ошибка\")\n`;
   code += `        logging.error(f\"Неожиданная ошибка при ограничении: {e}\")\n`;
   code += `\n`;
-
+  
   // Генерируем условие с учётом целевой группы и синонимов
   let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
   if (targetGroupId) {
@@ -10212,7 +10731,7 @@ function generateMuteUserHandler(node: Node): string {
   } else {
     condition += ` and message.chat.type in ['group', 'supergroup']`;
   }
-
+  
   code += `@dp.message(${condition})\n`;
   code += `async def mute_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
@@ -10241,7 +10760,7 @@ function generateMuteUserHandler(node: Node): string {
   code += `        if not target_user_id:\n`;
   code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
   code += `            return\n`;
-
+  
   code += `    \n`;
   code += `    if not target_user_id:\n`;
   code += `        await message.answer("❌ Не удалось определить пользователя для ограничения")\n`;
@@ -10285,7 +10804,7 @@ function generateMuteUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при ограничении: {e}")\n`;
   code += `\n`;
-
+  
   return code;
 }
 
@@ -10293,11 +10812,11 @@ function generateUnmuteUserHandler(node: Node): string {
   let code = `\n# Unmute User Handler\n`;
   const targetGroupId = node.data.targetGroupId || '';
   const synonyms = node.data.synonyms || 'размутить, размут, освободить';
-
+  
   // Создаем список синонимов для проверки
   const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : (synonyms as string).split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
-
+  
   // Генерируем обработчик команды /unmute_user
   code += `@dp.message(Command("unmute_user"))\n`;
   code += `async def unmute_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_command_handler(message: types.Message):\n`;
@@ -10362,7 +10881,7 @@ function generateUnmuteUserHandler(node: Node): string {
   code += `        await message.answer(\"❌ Произошла неожиданная ошибка\")\n`;
   code += `        logging.error(f\"Неожиданная ошибка при снятии ограничений: {e}\")\n`;
   code += `\n`;
-
+  
   // Генерируем условие с учётом целевой группы и синонимов
   let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
   if (targetGroupId) {
@@ -10370,7 +10889,7 @@ function generateUnmuteUserHandler(node: Node): string {
   } else {
     condition += ` and message.chat.type in ['group', 'supergroup']`;
   }
-
+  
   code += `@dp.message(${condition})\n`;
   code += `async def unmute_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
@@ -10399,7 +10918,7 @@ function generateUnmuteUserHandler(node: Node): string {
   code += `        if not target_user_id:\n`;
   code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
   code += `            return\n`;
-
+  
   code += `    \n`;
   code += `    if not target_user_id:\n`;
   code += `        await message.answer("❌ Не удалось определить пользователя для снятия ограничений")\n`;
@@ -10433,7 +10952,7 @@ function generateUnmuteUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при снятии ограничений: {e}")\n`;
   code += `\n`;
-
+  
   return code;
 }
 
@@ -10442,11 +10961,11 @@ function generateKickUserHandler(node: Node): string {
   const reason = node.data.reason || 'Нарушение правил группы';
   const targetGroupId = node.data.targetGroupId || '';
   const synonyms = node.data.synonyms || ['кикнуть', 'кик', 'исключить'];
-
+  
   // Создаем список синонимов для проверки
   const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : (synonyms as string).split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
-
+  
   // Генерируем обработчик команды /kick_user
   code += `@dp.message(Command("kick_user"))\n`;
   code += `async def kick_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_command_handler(message: types.Message):\n`;
@@ -10509,7 +11028,7 @@ function generateKickUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при исключении: {e}")\n`;
   code += `\n`;
-
+  
   // Генерируем условие с учётом целевой группы и синонимов
   let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
   if (targetGroupId) {
@@ -10517,7 +11036,7 @@ function generateKickUserHandler(node: Node): string {
   } else {
     condition += ` and message.chat.type in ['group', 'supergroup']`;
   }
-
+  
   code += `@dp.message(${condition})\n`;
   code += `async def kick_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
@@ -10548,7 +11067,7 @@ function generateKickUserHandler(node: Node): string {
   code += `        if not target_user_id:\n`;
   code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
   code += `            return\n`;
-
+  
   code += `    \n`;
   code += `    if not target_user_id:\n`;
   code += `        await message.answer("❌ Не удалось определить пользователя для исключения")\n`;
@@ -10585,7 +11104,7 @@ function generateKickUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при исключении: {e}")\n`;
   code += `\n`;
-
+  
   return code;
 }
 
@@ -10594,7 +11113,7 @@ function generatePromoteUserHandler(node: Node): string {
 
   const targetGroupId = node.data.targetGroupId || '';
   const synonyms = node.data.synonyms || ['повысить', 'админ', 'назначить'];
-
+  
   // Admin rights
   const canChangeInfo = node.data.canChangeInfo || false;
   const canDeleteMessages = node.data.canDeleteMessages || true;
@@ -10607,11 +11126,11 @@ function generatePromoteUserHandler(node: Node): string {
   const canManageVideoChats = node.data.canManageVideoChats || false;
   const canManageTopics = node.data.canManageTopics || false;
   const isAnonymous = node.data.isAnonymous || false;
-
+  
   // Создаем список синонимов для проверки
   const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : (synonyms as string).split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
-
+  
   // Генерируем обработчик команды /promote_user
   code += `@dp.message(Command("promote_user"))\n`;
   code += `async def promote_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_command_handler(message: types.Message):\n`;
@@ -10681,7 +11200,7 @@ function generatePromoteUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при назначении админа: {e}")\n`;
   code += `\n`;
-
+  
   // Генерируем условие с учётом целевой группы и синонимов
   let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
   if (targetGroupId) {
@@ -10689,7 +11208,7 @@ function generatePromoteUserHandler(node: Node): string {
   } else {
     condition += ` and message.chat.type in ['group', 'supergroup']`;
   }
-
+  
   code += `@dp.message(${condition})\n`;
   code += `async def promote_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
@@ -10720,7 +11239,7 @@ function generatePromoteUserHandler(node: Node): string {
   code += `        if not target_user_id:\n`;
   code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
   code += `            return\n`;
-
+  
   code += `    \n`;
   code += `    if not target_user_id:\n`;
   code += `        await message.answer("❌ Не удалось определить пользователя для назначения администратором")\n`;
@@ -10755,7 +11274,7 @@ function generatePromoteUserHandler(node: Node): string {
   if (canPromoteMembers) code += `        rights.append("назначение администраторов")\n`;
   if (canManageVideoChats) code += `        rights.append("управление видеочатами")\n`;
   if (canManageTopics) code += `        rights.append("управление темами")\n`;
-
+  
   code += `        rights_text = ", ".join(rights) if rights else "базовые права администратора"\n`;
   code += `        \n`;
   code += `        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором\\nПрава: {rights_text}")\n`;
@@ -10774,7 +11293,7 @@ function generatePromoteUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при назначении администратора: {e}")\n`;
   code += `\n`;
-
+  
   return code;
 }
 
@@ -10783,11 +11302,11 @@ function generateDemoteUserHandler(node: Node): string {
 
   const targetGroupId = node.data.targetGroupId || '';
   const synonyms = node.data.synonyms || ['понизить', 'снять с админки', 'демоут'];
-
+  
   // Создаем список синонимов для проверки
   const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : (synonyms as string).split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
-
+  
   // Генерируем обработчик команды /demote_user
   code += `@dp.message(Command("demote_user"))\n`;
   code += `async def demote_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_command_handler(message: types.Message):\n`;
@@ -10851,7 +11370,7 @@ function generateDemoteUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при понижении админа: {e}")\n`;
   code += `\n`;
-
+  
   // Генерируем условие с учётом целевой группы и синонимов
   let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
   if (targetGroupId) {
@@ -10859,7 +11378,7 @@ function generateDemoteUserHandler(node: Node): string {
   } else {
     condition += ` and message.chat.type in ['group', 'supergroup']`;
   }
-
+  
   code += `@dp.message(${condition})\n`;
   code += `async def demote_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
@@ -10890,7 +11409,7 @@ function generateDemoteUserHandler(node: Node): string {
   code += `        if not target_user_id:\n`;
   code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
   code += `            return\n`;
-
+  
   code += `    \n`;
   code += `    if not target_user_id:\n`;
   code += `        await message.answer("❌ Не удалось определить пользователя для снятия прав администратора")\n`;
@@ -10924,18 +11443,18 @@ function generateDemoteUserHandler(node: Node): string {
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка при снятии прав администратора: {e}")\n`;
   code += `\n`;
-
+  
   return code;
 }
 
 function generateAdminRightsHandler(node: Node): string {
   let code = `\n# Interactive Admin Rights Handler for ${node.id}\n`;
-
+  
   const safeFunctionName = createSafeFunctionName(node.id);
   const messageText = node.data.messageText || "⚙️ Управление правами администратора";
   const formattedText = formatTextForPython(messageText);
   const command = node.data.command?.replace('/', '') || 'admin_rights';
-
+  
   // Создаем основной command handler с автоматическим определением участника
   code += `@dp.message(Command("${command}"))\n`;
   code += `async def ${safeFunctionName}_command_handler(message: types.Message, bot):\n`;
@@ -11043,7 +11562,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `    \n`;
   code += `    await message.answer(text, reply_markup=keyboard)\n`;
   code += `\n`;
-
+  
   // Создаем функцию для получения текущих прав администратора
   code += `async def get_admin_rights_${safeFunctionName}(bot, chat_id, target_user_id):\n`;
   code += `    """\n`;
@@ -11073,7 +11592,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `        logging.error(f"Ошибка при получении прав администратора: {e}")\n`;
   code += `        return None\n`;
   code += `\n`;
-
+  
   // Создаем функцию для генерации интерактивной клавиатуры
   code += `async def create_admin_rights_keyboard_${safeFunctionName}(bot, chat_id, target_user_id, node_id="${node.id}"):\n`;
   code += `    """\n`;
@@ -11121,7 +11640,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `    builder.adjust(1)  # Располагаем кнопки в одну колонку для лучшей читаемости\n`;
   code += `    return builder.as_markup()\n`;
   code += `\n`;
-
+  
   // Главный callback обработчик для узла admin_rights
   code += `@dp.callback_query(lambda c: c.data == "${node.id}")\n`;
   code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery, bot):\n`;
@@ -11163,7 +11682,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `    \n`;
   code += `    # Текст сообщения\n`;
   code += `    text = ${formattedText}\n`;
-
+  
   // Добавляем универсальную замену переменных
   code += generateUniversalVariableReplacement('    ');
   code += `    \n`;
@@ -11179,32 +11698,32 @@ function generateAdminRightsHandler(node: Node): string {
   code += `        logging.info(f"Отправляем новое сообщение admin_rights: {e}")\n`;
   code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
   code += `\n`;
-
+  
   // Добавляем callback обработчики для переключения прав
   code += generateAdminRightsToggleHandlers(node);
-
+  
   return code;
 }
 
-function generateAdminRightsToggleHandlers(node: Node): string {
+function generateAdminRightsToggleHandlers(node: any): string {
   const safeFunctionName = createSafeFunctionName(node.id);
   let code = '\n';
-
+  
   // Список основных админ прав включая управление историями
   const adminRights = [
     'can_change_info',
-    'can_delete_messages',
+    'can_delete_messages', 
     'can_restrict_members',
     'can_invite_users',
     'can_pin_messages',
     'can_manage_video_chats',
     'can_post_stories',
-    'can_edit_stories',
+    'can_edit_stories', 
     'can_delete_stories',
     'is_anonymous',
     'can_promote_members'
   ];
-
+  
   // Создаем обработчик для каждого права
   adminRights.forEach(rightKey => {
     const shortRightKey = rightKey.substring(0, 12); // Обрезаем ключ права до 12 символов
@@ -11285,7 +11804,7 @@ function generateAdminRightsToggleHandlers(node: Node): string {
     code += `        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")\n`;
     code += `\n`;
   });
-
+  
   // Обработчик кнопки обновления
   code += `# Обработчик кнопки обновления прав\n`;
   code += `@dp.callback_query(lambda c: c.data.startswith("ref_"))\n`;
@@ -11315,14 +11834,14 @@ function generateAdminRightsToggleHandlers(node: Node): string {
   code += `        logging.error(f"Ошибка при обновлении прав: {e}")\n`;
   code += `        await safe_edit_or_send(callback_query, "❌ Не удалось обновить права. Попробуйте позже.")\n`;
   code += `\n`;
-
+  
   return code;
 }
 
 function generateUserManagementSynonymHandler(node: Node, synonym: string): string {
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
   const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
-
+  
   // Для admin_rights разрешаем работу в любых чатах, для остальных - только в группах
   const chatTypeFilter = node.type === 'admin_rights' ? '' : ` and message.chat.type in ['group', 'supergroup']`;
   let code = `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} "))${chatTypeFilter})\n`;
@@ -11362,7 +11881,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
   if (node.type === 'ban_user') {
     const reason = node.data.reason || 'Нарушение правил группы';
     const untilDate = node.data.untilDate || 0;
-
+    
     if (untilDate && untilDate > 0) {
       code += `        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id, until_date=${untilDate})\n`;
       code += `        await message.answer(f"✅ Пользователь {target_user_id} заблокирован до ${untilDate}\\nПричина: ${reason}")\n`;
@@ -11386,7 +11905,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
     const reason = node.data.reason || 'Нарушение правил группы';
     const canSendMessages = node.data.canSendMessages || false;
     const canSendMediaMessages = node.data.canSendMediaMessages || false;
-
+    
     code += `        from datetime import datetime, timedelta\n`;
     code += `        until_date = datetime.now() + timedelta(seconds=${duration})\n`;
     code += `        await bot.restrict_chat_member(\n`;
@@ -11416,7 +11935,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
     const canDeleteMessages = node.data.canDeleteMessages !== false;
     const canInviteUsers = node.data.canInviteUsers !== false;
     const canPinMessages = node.data.canPinMessages !== false;
-
+    
     code += `        await bot.promote_chat_member(\n`;
     code += `            chat_id=chat_id, user_id=target_user_id,\n`;
     code += `            can_delete_messages=${canDeleteMessages ? 'True' : 'False'},\n`;
@@ -11457,7 +11976,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
     code += `        await handle_callback_${safeFunctionName}(mock_callback, bot)\n`;
     code += `        return  # Завершаем обработку, так как все сделано в callback\n`;
   }
-
+  
   code += `    except TelegramBadRequest as e:\n`;
   code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
   code += `            await message.answer("❌ Недостаточно прав для выполнения операции")\n`;
@@ -11468,7 +11987,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")\n`;
   code += `\n`;
-
+  
   return code;
 }
 
@@ -11476,24 +11995,24 @@ function generateSynonymHandler(node: Node, synonym: string): string {
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
   const originalCommand = node.data.command || (node.type === 'start' ? '/start' : '/help');
   const functionName = originalCommand.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
-
+  
   let code = `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
   code += `async def ${functionName}_synonym_${sanitizedSynonym}_handler(message: types.Message):\n`;
   code += `    # Синоним для команды ${originalCommand}\n`;
-
+  
   if (node.type === 'start') {
     code += '    await start_handler(message)\n';
   } else {
     code += `    await ${functionName}_handler(message)\n`;
   }
-
+  
   return code;
 }
 
 function generateMessageSynonymHandler(node: Node, synonym: string): string {
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
   const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
-
+  
   let code = `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
   code += `async def message_${sanitizedNodeId}_synonym_${sanitizedSynonym}_handler(message: types.Message):\n`;
   code += `    # Синоним для сообщения ${node.id}\n`;
@@ -11518,19 +12037,19 @@ function generateMessageSynonymHandler(node: Node, synonym: string): string {
   code += `    \n`;
   code += `    mock_callback = MockCallback("${node.id}", message.from_user, message)\n`;
   code += `    await handle_callback_${sanitizedNodeId}(mock_callback)\n`;
-
+  
   return code;
 }
 
 function generateKeyboard(node: Node): string {
   let code = '';
-
+  
   // Определяем режим форматирования в начале
-  const hasConditionalMessages = node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages?.length > 0;
-
+  const hasConditionalMessages = node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0;
+  
   // Определяем отступ в зависимости от наличия условных сообщений
   const indent3 = hasConditionalMessages ? '        ' : '    ';
-
+  
   // Добавляем поддержку условных сообщений для клавиатуры
   if (hasConditionalMessages) {
     code += generateUniversalVariableReplacement('    ');
@@ -11543,7 +12062,7 @@ function generateKeyboard(node: Node): string {
     code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
     code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
     code += '    \n';
-
+    
     // Use conditional message if available, otherwise use default text
     code += '    # Используем условное сообщение если есть подходящее условие\n';
     code += '    if "text" not in locals():\n';
@@ -11553,10 +12072,10 @@ function generateKeyboard(node: Node): string {
     code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
     code += '    use_conditional_keyboard = conditional_keyboard is not None\n';
   }
-
+  
   // Генерируем parseMode строку для использования в коде
   let parseMode = '';
-
+  
   if (hasConditionalMessages) {
     // Для узлов с условными сообщениями - проверяем приоритет условного режима
     code += '    # Определяем режим форматирования (приоритет у условного сообщения)\n';
@@ -11570,7 +12089,7 @@ function generateKeyboard(node: Node): string {
     } else {
       code += '        current_parse_mode = None\n';
     }
-
+    
     // Для узлов с условными сообщениями используем current_parse_mode
     if (node.data.formatMode === 'markdown' || node.data.markdown === true || node.data.formatMode === 'html') {
       parseMode = ', parse_mode=current_parse_mode';
@@ -11589,20 +12108,20 @@ function generateKeyboard(node: Node): string {
   }
 
   // НОВАЯ ЛОГИКА: Сбор ввода как дополнительная функциональность к обычным кнопкам
-
+  
   // Определяем есть ли обычные кнопки у узла
-  const hasRegularButtons = node.data.keyboardType !== "none" && node.data.buttons && node.data.buttons?.length > 0;
-
+  const hasRegularButtons = node.data.keyboardType !== "none" && node.data.buttons && node.data.buttons.length > 0;
+  
   // Определяем включен ли сбор пользовательского ввода ИЛИ текстовый/медиа ввод
-  const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true ||
-    node.data.enablePhotoInput === true || node.data.enableVideoInput === true ||
-    node.data.enableAudioInput === true || node.data.enableDocumentInput === true;
-
+  const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true || 
+                             node.data.enablePhotoInput === true || node.data.enableVideoInput === true || 
+                             node.data.enableAudioInput === true || node.data.enableDocumentInput === true;
+  
   // Добавляем логирование для отладки (используем Python переменные)
   code += `    has_regular_buttons = ${toPythonBoolean(hasRegularButtons)}\n`;
   code += `    has_input_collection = ${toPythonBoolean(hasInputCollection)}\n`;
   code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=${node.data.collectUserInput}, enableTextInput=${node.data.enableTextInput}, enablePhotoInput=${node.data.enablePhotoInput}, enableVideoInput=${node.data.enableVideoInput}, enableAudioInput=${node.data.enableAudioInput}, enableDocumentInput=${node.data.enableDocumentInput}")\n`;
-
+  
   // CASE 1: Есть обычные кнопки + сбор ввода = обычные кнопки работают + дополнительно сохраняются как ответы
   if (hasRegularButtons && hasInputCollection) {
     // Проверяем условную клавиатуру только если есть условные сообщения
@@ -11614,14 +12133,14 @@ function generateKeyboard(node: Node): string {
       code += '    else:\n';
       code += '        # Отправляем обычные кнопки если условной клавиатуры нет\n';
     }
-
+    
     const indent4 = hasConditionalMessages ? '        ' : '    ';
-
+    
     // Отправляем обычные кнопки как обычно (используем правильный отступ)
     if (node.data.keyboardType === "reply") {
       code += `${indent4}# Создаем reply клавиатуру (+ дополнительный сбор ответов включен)\n`;
       code += `${indent4}builder = ReplyKeyboardBuilder()\n`;
-      node.data.buttons.forEach((button: ButtonSchema) => {
+      node.data.buttons.forEach(button => {
         if (button.action === "contact" && button.requestContact) {
           code += `${indent4}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
         } else if (button.action === "location" && button.requestLocation) {
@@ -11630,16 +12149,16 @@ function generateKeyboard(node: Node): string {
           code += `${indent4}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
         }
       });
-
+      
       const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
       const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
       code += `${indent4}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
       code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
-
+      
     } else if (node.data.keyboardType === "inline") {
       code += `${indent4}# Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n`;
       code += `${indent4}builder = InlineKeyboardBuilder()\n`;
-      node.data.buttons.forEach((button: ButtonSchema) => {
+      node.data.buttons.forEach(button => {
         if (button.action === "url") {
           code += `${indent4}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
         } else if (button.action === 'goto') {
@@ -11650,68 +12169,61 @@ function generateKeyboard(node: Node): string {
           code += `${indent4}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
         }
       });
-
+      
       code += `${indent4}builder.adjust(2)  # Используем 2 колонки для консистентности\n`;
       code += `${indent4}keyboard = builder.as_markup()\n`;
       code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
     }
-
+    
     // Закрываем блок else если были условные сообщения
     if (hasConditionalMessages) {
       code += '    \n';
     }
-
+    
     // Дополнительно настраиваем сбор ответов с полной структурой ожидания ввода
     code += '    \n';
     code += '    # Дополнительно: настраиваем полную структуру ожидания ввода для узла с кнопками\n';
     code += generateWaitingStateCode(node, '    ');
-
+    
     return code;
   }
-
+  
   // CASE 2: Только сбор ввода БЕЗ обычных кнопок = специальные кнопки для сбора или текстовый ввод
   else if (!hasRegularButtons && hasInputCollection) {
-
+    
     // Если настроены специальные кнопки ответа
-    if (node.data.responseType === 'buttons' && node.data.responseOptions && node.data.responseOptions?.length > 0) {
+    if (node.data.responseType === 'buttons' && node.data.responseOptions && node.data.responseOptions.length > 0) {
       const buttonType = node.data.inputButtonType || 'inline';
-
+      
       if (buttonType === 'reply') {
         code += '    \n';
         code += '    # Создаем reply клавиатуру для сбора ответов\n';
         code += '    builder = ReplyKeyboardBuilder()\n';
-        node.data.responseOptions.forEach((option: ResponseOption) => {
+        node.data.responseOptions.forEach(option => {
           code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
         });
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
         code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
-
+        
       } else {
         // inline кнопки для сбора ответов
         code += '    \n';
         code += '    # Создаем inline клавиатуру для сбора ответов\n';
         code += '    builder = InlineKeyboardBuilder()\n';
-        node.data.responseOptions.forEach((option: ResponseOption, index: number) => {
-          const callbackData = `input_${node.id}_${option.id || `option_${index}`}`;
+        node.data.responseOptions.forEach(option => {
+          const callbackData = `input_${node.id}_${option.id}`;
           code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="${callbackData}"))\n`;
         });
-
+        
         // Автоматическое распределение колонок
-        const responseOptionsAsButtons = node.data.responseOptions.map((option: ResponseOption, index: number) => ({
-          ...option,
-          buttonType: 'normal' as const,
-          action: 'goto' as const,
-          skipDataCollection: false,
-          hideAfterClick: false
-        }));
-        const columns = calculateOptimalColumns(responseOptionsAsButtons, node.data);
+        const columns = calculateOptimalColumns(node.data.responseOptions, node.data);
         code += `    builder.adjust(${columns})\n`;
         code += '    keyboard = builder.as_markup()\n';
         code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       }
-
+      
     } else {
       // Текстовый ввод - проверяем условную клавиатуру только если есть условные сообщения
       if (hasConditionalMessages) {
@@ -11726,20 +12238,20 @@ function generateKeyboard(node: Node): string {
         code += `    await message.answer(text${parseMode})\n`;
       }
     }
-
+    
     // Устанавливаем состояние ожидания ввода
     code += '    \n';
     code += '    # Устанавливаем состояние ожидания ввода с полной структурой\n';
     code += generateWaitingStateCode(node, '    ');
-
+    
     return code;
   }
-
+  
   // CASE 3: Только обычные кнопки БЕЗ сбора ввода = работает как раньше
   else {
     code += `    # DEBUG: Узел ${node.id} - hasRegularButtons=${toPythonBoolean(hasRegularButtons)}, hasInputCollection=${toPythonBoolean(hasInputCollection)}\n`;
     code += `    logging.info(f"DEBUG: Узел ${node.id} обработка кнопок - keyboardType=${node.data.keyboardType}, buttons=${node.data.buttons ? node.data.buttons.length : 0}")\n`;
-
+    
     // Проверяем условную клавиатуру только если есть условные сообщения
     if (hasConditionalMessages) {
       code += '    \n';
@@ -11749,22 +12261,22 @@ function generateKeyboard(node: Node): string {
       code += '        return  # Возвращаемся чтобы не отправлять сообщение дважды\n';
       code += '    \n';
     }
-
-    if (node.data.keyboardType === "reply" && node.data.buttons?.length > 0) {
+    
+    if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
       // Проверяем, есть ли множественный выбор
       if (node.data.allowMultipleSelection) {
         code += `${indent3}# Создаем reply клавиатуру с поддержкой множественного выбора\n`;
         code += `${indent3}builder = ReplyKeyboardBuilder()\n`;
-
+        
         // Разделяем кнопки на опции выбора и обычные кнопки
-        const selectionButtons = node.data.buttons.filter((button: Button) => button.action === 'selection');
-        const regularButtons = node.data.buttons.filter((button: Button) => button.action !== 'selection');
-
+        const selectionButtons = node.data.buttons.filter(button => button.action === 'selection');
+        const regularButtons = node.data.buttons.filter(button => button.action !== 'selection');
+        
         // Добавляем кнопки для множественного выбора
-        selectionButtons.forEach((button: ButtonSchema) => {
+        selectionButtons.forEach(button => {
           code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
         });
-
+        
         // Добавляем обычные кнопки
         regularButtons.forEach(button => {
           if (button.action === "contact" && button.requestContact) {
@@ -11775,20 +12287,20 @@ function generateKeyboard(node: Node): string {
             code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
           }
         });
-
+        
         // Добавляем кнопку завершения, если есть опции выбора
-        if (selectionButtons?.length > 0) {
+        if (selectionButtons.length > 0) {
           const continueText = node.data.continueButtonText || 'Готово';
           code += `${indent3}builder.add(KeyboardButton(text="${continueText}"))\n`;
         }
-
+        
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
         code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
-
+        
         // Инициализируем состояние множественного выбора
-        if (selectionButtons?.length > 0) {
+        if (selectionButtons.length > 0) {
           code += `${indent3}\n`;
           code += `${indent3}# Инициализируем состояние множественного выбора\n`;
           code += `${indent3}user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
@@ -11799,7 +12311,7 @@ function generateKeyboard(node: Node): string {
       } else {
         // Обычная reply клавиатура
         code += `${indent3}builder = ReplyKeyboardBuilder()\n`;
-        node.data.buttons.forEach((button: ButtonSchema) => {
+        node.data.buttons.forEach((button: Button) => {
           if (button.action === "contact" && button.requestContact) {
             code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
           } else if (button.action === "location" && button.requestLocation) {
@@ -11808,21 +12320,21 @@ function generateKeyboard(node: Node): string {
             code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
           }
         });
-
+        
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
         code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       }
-    } else if (node.data.keyboardType === "inline" && node.data.buttons?.length > 0) {
+    } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       // Проверяем, есть ли множественный выбор
       if (node.data.allowMultipleSelection) {
         // Добавляем универсальную функцию замены переменных для доступа к user_vars
         code += generateUniversalVariableReplacement(indent3);
-
+        
         // Добавляем логику загрузки ранее выбранных интересов
         const multiSelectVariable = node.data.multiSelectVariable || 'user_interests';
-
+        
         code += `${indent3}# Загружаем ранее выбранные интересы из базы данных для восстановления состояния\n`;
         code += `${indent3}if user_id not in user_data:\n`;
         code += `${indent3}    user_data[user_id] = {}\n`;
@@ -11850,16 +12362,16 @@ function generateKeyboard(node: Node): string {
         code += `${indent3}user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
         code += `${indent3}logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n`;
         code += `${indent3}\n`;
-
+        
         code += `${indent3}# Создаем inline клавиатуру с поддержкой множественного выбора\n`;
         code += `${indent3}builder = InlineKeyboardBuilder()\n`;
-
+        
         // Разделяем кнопки на опции выбора и обычные кнопки
-        const selectionButtons = node.data.buttons.filter((button: Button) => button.action === 'selection');
-        const regularButtons = node.data.buttons.filter((button: Button) => button.action !== 'selection');
-
+        const selectionButtons = node.data.buttons.filter(button => button.action === 'selection');
+        const regularButtons = node.data.buttons.filter(button => button.action !== 'selection');
+        
         // Добавляем кнопки для множественного выбора с логикой галочек
-        selectionButtons.forEach((button: ButtonSchema) => {
+        selectionButtons.forEach(button => {
           const buttonValue = button.target || button.id || button.text;
           const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
           code += `${indent3}# Проверяем каждый интерес и добавляем галочку если он выбран\n`;
@@ -11870,9 +12382,9 @@ function generateKeyboard(node: Node): string {
           code += `${indent3}logging.info(f"📱 /START: СОЗДАЕМ КНОПКУ: text='{${safeVarName}_text}'")\n`;
           code += `${indent3}builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
         });
-
+        
         // Добавляем обычные кнопки
-        regularButtons.forEach((button: ButtonSchema) => {
+        regularButtons.forEach((button: Button) => {
           if (button.action === "url") {
             code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
           } else if (button.action === 'goto') {
@@ -11884,19 +12396,19 @@ function generateKeyboard(node: Node): string {
           }
         });
         code += `${indent3}\n`;
-
+        
         // Добавляем кнопку завершения, если есть опции выбора
-        if (selectionButtons?.length > 0) {
+        if (selectionButtons.length > 0) {
           const continueText = node.data.continueButtonText || 'Готово';
           code += `${indent3}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
         }
-
+        
         // Автоматическое распределение колонок
         // Для множественного выбора учитываем все кнопки: селекции + регулярные + "Готово"
         const allButtons: Button[] = [...selectionButtons, ...regularButtons];
-        if (selectionButtons?.length > 0) {
-          allButtons.push({
-            id: `continue_${node.id}`,
+        if (selectionButtons.length > 0) {
+          allButtons.push({ 
+            id: `continue_${node.id}`, 
             text: node.data.continueButtonText || 'Готово',
             action: 'goto',
             buttonType: 'complete',
@@ -11908,14 +12420,14 @@ function generateKeyboard(node: Node): string {
         code += `${indent3}builder.adjust(${columns})\n`;
         code += `${indent3}keyboard = builder.as_markup()\n`;
         code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
-
+        
         // Состояние множественного выбора уже инициализировано выше с сохраненными значениями
       } else {
         // Обычная inline клавиатура
         code += `${indent3}# Создаем inline клавиатуру с кнопками\n`;
         code += `${indent3}logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${node.id} с ${node.data.buttons ? node.data.buttons.length : 0} кнопками")\n`;
         code += `${indent3}builder = InlineKeyboardBuilder()\n`;
-        node.data.buttons.forEach((button: ButtonSchema) => {
+        node.data.buttons.forEach((button: Button) => {
           if (button.action === "url") {
             code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
           } else if (button.action === 'goto') {
@@ -11928,7 +12440,7 @@ function generateKeyboard(node: Node): string {
             code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
           }
         });
-
+        
         // Автоматическое распределение колонок
         const columns = calculateOptimalColumns(node.data.buttons, node.data);
         code += `${indent3}builder.adjust(${columns})\n`;
@@ -11940,11 +12452,369 @@ function generateKeyboard(node: Node): string {
       code += `${indent3}await message.answer(text${parseMode})\n`;
     }
   }
-
+  
   // Reset global logging flag before returning
   globalLoggingEnabled = false;
-
+  
   return code;
 }
 
+export function validateBotStructure(botData: BotData): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  const { nodes, connections } = extractNodesAndConnections(botData);
 
+  // Check if there's a start node
+  const startNodes = (nodes || []).filter(node => node.type === 'start');
+  if (startNodes.length === 0) {
+    errors.push("Бот должен содержать хотя бы одну стартовую команду");
+  }
+  if (startNodes.length > 1) {
+    errors.push("Бот может содержать только одну стартовую команду");
+  }
+
+  // Validate each node
+  nodes.forEach(node => {
+    // Пропускаем валидацию для стартовых узлов без команды
+    if (node.type === 'start' && !node.data.command) {
+      return; // это просто стартовый узел, не требуется команда
+    }
+
+    // Для узлов command требуем текст, для остальных это опционально
+    if (!node.data.messageText && node.type === 'command') {
+      errors.push(`Узел "${node.id}" должен содержать текст сообщения`);
+    }
+
+    // Validate commands
+    if ((node.type === 'start' || node.type === 'command') && node.data.command) {
+      const commandValidation = validateCommand(node.data.command);
+      if (!commandValidation.isValid) {
+        errors.push(...commandValidation.errors.map(err => `Команда "${node.data.command}": ${err}`));
+      }
+    }
+
+    // Валидация кнопок
+    if (node.data.buttons && Array.isArray(node.data.buttons)) {
+      node.data.buttons.forEach(button => {
+        if (!button.text.trim()) {
+          errors.push(`Кнопка в узле "${node.id}" должна содержать текст`);
+        }
+        if (button.action === 'url' && !button.url) {
+          errors.push(`Кнопка "${button.text}" должна содержать URL`);
+        }
+        // Проверка цели перехода для кнопок с действием goto опциональна
+        // Кнопка может работать без целевого узла
+      });
+    }
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+function validateCommand(command: string): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  if (!command) {
+    errors.push('Команда не может быть пустой');
+    return { isValid: false, errors };
+  }
+  
+  if (!command.startsWith('/')) {
+    errors.push('Команда должна начинаться с символа "/"');
+  }
+  
+  if (command.length < 2) {
+    errors.push('Команда должна содержать хотя бы один символ после "/"');
+  }
+  
+  if (command.length > 32) {
+    errors.push('Команда не может быть длиннее 32 символов');
+  }
+  
+  // Проверка на допустимые символы
+  const validPattern = /^\/[a-zA-Z][a-zA-Z0-9_]*$/;
+  if (!validPattern.test(command)) {
+    errors.push('Команда может содержать только латинские буквы, цифры и подчёркивания');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+export function generateRequirementsTxt(): string {
+  const lines = [
+    '# Telegram Bot Requirements - Updated compatible versions',
+    '# Install with: pip install -r requirements.txt',
+    '# If you get Rust compilation errors, use: pip install --only-binary=all -r requirements.txt',
+    '',
+    '# Core dependencies (using newer versions to avoid Rust compilation issues)',
+    'aiogram>=3.21.0',
+    'aiohttp>=3.12.13',
+    'requests>=2.32.4',
+    'python-dotenv>=1.0.0',
+    'aiofiles>=23.2.1',
+    'asyncpg>=0.29.0',
+    '',
+    '# Note: These versions have pre-compiled wheels and do not require Rust',
+    '# If you still encounter issues, try:',
+    '# pip install --upgrade pip setuptools wheel',
+    '# pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles asyncpg',
+    '',
+    '# Optional dependencies for extended functionality',
+    '# redis>=5.0.1  # For session storage',
+    '# motor>=3.3.2  # For MongoDB',
+    '# pillow>=10.1.0  # For image processing'
+  ];
+  return lines.join('\n');
+}
+
+export function generateReadme(botData: BotData, botName: string): string {
+  const nodes = botData?.nodes || [];
+  const connections = botData?.connections || [];
+  const commandNodes = nodes.filter(node => 
+    (node.type === 'start' || node.type === 'command') && node.data?.command
+  );
+  
+  let readme = '# ' + botName + '\n\n';
+  readme += 'Telegram бот, созданный с помощью TelegramBot Builder.\n\n';
+  readme += '## Описание\n\n';
+  readme += 'Этот бот содержит ' + nodes.length + ' узлов и ' + connections.length + ' соединений.\n\n';
+  readme += '### Команды бота\n\n';
+
+  commandNodes.forEach(node => {
+    const command = node.data.command || '/unknown';
+    const description = node.data.description || 'Описание отсутствует';
+    readme += '- `' + command + '` - ' + description + '\n';
+    
+    if (node.data.adminOnly) {
+      readme += '  - 🔒 Только для администраторов\n';
+    }
+    if (node.data.isPrivateOnly) {
+      readme += '  - 👤 Только в приватных чатах\n';
+    }
+    if (node.data.requiresAuth) {
+      readme += '  - 🔐 Требует авторизации\n';
+    }
+  });
+
+  readme += '\n## Установка\n\n';
+  readme += '1. Клонируйте или скачайте файлы проекта\n';
+  readme += '2. Установите зависимости:\n';
+  readme += '   ```bash\n';
+  readme += '   pip install -r requirements.txt\n';
+  readme += '   ```\n\n';
+  readme += '3. Создайте файл `.env` и добавьте настройки:\n';
+  readme += '   ```\n';
+  readme += '   BOT_TOKEN=your_bot_token_here\n';
+  readme += '   DATABASE_URL=postgresql://user:password@localhost:5432/bot_db\n';
+  readme += '   ```\n\n';
+  readme += '4. Настройте базу данных PostgreSQL (опционально):\n';
+  readme += '   - Создайте базу данных PostgreSQL\n';
+  readme += '   - Обновите DATABASE_URL в .env файле\n';
+  readme += '   - Бот автоматически создаст необходимые таблицы при запуске\n';
+  readme += '   - Если БД недоступна, бот будет использовать локальное хранилище\n\n';
+  readme += '5. Запустите бота:\n';
+  readme += '   ```bash\n';
+  readme += '   python bot.py\n';
+  readme += '   ```\n\n';
+  
+  readme += '## Настройка\n\n';
+  readme += '### Получение токена бота\n\n';
+  readme += '1. Найдите [@BotFather](https://t.me/BotFather) в Telegram\n';
+  readme += '2. Отправьте команду `/newbot`\n';
+  readme += '3. Следуйте инструкциям для создания нового бота\n';
+  readme += '4. Скопируйте полученный токен\n\n';
+  
+  readme += '### Настройка команд в @BotFather\n\n';
+  readme += '1. Отправьте команду `/setcommands` в @BotFather\n';
+  readme += '2. Выберите своего бота\n';
+  readme += '3. Скопируйте и отправьте следующие команды:\n\n';
+  readme += '```\n';
+  const botFatherCommands = generateBotFatherCommands(nodes);
+  readme += botFatherCommands || '';
+  readme += '\n```\n\n';
+  
+  readme += '## Структура проекта\n\n';
+  readme += '- `bot.py` - Основной файл бота\n';
+  readme += '- `requirements.txt` - Зависимости Python\n';
+  readme += '- `config.yaml` - Конфигурационный файл\n';
+  readme += '- `README.md` - Документация\n';
+  readme += '- `Dockerfile` - Для контейнеризации (опционально)\n\n';
+  
+  readme += '## Функциональность\n\n';
+  readme += '### Статистика\n\n';
+  readme += '- **Всего узлов**: ' + nodes.length + '\n';
+  readme += '- **Команд**: ' + commandNodes.length + '\n';
+  readme += '- **Сообщений**: ' + nodes.filter(n => n.type === 'message').length + '\n';
+  readme += '- **Кнопок**: ' + (nodes.reduce((sum: number, node: any) => sum + (node.data?.buttons?.length || 0), 0) as number) + '\n\n';
+  
+  readme += '### Безопасность\n\n';
+  readme += 'Бот включает следующие функции безопасности:\n';
+  readme += '- Проверка администраторских прав\n';
+  readme += '- Ограничения на приватные чаты\n';
+  readme += '- Система авторизации пользователей\n\n';
+  
+  readme += '## Разработка\n\n';
+  readme += 'Этот бот создан с использованием:\n';
+  readme += '- [aiogram 3.x](https://docs.aiogram.dev/) - современная библиотека для Telegram Bot API\n';
+  readme += '- Python 3.8+\n';
+  readme += '- Асинхронное программирование\n\n';
+  
+  readme += '## Лицензия\n\n';
+  readme += 'Сгенерировано с помощью TelegramBot Builder\n';
+
+  return readme;
+}
+
+export function generateDockerfile(): string {
+  const lines = [
+    '# Dockerfile для Telegram бота',
+    'FROM python:3.11-slim',
+    '',
+    '# Установка системных зависимостей',
+    'RUN apt-get update && apt-get install -y \\',
+    '    gcc \\',
+    '    && rm -rf /var/lib/apt/lists/*',
+    '',
+    '# Создание рабочей директории',
+    'WORKDIR /app',
+    '',
+    '# Копирование requirements.txt и установка зависимостей',
+    'COPY requirements.txt .',
+    'RUN pip install --no-cache-dir -r requirements.txt',
+    '',
+    '# Копирование исходного кода',
+    'COPY . .',
+    '',
+    '# Создание пользователя для безопасности',
+    'RUN adduser --disabled-password --gecos \'\' botuser',
+    'RUN chown -R botuser:botuser /app',
+    'USER botuser',
+    '',
+    '# Запуск бота',
+    'CMD ["python", "bot.py"]'
+  ];
+  return lines.join('\n');
+}
+
+export function generateConfigYaml(botName: string): string {
+  const lines = [
+    '# Конфигурация бота',
+    'bot:',
+    '  name: "' + botName + '"',
+    '  description: "Telegram бот, созданный с помощью TelegramBot Builder"',
+    '',
+    '# Настройки логирования',
+    'logging:',
+    '  level: INFO',
+    '  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"',
+    '',
+    '# Настройки базы данных (опционально)',
+    'database:',
+    '  # type: sqlite',
+    '  # url: "sqlite:///bot.db"',
+    '',
+    '  # type: postgresql',
+    '  # host: localhost',
+    '  # port: 5432',
+    '  # name: botdb',
+    '  # user: botuser',
+    '  # password: botpass',
+    '',
+    '# Настройки Redis (опционально)',
+    'redis:',
+    '  # host: localhost',
+    '  # port: 6379',
+    '  # db: 0',
+    '  # password: ""',
+    '',
+    '# Настройки webhook (для продакшена)',
+    'webhook:',
+    '  # enabled: false',
+    '  # host: "0.0.0.0"',
+    '  # port: 8080',
+    '  # path: "/webhook"',
+    '  # url: "https://yourdomain.com/webhook"',
+    '',
+    '# Настройки администраторов',
+    'admins:',
+    '  - 123456789  # Замените на реальные Telegram ID администраторов',
+    '',
+    '# Дополнительные настройки',
+    'settings:',
+    '  timezone: "UTC"',
+    '  language: "ru"',
+    '  debug: false'
+  ];
+  return lines.join('\n');
+}
+
+// Типы для карты кода
+export interface CodeNodeRange {
+  nodeId: string;
+  startLine: number;
+  endLine: number;
+}
+
+export interface CodeWithMap {
+  code: string;
+  nodeMap: CodeNodeRange[];
+}
+
+// Функция для парсинга маркеров и создания карты кода
+export function parseCodeMap(code: string): CodeWithMap {
+  const lines = code.split('\n');
+  const nodeMap: CodeNodeRange[] = [];
+  const stack: Array<{ nodeId: string; startLine: number }> = [];
+  
+  lines.forEach((line, index) => {
+    const lineNumber = index + 1;
+    
+    // Проверяем маркер начала
+    const startMatch = line.match(/# @@NODE_START:(.+?)@@/);
+    if (startMatch) {
+      const nodeId = startMatch[1];
+      stack.push({ nodeId, startLine: lineNumber });
+      return;
+    }
+    
+    // Проверяем маркер конца
+    const endMatch = line.match(/# @@NODE_END:(.+?)@@/);
+    if (endMatch) {
+      const nodeId = endMatch[1];
+      const startInfo = stack.pop();
+      
+      if (startInfo && startInfo.nodeId === nodeId) {
+        nodeMap.push({
+          nodeId,
+          startLine: startInfo.startLine,
+          endLine: lineNumber
+        });
+      }
+    }
+  });
+  
+  return { code, nodeMap };
+}
+
+// Функция для удаления маркеров из кода (опционально)
+export function removeCodeMarkers(code: string): string {
+  return code.replace(/# @@NODE_(START|END):.+?@@\n/g, '');
+}
+
+// Обновленная функция генерации с картой
+export function generatePythonCodeWithMap(
+  botData: BotData, 
+  botName: string = "MyBot", 
+  groups: BotGroup[] = [],
+  userDatabaseEnabled: boolean = false,
+  projectId: number | null = null,
+  enableLogging: boolean = false
+): CodeWithMap {
+  const code = generatePythonCode(botData, botName, groups, userDatabaseEnabled, projectId, enableLogging);
+  return parseCodeMap(code);
+}
