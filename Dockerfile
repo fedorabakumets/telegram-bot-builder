@@ -27,7 +27,7 @@ WORKDIR /app
 COPY package*.json .npmrc ./
 
 # Устанавливаем зависимости (включая dev для сборки)
-RUN npm ci --legacy-peer-deps
+RUN npm ci
 
 # Копируем исходный код
 COPY . .
