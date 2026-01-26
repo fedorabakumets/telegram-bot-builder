@@ -1,11 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs-18_x", "npm-9_x", "python3", "python3Packages.pip"]
+nixPkgs = ["nodejs-18_x", "python3"]
 
 [phases.install]
-cmds = ["npm install --production"]
+cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npm run build || echo 'No build script found'"]
+cmds = ["npm run build"]
 
 [start]
 cmd = "npm run start"
