@@ -22,17 +22,55 @@ export async function initializeDatabaseTables() {
   console.log('🔧 Initializing database tables...');
   
   try {
-    // Use imported db directly
+    // Test the connection with extended timeout and retry logic
+    console.log('🧪 Testing database connection...');
     
-    // First, test the connection with timeout
-    console.log('Testing database connection...');
-    const healthCheckPromise = db.execute(sql`SELECT 1 as health`);
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database connection timeout')), 60000)
-    );
+    let connectionAttempts = 0;
+    const maxConnectionAttempts = 5;
+    let connected = false;
     
-    await Promise.race([healthCheckPromise, timeoutPromise]);
-    console.log('✅ Database connection successful!');
+    while (!connected && connectionAttempts < maxConnectionAttempts) {
+      connectionAttempts++;
+      try {
+        console.log(`📡 Connection attempt ${connectionAttempts}/${maxConnectionAttempts}...`);
+        
+        const healthCheckPromise = db.execute(sql`SELECT 1 as health`);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database connection timeout after 30 seconds')), 30000)
+        );
+        
+        await Promise.race([healthCheckPromise, timeoutPromise]);
+        connected = true;
+        console.log('✅ Database connection successful!');
+        
+      } catch (error: any) {
+        console.error(`❌ Connection attempt ${connectionAttempts} failed:`, error.message);
+        
+        if (connectionAttempts >= maxConnectionAttempts) {
+          console.error('💥 All connection attempts failed. Database may be unavailable.');
+          console.error('🔍 Error details:', {
+            code: error.code,
+            errno: error.errno,
+            syscall: error.syscall,
+            message: error.message
+          });
+          
+          // Return false instead of throwing to allow app to start without DB
+          console.log('⚠️ Starting application without database initialization...');
+          return false;
+        }
+        
+        // Wait before retry with exponential backoff
+        const waitTime = Math.min(1000 * Math.pow(2, connectionAttempts - 1), 10000);
+        console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+    
+    if (!connected) {
+      console.error('💥 Could not establish database connection after all attempts');
+      return false;
+    }
     
     // Создаем таблицы если их нет (с поддержкой IF NOT EXISTS)
     // Сначала создаем telegram_users, так как на неё ссылаются другие таблицы

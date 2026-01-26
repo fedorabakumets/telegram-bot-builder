@@ -13,7 +13,7 @@ export class DatabaseManager {
     lastHealthCheck: new Date()
   };
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): DatabaseManager {
     if (!DatabaseManager.instance) {
@@ -53,8 +53,8 @@ export class DatabaseManager {
   async performHealthCheck(): Promise<boolean> {
     try {
       // Test connection with a simple query
-      const result = await db.execute(sql`SELECT 1 as health`);
-      
+      await db.execute(sql`SELECT 1 as health`);
+
       // Update connection stats if pool is available
       if (pool) {
         this.connectionStats.totalConnections = pool.totalCount || 0;
@@ -166,7 +166,7 @@ export class DatabaseManager {
   async createBackup(): Promise<string> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupName = `backup_${timestamp}`;
-    
+
     try {
       // This is a simplified backup - in production you'd use pg_dump
       await db.execute(sql`
@@ -174,7 +174,7 @@ export class DatabaseManager {
         FROM pg_stat_activity
         WHERE datname = current_database() AND pid <> pg_backend_pid()
       `);
-      
+
       console.log(`Backup created: ${backupName}`);
       return backupName;
     } catch (error: any) {
