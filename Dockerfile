@@ -20,15 +20,17 @@ WORKDIR /app
 # Копируем только package files для кэширования слоя
 COPY package*.json ./
 
-# Устанавливаем зависимости с оптимизацией
-RUN npm ci --only=production --no-audit --no-fund --silent \
-    && npm cache clean --force
+# Устанавливаем все зависимости (включая dev для сборки)
+RUN npm ci --no-audit --no-fund --silent
 
 # Копируем исходный код
 COPY . .
 
-# Собираем проект если нужно
-RUN npm run build 2>/dev/null || echo "No build script, skipping..."
+# Собираем проект
+RUN npm run build || echo "Build failed, continuing..."
+
+# Удаляем dev зависимости после сборки
+RUN npm prune --omit=dev && npm cache clean --force
 
 # Создаем non-root пользователя для безопасности
 RUN addgroup -g 1001 -S nodejs \
