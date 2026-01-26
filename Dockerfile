@@ -1,46 +1,42 @@
 FROM node:20-alpine
 
-# Добавляем информацию о сборке
-RUN echo "Build timestamp: $(date)" > /tmp/build_info
+# Устанавливаем переменные окружения для оптимизации
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV NPM_CONFIG_CACHE=/tmp/.npm
 
-# Устанавливаем системные зависимости
+# Устанавливаем системные зависимости одним слоем
 RUN apk update && apk add --no-cache \
     python3 \
     py3-pip \
-    python3-dev \
     build-base \
-    gcc \
-    musl-dev
-
-# Создаем символические ссылки для Python
-RUN ln -sf python3 /usr/bin/python && \
-    ln -sf pip3 /usr/bin/pip
-
-# Проверяем установку Python
-RUN python --version && pip --version && \
-    echo "Python installation verified successfully"
+    && ln -sf python3 /usr/bin/python \
+    && ln -sf pip3 /usr/bin/pip \
+    && rm -rf /var/cache/apk/*
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем package.json и package-lock.json
+# Копируем только package files для кэширования слоя
 COPY package*.json ./
 
-# Устанавливаем Node.js зависимости
-RUN npm ci --legacy-peer-deps
+# Устанавливаем зависимости с оптимизацией
+RUN npm ci --only=production --no-audit --no-fund --silent \
+    && npm cache clean --force
 
-# Копируем весь код проекта
+# Копируем исходный код
 COPY . .
 
-# Собираем проект (если есть build скрипт)
-RUN npm run build || echo "No build script found, skipping..."
+# Собираем проект если нужно
+RUN npm run build 2>/dev/null || echo "No build script, skipping..."
 
-# Удаляем dev зависимости для уменьшения размера образа
-RUN npm prune --omit=dev
+# Создаем non-root пользователя для безопасности
+RUN addgroup -g 1001 -S nodejs \
+    && adduser -S nextjs -u 1001
 
-# Устанавливаем переменные окружения
-ENV NODE_ENV=production
-ENV PORT=8080
+# Меняем владельца файлов
+RUN chown -R nextjs:nodejs /app
+USER nextjs
 
 # Открываем порт
 EXPOSE 8080

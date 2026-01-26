@@ -1,5 +1,7 @@
 [build]
 builder = "DOCKERFILE"
+# Используем кэширование Docker слоев для ускорения сборки
+buildCommand = "npm run railway:build"
 
 [deploy]
 startCommand = "npm run start"
@@ -10,6 +12,10 @@ healthcheckTimeout = 300
 
 [env]
 NODE_ENV = "production"
+# Оптимизация для быстрой сборки
+NPM_CONFIG_CACHE = "/tmp/.npm"
+NPM_CONFIG_AUDIT = "false"
+NPM_CONFIG_FUND = "false"
 # Railway will automatically set DATABASE_URL to the private URL when PostgreSQL service is connected
 # This ensures internal network communication for better performance
 
