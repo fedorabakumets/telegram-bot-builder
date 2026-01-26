@@ -1,14 +1,14 @@
 [build]
 builder = "DOCKERFILE"
 # Используем кэширование Docker слоев для ускорения сборки
-buildCommand = "npm run build"
+buildCommand = "npm run build:fast"
 
 [deploy]
 startCommand = "npm start"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 healthcheckPath = "/api/health"
-healthcheckTimeout = 300
+healthcheckTimeout = 60
 
 [env]
 NODE_ENV = "development"

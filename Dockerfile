@@ -1,42 +1,30 @@
 FROM node:20-alpine
 
-# Добавляем информацию о времени сборки
-RUN echo "Build timestamp: $(date)" > /tmp/build_info
-
-# Устанавливаем системные зависимости для сборки
+# Устанавливаем системные зависимости для сборки (кэшируем слой)
 RUN apk update && apk add --no-cache \
     python3 \
     py3-pip \
     python3-dev \
     build-base \
     gcc \
-    musl-dev
-
-# Создаем символические ссылки для python и pip
-RUN ln -sf python3 /usr/bin/python && \
+    musl-dev && \
+    ln -sf python3 /usr/bin/python && \
     ln -sf pip3 /usr/bin/pip
-
-# Проверяем установку Python
-RUN python --version && pip --version && \
-    echo "Python installation verified successfully"
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем package files и .npmrc
-COPY package*.json .npmrc ./
+# Копируем только package files для кэширования зависимостей
+COPY package*.json ./
 
-# Устанавливаем зависимости (включая dev для сборки)
-RUN npm ci
+# Устанавливаем зависимости с кэшированием
+RUN npm ci --only=production --silent
 
 # Копируем исходный код
 COPY . .
 
-# Собираем проект
-RUN npm run build || echo "No build script found, skipping..."
-
-# Удаляем dev зависимости после сборки
-RUN npm prune --omit=dev
+# Собираем проект быстро
+RUN npm run build:fast || npm run build || echo "No build script found"
 
 # Открываем порт
 EXPOSE 8080
