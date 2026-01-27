@@ -1,4 +1,4 @@
-import { isLoggingEnabled } from "../bot-generator";
+import { isLoggingEnabled } from "../bot-generatornew";
 
 // ============================================================================
 // ГЕНЕРАТОРЫ МЕДИА И УСЛОВНЫХ СООБЩЕНИЙ

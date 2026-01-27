@@ -1,4 +1,4 @@
-import { Button, globalLoggingEnabled } from "../bot-generator";
+import { Button, globalLoggingEnabled } from "../bot-generatornew";
 import { generateButtonText } from '../format/generateButtonText';
 import { calculateOptimalColumns } from '../format/calculateOptimalColumns';
 import { generateUniversalVariableReplacement } from '../variable/generateUniversalVariableReplacement';

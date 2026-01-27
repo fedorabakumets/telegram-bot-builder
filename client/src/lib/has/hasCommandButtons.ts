@@ -1,4 +1,4 @@
-import { Button } from "../bot-generator";
+import { Button } from "../bot-generatornew";
 
 // Функция для проверки наличия кнопок команд
 function hasCommandButtons(nodes: Node[]): boolean {
