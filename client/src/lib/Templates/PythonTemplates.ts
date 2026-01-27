@@ -498,9 +498,9 @@ def format_user_info(user: types.User) -> str:
 
 def escape_markdown(text: str) -> str:
     """Экранирует специальные символы для Markdown"""
-    escape_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    escape_chars = ['_', '*', '[', ']', '(', ')', '~', '\`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
     for char in escape_chars:
-        text = text.replace(char, f'\\{char}')
+        text = text.replace(char, f'\\\\{char}')
     return text
 
 `);
