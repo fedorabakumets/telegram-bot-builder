@@ -209,4 +209,73 @@ describe('MainLoopGenerator', () => {
       expect(() => generator.generateMainFunction(partialContext)).not.toThrow();
     });
   });
+
+  describe('signal handlers', () => {
+    it('should include signal handlers in main function', () => {
+      const result = generator.generateMainFunction(mockContext);
+      
+      expect(result).toContain('def signal_handler(signum, frame):');
+      expect(result).toContain('signal.signal(signal.SIGTERM, signal_handler)');
+      expect(result).toContain('signal.signal(signal.SIGINT, signal_handler)');
+      expect(result).toContain('raise KeyboardInterrupt()');
+    });
+  });
+
+  describe('exception handling', () => {
+    it('should include proper exception handling', () => {
+      const result = generator.generateMainFunction(mockContext);
+      
+      expect(result).toContain('except KeyboardInterrupt:');
+      expect(result).toContain('except SystemExit:');
+      expect(result).toContain('except Exception as e:');
+      expect(result).toContain('logging.error(f"Критическая ошибка: {e}")');
+    });
+  });
+
+  describe('handler registration verification', () => {
+    it('should generate proper structure for handler registration', () => {
+      mockContext.userDatabaseEnabled = true;
+      mockContext.nodes = [
+        {
+          id: 'mixed-node',
+          type: 'message',
+          data: {
+            keyboardType: 'inline',
+            buttons: [{ text: 'Callback Button', action: 'callback' }]
+          }
+        } as Node
+      ];
+      
+      const result = generator.generateMainFunction(mockContext);
+      
+      // Проверяем правильную последовательность операций
+      const lines = result.split('\n');
+      const initDbIndex = lines.findIndex(line => line.includes('await init_database()'));
+      const messageMiddlewareIndex = lines.findIndex(line => line.includes('dp.message.middleware'));
+      const callbackMiddlewareIndex = lines.findIndex(line => line.includes('dp.callback_query.middleware'));
+      const startPollingIndex = lines.findIndex(line => line.includes('await dp.start_polling(bot)'));
+      
+      // Проверяем правильный порядок выполнения
+      expect(initDbIndex).toBeGreaterThan(-1);
+      expect(messageMiddlewareIndex).toBeGreaterThan(initDbIndex);
+      expect(callbackMiddlewareIndex).toBeGreaterThan(messageMiddlewareIndex);
+      expect(startPollingIndex).toBeGreaterThan(callbackMiddlewareIndex);
+    });
+
+    it('should generate correct initialization sequence without database', () => {
+      mockContext.userDatabaseEnabled = false;
+      
+      const result = generator.generateMainFunction(mockContext);
+      
+      const lines = result.split('\n');
+      const startPollingIndex = lines.findIndex(line => line.includes('await dp.start_polling(bot)'));
+      
+      // Проверяем, что polling запускается даже без базы данных
+      expect(startPollingIndex).toBeGreaterThan(-1);
+      
+      // Проверяем отсутствие инициализации БД и middleware
+      expect(result).not.toContain('await init_database()');
+      expect(result).not.toContain('dp.message.middleware');
+    });
+  });
 });

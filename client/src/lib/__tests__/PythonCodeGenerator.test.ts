@@ -230,4 +230,117 @@ describe('PythonCodeGenerator', () => {
       expect(result).not.toContain('await save_message_to_api(');
     });
   });
+
+  describe('edge cases and error handling', () => {
+    it('should handle empty nodes array', () => {
+      mockContext.nodes = [];
+      
+      const result = generator.generateUtilityFunctions(mockContext);
+      
+      expect(result).toContain('async def is_admin(user_id: int) -> bool:');
+      expect(result).toContain('async def is_private_chat(message: types.Message) -> bool:');
+    });
+
+    it('should handle nodes with auto transitions', () => {
+      mockContext.nodes = [
+        {
+          id: 'test',
+          type: 'message',
+          data: {
+            enableAutoTransition: true,
+            autoTransitionTo: 'next_node',
+            autoTransitionDelay: 5000
+          }
+        }
+      ] as any;
+      
+      const result = generator.generateUtilityFunctions(mockContext);
+      
+      expect(result).toContain('async def safe_edit_or_send(');
+      expect(result).toContain('is_auto_transition=False');
+    });
+
+    it('should generate message wrappers when database is enabled', () => {
+      mockContext.userDatabaseEnabled = true;
+      
+      const result = generator.generateUtilityFunctions(mockContext);
+      
+      expect(result).toContain('# Обертка для сохранения исходящих сообщений');
+      expect(result).toContain('original_send_message = bot.send_message');
+      expect(result).toContain('async def send_message_with_logging(');
+      expect(result).toContain('bot.send_message = send_message_with_logging');
+      expect(result).toContain('# Обертка для message.answer с сохранением');
+      expect(result).toContain('original_answer = types.Message.answer');
+      expect(result).toContain('types.Message.answer = answer_with_logging');
+      expect(result).toContain('# Обертка для callback_query.answer с сохранением');
+      expect(result).toContain('original_callback_answer = types.CallbackQuery.answer');
+      expect(result).toContain('types.CallbackQuery.answer = callback_answer_with_logging');
+    });
+
+    it('should handle complex node configurations', () => {
+      mockContext.userDatabaseEnabled = true;
+      mockContext.nodes = [
+        {
+          id: 'message_node',
+          type: 'message',
+          data: {
+            keyboardType: 'inline',
+            buttons: [
+              { text: 'Button 1', action: 'callback', callbackData: 'btn1' },
+              { text: 'Button 2', action: 'url', url: 'https://example.com' }
+            ]
+          }
+        },
+        {
+          id: 'auto_node',
+          type: 'message',
+          data: {
+            enableAutoTransition: true,
+            autoTransitionTo: 'next_node',
+            autoTransitionDelay: 3000
+          }
+        }
+      ] as any;
+      
+      const result = generator.generateUtilityFunctions(mockContext);
+      
+      expect(result).toContain('async def save_message_to_api(');
+      expect(result).toContain('async def message_logging_middleware(');
+      expect(result).toContain('async def callback_query_logging_middleware(');
+      expect(result).toContain('async def safe_edit_or_send(');
+    });
+  });
+
+  describe('interface compliance', () => {
+    it('should implement all IPythonCodeGenerator methods', () => {
+      expect(typeof generator.generateBotInitialization).toBe('function');
+      expect(typeof generator.generateGlobalVariables).toBe('function');
+      expect(typeof generator.generateUtilityFunctions).toBe('function');
+    });
+
+    it('should return strings from all methods', () => {
+      const initResult = generator.generateBotInitialization(mockContext);
+      const varsResult = generator.generateGlobalVariables(mockContext);
+      const utilsResult = generator.generateUtilityFunctions(mockContext);
+      
+      expect(typeof initResult).toBe('string');
+      expect(typeof varsResult).toBe('string');
+      expect(typeof utilsResult).toBe('string');
+    });
+
+    it('should handle different context configurations', () => {
+      const contexts = [
+        { ...mockContext, userDatabaseEnabled: true, projectId: 123 },
+        { ...mockContext, userDatabaseEnabled: false, projectId: null },
+        { ...mockContext, userDatabaseEnabled: true, projectId: null },
+        { ...mockContext, enableLogging: false }
+      ];
+
+      contexts.forEach(context => {
+        expect(() => generator.generateBotInitialization(context)).not.toThrow();
+        expect(() => generator.generateGlobalVariables(context)).not.toThrow();
+        expect(() => generator.generateUtilityFunctions(context)).not.toThrow();
+      });
+    });
+  });
 });
