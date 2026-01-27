@@ -179,6 +179,11 @@ export interface IMainLoopGenerator {
    * Генерирует код остановки бота
    */
   generateBotShutdown(context: GenerationContext): string;
+  
+  /**
+   * Генерирует точку входа в программу
+   */
+  generateEntryPoint(): string;
 }
 
 /**
