@@ -1,4 +1,4 @@
-import { generateUniversalVariableReplacementUtil, generateReplaceVariablesFunction } from "../utils/user-utils";
+import { generateUniversalVariableReplacement as generateUniversalVariableReplacementUtil, generateReplaceVariablesFunction } from "../utils/user-utils";
 
 // Функция для генерации замены всех переменных в тексте (рефакторенная версия)
 

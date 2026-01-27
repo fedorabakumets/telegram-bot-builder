@@ -67,6 +67,12 @@ import {
   hasMultiSelectNodes,
   hasLocationFeatures
 } from './has';
+import {
+  generateRequirementsTxt,
+  generateDockerfile,
+  generateReadme,
+  generateConfigYaml
+} from './scaffolding';
 
 export type Button = z.infer<typeof buttonSchema>;
 
@@ -7884,5 +7890,8 @@ export interface CodeWithMap {
   code: string;
   nodeMap: CodeNodeRange[];
 }
+
+// Re-export scaffolding functions
+export { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml };
 
 

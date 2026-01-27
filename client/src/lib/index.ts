@@ -1,9 +1,7 @@
 // Main bot generator
 export * from './bot-generator';
 export * from './commands';
-
-// API utilities
-export * from './api';
+export * from './queryClient';
 
 // Command handlers
 export * from './CommandHandler';
