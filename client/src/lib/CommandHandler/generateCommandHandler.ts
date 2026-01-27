@@ -1,4 +1,8 @@
-import { stripHtmlTags, formatTextForPython, getParseMode, generateConditionalMessageLogic, generateUniversalVariableReplacement } from "../bot-generator";
+import { getParseMode } from '../format/getParseMode';
+import { stripHtmlTags } from '../format/stripHtmlTags';
+import { formatTextForPython } from '../format/formatTextForPython';
+import { generateUniversalVariableReplacement } from '../variable/generateUniversalVariableReplacement';
+import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { Node } from '../../../../shared/schema';
 

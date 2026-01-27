@@ -1,6 +1,10 @@
-import { generateUniversalVariableReplacement, generateConditionalMessageLogic, generateButtonText, calculateOptimalColumns, Button, globalLoggingEnabled } from "../bot-generator";
-import { generateWaitingStateCode } from '../generateWaitingStateCode';
-import { toPythonBoolean } from '../toPythonBoolean';
+import { Button, globalLoggingEnabled } from "../bot-generator";
+import { generateButtonText } from '../format/generateButtonText';
+import { calculateOptimalColumns } from '../format/calculateOptimalColumns';
+import { generateUniversalVariableReplacement } from '../variable/generateUniversalVariableReplacement';
+import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
+import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
+import { toPythonBoolean } from '../format/toPythonBoolean';
 import { Node } from '../../../../shared/schema';
 
 

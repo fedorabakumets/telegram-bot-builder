@@ -1,4 +1,4 @@
-import { generateButtonText } from "../bot-generator";
+import { generateButtonText } from '../format/generateButtonText';
 import { Node } from '../../../../shared/schema';
 
 // ============================================================================

@@ -1,4 +1,6 @@
-import { createSafeFunctionName, formatTextForPython, generateUniversalVariableReplacement } from "../bot-generator";
+import { createSafeFunctionName } from '../format/createSafeFunctionName';
+import { formatTextForPython } from '../format/formatTextForPython';
+import { generateUniversalVariableReplacement } from '../variable/generateUniversalVariableReplacement';
 import { generateAdminRightsToggleHandlers } from './generateAdminRightsToggleHandlers';
 import { Node } from '../../../../shared/schema';
 

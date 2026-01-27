@@ -1,4 +1,6 @@
-import { generateButtonText, formatTextForPython, generateConditionalMessageLogic } from "../bot-generator";
+import { generateButtonText } from '../format/generateButtonText';
+import { formatTextForPython } from '../format/formatTextForPython';
+import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { Node } from '../../../../shared/schema';
 
