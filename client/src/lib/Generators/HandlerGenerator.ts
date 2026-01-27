@@ -77,6 +77,32 @@ export class HandlerGenerator implements IHandlerGenerator {
       });
     }
 
+    // Handle start nodes that don't have explicit commands
+    const startNodes = (nodes || []).filter(node => 
+      node.type === 'start' && !node.data.command
+    );
+
+    if (startNodes.length > 0) {
+      code += '\n# Обработчики start узлов\n';
+      
+      startNodes.forEach(node => {
+        code += `# @@NODE_START:${node.id}@@\n`;
+        
+        // Create a modified node with default command for start handler
+        const nodeWithCommand = {
+          ...node,
+          data: {
+            ...node.data,
+            command: '/start',
+            messageText: node.data.text || node.data.message || 'Добро пожаловать!'
+          }
+        };
+        
+        code += generateStartHandler(nodeWithCommand, userDatabaseEnabled);
+        code += `# @@NODE_END:${node.id}@@\n`;
+      });
+    }
+
     // Генерируем обработчики синонимов
     code += this.generateSynonymHandlers(context);
 

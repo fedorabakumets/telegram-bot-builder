@@ -48,9 +48,19 @@ export class PythonCodeGenerator implements IPythonCodeGenerator {
 
         // API конфигурация для сохранения сообщений (только если включена БД)
         if (context.userDatabaseEnabled) {
+            code += '# Конфигурация базы данных\n';
+            code += 'DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/dbname")\n';
             code += '# API configuration для сохранения сообщений\n';
             code += 'API_BASE_URL = os.getenv("API_BASE_URL", os.getenv("REPLIT_DEV_DOMAIN", "http://localhost:5000"))\n';
             code += `PROJECT_ID = int(os.getenv("PROJECT_ID", "${context.projectId || 0}"))  # ID проекта в системе\n\n`;
+            
+            // Добавляем переменные для работы с БД
+            code += '# Глобальные переменные для работы с базой данных\n';
+            code += 'db_pool = None\n';
+            code += 'user_data = {}  # Локальное хранилище как fallback\n\n';
+        } else {
+            code += '# Локальное хранилище данных пользователей\n';
+            code += 'user_data = {}\n\n';
         }
 
         return code;
@@ -64,6 +74,7 @@ export class PythonCodeGenerator implements IPythonCodeGenerator {
 
         // Функция для сохранения сообщений в API (только если включена БД)
         if (context.userDatabaseEnabled) {
+            code += this.generateDatabaseFunctions();
             code += this.generateSaveMessageFunction();
             code += this.generateMessageLoggingMiddleware(context.nodes as unknown as BotNode[]);
 
@@ -83,6 +94,69 @@ export class PythonCodeGenerator implements IPythonCodeGenerator {
 
         // Утилитарные функции
         code += this.generateUtilityHelperFunctions();
+
+        return code;
+    }
+
+    /**
+     * Генерирует функции для работы с базой данных
+     */
+    private generateDatabaseFunctions(): string {
+        let code = '';
+
+        code += '# Функции для работы с базой данных\n';
+        code += 'async def init_database():\n';
+        code += '    """Инициализация подключения к базе данных"""\n';
+        code += '    global db_pool\n';
+        code += '    try:\n';
+        code += '        db_pool = await asyncpg.create_pool(DATABASE_URL)\n';
+        code += '        logging.info("✅ Подключение к базе данных установлено")\n';
+        code += '        return True\n';
+        code += '    except Exception as e:\n';
+        code += '        logging.error(f"❌ Ошибка подключения к базе данных: {e}")\n';
+        code += '        return False\n\n';
+
+        code += 'async def save_user_to_db(user_id, username, first_name, last_name):\n';
+        code += '    """Сохранение пользователя в базу данных"""\n';
+        code += '    if not db_pool:\n';
+        code += '        return False\n';
+        code += '    try:\n';
+        code += '        async with db_pool.acquire() as conn:\n';
+        code += '            await conn.execute(\n';
+        code += '                "INSERT INTO users (user_id, username, first_name, last_name) VALUES ($1, $2, $3, $4) ON CONFLICT (user_id) DO UPDATE SET username = $2, first_name = $3, last_name = $4",\n';
+        code += '                user_id, username, first_name, last_name\n';
+        code += '            )\n';
+        code += '        return True\n';
+        code += '    except Exception as e:\n';
+        code += '        logging.error(f"Ошибка сохранения пользователя в БД: {e}")\n';
+        code += '        return False\n\n';
+
+        code += 'async def get_user_from_db(user_id):\n';
+        code += '    """Получение пользователя из базы данных"""\n';
+        code += '    if not db_pool:\n';
+        code += '        return None\n';
+        code += '    try:\n';
+        code += '        async with db_pool.acquire() as conn:\n';
+        code += '            row = await conn.fetchrow("SELECT * FROM users WHERE user_id = $1", user_id)\n';
+        code += '            return dict(row) if row else None\n';
+        code += '    except Exception as e:\n';
+        code += '        logging.error(f"Ошибка получения пользователя из БД: {e}")\n';
+        code += '        return None\n\n';
+
+        code += 'async def update_user_data_in_db(user_id, key, value):\n';
+        code += '    """Обновление данных пользователя в базе данных"""\n';
+        code += '    if not db_pool:\n';
+        code += '        return False\n';
+        code += '    try:\n';
+        code += '        async with db_pool.acquire() as conn:\n';
+        code += '            await conn.execute(\n';
+        code += '                "UPDATE users SET user_data = jsonb_set(COALESCE(user_data, \'{}\'), $2, $3) WHERE user_id = $1",\n';
+        code += '                user_id, [key], json.dumps(value)\n';
+        code += '            )\n';
+        code += '        return True\n';
+        code += '    except Exception as e:\n';
+        code += '        logging.error(f"Ошибка обновления данных пользователя в БД: {e}")\n';
+        code += '        return False\n\n';
 
         return code;
     }
@@ -505,6 +579,26 @@ export class PythonCodeGenerator implements IPythonCodeGenerator {
 
         code += 'async def is_private_chat(message: types.Message) -> bool:\n';
         code += '    return message.chat.type == "private"\n\n';
+
+        code += 'def init_user_variables(user_id: int, user_obj) -> str:\n';
+        code += '    """Инициализирует базовые переменные пользователя"""\n';
+        code += '    if user_id not in user_data:\n';
+        code += '        user_data[user_id] = {}\n';
+        code += '    \n';
+        code += '    # Определяем имя пользователя\n';
+        code += '    user_name = user_obj.first_name or "Пользователь"\n';
+        code += '    if user_obj.last_name:\n';
+        code += '        user_name += f" {user_obj.last_name}"\n';
+        code += '    \n';
+        code += '    # Сохраняем базовые переменные\n';
+        code += '    user_data[user_id].update({\n';
+        code += '        "user_name": user_name,\n';
+        code += '        "first_name": user_obj.first_name,\n';
+        code += '        "last_name": user_obj.last_name,\n';
+        code += '        "username": user_obj.username\n';
+        code += '    })\n';
+        code += '    \n';
+        code += '    return user_name\n\n';
 
         return code;
     }

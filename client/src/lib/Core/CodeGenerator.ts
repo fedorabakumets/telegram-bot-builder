@@ -203,23 +203,9 @@ export class CodeGenerator implements ICodeGenerator {
       ));
     }
 
-    if (!context.nodes || context.nodes.length === 0) {
-      errors.push(this.createError(
-        GenerationErrorType.VALIDATION_ERROR,
-        'Бот должен содержать хотя бы один узел',
-        'CodeGenerator'
-      ));
-    }
-
-    // Проверяем наличие стартового узла
-    const hasStartNode = context.nodes?.some(node => node.type === 'start');
-    if (!hasStartNode) {
-      errors.push(this.createError(
-        GenerationErrorType.VALIDATION_ERROR,
-        'Бот должен содержать стартовый узел',
-        'CodeGenerator'
-      ));
-    }
+    // Legacy behavior: Allow empty bots and bots without start nodes
+    // The legacy system would generate basic fallback code for these cases
+    // So we don't validate for nodes or start nodes here
 
     return errors;
   }

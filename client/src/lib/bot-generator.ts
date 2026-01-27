@@ -47,6 +47,16 @@ export function generatePythonCode(
   // Set global logging flag for this generation run
   globalLoggingEnabled = enableLogging;
 
+  if (enableLogging) {
+    console.log('🔧 ГЕНЕРАТОР: Начинаем генерацию с параметрами:', {
+      botName,
+      userDatabaseEnabled,
+      projectId,
+      enableLogging,
+      nodesCount: botData?.nodes?.length || 0
+    });
+  }
+
   try {
     // Создаем контекст генерации из данных бота
     const context = GenerationContextBuilder.createFromBotData(botData, {
@@ -56,6 +66,14 @@ export function generatePythonCode(
       projectId,
       enableLogging
     });
+
+    if (enableLogging) {
+      console.log('🔧 ГЕНЕРАТОР: Контекст создан:', {
+        nodesCount: context.nodes?.length || 0,
+        connectionsCount: context.connections?.length || 0,
+        userDatabaseEnabled: context.userDatabaseEnabled
+      });
+    }
 
     // Логирование для отладки (если включено)
     if (enableLogging) {
@@ -85,8 +103,21 @@ export function generatePythonCode(
       mainLoopGenerator
     );
 
+    if (enableLogging) {
+      console.log('🔧 ГЕНЕРАТОР: Генераторы созданы, начинаем генерацию кода...');
+    }
+
     // Генерируем код
     const result = codeGenerator.generate(context);
+
+    if (enableLogging) {
+      console.log('🔧 ГЕНЕРАТОР: Результат генерации:', {
+        success: result.success,
+        errorsCount: result.errors?.length || 0,
+        warningsCount: result.warnings?.length || 0,
+        codeLength: result.code?.length || 0
+      });
+    }
 
     if (!result.success) {
       console.error('Ошибки при генерации кода:', result.errors);
@@ -125,6 +156,10 @@ export function generatePythonCode(
 
   } catch (error) {
     console.error('Критическая ошибка при генерации кода:', error);
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace available');
+
+    // For debugging, let's see what the actual error is
+    throw error; // Temporarily disable fallback to see the actual error
 
     // Fallback: если новая система не работает, используем старую логику
     console.warn('Переключаемся на резервную систему генерации...');
