@@ -8,7 +8,7 @@ import {
   generateUniversalVariableReplacement,
   SYSTEM_VARIABLES,
   generateVariablesDocumentation
-} from '../user-utils';
+} from '../utils/user-utils';
 
 describe('user-utils', () => {
   describe('generateInitUserVariablesFunction', () => {

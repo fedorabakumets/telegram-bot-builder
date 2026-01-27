@@ -206,7 +206,7 @@ describe('PythonCodeGenerator', () => {
       
       const result = generator.generateUtilityFunctions(mockContext);
       
-      expect(result).toContain('# Сохраняем отправленное сообщение в базу данных');
+      expect(result).toContain('# Сохраняем сообщение в базу данных');
       expect(result).toContain('await save_message_to_api(');
       expect(result).toContain('message_type="bot"');
     });

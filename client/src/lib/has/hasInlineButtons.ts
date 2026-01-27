@@ -1,3 +1,5 @@
+import { Node } from '../../../../shared/schema';
+
 // Функция для проверки наличия inline кнопок (callback)
 export function hasInlineButtons(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
