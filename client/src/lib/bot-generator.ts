@@ -1,52 +1,72 @@
-import { BotData, Node, BotGroup, buttonSchema } from '../../../shared/schema';
-import { generateBotFatherCommands } from './commands';
-import { generateSynonymHandler } from './Synonyms/generateSynonymHandler';
-import { generateMessageSynonymHandler } from './Synonyms/generateMessageSynonymHandler';
-import {
-  generateInitUserVariablesFunction} from './utils/user-utils';
+// External dependencies
 import { z } from 'zod';
-import { generateBanUserHandler } from './UserHandler/generateBanUserHandler';
-import { generateUnbanUserHandler } from './UserHandler/generateUnbanUserHandler';
-import { generateMuteUserHandler } from './UserHandler/generateMuteUserHandler';
-import { generateUnmuteUserHandler } from './UserHandler/generateUnmuteUserHandler';
-import { generateKickUserHandler } from './UserHandler/generateKickUserHandler';
-import { generatePromoteUserHandler } from './UserHandler/generatePromoteUserHandler';
-import { generateAdminRightsHandler } from './UserHandler/generateAdminRightsHandler';
-import { generateDemoteUserHandler } from './UserHandler/generateDemoteUserHandler';
-import { generateUserManagementSynonymHandler } from './UserHandler/generateUserManagementSynonymHandler';
-import { generateUnpinMessageHandler } from './MessageHandler/generateUnpinMessageHandler';
-import { generateDeleteMessageHandler } from './MessageHandler/generateDeleteMessageHandler';
-import { generatePinMessageHandler } from './MessageHandler/generatePinMessageHandler';
-import { generateStickerHandler } from './MediaHandler/generateStickerHandler';
-import { generateVoiceHandler } from './MediaHandler/generateVoiceHandler';
-import { generateAnimationHandler } from './MediaHandler/generateAnimationHandler';
-import { generateLocationHandler } from './MediaHandler/generateLocationHandler';
-import { generateContactHandler } from './MediaHandler/generateContactHandler';
-import { generateCommandHandler } from './CommandHandler/generateCommandHandler';
-import { generateStartHandler } from './CommandHandler/generateStartHandler';
-import { toPythonBoolean } from './format/toPythonBoolean';
-import { generateWaitingStateCode } from './format/generateWaitingStateCode';
-import { extractNodesAndConnections } from './format/extractNodesAndConnections';
-import { generateConditionalMessageLogic } from './Conditional/generateConditionalMessageLogic';
-import { generateAttachedMediaSendCode } from './format/generateAttachedMediaSendCode';
-import { generateUniversalVariableReplacement } from './variable/generateUniversalVariableReplacement';
-import { generateInlineKeyboardCode } from './Keyboard/generateInlineKeyboardCode';
-import { generateReplyKeyboardCode } from './Keyboard/generateReplyKeyboardCode';
-import { collectMediaVariables } from './variable/collectMediaVariables';
-import { hasConditionalButtons } from './has/hasConditionalButtons';
-import { hasMediaNodes } from './has/hasMediaNodes';
-import { hasInputCollection } from './has/hasInputCollection';
-import { hasInlineButtons } from './has/hasInlineButtons';
-import { hasAutoTransitions } from './has/hasAutoTransitions';
-import { hasMultiSelectNodes } from './has/hasMultiSelectNodes';
-import { hasLocationFeatures } from './has/hasLocationFeatures';
-import { formatTextForPython } from './format/formatTextForPython';
-import { stripHtmlTags } from './format/stripHtmlTags';
-import { generateUniqueShortId } from './format/generateUniqueShortId';
-import { escapeForJsonString } from './format/escapeForJsonString';
-import { calculateOptimalColumns } from './format/calculateOptimalColumns';
-import { getParseMode } from './format/getParseMode';
-import { generateButtonText } from './format/generateButtonText';
+import { BotData, Node, BotGroup, buttonSchema } from '../../../shared/schema';
+
+// Internal modules - using barrel exports
+import { generateBotFatherCommands } from './commands';
+import { generateInitUserVariablesFunction } from './utils';
+import {
+  generateSynonymHandler,
+  generateMessageSynonymHandler
+} from './Synonyms';
+import {
+  generateBanUserHandler,
+  generateUnbanUserHandler,
+  generateMuteUserHandler,
+  generateUnmuteUserHandler,
+  generateKickUserHandler,
+  generatePromoteUserHandler,
+  generateAdminRightsHandler,
+  generateDemoteUserHandler,
+  generateUserManagementSynonymHandler
+} from './UserHandler';
+import {
+  generateUnpinMessageHandler,
+  generateDeleteMessageHandler,
+  generatePinMessageHandler
+} from './MessageHandler';
+import {
+  generateStickerHandler,
+  generateVoiceHandler,
+  generateAnimationHandler,
+  generateLocationHandler,
+  generateContactHandler
+} from './MediaHandler';
+import {
+  generateCommandHandler,
+  generateStartHandler
+} from './CommandHandler';
+import {
+  toPythonBoolean,
+  generateWaitingStateCode,
+  extractNodesAndConnections,
+  generateAttachedMediaSendCode,
+  formatTextForPython,
+  stripHtmlTags,
+  generateUniqueShortId,
+  escapeForJsonString,
+  calculateOptimalColumns,
+  getParseMode,
+  generateButtonText
+} from './format';
+import { generateConditionalMessageLogic } from './Conditional';
+import {
+  generateUniversalVariableReplacement,
+  collectMediaVariables
+} from './variable';
+import {
+  generateInlineKeyboardCode,
+  generateReplyKeyboardCode
+} from './Keyboard';
+import {
+  hasConditionalButtons,
+  hasMediaNodes,
+  hasInputCollection,
+  hasInlineButtons,
+  hasAutoTransitions,
+  hasMultiSelectNodes,
+  hasLocationFeatures
+} from './has';
 
 export type Button = z.infer<typeof buttonSchema>;
 
