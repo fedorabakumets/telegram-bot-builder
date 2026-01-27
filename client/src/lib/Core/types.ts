@@ -134,6 +134,11 @@ export interface IPythonCodeGenerator {
    * Генерирует вспомогательные функции
    */
   generateUtilityFunctions(context: GenerationContext): string;
+  
+  /**
+   * Генерирует конфигурацию групп
+   */
+  generateGroupsConfiguration(context: GenerationContext): string;
 }
 
 /**
@@ -159,6 +164,11 @@ export interface IHandlerGenerator {
    * Генерирует обработчики медиа
    */
   generateMediaHandlers(context: GenerationContext): string;
+  
+  /**
+   * Генерирует обработчики для групп
+   */
+  generateGroupHandlers(context: GenerationContext): string;
 }
 
 /**

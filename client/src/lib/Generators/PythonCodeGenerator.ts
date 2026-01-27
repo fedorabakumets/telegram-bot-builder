@@ -600,6 +600,39 @@ export class PythonCodeGenerator implements IPythonCodeGenerator {
         code += '    \n';
         code += '    return user_name\n\n';
 
+        // Добавляем функцию on_startup для совместимости с тестами
+        code += 'async def on_startup():\n';
+        code += '    """Функция инициализации при запуске бота"""\n';
+        code += '    logging.info("🚀 Бот запускается...")\n';
+        code += '    # Здесь можно добавить дополнительную инициализацию\n\n';
+
+        return code;
+    }
+
+    /**
+     * Генерирует конфигурацию групп
+     */
+    generateGroupsConfiguration(context: GenerationContext): string {
+        let code = '';
+
+        // Добавляем конфигурацию групп только если они есть
+        if (context.groups && context.groups.length > 0) {
+            code += '\n# Подключенные группы\n';
+            code += 'CONNECTED_GROUPS = {\n';
+            
+            context.groups.forEach((group, index) => {
+                const groupId = (group as any).groupId || 'None';
+                const isLast = index === context.groups.length - 1;
+                
+                code += `    "${group.name}": {\n`;
+                code += `        "id": ${groupId === 'None' ? 'None' : `"${groupId}"`},\n`;
+                code += `        "description": "${group.description || ''}"\n`;
+                code += `    }${isLast ? '' : ','}\n`;
+            });
+            
+            code += '}\n\n';
+        }
+
         return code;
     }
 }

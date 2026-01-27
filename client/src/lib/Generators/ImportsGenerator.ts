@@ -79,9 +79,10 @@ export class ImportsGenerator {
     }
     
     const commandNodes = nodes.filter(node => 
-      (node.type === 'start' || node.type === 'command') && 
-      node.data?.command &&
-      (node.data?.showInMenu !== false) // Включаем команды где showInMenu = true, undefined или не установлено
+      ((node.type === 'start' || node.type === 'command' || 
+        ['ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user'].includes(node.type)) && 
+       node.data?.command &&
+       (node.data?.showInMenu !== false)) // Включаем команды где showInMenu = true, undefined или не установлено
     );
     
     if (commandNodes.length === 0) {
@@ -92,7 +93,7 @@ export class ImportsGenerator {
     
     commandNodes.forEach(node => {
       const command = node.data.command.replace('/', '');
-      const description = node.data.description || 'Команда бота';
+      const description = node.data.description || node.data.text || 'Команда бота';
       botFatherCommands += `${command} - ${description}\n`;
     });
     

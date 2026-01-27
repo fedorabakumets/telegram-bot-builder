@@ -1,4 +1,4 @@
-import { Button } from "../bot-generatornew";
+import { Button } from "../bot-generator";
 import { generateButtonText } from '../format/generateButtonText';
 import { calculateOptimalColumns } from '../format/calculateOptimalColumns';
 import { toPythonBoolean } from "../format/toPythonBoolean";

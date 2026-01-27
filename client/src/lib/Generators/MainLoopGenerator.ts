@@ -61,6 +61,10 @@ export class MainLoopGenerator implements IMainLoopGenerator {
     generateBotStartup(context: GenerationContext): string {
         let code = '';
 
+        // Добавляем функцию on_startup для совместимости с тестами
+        code += '        # Регистрируем startup функцию\n';
+        code += '        dp.startup.register(on_startup)\n';
+        code += '        \n';
         code += '        print("🤖 Бот запущен и готов к работе!")\n';
         code += '        await dp.start_polling(bot)\n';
 

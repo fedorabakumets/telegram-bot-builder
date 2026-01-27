@@ -1,4 +1,4 @@
-import { Button } from "../bot-generatornew";
+import { Button } from "../bot-generator";
 
 // Функция для проверки наличия условных кнопок с callback_data формата "conditional_"
 export function hasConditionalButtons(nodes: Node[]): boolean {

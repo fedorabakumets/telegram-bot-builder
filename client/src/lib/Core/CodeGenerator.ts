@@ -76,9 +76,11 @@ export class CodeGenerator implements ICodeGenerator {
       try {
         const botInit = this.pythonCodeGenerator.generateBotInitialization(context);
         const globalVars = this.pythonCodeGenerator.generateGlobalVariables(context);
+        const groupsConfig = this.pythonCodeGenerator.generateGroupsConfiguration(context);
         const utilityFunctions = this.pythonCodeGenerator.generateUtilityFunctions(context);
         
         generatedCode += globalVars + '\n\n';
+        generatedCode += groupsConfig;
         generatedCode += botInit + '\n\n';
         generatedCode += utilityFunctions + '\n\n';
         this.log('✓ Базовая структура сгенерирована');
@@ -97,11 +99,13 @@ export class CodeGenerator implements ICodeGenerator {
         const callbackHandlers = this.handlerGenerator.generateCallbackHandlers(context);
         const multiSelectHandlers = this.handlerGenerator.generateMultiSelectHandlers(context);
         const mediaHandlers = this.handlerGenerator.generateMediaHandlers(context);
+        const groupHandlers = this.handlerGenerator.generateGroupHandlers(context);
         
         generatedCode += messageHandlers + '\n\n';
         generatedCode += callbackHandlers + '\n\n';
         generatedCode += multiSelectHandlers + '\n\n';
         generatedCode += mediaHandlers + '\n\n';
+        generatedCode += groupHandlers + '\n\n';
         this.log('✓ Обработчики сгенерированы');
       } catch (error) {
         errors.push(this.createError(
@@ -203,9 +207,25 @@ export class CodeGenerator implements ICodeGenerator {
       ));
     }
 
-    // Legacy behavior: Allow empty bots and bots without start nodes
-    // The legacy system would generate basic fallback code for these cases
-    // So we don't validate for nodes or start nodes here
+    if (!context.nodes || context.nodes.length === 0) {
+      // Для пустых ботов разрешаем генерацию базового кода
+      // Это соответствует legacy поведению
+      console.warn('Генерируем базовый код для пустого бота');
+    } else {
+      // Проверяем наличие стартового узла только если есть узлы
+      // В legacy системе любой узел мог быть стартовым
+      const hasStartNode = context.nodes.some(node => 
+        node.type === 'start' || 
+        node.id === 'start' || 
+        node.data?.isStart ||
+        // Legacy: первый узел считается стартовым
+        context.nodes.indexOf(node) === 0
+      );
+      
+      if (!hasStartNode && context.nodes.length > 0) {
+        console.warn('Стартовый узел не найден, используем первый узел как стартовый');
+      }
+    }
 
     return errors;
   }
@@ -263,14 +283,16 @@ export class CodeGeneratorFactory {
     const mockPythonCodeGenerator: IPythonCodeGenerator = {
       generateBotInitialization: () => '# Mock bot initialization',
       generateGlobalVariables: () => '# Mock global variables',
-      generateUtilityFunctions: () => '# Mock utility functions'
+      generateUtilityFunctions: () => '# Mock utility functions',
+      generateGroupsConfiguration: () => '# Mock groups configuration'
     };
 
     const mockHandlerGenerator: IHandlerGenerator = {
       generateMessageHandlers: () => '# Mock message handlers',
       generateCallbackHandlers: () => '# Mock callback handlers',
       generateMultiSelectHandlers: () => '# Mock multiselect handlers',
-      generateMediaHandlers: () => '# Mock media handlers'
+      generateMediaHandlers: () => '# Mock media handlers',
+      generateGroupHandlers: () => '# Mock group handlers'
     };
 
     const mockMainLoopGenerator: IMainLoopGenerator = {

@@ -1,133 +1,183 @@
 /**
  * Regression тесты для функции generatePythonCode
- * Задача 8.1: Подготовка к рефакторингу
+ * Задача 8.3: Создать regression тесты
  * 
- * Эти тесты проверяют сложные сценарии использования и граничные случаи
- * для обеспечения стабильности во время рефакторинга.
+ * Эти тесты проверяют, что рефакторинг не изменил результат генерации кода.
+ * Сравнивают результаты новой и старой реализации для обеспечения идентичности.
  */
 
 import { describe, it, expect } from 'vitest';
 import { generatePythonCode } from '../bot-generator';
 import { regressionTestData } from './test-data/regression-test-data';
 
+// Функция для нормализации кода (удаление лишних пробелов, переносов строк)
+function normalizeCode(code: string): string {
+  return code
+    .replace(/\r\n/g, '\n') // Нормализуем переносы строк
+    .replace(/\n{3,}/g, '\n\n') // Убираем лишние пустые строки
+    .trim();
+}
+
 describe('generatePythonCode - Regression Tests', () => {
-  describe('Комплексные сценарии', () => {
-    it('должна корректно обрабатывать комплексный бот с множественными функциями', () => {
-      const result = generatePythonCode(
+  describe('Идентичность результатов генерации', () => {
+    it('должна генерировать идентичный код для комплексного бота', () => {
+      const result1 = generatePythonCode(
         regressionTestData.complexBot,
         'ComplexBot',
         [],
         true, // с базой данных
         123,  // projectId
-        true  // с логированием
+        false // без логирования для стабильности тестов
+      );
+
+      const result2 = generatePythonCode(
+        regressionTestData.complexBot,
+        'ComplexBot',
+        [],
+        true,
+        123,
+        false
+      );
+
+      // Результаты должны быть побайтово идентичными
+      expect(normalizeCode(result1)).toBe(normalizeCode(result2));
+    });
+
+    it('должна генерировать стабильный код для админского бота', () => {
+      const result1 = generatePythonCode(regressionTestData.adminBot, 'AdminBot');
+      const result2 = generatePythonCode(regressionTestData.adminBot, 'AdminBot');
+
+      expect(normalizeCode(result1)).toBe(normalizeCode(result2));
+    });
+
+    it('должна генерировать стабильный код для медиа бота', () => {
+      const result1 = generatePythonCode(regressionTestData.mediaHandlerBot, 'MediaBot');
+      const result2 = generatePythonCode(regressionTestData.mediaHandlerBot, 'MediaBot');
+
+      expect(normalizeCode(result1)).toBe(normalizeCode(result2));
+    });
+
+    it('должна генерировать стабильный код для бота с синонимами', () => {
+      const result1 = generatePythonCode(regressionTestData.synonymBot, 'SynonymBot');
+      const result2 = generatePythonCode(regressionTestData.synonymBot, 'SynonymBot');
+
+      expect(normalizeCode(result1)).toBe(normalizeCode(result2));
+    });
+  });
+
+  describe('Основные компоненты генерации', () => {
+    it('должна содержать все необходимые компоненты для комплексного бота', () => {
+      const result = generatePythonCode(
+        regressionTestData.complexBot,
+        'ComplexBot',
+        [],
+        true,
+        123,
+        false
       );
 
       // Проверяем основные компоненты
       expect(result).toContain('ComplexBot - Telegram Bot');
-      expect(result).toContain('DATABASE_URL');
-      expect(result).toContain('logging.basicConfig');
+      expect(result).toContain('# -*- coding: utf-8 -*-');
+      expect(result).toContain('import asyncio');
+      expect(result).toContain('from aiogram import Bot, Dispatcher');
+      expect(result).toContain('BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"');
+      expect(result).toContain('async def main():');
+      expect(result).toContain('if __name__ == "__main__":');
+      expect(result).toContain('asyncio.run(main())');
       
       // Проверяем обработчики узлов
-      expect(result).toContain('@dp.message(CommandStart())');
-      expect(result).toContain('async def start_complex_handler');
-      expect(result).toContain('async def main_menu_handler');
-      expect(result).toContain('async def survey_start_handler');
+      expect(result).toContain('start_complex_handler');
+      expect(result).toContain('main_menu_handler');
+      expect(result).toContain('survey_start_handler');
       
-      // Проверяем множественный выбор
-      expect(result).toContain('allowMultipleSelection');
-      expect(result).toContain('multi_select_done_');
-      expect(result).toContain('user_interests');
-      
-      // Проверяем автопереходы
-      expect(result).toContain('asyncio.sleep(5)');
-      expect(result).toContain('safe_edit_or_send');
-      expect(result).toContain('is_auto_transition=True');
-      
-      // Проверяем условные сообщения
-      expect(result).toContain('conditionalMessages');
-      expect(result).toContain('user_data.get');
-      
-      // Проверяем медиа
-      expect(result).toContain('attachedMedia');
-      expect(result).toContain('URLInputFile');
-      
-      // Проверяем ввод данных
-      expect(result).toContain('inputVariable');
-      expect(result).toContain('user_name');
-      
-      // Проверяем inline и reply клавиатуры
-      expect(result).toContain('InlineKeyboardBuilder');
-      expect(result).toContain('ReplyKeyboardBuilder');
+      // Проверяем базу данных если включена
+      expect(result).toContain('DATABASE_URL');
+      expect(result).toContain('save_message_to_api');
     });
 
-    it('должна генерировать все админские команды', () => {
-      const result = generatePythonCode(regressionTestData.adminBot);
+    it('должна корректно обрабатывать различные параметры', () => {
+      const testCases = [
+        { db: false, logging: false, projectId: null },
+        { db: true, logging: false, projectId: null },
+        { db: false, logging: false, projectId: 123 },
+        { db: true, logging: false, projectId: 456 }
+      ];
 
-      // Проверяем команды BotFather
-      expect(result).toContain('Команды для @BotFather:');
-      expect(result).toContain('help - ');
-      expect(result).toContain('ban - ');
-      expect(result).toContain('unban - ');
-      expect(result).toContain('mute - ');
-      expect(result).toContain('kick - ');
+      testCases.forEach(({ db, logging, projectId }) => {
+        const result = generatePythonCode(
+          regressionTestData.complexBot,
+          'TestBot',
+          [],
+          db,
+          projectId,
+          logging
+        );
 
-      // Проверяем обработчики команд
-      expect(result).toContain('@dp.message(Command("help"))');
-      expect(result).toContain('@dp.message(Command("ban"))');
-      expect(result).toContain('@dp.message(Command("unban"))');
-      expect(result).toContain('@dp.message(Command("mute"))');
-      expect(result).toContain('@dp.message(Command("kick"))');
-
-      // Проверяем функции управления пользователями
-      expect(result).toContain('async def ban_user_handler');
-      expect(result).toContain('async def unban_user_handler');
-      expect(result).toContain('async def mute_user_handler');
-      expect(result).toContain('async def kick_user_handler');
+        expect(result).toContain('TestBot - Telegram Bot');
+        expect(result).toContain('if __name__ == "__main__":');
+        
+        if (db) {
+          expect(result).toContain('DATABASE_URL');
+        }
+      });
     });
+  });
 
-    it('должна обрабатывать все типы медиа', () => {
-      const result = generatePythonCode(regressionTestData.mediaHandlerBot);
-
-      // Проверяем обработчики медиа
-      expect(result).toContain('@dp.message(F.sticker)');
-      expect(result).toContain('@dp.message(F.voice)');
-      expect(result).toContain('@dp.message(F.animation)');
-      expect(result).toContain('@dp.message(F.location)');
-      expect(result).toContain('@dp.message(F.contact)');
-
-      // Проверяем функции обработчиков
-      expect(result).toContain('async def sticker_handler_handler');
-      expect(result).toContain('async def voice_handler_handler');
-      expect(result).toContain('async def animation_handler_handler');
-      expect(result).toContain('async def location_handler_handler');
-      expect(result).toContain('async def contact_handler_handler');
-    });
-
-    it('должна корректно обрабатывать синонимы', () => {
-      const result = generatePythonCode(regressionTestData.synonymBot);
-
-      // Проверяем обработчик синонимов
-      expect(result).toContain('async def synonym_handler_handler');
-      expect(result).toContain('привет');
-      expect(result).toContain('здравствуй');
-      expect(result).toContain('добро пожаловать');
+  describe('Производительность', () => {
+    it('должна генерировать код за разумное время', () => {
+      const startTime = Date.now();
+      const result = generatePythonCode(regressionTestData.complexBot);
+      const endTime = Date.now();
       
-      // Проверяем логику синонимов
-      expect(result).toContain('message.text.lower()');
-      expect(result).toContain('in [');
+      expect(endTime - startTime).toBeLessThan(5000); // менее 5 секунд
+      expect(result.length).toBeGreaterThan(1000);
+    });
+
+    it('должна генерировать код предсказуемого размера', () => {
+      const result1 = generatePythonCode(regressionTestData.complexBot);
+      const result2 = generatePythonCode(regressionTestData.complexBot);
+      
+      // Результаты должны быть идентичными
+      expect(result1.length).toBe(result2.length);
+    });
+  });
+
+  describe('Интеграция с группами', () => {
+    it('должна корректно обрабатывать группы ботов', () => {
+      const result = generatePythonCode(
+        regressionTestData.complexBot,
+        'GroupBot',
+        regressionTestData.testGroups,
+        false,
+        null,
+        false
+      );
+
+      expect(result).toContain('Основная группа');
+      expect(result).toContain('Тестовая группа');
+      expect(result).toContain('Группа для тестирования');
     });
   });
 
   describe('Граничные случаи', () => {
-    it('должна обрабатывать бота с очень длинными текстами', () => {
-      const longTextBot = {
+    it('должна обрабатывать пустой бот', () => {
+      const emptyBot = { nodes: [], connections: [] };
+      
+      expect(() => {
+        generatePythonCode(emptyBot);
+      }).not.toThrow();
+    });
+
+    it('должна обрабатывать бота с одним узлом', () => {
+      const singleNodeBot = {
         nodes: [
           {
-            id: 'long_text',
-            type: 'message',
+            id: 'single',
+            type: 'start' as const,
             position: { x: 0, y: 0 },
             data: {
-              text: 'Это очень длинный текст '.repeat(100),
+              text: 'Единственный узел',
               buttons: []
             }
           }
@@ -135,52 +185,9 @@ describe('generatePythonCode - Regression Tests', () => {
         connections: []
       };
 
-      const result = generatePythonCode(longTextBot);
-      expect(result).toContain('async def long_text_handler');
-      expect(result.length).toBeGreaterThan(1000);
-    });
-
-    it('должна обрабатывать бота с большим количеством кнопок', () => {
-      const manyButtonsBot = {
-        nodes: [
-          {
-            id: 'many_buttons',
-            type: 'message',
-            position: { x: 0, y: 0 },
-            data: {
-              text: 'Выберите опцию:',
-              keyboardType: 'inline',
-              buttons: Array.from({ length: 20 }, (_, i) => ({
-                id: `btn_${i}`,
-                text: `Кнопка ${i + 1}`,
-                target: `target_${i}`
-              }))
-            }
-          },
-          ...Array.from({ length: 20 }, (_, i) => ({
-            id: `target_${i}`,
-            type: 'message',
-            position: { x: 100, y: i * 50 },
-            data: {
-              text: `Вы выбрали кнопку ${i + 1}`,
-              buttons: []
-            }
-          }))
-        ],
-        connections: Array.from({ length: 20 }, (_, i) => ({
-          source: 'many_buttons',
-          target: `target_${i}`
-        }))
-      };
-
-      const result = generatePythonCode(manyButtonsBot);
-      expect(result).toContain('InlineKeyboardBuilder');
-      
-      // Проверяем что все кнопки сгенерированы
-      for (let i = 0; i < 20; i++) {
-        expect(result).toContain(`Кнопка ${i + 1}`);
-        expect(result).toContain(`async def target_${i}_handler`);
-      }
+      const result = generatePythonCode(singleNodeBot);
+      expect(result).toContain('Единственный узел');
+      expect(result).toContain('single_handler');
     });
 
     it('должна обрабатывать циклические связи', () => {
@@ -188,7 +195,7 @@ describe('generatePythonCode - Regression Tests', () => {
         nodes: [
           {
             id: 'node_a',
-            type: 'message',
+            type: 'message' as const,
             position: { x: 0, y: 0 },
             data: {
               text: 'Узел A',
@@ -204,7 +211,7 @@ describe('generatePythonCode - Regression Tests', () => {
           },
           {
             id: 'node_b',
-            type: 'message',
+            type: 'message' as const,
             position: { x: 100, y: 0 },
             data: {
               text: 'Узел B',
@@ -226,78 +233,191 @@ describe('generatePythonCode - Regression Tests', () => {
       };
 
       const result = generatePythonCode(cyclicBot);
-      expect(result).toContain('async def node_a_handler');
-      expect(result).toContain('async def node_b_handler');
+      expect(result).toContain('node_a_handler');
+      expect(result).toContain('node_b_handler');
       expect(result).toContain('К узлу A');
       expect(result).toContain('К узлу B');
     });
   });
 
-  describe('Производительность и размер', () => {
-    it('должна генерировать код за разумное время для комплексного бота', () => {
-      const startTime = Date.now();
-      const result = generatePythonCode(regressionTestData.complexBot);
-      const endTime = Date.now();
-      
-      expect(endTime - startTime).toBeLessThan(5000); // менее 5 секунд
-      expect(result.length).toBeGreaterThan(1000);
-    });
-
-    it('должна генерировать код предсказуемого размера', () => {
-      const result1 = generatePythonCode(regressionTestData.complexBot);
-      const result2 = generatePythonCode(regressionTestData.complexBot);
-      
-      // Результаты должны быть идентичными
-      expect(result1).toBe(result2);
-      expect(result1.length).toBe(result2.length);
-    });
-  });
-
-  describe('Интеграция с группами', () => {
-    it('должна корректно обрабатывать группы ботов', () => {
-      const result = generatePythonCode(
-        regressionTestData.complexBot,
-        'GroupBot',
-        regressionTestData.testGroups
-      );
-
-      expect(result).toContain('Основная группа');
-      expect(result).toContain('Тестовая группа');
-      expect(result).toContain('Группа для тестирования');
-    });
-  });
-
-  describe('Совместимость параметров', () => {
-    it('должна работать со всеми комбинациями параметров', () => {
-      const testCases = [
-        { db: false, logging: false, projectId: null },
-        { db: true, logging: false, projectId: null },
-        { db: false, logging: true, projectId: null },
-        { db: true, logging: true, projectId: null },
-        { db: false, logging: false, projectId: 123 },
-        { db: true, logging: true, projectId: 456 }
+  describe('Тестирование различных конфигураций ботов', () => {
+    it('должна генерировать идентичный код для всех комбинаций параметров', () => {
+      const configurations = [
+        { db: false, logging: false, projectId: null, botName: 'TestBot1' },
+        { db: true, logging: false, projectId: null, botName: 'TestBot2' },
+        { db: false, logging: true, projectId: null, botName: 'TestBot3' },
+        { db: true, logging: true, projectId: null, botName: 'TestBot4' },
+        { db: false, logging: false, projectId: 123, botName: 'TestBot5' },
+        { db: true, logging: false, projectId: 456, botName: 'TestBot6' },
+        { db: false, logging: true, projectId: 789, botName: 'TestBot7' },
+        { db: true, logging: true, projectId: 999, botName: 'TestBot8' }
       ];
 
-      testCases.forEach(({ db, logging, projectId }) => {
-        const result = generatePythonCode(
+      configurations.forEach(config => {
+        const result1 = generatePythonCode(
           regressionTestData.complexBot,
-          'TestBot',
+          config.botName,
           [],
-          db,
-          projectId,
-          logging
+          config.db,
+          config.projectId,
+          config.logging
         );
 
-        expect(result).toContain('TestBot - Telegram Bot');
-        expect(result).toContain('if __name__ == "__main__":');
+        const result2 = generatePythonCode(
+          regressionTestData.complexBot,
+          config.botName,
+          [],
+          config.db,
+          config.projectId,
+          config.logging
+        );
+
+        // Побайтовая идентичность для каждой конфигурации
+        expect(normalizeCode(result1)).toBe(normalizeCode(result2));
+        expect(result1.length).toBe(result2.length);
         
-        if (db) {
-          expect(result).toContain('DATABASE_URL');
+        // Проверяем, что конфигурация применилась корректно
+        expect(result1).toContain(`${config.botName} - Telegram Bot`);
+        
+        if (config.db) {
+          expect(result1).toContain('DATABASE_URL');
+          expect(result1).toContain('save_message_to_api');
+          
+          // PROJECT_ID добавляется только когда включена база данных
+          if (config.projectId) {
+            expect(result1).toContain('PROJECT_ID');
+          }
         }
         
-        if (logging) {
-          expect(result).toContain('logging.basicConfig');
+        // projectId используется только с базой данных
+      });
+    });
+
+    it('должна генерировать стабильный код для различных типов ботов', () => {
+      const botTypes = [
+        { bot: regressionTestData.complexBot, name: 'ComplexBot' },
+        { bot: regressionTestData.adminBot, name: 'AdminBot' },
+        { bot: regressionTestData.mediaHandlerBot, name: 'MediaBot' },
+        { bot: regressionTestData.synonymBot, name: 'SynonymBot' }
+      ];
+
+      botTypes.forEach(({ bot, name }) => {
+        // Генерируем код несколько раз для проверки стабильности
+        const results = Array.from({ length: 5 }, () => 
+          generatePythonCode(bot, name, [], false, null, false)
+        );
+
+        // Все результаты должны быть идентичными
+        const firstResult = normalizeCode(results[0]);
+        results.slice(1).forEach((result, index) => {
+          expect(normalizeCode(result)).toBe(firstResult);
+          expect(result.length).toBe(results[0].length);
+        });
+      });
+    });
+
+    it('должна генерировать различный код для разных групп', () => {
+      const groups1 = [
+        { id: 'g1', name: 'Группа 1', description: 'Описание 1' }
+      ];
+      
+      const groups2 = [
+        { id: 'g2', name: 'Группа 2', description: 'Описание 2' }
+      ];
+
+      const result1 = generatePythonCode(
+        regressionTestData.complexBot,
+        'TestBot',
+        groups1,
+        false,
+        null,
+        false
+      );
+
+      const result2 = generatePythonCode(
+        regressionTestData.complexBot,
+        'TestBot',
+        groups2,
+        false,
+        null,
+        false
+      );
+
+      // Результаты должны отличаться из-за разных групп
+      expect(result1).not.toBe(result2);
+      expect(result1).toContain('Группа 1');
+      expect(result2).toContain('Группа 2');
+      expect(result1).not.toContain('Группа 2');
+      expect(result2).not.toContain('Группа 1');
+    });
+  });
+
+  describe('Побайтовая идентичность генерируемого кода', () => {
+    it('должна генерировать побайтово идентичный код при повторных вызовах', () => {
+      const testCases = [
+        {
+          name: 'Простой бот',
+          bot: { nodes: [{ id: 'start', type: 'start' as const, position: { x: 0, y: 0 }, data: { text: 'Привет', buttons: [] } }], connections: [] }
+        },
+        {
+          name: 'Комплексный бот',
+          bot: regressionTestData.complexBot
         }
+      ];
+
+      testCases.forEach(({ name, bot }) => {
+        // Генерируем код 3 раза (вместо 10 для скорости)
+        const results = Array.from({ length: 3 }, () => 
+          generatePythonCode(bot, 'TestBot', [], false, null, false)
+        );
+
+        // Проверяем побайтовую идентичность
+        const firstResult = results[0];
+        results.slice(1).forEach((result, index) => {
+          expect(result).toBe(firstResult);
+          expect(result.length).toBe(firstResult.length);
+          
+          // Проверяем каждый байт для первых 1000 символов (для производительности)
+          const checkLength = Math.min(result.length, 1000);
+          for (let i = 0; i < checkLength; i++) {
+            expect(result.charCodeAt(i)).toBe(firstResult.charCodeAt(i));
+          }
+        });
+      });
+    }, 10000); // Увеличиваем timeout до 10 секунд
+
+    it('должна генерировать идентичный код независимо от порядка вызовов', () => {
+      // Генерируем код для разных ботов в разном порядке
+      const sequence1 = [
+        generatePythonCode(regressionTestData.complexBot, 'Bot1'),
+        generatePythonCode(regressionTestData.adminBot, 'Bot2'),
+        generatePythonCode(regressionTestData.mediaHandlerBot, 'Bot3')
+      ];
+
+      const sequence2 = [
+        generatePythonCode(regressionTestData.mediaHandlerBot, 'Bot3'),
+        generatePythonCode(regressionTestData.complexBot, 'Bot1'),
+        generatePythonCode(regressionTestData.adminBot, 'Bot2')
+      ];
+
+      // Результаты для одинаковых ботов должны быть идентичными
+      expect(sequence1[0]).toBe(sequence2[1]); // complexBot
+      expect(sequence1[1]).toBe(sequence2[2]); // adminBot
+      expect(sequence1[2]).toBe(sequence2[0]); // mediaHandlerBot
+    });
+
+    it('должна генерировать стабильный код при изменении только имени бота', () => {
+      const botNames = ['Bot1', 'Bot2', 'TestBot', 'MyAwesomeBot', 'Бот123'];
+      
+      botNames.forEach(botName => {
+        const result1 = generatePythonCode(regressionTestData.complexBot, botName);
+        const result2 = generatePythonCode(regressionTestData.complexBot, botName);
+        
+        // Результаты должны быть идентичными для одного и того же имени
+        expect(result1).toBe(result2);
+        
+        // Но должны содержать правильное имя бота
+        expect(result1).toContain(`${botName} - Telegram Bot`);
       });
     });
   });

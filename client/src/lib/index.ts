@@ -1,49 +1,159 @@
-// Main bot generator
+/**
+ * Основной индексный файл библиотеки генерации ботов
+ * 
+ * Экспортирует все компоненты системы генерации кода для Telegram ботов.
+ * Поддерживает как новую модульную архитектуру, так и обратную совместимость
+ * со старыми путями импорта.
+ */
+
+// ============================================================================
+// ОСНОВНЫЕ КОМПОНЕНТЫ ГЕНЕРАТОРА
+// ============================================================================
+
+// Главная функция генерации и связанные утилиты
 export * from './bot-generator';
 export * from './commands';
 export * from './queryClient';
 
-// Command handlers
+// ============================================================================
+// НОВАЯ МОДУЛЬНАЯ АРХИТЕКТУРА
+// ============================================================================
+
+// Основные модули новой архитектуры
+export * from './Core';
+export * from './Generators';
+export * from './Templates';
+
+// ============================================================================
+// СУЩЕСТВУЮЩИЕ МОДУЛИ (LEGACY SUPPORT)
+// ============================================================================
+
+// Обработчики команд
 export * from './CommandHandler';
 
-// Conditional logic
+// Условная логика
 export * from './Conditional';
 
-// Formatting utilities
+// Утилиты форматирования
 export * from './format';
 
-// Feature detection
+// Определение возможностей
 export * from './has';
 
-// Keyboard generators
+// Генераторы клавиатур
 export * from './Keyboard';
 
-// Code mapping utilities
+// Утилиты маппинга кода
 export * from './map-utils';
 
-// Media handlers
+// Обработчики медиа
 export * from './MediaHandler';
 
-// Message handlers
+// Обработчики сообщений
 export * from './MessageHandler';
 
-// Project scaffolding
+// Создание структуры проекта
 export * from './scaffolding';
 
-// Storage utilities
+// Утилиты хранения
 export * from './storage';
 
-// Synonym handlers
+// Обработчики синонимов
 export * from './Synonyms';
 
-// User management handlers
+// Обработчики управления пользователями
 export * from './UserHandler';
 
-// General utilities
+// Общие утилиты
 export * from './utils';
 
-// Validation utilities
+// Утилиты валидации
 export * from './validate';
 
-// Variable handling
+// Обработка переменных
 export * from './variable';
+
+// ============================================================================
+// ПРЯМЫЕ ЭКСПОРТЫ ДЛЯ УДОБСТВА ИСПОЛЬЗОВАНИЯ
+// ============================================================================
+
+// Основные генераторы доступны напрямую для удобства импорта
+export {
+  ImportsGenerator,
+  PythonCodeGenerator,
+  HandlerGenerator,
+  MainLoopGenerator
+} from './Generators';
+
+// Основные шаблоны доступны напрямую
+export {
+  PythonTemplates,
+  pythonTemplates,
+  BotStructureTemplate,
+  botStructureTemplate,
+  templates,
+  TemplateUtils
+} from './Templates';
+
+// Core компоненты доступны напрямую
+export {
+  CodeGenerator,
+  GenerationContextBuilder,
+  GenerationContextFactory
+} from './Core';
+
+// ============================================================================
+// ЭКСПОРТ ТИПОВ И ИНТЕРФЕЙСОВ
+// ============================================================================
+
+// Все типы и интерфейсы доступны для TypeScript разработки
+export type {
+  // Основные типы контекста и результатов
+  GenerationContext,
+  GenerationOptions,
+  GenerationResult,
+  GenerationError,
+  GenerationErrorType,
+  
+  // Интерфейсы генераторов
+  IImportsGenerator,
+  IPythonCodeGenerator,
+  IHandlerGenerator,
+  IMainLoopGenerator,
+  ICodeGenerator,
+  
+  // Интерфейсы шаблонов
+  IPythonTemplates,
+  IBotStructureTemplate
+} from './Core/types';
+
+// ============================================================================
+// ОБРАТНАЯ СОВМЕСТИМОСТЬ
+// ============================================================================
+
+// Алиасы для обратной совместимости со старыми импортами
+export type {
+  GenerationContext as IGenerationContext
+} from './Core/types';
+
+// Экспорт основной функции генерации под старым именем для совместимости
+export { generatePythonCode } from './bot-generator';
+
+// ============================================================================
+// УТИЛИТЫ ДЛЯ РАЗРАБОТЧИКОВ
+// ============================================================================
+
+/**
+ * Информация о версии и архитектуре библиотеки
+ */
+export const LIB_INFO = {
+  version: '2.0.0',
+  architecture: 'modular',
+  compatibility: 'backward-compatible',
+  modules: {
+    core: ['CodeGenerator', 'GenerationContext'],
+    generators: ['ImportsGenerator', 'PythonCodeGenerator', 'HandlerGenerator', 'MainLoopGenerator'],
+    templates: ['PythonTemplates', 'BotStructureTemplate'],
+    legacy: ['CommandHandler', 'MediaHandler', 'MessageHandler', 'UserHandler', 'Keyboard']
+  }
+} as const;

@@ -85,16 +85,17 @@ describe('CodeGenerator', () => {
       expect(result.errors![0]).toContain('Имя бота не может быть пустым');
     });
 
-    it('должен вернуть ошибку для контекста без узлов', () => {
+    it('должен обрабатывать контекст без узлов (генерировать базовый код)', () => {
       const invalidContext = { ...validContext, nodes: [] };
       const result = codeGenerator.generate(invalidContext);
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toBeDefined();
-      expect(result.errors![0]).toContain('хотя бы один узел');
+      // Новое поведение: генерируем базовый код для пустых ботов
+      expect(result.success).toBe(true);
+      expect(result.code).toBeDefined();
+      expect(result.code).toContain('# Mock imports');
     });
 
-    it('должен вернуть ошибку для контекста без стартового узла', () => {
+    it('должен обрабатывать контекст без стартового узла (использовать первый узел)', () => {
       const noStartNodes: Node[] = [
         {
           id: 'message-1',
@@ -106,9 +107,10 @@ describe('CodeGenerator', () => {
       const invalidContext = { ...validContext, nodes: noStartNodes };
       const result = codeGenerator.generate(invalidContext);
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toBeDefined();
-      expect(result.errors![0]).toContain('стартовый узел');
+      // Новое поведение: используем первый узел как стартовый
+      expect(result.success).toBe(true);
+      expect(result.code).toBeDefined();
+      expect(result.code).toContain('# Mock message handlers');
     });
 
     it('должен включить команды BotFather в сгенерированный код', () => {
@@ -130,14 +132,16 @@ describe('CodeGenerator', () => {
       const mockPythonCodeGenerator = {
         generateBotInitialization: () => '# Mock bot initialization',
         generateGlobalVariables: () => '# Mock global variables',
-        generateUtilityFunctions: () => '# Mock utility functions'
+        generateUtilityFunctions: () => '# Mock utility functions',
+        generateGroupsConfiguration: () => '# Mock groups configuration'
       };
 
       const mockHandlerGenerator = {
         generateMessageHandlers: () => '# Mock message handlers',
         generateCallbackHandlers: () => '# Mock callback handlers',
         generateMultiSelectHandlers: () => '# Mock multiselect handlers',
-        generateMediaHandlers: () => '# Mock media handlers'
+        generateMediaHandlers: () => '# Mock media handlers',
+        generateGroupHandlers: () => '# Mock group handlers'
       };
 
       const mockMainLoopGenerator = {

@@ -71,7 +71,7 @@ describe('generatePythonCode - Baseline Tests', () => {
       const result = generatePythonCode(baselineTestData.simpleStartBot);
       
       expect(result).toContain('@dp.message(CommandStart())');
-      expect(result).toContain('async def start_handler');
+      expect(result).toContain('start_1_handler'); // Новое имя функции
       expect(result).toContain('Добро пожаловать!');
     });
 
@@ -96,7 +96,7 @@ describe('generatePythonCode - Baseline Tests', () => {
       const result = generatePythonCode(baselineTestData.inlineButtonBot);
       
       expect(result).toContain('InlineKeyboardBuilder');
-      expect(result).toContain('handle_callback_target_1');
+      expect(result).toContain('handle_callback_btn_1'); // Новое имя функции
       expect(result).toContain('@dp.callback_query');
     });
 

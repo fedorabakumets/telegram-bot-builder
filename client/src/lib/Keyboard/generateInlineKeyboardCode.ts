@@ -1,4 +1,4 @@
-import { isLoggingEnabled } from "../bot-generatornew";
+import { isLoggingEnabled } from "../bot-generator";
 import { generateButtonText } from '../format/generateButtonText';
 import { calculateOptimalColumns } from '../format/calculateOptimalColumns';
 import { generateUniqueShortId } from '../format/generateUniqueShortId';

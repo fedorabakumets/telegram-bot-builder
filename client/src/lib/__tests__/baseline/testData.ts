@@ -98,6 +98,16 @@ export function createComplexBotData(): BotData {
       }
     },
     {
+      id: 'help_command',
+      type: 'command',
+      position: { x: 100, y: 200 },
+      data: {
+        command: 'help',
+        text: 'Доступные команды:\n/help - показать помощь\n/stats - статистика',
+        buttons: []
+      }
+    },
+    {
       id: 'main_menu',
       type: 'message',
       position: { x: 300, y: 100 },

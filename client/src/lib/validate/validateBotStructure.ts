@@ -1,5 +1,5 @@
 import { BotData } from "../../../../shared/schema";
-import { extractNodesAndConnections } from "../extractNodesAndConnections";
+import { extractNodesAndConnections } from "../format/extractNodesAndConnections";
 import { validateCommand } from "./validateCommand";
 
 
