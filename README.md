@@ -784,6 +784,31 @@ if __name__ == "__main__":
 
 ## 📚 Документация
 
+### 🏗️ Архитектура и разработка
+
+- **[📖 Основная документация](docs/README.md)** - Полное руководство по проекту
+- **[🔧 Migration Guide](docs/MIGRATION_GUIDE.md)** - Руководство по миграции на новую архитектуру
+- **[💡 Примеры использования](docs/EXAMPLES.md)** - Практические примеры работы с новыми модулями
+
+### 📦 Модули системы
+
+- **[🎯 Core Module](client/src/lib/Core/README.md)** - Основная архитектура и оркестрация
+- **[⚙️ Generators Module](client/src/lib/Generators/README.md)** - Специализированные генераторы кода
+- **[📝 Templates Module](client/src/lib/Templates/README.md)** - Система шаблонов для переиспользования
+- **[📚 Bot Generator Library](client/src/lib/README.md)** - Основная библиотека генерации ботов
+
+### 🚀 Развертывание и настройка
+
+- **[☁️ Railway Deploy](docs/deployment/RAILWAY_DEPLOY.md)** - Деплой в облако Railway
+- **[🐛 Troubleshooting](docs/development/TROUBLESHOOTING_RU.md)** - Решение проблем
+- **[🔧 Development Setup](docs/development/SETUP.md)** - Настройка среды разработки
+
+### 📊 Компоненты и API
+
+- **[🧩 Components Guide](docs/COMPONENTS.md)** - Описание компонентов системы
+- **[🔗 API Reference](docs/API.md)** - Справочник по API
+- **[🔒 Security Guide](docs/SECURITY.md)** - Руководство по безопасности
+
 <div align="center">
   <img src="https://img.shields.io/badge/📚_Документация-Полная_и_структурированная-blue?style=for-the-badge&logo=gitbook" alt="Documentation"/>
   <img src="https://img.shields.io/badge/🌍_Языки-Русский_+_English-green?style=for-the-badge&logo=translate" alt="Languages"/>

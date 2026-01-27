@@ -1,14 +1,91 @@
 # Bot Generator Library
 
-Эта библиотека содержит утилиты для генерации Telegram ботов.
+Эта библиотека содержит утилиты для генерации Telegram ботов с модульной архитектурой.
 
 ## Архитектура
 
+### Новая модульная структура (v2.0+):
+
+- **`Core/`** - Основная архитектура и оркестрация генерации
+  - `CodeGenerator.ts` - Главный оркестратор процесса генерации
+  - `GenerationContext.ts` - Контекст и данные для генерации
+  - `types.ts` - Интерфейсы и типы системы
+- **`Generators/`** - Специализированные генераторы кода
+  - `ImportsGenerator.ts` - Генерация импортов Python
+  - `PythonCodeGenerator.ts` - Базовая структура Python кода
+  - `HandlerGenerator.ts` - Генерация обработчиков событий
+  - `MainLoopGenerator.ts` - Основной цикл бота
+- **`Templates/`** - Система шаблонов для переиспользования
+  - `PythonTemplates.ts` - Шаблоны Python кода
+  - `BotStructureTemplate.ts` - Шаблоны структуры бота
+
 ### Основные файлы:
 
-- **`bot-generator.ts`** - Основной генератор кода ботов
+- **`bot-generator.ts`** - Основной генератор кода ботов (рефакторинг в модульную систему)
 - **`user-utils.ts`** - Утилиты для работы с пользовательскими данными и переменными
 - **`commands.ts`** - Генерация команд для BotFather
+
+## Использование
+
+### Базовое использование (обратная совместимость)
+
+```typescript
+import { generatePythonCode } from '@/lib/bot-generator';
+
+const pythonCode = generatePythonCode(
+  botData,
+  botName,
+  groups,
+  userDatabaseEnabled,
+  projectId,
+  enableLogging
+);
+```
+
+### Продвинутое использование с новыми модулями
+
+```typescript
+import { CodeGenerator, GenerationContext } from '@/lib/Core';
+import { createAllGenerators } from '@/lib/Generators';
+
+// Создание контекста генерации
+const context = GenerationContext.create({
+  botData,
+  botName,
+  groups,
+  userDatabaseEnabled,
+  projectId,
+  enableLogging
+});
+
+// Использование модульной системы
+const generators = createAllGenerators();
+const codeGenerator = new CodeGenerator(...Object.values(generators));
+const result = codeGenerator.generate(context);
+
+if (result.success) {
+  console.log('Generated code:', result.code);
+} else {
+  console.error('Generation failed:', result.errors);
+}
+```
+
+### Использование отдельных генераторов
+
+```typescript
+import { ImportsGenerator, HandlerGenerator } from '@/lib/Generators';
+import { GenerationContext } from '@/lib/Core';
+
+const context = GenerationContext.create(options);
+
+// Генерация только импортов
+const importsGenerator = new ImportsGenerator();
+const imports = importsGenerator.generateImports(context);
+
+// Генерация только обработчиков
+const handlerGenerator = new HandlerGenerator();
+const handlers = handlerGenerator.generateMessageHandlers(context);
+```
 
 ## Пользовательские переменные
 
@@ -55,22 +132,51 @@
 - Получения данных из базы данных
 - Замены переменных в тексте
 
-## Рефакторинг
+## Рефакторинг и миграция
 
-### Что было изменено:
+### Что было изменено в v2.0:
 
-1. **Вынесены утилиты** - Функции работы с пользователями перенесены в `user-utils.ts`
-2. **Улучшена документация** - Добавлены подробные комментарии и JSDoc
-3. **Добавлено логирование** - Улучшена отладка процесса замены переменных
-4. **Создана константа SYSTEM_VARIABLES** - Централизованное описание всех системных переменных
+1. **Модульная архитектура** - Монолитный bot-generator.ts разделен на специализированные модули
+2. **Улучшенная типизация** - Добавлены строгие TypeScript интерфейсы для всех компонентов
+3. **Система шаблонов** - Переиспользуемые шаблоны для генерации кода
+4. **Лучшая тестируемость** - Каждый модуль может быть протестирован изолированно
+5. **Расширяемость** - Легко добавлять новые генераторы и кастомизировать существующие
 
-### Преимущества рефакторинга:
+### Обратная совместимость
 
-- **Модульность** - Логика работы с пользователями выделена в отдельный модуль
-- **Переиспользование** - Функции можно использовать в других частях приложения
-- **Тестируемость** - Утилиты легко покрыть unit-тестами
-- **Документированность** - Четкое описание всех переменных и функций
-- **Расширяемость** - Легко добавлять новые системные переменные
+Все существующие API остаются без изменений. Ваш код продолжит работать:
+
+```typescript
+// ✅ Продолжает работать без изменений
+import { generatePythonCode } from '@/lib/bot-generator';
+const code = generatePythonCode(botData, botName, groups, userDatabaseEnabled, projectId, enableLogging);
+```
+
+### Миграция на новую архитектуру
+
+Для новых проектов рекомендуется использовать модульную систему:
+
+```typescript
+// Новый подход (рекомендуется)
+import { CodeGenerator, GenerationContext } from '@/lib/Core';
+import { createAllGenerators } from '@/lib/Generators';
+
+const context = GenerationContext.create(options);
+const generators = createAllGenerators();
+const codeGenerator = new CodeGenerator(...Object.values(generators));
+const result = codeGenerator.generate(context);
+```
+
+**Подробное руководство по миграции**: [Migration Guide](../../../docs/MIGRATION_GUIDE.md)
+
+### Преимущества новой архитектуры:
+
+- **Модульность** - Четкое разделение ответственности между компонентами
+- **Переиспользование** - Генераторы и шаблоны можно использовать независимо
+- **Тестируемость** - Каждый модуль легко покрыть unit-тестами
+- **Документированность** - Подробная документация для каждого модуля
+- **Расширяемость** - Простое добавление новых генераторов и функций
+- **Производительность** - Оптимизированная генерация с кэшированием шаблонов
 
 ## Примеры использования
 

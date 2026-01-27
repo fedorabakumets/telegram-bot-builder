@@ -13,41 +13,56 @@ import { GenerationContext } from '../Core/types';
 export interface IBotStructureTemplate {
   /**
    * Получить полную структуру простого бота
+   * @param context Контекст генерации
+   * @returns Структура простого бота
    */
   getSimpleBotStructure(context: GenerationContext): string;
   
   /**
    * Получить структуру бота с базой данных
+   * @param context Контекст генерации
+   * @returns Структура бота с БД
    */
   getDatabaseBotStructure(context: GenerationContext): string;
   
   /**
    * Получить структуру бота с админ-панелью
+   * @param context Контекст генерации
+   * @returns Структура админ-бота
    */
   getAdminBotStructure(context: GenerationContext): string;
   
   /**
    * Получить структуру бота с медиа-обработкой
+   * @param context Контекст генерации
+   * @returns Структура медиа-бота
    */
   getMediaBotStructure(context: GenerationContext): string;
   
   /**
    * Получить структуру бота с множественным выбором
+   * @param context Контекст генерации
+   * @returns Структура бота с множественным выбором
    */
   getMultiSelectBotStructure(context: GenerationContext): string;
   
   /**
    * Получить шаблон регистрации middleware
+   * @param enableDatabase Включить поддержку БД
+   * @returns Шаблон регистрации middleware
    */
   getMiddlewareRegistrationTemplate(enableDatabase: boolean): string;
   
   /**
    * Получить шаблон регистрации обработчиков
+   * @returns Шаблон регистрации обработчиков
    */
   getHandlerRegistrationTemplate(): string;
   
   /**
    * Получить шаблон глобальных переменных
+   * @param context Контекст генерации
+   * @returns Шаблон глобальных переменных
    */
   getGlobalVariablesTemplate(context: GenerationContext): string;
 }
@@ -59,6 +74,8 @@ export class BotStructureTemplate implements IBotStructureTemplate {
   
   /**
    * Получить полную структуру простого бота
+   * @param context Контекст генерации
+   * @returns Код структуры простого бота
    */
   getSimpleBotStructure(context: GenerationContext): string {
     return `# Простая структура бота
@@ -96,6 +113,8 @@ async def main():
 
   /**
    * Получить структуру бота с базой данных
+   * @param context Контекст генерации
+   * @returns Код структуры бота с БД
    */
   getDatabaseBotStructure(context: GenerationContext): string {
     return `# Структура бота с базой данных
@@ -141,6 +160,8 @@ async def main():
 
   /**
    * Получить структуру бота с админ-панелью
+   * @param context Контекст генерации
+   * @returns Код структуры админ-бота
    */
   getAdminBotStructure(context: GenerationContext): string {
     return `# Структура бота с админ-панелью
@@ -206,6 +227,8 @@ async def main():
 
   /**
    * Получить структуру бота с медиа-обработкой
+   * @param context Контекст генерации
+   * @returns Код структуры медиа-бота
    */
   getMediaBotStructure(context: GenerationContext): string {
     return `# Структура бота с медиа-обработкой
@@ -297,6 +320,8 @@ async def main():
 
   /**
    * Получить структуру бота с множественным выбором
+   * @param context Контекст генерации
+   * @returns Код структуры бота с множественным выбором
    */
   getMultiSelectBotStructure(context: GenerationContext): string {
     return `# Структура бота с множественным выбором
@@ -375,6 +400,8 @@ async def main():
 
   /**
    * Получить шаблон регистрации middleware
+   * @param enableDatabase Включить поддержку БД
+   * @returns Код регистрации middleware
    */
   getMiddlewareRegistrationTemplate(enableDatabase: boolean): string {
     let template = `# Регистрация middleware`;
@@ -415,6 +442,7 @@ dp.callback_query.middleware(error_handling_middleware)
 
   /**
    * Получить шаблон регистрации обработчиков
+   * @returns Код регистрации обработчиков
    */
   getHandlerRegistrationTemplate(): string {
     return `# Регистрация обработчиков
@@ -440,6 +468,8 @@ async def handle_unknown_message(message: types.Message):
 
   /**
    * Получить шаблон глобальных переменных
+   * @param context Контекст генерации
+   * @returns Код глобальных переменных
    */
   getGlobalVariablesTemplate(context: GenerationContext): string {
     let template = `# Глобальные переменные

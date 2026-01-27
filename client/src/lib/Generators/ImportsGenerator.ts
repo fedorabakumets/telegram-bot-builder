@@ -1,10 +1,11 @@
-import { GenerationContext } from '../Core/types';
+import { GenerationContext, IImportsGenerator } from '../Core/types';
 import { hasInlineButtons, hasAutoTransitions } from '../has';
+import type { Node } from '../../../../shared/schema';
 
 /**
  * Генератор импортов и настройки кодировки для Python файлов
  */
-export class ImportsGenerator {
+export class ImportsGenerator implements IImportsGenerator {
   /**
    * Генерирует настройку UTF-8 кодировки для Python файла
    */
@@ -72,13 +73,15 @@ export class ImportsGenerator {
 
   /**
    * Генерирует BotFather команды для настройки меню
+   * @param nodes Узлы бота для анализа команд
+   * @returns Строка с командами для BotFather
    */
-  generateBotFatherCommands(nodes: any[]): string {
+  generateBotFatherCommands(nodes: readonly Node[]): string {
     if (!nodes || !Array.isArray(nodes)) {
       return '';
     }
     
-    const commandNodes = nodes.filter(node => 
+    const commandNodes = nodes.filter((node): node is Node => 
       ((node.type === 'start' || node.type === 'command' || 
         ['ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user'].includes(node.type)) && 
        node.data?.command &&
@@ -91,8 +94,8 @@ export class ImportsGenerator {
     
     let botFatherCommands = '';
     
-    commandNodes.forEach(node => {
-      const command = node.data.command.replace('/', '');
+    commandNodes.forEach((node: Node) => {
+      const command = node.data.command?.replace('/', '') ?? '';
       const description = node.data.description || node.data.text || 'Команда бота';
       botFatherCommands += `${command} - ${description}\n`;
     });

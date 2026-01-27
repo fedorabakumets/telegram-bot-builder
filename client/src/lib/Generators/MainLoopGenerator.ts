@@ -15,6 +15,8 @@ import { hasInlineButtons } from '../has';
 export class MainLoopGenerator implements IMainLoopGenerator {
     /**
      * Генерирует основную функцию main()
+     * @param context Контекст генерации
+     * @returns Код основной функции
      */
     generateMainFunction(context: GenerationContext): string {
         const { userDatabaseEnabled, nodes } = context;
@@ -57,6 +59,8 @@ export class MainLoopGenerator implements IMainLoopGenerator {
 
     /**
      * Генерирует код запуска бота
+     * @param context Контекст генерации
+     * @returns Код запуска бота
      */
     generateBotStartup(context: GenerationContext): string {
         let code = '';
@@ -73,6 +77,8 @@ export class MainLoopGenerator implements IMainLoopGenerator {
 
     /**
      * Генерирует код остановки бота
+     * @param context Контекст генерации
+     * @returns Код остановки бота
      */
     generateBotShutdown(context: GenerationContext): string {
         const { userDatabaseEnabled } = context;
@@ -179,6 +185,7 @@ export class MainLoopGenerator implements IMainLoopGenerator {
 
     /**
      * Генерирует точку входа в программу
+     * @returns Код точки входа
      */
     generateEntryPoint(): string {
         let code = '';

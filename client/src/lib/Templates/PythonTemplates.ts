@@ -5,6 +5,8 @@
  * Шаблоны кэшируются для повышения производительности.
  */
 
+import { HandlerType } from '../Core/types';
+
 /**
  * Интерфейс для системы шаблонов Python
  */
@@ -31,8 +33,10 @@ export interface IPythonTemplates {
   
   /**
    * Получить шаблон обработчика по типу
+   * @param handlerType Тип обработчика
+   * @returns Шаблон обработчика
    */
-  getHandlerTemplate(handlerType: string): string;
+  getHandlerTemplate(handlerType: HandlerType): string;
   
   /**
    * Получить шаблон функции сохранения сообщений
@@ -193,8 +197,10 @@ if __name__ == "__main__":
 
   /**
    * Шаблон обработчика по типу
+   * @param handlerType Тип обработчика
+   * @returns Шаблон кода обработчика
    */
-  getHandlerTemplate(handlerType: string): string {
+  getHandlerTemplate(handlerType: HandlerType): string {
     const cacheKey = `handler_${handlerType}`;
     
     return this.getCachedTemplate(cacheKey, () => {

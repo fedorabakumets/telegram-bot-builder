@@ -1,6 +1,10 @@
-// Функция для создания уникальных коротких ID для узлов
-
-export function generateUniqueShortId(nodeId: string, allNodeIds: string[]): string {
+/**
+ * Функция для создания уникальных коротких ID для узлов
+ * @param nodeId ID узла для которого создается короткий ID
+ * @param allNodeIds Список всех ID узлов для проверки уникальности
+ * @returns Уникальный короткий ID для узла
+ */
+export function generateUniqueShortId(nodeId: string, allNodeIds: readonly string[]): string {
   if (!nodeId) return 'node';
 
   // Особая обработка для узлов интересов

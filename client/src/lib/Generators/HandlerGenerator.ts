@@ -9,7 +9,7 @@
  */
 
 import { Node } from '../../../../shared/schema';
-import { GenerationContext, IHandlerGenerator } from '../Core/types';
+import { GenerationContext, IHandlerGenerator, HandlerGenerationResult } from '../Core/types';
 import {
   generateSynonymHandler,
   generateMessageSynonymHandler
@@ -51,8 +51,10 @@ export class HandlerGenerator implements IHandlerGenerator {
 
   /**
    * Генерирует обработчики сообщений для всех узлов
+   * @param context Контекст генерации
+   * @returns Результат генерации обработчиков сообщений
    */
-  generateMessageHandlers(context: GenerationContext): string {
+  generateMessageHandlers(context: GenerationContext): HandlerGenerationResult {
     const { nodes, userDatabaseEnabled } = context;
     let code = '';
 
@@ -302,7 +304,17 @@ export class HandlerGenerator implements IHandlerGenerator {
     // Генерируем обработчики синонимов
     code += this.generateSynonymHandlers(context);
 
-    return code;
+    // Подсчитываем количество обработчиков
+    const handlersCount = (nodes || []).filter(node => 
+      node.type === 'start' || node.type === 'command' || node.type === 'input' ||
+      ['ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user'].includes(node.type)
+    ).length;
+
+    return {
+      code,
+      handlersCount,
+      warnings: []
+    };
   }
 
   /**
@@ -371,8 +383,10 @@ export class HandlerGenerator implements IHandlerGenerator {
 
   /**
    * Генерирует обработчики callback'ов для inline кнопок
+   * @param context Контекст генерации
+   * @returns Результат генерации обработчиков callback'ов
    */
-  generateCallbackHandlers(context: GenerationContext): string {
+  generateCallbackHandlers(context: GenerationContext): HandlerGenerationResult {
     const { nodes, connections } = context;
     let code = '';
 
@@ -517,13 +531,23 @@ async def unmute_user(chat_id: int, user_id: int) -> bool:
 
 `;
 
-    return code;
+    // Подсчитываем количество обработчиков callback'ов
+    const callbackHandlersCount = inlineNodes.length + autoTransitionNodes.length + 
+      (hasUserManagement ? 1 : 0) + multiSelectNodes.length;
+
+    return {
+      code,
+      handlersCount: callbackHandlersCount,
+      warnings: []
+    };
   }
 
   /**
    * Генерирует обработчики множественного выбора
+   * @param context Контекст генерации
+   * @returns Результат генерации обработчиков множественного выбора
    */
-  generateMultiSelectHandlers(context: GenerationContext): string {
+  generateMultiSelectHandlers(context: GenerationContext): HandlerGenerationResult {
     const { nodes, allNodeIds } = context;
     let code = '';
 
@@ -534,13 +558,19 @@ async def unmute_user(chat_id: int, user_id: int) -> bool:
       code += this.generateMultiSelectLogic(context, multiSelectNodes);
     }
 
-    return code;
+    return {
+      code,
+      handlersCount: multiSelectNodes.length,
+      warnings: []
+    };
   }
 
   /**
    * Генерирует обработчики медиа
+   * @param context Контекст генерации
+   * @returns Результат генерации обработчиков медиа
    */
-  generateMediaHandlers(context: GenerationContext): string {
+  generateMediaHandlers(context: GenerationContext): HandlerGenerationResult {
     const { nodes } = context;
     let code = '';
 
@@ -604,7 +634,11 @@ async def unmute_user(chat_id: int, user_id: int) -> bool:
       });
     }
 
-    return code;
+    return {
+      code,
+      handlersCount: mediaNodes.length,
+      warnings: []
+    };
   }
 
   /**
@@ -962,8 +996,10 @@ async def unmute_user(chat_id: int, user_id: int) -> bool:
 
   /**
    * Генерирует обработчики для групп
+   * @param context Контекст генерации
+   * @returns Результат генерации обработчиков групп
    */
-  generateGroupHandlers(context: GenerationContext): string {
+  generateGroupHandlers(context: GenerationContext): HandlerGenerationResult {
     let code = '';
 
     // Добавляем обработчики для групп только если они есть
@@ -1048,6 +1084,13 @@ async def unmute_user(chat_id: int, user_id: int) -> bool:
       code += '\n';
     }
 
-    return code;
+    // Подсчитываем количество групповых обработчиков
+    const groupHandlersCount = context.groups ? context.groups.length : 0;
+
+    return {
+      code,
+      handlersCount: groupHandlersCount,
+      warnings: []
+    };
   }
 }

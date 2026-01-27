@@ -10,6 +10,8 @@ import type { Node as BotNode } from '../../../../shared/schema';
 export class PythonCodeGenerator implements IPythonCodeGenerator {
     /**
      * Генерирует инициализацию бота и диспетчера
+     * @param context Контекст генерации (не используется в базовой реализации)
+     * @returns Код инициализации бота
      */
     generateBotInitialization(_context: GenerationContext): string {
         let code = '';
@@ -38,6 +40,8 @@ export class PythonCodeGenerator implements IPythonCodeGenerator {
 
     /**
      * Генерирует глобальные переменные
+     * @param context Контекст генерации для определения необходимых переменных
+     * @returns Код глобальных переменных
      */
     generateGlobalVariables(context: GenerationContext): string {
         let code = '';
@@ -68,6 +72,8 @@ export class PythonCodeGenerator implements IPythonCodeGenerator {
 
     /**
      * Генерирует вспомогательные функции
+     * @param context Контекст генерации для определения необходимых функций
+     * @returns Код вспомогательных функций
      */
     generateUtilityFunctions(context: GenerationContext): string {
         let code = '';
@@ -611,6 +617,8 @@ export class PythonCodeGenerator implements IPythonCodeGenerator {
 
     /**
      * Генерирует конфигурацию групп
+     * @param context Контекст генерации с информацией о группах
+     * @returns Код конфигурации групп
      */
     generateGroupsConfiguration(context: GenerationContext): string {
         let code = '';
