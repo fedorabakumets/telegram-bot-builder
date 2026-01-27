@@ -1,3 +1,5 @@
+import { Node } from '../../../../shared/schema';
+
 export function generateDemoteUserHandler(node: Node): string {
   let code = `\n# Demote User Handler\n`;
 

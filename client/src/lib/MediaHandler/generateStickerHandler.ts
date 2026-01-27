@@ -1,4 +1,5 @@
 import { generateButtonText } from "../bot-generator";
+import { Node } from '../../../../shared/schema';
 
 // ============================================================================
 // ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ МЕДИА

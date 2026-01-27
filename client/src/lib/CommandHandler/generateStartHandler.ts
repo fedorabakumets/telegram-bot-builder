@@ -1,5 +1,6 @@
 import { generateButtonText, formatTextForPython, generateConditionalMessageLogic } from "../bot-generator";
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
+import { Node } from '../../../../shared/schema';
 
 // ============================================================================
 // ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ КОМАНД И СООБЩЕНИЙ

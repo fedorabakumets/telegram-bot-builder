@@ -1,3 +1,5 @@
+import { Node } from '../../../../shared/schema';
+
 export function generateUnpinMessageHandler(node: Node): string {
   let code = `\n# Unpin Message Handler\n`;
   const synonyms = node.data.synonyms || ['открепить', 'отцепить', 'убрать закрепление'];

@@ -1,3 +1,5 @@
+import { Node } from '../../../../shared/schema';
+
 export function generateMuteUserHandler(node: Node): string {
   let code = `\n# Mute User Handler\n`;
   const duration = node.data.duration || 3600;

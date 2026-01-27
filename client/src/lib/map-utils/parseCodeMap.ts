@@ -1,4 +1,4 @@
-import { CodeWithMap, CodeNodeRange } from "../../bot-generator";
+import { CodeWithMap, CodeNodeRange } from "../bot-generator";
 
 // Функция для парсинга маркеров и создания карты кода
 

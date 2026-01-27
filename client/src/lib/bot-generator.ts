@@ -382,7 +382,7 @@ function findMediaVariablesInText(text: string, mediaVariables: Map<string, { ty
 
   // Регулярное выражение для поиска переменных формата {variable_name}
   const variableRegex = /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
-  let match;
+  let match: RegExpExecArray | null;
 
   while ((match = variableRegex.exec(text)) !== null) {
     const variableName = match[1];
@@ -463,13 +463,13 @@ export function calculateOptimalColumns(buttons: any[], nodeData?: any): number 
 }
 
 // Функция для генерации reply клавиатуры
-function generateReplyKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any): string {
+function generateReplyKeyboardCode(buttons: any[], indentLevel: string, _nodeId?: string, nodeData?: any): string {
   if (!buttons || buttons.length === 0) return '';
 
   let code = '';
   code += `${indentLevel}builder = ReplyKeyboardBuilder()\n`;
 
-  buttons.forEach((button, index) => {
+  buttons.forEach((button, _index) => {
     if (button.action === "contact" && button.requestContact) {
       code += `${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
     } else if (button.action === "location" && button.requestLocation) {
@@ -549,7 +549,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Проверяем условие инициализации: hasSelectionButtons=${hasSelectionButtons} && isMultipleSelection=${isMultipleSelection}`);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Результат проверки: ${hasSelectionButtons && isMultipleSelection}`);
 
-  buttons.forEach((button, index) => {
+  buttons.forEach((button, _index) => {
     if (button.action === "url") {
       code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
     } else if (button.action === 'goto') {
@@ -1284,7 +1284,7 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
 
   // Ищем все NODE_START и NODE_END блоки
   const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@\n([\s\S]*?)# @@NODE_END:\1@@/g;
-  let match;
+  let match: RegExpExecArray | null;
   let xPosition = 50;
 
   while ((match = nodePattern.exec(pythonCode)) !== null) {
@@ -1349,7 +1349,7 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
     const buttons: Button[] = [];
     const inlineButtonMatches = Array.from(nodeContent.matchAll(/InlineKeyboardButton\s*\(\s*text\s*=\s*([^,]+)\s*,\s*callback_data\s*=\s*"([^"]+)"\s*\)/g));
     for (const btnMatch of inlineButtonMatches) {
-      let btnText = btnMatch[1].replace(/["'`]/g, '').trim();
+      let btnText = (btnMatch[1] as string).replace(/["'`]/g, '').trim();
       // Убираем префиксы типа 'replace_variables_in_text('
       if (btnText.includes('(')) {
         const innerMatch = /\("([^"]+)"\)/.exec(btnText);
@@ -1357,7 +1357,7 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
           btnText = innerMatch[1];
         }
       }
-      const callbackData = btnMatch[2];
+      const callbackData = btnMatch[2] as string;
       buttons.push({
         id: `btn_${nodeId}_${buttons.length}`,
         text: btnText,
@@ -1370,7 +1370,7 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
     // Извлекаем Reply кнопки
     const replyButtonMatches = Array.from(nodeContent.matchAll(/KeyboardButton\s*\(\s*text\s*=\s*([^)]+)\s*\)/g));
     for (const btnMatch of replyButtonMatches) {
-      let btnText = btnMatch[1].replace(/["'`]/g, '').trim();
+      let btnText = (btnMatch[1] as string).replace(/["'`]/g, '').trim();
       // Убираем функции типа replace_variables_in_text
       if (btnText.includes('(')) {
         const innerMatch = /\("([^"]+)"\)/.exec(btnText);
@@ -1427,8 +1427,40 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
         collectUserInput: collectUserInput,
         conditionalMessages: [],
         synonyms: [],
-        attachedMedia: []
-      }
+        attachedMedia: [],
+        // Добавляем недостающие свойства с значениями по умолчанию
+        options: [],
+        markdown: false,
+        oneTimeKeyboard: false,
+        resizeKeyboard: true,
+        enableTextInput: false,
+        enableConditionalMessages: false,
+        enableAutoTransition: false,
+        autoTransitionTo: '',
+        autoTransitionDelay: 0,
+        multiSelectVariable: '',
+        continueButtonText: 'Готово',
+        continueButtonTarget: '',
+        inputType: 'text',
+        inputTargetNodeId: '',
+        photoInputVariable: '',
+        videoInputVariable: '',
+        audioInputVariable: '',
+        documentInputVariable: '',
+        title: '',
+        address: '',
+        city: '',
+        country: '',
+        mapService: 'custom',
+        latitude: 0,
+        longitude: 0,
+        reason: '',
+        duration: 3600,
+        untilDate: 0,
+        targetGroupId: '',
+        disableNotification: false,
+        adminChatVariableName: ''
+      } as any
     };
 
     nodes.push(node);
@@ -4515,7 +4547,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // Несколько кнопок ведут к одному узлу - создаем логику определения по callback_data
               code += `    # Определяем текст кнопки по callback_data\n`;
               code += `    button_display_text = "Неизвестная кнопка"\n`;
-              buttonsToTargetNode.forEach((button, index) => {
+              buttonsToTargetNode.forEach((button: Button, index: number) => {
                 // Проверяем по суффиксу _btn_index в callback_data
                 code += `    if callback_query.data.endswith("_btn_${index}"):\n`;
                 code += `        button_display_text = "${button.text}"\n`;
@@ -4523,13 +4555,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
               // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ищем кнопку по точному соответствию callback_data с nodeId
               code += `    # Дополнительная проверка по точному соответствию callback_data\n`;
-              buttonsToTargetNode.forEach((button) => {
+              buttonsToTargetNode.forEach((button: Button) => {
                 code += `    if callback_query.data == "${nodeId}":\n`;
                 // Для случая когда несколько кнопок ведут к одному узлу, используем первую найденную
                 code += `        button_display_text = "${button.text}"\n`;
               });
             } else {
-              const button = sourceNode.data.buttons.find(btn => btn.target === nodeId);
+              const button = sourceNode.data.buttons.find((btn: Button) => btn.target === nodeId);
               if (button) {
                 code += `    button_display_text = "${button.text}"\n`;
               } else {
@@ -8074,7 +8106,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '                    "options": [\n';
 
             // Добавляем каждый вариант ответа с индивидуальными настройками навигации
-            responseOptions.forEach((option: string, index: number) => {
+            responseOptions.forEach((option: ResponseOption, index: number) => {
               const optionValue = option.value || option.text;
               const action = option.action || 'goto';
               const target = option.target || '';

@@ -1,5 +1,6 @@
 import { stripHtmlTags, formatTextForPython, getParseMode, generateConditionalMessageLogic, generateUniversalVariableReplacement } from "../bot-generator";
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
+import { Node } from '../../../../shared/schema';
 
 export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): string {
   const command = node.data.command || "/help";

@@ -1,4 +1,6 @@
-function generateContentManagementSynonymHandler(node: Node, synonym: string): string {
+import { Node } from '../../../../shared/schema';
+
+export function generateContentManagementSynonymHandler(node: Node, synonym: string): string {
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
   const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
   const messageText = node.data.messageText || (

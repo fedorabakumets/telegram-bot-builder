@@ -1,6 +1,7 @@
 import { generateUniversalVariableReplacement, generateConditionalMessageLogic, generateButtonText, calculateOptimalColumns, Button, globalLoggingEnabled } from "../bot-generator";
 import { generateWaitingStateCode } from '../generateWaitingStateCode';
 import { toPythonBoolean } from '../toPythonBoolean';
+import { Node } from '../../../../shared/schema';
 
 
 export function generateKeyboard(node: Node): string {
@@ -417,9 +418,6 @@ export function generateKeyboard(node: Node): string {
       code += `${indent3}await message.answer(text${parseMode})\n`;
     }
   }
-
-  // Reset global logging flag before returning
-  globalLoggingEnabled = false;
 
   return code;
 }

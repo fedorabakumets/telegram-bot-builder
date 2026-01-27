@@ -1,3 +1,5 @@
+import { Node } from '../../../../shared/schema';
+
 export function generatePromoteUserHandler(node: Node): string {
   let code = `\n# Promote User Handler\n`;
 

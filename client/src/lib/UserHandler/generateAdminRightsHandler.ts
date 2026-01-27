@@ -1,5 +1,6 @@
 import { createSafeFunctionName, formatTextForPython, generateUniversalVariableReplacement } from "../bot-generator";
 import { generateAdminRightsToggleHandlers } from './generateAdminRightsToggleHandlers';
+import { Node } from '../../../../shared/schema';
 
 export function generateAdminRightsHandler(node: Node): string {
   let code = `\n# Interactive Admin Rights Handler for ${node.id}\n`;

@@ -1,3 +1,5 @@
+import { Node } from '../../../../shared/schema';
+
 export function generateDeleteMessageHandler(node: Node): string {
   let code = `\n# Delete Message Handler\n`;
   const synonyms = node.data.synonyms || ['удалить', 'стереть', 'убрать сообщение'];

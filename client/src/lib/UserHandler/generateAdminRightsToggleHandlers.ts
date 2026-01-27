@@ -1,4 +1,5 @@
 import { createSafeFunctionName } from "../bot-generator";
+import { Node } from '../../../../shared/schema';
 
 
 

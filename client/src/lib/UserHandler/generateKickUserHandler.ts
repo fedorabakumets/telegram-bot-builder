@@ -1,3 +1,5 @@
+import { Node } from '../../../../shared/schema';
+
 export function generateKickUserHandler(node: Node): string {
   let code = `\n# Kick User Handler\n`;
   const reason = node.data.reason || 'Нарушение правил группы';

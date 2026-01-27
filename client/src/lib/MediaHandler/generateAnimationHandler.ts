@@ -1,4 +1,5 @@
 import { generateButtonText } from "../bot-generator";
+import { Node } from '../../../../shared/schema';
 
 export function generateAnimationHandler(node: Node): string {
   let code = `\n# Обработчик GIF анимации для узла ${node.id}\n`;
