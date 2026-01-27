@@ -20,7 +20,7 @@ router.get('/health', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(500).json({ error: 'Health check failed', message: error.message });
+    res.status(500).json({ error: 'Health check failed', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -30,7 +30,7 @@ router.get('/stats', async (req, res) => {
     const stats = await (storage as any).getDetailedStats();
     res.json(stats);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get stats', message: error.message });
+    res.status(500).json({ error: 'Failed to get stats', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -40,7 +40,7 @@ router.get('/metrics', async (req, res) => {
     const metrics = await dbManager.getDatabaseMetrics();
     res.json(metrics);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get metrics', message: error.message });
+    res.status(500).json({ error: 'Failed to get metrics', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -50,7 +50,7 @@ router.get('/cache/stats', async (req, res) => {
     const stats = dbCache.getStats();
     res.json(stats);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get cache stats', message: error.message });
+    res.status(500).json({ error: 'Failed to get cache stats', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -67,7 +67,7 @@ router.post('/cache/clear', async (req, res) => {
     
     res.json({ message: 'Cache cleared successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to clear cache', message: error.message });
+    res.status(500).json({ error: 'Failed to clear cache', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -77,7 +77,7 @@ router.post('/maintenance', async (req, res) => {
     await (storage as any).performMaintenance();
     res.json({ message: 'Database maintenance completed successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Maintenance failed', message: error.message });
+    res.status(500).json({ error: 'Maintenance failed', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -87,7 +87,7 @@ router.post('/backup', async (req, res) => {
     const backupName = await (storage as any).createBackup();
     res.json({ message: 'Backup created successfully', backupName });
   } catch (error) {
-    res.status(500).json({ error: 'Backup failed', message: error.message });
+    res.status(500).json({ error: 'Backup failed', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -97,7 +97,7 @@ router.post('/optimize', async (req, res) => {
     await dbManager.optimizeConnections();
     res.json({ message: 'Database connections optimized' });
   } catch (error) {
-    res.status(500).json({ error: 'Optimization failed', message: error.message });
+    res.status(500).json({ error: 'Optimization failed', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -108,7 +108,7 @@ router.post('/cleanup', async (req, res) => {
     await dbManager.cleanupOldData(days);
     res.json({ message: `Cleaned up data older than ${days} days` });
   } catch (error) {
-    res.status(500).json({ error: 'Cleanup failed', message: error.message });
+    res.status(500).json({ error: 'Cleanup failed', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -118,7 +118,7 @@ router.get('/pool', async (req, res) => {
     const stats = dbManager.getConnectionStats();
     res.json(stats.poolInfo);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get pool info', message: error.message });
+    res.status(500).json({ error: 'Failed to get pool info', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
@@ -155,8 +155,8 @@ router.post('/backup', async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       success: false, 
-      error: 'Не удалось создать резервную копию', 
-      message: error.message 
+      error: 'Не удалось создать резервную копию',
+      message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
@@ -173,8 +173,8 @@ router.get('/backups', async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       success: false, 
-      error: 'Не удалось получить список резервных копий', 
-      message: error.message 
+      error: 'Не удалось получить список резервных копий',
+      message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
@@ -207,8 +207,8 @@ router.get('/backup/:filename', async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       success: false, 
-      error: 'Не удалось скачать резервную копию', 
-      message: error.message 
+      error: 'Не удалось скачать резервную копию',
+      message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
@@ -229,8 +229,8 @@ router.post('/restore', async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       success: false, 
-      error: 'Не удалось восстановить базу данных', 
-      message: error.message 
+      error: 'Не удалось восстановить базу данных',
+      message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
@@ -269,7 +269,7 @@ router.post('/backup/upload', upload.single('backup'), async (req, res) => {
         result.message = 'Файл загружен и база данных восстановлена успешно';
         result.restored = true;
       } catch (restoreError) {
-        result.warning = 'Файл загружен, но восстановление не удалось: ' + restoreError.message;
+        result.warning = 'Файл загружен, но восстановление не удалось: ' + (restoreError instanceof Error ? restoreError.message : 'Неизвестная ошибка');
       }
     }
 
@@ -277,8 +277,8 @@ router.post('/backup/upload', upload.single('backup'), async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       success: false, 
-      error: 'Не удалось загрузить файл', 
-      message: error.message 
+      error: 'Не удалось загрузить файл',
+      message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
@@ -296,8 +296,8 @@ router.delete('/backup/:filename', async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       success: false, 
-      error: 'Не удалось удалить резервную копию', 
-      message: error.message 
+      error: 'Не удалось удалить резервную копию',
+      message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
@@ -313,8 +313,8 @@ router.get('/stats/detailed', async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       success: false, 
-      error: 'Не удалось получить статистику', 
-      message: error.message 
+      error: 'Не удалось получить статистику',
+      message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });

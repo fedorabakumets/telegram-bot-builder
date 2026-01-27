@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { TelegramUserDB } from "@shared/schema";
+import { TelegramUserDB } from "../shared/schema";
 import "express-session";
 
 // Расширяем типы Express для поддержки req.user и session

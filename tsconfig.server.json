@@ -13,7 +13,13 @@
     "rootDir": ".",
     "resolveJsonModule": true,
     "allowJs": true,
-    "noEmitOnError": false
+    "noEmitOnError": false,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": [
+        "./shared/*"
+      ]
+    }
   },
   "include": [
     "server/**/*",

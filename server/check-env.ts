@@ -65,7 +65,7 @@ if (process.env.DATABASE_URL) {
       console.log(`SSL Mode: ${searchParams.get('sslmode')}`);
     }
   } catch (error) {
-    console.log(`❌ Invalid DATABASE_URL format: ${error.message}`);
+    console.log(`❌ Invalid DATABASE_URL format: ${(error as Error).message || String(error)}`);
     allRequiredPresent = false;
   }
 }
