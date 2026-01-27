@@ -283,7 +283,7 @@ export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
   errorMessage: true,
   startedAt: true,
   stoppedAt: true,
-});
+} as any);
 
 export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   ownerId: true,
@@ -303,7 +303,7 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   requiresToken: true,
   complexity: true,
   estimatedTime: true,
-}).extend({
+} as any).extend({
   ownerId: z.number().nullable().optional(),
   category: z.enum(["custom", "business", "entertainment", "education", "utility", "games", "official", "community"]).default("custom"),
   difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
@@ -332,7 +332,7 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   botHasMainWebApp: true,
   trackExecutionTime: true,
   totalExecutionSeconds: true,
-}).extend({
+} as any).extend({
   ownerId: z.number().nullable().optional(),
   name: z.string().min(1, "Имя токена обязательно"),
   token: z.string().min(1, "Токен обязателен"),
@@ -357,7 +357,7 @@ export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({
   description: true,
   tags: true,
   isPublic: true,
-}).extend({
+} as any).extend({
   fileName: z.string().min(1, "Имя файла обязательно"),
   fileType: z.enum(["photo", "video", "audio", "document"]),
   filePath: z.string().min(1, "Путь к файлу обязателен"),
@@ -392,7 +392,7 @@ export const insertUserBotDataSchema = createInsertSchema(userBotData).pick({
   isActive: true,
   tags: true,
   notes: true,
-}).extend({
+} as any).extend({
   userId: z.string().min(1, "ID пользователя обязателен"),
   userData: z.record(z.any()).default({}),
   preferences: z.record(z.any()).default({}),
@@ -415,7 +415,7 @@ export const insertBotUserSchema = createInsertSchema(botUsers).pick({
   interactionCount: true,
   userData: true,
   isActive: true,
-}).extend({
+} as any).extend({
   userId: z.number().positive("ID пользователя должен быть положительным числом"),
   userData: z.record(z.any()).default({}),
   isActive: z.number().min(0).max(1).default(1),
@@ -444,7 +444,7 @@ export const insertBotGroupSchema = createInsertSchema(botGroups).pick({
   timezone: true,
   tags: true,
   notes: true,
-}).extend({
+} as any).extend({
   name: z.string().min(1, "Название группы обязательно"),
   url: z.string().optional().default(""), // Ссылка может быть пустой для числовых ID групп
   isAdmin: z.number().min(0).max(1).default(0),
@@ -713,12 +713,12 @@ export const nodeSchema = z.object({
     fallbackMessage: z.string().optional(), // Сообщение по умолчанию, если ни одно условие не выполнено
     saveToDatabase: z.boolean().default(false), // Сохранять ли в базу данных
     allowSkip: z.boolean().default(false), // Разрешить пропуск ввода
-    
+
     // Универсальные настройки сбора ввода для всех типов узлов
     collectUserInput: z.boolean().default(false), // Включить сбор пользовательского ввода
     inputTargetNodeId: z.string().optional(), // ID узла, к которому переходить после сбора ввода
     inputButtonType: z.enum(['inline', 'reply']).default('inline'), // Тип кнопок для ответов
-    
+
     // Автопереход - отправка сообщения и автоматический переход к следующему узлу без ожидания ввода
     enableAutoTransition: z.boolean().default(false), // Включить автопереход
     autoTransitionTo: z.string().optional(), // ID узла для автоматического перехода после отправки сообщения
@@ -726,8 +726,8 @@ export const nodeSchema = z.object({
     maxLength: z.number().optional(), // Максимальная длина текста
     placeholder: z.string().optional(), // Подсказка для ввода
     defaultValue: z.string().optional(), // Значение по умолчанию
-    
-    
+
+
     // Настройки пользовательских действий
     enableUserActions: z.boolean().default(false), // Включить пользовательские действия
     actionTrigger: z.enum(['join', 'leave', 'message', 'button_click', 'custom']).optional(), // Триггер действия
@@ -736,7 +736,7 @@ export const nodeSchema = z.object({
     actionTag: z.string().optional(), // Тег действия
     actionMessage: z.string().optional(), // Сообщение действия
     silentAction: z.boolean().default(false), // Беззвучное действие
-    
+
     // Дополнительные поля для различных типов узлов
     mimeType: z.string().optional(),
     stickerSetName: z.string().optional(),
@@ -756,7 +756,7 @@ export const nodeSchema = z.object({
     label: z.string().optional(),
     checkmarkSymbol: z.string().optional(),
     multiSelectCheckmark: z.string().optional(),
-    
+
     // Поля для управления пользователями (ID определяется автоматически из контекста)
     duration: z.number().optional(), // Длительность действия в секундах
     muteDuration: z.number().optional(), // Длительность действия (для mute) в секундах
@@ -783,7 +783,7 @@ export const nodeSchema = z.object({
     canInviteUsers2: z.boolean().default(true), // Может приглашать пользователей (дубликат для restrict)
     canPinMessages2: z.boolean().default(true), // Может закреплять сообщения (дубликат для restrict)
     untilDate: z.number().optional(), // Дата окончания ограничения (Unix timestamp)
-    
+
     // Поля для узла admin_rights - управление правами администратора (в соответствии с Telegram Bot API)
     adminTargetUserId: z.string().optional(), // ID пользователя для изменения прав
     adminUserIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'), // Источник ID пользователя
@@ -808,10 +808,10 @@ export const nodeSchema = z.object({
     adminChatId: z.string().optional(), // ID чата для применения прав
     adminChatIdSource: z.enum(['manual', 'variable', 'current_chat']).default('current_chat'), // Источник ID чата
     adminChatVariableName: z.string().optional(), // Имя переменной с ID чата
-    
+
     // Прикрепленные медиапеременные (для отправки медиафайлов)
     attachedMedia: z.array(z.string()).default([]), // Список имен медиапеременных для прикрепления к сообщению
-    
+
     // Дополнительные поля для совместимости
     text: z.string().optional(), // Альтернативное поле для messageText
     action: z.string().optional(), // Поле для действий (poll, dice, input и т.д.)
