@@ -1,0 +1,177 @@
+export function generateDeleteMessageHandler(node: Node): string {
+  let code = `\n# Delete Message Handler\n`;
+  const synonyms = node.data.synonyms || ['удалить', 'стереть', 'убрать сообщение'];
+  const targetGroupId = node.data.targetGroupId;
+  const messageText = node.data.messageText || "🗑️ Сообщение успешно удалено!";
+
+  // Если указан конкретный ID группы, генерируем обработчик для этой группы
+  if (targetGroupId) {
+    const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+
+    synonyms.forEach((synonym, index) => {
+      const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+      code += `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
+      code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
+      code += `    """\n`;
+      code += `    Обработчик для удаления сообщения по команде '${synonym}'\n`;
+      code += `    Работает в группе ${targetGroupId}\n`;
+      code += `    """\n`;
+      code += `    user_id = message.from_user.id\n`;
+      code += `    chat_id = ${targetGroupId}\n`;
+      code += `    \n`;
+      code += `    # Определяем целевое сообщение\n`;
+      code += `    target_message_id = None\n`;
+      code += `    \n`;
+      code += `    if message.reply_to_message:\n`;
+      code += `        # Если есть ответ на сообщение - используем его\n`;
+      code += `        target_message_id = message.reply_to_message.message_id\n`;
+      code += `        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления")\n`;
+      code += `    else:\n`;
+      code += `        # Если нет ответа, проверяем текст на наличие ID сообщения\n`;
+      code += `        text_parts = message.text.split()\n`;
+      code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+      code += `            target_message_id = int(text_parts[1])\n`;
+      code += `            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления")\n`;
+      code += `        else:\n`;
+      code += `            logging.info(f"DEBUG: Получен текст ${synonym} без ID сообщения")\n`;
+      code += `            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите '${synonym} ID_сообщения'")\n`;
+      code += `            return\n`;
+      code += `    \n`;
+      code += `    try:\n`;
+      code += `        # Удаляем сообщение в указанной группе\n`;
+      code += `        await bot.delete_message(\n`;
+      code += `            chat_id=chat_id,\n`;
+      code += `            message_id=target_message_id\n`;
+      code += `        )\n`;
+      code += `        await message.answer("${messageText}")\n`;
+      code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")\n`;
+      code += `    except TelegramBadRequest as e:\n`;
+      code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
+      code += `            await message.answer("❌ Сообщение не найдено")\n`;
+      code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+      code += `            await message.answer("❌ Недостаточно прав для удаления сообщения")\n`;
+      code += `        else:\n`;
+      code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+      code += `        logging.error(f"Ошибка удаления сообщения: {e}")\n`;
+      code += `    except Exception as e:\n`;
+      code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+      code += `        logging.error(f"Неожиданная ошибка при удалении: {e}")\n`;
+      code += `\n`;
+    });
+  } else {
+    // Если группа не указана, создаем общий обработчик для всех групп
+    code += `# Обработчик для удаления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
+    code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+    code += `# Работает в любых группах где бот имеет права администратора\n`;
+
+    const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+
+    // Генерируем обработчик команды
+    code += `\n@dp.message(Command("delete_message"))\n`;
+    code += `async def delete_message_${sanitizedNodeId}_command_handler(message: types.Message):\n`;
+    code += `    """\n`;
+    code += `    Обработчик команды /delete_message\n`;
+    code += `    Работает в любых группах где бот имеет права администратора\n`;
+    code += `    """\n`;
+    code += `    user_id = message.from_user.id\n`;
+    code += `    chat_id = message.chat.id\n`;
+    code += `    \n`;
+    code += `    # Проверяем, что это группа\n`;
+    code += `    if message.chat.type not in ['group', 'supergroup']:\n`;
+    code += `        await message.answer("❌ Команда работает только в группах")\n`;
+    code += `        return\n`;
+    code += `    \n`;
+    code += `    # Определяем целевое сообщение\n`;
+    code += `    target_message_id = None\n`;
+    code += `    \n`;
+    code += `    if message.reply_to_message:\n`;
+    code += `        # Если есть ответ на сообщение - используем его\n`;
+    code += `        target_message_id = message.reply_to_message.message_id\n`;
+    code += `        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления")\n`;
+    code += `    else:\n`;
+    code += `        # Если нет ответа, проверяем текст на наличие ID сообщения\n`;
+    code += `        text_parts = message.text.split()\n`;
+    code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+    code += `            target_message_id = int(text_parts[1])\n`;
+    code += `            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления")\n`;
+    code += `        else:\n`;
+    code += `            logging.info(f"DEBUG: Получена команда удаления без ID сообщения")\n`;
+    code += `            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите '/delete_message ID_сообщения'")\n`;
+    code += `            return\n`;
+    code += `    \n`;
+    code += `    try:\n`;
+    code += `        # Удаляем сообщение\n`;
+    code += `        await bot.delete_message(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            message_id=target_message_id\n`;
+    code += `        )\n`;
+    code += `        await message.answer("${messageText}")\n`;
+    code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")\n`;
+    code += `    except TelegramBadRequest as e:\n`;
+    code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
+    code += `            await message.answer("❌ Сообщение не найдено")\n`;
+    code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+    code += `            await message.answer("❌ Недостаточно прав для удаления сообщения")\n`;
+    code += `        else:\n`;
+    code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+    code += `        logging.error(f"Ошибка удаления сообщения: {e}")\n`;
+    code += `    except Exception as e:\n`;
+    code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+    code += `        logging.error(f"Неожиданная ошибка при удалении: {e}")\n`;
+    code += `\n`;
+
+    // Генерируем обработчики для синонимов
+    synonyms.forEach((synonym, index) => {
+      const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+      code += `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
+      code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
+      code += `    """\n`;
+      code += `    Обработчик синонима '${synonym}' для удаления сообщения\n`;
+      code += `    Работает в группах с ответом на сообщение или с указанием ID\n`;
+      code += `    """\n`;
+      code += `    user_id = message.from_user.id\n`;
+      code += `    chat_id = message.chat.id\n`;
+      code += `    \n`;
+      code += `    # Определяем целевое сообщение\n`;
+      code += `    target_message_id = None\n`;
+      code += `    \n`;
+      code += `    if message.reply_to_message:\n`;
+      code += `        # Если есть ответ на сообщение - используем его\n`;
+      code += `        target_message_id = message.reply_to_message.message_id\n`;
+      code += `        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления через синоним '${synonym}'")\n`;
+      code += `    else:\n`;
+      code += `        # Если нет ответа, проверяем текст на наличие ID сообщения\n`;
+      code += `        text_parts = message.text.split()\n`;
+      code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+      code += `            target_message_id = int(text_parts[1])\n`;
+      code += `            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним '${synonym}'")\n`;
+      code += `        else:\n`;
+      code += `            logging.info(f"DEBUG: Получен синоним '${synonym}' без ID сообщения")\n`;
+      code += `            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите '${synonym} ID_сообщения'")\n`;
+      code += `            return\n`;
+      code += `    \n`;
+      code += `    try:\n`;
+      code += `        # Удаляем сообщение\n`;
+      code += `        await bot.delete_message(\n`;
+      code += `            chat_id=chat_id,\n`;
+      code += `            message_id=target_message_id\n`;
+      code += `        )\n`;
+      code += `        await message.answer("${messageText}")\n`;
+      code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним '${synonym}'")\n`;
+      code += `    except TelegramBadRequest as e:\n`;
+      code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
+      code += `            await message.answer("❌ Сообщение не найдено")\n`;
+      code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+      code += `            await message.answer("❌ Недостаточно прав для удаления сообщения")\n`;
+      code += `        else:\n`;
+      code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+      code += `        logging.error(f"Ошибка удаления сообщения через синоним '${synonym}': {e}")\n`;
+      code += `    except Exception as e:\n`;
+      code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+      code += `        logging.error(f"Неожиданная ошибка при удалении через синоним '${synonym}': {e}")\n`;
+      code += `\n`;
+    });
+  }
+
+  return code;
+}
