@@ -20,11 +20,11 @@
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["./shared/*"],
-      "@/*": ["./src/*"]
+      "@/*": ["./client/src/*"]
     }
   },
   "include": [
-    "src/**/*",
+    "client/src/**/*",
     "shared/**/*",
     "server/**/*",
     "global.d.ts"

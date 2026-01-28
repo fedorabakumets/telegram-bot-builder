@@ -1,15 +1,22 @@
-// ============================================================================
-// ГЕНЕРАТОРЫ ЗАМЕНЫ ПЕРЕМЕННЫХ
-// ============================================================================
-// Функция для генерации замены переменных в тексте
-function generateVariableReplacement(variableName: string, indentLevel: string): string {
-  let code = '';
-  code += `${indentLevel}    # Подставляем значения переменных\n`;
-  code += `${indentLevel}    if "{${variableName}}" in text:\n`;
-  code += `${indentLevel}        if variable_value is not None:\n`;
-  code += `${indentLevel}            text = text.replace("{${variableName}}", str(variable_value))\n`;
-  code += `${indentLevel}        else:\n`;
-  code += `${indentLevel}            # Если переменная не найдена, отображаем как простой текст\n`;
-  code += `${indentLevel}            text = text.replace("{${variableName}}", "${variableName}")\n`;
-  return code;
+// client/src/lib/variable/generateVariableReplacement.ts
+// Функция для генерации замены переменных
+
+export function generateVariableReplacement(variableName: string, value: any): string {
+  // Генерирует строку замены для переменной
+  return String(value);
+}
+
+export function generateUniversalVariableReplacement(
+  text: string, 
+  variables: Record<string, any>
+): string {
+  // Заменяет все переменные в тексте на их значения
+  return text.replace(/\{\{([^}]+)\}\}|\{([^}]+)\}/g, (match, p1, p2) => {
+    const variableName = p1 || p2;
+    if (variables.hasOwnProperty(variableName)) {
+      return String(variables[variableName]);
+    }
+    // Если переменная не найдена, возвращаем оригинальное совпадение
+    return match;
+  });
 }

@@ -47,3 +47,15 @@ export * from './validate';
 
 // Variable handling
 export * from './variable';
+
+// Additional utilities
+export * from './add';
+
+// Collection utilities
+export * from './collect';
+
+// Code generation utilities
+export * from './generate';
+
+// Processing utilities
+export * from './process';

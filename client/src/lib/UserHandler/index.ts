@@ -1,10 +1,10 @@
-export * from './generateAdminRightsHandler';
-export * from './generateAdminRightsToggleHandlers';
-export * from './generateBanUserHandler';
-export * from './generateDemoteUserHandler';
-export * from './generateKickUserHandler';
-export * from './generateMuteUserHandler';
-export * from './generatePromoteUserHandler';
-export * from './generateUnbanUserHandler';
-export * from './generateUnmuteUserHandler';
-export * from './generateUserManagementSynonymHandler';
+// Экспорт всех функций из папки UserHandler
+export { generateBanUserHandler } from './generateBanUserHandler';
+export { generateUnbanUserHandler } from './generateUnbanUserHandler';
+export { generateMuteUserHandler } from './generateMuteUserHandler';
+export { generateUnmuteUserHandler } from './generateUnmuteUserHandler';
+export { generateKickUserHandler } from './generateKickUserHandler';
+export { generatePromoteUserHandler } from './generatePromoteUserHandler';
+export { generateAdminRightsHandler } from './generateAdminRightsHandler';
+export { generateDemoteUserHandler } from './generateDemoteUserHandler';
+export { generateUserManagementSynonymHandler } from './generateUserManagementSynonymHandler';

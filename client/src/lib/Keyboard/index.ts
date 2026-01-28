@@ -1,3 +1,3 @@
-export * from './generateInlineKeyboardCode';
-export * from './generateKeyboard';
-export * from './generateReplyKeyboardCode';
+// Экспорт всех функций из папки Keyboard
+export { generateInlineKeyboardCode } from './generateInlineKeyboardCode';
+export { generateReplyKeyboardCode } from './generateReplyKeyboardCode';
