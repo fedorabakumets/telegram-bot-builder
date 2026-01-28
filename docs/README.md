@@ -25,8 +25,6 @@
 - [Infrastructure Analysis](analysis/INFRASTRUCTURE_ANALYSIS.md) - Анализ инфраструктуры
 - [Analysis Summary](analysis/ANALYSIS_SUMMARY.md) - Сводка анализа
 
-## 🔒 Безопасность
-- [Security Guidelines](SECURITY.md) - Руководство по безопасности
 
 ## 🛠️ Скрипты и утилиты
 - [Scripts Documentation](../scripts/README.md) - Документация по скриптам проекта
