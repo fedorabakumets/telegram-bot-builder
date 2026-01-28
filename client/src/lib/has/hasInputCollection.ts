@@ -1,5 +1,7 @@
+import { BotNode } from "../types/bot-node";
+
 // Функция для проверки наличия узлов со сбором пользовательского ввода
-export function hasInputCollection(nodes: Node[]): boolean {
+export function hasInputCollection(nodes: BotNode[]): boolean {
   if (!nodes || nodes.length === 0) return false;
 
   // Проверяем узлы с collectUserInput

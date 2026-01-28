@@ -21,9 +21,11 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
   code += `${indentLevel}if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):\n`;
   code += `${indentLevel}    # Получаем объект пользователя из сообщения или callback\n`;
   code += `${indentLevel}    user_obj = None\n`;
-  code += `${indentLevel}    if hasattr(locals().get('message'), 'from_user'):\n`;
+  code += `${indentLevel}    # Проверяем наличие message (для message handlers)\n`;
+  code += `${indentLevel}    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):\n`;
   code += `${indentLevel}        user_obj = message.from_user\n`;
-  code += `${indentLevel}    elif hasattr(locals().get('callback_query'), 'from_user'):\n`;
+  code += `${indentLevel}    # Проверяем наличие callback_query (для callback handlers)\n`;
+  code += `${indentLevel}    elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):\n`;
   code += `${indentLevel}        user_obj = callback_query.from_user\n`;
   code += `${indentLevel}    \n`;
   code += `${indentLevel}    if user_obj:\n`;

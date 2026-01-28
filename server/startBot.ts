@@ -178,24 +178,42 @@ export async function startBot(projectId: number, token: string, tokenId: number
     // Обрабатываем события процесса
     botProcess.on('error', async (error) => {
       console.error(`Ошибка запуска бота ${projectId} (токен ${tokenId}):`, error);
-      const instance = await storage.getBotInstance(projectId);
-      if (instance) {
-        await storage.updateBotInstance(instance.id, {
-          status: 'error',
-          errorMessage: error.message
-        });
+      try {
+        // Проверяем, что пул соединений все еще активен перед обращением к базе данных
+        if (globalThis.__dbPoolActive !== false) {
+          const instance = await storage.getBotInstance(projectId);
+          if (instance) {
+            await storage.updateBotInstance(instance.id, {
+              status: 'error',
+              errorMessage: error.message
+            });
+          }
+        } else {
+          console.log(`⚠️ Пропускаем обновление статуса бота в базе данных - пул соединений закрыт`);
+        }
+      } catch (dbError) {
+        console.error(`Ошибка обновления статуса бота в базе данных:`, dbError);
       }
       botProcesses.delete(processKey);
     });
 
-    botProcess.on('exit', async (code) => {
-      console.log(`Бот ${projectId} (токен ${tokenId}) завершен с кодом ${code}`);
-      const instance = await storage.getBotInstance(projectId);
-      if (instance) {
-        await storage.updateBotInstance(instance.id, {
-          status: 'stopped',
-          errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null
-        });
+    botProcess.on('exit', async (code, signal) => {
+      console.log(`Бот ${projectId} (токен ${tokenId}) завершен с кодом ${code}, сигнал: ${signal}`);
+      try {
+        // Проверяем, что пул соединений все еще активен перед обращением к базе данных
+        if (globalThis.__dbPoolActive !== false) {
+          const instance = await storage.getBotInstance(projectId);
+          if (instance) {
+            await storage.updateBotInstance(instance.id, {
+              status: 'stopped',
+              errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null
+            });
+          }
+        } else {
+          console.log(`⚠️ Пропускаем обновление статуса бота в базе данных - пул соединений закрыт`);
+        }
+      } catch (dbError) {
+        console.error(`Ошибка обновления статуса бота в базе данных:`, dbError);
       }
       botProcesses.delete(processKey);
     });

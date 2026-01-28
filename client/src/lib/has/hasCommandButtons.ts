@@ -1,7 +1,8 @@
 import { Button } from "../bot-generator";
+import { BotNode } from "../types/bot-node";
 
 // Функция для проверки наличия кнопок команд
-function hasCommandButtons(nodes: Node[]): boolean {
+function hasCommandButtons(nodes: BotNode[]): boolean {
   if (!nodes || nodes.length === 0) return false;
 
   // Проверяем обычные кнопки

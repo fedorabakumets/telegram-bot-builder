@@ -242,10 +242,8 @@ dbManager.startHealthMonitoring();
 // Graceful shutdown
 process.on('SIGTERM', () => {
   dbManager.stopHealthMonitoring();
-  pool.end();
 });
 
 process.on('SIGINT', () => {
   dbManager.stopHealthMonitoring();
-  pool.end();
 });

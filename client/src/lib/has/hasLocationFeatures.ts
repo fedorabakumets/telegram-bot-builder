@@ -1,10 +1,11 @@
 import { Button } from "../bot-generator";
+import { BotNode } from "../types/bot-node";
 
 // ============================================================================
 // ФУНКЦИИ АНАЛИЗА ВОЗМОЖНОСТЕЙ БОТА
 // ============================================================================
 // Функция для проверки наличия геолокационных элементов в боте
-export function hasLocationFeatures(nodes: Node[]): boolean {
+export function hasLocationFeatures(nodes: BotNode[]): boolean {
   if (!nodes || nodes.length === 0) return false;
 
   // Проверяем наличие узлов типа location

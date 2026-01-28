@@ -75,7 +75,9 @@ app.use((req, res, next) => {
   const port = process.env.PORT || 5000;
   const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
   server.listen(Number(port), host, () => {
-    log(`serving on http://${host}:${port}`);
+    // Display localhost in logs even when binding to 0.0.0.0 for external connections
+    const displayHost = host === '0.0.0.0' ? 'localhost' : host;
+    log(`serving on http://${displayHost}:${port}`);
   });
 
   // Graceful shutdown

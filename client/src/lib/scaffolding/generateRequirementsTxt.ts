@@ -15,6 +15,7 @@ export function generateRequirementsTxt(): string {
     'python-dotenv>=1.0.0',
     'aiofiles>=23.2.1',
     'asyncpg>=0.29.0',
+    'certifi>=2024.8.30',
     '',
     '# Note: These versions have pre-compiled wheels and do not require Rust',
     '# If you still encounter issues, try:',
