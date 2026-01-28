@@ -6,7 +6,7 @@ import { storage } from "./storage";
 export async function stopBot(projectId: number, tokenId: number): Promise<{ success: boolean; error?: string; }> {
   try {
     const processKey = `${projectId}_${tokenId}`;
-    const process = botProcesses.get(processKey);
+    const botProcess = botProcesses.get(processKey);
 
     // Убиваем ВСЕ Python процессы для этого проекта (включая старые/зависшие)
     try {
@@ -14,7 +14,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
 
       // Находим все процессы с этим файлом
       try {
-        const psCommand = process.platform === 'win32'
+        const psCommand = global.process.platform === 'win32'
           ? `tasklist /FI "IMAGENAME eq python.exe" /FO CSV | findstr "${botFileName}"`
           : `ps aux | grep python | grep "${botFileName}" | grep -v grep`;
         const allPythonProcesses = execSync(psCommand, { encoding: 'utf8' }).trim();
@@ -43,17 +43,17 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
     }
 
     // Если процесс был в памяти - завершаем его мягко
-    if (process) {
+    if (botProcess) {
       try {
         // Сначала пытаемся мягко завершить
-        process.kill('SIGTERM');
+        botProcess.kill('SIGTERM');
 
         // Даем время на корректное завершение
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Если процесс все еще работает, принудительно завершаем
         try {
-          process.kill('SIGKILL');
+          botProcess.kill('SIGKILL');
         } catch (e) {
           // Процесс уже завершен
         }

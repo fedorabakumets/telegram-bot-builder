@@ -34,12 +34,12 @@ const poolConfig = {
 export const pool = new Pool(poolConfig);
 
 // Handle pool errors
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   console.error('❌ Unexpected error on idle client:', err.message);
   console.error('Error details:', {
-    code: err.code,
-    errno: err.errno,
-    syscall: err.syscall
+    code: (err as any).code,
+    errno: (err as any).errno,
+    syscall: (err as any).syscall
   });
 });
 
@@ -54,6 +54,9 @@ pool.on('acquire', () => {
 pool.on('remove', () => {
   console.log('🔌 Database connection removed');
 });
+
+// Устанавливаем начальное состояние пула
+globalThis.__dbPoolActive = true;
 
 export const db = drizzle(pool, { schema });
 
@@ -71,13 +74,13 @@ async function testConnection() {
   } catch (error: any) {
     console.error('❌ Database connection test failed:', error.message);
     console.error('Connection details:', {
-      code: error.code,
-      errno: error.errno,
-      syscall: error.syscall,
-      hostname: error.hostname,
-      port: error.port
+      code: (error as any).code,
+      errno: (error as any).errno,
+      syscall: (error as any).syscall,
+      hostname: (error as any).hostname,
+      port: (error as any).port
     });
-    
+
     // Don't throw error here, let the app try to continue
     // The health checks will catch ongoing issues
   }
@@ -85,3 +88,20 @@ async function testConnection() {
 
 // Test connection after a short delay to allow for startup
 setTimeout(testConnection, 2000);
+
+// Graceful shutdown - обновляем флаг перед закрытием пула
+process.on('SIGTERM', () => {
+  console.log('🛑 Получен сигнал SIGTERM, закрываем пул соединений...');
+  globalThis.__dbPoolActive = false;
+  pool.end(() => {
+    console.log('🔌 Пул соединений закрыт');
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 Получен сигнал SIGINT, закрываем пул соединений...');
+  globalThis.__dbPoolActive = false;
+  pool.end(() => {
+    console.log('🔌 Пул соединений закрыт');
+  });
+});

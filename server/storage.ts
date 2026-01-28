@@ -237,6 +237,7 @@ class MemStorage implements IStorage {
       description: insertProject.description || null,
       botToken: insertProject.botToken ?? null,
       userDatabaseEnabled: insertProject.userDatabaseEnabled ?? 1,
+      data: insertProject.data ?? {}, // Убедимся, что поле data всегда присутствует
     };
     this.projects.set(id, project);
     return project;
@@ -832,7 +833,10 @@ export class DatabaseStorage implements IStorage {
   async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
     const [project] = await this.db
       .insert(botProjects)
-      .values(insertProject)
+      .values({
+        ...insertProject,
+        data: insertProject.data ?? {} // Убедимся, что поле data всегда присутствует
+      })
       .returning();
     return project;
   }
@@ -1609,7 +1613,10 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
     const [project] = await this.db
       .insert(botProjects)
-      .values(insertProject)
+      .values({
+        ...insertProject,
+        data: insertProject.data ?? {} // Убедимся, что поле data всегда присутствует
+      })
       .returning();
     this.projectCache.set(project.id, project);
     return project;

@@ -25,11 +25,12 @@
   },
   "include": [
     "src/**/*",
-    "shared/**/*"
+    "shared/**/*",
+    "server/**/*",
+    "global.d.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "server"
+    "dist"
   ]
 }

@@ -1248,7 +1248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Создаем проект
         const newProject = await storage.createBotProject({
           name: template.name,
-          description: template.description,
+          description: template.description ?? undefined,
           data: template.data as any,
           ownerId: ownerId,
           userDatabaseEnabled: 1
