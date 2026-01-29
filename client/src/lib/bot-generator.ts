@@ -50,7 +50,7 @@ import { generateInlineKeyboardCode, generateReplyKeyboardCode } from './Keyboar
 import { hasConditionalButtons, hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions, hasMultiSelectNodes, hasLocationFeatures } from './has';
 import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
 import { processInlineButtonNodes, processConnectionTargets } from './process';
-import { collectInputTargetNodes, collectConditionalMessageButtons } from './collect';
+import { collectInputTargetNodes, } from './collect';
 import { filterInlineNodes } from './filterInlineNodes';
 import { addInputTargetNodes } from './add';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration } from './generate';

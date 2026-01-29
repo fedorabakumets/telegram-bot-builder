@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
+import { parsePythonCodeToJson } from '@/lib/format';
 
 import QuickLayoutSwitcher from '@/components/layout/quick-layout-switcher';
 import DragLayoutManager from '@/components/layout/drag-layout-manager';
@@ -1036,10 +1037,9 @@ export function ComponentsSidebar({
     }
   };
 
-  const parsePythonBotToJson = async (pythonCode: string) => {
+  const parsePythonBotToJson = (pythonCode: string) => {
     // Используем функцию парсинга из bot-generator.ts (обратная операция к generatePythonCode)
-    const botGenerator = await import('@/lib/bot-generator');
-    const { nodes, connections } = botGenerator.parsePythonCodeToJson(pythonCode);
+    const { nodes, connections } = parsePythonCodeToJson(pythonCode);
     
     // Создаём структуру проекта с листом (sheets), точно как extractNodesAndConnections
     const projectData = {
@@ -1070,12 +1070,13 @@ export function ComponentsSidebar({
         try {
           // Проверяем, это ли Python код бота
           if (importPythonText.includes('@@NODE_START:') && importPythonText.includes('@@NODE_END:')) {
-            // Это Python код бота - парсим его в JSON
-            parsePythonBotToJson(importPythonText).then((result) => {
+            try {
+              // Это Python код бота - парсим его в JSON
+              const result = parsePythonBotToJson(importPythonText);
               const projectName = `Python Bot ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
               const projectDescription = `Импортирован из Python кода (${result.nodeCount} узлов)`;
-              
-              return apiRequest('POST', '/api/projects', {
+
+              apiRequest('POST', '/api/projects', {
                 name: projectName,
                 description: projectDescription,
                 data: result.data
@@ -1094,15 +1095,22 @@ export function ComponentsSidebar({
                 setTimeout(() => {
                   queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
                 }, 300);
+              }).catch((apiError: any) => {
+                  setImportError(apiError.message || 'Ошибка при создании проекта');
+                  toast({
+                    title: "❌ Ошибка создания проекта",
+                    description: apiError.message || 'Не удалось создать проект',
+                    variant: "destructive",
+                  });
               });
-            }).catch((error: any) => {
+            } catch (error: any) {
               setImportError(error.message || 'Ошибка при импорте проекта');
               toast({
                 title: "❌ Ошибка импорта",
                 description: error.message || 'Не удалось создать проект',
                 variant: "destructive",
               });
-            });
+            }
             return;
           } else {
             // Может быть JSON в файле - пробуем парсить
