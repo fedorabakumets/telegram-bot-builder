@@ -1,6 +1,6 @@
 import { createSafeFunctionName } from '../format/createSafeFunctionName';
 import { formatTextForPython } from '../format/formatTextForPython';
-import { generateUniversalVariableReplacement } from '../variable/generateUniversalVariableReplacement';
+import { generateUniversalVariableReplacement } from "../bot-generator";
 import { generateAdminRightsToggleHandlers } from './generateAdminRightsToggleHandlers';
 import { Node } from '../../../../shared/schema';
 

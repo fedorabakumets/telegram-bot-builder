@@ -1,4 +1,4 @@
-import { generateReplaceVariablesFunction, generateInitUserVariablesFunction } from './utils';
+import { generateReplaceVariablesFunction, generateInitUserVariablesFunction } from '../utils';
 
 /**
  * Вспомогательная функция для генерации кода, связанного с базой данных

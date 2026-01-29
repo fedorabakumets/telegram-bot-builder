@@ -46,16 +46,17 @@ import {
   generateButtonText
 } from './format';
 import { generateConditionalMessageLogic } from './Conditional';
-import { generateUniversalVariableReplacement } from './variable';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from './Keyboard';
 import { hasConditionalButtons, hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions, hasMultiSelectNodes, hasLocationFeatures } from './has';
 import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
 import { processInlineButtonNodes, processConnectionTargets } from './process';
 import { collectInputTargetNodes, collectConditionalMessageButtons } from './collect';
 import { filterInlineNodes } from './filterInlineNodes';
-import { addInputTargetNodes, addAutoTransitionNodes } from './add';
+import { addInputTargetNodes } from './add';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration } from './generate';
 import { extractNodeData } from './extractNodeData';
+import { generateUniversalVariableReplacement as generateUniversalVariableReplacementUtil, generateReplaceVariablesFunction } from './utils';
+
 
 export type Button = z.infer<typeof buttonSchema>;
 
@@ -7560,6 +7561,61 @@ export interface CodeWithMap {
 
 // Повторный экспорт функций каркаса
 export { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml };
+/**
+   * Вспомогательная функция для добавления целевых узлов автоперехдов
+   * @param {any[]} nodes - Массив узлов для обработки
+   * @param {Set<string>} allReferencedNodeIds - Множество идентификаторов узлов для обновления
+   */
+
+  export function addAutoTransitionNodes(nodes: any[], allReferencedNodeIds: Set<string>): void {
+    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем узлы, которые являются целями автопереходов
+    (nodes || []).forEach(node => {
+      if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
+        allReferencedNodeIds.add(node.data.autoTransitionTo);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);
+      }
+    });
+  }
+/**
+ * Вспомогательная функция для сбора кнопок из условных сообщений
+ * @param {any[]} nodes - Массив узлов для извлечения кнопок
+ * @param {Set<string>} allConditionalButtons - Множество кнопок для обновления
+ */
+
+export function collectConditionalMessageButtons(nodes: any[], allConditionalButtons: Set<string>): void {
+  // Собираем кнопки из условных сообщений
+  (nodes || []).forEach(node => {
+    if (node.data.conditionalMessages) {
+      node.data.conditionalMessages.forEach((condition: any) => {
+        if (condition.buttons) {
+          condition.buttons.forEach((button: Button) => {
+            if (button.action === 'goto' && button.target) {
+              allConditionalButtons.add(button.target);
+            }
+          });
+        }
+      });
+    }
+  });
+}
+// Функция для генерации замены всех переменных в тексте (рефакторенная версия)
+
+export function generateUniversalVariableReplacement(indentLevel: string): string {
+  let code = '';
+
+  // Используем утилиту для генерации кода инициализации переменных
+  code += generateUniversalVariableReplacementUtil(indentLevel);
+  code += `${indentLevel}\n`;
+
+  // Добавляем функцию замены переменных (если она еще не была добавлена)
+  code += `${indentLevel}# Заменяем все переменные в тексте\n`;
+  code += `${indentLevel}import re\n`;
+  code += generateReplaceVariablesFunction(indentLevel);
+  code += `${indentLevel}\n`;
+  code += `${indentLevel}text = replace_variables_in_text(text, user_vars)\n`;
+
+  return code;
+}
 
 
 

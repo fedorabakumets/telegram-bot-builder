@@ -1,7 +1,7 @@
 import { getParseMode } from '../format/getParseMode';
 import { stripHtmlTags } from '../format/stripHtmlTags';
 import { formatTextForPython } from '../format/formatTextForPython';
-import { generateUniversalVariableReplacement } from '../variable/generateUniversalVariableReplacement';
+import { generateUniversalVariableReplacement } from "../bot-generator";
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { Node } from '../../../../shared/schema';

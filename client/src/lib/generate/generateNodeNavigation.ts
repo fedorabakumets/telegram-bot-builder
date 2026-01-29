@@ -1,5 +1,5 @@
-import { formatTextForPython } from './format';
-import { generateUniversalVariableReplacement } from './variable';
+import { formatTextForPython } from '../format/formatTextForPython';
+import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 
 /**
  * Функция для генерации кода навигации по узлам

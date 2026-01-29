@@ -1,5 +1,5 @@
 import { BotData } from "../../../../shared/schema";
-import { extractNodesAndConnections } from "../extractNodesAndConnections";
+import { extractNodesAndConnections } from "../format/extractNodesAndConnections";
 import { validateCommand } from "./validateCommand";
 
 
@@ -38,7 +38,7 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
 
     // Валидация кнопок
     if (node.data.buttons && Array.isArray(node.data.buttons)) {
-      node.data.buttons.forEach(button => {
+      node.data.buttons.forEach((button: { text: string; action: string; url: any; }) => {
         if (!button.text.trim()) {
           errors.push(`Кнопка в узле "${node.id}" должна содержать текст`);
         }
