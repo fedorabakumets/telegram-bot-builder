@@ -1679,7 +1679,7 @@ async def help_handler(message: types.Message):
 # Pin Message Handler
 
 @dp.callback_query(lambda c: c.data.startswith("pin_message_pin_message_node_"))
-async def handle_callback_pin_message_pin_message_node(callback_query: types.CallbackQuery):
+async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
     """
     Обработчик callback запросов команды закрепления
     Работает в группах где бот имеет права администратора
@@ -1923,6 +1923,42 @@ async def pin_message_pin_message_node_зафиксировать_handler(messag
 # @@NODE_START:unpin_message_node@@
 
 # Unpin Message Handler
+
+@dp.callback_query(lambda c: c.data.startswith("unpin_message_unpin_message_node_"))
+async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery):
+    """
+    Обработчик callback запросов команды открепления
+    Работает в группах где бот имеет права администратора
+    """
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    # Проверяем, что это группа
+    if callback_query.message.chat.type not in ['group', 'supergroup']:
+        await callback_query.message.answer("❌ Команда работает только в группах")
+        return
+    
+    try:
+        await bot.unpin_all_chat_messages(chat_id=chat_id)
+        await callback_query.message.answer("✅ Все сообщения откреплены")
+        logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "message to unpin not found" in str(e) or "not found" in str(e):
+            await callback_query.message.answer("❌ Нечего откреплять")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await callback_query.message.answer("❌ Недостаточно прав для открепления")
+        else:
+            await callback_query.message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка открепления: {e}")
+    except Exception as e:
+        await callback_query.message.answer("❌ Произошла ошибка")
+        logging.error(f"Неожиданная ошибка при откреплении: {e}")
+    
+    try:
+        await callback_query.answer()
+    except:
+        pass
+
 @dp.message(Command("unpin_message"))
 async def unpin_message_unpin_message_node_command_handler(message: types.Message):
     """
@@ -2139,6 +2175,52 @@ async def unpin_message_unpin_message_node_убрать_закрепление_h
 # @@NODE_START:delete_message_node@@
 
 # Delete Message Handler
+
+@dp.callback_query(lambda c: c.data.startswith("delete_message_delete_message_node_"))
+async def handle_callback_delete_message_node(callback_query: types.CallbackQuery):
+    """
+    Обработчик callback запросов команды удаления
+    Работает в группах где бот имеет права администратора
+    """
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    # Проверяем, что это группа
+    if callback_query.message.chat.type not in ['group', 'supergroup']:
+        await callback_query.message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевое сообщение из callback_data
+    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
+    
+    if not target_message_id:
+        await callback_query.message.answer("❌ Не удалось определить ID сообщения для удаления")
+        return
+    
+    try:
+        await bot.delete_message(
+            chat_id=chat_id,
+            message_id=target_message_id
+        )
+        await callback_query.message.answer("🗑️ Сообщение успешно удалено!")
+        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "message to delete not found" in str(e) or "message not found" in str(e):
+            await callback_query.message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await callback_query.message.answer("❌ Недостаточно прав для удаления")
+        else:
+            await callback_query.message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка удаления сообщения: {e}")
+    except Exception as e:
+        await callback_query.message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при удалении: {e}")
+    
+    try:
+        await callback_query.answer()
+    except:
+        pass
+
 # Обработчик для удаления сообщения используя синонимы: удалить, стереть, убрать сообщение
 # Поддерживает ответ на сообщение для автоматического определения target message ID
 # Работает в любых группах где бот имеет права администратора
@@ -8179,7 +8261,7 @@ async def admin_rights_admin_rights_node_synonym_права_админа_handler
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback
@@ -8244,7 +8326,7 @@ async def admin_rights_admin_rights_node_synonym_настроить_права_h
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback
@@ -8309,7 +8391,7 @@ async def admin_rights_admin_rights_node_synonym_тг_права_handler(message
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback
@@ -8374,7 +8456,7 @@ async def admin_rights_admin_rights_node_synonym_права_администра
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback
@@ -8439,7 +8521,7 @@ async def admin_rights_admin_rights_node_synonym_admin_rights_handler(message: t
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback

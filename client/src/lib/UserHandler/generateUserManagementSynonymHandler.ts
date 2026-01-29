@@ -133,7 +133,7 @@ export function generateUserManagementSynonymHandler(node: Node, synonym: string
     code += `                    logging.warning(f"Не удалось отредактировать сообщение: {e}")\n`;
     code += `                    return await self.message.answer(text, **kwargs)\n`;
     code += `        \n`;
-    code += `        mock_callback = MockCallback("${node.id}", message.from_user, message)\n`;
+    code += `        mock_callback = MockCallback("${node.id}", callback_query.from_user, callback_query.message)\n`;
     code += `        # bot уже определен глобально\n`;
     code += `        await handle_callback_${safeFunctionName}(mock_callback, bot)\n`;
     code += `        return  # Завершаем обработку, так как все сделано в callback\n`;

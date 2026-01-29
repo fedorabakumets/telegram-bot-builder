@@ -5,6 +5,54 @@ export function generateDeleteMessageHandler(node: Node): string {
   const synonyms = node.data.synonyms || ['удалить', 'стереть', 'убрать сообщение'];
   const targetGroupId = node.data.targetGroupId;
   const messageText = node.data.messageText || "🗑️ Сообщение успешно удалено!";
+  const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+
+  // Генерируем обработчик callback запросов для команды удаления
+  code += `\n@dp.callback_query(lambda c: c.data.startswith("delete_message_${sanitizedNodeId}_"))\n`;
+  code += `async def handle_callback_${sanitizedNodeId}(callback_query: types.CallbackQuery):\n`;
+  code += `    """\n`;
+  code += `    Обработчик callback запросов команды удаления\n`;
+  code += `    Работает в группах где бот имеет права администратора\n`;
+  code += `    """\n`;
+  code += `    user_id = callback_query.from_user.id\n`;
+  code += `    chat_id = callback_query.message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Проверяем, что это группа\n`;
+  code += `    if callback_query.message.chat.type not in ['group', 'supergroup']:\n`;
+  code += `        await callback_query.message.answer("❌ Команда работает только в группах")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    # Определяем целевое сообщение из callback_data\n`;
+  code += `    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None\n`;
+  code += `    \n`;
+  code += `    if not target_message_id:\n`;
+  code += `        await callback_query.message.answer("❌ Не удалось определить ID сообщения для удаления")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        await bot.delete_message(\n`;
+  code += `            chat_id=chat_id,\n`;
+  code += `            message_id=target_message_id\n`;
+  code += `        )\n`;
+  code += `        await callback_query.message.answer("${messageText}")\n`;
+  code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
+  code += `            await callback_query.message.answer("❌ Сообщение не найдено")\n`;
+  code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await callback_query.message.answer("❌ Недостаточно прав для удаления")\n`;
+  code += `        else:\n`;
+  code += `            await callback_query.message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка удаления сообщения: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await callback_query.message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при удалении: {e}")\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        await callback_query.answer()\n`;
+  code += `    except:\n`;
+  code += `        pass\n`;
+  code += `\n`;
 
   // Если указан конкретный ID группы, генерируем обработчик для этой группы
   if (targetGroupId) {

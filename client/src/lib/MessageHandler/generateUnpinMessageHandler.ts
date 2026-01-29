@@ -8,7 +8,7 @@ export function generateUnpinMessageHandler(node: Node): string {
 
   // Генерируем обработчик callback запросов для команды открепления
   code += `\n@dp.callback_query(lambda c: c.data.startswith("unpin_message_${sanitizedNodeId}_"))\n`;
-  code += `async def handle_callback_unpin_message_${sanitizedNodeId}(callback_query: types.CallbackQuery):\n`;
+  code += `async def handle_callback_${sanitizedNodeId}(callback_query: types.CallbackQuery):\n`;
   code += `    """\n`;
   code += `    Обработчик callback запросов команды открепления\n`;
   code += `    Работает в группах где бот имеет права администратора\n`;

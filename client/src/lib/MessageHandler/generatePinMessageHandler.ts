@@ -13,7 +13,7 @@ export function generatePinMessageHandler(node: Node): string {
 
   // Генерируем обработчик callback запросов для команды закрепления
   code += `\n@dp.callback_query(lambda c: c.data.startswith("pin_message_${sanitizedNodeId}_"))\n`;
-  code += `async def handle_callback_pin_message_${sanitizedNodeId}(callback_query: types.CallbackQuery):\n`;
+  code += `async def handle_callback_${sanitizedNodeId}(callback_query: types.CallbackQuery):\n`;
   code += `    """
 `;
   code += `    Обработчик callback запросов команды закрепления
