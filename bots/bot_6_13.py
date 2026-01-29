@@ -1677,6 +1677,52 @@ async def help_handler(message: types.Message):
 # @@NODE_START:pin_message_node@@
 
 # Pin Message Handler
+
+@dp.callback_query(lambda c: c.data.startswith("pin_message_pin_message_node_"))
+async def handle_callback_pin_message_pin_message_node(callback_query: types.CallbackQuery):
+    """
+    Обработчик callback запросов команды закрепления
+    Работает в группах где бот имеет права администратора
+    """
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id  # Определяем ID группы из контекста сообщения
+    
+    # Проверяем, что это группа
+    if callback_query.message.chat.type not in ['group', 'supergroup']:
+        await callback_query.message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевое сообщение из callback_data
+    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
+    
+    if not target_message_id:
+        await callback_query.message.answer("❌ Не удалось определить ID сообщения для закрепления")
+        return
+    
+    try:
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=target_message_id,
+            disable_notification=False
+        )
+        await callback_query.message.answer("✅ Сообщение закреплено")
+        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "message to pin not found" in str(e) or "message not found" in str(e):
+            await callback_query.message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await callback_query.message.answer("❌ Недостаточно прав для закрепления сообщения")
+        else:
+            await callback_query.message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка закрепления сообщения: {e}")
+    except Exception as e:
+        await callback_query.message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при закреплении: {e}")
+    
+    try:
+        await callback_query.answer()
+    except:
+        pass
 @dp.message(Command("pin_message"))
 async def pin_message_pin_message_node_command_handler(message: types.Message):
     """

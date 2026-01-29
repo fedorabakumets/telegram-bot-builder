@@ -5,10 +5,102 @@ import { Node } from '../../../../shared/schema';
 // ============================================================================
 export function generatePinMessageHandler(node: Node): string {
   let code = `\n# Pin Message Handler\n`;
+
+  const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
   const synonyms = node.data.synonyms || ['закрепить', 'прикрепить', 'зафиксировать'];
   const disableNotification = node.data.disableNotification || false;
   const targetGroupId = node.data.targetGroupId;
-  const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+
+  // Генерируем обработчик callback запросов для команды закрепления
+  code += `\n@dp.callback_query(lambda c: c.data.startswith("pin_message_${sanitizedNodeId}_"))\n`;
+  code += `async def handle_callback_pin_message_${sanitizedNodeId}(callback_query: types.CallbackQuery):\n`;
+  code += `    """
+`;
+  code += `    Обработчик callback запросов команды закрепления
+`;
+  code += `    Работает в группах где бот имеет права администратора
+`;
+  code += `    """
+`;
+  code += `    user_id = callback_query.from_user.id
+`;
+  code += `    chat_id = callback_query.message.chat.id  # Определяем ID группы из контекста сообщения
+`;
+  code += `    
+`;
+  code += `    # Проверяем, что это группа
+`;
+  code += `    if callback_query.message.chat.type not in ['group', 'supergroup']:
+`;
+  code += `        await callback_query.message.answer("❌ Команда работает только в группах")
+`;
+  code += `        return
+`;
+  code += `    
+`;
+  code += `    # Определяем целевое сообщение из callback_data
+`;
+  code += `    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
+`;
+  code += `    
+`;
+  code += `    if not target_message_id:
+`;
+  code += `        await callback_query.message.answer("❌ Не удалось определить ID сообщения для закрепления")
+`;
+  code += `        return
+`;
+  code += `    
+`;
+  code += `    try:
+`;
+  code += `        await bot.pin_chat_message(
+`;
+  code += `            chat_id=chat_id,
+`;
+  code += `            message_id=target_message_id,
+`;
+  code += `            disable_notification=${disableNotification ? 'True' : 'False'}
+`;
+  code += `        )
+`;
+  code += `        await callback_query.message.answer("✅ Сообщение закреплено")
+`;
+  code += `        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
+`;
+  code += `    except TelegramBadRequest as e:
+`;
+  code += `        if "message to pin not found" in str(e) or "message not found" in str(e):
+`;
+  code += `            await callback_query.message.answer("❌ Сообщение не найдено")
+`;
+  code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+`;
+  code += `            await callback_query.message.answer("❌ Недостаточно прав для закрепления сообщения")
+`;
+  code += `        else:
+`;
+  code += `            await callback_query.message.answer(f"❌ Ошибка: {e}")
+`;
+  code += `        logging.error(f"Ошибка закрепления сообщения: {e}")
+`;
+  code += `    except Exception as e:
+`;
+  code += `        await callback_query.message.answer("❌ Произошла неожиданная ошибка")
+`;
+  code += `        logging.error(f"Неожиданная ошибка при закреплении: {e}")
+`;
+  code += `    
+`;
+  code += `    try:
+`;
+  code += `        await callback_query.answer()
+`;
+  code += `    except:
+`;
+  code += `        pass
+`;
+
 
   // Генерируем обработчик команды /pin_message
   code += `@dp.message(Command("pin_message"))\n`;

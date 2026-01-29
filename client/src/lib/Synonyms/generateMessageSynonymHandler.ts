@@ -27,7 +27,7 @@ export function generateMessageSynonymHandler(node: Node, synonym: string): stri
   code += `                return await self.message.answer(text, **kwargs)\n`;
   code += `    \n`;
   code += `    mock_callback = MockCallback("${node.id}", message.from_user, message)\n`;
-  code += `    await handle_callback_${sanitizedNodeId}(mock_callback)\n`;
+  code += `    await handle_callback_pin_message_${sanitizedNodeId}(mock_callback)\n`;
 
   return code;
 }
