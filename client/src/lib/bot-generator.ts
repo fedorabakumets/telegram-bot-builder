@@ -647,24 +647,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
  
 
-  /**
-   * Генерирует код функций для работы с медиафайлами
-   * @returns Сгенерированный код функций для работы с медиафайлами
-   */
-  function generateMediaFileFunctions(): string {
-    let mediaCode = '';
-    mediaCode += 'def is_local_file(url: str) -> bool:\n';
-    mediaCode += '    """Проверяет, является ли URL локальным загруженным файлом"""\n';
-    mediaCode += '    return url.startswith("/uploads/") or url.startswith("uploads/")\n\n';
-
-    mediaCode += 'def get_local_file_path(url: str) -> str:\n';
-    mediaCode += '    """Получает локальный путь к файлу из URL"""\n';
-    mediaCode += '    if url.startswith("/"):\n';
-    mediaCode += '        return url[1:]  # Убираем ведущий слеш\n';
-    mediaCode += '    return url\n\n';
-
-    return mediaCode;
-  }
+ 
 
   // Добавляем утилитарные функции
   code += generateUtilityFunctions(userDatabaseEnabled);
@@ -7428,7 +7411,11 @@ export interface CodeWithMap {
 // Повторный экспорт функций каркаса
 export { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml };
 
-  function generateUtilityFunctions(userDatabaseEnabled: boolean) {
+  export function generateUtilityFunctions(userDatabaseEnabled: boolean) {
     throw new Error('Function not implemented.');
   }
+
+function generateMediaFileFunctions() {
+  throw new Error('Function not implemented.');
+}
 
