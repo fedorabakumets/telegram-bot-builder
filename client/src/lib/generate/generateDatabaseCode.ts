@@ -120,6 +120,23 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     code += '        logging.error(f"Ошибка получения пользователя из БД: {e}")\n';
     code += '        return None\n\n';
 
+    code += 'async def get_user_data_from_db(user_id: int, data_key: str):\n';
+    code += '    """Получает конкретное значение из поля user_data пользователя"""\n';
+    code += '    if not db_pool:\n';
+    code += '        return None\n';
+    code += '    try:\n';
+    code += '        async with db_pool.acquire() as conn:\n';
+    code += '            # Используем оператор ->> для получения значения поля JSONB как текста\n';
+    code += '            value = await conn.fetchval(\n';
+    code += '                "SELECT user_data ->> $2 FROM bot_users WHERE user_id = $1",\n';
+    code += '                user_id,\n';
+    code += '                data_key\n';
+    code += '            )\n';
+    code += '            return value\n';
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка получения данных пользователя из БД: {e}")\n';
+    code += '        return None\n\n';
+
     // Добавляем функции handle_command_ как алиасы для handlers
     code += '# Алиас функции для callback обработчиков\n';
     code += 'async def handle_command_start(message):\n';

@@ -889,9 +889,6 @@ async def start_handler(message: types.Message):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -1090,9 +1087,6 @@ async def profile_handler(message: types.Message):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -1150,9 +1144,6 @@ async def profile_handler(message: types.Message):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -1274,9 +1265,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -1334,9 +1322,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -1550,9 +1535,6 @@ async def help_handler(message: types.Message):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -1610,9 +1592,6 @@ async def help_handler(message: types.Message):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -3296,9 +3275,6 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -3475,9 +3451,6 @@ async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery,
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -8469,9 +8442,6 @@ async def handle_callback_gender_selection(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -8593,9 +8563,6 @@ async def handle_callback_decline_response(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -8708,9 +8675,6 @@ async def handle_callback_name_input(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -8869,9 +8833,6 @@ async def handle_callback_red_line_stations(callback_query: types.CallbackQuery)
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -9182,9 +9143,6 @@ async def handle_callback_blue_line_stations(callback_query: types.CallbackQuery
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -9488,9 +9446,6 @@ async def handle_callback_green_line_stations(callback_query: types.CallbackQuer
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -9752,9 +9707,6 @@ async def handle_callback_purple_line_stations(callback_query: types.CallbackQue
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -10026,9 +9978,6 @@ async def handle_callback_interests_categories(callback_query: types.CallbackQue
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -10147,9 +10096,6 @@ async def handle_callback_metro_selection(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -10306,9 +10252,6 @@ async def handle_callback_music_interests(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -10542,9 +10485,6 @@ async def handle_callback_hobby_interests(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -10776,9 +10716,6 @@ async def handle_callback_social_interests(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -10996,9 +10933,6 @@ async def handle_callback_creativity_interests(callback_query: types.CallbackQue
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -11223,9 +11157,6 @@ async def handle_callback_active_interests(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -11450,9 +11381,6 @@ async def handle_callback_food_interests(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -11677,9 +11605,6 @@ async def handle_callback_sport_interests(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -11875,9 +11800,6 @@ async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -12004,9 +11926,6 @@ async def handle_callback_channel_choice(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -12133,9 +12052,6 @@ async def handle_callback_extra_info(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -12273,9 +12189,6 @@ async def handle_callback_profile_complete(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -12459,9 +12372,6 @@ async def handle_callback_age_input(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -12582,9 +12492,6 @@ async def handle_callback_marital_status(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -12731,9 +12638,6 @@ async def handle_callback_join_request(callback_query: types.CallbackQuery):
         # Проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
             user_obj = callback_query.from_user
-        # В случае если мы внутри message handler, используем message.from_user
-        elif hasattr(locals().get('message', {}), 'from_user'):
-            user_obj = message.from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -13593,9 +13497,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -13673,9 +13574,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -13740,9 +13638,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -13857,9 +13752,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -13944,9 +13836,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -14184,9 +14073,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -14417,9 +14303,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -14608,9 +14491,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -14799,9 +14679,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -14883,9 +14760,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -15046,9 +14920,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -15207,9 +15078,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -15354,9 +15222,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -15508,9 +15373,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -15662,9 +15524,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -15816,9 +15675,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -15970,9 +15826,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16053,9 +15906,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16139,9 +15989,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16221,9 +16068,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16313,9 +16157,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16399,9 +16240,6 @@ async def handle_user_input(message: types.Message):
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16484,9 +16322,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16661,9 +16496,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16737,9 +16569,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16803,9 +16632,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16869,9 +16695,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -16935,9 +16758,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -17001,9 +16821,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -17067,9 +16884,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -17133,9 +16947,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -17199,9 +17010,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -17265,9 +17073,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -17331,9 +17136,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -17399,9 +17201,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Проверяем наличие callback_query (для callback handlers)
                             elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                 user_obj = callback_query.from_user
-                            # В случае если мы внутри message handler, используем message.from_user
-                            elif hasattr(locals().get('message', {}), 'from_user'):
-                                user_obj = message.from_user
                             
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
@@ -18072,9 +17871,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -18143,9 +17939,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -18214,9 +18007,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -18287,9 +18077,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -18368,9 +18155,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -18449,9 +18233,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -18528,9 +18309,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -18768,9 +18546,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -19001,9 +18776,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -19192,9 +18964,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -19383,9 +19152,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -19467,9 +19233,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -19630,9 +19393,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -19791,9 +19551,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -19938,9 +19695,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -20092,9 +19846,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -20246,9 +19997,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -20400,9 +20148,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -20552,9 +20297,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -20625,9 +20367,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -20701,9 +20440,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -20773,9 +20509,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -20856,9 +20589,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 # Проверяем наличие callback_query (для callback handlers)
                                 elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                                     user_obj = callback_query.from_user
-                                # В случае если мы внутри message handler, используем message.from_user
-                                elif hasattr(locals().get('message', {}), 'from_user'):
-                                    user_obj = message.from_user
                                 
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
@@ -21440,9 +21170,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -21506,9 +21233,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -21577,9 +21301,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -21643,9 +21364,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -21716,9 +21434,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -21784,9 +21499,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -21852,9 +21564,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -21929,9 +21638,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -22163,9 +21869,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -22390,9 +22093,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -22575,9 +22275,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -22760,9 +22457,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -22838,9 +22532,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -22995,9 +22686,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -23150,9 +22838,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -23291,9 +22976,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -23439,9 +23121,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -23587,9 +23266,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -23735,9 +23411,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -23883,9 +23556,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -23956,9 +23626,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24032,9 +23699,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24104,9 +23768,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24187,9 +23848,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24272,9 +23930,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24356,9 +24011,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24533,9 +24185,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24608,9 +24257,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24674,9 +24320,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24740,9 +24383,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24806,9 +24446,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24872,9 +24509,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -24938,9 +24572,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -25004,9 +24635,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -25070,9 +24698,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -25136,9 +24761,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -25202,9 +24824,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -25270,9 +24889,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                     # Проверяем наличие callback_query (для callback handlers)
                     elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
                         user_obj = callback_query.from_user
-                    # В случае если мы внутри message handler, используем message.from_user
-                    elif hasattr(locals().get('message', {}), 'from_user'):
-                        user_obj = message.from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
