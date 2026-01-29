@@ -1337,7 +1337,6 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Create reply keyboard
     # Удаляем старое сообщение и отправляем новое с reply клавиатурой
@@ -1742,7 +1741,6 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     
     # Проверка условных сообщений дл���� навигации
@@ -2007,7 +2005,6 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     
     # Проверка условных сообщений дл���� навигации
@@ -2564,7 +2561,6 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     
     # Проверка условных сообщений дл���� навигации
@@ -2834,7 +2830,6 @@ async def handle_callback_vxPv7G4n0QGyhnv4ucOM5(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     keyboard = None
     
@@ -2963,7 +2958,6 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     keyboard = None
     
@@ -3099,7 +3093,6 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Create reply keyboard
     # Удаляем старое сообщение и отправляем новое с reply клавиатурой
@@ -3481,7 +3474,6 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Create reply keyboard
     # Удаляем старое сообщение и отправляем новое с reply клавиатурой
@@ -3921,7 +3913,6 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     
     # Проверка условных сообщений дл���� навигации
@@ -4223,7 +4214,6 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Create reply keyboard
     # Удаляем старое сообщение и отправляем новое с reply клавиатурой
@@ -4644,7 +4634,6 @@ async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="Девушки"))
@@ -4776,7 +4765,6 @@ async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="Девушки"))
@@ -4908,7 +4896,6 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
@@ -5156,7 +5143,6 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
@@ -5404,7 +5390,6 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
@@ -5652,7 +5637,6 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
@@ -5900,7 +5884,6 @@ async def handle_reply_Y6DFar0NH2ejdlKLTFgwC(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="1"))
@@ -6026,7 +6009,6 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
@@ -6274,7 +6256,6 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
@@ -6522,7 +6503,6 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
@@ -6767,7 +6747,6 @@ async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
                 logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
         
         return text_content
-    
     text = replace_variables_in_text(text, user_vars)
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="Пропустить"))
@@ -7058,7 +7037,6 @@ async def handle_user_input(message: types.Message):
                                     logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                             
                             return text_content
-                        
                         text = replace_variables_in_text(text, user_vars)
                         # Создаем reply клавиатуру
                         builder = ReplyKeyboardBuilder()
@@ -7136,7 +7114,6 @@ async def handle_user_input(message: types.Message):
                                     logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                             
                             return text_content
-                        
                         text = replace_variables_in_text(text, user_vars)
                         # Создаем reply клавиатуру
                         builder = ReplyKeyboardBuilder()
@@ -7505,7 +7482,6 @@ async def handle_user_input(message: types.Message):
                                     logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                             
                             return text_content
-                        
                         text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: vxPv7G4n0QGyhnv4ucOM5")
                         await message.answer(text)
@@ -7570,7 +7546,6 @@ async def handle_user_input(message: types.Message):
                                     logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                             
                             return text_content
-                        
                         text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: 8xSJaWAJNz7Hz_54mjFTF")
                         await message.answer(text)
@@ -7633,7 +7608,6 @@ async def handle_user_input(message: types.Message):
                                     logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                             
                             return text_content
-                        
                         text = replace_variables_in_text(text, user_vars)
                         # Создаем reply клавиатуру
                         builder = ReplyKeyboardBuilder()
@@ -7704,7 +7678,6 @@ async def handle_user_input(message: types.Message):
                                     logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                             
                             return text_content
-                        
                         text = replace_variables_in_text(text, user_vars)
                         # Создаем reply клавиатуру
                         builder = ReplyKeyboardBuilder()
@@ -8150,7 +8123,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста
                             builder = ReplyKeyboardBuilder()
@@ -8232,7 +8204,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста
                             builder = ReplyKeyboardBuilder()
@@ -8315,7 +8286,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
@@ -8391,7 +8361,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
@@ -8467,7 +8436,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             # Узел с условными сообщениями - проверяем условия
                             logging.info(f"🔧 Обработка узла с условными сообщениями: lBPy3gcGVLla0NGdSYb35")
@@ -8603,7 +8571,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
@@ -8679,7 +8646,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # НЕ отправляем сообщение об успехе здесь - это делается в старом формате
@@ -8770,7 +8736,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # НЕ отправляем сообщение об успехе здесь - это делается в старом формате
@@ -8859,7 +8824,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             # Создаем reply клавиатуру
                             builder = ReplyKeyboardBuilder()
@@ -8936,7 +8900,6 @@ async def handle_user_input(message: types.Message):
                                         logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                                 
                                 return text_content
-                            
                             text = replace_variables_in_text(text, user_vars)
                             # Создаем reply клавиатуру
                             builder = ReplyKeyboardBuilder()
@@ -9331,7 +9294,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"✅ Навигация к обычному узлу start выполнена")
@@ -9394,7 +9356,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу f90r9k3FSLu2Tjn74cBn_ выполнен")
@@ -9457,7 +9418,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу RFTgm4KzC6dI39AMTPcmo выполнен")
@@ -9520,7 +9480,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу sIh3xXKEtb_TtrhHqZQzX выполнен")
@@ -9583,7 +9542,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу tS2XGL2Mn4LkE63SnxhPy выполнен")
@@ -9646,7 +9604,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу lBPy3gcGVLla0NGdSYb35 выполнен")
@@ -9709,7 +9666,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу Y9zLRp1BLpVhm-HcsNkJV выполнен")
@@ -9772,7 +9728,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу vxPv7G4n0QGyhnv4ucOM5 выполнен")
@@ -9837,7 +9792,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу 8xSJaWAJNz7Hz_54mjFTF выполнен")
@@ -9900,7 +9854,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу KE-8sR9elPEefApjXtBxC выполнен")
@@ -9966,7 +9919,6 @@ async def handle_user_input(message: types.Message):
                             logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
                     
                     return text_content
-                
                 text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу yrsc8v81qQa5oQx538Dzn выполнен")

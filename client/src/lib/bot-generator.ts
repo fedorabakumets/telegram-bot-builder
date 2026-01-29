@@ -5,6 +5,7 @@ import { BotData, Node, BotGroup, buttonSchema } from '../../../shared/schema';
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';
 import { generateSynonymHandler, generateMessageSynonymHandler } from './Synonyms';
+import { generateSynonymHandlers } from './generate-synonym-handlers';
 import {
   generateBanUserHandler,
   generateUnbanUserHandler,
@@ -56,6 +57,8 @@ import { addInputTargetNodes } from './add';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration } from './generate';
 import { extractNodeData } from './extractNodeData';
 import { generateUniversalVariableReplacement } from './generateUniversalVariableReplacement';
+import { collectConditionalMessageButtons } from './collectConditionalMessageButtons';
+import { addAutoTransitionNodes } from './addAutoTransitionNodes';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -763,23 +766,33 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * Генерирует код настройки меню команд для BotFather
    * @param menuCommands - Команды, которые будут отображаться в меню
    * @returns Сгенерированный код настройки меню команд
+   * @description
+   *   Этот код настраивает настройку меню команд для BotFather
+   *   с помощью функции set_bot_commands
    */
   function generateBotCommandsSetup(menuCommands: any[]): string {
+    /**
+     * @description Проверяем, есть ли команды для настройки меню
+     * @returns true, если есть команды, false, иначе
+     */
     if (menuCommands.length === 0) {
       return '';
     }
 
     let commandCode = '\n# Настройка меню команд\n';
+    commandCode += '# Генерируем настройку меню команд для BotFather\n';
     commandCode += 'async def set_bot_commands():\n';
     commandCode += '    commands = [\n';
 
     menuCommands.forEach(node => {
       const command = node.data.command?.replace('/', '') || '';
       const description = node.data.description || 'Команда бота';
+      commandCode += `        # Команда ${command} - ${description}\n`;
       commandCode += `        BotCommand(command="${command}", description="${description}"),\n`;
     });
 
     commandCode += '    ]\n';
+    commandCode += '# Устанавливаем команды для бота\n';
     commandCode += '    await bot.set_my_commands(commands)\n\n';
 
     return commandCode;
@@ -846,45 +859,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // Настройка меню команд для BotFather
   code += generateBotCommandsSetup(menuCommands);
-
-  /**
-   * Генерирует обработчики синонимов для узлов
-   * @param nodes - Массив узлов для генерации обработчиков синонимов
-   * @returns Сгенерированный код обработчиков синонимов
-   */
-  function generateSynonymHandlers(nodes: Node[]): string {
-    let synonymCode = '';
-
-    const nodesWithSynonyms = nodes.filter(node =>
-      node.data.synonyms &&
-      node.data.synonyms.length > 0
-    );
-
-    if (nodesWithSynonyms.length > 0) {
-      synonymCode += '\n# Обработчики синонимов\n';
-      nodesWithSynonyms.forEach(node => {
-        if (node.data.synonyms) {
-          node.data.synonyms.forEach((synonym: string) => {
-            // Добавляем маркер для синонимов того же узла
-            synonymCode += `# @@NODE_START:${node.id}@@\n`;
-
-            if (node.type === 'start' || node.type === 'command') {
-              synonymCode += generateSynonymHandler(node, synonym);
-            } else if (node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || node.type === 'unmute_user' ||
-              node.type === 'kick_user' || node.type === 'promote_user' || node.type === 'demote_user' || node.type === 'admin_rights') {
-              synonymCode += generateUserManagementSynonymHandler(node, synonym);
-            } else {
-              synonymCode += generateMessageSynonymHandler(node, synonym);
-            }
-
-            synonymCode += `# @@NODE_END:${node.id}@@\n`;
-          });
-        }
-      });
-    }
-
-    return synonymCode;
-  }
 
   // Генерируем обработчики для каждого узла
   code += generateNodeHandlers(nodes || [], userDatabaseEnabled);
@@ -7561,41 +7535,4 @@ export interface CodeWithMap {
 
 // Повторный экспорт функций каркаса
 export { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml };
-/**
-   * Вспомогательная функция для добавления целевых узлов автоперехдов
-   * @param {any[]} nodes - Массив узлов для обработки
-   * @param {Set<string>} allReferencedNodeIds - Множество идентификаторов узлов для обновления
-   */
-
-  export function addAutoTransitionNodes(nodes: any[], allReferencedNodeIds: Set<string>): void {
-    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем узлы, которые являются целями автопереходов
-    (nodes || []).forEach(node => {
-      if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
-        allReferencedNodeIds.add(node.data.autoTransitionTo);
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);
-      }
-    });
-  }
-/**
- * Вспомогательная функция для сбора кнопок из условных сообщений
- * @param {any[]} nodes - Массив узлов для извлечения кнопок
- * @param {Set<string>} allConditionalButtons - Множество кнопок для обновления
- */
-
-export function collectConditionalMessageButtons(nodes: any[], allConditionalButtons: Set<string>): void {
-  // Собираем кнопки из условных сообщений
-  (nodes || []).forEach(node => {
-    if (node.data.conditionalMessages) {
-      node.data.conditionalMessages.forEach((condition: any) => {
-        if (condition.buttons) {
-          condition.buttons.forEach((button: Button) => {
-            if (button.action === 'goto' && button.target) {
-              allConditionalButtons.add(button.target);
-            }
-          });
-        }
-      });
-    }
-  });
-}
 
