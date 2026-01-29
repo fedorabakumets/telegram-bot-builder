@@ -55,7 +55,7 @@ import { filterInlineNodes } from './filterInlineNodes';
 import { addInputTargetNodes } from './add';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration } from './generate';
 import { extractNodeData } from './extractNodeData';
-import { generateUniversalVariableReplacement as generateUniversalVariableReplacementUtil, generateReplaceVariablesFunction } from './utils';
+import { generateUniversalVariableReplacement } from './generateUniversalVariableReplacement';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -7598,24 +7598,4 @@ export function collectConditionalMessageButtons(nodes: any[], allConditionalBut
     }
   });
 }
-// Функция для генерации замены всех переменных в тексте (рефакторенная версия)
-
-export function generateUniversalVariableReplacement(indentLevel: string): string {
-  let code = '';
-
-  // Используем утилиту для генерации кода инициализации переменных
-  code += generateUniversalVariableReplacementUtil(indentLevel);
-  code += `${indentLevel}\n`;
-
-  // Добавляем функцию замены переменных (если она еще не была добавлена)
-  code += `${indentLevel}# Заменяем все переменные в тексте\n`;
-  code += `${indentLevel}import re\n`;
-  code += generateReplaceVariablesFunction(indentLevel);
-  code += `${indentLevel}\n`;
-  code += `${indentLevel}text = replace_variables_in_text(text, user_vars)\n`;
-
-  return code;
-}
-
-
 
