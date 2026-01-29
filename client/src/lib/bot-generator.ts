@@ -59,6 +59,7 @@ import { extractNodeData } from './extractNodeData';
 import { generateUniversalVariableReplacement } from './generateUniversalVariableReplacement';
 import { collectConditionalMessageButtons } from './collectConditionalMessageButtons';
 import { addAutoTransitionNodes } from './addAutoTransitionNodes';
+import { generateNodeHandlers } from './generate-node-handlers';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -796,65 +797,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     commandCode += '    await bot.set_my_commands(commands)\n\n';
 
     return commandCode;
-  }
-
-  /**
-   * Генерирует обработчики для каждого узла
-   * @param nodes - Массив узлов для генерации обработчиков
-   * @param userDatabaseEnabled - Флаг, указывающий, включена ли база данных пользователей
-   * @returns Сгенерированный код обработчиков узлов
-   */
-  function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean): string {
-    let nodeCode = '';
-
-    nodes.forEach((node: Node) => {
-      // Добавляем маркер начала узла для отслеживания позиции в коде
-      nodeCode += `\n# @@NODE_START:${node.id}@@\n`;
-
-      if (node.type === "start") {
-        nodeCode += generateStartHandler(node, userDatabaseEnabled);
-      } else if (node.type === "command") {
-        nodeCode += generateCommandHandler(node, userDatabaseEnabled);
-      } else if (node.type === "sticker") {
-        nodeCode += generateStickerHandler(node);
-      } else if (node.type === "voice") {
-        nodeCode += generateVoiceHandler(node);
-      } else if (node.type === "animation") {
-        nodeCode += generateAnimationHandler(node);
-      } else if (node.type === "location") {
-        nodeCode += generateLocationHandler(node);
-      } else if (node.type === "contact") {
-        nodeCode += generateContactHandler(node);
-      } else if (node.type === "pin_message") {
-        nodeCode += generatePinMessageHandler(node);
-      } else if (node.type === "unpin_message") {
-        nodeCode += generateUnpinMessageHandler(node);
-      } else if (node.type === "delete_message") {
-        nodeCode += generateDeleteMessageHandler(node);
-      } else if (node.type === "ban_user") {
-        nodeCode += generateBanUserHandler(node);
-      } else if (node.type === "unban_user") {
-        nodeCode += generateUnbanUserHandler(node);
-      } else if (node.type === "mute_user") {
-        nodeCode += generateMuteUserHandler(node);
-      } else if (node.type === "unmute_user") {
-        nodeCode += generateUnmuteUserHandler(node);
-      } else if (node.type === "kick_user") {
-        nodeCode += generateKickUserHandler(node);
-      } else if (node.type === "promote_user") {
-        nodeCode += generatePromoteUserHandler(node);
-      } else if (node.type === "demote_user") {
-        nodeCode += generateDemoteUserHandler(node);
-      } else if (node.type === "admin_rights") {
-        nodeCode += generateAdminRightsHandler(node);
-      }
-      // Примечание: узлы ввода пользователя и сообщений обрабатываются через обработчики обратного вызова, а не как отдельные обработчики команд
-
-      // Добавляем маркер конца узла
-      nodeCode += `# @@NODE_END:${node.id}@@\n`;
-    });
-
-    return nodeCode;
   }
 
   // Настройка меню команд для BotFather
