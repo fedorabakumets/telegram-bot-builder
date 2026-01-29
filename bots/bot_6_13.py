@@ -8261,7 +8261,7 @@ async def admin_rights_admin_rights_node_synonym_права_админа_handler
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback
@@ -8326,7 +8326,7 @@ async def admin_rights_admin_rights_node_synonym_настроить_права_h
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback
@@ -8391,7 +8391,7 @@ async def admin_rights_admin_rights_node_synonym_тг_права_handler(message
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback
@@ -8456,7 +8456,7 @@ async def admin_rights_admin_rights_node_synonym_права_администра
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback
@@ -8521,7 +8521,7 @@ async def admin_rights_admin_rights_node_synonym_admin_rights_handler(message: t
                     logging.warning(f"Не удалось отредактировать сообщение: {e}")
                     return await self.message.answer(text, **kwargs)
         
-        mock_callback = MockCallback("admin_rights_node", callback_query.from_user, callback_query.message)
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
         # bot уже определен глобально
         await handle_callback_admin_rights_node(mock_callback, bot)
         return  # Завершаем обработку, так как все сделано в callback
