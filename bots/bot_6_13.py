@@ -720,6 +720,23 @@ async def get_user_from_db(user_id: int):
         logging.error(f"Ошибка получения пользователя из БД: {e}")
         return None
 
+async def get_user_data_from_db(user_id: int, data_key: str):
+    """Получает конкретное значение из поля user_data пользователя"""
+    if not db_pool:
+        return None
+    try:
+        async with db_pool.acquire() as conn:
+            # Используем оператор ->> для получения значения поля JSONB как текста
+            value = await conn.fetchval(
+                "SELECT user_data ->> $2 FROM bot_users WHERE user_id = $1",
+                user_id,
+                data_key
+            )
+            return value
+    except Exception as e:
+        logging.error(f"Ошибка получения данных пользователя из БД: {e}")
+        return None
+
 # Алиас функции для callback обработчиков
 async def handle_command_start(message):
     """Алиас для start_handler, используется в callback обработчиках"""
@@ -883,13 +900,13 @@ async def start_handler(message: types.Message):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -1081,13 +1098,13 @@ async def profile_handler(message: types.Message):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -1138,13 +1155,13 @@ async def profile_handler(message: types.Message):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -1259,13 +1276,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -1316,13 +1333,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -1529,13 +1546,13 @@ async def help_handler(message: types.Message):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -1586,13 +1603,13 @@ async def help_handler(message: types.Message):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -3269,13 +3286,13 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -3445,13 +3462,13 @@ async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery,
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -8436,13 +8453,13 @@ async def handle_callback_gender_selection(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -8557,13 +8574,13 @@ async def handle_callback_decline_response(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -8669,13 +8686,13 @@ async def handle_callback_name_input(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -8827,13 +8844,13 @@ async def handle_callback_red_line_stations(callback_query: types.CallbackQuery)
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -9137,13 +9154,13 @@ async def handle_callback_blue_line_stations(callback_query: types.CallbackQuery
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -9440,13 +9457,13 @@ async def handle_callback_green_line_stations(callback_query: types.CallbackQuer
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -9701,13 +9718,13 @@ async def handle_callback_purple_line_stations(callback_query: types.CallbackQue
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -9972,13 +9989,13 @@ async def handle_callback_interests_categories(callback_query: types.CallbackQue
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -10090,13 +10107,13 @@ async def handle_callback_metro_selection(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -10246,13 +10263,13 @@ async def handle_callback_music_interests(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -10479,13 +10496,13 @@ async def handle_callback_hobby_interests(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -10710,13 +10727,13 @@ async def handle_callback_social_interests(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -10927,13 +10944,13 @@ async def handle_callback_creativity_interests(callback_query: types.CallbackQue
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -11151,13 +11168,13 @@ async def handle_callback_active_interests(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -11375,13 +11392,13 @@ async def handle_callback_food_interests(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -11599,13 +11616,13 @@ async def handle_callback_sport_interests(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -11794,13 +11811,13 @@ async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -11920,13 +11937,13 @@ async def handle_callback_channel_choice(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -12046,13 +12063,13 @@ async def handle_callback_extra_info(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -12183,13 +12200,13 @@ async def handle_callback_profile_complete(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -12366,13 +12383,13 @@ async def handle_callback_age_input(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -12486,13 +12503,13 @@ async def handle_callback_marital_status(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -12632,13 +12649,13 @@ async def handle_callback_join_request(callback_query: types.CallbackQuery):
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
-        # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
-        # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-            user_obj = callback_query.from_user
-        
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
         if user_obj:
             init_user_variables(user_id, user_obj)
     
@@ -13491,13 +13508,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -13568,13 +13585,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -13632,13 +13649,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -13746,13 +13763,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -13830,13 +13847,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -14067,13 +14084,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -14297,13 +14314,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -14485,13 +14502,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -14673,13 +14690,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -14754,13 +14771,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -14914,13 +14931,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -15072,13 +15089,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -15216,13 +15233,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -15367,13 +15384,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -15518,13 +15535,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -15669,13 +15686,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -15820,13 +15837,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -15900,13 +15917,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -15983,13 +16000,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16062,13 +16079,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16151,13 +16168,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16234,13 +16251,13 @@ async def handle_user_input(message: types.Message):
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16316,13 +16333,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16490,13 +16507,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16563,13 +16580,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16626,13 +16643,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16689,13 +16706,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16752,13 +16769,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16815,13 +16832,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16878,13 +16895,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -16941,13 +16958,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -17004,13 +17021,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -17067,13 +17084,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -17130,13 +17147,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -17195,13 +17212,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                             # Получаем объект пользователя из сообщения или callback
                             user_obj = None
-                            # Проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                user_obj = message.from_user
-                            # Проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                user_obj = callback_query.from_user
-                            
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
                             if user_obj:
                                 init_user_variables(user_id, user_obj)
                         
@@ -17865,13 +17882,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -17933,13 +17950,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -18001,13 +18018,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -18071,13 +18088,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -18149,13 +18166,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -18227,13 +18244,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -18303,13 +18320,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -18540,13 +18557,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -18770,13 +18787,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -18958,13 +18975,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -19146,13 +19163,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -19227,13 +19244,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -19387,13 +19404,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -19545,13 +19562,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -19689,13 +19706,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -19840,13 +19857,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -19991,13 +20008,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -20142,13 +20159,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -20291,13 +20308,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -20361,13 +20378,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -20434,13 +20451,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -20503,13 +20520,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -20583,13 +20600,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                                 # Получаем объект пользователя из сообщения или callback
                                 user_obj = None
-                                # Проверяем наличие message (для message handlers)
-                                if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                                    user_obj = message.from_user
-                                # Проверяем наличие callback_query (для callback handlers)
-                                elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                                    user_obj = callback_query.from_user
-                                
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
                                 if user_obj:
                                     init_user_variables(user_id, user_obj)
                             
@@ -21164,13 +21181,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -21227,13 +21244,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -21295,13 +21312,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -21358,13 +21375,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -21428,13 +21445,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -21493,13 +21510,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -21558,13 +21575,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -21632,13 +21649,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -21863,13 +21880,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -22087,13 +22104,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -22269,13 +22286,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -22451,13 +22468,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -22526,13 +22543,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -22680,13 +22697,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -22832,13 +22849,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -22970,13 +22987,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -23115,13 +23132,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -23260,13 +23277,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -23405,13 +23422,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -23550,13 +23567,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -23620,13 +23637,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -23693,13 +23710,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -23762,13 +23779,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -23842,13 +23859,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -23924,13 +23941,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24005,13 +24022,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24179,13 +24196,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24251,13 +24268,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24314,13 +24331,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24377,13 +24394,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24440,13 +24457,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24503,13 +24520,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24566,13 +24583,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24629,13 +24646,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24692,13 +24709,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24755,13 +24772,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24818,13 +24835,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
@@ -24883,13 +24900,13 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
-                    # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
-                    # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and 'callback_query' in globals() and hasattr(callback_query, 'from_user'):
-                        user_obj = callback_query.from_user
-                    
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
                     if user_obj:
                         init_user_variables(user_id, user_obj)
                 
