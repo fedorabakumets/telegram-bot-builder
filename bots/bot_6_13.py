@@ -1296,6 +1296,9 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_f90r9k3FSLu2Tjn74cBn_: {e}")
         return
     
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
         await callback_query.answer()
@@ -1689,6 +1692,9 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_tS2XGL2Mn4LkE63SnxhPy: {e}")
         return
     
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
         await callback_query.answer()
@@ -1939,6 +1945,47 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
     except Exception as e:
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_lBPy3gcGVLla0NGdSYb35: {e}")
         return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+        # Проверяем, содержит ли callback_data кнопку с флагом hideAfterClick
+    hide_after_click_buttons = ["g9KWWguVciHEUMMeyZ-WN", "Y9zLRp1BLpVhm-HcsNkJV"]
+    
+    # Проверяем, совпадает ли callback_data с одной из кнопок с флагом hideAfterClick
+    if callback_data in hide_after_click_buttons:
+        try:
+            # Удаляем сообщение, в котором была нажата кнопка
+            await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
+            logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {callback_data}")
+        except Exception as e:
+            logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")
+            # Если не удалось удалить сообщение, просто отвечаем на callback
+            try:
+                await callback_query.answer()
+            except:
+                pass
+        return  # Прерываем дальнейшую обработку, так как сообщение уже удалено
+    
+    # Проверяем формат callback_data вида nodeId_btn_index для кнопок с флагом hideAfterClick
+    # Извлекаем индекс кнопки из callback_data и проверяем, соответствует ли она hideAfterClick кнопке
+    if "_" in callback_data:
+        parts = callback_data.split("_btn_")
+        if len(parts) == 2:
+            node_part, index_part = parts
+            # Проверяем, является ли node_part одним из ID кнопок с флагом hideAfterClick
+            if node_part == "g9KWWguVciHEUMMeyZ-WN":
+                try:
+                    # Удаляем сообщение, в котором была нажата кнопка
+                    await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
+                    logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {callback_data}")
+                except Exception as e:
+                    logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")
+                    try:
+                        await callback_query.answer()
+                    except:
+                        pass
+                return  # Прерываем дальнейшую обработку
+    
+
     
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
@@ -2491,6 +2538,9 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_Y9zLRp1BLpVhm_HcsNkJV: {e}")
         return
     
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
         await callback_query.answer()
@@ -2740,6 +2790,9 @@ async def handle_callback_vxPv7G4n0QGyhnv4ucOM5(callback_query: types.CallbackQu
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_vxPv7G4n0QGyhnv4ucOM5: {e}")
         return
     
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
         await callback_query.answer()
@@ -2845,6 +2898,9 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
     except Exception as e:
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_8xSJaWAJNz7Hz_54mjFTF: {e}")
         return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
     
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
@@ -2966,6 +3022,9 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
     except Exception as e:
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_KE_8sR9elPEefApjXtBxC: {e}")
         return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
     
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
@@ -3324,6 +3383,9 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
     except Exception as e:
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_RFTgm4KzC6dI39AMTPcmo: {e}")
         return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
     
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
@@ -3753,6 +3815,9 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_sIh3xXKEtb_TtrhHqZQzX: {e}")
         return
     
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
         await callback_query.answer()
@@ -4041,6 +4106,9 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
     except Exception as e:
         logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_yrsc8v81qQa5oQx538Dzn: {e}")
         return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
     
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
@@ -6350,6 +6418,33 @@ async def handle_user_input(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick
+        # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick
+    user_text_lower = user_text.lower() if user_text else ""
+    
+    # Список текстов кнопок с флагом hideAfterClick
+    hide_after_click_texts = ["пропустить"]
+    
+    if user_text_lower in hide_after_click_texts:
+        try:
+            # Удаляем сообщение пользователя, которое содержит нажатие на кнопку
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+            logging.info(f"🗑️ Сообщение пользователя удалено после нажатия reply-кнопки с флагом hideAfterClick: {user_text}")
+        except Exception as e:
+            logging.warning(f"⚠️ Не удалось удалить сообщение пользователя с reply-кнопкой hideAfterClick: {e}")
+        return  # Прерываем дальнейшую обработку, так как сообщение уже удалено
+    
+    # Дополнительная проверка для специфических кнопок с флагом hideAfterClick
+    if any(skip_text in user_text_lower for skip_text in ["пропустить"]):
+        try:
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+            logging.info(f"🗑️ Сообщение пользователя удалено для кнопки skip с флагом hideAfterClick: {user_text}")
+        except Exception as e:
+            logging.warning(f"⚠️ Не удалось удалить сообщение для skip кнопки: {e}")
+        return
+    
+
     
     # Проверяем, ожидаем ли мы ввод для условного сообщения
     if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:

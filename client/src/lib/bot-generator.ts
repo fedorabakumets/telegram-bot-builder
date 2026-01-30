@@ -29,6 +29,8 @@ import {
   generateLocationHandler,
   generateContactHandler
 } from './MediaHandler';
+import { generateHideAfterClickMiddleware } from './handlers/generateHideAfterClickHandler';
+import { generateReplyHideAfterClickHandler } from './handlers/generateReplyHideAfterClickHandler';
 import {
   generateCommandHandler,
   generateStartHandler
@@ -550,6 +552,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    except Exception as e:\n';
           code += `        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_${safeFunctionName}: {e}")\n`;
           code += '        return\n';
+          code += '    \n';
+          code += '    # Проверяем флаг hideAfterClick для кнопок\n';
+          code += `    ${generateHideAfterClickMiddleware(targetNode)}\n`;
           code += '    \n';
           code += '    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)\n';
           code += '    try:\n';
@@ -2170,6 +2175,9 @@ if (userInputNodes.length > 0) {
     code += '    user_name = init_user_variables(user_id, message.from_user)\n';
     code += '    \n';
     code += generateUniversalVariableReplacement('    ');
+    code += '    \n';
+    code += '    # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick\n';
+    code += `    ${generateReplyHideAfterClickHandler(nodes)}\n`;
     code += '    \n';
     code += '    # Проверяем, ожидаем ли мы ввод для условного сообщения\n';
     code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
@@ -5633,6 +5641,9 @@ if (userInputNodes.length > 0) {
           code += `        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_${safeFunctionName}: {e}")\n`;
           code += '        return\n';
           code += '    \n';
+          code += '    # Проверяем флаг hideAfterClick для кнопок\n';
+          code += `    # Обработка hideAfterClick не применяется в этом обработчике, так как он используется для специальных кнопок\n`;
+          code += '    \n';
           code += '    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)\n';
           code += '    try:\n';
           code += '        await callback_query.answer()\n';
@@ -6778,6 +6789,8 @@ if (userInputNodes.length > 0) {
           code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
           const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+          code += '    # Проверяем флаг hideAfterClick для кнопок\n';
+          code += `    # Обработка hideAfterClick не применяется в этом обработчике, так как он используется для специальных командных кнопок\n`;
           code += '    await callback_query.answer()\n';
           code += '    user_id = callback_query.from_user.id\n';
           code += '    # Инициализируем базовыя переменные пользователя\n';
@@ -6850,7 +6863,7 @@ function generateMediaFileFunctions() {
   // Add media file functions that handle photo registration and processing
   code += `
 async def register_telegram_photo(message_id: int, file_id: str, bot_token: str, media_type: str = "photo"):
-    """Регистрирует фото из Telegram в системе
+    """Регистр��рует фото из Telegram в системе
 
     Args:
         message_id: ID сообщения в базе данных
