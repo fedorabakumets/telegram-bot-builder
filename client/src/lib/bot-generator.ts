@@ -1739,7 +1739,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Обрабатываем узла сбора ввода
             const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "П���жалуйяяяа, введите ваш отяяяет:";
             const responseType = targetNode.data.responseType || 'text';
-            const inputType = targetNode.data.inputType || 'text';
+            // Определяем тип ввода - если включены медиа-типы, используем их, иначе текст
+            let inputType = 'text';
+            if (targetNode.data.enablePhotoInput) {
+              inputType = 'photo';
+            } else if (targetNode.data.enableVideoInput) {
+              inputType = 'video';
+            } else if (targetNode.data.enableAudioInput) {
+              inputType = 'audio';
+            } else if (targetNode.data.enableDocumentInput) {
+              inputType = 'document';
+            } else {
+              inputType = targetNode.data.inputType || 'text';
+            }
             const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
             const saveToDatabase = targetNode.data.saveToDatabase || false;
 
@@ -3085,7 +3097,19 @@ if (userInputNodes.length > 0) {
 
             // Если узел message собирает ввод, настраиваем ожидание
             if (targetNode.data.collectUserInput === true) {
-              const inputType = targetNode.data.inputType || 'text';
+              // Определяем тип ввода - если включены медиа-типы, используем их, иначе текст
+              let inputType = 'text';
+              if (targetNode.data.enablePhotoInput) {
+                inputType = 'photo';
+              } else if (targetNode.data.enableVideoInput) {
+                inputType = 'video';
+              } else if (targetNode.data.enableAudioInput) {
+                inputType = 'audio';
+              } else if (targetNode.data.enableDocumentInput) {
+                inputType = 'document';
+              } else {
+                inputType = targetNode.data.inputType || 'text';
+              }
               const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
               const inputTargetNodeId = targetNode.data.inputTargetNodeId;
 
@@ -4438,7 +4462,19 @@ if (userInputNodes.length > 0) {
         } else if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
           const inputPrompt = formatTextForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
           const responseType = targetNode.data.responseType || 'text';
-          const inputType = targetNode.data.inputType || 'text';
+          // Определяем тип ввода - если включены медиа-типы, используем их, иначе текст
+          let inputType = 'text';
+          if (targetNode.data.enablePhotoInput) {
+            inputType = 'photo';
+          } else if (targetNode.data.enableVideoInput) {
+            inputType = 'video';
+          } else if (targetNode.data.enableAudioInput) {
+            inputType = 'audio';
+          } else if (targetNode.data.enableDocumentInput) {
+            inputType = 'document';
+          } else {
+            inputType = targetNode.data.inputType || 'text';
+          }
           const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
           const minLength = targetNode.data.minLength || 0;
           const maxLength = targetNode.data.maxLength || 0;
@@ -6054,7 +6090,19 @@ if (userInputNodes.length > 0) {
 
               // КРИТИЧЕСКИ ВАЖНАЯ ЛОГИКА: Если этот узел имеет collectUserInput, настраиваем состояние ожидания
               if (targetNode.data.collectUserInput === true) {
-                const inputType = targetNode.data.inputType || 'text';
+                // Определяем тип ввода - если включены медиа-типы, используем их, иначе текст
+                let inputType = 'text';
+                if (targetNode.data.enablePhotoInput) {
+                  inputType = 'photo';
+                } else if (targetNode.data.enableVideoInput) {
+                  inputType = 'video';
+                } else if (targetNode.data.enableAudioInput) {
+                  inputType = 'audio';
+                } else if (targetNode.data.enableDocumentInput) {
+                  inputType = 'document';
+                } else {
+                  inputType = targetNode.data.inputType || 'text';
+                }
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 const inputTargetNodeId = targetNode.data.inputTargetNodeId;
 
@@ -6821,7 +6869,7 @@ if (userInputNodes.length > 0) {
           code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
           const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
-          code += '    # Проверяем флаг hideAfterClick для кнопок\n';
+          code += '    # Проверяем флаг hideAfterClick ��ля кнопок\n';
           code += `    # Обработка hideAfterClick не применяется в этом обработчике, так как он используется для специальных командных кнопок\n`;
           code += '    await callback_query.answer()\n';
           code += '    user_id = callback_query.from_user.id\n';

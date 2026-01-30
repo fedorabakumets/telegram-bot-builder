@@ -5535,7 +5535,7 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
     
     # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-    user_data[message.from_user.id]["waiting_for_photo"] = {
+    user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "photo",
         "modes": ["photo"],
         "variable": "photo",
@@ -6277,7 +6277,7 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
     
     # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-    user_data[message.from_user.id]["waiting_for_photo"] = {
+    user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "photo",
         "modes": ["photo"],
         "variable": "photo",
@@ -6421,25 +6421,26 @@ async def handle_user_input(message: types.Message):
     
     # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick
         # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick
-    user_text_lower = user_text.lower() if user_text else ""
+    # Используем message.text напрямую, так как user_text может быть не определен в этом месте
+    message_text_lower = message.text.lower() if message.text else ""
     
     # Список текстов кнопок с флагом hideAfterClick
     hide_after_click_texts = ["пропустить"]
     
-    if user_text_lower in hide_after_click_texts:
+    if message_text_lower in hide_after_click_texts:
         try:
             # Удаляем сообщение пользователя, которое содержит нажатие на кнопку
             await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-            logging.info(f"🗑️ Сообщение пользователя удалено после нажатия reply-кнопки с флагом hideAfterClick: {user_text}")
+            logging.info(f"🗑️ Сообщение пользователя удалено после нажатия reply-кнопки с флагом hideAfterClick: {message.text}")
         except Exception as e:
             logging.warning(f"⚠️ Не удалось удалить сообщение пользователя с reply-кнопкой hideAfterClick: {e}")
         return  # Прерываем дальнейшую обработку, так как сообщение уже удалено
     
     # Дополнительная проверка для специфических кнопок с флагом hideAfterClick
-    if any(skip_text in user_text_lower for skip_text in ["пропустить"]):
+    if any(skip_text in message_text_lower for skip_text in ["пропустить"]):
         try:
             await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-            logging.info(f"🗑️ Сообщение пользователя удалено для кнопки skip с флагом hideAfterClick: {user_text}")
+            logging.info(f"🗑️ Сообщение пользователя удалено для кнопки skip с флагом hideAfterClick: {message.text}")
         except Exception as e:
             logging.warning(f"⚠️ Не удалось удалить сообщение для skip кнопки: {e}")
         return
@@ -7312,9 +7313,11 @@ async def handle_user_input(message: types.Message):
                 # Очищаем pending_skip_buttons и любые медиа-ожидания
                 if "pending_skip_buttons" in user_data[user_id]:
                     del user_data[user_id]["pending_skip_buttons"]
-                for media_wait in ["waiting_for_photo", "waiting_for_video", "waiting_for_audio", "waiting_for_document"]:
-                    if media_wait in user_data[user_id]:
-                        del user_data[user_id][media_wait]
+                # Проверяем и очищаем waiting_for_input если тип соответствует медиа
+                if "waiting_for_input" in user_data[user_id]:
+                    waiting_config = user_data[user_id]["waiting_for_input"]
+                    if isinstance(waiting_config, dict) and waiting_config.get("type") in ["photo", "video", "audio", "document"]:
+                        del user_data[user_id]["waiting_for_input"]
                 # Переходим к целевому узлу
                 if skip_target:
                     try:
@@ -7377,6 +7380,12 @@ async def handle_user_input(message: types.Message):
             min_length = waiting_config.get("min_length", 0)
             max_length = waiting_config.get("max_length", 0)
             next_node_id = waiting_config.get("next_node_id")
+            
+            # ИСПРАВЛЕНИЕ: Проверяем, является ли тип ввода медиа (фото, видео, аудио, документ)
+            # Если да, то текстовый обработчик не должен его обрабатывать
+            if input_type in ["photo", "video", "audio", "document"]:
+                logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается медиа ({input_type})")
+                return
         else:
             # Старый формат - waiting_config это строка с node_id
             waiting_node_id = waiting_config
@@ -7823,7 +7832,7 @@ async def handle_user_input(message: types.Message):
                             await message.answer(text)
                             # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-                            user_data[message.from_user.id]["waiting_for_photo"] = {
+                            user_data[message.from_user.id]["waiting_for_input"] = {
                                 "type": "photo",
                                 "modes": ["photo"],
                                 "variable": "photo",
@@ -8683,15 +8692,21 @@ async def handle_user_input(message: types.Message):
 @dp.message(F.photo)
 async def handle_photo_input(message: types.Message):
     user_id = message.from_user.id
-    logging.info(f"📸 яолучено фото от пользователя {user_id}")
+    logging.info(f"📸 Получено фото от пользователя {user_id}")
     
-    # Проверяем, ожидаем ли мы ввод фото
-    if user_id not in user_data or "waiting_for_photo" not in user_data[user_id]:
+    # Проверяем, ожидаем ли мы ввод фото - проверяем waiting_for_input с типом photo
+    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:
         logging.info(f"Фото от пользователя {user_id} проигнорировано - не ожидается ввод")
         return
     
     # Получаем конфигурацию ожидания
-    photo_config = user_data[user_id]["waiting_for_photo"]
+    waiting_config = user_data[user_id]["waiting_for_input"]
+    # Проверяем, что тип ожидания - фото
+    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "photo"):
+        logging.info(f"Фото от пользователя {user_id} проигнорировано - ожидается другой тип ввода")
+        return
+    
+    photo_config = waiting_config
     photo_variable = photo_config.get("variable", "user_photo")
     node_id = photo_config.get("node_id", "unknown")
     next_node_id = photo_config.get("next_node_id")
@@ -8774,7 +8789,7 @@ async def handle_photo_input(message: types.Message):
         logging.warning(f"Не удалось сохранить фото в БД, данные сохранены локально")
     
     # Очищаем состояние ожидания
-    del user_data[user_id]["waiting_for_photo"]
+    del user_data[user_id]["waiting_for_input"]
     
     logging.info(f"Фото сохранено: {photo_variable} = {photo_file_id}, URL = {photo_url}")
     
