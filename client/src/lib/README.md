@@ -11,7 +11,6 @@
 - **`index.ts`** - Главный экспорт всех модулей
 - **`queryClient.ts`** - Управление клиентом запросов
 - **`generateButtonResponseHandlers.ts`** - Генерация обработчиков для кнопочных ответов
-- **`generateUtilityFunctions.ts`** - Генерация вспомогательных функций
 - **`generateMediaFileFunctions.ts`** - Генерация функций для работы с медиафайлами
 - **`message-logging.ts`** - Логирование сообщений
 - **`extractNodeData.ts`** - Извлечение данных узлов
