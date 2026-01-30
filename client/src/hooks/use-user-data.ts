@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { LocalStorageService } from "@/lib/local-storage";
+import { LocalStorageService } from "@/lib/storage/local-storage";
 import type { BotProject, BotToken, BotTemplate } from "@shared/schema";
 
 type UserDataMode = 'local' | 'server';

@@ -1,6 +1,6 @@
-import { Node } from '../../../shared/schema';
-import { generateSynonymHandler, generateMessageSynonymHandler } from './Synonyms';
-import { generateUserManagementSynonymHandler } from './UserHandler';
+import { Node } from '@shared/schema';
+import { generateSynonymHandler, generateMessageSynonymHandler } from '../Synonyms';
+import { generateUserManagementSynonymHandler } from '../UserHandler';
 
 /**
  * Генерирует обработчики синонимов для узлов

@@ -5,7 +5,7 @@ import { BotData, Node, BotGroup, buttonSchema } from '../../../shared/schema';
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';
 import { generateSynonymHandler, generateMessageSynonymHandler } from './Synonyms';
-import { generateSynonymHandlers } from './generate-synonym-handlers';
+import { generateSynonymHandlers } from './generate/generate-synonym-handlers';
 import {
   generateBanUserHandler,
   generateUnbanUserHandler,
@@ -55,14 +55,14 @@ import { collectInputTargetNodes, } from './collect';
 import { filterInlineNodes } from './filterInlineNodes';
 import { addInputTargetNodes } from './add';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration } from './generate';
-import { generateMessageLoggingCode } from './message-logging';
+import { generateMessageLoggingCode } from './generate/generate-message-logging';
 import { extractNodeData } from './extractNodeData';
-import { generateUniversalVariableReplacement } from './generateUniversalVariableReplacement';
-import { collectConditionalMessageButtons } from './collectConditionalMessageButtons';
-import { addAutoTransitionNodes } from './addAutoTransitionNodes';
-import { generateNodeHandlers } from './generate-node-handlers';
+import { generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
+import { collectConditionalMessageButtons } from './collect/collectConditionalMessageButtons';
+import { addAutoTransitionNodes } from './add/addAutoTransitionNodes';
+import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateBotCommandsSetup } from './bot-commands-setup';
-import { generateButtonResponseHandlers } from './generateButtonResponseHandlers';
+import { generateButtonResponseHandlers } from './generate/generateButtonResponseHandlers';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -3317,7 +3317,7 @@ if (userInputNodes.length > 0) {
           code += `${bodyIndent}fake_message.date = message.date\n`;
           code += `${bodyIndent}fake_message.answer = message.answer\n`;
           code += `${bodyIndent}await ${handlerName}(fake_message)\n`;
-          code += `${bodyIndent}break  # Выходим из цикла после выполнения команды\n`;
+          code += `${bodyIndent}break  # Выходим из цикла после выпол��ен��я команды\n`;
         } else {
           code += `${bodyIndent}logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
           code += `${bodyIndent}break  # Выходим из цикла для неизвестного типа узла\n`;

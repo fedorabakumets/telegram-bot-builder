@@ -1,6 +1,6 @@
-import { Node, Button } from '../../../shared/schema';
-import { generateStartHandler, generateCommandHandler } from './CommandHandler';
-import { generateStickerHandler, generateVoiceHandler, generateAnimationHandler, generateLocationHandler, generateContactHandler } from './MediaHandler';
+import { Node, Button } from '@shared/schema';
+import { generateStartHandler, generateCommandHandler } from '../CommandHandler';
+import { generateStickerHandler, generateVoiceHandler, generateAnimationHandler, generateLocationHandler, generateContactHandler } from '../MediaHandler';
 import {
   generateBanUserHandler,
   generateUnbanUserHandler,
@@ -10,8 +10,8 @@ import {
   generatePromoteUserHandler,
   generateAdminRightsHandler,
   generateDemoteUserHandler
-} from './UserHandler';
-import { generateUnpinMessageHandler, generateDeleteMessageHandler, generatePinMessageHandler } from './MessageHandler';
+} from '../UserHandler';
+import { generateUnpinMessageHandler, generateDeleteMessageHandler, generatePinMessageHandler } from '../MessageHandler';
 
 /**
  * Генерирует обработчики для каждого узла

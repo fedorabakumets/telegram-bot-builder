@@ -1,7 +1,7 @@
 import { Button, globalLoggingEnabled } from "../bot-generator";
 import { generateButtonText } from '../format/generateButtonText';
 import { calculateOptimalColumns } from '../format/calculateOptimalColumns';
-import { generateUniversalVariableReplacement } from '../generateUniversalVariableReplacement';
+import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';

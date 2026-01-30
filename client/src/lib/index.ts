@@ -2,13 +2,12 @@
 export * from './bot-generator';
 export * from './commands';
 export * from './queryClient';
-export * from './generateButtonResponseHandlers';
-export * from './generateMediaFileFunctions';
+export * from './generate/generateButtonResponseHandlers';
+export * from './generate/generateMediaFileFunctions';
 export * from './extractNodeData';
 export * from './filterInlineNodes';
-export * from './addAutoTransitionNodes';
-export * from './generate-node-handlers';
-export * from './generate-synonym-handlers';
+export * from './add/addAutoTransitionNodes';
+export * from './generate/generate-synonym-handlers';
 export * from './bot-commands-setup';
 
 // Command handlers
@@ -57,7 +56,8 @@ export * from './add';
 export * from './collect';
 
 // Code generation utilities
-export * from './generate';
+// NOTE: Individual exports added above to prevent conflicts
+// export * from './generate';
 
 // Processing utilities
 export * from './process';
@@ -66,19 +66,6 @@ export * from './process';
 export * from './utils';
 
 // Validation utilities
-export * from './validate';
+// NOTE: Already exported via commands.ts to prevent conflicts
+// export * from './validate';
 
-// Variable handling
-export * from './variable';
-
-// Additional utilities
-export * from './add';
-
-// Collection utilities
-export * from './collect';
-
-// Code generation utilities
-export * from './generate';
-
-// Processing utilities
-export * from './process';
