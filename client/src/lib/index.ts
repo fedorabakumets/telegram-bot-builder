@@ -2,6 +2,18 @@
 export * from './bot-generator';
 export * from './commands';
 export * from './queryClient';
+export * from './generateButtonResponseHandlers';
+export * from './generateUtilityFunctions';
+export * from './generateMediaFileFunctions';
+export * from './message-logging';
+export * from './extractNodeData';
+export * from './collectConditionalMessageButtons';
+export * from './filterInlineNodes';
+export * from './addAutoTransitionNodes';
+export * from './generate-node-handlers';
+export * from './generate-synonym-handlers';
+export * from './generateUniversalVariableReplacement';
+export * from './bot-commands-setup';
 
 // Command handlers
 export * from './CommandHandler';
@@ -38,6 +50,21 @@ export * from './Synonyms';
 
 // User management handlers
 export * from './UserHandler';
+
+// Types
+export * from './types/bot-node';
+
+// Additional utilities
+export * from './add';
+
+// Collection utilities
+export * from './collect';
+
+// Code generation utilities
+export * from './generate';
+
+// Processing utilities
+export * from './process';
 
 // General utilities
 export * from './utils';
