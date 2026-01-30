@@ -114,10 +114,13 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean)
     }
 
     code += '    \n';
+
+    // Добавляем универсальную замену переменных
+    code += generateUniversalVariableReplacement('    ');
   } else {
     code += `\n    text = ${formattedText}\n`;
 
-    // Добавляем замену переменных для обычных команд
+    // Добавляем универсальную замену переменных
     code += '    \n';
     code += generateUniversalVariableReplacement('    ');
   }

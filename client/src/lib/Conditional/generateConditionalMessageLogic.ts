@@ -22,11 +22,11 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
   code += `${indentLevel}    # Получаем объект пользователя из сообщения или callback\n`;
   code += `${indentLevel}    user_obj = None\n`;
   code += `${indentLevel}    # Проверяем наличие message (для message handlers)\n`;
-  code += `${indentLevel}    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):\n`;
-  code += `${indentLevel}        user_obj = message.from_user\n`;
+  code += `${indentLevel}    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):\n`;
+  code += `${indentLevel}        user_obj = locals().get('message').from_user\n`;
   code += `${indentLevel}    # Проверяем наличие callback_query (для callback handlers)\n`;
-  code += `${indentLevel}    elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):\n`;
-  code += `${indentLevel}        user_obj = callback_query.from_user\n`;
+  code += `${indentLevel}    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):\n`;
+  code += `${indentLevel}        user_obj = locals().get('callback_query').from_user\n`;
   code += `${indentLevel}    \n`;
   code += `${indentLevel}    if user_obj:\n`;
   code += `${indentLevel}        init_user_variables(user_id, user_obj)\n`;

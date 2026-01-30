@@ -2,6 +2,7 @@ import { generateButtonText } from '../format/generateButtonText';
 import { formatTextForPython } from '../format/formatTextForPython';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
+import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { Node } from '../../../../shared/schema';
 
 // ============================================================================
@@ -30,15 +31,12 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     code += '        return\n';
   }
 
-  // Всегда регистрируем пользователя и инициализируем переменные
+  // Регистрируем пользователя и сохраняем его данные
   code += '\n    # Регистрируем пользователя в системе\n';
   code += '    user_id = message.from_user.id\n';
   code += '    username = message.from_user.username\n';
   code += '    first_name = message.from_user.first_name\n';
   code += '    last_name = message.from_user.last_name\n';
-  code += '    \n';
-  code += '    # Инициализируем базовые переменные пользователя\n';
-  code += '    user_name = init_user_variables(user_id, message.from_user)\n';
   code += '    \n';
 
   if (userDatabaseEnabled) {
@@ -46,6 +44,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
     code += '    \n';
     code += '    # Сохраняем переменные пользователя в базу данных\n';
+    code += '    user_name = init_user_variables(user_id, message.from_user)\n';
     code += '    await update_user_data_in_db(user_id, "user_name", user_name)\n';
     code += '    await update_user_data_in_db(user_id, "first_name", first_name)\n';
     code += '    await update_user_data_in_db(user_id, "last_name", last_name)\n';
@@ -63,7 +62,14 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     code += '        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")\n';
     code += '    else:\n';
     code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
+  } else {
+    code += '    # Инициализируем базовые переменные пользователя\n';
+    code += '    user_name = init_user_variables(user_id, message.from_user)\n';
+    code += '    \n';
   }
+
+  // Используем универсальную замену переменных для инициализации
+  code += generateUniversalVariableReplacement('    ');
 
   // Восстанавливаем состояние множественного выбора ТОЛЬКО если он включен
   if (node.data.allowMultipleSelection) {

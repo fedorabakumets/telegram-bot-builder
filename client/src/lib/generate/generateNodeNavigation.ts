@@ -38,7 +38,7 @@ export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNod
         code += `${baseIndent}        if isinstance(media_file_id, dict) and "value" in media_file_id:\n`;
         code += `${baseIndent}            media_file_id = media_file_id["value"]\n`;
         code += `${baseIndent}        await ${messageVar}.answer_photo(media_file_id, caption=text)\n`;
-        code += `${baseIndent}        logging.info(f"✅ Отправлено фото из переменной ${attachedMedia[0]} с текстом узла ${nextNodeIdVar}")\n`;
+        code += `${baseIndent}        logging.info(f"✅ Отправлено фото из переменной ${attachedMedia[0]} с текстом узла {${nextNodeIdVar}}")\n`;
         code += `${baseIndent}    else:\n`;
         code += `${baseIndent}        await ${messageVar}.answer(text)\n`;
         code += `${baseIndent}        logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
@@ -52,7 +52,7 @@ export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNod
         code += `${baseIndent}    \n`;
         code += `${baseIndent}    # Автопереход к следующему узлу\n`;
         code += `${baseIndent}    auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
-        code += `${baseIndent}    logging.info(f"⚡ Автопереход от ${nextNodeIdVar} к {auto_next_node_id}")\n`;
+        code += `${baseIndent}    logging.info(f"⚡ Автопереход от {${nextNodeIdVar}} к {auto_next_node_id}")\n`;
         code += `${baseIndent}    # Создаем искусственный callback для вызова обработчика\n`;
         code += `${baseIndent}    import types as aiogram_types\n`;
         code += `${baseIndent}    fake_callback = aiogram_types.SimpleNamespace(\n`;
@@ -70,11 +70,11 @@ export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNod
           const safeFuncName = autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `${baseIndent}    await handle_callback_${safeFuncName}(fake_callback)\n`;
         }
-        code += `${baseIndent}    logging.info(f"✅ Автопереход выполнен: ${nextNodeIdVar} -> {auto_next_node_id}")\n`;
+        code += `${baseIndent}    logging.info(f"✅ Автопереход выполнен: {${nextNodeIdVar}} -> {auto_next_node_id}")\n`;
       }
     });
     code += `${baseIndent}else:\n`;
-    code += `${baseIndent}    logging.warning(f"Неизвестный следующий узел: {nextNodeIdVar}")\n`;
+    code += `${baseIndent}    logging.warning(f"Неизвестный следующий узел: {${nextNodeIdVar}}")\n`;
   }
 
   return code;

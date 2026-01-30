@@ -189,7 +189,7 @@ def get_api_base_url():
 
 API_BASE_URL = get_api_base_url()
 logging.info(f"📡 API Base URL определён как: {API_BASE_URL}")
-PROJECT_ID = int(os.getenv("PROJECT_ID", "6"))  # ID проекта в системе
+PROJECT_ID = int(os.getenv("PROJECT_ID", 6))  # ID проекта в системе
 
 # Функция для сохранения сообщений в базу данных через API
 async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
@@ -220,28 +220,36 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
             session_params = {"connector": connector}
         else:
             # Для локальных соединений не используем SSL-контекст
-            session_params = {}
+            connector = aiohttp.TCPConnector(ssl=False)
+            session_params = {"connector": connector}
         
         async with aiohttp.ClientSession(**session_params) as session:
-            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=5)) as response:
+            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as response:
                 if response.status == 200:
-                    logging.info(f"✅ Сообщение сохр��нено: {message_type} от {user_id}")
+                    logging.info(f"✅ Сообщение сохранено: {message_type} от {user_id}")
                     response_data = await response.json()
                     return response_data.get("data")  # Возвращаем сохраненное сообщение с id
+                elif response.status == 429:
+                    logging.warning(f"⚠️ Слишком много запросов при попытке сохранить сообщение: {user_id}, {message_type}")
+                    return None
                 else:
                     error_text = await response.text()
                     logging.error(f"❌ Не удалось сохранить сообщение: {response.status} - {error_text}")
                     logging.error(f"Отправленный payload: {payload}")
                     return None
+    except aiohttp.ClientConnectorError as e:
+        logging.error(f"Ошибка подключения к API: {e}")
+    except asyncio.TimeoutError as e:
+        logging.error(f"Таймаут при обращении к API: {e}")
     except Exception as e:
-        logging.error(f"Ошибка при сохранении сообщения: {e}")
-        return None
+        logging.error(f"Неизвестная ошибка при сохранении сообщения: {type(e).__name__}: {e}")
+    return None
 
 # Middleware для сохранения входящих сообщений
 async def message_logging_middleware(handler, event: types.Message, data: dict):
     """Middleware для автоматического сохранения входящих сообщений от пользователей"""
     try:
-        # Сохраняем входящее сообщение от пол��зователя
+        # Сохраняем входящее сообщение от пользователя
         user_id = str(event.from_user.id)
         message_text = event.text or event.caption or "[медиа]"
         message_data = {"message_id": event.message_id}
@@ -249,7 +257,7 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         # Проверяем наличие фото
         photo_file_id = None
         if event.photo:
-            # Берем фото наибо��ьшего размера (последнее в списке)
+            # Берем фото наибольшего размера (последнее в списке)
             largest_photo = event.photo[-1]
             photo_file_id = largest_photo.file_id
             message_data["photo"] = {
@@ -262,7 +270,7 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
             if not message_text or message_text == "[медиа]":
                 message_text = "[Фото]"
         
-        # Сохраняем сообщение �� базу данных
+        # Сохраняем сообщение в базу данных
         saved_message = await save_message_to_api(
             user_id=user_id,
             message_type="user",
@@ -294,7 +302,8 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
                     session_params = {"connector": connector}
                 else:
                     # Для локальных соединений не используем SSL-контекст
-                    session_params = {}
+                    connector = aiohttp.TCPConnector(ssl=False)
+                    session_params = {"connector": connector}
                 
                 async with aiohttp.ClientSession(**session_params) as session:
                     async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:
@@ -524,15 +533,16 @@ async def send_photo_with_logging(chat_id, photo, *args, caption=None, node_id=N
             }
             
             # Определяем, использовать ли SSL для медиа-запросов
-            use_ssl_media2 = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
+            use_ssl_media = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
             
-            if use_ssl_media2:
+            if use_ssl_media:
                 # Для внешних соединений используем SSL-контекст
                 connector = aiohttp.TCPConnector(ssl=True)
                 session_params = {"connector": connector}
             else:
                 # Для локальных соединений не используем SSL-контекст
-                session_params = {}
+                connector = aiohttp.TCPConnector(ssl=False)
+                session_params = {"connector": connector}
             
             async with aiohttp.ClientSession(**session_params) as session:
                 async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:
@@ -815,6 +825,8 @@ async def log_message(user_id: int, message_type: str, message_text: str = None,
 
 
 # Утилитарные функции
+from aiogram import types
+
 async def is_admin(user_id: int) -> bool:
     return user_id in ADMIN_IDS
 
@@ -830,10 +842,13 @@ async def check_auth(user_id: int) -> bool:
 
 
 # Настройка меню команд
+# Генерируем настройку меню команд для BotFather
 async def set_bot_commands():
     commands = [
+        # Команда start - Запустить бота
         BotCommand(command="start", description="Запустить бота"),
     ]
+# Устанавливаем команды для бота
     await bot.set_my_commands(commands)
 
 
@@ -848,13 +863,11 @@ async def start_handler(message: types.Message):
     first_name = message.from_user.first_name
     last_name = message.from_user.last_name
     
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, message.from_user)
-    
     # Сохраняем пользователя в базу данных
     saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
     
     # Сохраняем переменные пользователя в базу данных
+    user_name = init_user_variables(user_id, message.from_user)
     await update_user_data_in_db(user_id, "user_name", user_name)
     await update_user_data_in_db(user_id, "first_name", first_name)
     await update_user_data_in_db(user_id, "last_name", last_name)
@@ -873,6 +886,28 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
     # Проверяем условные сообщения
     text = "Сколько тебе лет?"  # Основной текст узла как fallback
     conditional_parse_mode = None
@@ -897,11 +932,11 @@ async def start_handler(message: types.Message):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -1028,41 +1063,6 @@ async def start_handler(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    
-    text = replace_variables_in_text(text, user_vars)
     text = replace_variables_in_text(text, user_vars)
     
     # Проверка условных сообщений для клавиатуры
@@ -1075,11 +1075,11 @@ async def start_handler(message: types.Message):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -1304,40 +1304,6 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Create reply keyboard
     # Удаляем старое сообщение и отправляем новое с reply клавиатурой
     builder = ReplyKeyboardBuilder()
@@ -1363,6 +1329,9 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
     return  # Возвращаемся чтобы не отправить сообщение дважды
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -1389,7 +1358,7 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
     
     user_id = callback_query.from_user.id
     
-    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после со��ранения данных
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сояранения данных
     next_node_id = "RFTgm4KzC6dI39AMTPcmo"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
@@ -1709,41 +1678,7 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
-    
-    # Проверка условных сообщений дл���� навигации
+    # Проверка условных сообщений дляя навигации
     conditional_parse_mode = None
     conditional_keyboard = None
     user_record = await get_user_from_db(user_id)
@@ -1755,11 +1690,11 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -1867,6 +1802,9 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
     keyboard = None
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -1973,41 +1911,7 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
-    
-    # Проверка условных сообщений дл���� навигации
+    # Проверка условных сообщений дляя навигации
     conditional_parse_mode = None
     conditional_keyboard = None
     user_record = await get_user_from_db(user_id)
@@ -2019,11 +1923,11 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -2134,10 +2038,12 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Create reply keyboard
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     # Проверяем, есть ли условная клавиатура
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
         keyboard = conditional_keyboard
-        logging.info("✅ Используем у��ловную reply клавиатуру")
+        logging.info("✅ Используем уяловную reply клавиатуру")
     else:
         # Условная клавиатура не создана, используем обычную
         builder = ReplyKeyboardBuilder()
@@ -2163,6 +2069,9 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
     return  # Возвращаемся чтобы не отправить сообщение дважды
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -2190,7 +2099,7 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
-    # Ищем тек��т кнопки по callback_data
+    # Ищем текят кнопки по callback_data
     button_display_text = "4"
     
     # Сохраняем ответ в базу данных
@@ -2207,13 +2116,13 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
     # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
     has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
     if not has_conditional_keyboard_for_save:
-        # Сохраняем в базу данных с правильным именем пере��енной
+        # Сохраняем в базу данных с правильным именем переяенной
         await update_user_data_in_db(user_id, "button_click", button_display_text)
         logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     else:
         logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
     
-    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после со��ранения данных
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сояранения данных
     next_node_id = "Y9zLRp1BLpVhm-HcsNkJV"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
@@ -2529,41 +2438,7 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
-    
-    # Проверка условных сообщений дл���� навигации
+    # Проверка условных сообщений дляя навигации
     conditional_parse_mode = None
     conditional_keyboard = None
     user_record = await get_user_from_db(user_id)
@@ -2575,11 +2450,11 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -2684,6 +2559,9 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
     keyboard = None
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -2726,7 +2604,7 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
-    # Ищем тек��т кнопки по callback_data
+    # Ищем текят кнопки по callback_data
     button_display_text = "Пропустить"
     
     # Сохраняем ответ в базу данных
@@ -2743,7 +2621,7 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
     # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
     has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
     if not has_conditional_keyboard_for_save:
-        # Сохраняем в базу данных с правильным именем пере��енной
+        # Сохраняем в базу данных с правильным именем переяенной
         await update_user_data_in_db(user_id, "info", button_display_text)
         logging.info(f"Переменная info сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     else:
@@ -2797,43 +2675,12 @@ async def handle_callback_vxPv7G4n0QGyhnv4ucOM5(callback_query: types.CallbackQu
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     keyboard = None
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -2925,43 +2772,12 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     keyboard = None
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -3060,40 +2876,6 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Create reply keyboard
     # Удаляем старое сообщение и отправляем новое с reply клавиатурой
     builder = ReplyKeyboardBuilder()
@@ -3108,6 +2890,9 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
     return  # Возвращаемся чтобы не отправить сообщение дважды
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -3134,7 +2919,7 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
     
     user_id = callback_query.from_user.id
     
-    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после со��ранения данных
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сояранения данных
     next_node_id = "yrsc8v81qQa5oQx538Dzn"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
@@ -3441,40 +3226,6 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Create reply keyboard
     # Удаляем старое сообщение и отправляем новое с reply клавиатурой
     builder = ReplyKeyboardBuilder()
@@ -3501,6 +3252,9 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
     return  # Возвращаемся чтобы не отправить сообщение дважды
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -3528,9 +3282,9 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
-    # Ищем тек��т кнопки по callback_data
-    # Определяем т��кст кнопки по callback_data
-    button_display_text = "Неизвестна�� кнопка"
+    # Ищем текят кнопки по callback_data
+    # Определяем тякст кнопки по callback_data
+    button_display_text = "Неизвестная кнопка"
     if callback_query.data.endswith("_btn_0"):
         button_display_text = "Я девушка"
     if callback_query.data.endswith("_btn_1"):
@@ -3555,13 +3309,13 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
     # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
     has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
     if not has_conditional_keyboard_for_save:
-        # Сохраняем в базу данных с правильным именем пере��енной
+        # Сохраняем в базу данных с правильным именем переяенной
         await update_user_data_in_db(user_id, "gender", button_display_text)
         logging.info(f"Переменная gender сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     else:
         logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
     
-    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после со��ранения данных
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сояранения данных
     next_node_id = "sIh3xXKEtb_TtrhHqZQzX"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
@@ -3881,41 +3635,7 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
-    
-    # Проверка условных сообщений дл���� навигации
+    # Проверка условных сообщений дляя навигации
     conditional_parse_mode = None
     conditional_keyboard = None
     user_record = await get_user_from_db(user_id)
@@ -3927,11 +3647,11 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -4039,6 +3759,9 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
     keyboard = None
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -4081,9 +3804,9 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
-    # Ищем тек��т кнопки по callback_data
-    # Определяем т��кст кнопки по callback_data
-    button_display_text = "Неизвестна�� кнопка"
+    # Ищем текят кнопки по callback_data
+    # Определяем тякст кнопки по callback_data
+    button_display_text = "Неизвестная кнопка"
     if callback_query.data.endswith("_btn_0"):
         button_display_text = "Девушки"
     if callback_query.data.endswith("_btn_1"):
@@ -4112,7 +3835,7 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
     # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
     has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
     if not has_conditional_keyboard_for_save:
-        # Сохраняем в базу данных с правильным именем пере��енной
+        # Сохраняем в базу данных с правильным именем переяенной
         await update_user_data_in_db(user_id, "sex", button_display_text)
         logging.info(f"Переменная sex сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     else:
@@ -4181,40 +3904,6 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Create reply keyboard
     # Удаляем старое сообщение и отправляем новое с reply клавиатурой
     builder = ReplyKeyboardBuilder()
@@ -4231,6 +3920,9 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
     return  # Возвращаемся чтобы не отправить сообщение дважды
     
     # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     user_id = callback_query.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -4258,7 +3950,7 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
-    # Ищем тек��т кнопки по callback_data
+    # Ищем текят кнопки по callback_data
     button_display_text = "Да"
     
     # Сохраняем ответ в базу данных
@@ -4275,13 +3967,13 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
     # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
     has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
     if not has_conditional_keyboard_for_save:
-        # Сохраняем в базу данных с правильным именем пере��енной
+        # Сохраняем в базу данных с правильным именем переяенной
         await update_user_data_in_db(user_id, "button_click", button_display_text)
         logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     else:
         logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
     
-    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после со��ранения данных
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сояранения данных
     next_node_id = "start"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
@@ -4575,7 +4267,7 @@ async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -4601,40 +4293,6 @@ async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="Девушки"))
     builder.add(KeyboardButton(text="Парни"))
@@ -4661,7 +4319,7 @@ async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
         input_variable = user_data[user_id].get("input_variable", "button_response")
         
         response_data = {
-            "value": "Я девушка",
+            "value": "{button_text}",
             "type": "reply_button",
             "timestamp": timestamp,
             "nodeId": input_node_id,
@@ -4670,7 +4328,7 @@ async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
         }
         
         user_data[user_id][f"{input_variable}_button"] = response_data
-        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")
+        logging.info(f"Reply кнопка сохранена: {input_variable}_button = {button_text} (пользователь {user_id})")
 
 @dp.message(lambda message: message.text == "Я парень")
 async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
@@ -4706,7 +4364,7 @@ async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -4732,40 +4390,6 @@ async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="Девушки"))
     builder.add(KeyboardButton(text="Парни"))
@@ -4792,7 +4416,7 @@ async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
         input_variable = user_data[user_id].get("input_variable", "button_response")
         
         response_data = {
-            "value": "Я парень",
+            "value": "{button_text}",
             "type": "reply_button",
             "timestamp": timestamp,
             "nodeId": input_node_id,
@@ -4801,7 +4425,7 @@ async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
         }
         
         user_data[user_id][f"{input_variable}_button"] = response_data
-        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")
+        logging.info(f"Reply кнопка сохранена: {input_variable}_button = {button_text} (пользователь {user_id})")
 
 @dp.message(lambda message: message.text == "Девушки")
 async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
@@ -4837,7 +4461,7 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -4863,40 +4487,6 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
     conditional_keyboard = None
@@ -4909,11 +4499,11 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -5019,6 +4609,9 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Отправляем сообщение с учетом условной клавиатуры
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
         # Используем условную клавиатуру
         # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
@@ -5084,7 +4677,7 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5110,40 +4703,6 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
     conditional_keyboard = None
@@ -5156,11 +4715,11 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -5266,6 +4825,9 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Отправляем сообщение с учетом условной клавиатуры
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
         # Используем условную клавиатуру
         # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
@@ -5331,7 +4893,7 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5357,40 +4919,6 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
     conditional_keyboard = None
@@ -5403,11 +4931,11 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -5513,6 +5041,9 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Отправляем сообщение с учетом условной клавиатуры
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
         # Используем условную клавиатуру
         # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
@@ -5578,7 +5109,7 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5604,40 +5135,6 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
     conditional_keyboard = None
@@ -5650,11 +5147,11 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -5757,6 +5254,9 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Отправляем сообщение с учетом условной клавиатуры
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
         # Используем условную клавиатуру
         # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
@@ -5825,7 +5325,7 @@ async def handle_reply_Y6DFar0NH2ejdlKLTFgwC(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5851,40 +5351,6 @@ async def handle_reply_Y6DFar0NH2ejdlKLTFgwC(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="1"))
     builder.add(KeyboardButton(text="2"))
@@ -5905,7 +5371,7 @@ async def handle_reply_Y6DFar0NH2ejdlKLTFgwC(message: types.Message):
         input_variable = user_data[user_id].get("input_variable", "button_response")
         
         response_data = {
-            "value": "Да",
+            "value": "{button_text}",
             "type": "reply_button",
             "timestamp": timestamp,
             "nodeId": input_node_id,
@@ -5914,7 +5380,7 @@ async def handle_reply_Y6DFar0NH2ejdlKLTFgwC(message: types.Message):
         }
         
         user_data[user_id][f"{input_variable}_button"] = response_data
-        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")
+        logging.info(f"Reply кнопка сохранена: {input_variable}_button = {button_text} (пользователь {user_id})")
 
 @dp.message(lambda message: message.text == "Изменить анкету")
 async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
@@ -5950,7 +5416,7 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5976,40 +5442,6 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
     conditional_keyboard = None
@@ -6022,11 +5454,11 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -6132,6 +5564,9 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Отправляем сообщение с учетом условной клавиатуры
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
         # Используем условную клавиатуру
         # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
@@ -6197,7 +5632,7 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -6223,40 +5658,6 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
     conditional_keyboard = None
@@ -6269,11 +5670,11 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -6379,6 +5780,9 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Отправляем сообщение с учетом условной клавиатуры
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
         # Используем условную клавиатуру
         # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
@@ -6444,7 +5848,7 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -6470,40 +5874,6 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     # Проверка условных сообщений для целевого узла
     conditional_parse_mode = None
     conditional_keyboard = None
@@ -6516,11 +5886,11 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-            user_obj = message.from_user
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
         # Проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-            user_obj = callback_query.from_user
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
         
         if user_obj:
             init_user_variables(user_id, user_obj)
@@ -6623,6 +5993,9 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Отправляем сообщение с учетом условной клавиатуры
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
         # Используем условную клавиатуру
         # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
@@ -6688,7 +6061,7 @@ async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
             # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, ��о button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -6714,40 +6087,6 @@ async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        """Заменяет переменные формата {variable_name} в тексте на их значения
-        
-        Args:
-            text_content (str): Текст с переменными для замены
-            variables_dict (dict): Словарь переменных пользователя
-        
-        Returns:
-            str: Текст с замененными переменными
-        """
-        if not text_content or not variables_dict:
-            return text_content
-        
-        # Проходим по всем переменным пользователя
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                # Извлекаем значение переменной
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                
-                # Заменяем переменную на значение
-                text_content = text_content.replace(placeholder, var_value)
-                logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-        
-        return text_content
-    text = replace_variables_in_text(text, user_vars)
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="Пропустить"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
@@ -6772,7 +6111,7 @@ async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
         input_variable = user_data[user_id].get("input_variable", "button_response")
         
         response_data = {
-            "value": "4",
+            "value": "{button_text}",
             "type": "reply_button",
             "timestamp": timestamp,
             "nodeId": input_node_id,
@@ -6781,7 +6120,7 @@ async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
         }
         
         user_data[user_id][f"{input_variable}_button"] = response_data
-        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")
+        logging.info(f"Reply кнопка сохранена: {input_variable}_button = {button_text} (пользователь {user_id})")
 
 
 # Универсальный обработчик пользовательского ввода
@@ -6791,6 +6130,29 @@ async def handle_user_input(message: types.Message):
     
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, message.from_user)
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
     
     # Проверяем, ожидаем ли мы ввод для условного сообщения
     if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:
@@ -6943,7 +6305,7 @@ async def handle_user_input(message: types.Message):
                             if "{age}" in text and var_value_age is not None:
                                 text = text.replace("{age}", var_value_age)
                             conditional_met = True
-                            logging.info(f"✅ Условие выполнено: переменная существует")
+                            logging.info(f"✅ Условие выполнено: переменная суяесявует")
                             # waitForTextInput=true: показываем сообщение и ждем ввода
                             # Генерируем клавиатуру с кнопками из условного сообщения
                             builder = ReplyKeyboardBuilder()
@@ -7004,40 +6366,6 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
-                        
-                        # Заменяем все переменные в тексте
-                        import re
-                        def replace_variables_in_text(text_content, variables_dict):
-                            """Заменяет переменные формата {variable_name} в тексте на их значения
-                            
-                            Args:
-                                text_content (str): Текст с переменными для замены
-                                variables_dict (dict): Словарь переменных пользователя
-                            
-                            Returns:
-                                str: Текст с замененными переменными
-                            """
-                            if not text_content or not variables_dict:
-                                return text_content
-                            
-                            # Проходим по всем переменным пользователя
-                            for var_name, var_data in variables_dict.items():
-                                placeholder = "{" + var_name + "}"
-                                if placeholder in text_content:
-                                    # Извлекаем значение переменной
-                                    if isinstance(var_data, dict) and "value" in var_data:
-                                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                    elif var_data is not None:
-                                        var_value = str(var_data)
-                                    else:
-                                        var_value = var_name  # Показываем имя переменной если значения нет
-                                    
-                                    # Заменяем переменную на значение
-                                    text_content = text_content.replace(placeholder, var_value)
-                                    logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                            
-                            return text_content
-                        text = replace_variables_in_text(text, user_vars)
                         # Создаем reply клавиатуру
                         builder = ReplyKeyboardBuilder()
                         builder.add(KeyboardButton(text="Я девушка"))
@@ -7053,7 +6381,7 @@ async def handle_user_input(message: types.Message):
                             "node_id": "f90r9k3FSLu2Tjn74cBn_",
                             "next_node_id": ""
                         }
-                        logging.info(f"✅ Состояние ожидания настроено: modes=['button'] для переменной gender (узел f90r9k3FSLu2Tjn74cBn_)")
+                        logging.info(f"✅ Со����тояние ожидания настроено: modes=['button'] для переменной gender (узел f90r9k3FSLu2Tjn74cBn_)")
                     elif next_node_id == "RFTgm4KzC6dI39AMTPcmo":
                         # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа
                         logging.info(f"✅ Показаны кнопки для узла RFTgm4KzC6dI39AMTPcmo с collectUserInput=true")
@@ -7081,40 +6409,6 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
-                        
-                        # Заменяем все переменные в тексте
-                        import re
-                        def replace_variables_in_text(text_content, variables_dict):
-                            """Заменяет переменные формата {variable_name} в тексте на их значения
-                            
-                            Args:
-                                text_content (str): Текст с переменными для замены
-                                variables_dict (dict): Словарь переменных пользователя
-                            
-                            Returns:
-                                str: Текст с замененными переменными
-                            """
-                            if not text_content or not variables_dict:
-                                return text_content
-                            
-                            # Проходим по всем переменным пользователя
-                            for var_name, var_data in variables_dict.items():
-                                placeholder = "{" + var_name + "}"
-                                if placeholder in text_content:
-                                    # Извлекаем значение переменной
-                                    if isinstance(var_data, dict) and "value" in var_data:
-                                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                    elif var_data is not None:
-                                        var_value = str(var_data)
-                                    else:
-                                        var_value = var_name  # Показываем имя переменной если значения нет
-                                    
-                                    # Заменяем переменную на значение
-                                    text_content = text_content.replace(placeholder, var_value)
-                                    logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                            
-                            return text_content
-                        text = replace_variables_in_text(text, user_vars)
                         # Создаем reply клавиатуру
                         builder = ReplyKeyboardBuilder()
                         builder.add(KeyboardButton(text="Девушки"))
@@ -7131,7 +6425,7 @@ async def handle_user_input(message: types.Message):
                             "node_id": "RFTgm4KzC6dI39AMTPcmo",
                             "next_node_id": ""
                         }
-                        logging.info(f"✅ Состояние ожидания настроено: modes=['button'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
+                        logging.info(f"✅ Со����тояние ожидания настроено: modes=['button'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
                     elif next_node_id == "sIh3xXKEtb_TtrhHqZQzX":
                         # Узел с условными сообщениями - проверяем условия
                         logging.info(f"🔧 Условная навигация к узлу с условными сообщениями: sIh3xXKEtb_TtrhHqZQzX")
@@ -7175,7 +6469,7 @@ async def handle_user_input(message: types.Message):
                             if "{city}" in text and var_value_city is not None:
                                 text = text.replace("{city}", var_value_city)
                             conditional_met = True
-                            logging.info(f"✅ Условие выполнено: переменная существует")
+                            logging.info(f"✅ Условие выполнено: переменная суяесявует")
                             # waitForTextInput=true: показываем сообщение и ждем ввода
                             # Генерируем клавиатуру с кнопками из условного сообщения
                             builder = ReplyKeyboardBuilder()
@@ -7252,7 +6546,7 @@ async def handle_user_input(message: types.Message):
                             if "{name}" in text and var_value_name is not None:
                                 text = text.replace("{name}", var_value_name)
                             conditional_met = True
-                            logging.info(f"✅ Условие выполнено: переменная существует")
+                            logging.info(f"✅ Условие выполнено: переменная суяесявует")
                             # waitForTextInput=true: показываем сообщение и ждем ввода
                             # Генерируем клавиатуру с кнопками из условного сообщения
                             builder = ReplyKeyboardBuilder()
@@ -7329,7 +6623,7 @@ async def handle_user_input(message: types.Message):
                             if "{info}" in text and var_value_info is not None:
                                 text = text.replace("{info}", var_value_info)
                             conditional_met = True
-                            logging.info(f"✅ Условие выполнено: переменная существует")
+                            logging.info(f"✅ Условие выполнено: переменная суяесявует")
                             # waitForTextInput=true: показываем сообщение и ждем ввода
                             # Генерируем клавиатуру с кнопками из условного сообщения
                             builder = ReplyKeyboardBuilder()
@@ -7402,14 +6696,14 @@ async def handle_user_input(message: types.Message):
                             if "{photo}" in text and var_value_photo is not None:
                                 text = text.replace("{photo}", var_value_photo)
                             conditional_met = True
-                            logging.info(f"✅ Условие выполнено: переменная существует")
+                            logging.info(f"✅ Условие выполнено: переменная суяесявует")
                             # Условное сообщение с кнопками: показываем клавиатуру
                             builder = ReplyKeyboardBuilder()
                             builder.add(KeyboardButton(text="Оставить текущее"))
                             builder.adjust(1)
                             keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
                             await safe_edit_or_send(callback_query, text, reply_markup=keyboard, node_id="Y9zLRp1BLpVhm-HcsNkJV")
-                            logging.info(f"✅ Показана условная клавиатура (кноп��и ведут напрямую, автопереход НЕ выполняется)")
+                            logging.info(f"✅ Показана условная клавиатура (кнопяи ведут напрямую, автопереход НЕ выполняется)")
                         if not conditional_met:
                             # Условие не выполнено - показываем основное сообщение
                             text = "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи"
@@ -7449,40 +6743,6 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
-                        
-                        # Заменяем все переменные в тексте
-                        import re
-                        def replace_variables_in_text(text_content, variables_dict):
-                            """Заменяет переменные формата {variable_name} в тексте на их значения
-                            
-                            Args:
-                                text_content (str): Текст с переменными для замены
-                                variables_dict (dict): Словарь переменных пользователя
-                            
-                            Returns:
-                                str: Текст с замененными переменными
-                            """
-                            if not text_content or not variables_dict:
-                                return text_content
-                            
-                            # Проходим по всем переменным пользователя
-                            for var_name, var_data in variables_dict.items():
-                                placeholder = "{" + var_name + "}"
-                                if placeholder in text_content:
-                                    # Извлекаем значение переменной
-                                    if isinstance(var_data, dict) and "value" in var_data:
-                                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                    elif var_data is not None:
-                                        var_value = str(var_data)
-                                    else:
-                                        var_value = var_name  # Показываем имя переменной если значения нет
-                                    
-                                    # Заменяем переменную на значение
-                                    text_content = text_content.replace(placeholder, var_value)
-                                    logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                            
-                            return text_content
-                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: vxPv7G4n0QGyhnv4ucOM5")
                         await message.answer(text)
                     elif next_node_id == "8xSJaWAJNz7Hz_54mjFTF":
@@ -7513,40 +6773,6 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
-                        
-                        # Заменяем все переменные в тексте
-                        import re
-                        def replace_variables_in_text(text_content, variables_dict):
-                            """Заменяет переменные формата {variable_name} в тексте на их значения
-                            
-                            Args:
-                                text_content (str): Текст с переменными для замены
-                                variables_dict (dict): Словарь переменных пользователя
-                            
-                            Returns:
-                                str: Текст с замененными переменными
-                            """
-                            if not text_content or not variables_dict:
-                                return text_content
-                            
-                            # Проходим по всем переменным пользователя
-                            for var_name, var_data in variables_dict.items():
-                                placeholder = "{" + var_name + "}"
-                                if placeholder in text_content:
-                                    # Извлекаем значение переменной
-                                    if isinstance(var_data, dict) and "value" in var_data:
-                                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                    elif var_data is not None:
-                                        var_value = str(var_data)
-                                    else:
-                                        var_value = var_name  # Показываем имя переменной если значения нет
-                                    
-                                    # Заменяем переменную на значение
-                                    text_content = text_content.replace(placeholder, var_value)
-                                    logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                            
-                            return text_content
-                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: 8xSJaWAJNz7Hz_54mjFTF")
                         await message.answer(text)
                     elif next_node_id == "KE-8sR9elPEefApjXtBxC":
@@ -7575,40 +6801,6 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
-                        
-                        # Заменяем все переменные в тексте
-                        import re
-                        def replace_variables_in_text(text_content, variables_dict):
-                            """Заменяет переменные формата {variable_name} в тексте на их значения
-                            
-                            Args:
-                                text_content (str): Текст с переменными для замены
-                                variables_dict (dict): Словарь переменных пользователя
-                            
-                            Returns:
-                                str: Текст с замененными переменными
-                            """
-                            if not text_content or not variables_dict:
-                                return text_content
-                            
-                            # Проходим по всем переменным пользователя
-                            for var_name, var_data in variables_dict.items():
-                                placeholder = "{" + var_name + "}"
-                                if placeholder in text_content:
-                                    # Извлекаем значение переменной
-                                    if isinstance(var_data, dict) and "value" in var_data:
-                                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                    elif var_data is not None:
-                                        var_value = str(var_data)
-                                    else:
-                                        var_value = var_name  # Показываем имя переменной если значения нет
-                                    
-                                    # Заменяем переменную на значение
-                                    text_content = text_content.replace(placeholder, var_value)
-                                    logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                            
-                            return text_content
-                        text = replace_variables_in_text(text, user_vars)
                         # Создаем reply клавиатуру
                         builder = ReplyKeyboardBuilder()
                         builder.add(KeyboardButton(text="Да"))
@@ -7645,40 +6837,6 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
-                        
-                        # Заменяем все переменные в тексте
-                        import re
-                        def replace_variables_in_text(text_content, variables_dict):
-                            """Заменяет переменные формата {variable_name} в тексте на их значения
-                            
-                            Args:
-                                text_content (str): Текст с переменными для замены
-                                variables_dict (dict): Словарь переменных пользователя
-                            
-                            Returns:
-                                str: Текст с замененными переменными
-                            """
-                            if not text_content or not variables_dict:
-                                return text_content
-                            
-                            # Проходим по всем переменным пользователя
-                            for var_name, var_data in variables_dict.items():
-                                placeholder = "{" + var_name + "}"
-                                if placeholder in text_content:
-                                    # Извлекаем значение переменной
-                                    if isinstance(var_data, dict) and "value" in var_data:
-                                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                    elif var_data is not None:
-                                        var_value = str(var_data)
-                                    else:
-                                        var_value = var_name  # Показываем имя переменной если значения нет
-                                    
-                                    # Заменяем переменную на значение
-                                    text_content = text_content.replace(placeholder, var_value)
-                                    logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                            
-                            return text_content
-                        text = replace_variables_in_text(text, user_vars)
                         # Создаем reply клавиатуру
                         builder = ReplyKeyboardBuilder()
                         builder.add(KeyboardButton(text="1"))
@@ -7689,7 +6847,7 @@ async def handle_user_input(message: types.Message):
                         logging.info(f"Условная навигация к обычному узлу: yrsc8v81qQa5oQx538Dzn")
                         await message.answer(text, reply_markup=keyboard)
                     else:
-                        logging.warning(f"Неизвестны�� следующий узел: {next_node_id}")
+                        logging.warning(f"Неизвестныя следующий узел: {next_node_id}")
             except Exception as e:
                 logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
         
@@ -7990,7 +7148,7 @@ async def handle_user_input(message: types.Message):
         
         # Валидация для нового формата
         if isinstance(waiting_config, dict):
-            # Валидация дли��ы
+            # Валидация длияы
             if min_length > 0 and len(user_text) < min_length:
                 retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
                 await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")
@@ -8001,13 +7159,13 @@ async def handle_user_input(message: types.Message):
                 await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")
                 return
             
-            # Валидация типа ввод��
+            # Валидация типа вводя
             if input_type == "email":
                 import re
                 email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                 if not re.match(email_pattern, user_text):
                     retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
-                    await message.answer(f"�� Н��верный формат email. {retry_message}")
+                    await message.answer(f"я Няверный формат email. {retry_message}")
                     return
             elif input_type == "number":
                 try:
@@ -8090,41 +7248,7 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
-                            # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста
+                            # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания тттекста
                             builder = ReplyKeyboardBuilder()
                             builder.add(KeyboardButton(text="Я девушка"))
                             builder.add(KeyboardButton(text="Я парень"))
@@ -8171,41 +7295,7 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
-                            # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста
+                            # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания тттекста
                             builder = ReplyKeyboardBuilder()
                             builder.add(KeyboardButton(text="Девушки"))
                             builder.add(KeyboardButton(text="Парни"))
@@ -8253,40 +7343,6 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
@@ -8328,40 +7384,6 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
@@ -8403,40 +7425,6 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
                             # Узел с условными сообщениями - проверяем условия
                             logging.info(f"🔧 Обработка узла с условными сообщениями: lBPy3gcGVLla0NGdSYb35")
                             user_data_dict = await get_user_from_db(user_id) or {}
@@ -8492,7 +7480,7 @@ async def handle_user_input(message: types.Message):
                                 logging.info(f"🔧 Установлено ожидание ввода для условного сообщения: {user_data[message.from_user.id]['waiting_for_input']}")
                             if not conditional_met:
                                 # Условие не выполнено - показываем основное сообщение
-                                # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста
+                                # ИСПяАВЛЕяИЕ: яя узла еять reply кнопки - показяваем их вместо ожидания тттекста
                                 builder = ReplyKeyboardBuilder()
                                 builder.add(KeyboardButton(text="Пропустить"))
                                 keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
@@ -8538,40 +7526,6 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
@@ -8613,47 +7567,13 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # НЕ отправляем сообщение об успехе здесь - это делается в старом формате
-                            # Очищаем с��стояние ожидания ввода после у��пе��но��о перехода
+                            # Очищаем сястояние ожидания ввода после уяпеянояо перехода
                             if "waiting_for_input" in user_data[user_id]:
                                 del user_data[user_id]["waiting_for_input"]
                             
-                            logging.info("✅ Переход к следующему у��лу выполнен успешно")
+                            logging.info("✅ Переход к следующему уялу выполнен успешно")
                             
                             # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF
                             logging.info(f"⚡ Автопереход от узла vxPv7G4n0QGyhnv4ucOM5 к узлу 8xSJaWAJNz7Hz_54mjFTF")
@@ -8703,47 +7623,13 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
                             await message.answer(text)
                             # НЕ отправляем сообщение об успехе здесь - это делается в старом формате
-                            # Очищаем с��стояние ожидания ввода после у��пе��но��о перехода
+                            # Очищаем сястояние ожидания ввода после уяпеянояо перехода
                             if "waiting_for_input" in user_data[user_id]:
                                 del user_data[user_id]["waiting_for_input"]
                             
-                            logging.info("✅ Переход к следующему у��лу выполнен успешно")
+                            logging.info("✅ Переход к следующему уялу выполнен успешно")
                             
                             # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC
                             logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
@@ -8791,40 +7677,6 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
                             # Создаем reply клавиатуру
                             builder = ReplyKeyboardBuilder()
                             builder.add(KeyboardButton(text="Да"))
@@ -8833,11 +7685,11 @@ async def handle_user_input(message: types.Message):
                             await message.answer(text, reply_markup=keyboard)
                             logging.info(f"✅ Показана reply клавиатура для переходного узла")
                             # НЕ отправляем сообщение об успехе здесь - это делается в старом формате
-                            # Очищаем с��стояние ожидания ввода после у��пе��но��о перехода
+                            # Очищаем сястояние ожидания ввода после уяпеянояо перехода
                             if "waiting_for_input" in user_data[user_id]:
                                 del user_data[user_id]["waiting_for_input"]
                             
-                            logging.info("✅ Переход к следующему у��лу выполнен успешно")
+                            logging.info("✅ Переход к следующему уялу выполнен успешно")
                             break  # Нет автоперехода, завершаем цикл
                         elif current_node_id == "yrsc8v81qQa5oQx538Dzn":
                             text = """1. Смотреть анкеты.
@@ -8867,40 +7719,6 @@ async def handle_user_input(message: types.Message):
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            
-                            # Заменяем все переменные в тексте
-                            import re
-                            def replace_variables_in_text(text_content, variables_dict):
-                                """Заменяет переменные формата {variable_name} в тексте на их значения
-                                
-                                Args:
-                                    text_content (str): Текст с переменными для замены
-                                    variables_dict (dict): Словарь переменных пользователя
-                                
-                                Returns:
-                                    str: Текст с замененными переменными
-                                """
-                                if not text_content or not variables_dict:
-                                    return text_content
-                                
-                                # Проходим по всем переменным пользователя
-                                for var_name, var_data in variables_dict.items():
-                                    placeholder = "{" + var_name + "}"
-                                    if placeholder in text_content:
-                                        # Извлекаем значение переменной
-                                        if isinstance(var_data, dict) and "value" in var_data:
-                                            var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                                        elif var_data is not None:
-                                            var_value = str(var_data)
-                                        else:
-                                            var_value = var_name  # Показываем имя переменной если значения нет
-                                        
-                                        # Заменяем переменную на значение
-                                        text_content = text_content.replace(placeholder, var_value)
-                                        logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                                
-                                return text_content
-                            text = replace_variables_in_text(text, user_vars)
                             # Создаем reply клавиатуру
                             builder = ReplyKeyboardBuilder()
                             builder.add(KeyboardButton(text="1"))
@@ -8911,11 +7729,11 @@ async def handle_user_input(message: types.Message):
                             await message.answer(text, reply_markup=keyboard)
                             logging.info(f"✅ Показана reply клавиатура для переходного узла")
                             # НЕ отправляем сообщение об успехе здесь - это делается в старом формате
-                            # Очищаем с��стояние ожидания ввода после у��пе��но��о перехода
+                            # Очищаем сястояние ожидания ввода после уяпеянояо перехода
                             if "waiting_for_input" in user_data[user_id]:
                                 del user_data[user_id]["waiting_for_input"]
                             
-                            logging.info("✅ Переход к следующему у��лу выполнен успешно")
+                            logging.info("✅ Переход к следующему уялу выполнен успешно")
                             break  # Нет автоперехода, завершаем цикл
                         else:
                             logging.warning(f"Неизвестный узел: {current_node_id}")
@@ -8971,7 +7789,7 @@ async def handle_user_input(message: types.Message):
                 
                 logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
-                logging.error(f"Ош��бка при переходе к следующему узлу: {e}")
+                logging.error(f"Ошябка при переходе к следующему узлу: {e}")
             return
         elif waiting_node_id == "f90r9k3FSLu2Tjn74cBn_":
             
@@ -9066,7 +7884,7 @@ async def handle_user_input(message: types.Message):
                 
                 logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
-                logging.error(f"Ош��бка при переходе к следующему узлу: {e}")
+                logging.error(f"Ошябка при переходе к следующему узлу: {e}")
             return
         elif waiting_node_id == "tS2XGL2Mn4LkE63SnxhPy":
             
@@ -9111,7 +7929,7 @@ async def handle_user_input(message: types.Message):
                 
                 logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
-                logging.error(f"Ош��бка при переходе к следующему узлу: {e}")
+                logging.error(f"Ошябка при переходе к следующему узлу: {e}")
             return
         elif waiting_node_id == "lBPy3gcGVLla0NGdSYb35":
             
@@ -9156,7 +7974,7 @@ async def handle_user_input(message: types.Message):
                 
                 logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
-                logging.error(f"Ош��бка при переходе к следующему узлу: {e}")
+                logging.error(f"Ошябка при переходе к следующему узлу: {e}")
             return
         elif waiting_node_id == "Y9zLRp1BLpVhm-HcsNkJV":
             
@@ -9191,7 +8009,7 @@ async def handle_user_input(message: types.Message):
                 
                 logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
-                logging.error(f"Ош��бка при переходе к следующему узлу: {e}")
+                logging.error(f"Ошябка при переходе к следующему узлу: {e}")
             return
         
         # Если узел не найден
@@ -9261,40 +8079,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"✅ Навигация к обычному узлу start выполнена")
             if input_target_node_id == "f90r9k3FSLu2Tjn74cBn_":
@@ -9323,40 +8107,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу f90r9k3FSLu2Tjn74cBn_ выполнен")
             if input_target_node_id == "RFTgm4KzC6dI39AMTPcmo":
@@ -9385,40 +8135,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу RFTgm4KzC6dI39AMTPcmo выполнен")
             if input_target_node_id == "sIh3xXKEtb_TtrhHqZQzX":
@@ -9447,40 +8163,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу sIh3xXKEtb_TtrhHqZQzX выполнен")
             if input_target_node_id == "tS2XGL2Mn4LkE63SnxhPy":
@@ -9509,40 +8191,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу tS2XGL2Mn4LkE63SnxhPy выполнен")
             if input_target_node_id == "lBPy3gcGVLla0NGdSYb35":
@@ -9571,40 +8219,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу lBPy3gcGVLla0NGdSYb35 выполнен")
             if input_target_node_id == "Y9zLRp1BLpVhm-HcsNkJV":
@@ -9633,40 +8247,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу Y9zLRp1BLpVhm-HcsNkJV выполнен")
             if input_target_node_id == "vxPv7G4n0QGyhnv4ucOM5":
@@ -9695,40 +8275,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу vxPv7G4n0QGyhnv4ucOM5 выполнен")
             if input_target_node_id == "8xSJaWAJNz7Hz_54mjFTF":
@@ -9759,40 +8305,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу 8xSJaWAJNz7Hz_54mjFTF выполнен")
             if input_target_node_id == "KE-8sR9elPEefApjXtBxC":
@@ -9821,40 +8333,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу KE-8sR9elPEefApjXtBxC выполнен")
             if input_target_node_id == "yrsc8v81qQa5oQx538Dzn":
@@ -9886,40 +8364,6 @@ async def handle_user_input(message: types.Message):
                 # get_user_from_db теперь возвращает уже обработанные user_data
                 if not isinstance(user_vars, dict):
                     user_vars = user_data.get(user_id, {})
-                
-                # Заменяем все переменные в тексте
-                import re
-                def replace_variables_in_text(text_content, variables_dict):
-                    """Заменяет переменные формата {variable_name} в тексте на их значения
-                    
-                    Args:
-                        text_content (str): Текст с переменными для замены
-                        variables_dict (dict): Словарь переменных пользователя
-                    
-                    Returns:
-                        str: Текст с замененными переменными
-                    """
-                    if not text_content or not variables_dict:
-                        return text_content
-                    
-                    # Проходим по всем переменным пользователя
-                    for var_name, var_data in variables_dict.items():
-                        placeholder = "{" + var_name + "}"
-                        if placeholder in text_content:
-                            # Извлекаем значение переменной
-                            if isinstance(var_data, dict) and "value" in var_data:
-                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                            elif var_data is not None:
-                                var_value = str(var_data)
-                            else:
-                                var_value = var_name  # Показываем имя переменной если значения нет
-                            
-                            # Заменяем переменную на значение
-                            text_content = text_content.replace(placeholder, var_value)
-                            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")
-                    
-                    return text_content
-                text = replace_variables_in_text(text, user_vars)
                 await message.answer(text)
                 logging.info(f"Переход к узлу yrsc8v81qQa5oQx538Dzn выполнен")
             return
@@ -9945,7 +8389,7 @@ async def handle_user_input(message: types.Message):
 @dp.message(F.photo)
 async def handle_photo_input(message: types.Message):
     user_id = message.from_user.id
-    logging.info(f"📸 ��олучено фото от пользователя {user_id}")
+    logging.info(f"📸 яолучено фото от пользователя {user_id}")
     
     # Проверяем, ожидаем ли мы ввод фото
     if user_id not in user_data or "waiting_for_photo" not in user_data[user_id]:
@@ -10253,7 +8697,7 @@ async def handle_photo_input(message: types.Message):
                 
                 # Автопереход к следующему узлу
                 auto_next_node_id = "8xSJaWAJNz7Hz_54mjFTF"
-                logging.info(f"⚡ Автопереход от next_node_id к {auto_next_node_id}")
+                logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")
                 # Создаем искусственный callback для вызова обработчика
                 import types as aiogram_types
                 fake_callback = aiogram_types.SimpleNamespace(
@@ -10265,7 +8709,7 @@ async def handle_photo_input(message: types.Message):
                     answer=lambda: None
                 )
                 await handle_callback_8xSJaWAJNz7Hz_54mjFTF(fake_callback)
-                logging.info(f"✅ Автопереход выполнен: next_node_id -> {auto_next_node_id}")
+                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")
             elif next_node_id == "8xSJaWAJNz7Hz_54mjFTF":
                 text = """
 {name}, {age}, {city} - {info}
@@ -10299,14 +8743,14 @@ async def handle_photo_input(message: types.Message):
                     if isinstance(media_file_id, dict) and "value" in media_file_id:
                         media_file_id = media_file_id["value"]
                     await message.answer_photo(media_file_id, caption=text)
-                    logging.info(f"✅ Отправлено фото из переменной photo с текстом узла next_node_id")
+                    logging.info(f"✅ Отправлено фото из переменной photo с текстом узла {next_node_id}")
                 else:
                     await message.answer(text)
                     logging.warning(f"⚠️ Переменная photo не найдена, отправлен только текст")
                 
                 # Автопереход к следующему узлу
                 auto_next_node_id = "KE-8sR9elPEefApjXtBxC"
-                logging.info(f"⚡ Автопереход от next_node_id к {auto_next_node_id}")
+                logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")
                 # Создаем искусственный callback для вызова обработчика
                 import types as aiogram_types
                 fake_callback = aiogram_types.SimpleNamespace(
@@ -10318,7 +8762,7 @@ async def handle_photo_input(message: types.Message):
                     answer=lambda: None
                 )
                 await handle_callback_KE_8sR9elPEefApjXtBxC(fake_callback)
-                logging.info(f"✅ Автопереход выполнен: next_node_id -> {auto_next_node_id}")
+                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")
             elif next_node_id == "KE-8sR9elPEefApjXtBxC":
                 text = "Все верно?"
                 # Замена переменных
@@ -10375,22 +8819,22 @@ async def handle_photo_input(message: types.Message):
                     user_vars = user_data.get(user_id, {})
                 await message.answer(text)
             else:
-                logging.warning(f"Неизвестный следующий узел: {nextNodeIdVar}")
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
             logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
     
     return
-    # Валидация длины текста
+    # Валидация длины тттекста
     min_length = input_config.get("min_length", 0)
     max_length = input_config.get("max_length", 0)
     
     if min_length > 0 and len(user_text) < min_length:
-        retry_message = input_config.get("retry_message", "Пожалуйста, ��опробуйте еще раз.")
+        retry_message = input_config.get("retry_message", "Пожалуйста, яопробуйте еще раз.")
         await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")
         return
     
     if max_length > 0 and len(user_text) > max_length:
-        retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте ещ�� раз.")
+        retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте ещя раз.")
         await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")
         return
     
@@ -10401,27 +8845,27 @@ async def handle_photo_input(message: types.Message):
         import re
         email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         if not re.match(email_pattern, user_text):
-            retry_message = input_config.get("retry_message", "Пожалуйс��а, ��опро��уйте еще р��з.")
-            await message.answer(f"❌ Неверный ф��рмат email. {retry_message}")
+            retry_message = input_config.get("retry_message", "Пожалуйсяа, яопрояуйте еще ряз.")
+            await message.answer(f"❌ Неверный фярмат email. {retry_message}")
             return
     
     elif input_type == "number":
         try:
             float(user_text)
         except ValueError:
-            retry_message = input_config.get("retry_message", "Пожалуйста, по��робуйт�� еще раз.")
-            await message.answer(f"❌ Введите корректное ч��сло. {retry_message}")
+            retry_message = input_config.get("retry_message", "Пожалуйста, пояробуйтя еще раз.")
+            await message.answer(f"❌ Введите корректное чясло. {retry_message}")
             return
     
     elif input_type == "phone":
         import re
         phone_pattern = r"^[+]?[0-9\s\-\(\)]{10,}$"
         if not re.match(phone_pattern, user_text):
-            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще р��з.")
+            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще ряз.")
             await message.answer(f"❌ Неверный формат телефона. {retry_message}")
             return
     
-    # Сохраняе�� ответ пользователя простым значением
+    # Сохраняея ответ пользователя простым значением
     variable_name = input_config.get("variable", "user_response")
     timestamp = get_moscow_time()
     node_id = input_config.get("node_id", "unknown")
@@ -10438,7 +8882,7 @@ async def handle_photo_input(message: types.Message):
         if saved_to_db:
             logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")
         else:
-            logging.warning(f"⚠️ Не удалось сохранить в ��Д, данные сохранены локально")
+            logging.warning(f"⚠️ Не удалось сохранить в яД, данные сохранены локально")
     
     # Отправляем сообщение об успехе только если оно задано
     success_message = input_config.get("success_message", "")
@@ -10448,11 +8892,11 @@ async def handle_photo_input(message: types.Message):
     # Очищаем состояние ожидания ввода
     del user_data[user_id]["waiting_for_input"]
     
-    logging.info(f"Получе�� пользовательский ввод: {variable_name} = {user_text}")
+    logging.info(f"Получея пользовательский ввод: {variable_name} = {user_text}")
     
     # Автоматическая навигация к следующему узлу после успешного ввода
     next_node_id = input_config.get("next_node_id")
-    logging.info(f"🔄 Проверя��м навигацию: next_node_id = {next_node_id}")
+    logging.info(f"🔄 Проверяям навигацию: next_node_id = {next_node_id}")
     if next_node_id:
         try:
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
@@ -10532,11 +8976,11 @@ async def handle_photo_input(message: types.Message):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
                     # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
                     # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-                        user_obj = callback_query.from_user
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -10673,11 +9117,11 @@ async def handle_photo_input(message: types.Message):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
                     # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
                     # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-                        user_obj = callback_query.from_user
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
@@ -10834,11 +9278,11 @@ async def handle_photo_input(message: types.Message):
                     # Получаем объект пользователя из сообщения или callback
                     user_obj = None
                     # Проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals()['message'], 'from_user'):
-                        user_obj = message.from_user
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
                     # Проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals()['callback_query'], 'from_user'):
-                        user_obj = callback_query.from_user
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
                     
                     if user_obj:
                         init_user_variables(user_id, user_obj)
