@@ -3726,16 +3726,25 @@ if (userInputNodes.length > 0) {
       code += '            \n';
       code += '            # Определяем, использовать ли SSL для медиа-запросов\n';
       code += '            use_ssl_media3 = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)\n';
+      code += '            logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media3}")\n';
+      code += '            # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER\n';
+      code += '            if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url:\n';
+      code += '                use_ssl_media3 = False\n';
+      code += '                logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")\n';
       code += '            \n';
       code += '            if use_ssl_media3:\n';
       code += '                # Для внешних соединений используем SSL-контекст\n';
       code += '                connector = aiohttp.TCPConnector(ssl=True)\n';
-      code += '                session_params = {"connector": connector}\n';
       code += '            else:\n';
       code += '                # Для локальных соединений не используем SSL-контекст\n';
-      code += '                session_params = {}\n';
+      code += '                # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения\n';
+      code += '                import ssl\n';
+      code += '                ssl_context = ssl.create_default_context()\n';
+      code += '                ssl_context.check_hostname = False\n';
+      code += '                ssl_context.verify_mode = ssl.CERT_NONE\n';
+      code += '                connector = aiohttp.TCPConnector(ssl=ssl_context)\n';
       code += '            \n';
-      code += '            async with aiohttp.ClientSession(**session_params) as session:\n';
+      code += '            async with aiohttp.ClientSession(connector=connector) as session:\n';
       code += '                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:\n';
       code += '                    if response.status == 200:\n';
       code += '                        result = await response.json()\n';
@@ -4227,7 +4236,7 @@ if (userInputNodes.length > 0) {
           const formattedText = formatTextForPython(messageText);
 
           if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-            code += '                # Проверяем условные сообщения\n';
+            code += '                # Проверяем ус����овные сообщения\n';
             code += '                text = None\n';
             code += '                \n';
             code += '                # Получаем данные пользователя для проверки условий\n';
@@ -6756,16 +6765,25 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
 
         # Определяем, использовать ли SSL для медиа-запросов
         use_ssl_media = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
+        logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media}")
+        # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER
+        if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url:
+            use_ssl_media = False
+            logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")
 
         if use_ssl_media:
             # Для внешних соединений используем SSL-контекст
             connector = aiohttp.TCPConnector(ssl=True)
-            session_params = {"connector": connector}
         else:
             # Для локальных соединений не используем SSL-контекст
-            session_params = {}
+            # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения
+            import ssl
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            connector = aiohttp.TCPConnector(ssl=ssl_context)
 
-        async with aiohttp.ClientSession(**session_params) as session:
+        async with aiohttp.ClientSession(connector=connector) as session:
             async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:
                 if response.status == 200:
                     logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")

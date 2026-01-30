@@ -210,20 +210,29 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
         }
         
         logging.debug(f"💾 Отправка сообщения в API: {payload}")
+        logging.debug(f"📡 API URL: {api_url}")
         
         # Определяем, использовать ли SSL
         use_ssl = not (api_url.startswith("http://") or "localhost" in api_url or "127.0.0.1" in api_url or "0.0.0.0" in api_url)
+        logging.debug(f"🔒 SSL требуется для URL {api_url}: {use_ssl}")
+        # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER
+        if "localhost" in api_url or "127.0.0.1" in api_url or "0.0.0.0" in api_url:
+            use_ssl = False
+            logging.debug(f"🔓 SSL принудительно отключен для локального URL: {api_url}")
         
         if use_ssl:
             # Для внешних соединений используем SSL-контекст
             connector = aiohttp.TCPConnector(ssl=True)
-            session_params = {"connector": connector}
         else:
             # Для локальных соединений не используем SSL-контекст
-            connector = aiohttp.TCPConnector(ssl=False)
-            session_params = {"connector": connector}
+            # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения
+            import ssl
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            connector = aiohttp.TCPConnector(ssl=ssl_context)
         
-        async with aiohttp.ClientSession(**session_params) as session:
+        async with aiohttp.ClientSession(connector=connector) as session:
             async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as response:
                 if response.status == 200:
                     logging.info(f"✅ Сообщение сохранено: {message_type} от {user_id}")
@@ -295,17 +304,25 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
                 
                 # Определяем, использовать ли SSL для медиа-запросов
                 use_ssl_media = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
+                logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media}")
+                # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER
+                if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url:
+                    use_ssl_media = False
+                    logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")
                 
                 if use_ssl_media:
                     # Для внешних соединений используем SSL-контекст
                     connector = aiohttp.TCPConnector(ssl=True)
-                    session_params = {"connector": connector}
                 else:
                     # Для локальных соединений не используем SSL-контекст
-                    connector = aiohttp.TCPConnector(ssl=False)
-                    session_params = {"connector": connector}
+                    # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения
+                    import ssl
+                    ssl_context = ssl.create_default_context()
+                    ssl_context.check_hostname = False
+                    ssl_context.verify_mode = ssl.CERT_NONE
+                    connector = aiohttp.TCPConnector(ssl=ssl_context)
                 
-                async with aiohttp.ClientSession(**session_params) as session:
+                async with aiohttp.ClientSession(connector=connector) as session:
                     async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:
                         if response.status == 200:
                             message_id = saved_message.get("id")
@@ -534,17 +551,25 @@ async def send_photo_with_logging(chat_id, photo, *args, caption=None, node_id=N
             
             # Определяем, использовать ли SSL для медиа-запросов
             use_ssl_media = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
+            logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media}")
+            # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER
+            if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url:
+                use_ssl_media = False
+                logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")
             
             if use_ssl_media:
                 # Для внешних соединений используем SSL-контекст
                 connector = aiohttp.TCPConnector(ssl=True)
-                session_params = {"connector": connector}
             else:
                 # Для локальных соединений не используем SSL-контекст
-                connector = aiohttp.TCPConnector(ssl=False)
-                session_params = {"connector": connector}
+                # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения
+                import ssl
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+                connector = aiohttp.TCPConnector(ssl=ssl_context)
             
-            async with aiohttp.ClientSession(**session_params) as session:
+            async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:
                     if response.status == 200:
                         bot_message_id = saved_message.get("id")
@@ -8433,16 +8458,25 @@ async def handle_photo_input(message: types.Message):
             
             # Определяем, использовать ли SSL для медиа-запросов
             use_ssl_media3 = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
+            logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media3}")
+            # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER
+            if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url:
+                use_ssl_media3 = False
+                logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")
             
             if use_ssl_media3:
                 # Для внешних соединений используем SSL-контекст
                 connector = aiohttp.TCPConnector(ssl=True)
-                session_params = {"connector": connector}
             else:
                 # Для локальных соединений не используем SSL-контекст
-                session_params = {}
+                # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения
+                import ssl
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+                connector = aiohttp.TCPConnector(ssl=ssl_context)
             
-            async with aiohttp.ClientSession(**session_params) as session:
+            async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:
                     if response.status == 200:
                         result = await response.json()
@@ -8954,7 +8988,7 @@ async def handle_photo_input(message: types.Message):
                 }
                 logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
             elif next_node_id == "sIh3xXKEtb_TtrhHqZQzX":
-                # Проверяем условные сообщения
+                # Проверяем ус����овные сообщения
                 text = None
                 
                 # Получаем данные пользователя для проверки условий
@@ -9095,7 +9129,7 @@ async def handle_photo_input(message: types.Message):
                     parse_mode = None
                 await message.answer(text, parse_mode=parse_mode)
             elif next_node_id == "tS2XGL2Mn4LkE63SnxhPy":
-                # Проверяем условные сообщения
+                # Проверяем ус����овные сообщения
                 text = None
                 
                 # Получаем данные пользователя для проверки условий
@@ -9256,7 +9290,7 @@ async def handle_photo_input(message: types.Message):
                 }
                 logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной info (узел lBPy3gcGVLla0NGdSYb35)")
             elif next_node_id == "Y9zLRp1BLpVhm-HcsNkJV":
-                # Проверяем условные сообщения
+                # Проверяем ус����овные сообщения
                 text = None
                 
                 # Получаем данные пользователя для проверки условий
