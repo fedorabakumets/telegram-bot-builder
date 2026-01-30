@@ -3,16 +3,12 @@ export * from './bot-generator';
 export * from './commands';
 export * from './queryClient';
 export * from './generateButtonResponseHandlers';
-export * from './generateUtilityFunctions';
 export * from './generateMediaFileFunctions';
-export * from './message-logging';
 export * from './extractNodeData';
-export * from './collectConditionalMessageButtons';
 export * from './filterInlineNodes';
 export * from './addAutoTransitionNodes';
 export * from './generate-node-handlers';
 export * from './generate-synonym-handlers';
-export * from './generateUniversalVariableReplacement';
 export * from './bot-commands-setup';
 
 // Command handlers
