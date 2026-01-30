@@ -82,7 +82,7 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     async function loadValidation() {
       if (selectedFormat === 'python') {
         try {
-          const { validateBotStructure } = await import('@/lib/bot-generator');
+          const { validateBotStructure } = await import('@/lib/validate/validateBotStructure');
           const validation = validateBotStructure(botData);
           setValidationResult(validation || { isValid: false, errors: [] });
         } catch (error) {
