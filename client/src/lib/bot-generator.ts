@@ -162,6 +162,40 @@ export const isLoggingEnabled = (): boolean => {
 };
 
 /**
+ * Анализирует и логирует структуру узлов и связей для отладки.
+ * @param {any[]} nodes - Массив узлов.
+ * @param {any[]} connections - Массив связей.
+ */
+const logFlowAnalysis = (nodes: any[], connections: any[]) => {
+  if (!isLoggingEnabled()) return;
+
+  console.log(`🔧 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
+
+  if (nodes && nodes.length > 0) {
+    console.log('🔧 ГЕНЕРАТОР: Анализируем все узлы:');
+    nodes.forEach((node, index) => {
+      console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: "${node.id}" (тип: ${node.type})`);
+      console.log(`🔧 ГЕНЕРАТОР:   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
+      console.log(`🔧 ГЕНЕРАТОР:   - кнопок: ${node.data.buttons?.length || 0}`);
+      console.log(`🔧 ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
+      console.log(`🔧 ГЕНЕРАТОР:   - continueButtonTarget: ${node.data.continueButtonTarget || 'нет'}`);
+
+      if (node.id === 'interests_result') {
+        console.log(`🚨 ГЕНЕРАТОР: НАЙДЕН interests_result!`);
+        console.log(`🚨 ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
+      }
+    });
+  }
+
+  if (connections && connections.length > 0) {
+    console.log('🔧 ГЕНЕРАТОР: Анализируем связи:');
+    connections.forEach((conn, index) => {
+      console.log(`🔧 ГЕНЕРАТОР: Связь ${index + 1}: ${conn.source} -> ${conn.target}`);
+    });
+  }
+};
+
+/**
  * Генерирует Python-код для Telegram бота на основе предоставленных данных
  * @param {BotData} botData - Данные бота для генерации
  * @param {string} botName - Имя бота (по умолчанию "MyBot")
@@ -179,38 +213,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   const { allNodeIds, mediaVariablesMap } = extractNodeData(nodes || []);
 
-  // ЛОГИРОВАНИЕ ГЕНЕРАТОРА: Подробная информация о данных бота
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
-
-  // Логируем все узлы с их свойствами
-  if (nodes && nodes.length > 0) {
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем все узлы:');
-    nodes.forEach((node, index) => {
-      const hasMultiSelect = node.data.allowMultipleSelection;
-      const hasButtons = node.data.buttons && node.data.buttons.length > 0;
-      const continueTarget = node.data.continueButtonTarget;
-
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: "${node.id}" (тип: ${node.type})`);
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - hasMultiSelect: ${hasMultiSelect}`);
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - кнопок: ${node.data.buttons?.length || 0}`);
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - continueButtonTarget: ${continueTarget || 'нет'}`);
-
-      if (node.id === 'interests_result') {
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: НАЙДЕН interests_result!`);
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
-      }
-    });
-
-    // Проверим связи
-    if (connections && connections.length > 0) {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем связи:');
-      connections.forEach((conn, index) => {
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Связь ${index + 1}: ${conn.source} -> ${conn.target}`);
-      });
-    }
-  }
+  // Анализируем и логируем поток
+  logFlowAnalysis(nodes, connections);
 
   let code = '"""\n';
   code += `${botName} - Telegram Bot\n`;
