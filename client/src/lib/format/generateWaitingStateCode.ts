@@ -6,7 +6,7 @@
 
 export function generateWaitingStateCode(node: any, indentLevel: string = '    ', userIdSource: string = 'message.from_user.id'): string {
   // Определяем тип ввода и соответствующее состояние
-  let waitingStateKey = 'waiting_for_input';
+  const waitingStateKey = 'waiting_for_input'; // Всегда используем одно и то же состояние
   let inputVariable = node.data.inputVariable || `response_${node.id}`;
 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем массив modes для поддержки нескольких типов ввода
@@ -14,19 +14,15 @@ export function generateWaitingStateCode(node: any, indentLevel: string = '    '
 
   // Проверяем медиа-типы
   if (node.data.enablePhotoInput) {
-    waitingStateKey = 'waiting_for_photo';
     modes.push('photo');
     inputVariable = node.data.photoInputVariable || 'user_photo';
   } else if (node.data.enableVideoInput) {
-    waitingStateKey = 'waiting_for_video';
     modes.push('video');
     inputVariable = node.data.videoInputVariable || 'user_video';
   } else if (node.data.enableAudioInput) {
-    waitingStateKey = 'waiting_for_audio';
     modes.push('audio');
     inputVariable = node.data.audioInputVariable || 'user_audio';
   } else if (node.data.enableDocumentInput) {
-    waitingStateKey = 'waiting_for_document';
     modes.push('document');
     inputVariable = node.data.documentInputVariable || 'user_document';
   } else {

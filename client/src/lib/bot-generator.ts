@@ -2835,9 +2835,11 @@ if (userInputNodes.length > 0) {
     code += '                # Очищаем pending_skip_buttons и любые медиа-ожидания\n';
     code += '                if "pending_skip_buttons" in user_data[user_id]:\n';
     code += '                    del user_data[user_id]["pending_skip_buttons"]\n';
-    code += '                for media_wait in ["waiting_for_photo", "waiting_for_video", "waiting_for_audio", "waiting_for_document"]:\n';
-    code += '                    if media_wait in user_data[user_id]:\n';
-    code += '                        del user_data[user_id][media_wait]\n';
+    code += '                # Проверяем и очищаем waiting_for_input если тип соответствует медиа\n';
+    code += '                if "waiting_for_input" in user_data[user_id]:\n';
+    code += '                    waiting_config = user_data[user_id]["waiting_for_input"]\n';
+    code += '                    if isinstance(waiting_config, dict) and waiting_config.get("type") in ["photo", "video", "audio", "document"]:\n';
+    code += '                        del user_data[user_id]["waiting_for_input"]\n';
     code += '                # Переходим к целевому узлу\n';
     code += '                if skip_target:\n';
     code += '                    try:\n';
@@ -2889,6 +2891,12 @@ if (userInputNodes.length > 0) {
     code += '            min_length = waiting_config.get("min_length", 0)\n';
     code += '            max_length = waiting_config.get("max_length", 0)\n';
     code += '            next_node_id = waiting_config.get("next_node_id")\n';
+    code += '            \n';
+    code += '            # ИСПРАВЛЕНИЕ: Проверяем, является ли тип ввода медиа (фото, видео, аудио, документ)\n';
+    code += '            # Если да, то текстовый обработчик не должен его обрабатывать\n';
+    code += '            if input_type in ["photo", "video", "audio", "document"]:\n';
+    code += '                logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается медиа ({input_type})")\n';
+    code += '                return\n';
     code += '        else:\n';
     code += '            # Старый формат - waiting_config это строка с node_id\n';
     code += '            waiting_node_id = waiting_config\n';
@@ -3781,15 +3789,21 @@ if (userInputNodes.length > 0) {
       code += '@dp.message(F.photo)\n';
       code += 'async def handle_photo_input(message: types.Message):\n';
       code += '    user_id = message.from_user.id\n';
-      code += '    logging.info(f"📸 яолучено фото от пользователя {user_id}")\n';
+      code += '    logging.info(f"📸 Получено фото от пользователя {user_id}")\n';
       code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод фото\n';
-      code += '    if user_id not in user_data or "waiting_for_photo" not in user_data[user_id]:\n';
+      code += '    # Проверяем, ожидаем ли мы ввод фото - проверяем waiting_for_input с типом photo\n';
+      code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
       code += '        logging.info(f"Фото от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
       code += '        return\n';
       code += '    \n';
       code += '    # Получаем конфигурацию ожидания\n';
-      code += '    photo_config = user_data[user_id]["waiting_for_photo"]\n';
+      code += '    waiting_config = user_data[user_id]["waiting_for_input"]\n';
+      code += '    # Проверяем, что тип ожидания - фото\n';
+      code += '    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "photo"):\n';
+      code += '        logging.info(f"Фото от пользователя {user_id} проигнорировано - ожидается другой тип ввода")\n';
+      code += '        return\n';
+      code += '    \n';
+      code += '    photo_config = waiting_config\n';
       code += '    photo_variable = photo_config.get("variable", "user_photo")\n';
       code += '    node_id = photo_config.get("node_id", "unknown")\n';
       code += '    next_node_id = photo_config.get("next_node_id")\n';
@@ -3872,7 +3886,7 @@ if (userInputNodes.length > 0) {
       code += '        logging.warning(f"Не удалось сохранить фото в БД, данные сохранены локально")\n';
       code += '    \n';
       code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_photo"]\n';
+      code += '    del user_data[user_id]["waiting_for_input"]\n';
       code += '    \n';
       code += '    logging.info(f"Фото сохранено: {photo_variable} = {photo_file_id}, URL = {photo_url}")\n';
       code += '    \n';
@@ -3906,13 +3920,19 @@ if (userInputNodes.length > 0) {
       code += '    user_id = message.from_user.id\n';
       code += '    logging.info(f"🎥 Получено видео от пользователя {user_id}")\n';
       code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод видео\n';
-      code += '    if user_id not in user_data or "waiting_for_video" not in user_data[user_id]:\n';
+      code += '    # Проверяем, ожидаем ли мы ввод видео - проверяем waiting_for_input с типом video\n';
+      code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
       code += '        logging.info(f"Видео от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
       code += '        return\n';
       code += '    \n';
       code += '    # Получаем конфигурацию ожидания\n';
-      code += '    video_config = user_data[user_id]["waiting_for_video"]\n';
+      code += '    waiting_config = user_data[user_id]["waiting_for_input"]\n';
+      code += '    # Проверяем, что тип ожидания - видео\n';
+      code += '    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "video"):\n';
+      code += '        logging.info(f"Видео от пользователя {user_id} проигнорировано - ожидается другой тип ввода")\n';
+      code += '        return\n';
+      code += '    \n';
+      code += '    video_config = waiting_config\n';
       code += '    video_variable = video_config.get("variable", "user_video")\n';
       code += '    node_id = video_config.get("node_id", "unknown")\n';
       code += '    next_node_id = video_config.get("next_node_id")\n';
@@ -3932,7 +3952,7 @@ if (userInputNodes.length > 0) {
       code += '        logging.warning(f"⚠️ Не удалось сохранить видео в БД, данные сохранены локально")\n';
       code += '    \n';
       code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_video"]\n';
+      code += '    del user_data[user_id]["waiting_for_input"]\n';
       code += '    \n';
       code += '    logging.info(f"🎥 Видео сохранено: {video_variable} = {video_file_id}")\n';
       code += '    \n';
@@ -4001,13 +4021,19 @@ if (userInputNodes.length > 0) {
       code += '    user_id = message.from_user.id\n';
       code += '    logging.info(f"🎵 Получено аудио от пользователя {user_id}")\n';
       code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод аудио\n';
-      code += '    if user_id not in user_data or "waiting_for_audio" not in user_data[user_id]:\n';
+      code += '    # Проверяем, ожидаем ли мы ввод аудио - проверяем waiting_for_input с типом audio\n';
+      code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
       code += '        logging.info(f"Аудио от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
       code += '        return\n';
       code += '    \n';
       code += '    # Получаем конфигурацию ожидания\n';
-      code += '    audio_config = user_data[user_id]["waiting_for_audio"]\n';
+      code += '    waiting_config = user_data[user_id]["waiting_for_input"]\n';
+      code += '    # Проверяем, что тип ожидания - аудио\n';
+      code += '    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "audio"):\n';
+      code += '        logging.info(f"Аудио от пользователя {user_id} проигнорировано - ожидается другой тип ввода")\n';
+      code += '        return\n';
+      code += '    \n';
+      code += '    audio_config = waiting_config\n';
       code += '    audio_variable = audio_config.get("variable", "user_audio")\n';
       code += '    node_id = audio_config.get("node_id", "unknown")\n';
       code += '    next_node_id = audio_config.get("next_node_id")\n';
@@ -4033,7 +4059,7 @@ if (userInputNodes.length > 0) {
       code += '        logging.warning(f"⚠️ Не удалось сохранить аудио в БД, данные сохранены локально")\n';
       code += '    \n';
       code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_audio"]\n';
+      code += '    del user_data[user_id]["waiting_for_input"]\n';
       code += '    \n';
       code += '    logging.info(f"🎵 Аудио сохранено: {audio_variable} = {audio_file_id}")\n';
       code += '    \n';
@@ -4102,13 +4128,19 @@ if (userInputNodes.length > 0) {
       code += '    user_id = message.from_user.id\n';
       code += '    logging.info(f"📄 Получен документ от пользователя {user_id}")\n';
       code += '    \n';
-      code += '    # Пряверяем, ожидаем ли мы вяод документа\n';
-      code += '    if user_id not in user_data or "waiting_for_document" not in user_data[user_id]:\n';
+      code += '    # Проверяем, ожидаем ли мы ввод документа - проверяем waiting_for_input с типом document\n';
+      code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
       code += '        logging.info(f"Документ от пользователя {user_id} проигнорирован - не ожидается ввод")\n';
       code += '        return\n';
       code += '    \n';
       code += '    # Получаем конфигурацию ожидания\n';
-      code += '    document_config = user_data[user_id]["waiting_for_document"]\n';
+      code += '    waiting_config = user_data[user_id]["waiting_for_input"]\n';
+      code += '    # Проверяем, что тип ожидания - документ\n';
+      code += '    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "document"):\n';
+      code += '        logging.info(f"Документ от пользователя {user_id} проигнорирован - ожидается другой тип ввода")\n';
+      code += '        return\n';
+      code += '    \n';
+      code += '    document_config = waiting_config\n';
       code += '    document_variable = document_config.get("variable", "user_document")\n';
       code += '    node_id = document_config.get("node_id", "unknown")\n';
       code += '    next_node_id = document_config.get("next_node_id")\n';
@@ -4128,7 +4160,7 @@ if (userInputNodes.length > 0) {
       code += '        logging.warning(f"⚠️ Не удалось сохранить документ в БД, данные сохранены локально")\n';
       code += '    \n';
       code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_document"]\n';
+      code += '    del user_data[user_id]["waiting_for_input"]\n';
       code += '    \n';
       code += '    logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}")\n';
       code += '    \n';
@@ -4183,7 +4215,7 @@ if (userInputNodes.length > 0) {
       }
 
       code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+      code += '            logging.error(f"Ошибка при переходе к следующему уз��у {next_node_id}: {e}")\n';
       code += '    \n';
       code += '    return\n';
     }
@@ -5113,7 +5145,7 @@ if (userInputNodes.length > 0) {
     }
 
     code += '            else:\n';
-    code += '                # Обычная логика для других узлов\n';
+    code += '                # Обыч����ая логика для других узлов\n';
 
     let hasElseCode = false;
     multiSelectNodes.forEach((node: Node) => {
@@ -5126,7 +5158,7 @@ if (userInputNodes.length > 0) {
       }
     });
 
-    // Добавляем pass если в else блоке нет кода
+    // Добавля��м pass если в else блоке нет кода
     if (!hasElseCode) {
       code += '                pass\n';
     }
@@ -5963,10 +5995,10 @@ if (userInputNodes.length > 0) {
                   code += '        except Exception as e:\n';
                   code += '            logging.debug(f"Не удалось удалить reply сообщение: {e}")\n';
                   code += '    \n';
-                  code += '    # Отправляем сообщение (с проверкой прякрепленного медиа)\n';
+                  code += '    # Отправляем сообщение (с п��оверкой прякрепленного медиа)\n';
                   code += mediaCode;
                 } else {
-                  // Резервный вариант если не удалось сгенерировать код медиа
+                  // Резервный вариант ��сли не удалось сгенерировать код медиа
                   code += '    # Отправляем сообщение (обычное)\n';
                   const autoFlag1 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
                   code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag1}${parseMode})\n`;
@@ -6807,7 +6839,7 @@ if (userInputNodes.length > 0) {
 
           // Создаем правильный вызов команды для callback кнопок
           if (button.target) {
-            // Определяем команду - убираем ведущий слеш если есть
+            // Определяем команду - убираем ведущий сл��ш если есть
             const command = button.target.startsWith('/') ? button.target.replace('/', '') : button.target;
             const handlerName = `${command}_handler`;
 
