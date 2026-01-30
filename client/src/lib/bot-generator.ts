@@ -561,6 +561,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    user_name = init_user_variables(user_id, callback_query.from_user)\n';
           code += '    \n';
 
+          // Устанавливаем флаг collectUserInput для текущего узла
+          // Узел собирает ввод, если включены любые типы ввода
+          const collectUserInputFlag = targetNode.data.collectUserInput !== false ||
+            targetNode.data.enableTextInput === true ||
+            targetNode.data.enablePhotoInput === true ||
+            targetNode.data.enableVideoInput === true ||
+            targetNode.data.enableAudioInput === true ||
+            targetNode.data.enableDocumentInput === true;
+          code += `    # Устанавливаем флаг collectUserInput для узла ${nodeId}\n`;
+          code += `    if user_id not in user_data:\n`;
+          code += '        user_data[user_id] = {}\n';
+          code += `    user_data[user_id]["collectUserInput_${nodeId}"] = ${toPythonBoolean(collectUserInputFlag)}\n`;
+          code += `    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла ${nodeId}: ${collectUserInputFlag}")\n`;
+          code += '    \n';
+
           // Добавляем обработку кнопки "Готово" для множественного выбора
           if (targetNode.data.allowMultipleSelection) {
             code += '    # Проверяем, является ли это кнопкой "Готово"\n';
@@ -618,14 +633,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
           // Обычная обработка узлов без специальной логики
 
-          // Определяем переменную для сохранения на основе родительского узла  
+          // Определяем переменную для сохранения на основе родительского узла
           if (targetNode && targetNode.data.inputVariable) {
             const variableName = targetNode.data.inputVariable;
             const variableValue = 'callback_query.data';
 
-            code += '    # Сохраняем правильную переменную в базу данных\n';
-            code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-            code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
+            // Проверяем, был ли переход через кнопку с skipDataCollection
+            // Если была установлена метка skipDataCollectionTransition, не сохраняем переменную
+            code += '    # Проверяем, был ли переход через кнопку с skipDataCollection\n';
+            code += '    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)\n';
+            code += '    if not skip_transition_flag:\n';
+            code += `        await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
+            code += `        logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
+            code += '    else:\n';
+            code += '        # Сбрасываем флаг\n';
+            code += '        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:\n';
+            code += '            del user_data[user_id]["skipDataCollectionTransition"]\n';
+            code += '        logging.info(f"Переход через skipDataCollection, переменная ' + variableName + ' не сохраняется (пользователь {user_id})")\n';
             code += '    \n';
           }
 
@@ -879,7 +903,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${replyAutoTransitionTarget}")\n`;
               }
 
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настраиваем waiting_for_input для targetNode ТОЛЬКО если collectUserInput=true
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настраиваем waiting_for_input ��ля targetNode ТОЛЬК�� если collectUserInput=true
               const targetCollectInputReply = targetNode.data.collectUserInput === true ||
                 targetNode.data.enableTextInput === true ||
                 targetNode.data.enablePhotoInput === true ||
@@ -912,13 +936,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
                 const modesStr = modes.length > 0 ? modes.map(m => `'${m}'`).join(', ') : "'button', 'text'";
 
+                // Собираем кнопки с skipDataCollection для reply клавиатуры
+                const skipButtons = (targetNode.data.buttons || [])
+                  .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+                  .map((btn: any) => ({ text: btn.text, target: btn.target }));
+                const skipButtonsJson = JSON.stringify(skipButtons);
+
                 code += `    user_data[user_id]["waiting_for_input"] = {\n`;
                 code += `        "type": "button",\n`;
                 code += `        "modes": [${modesStr}],\n`;
                 code += `        "variable": "${targetInputVariable}",\n`;
                 code += `        "save_to_database": ${targetSaveToDb ? 'True' : 'False'},\n`;
                 code += `        "node_id": "${targetNode.id}",\n`;
-                code += `        "next_node_id": ""\n`;
+                code += `        "next_node_id": "",\n`;
+                code += `        "skip_buttons": ${skipButtonsJson}\n`;
                 code += `    }\n`;
                 code += `    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesStr}] для переменной ${targetInputVariable} (узел ${targetNode.id})")\n`;
               } else {
@@ -980,6 +1011,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Генерируем код отправки с медиа
             const parseModeStr = targetNode.data.formatMode || '';
             const keyboardStr = 'keyboard if keyboard is not None else None';
+            // Определяем, собирает ли узел ввод (учитываем все типы ввода)
+            const collectUserInputFlag = targetNode.data.collectUserInput !== false ||
+              targetNode.data.enableTextInput === true ||
+              targetNode.data.enablePhotoInput === true ||
+              targetNode.data.enableVideoInput === true ||
+              targetNode.data.enableAudioInput === true ||
+              targetNode.data.enableDocumentInput === true;
             const mediaCode = generateAttachedMediaSendCode(
               attachedMedia,
               mediaVariablesMap,
@@ -988,7 +1026,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               keyboardStr,
               nodeId,
               '    ',
-              undefined // автопереход обрабатывается отдельно ниже
+              undefined, // автопереход обрабатывается отдельно ниже
+              collectUserInputFlag
             );
 
             if (mediaCode) {
@@ -1063,6 +1102,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '        logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")\n';
             code += '    elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
             code += `        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${nodeId}")\n`;
+            code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)\n';
+            code += `    elif user_id in user_data and user_data[user_id].get("collectUserInput_${nodeId}", True) == True:\n`;
+            code += `        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")\n`;
+            // Добавляем статическую проверку collectUserInput как резервную
+            const staticCollectUserInput = targetNode.data.collectUserInput !== false ||
+              targetNode.data.enableTextInput === true ||
+              targetNode.data.enablePhotoInput === true ||
+              targetNode.data.enableVideoInput === true ||
+              targetNode.data.enableAudioInput === true ||
+              targetNode.data.enableDocumentInput === true;
+            if (staticCollectUserInput) {
+              code += `    elif True:  # Узел ожидает ввод (статическая проверка)\n`;
+              code += `        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод (collectUserInput=true из статической проверки), автопереход пропущен")\n`;
+            }
             code += '    else:\n';
             code += `        # ⚡ Автопереход к узлу ${autoTransitionTarget}\n`;
             code += `        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTarget}")\n`;
@@ -1350,6 +1403,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         code += '            # Проверяем, не ждем ли мы ввод перед автопереходом\n';
                         code += '            if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
                         code += `                logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${navTargetNode.id}")\n`;
+                        code += '            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)\n';
+                        code += `            elif user_id in user_data and user_data[user_id].get("collectUserInput_${navTargetNode.id}", True) == True:\n`;
+                        code += `                logging.info(f"ℹ️ Узел ${navTargetNode.id} ожидает ввод (collectUserInput=true), автопереход пропущен")\n`;
                         code += '            else:\n';
                         code += `                # ⚡ Автопереход к узлу ${autoTargetId}\n`;
                         code += `                logging.info(f"⚡ Автопереход от узла ${navTargetNode.id} к узлу ${autoTargetId}")\n`;
@@ -1625,7 +1681,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       } else {
                         code += `            await bot.send_message(callback_query.from_user.id, text)\n`;
                       }
-                      code += `            logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполнена")\n`;
+                      code += `            logging.info(f"✅ ��рямая навигация к узлу множественного выбора ${navTargetNode.id} в��пол��ена")\n`;
                     } else {
                       const formattedText = formatTextForPython(messageText);
                       code += `            nav_text = ${formattedText}\n`;
@@ -1660,14 +1716,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               });
 
               code += '        else:\n';
-              code += '            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+              code += '            logging.warning(f"Неиз��естный следующий узел: {next_node_id}")\n';
             } else {
               code += '        # No nodes available for navigation\n';
               code += '        logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
             }
 
             code += '    except Exception as e:\n';
-            code += '        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+            code += '        logging.error(f"Ошибка при п����реходе к следующему узлу {next_node_id}: {e}")\n';
             code += '    \n';
             code += '    return  # Завершаем обработку после переадресации\n';
           }
@@ -1823,13 +1879,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               if (targetCollectInput) {
                 const targetVarName = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 code += '    \n';
+                // Собираем кнопки с skipDataCollection для целевого узла
+                const skipButtons1884 = (targetNode.data.buttons || [])
+                  .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+                  .map((btn: any) => ({ text: btn.text, target: btn.target }));
+                const skipButtonsJson1884 = JSON.stringify(skipButtons1884);
+
                 code += '    # Устанавливаем waiting_for_input для целевого узла (collectUserInput=true)\n';
                 code += `    user_data[user_id]["waiting_for_input"] = {\n`;
                 code += `        "type": "button",\n`;
                 code += `        "modes": ["button", "text"],\n`;
                 code += `        "variable": "${targetVarName}",\n`;
                 code += `        "save_to_database": True,\n`;
-                code += `        "node_id": "${targetNode.id}"\n`;
+                code += `        "node_id": "${targetNode.id}",\n`;
+                code += `        "skip_buttons": ${skipButtonsJson1884}\n`;
                 code += `    }\n`;
                 code += `    logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной ${targetVarName} (узел ${targetNode.id})")\n`;
               } else {
@@ -1898,13 +1961,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    # Проверяем, яужно ли использоватя условную клавиатуру\n';
               code += '    if use_conditional_keyboard:\n';
               if (targetCollectInputInline) {
+                // Собираем кнопки с skipDataCollection для условной reply клавиатуры
+                const skipButtons1959 = (targetNode.data.buttons || [])
+                  .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+                  .map((btn: any) => ({ text: btn.text, target: btn.target }));
+                const skipButtonsJson1959 = JSON.stringify(skipButtons1959);
+
                 code += '        # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)\n';
                 code += `        user_data[user_id]["waiting_for_input"] = {\n`;
                 code += `            "type": "button",\n`;
                 code += `            "modes": ["button", "text"],\n`;
                 code += `            "variable": "${targetNode.data.inputVariable || `response_${targetNode.id}`}",\n`;
                 code += `            "save_to_database": True,\n`;
-                code += `            "node_id": "${targetNode.id}"\n`;
+                code += `            "node_id": "${targetNode.id}",\n`;
+                code += `            "skip_buttons": ${skipButtonsJson1959}\n`;
                 code += `        }\n`;
               } else {
                 code += `        # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
@@ -1991,13 +2061,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
               code += '        # Используем условную клавиатуру\n';
               if (targetCollectInputCond) {
+                // Собираем кнопки с skipDataCollection для условной reply клавиатуры
+                const skipButtons2060 = (targetNode.data.buttons || [])
+                  .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+                  .map((btn: any) => ({ text: btn.text, target: btn.target }));
+                const skipButtonsJson2060 = JSON.stringify(skipButtons2060);
+
                 code += '        # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)\n';
                 code += `        user_data[user_id]["waiting_for_input"] = {\n`;
                 code += `            "type": "button",\n`;
                 code += `            "modes": ["button", "text"],\n`;
                 code += `            "variable": "${targetNode.data.inputVariable || `response_${targetNode.id}`}",\n`;
                 code += `            "save_to_database": True,\n`;
-                code += `            "node_id": "${targetNode.id}"\n`;
+                code += `            "node_id": "${targetNode.id}",\n`;
+                code += `            "skip_buttons": ${skipButtonsJson2060}\n`;
                 code += `        }\n`;
               } else {
                 code += `        # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
@@ -2458,7 +2535,7 @@ if (userInputNodes.length > 0) {
 
               // Fallback если условия не выпоянены
               code += `                        if not conditional_met:\n`;
-              code += `                            # Условие не выполнено - показываем основное сообщение\n`;
+              code += `                            # Условие не выполнено - показываем основно�� сообщение\n`;
               const messageText = targetNode.data.messageText || 'Сообщение';
               const formattedText = formatTextForPython(messageText);
               code += `                            text = ${formattedText}\n`;
@@ -2479,13 +2556,13 @@ if (userInputNodes.length > 0) {
               const messageText = targetNode.data.messageText || 'Сообщение';
               const formattedText = formatTextForPython(messageText);
 
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем ях И настраиваем ожидание ввода
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть к��опки - показываем ях И настраиваем ожидание ввода
               if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += `                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа\n`;
                 code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput=true")\n`;
                 code += `                        text = ${formattedText}\n`;
 
-                // Добавляем замену переменных
+                // До����авляем замену переменных
                 code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
                 code += generateUniversalVariableReplacement('                        ');
 
@@ -2511,6 +2588,12 @@ if (userInputNodes.length > 0) {
                 // Определяем modes - если есть enableTextInput, добавляем и text и button
                 const hasTextInput = targetNode.data.enableTextInput === true;
                 const btnModesList = hasTextInput ? "['button', 'text']" : "['button']";
+                // Собираем кнопки с skipDataCollection для кнопок
+                const skipButtons2572 = (targetNode.data.buttons || [])
+                  .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+                  .map((btn: any) => ({ text: btn.text, target: btn.target }));
+                const skipButtonsJson2572 = JSON.stringify(skipButtons2572);
+
                 code += `                        # Настраиваем ожидание ввода для сохранения ответа кнопки\n`;
                 code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
                 code += `                            "type": "button",\n`;
@@ -2518,7 +2601,8 @@ if (userInputNodes.length > 0) {
                 code += `                            "variable": "${inputVariable}",\n`;
                 code += `                            "save_to_database": True,\n`;
                 code += `                            "node_id": "${targetNode.id}",\n`;
-                code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
+                code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
+                code += `                            "skip_buttons": ${skipButtonsJson2572}\n`;
                 code += `                        }\n`;
                 code += `                        logging.info(f"✅ Со����тояние ожидания настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
               } else {
@@ -3252,30 +3336,37 @@ if (userInputNodes.length > 0) {
 
               // АВТОПЕРЕХОД: Если у узля есть autoTransitionTo, сразу вызываем callback обработчик
               if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-                const autoTargetId = targetNode.data.autoTransitionTo;
-                const autoSafeFunctionName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
-                code += `${bodyIndent}\n`;
-                code += `${bodyIndent}# ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `${bodyIndent}logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `${bodyIndent}import types as aiogram_types\n`;
-                code += `${bodyIndent}async def noop(*args, **kwargs):\n`;
-                code += `${bodyIndent}    return None\n`;
-                code += `${bodyIndent}fake_message = aiogram_types.SimpleNamespace(\n`;
-                code += `${bodyIndent}    chat=aiogram_types.SimpleNamespace(id=message.from_user.id),\n`;
-                code += `${bodyIndent}    message_id=message.message_id,\n`;
-                code += `${bodyIndent}    delete=noop,\n`;
-                code += `${bodyIndent}    edit_text=noop,\n`;
-                code += `${bodyIndent}    answer=lambda text, **kwargs: bot.send_message(message.from_user.id, text, **kwargs)\n`;
-                code += `${bodyIndent})\n`;
-                code += `${bodyIndent}fake_callback = aiogram_types.SimpleNamespace(\n`;
-                code += `${bodyIndent}    id="auto_transition",\n`;
-                code += `${bodyIndent}    from_user=message.from_user,\n`;
-                code += `${bodyIndent}    chat_instance="",\n`;
-                code += `${bodyIndent}    data="${autoTargetId}",\n`;
-                code += `${bodyIndent}    message=fake_message,\n`;
-                code += `${bodyIndent}    answer=noop\n`;
-                code += `${bodyIndent})\n`;
-                code += `${bodyIndent}await handle_callback_${autoSafeFunctionName}(fake_callback)\n`;
+                // Проверя��м, нужно ли выполнять автопереход - только если collectUserInput=true
+                if (targetNode.data.collectUserInput !== false) {
+                  const autoTargetId = targetNode.data.autoTransitionTo;
+                  const autoSafeFunctionName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
+                  code += `${bodyIndent}\n`;
+                  code += `${bodyIndent}# ⚡ Автопереход к узлу ${autoTargetId} (только если collectUserInput=true)\n`;
+                  code += `${bodyIndent}logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                  code += `${bodyIndent}import types as aiogram_types\n`;
+                  code += `${bodyIndent}async def noop(*args, **kwargs):\n`;
+                  code += `${bodyIndent}    return None\n`;
+                  code += `${bodyIndent}fake_message = aiogram_types.SimpleNamespace(\n`;
+                  code += `${bodyIndent}    chat=aiogram_types.SimpleNamespace(id=message.from_user.id),\n`;
+                  code += `${bodyIndent}    message_id=message.message_id,\n`;
+                  code += `${bodyIndent}    delete=noop,\n`;
+                  code += `${bodyIndent}    edit_text=noop,\n`;
+                  code += `${bodyIndent}    answer=lambda text, **kwargs: bot.send_message(message.from_user.id, text, **kwargs)\n`;
+                  code += `${bodyIndent})\n`;
+                  code += `${bodyIndent}fake_callback = aiogram_types.SimpleNamespace(\n`;
+                  code += `${bodyIndent}    id="auto_transition",\n`;
+                  code += `${bodyIndent}    from_user=message.from_user,\n`;
+                  code += `${bodyIndent}    chat_instance="",\n`;
+                  code += `${bodyIndent}    data="${autoTargetId}",\n`;
+                  code += `${bodyIndent}    message=fake_message,\n`;
+                  code += `${bodyIndent}    answer=noop\n`;
+                  code += `${bodyIndent})\n`;
+                  code += `${bodyIndent}await handle_callback_${autoSafeFunctionName}(fake_callback)\n`;
+                } else {
+                  code += `${bodyIndent}# Автопереход пропущен: collectUserInput=false\n`;
+                  code += `${bodyIndent}logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
+                  code += `${bodyIndent}break  # Нет автоперехода, завершаем цикл\n`;
+                }
               } else {
                 code += `${bodyIndent}break  # Нет автоперехода, завершаем цикл\n`;
               }
@@ -3286,7 +3377,7 @@ if (userInputNodes.length > 0) {
           code += `${bodyIndent}prompt_text = ${inputPrompt}\n`;
           code += `${bodyIndent}await message.answer(prompt_text)\n`;
 
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверя��м collectUserInput перед установкой waiting_for_input
           const msgNodeCollectInput = targetNode.data.collectUserInput === true ||
             targetNode.data.enableTextInput === true ||
             targetNode.data.enablePhotoInput === true ||
@@ -3295,7 +3386,7 @@ if (userInputNodes.length > 0) {
             targetNode.data.enableDocumentInput === true;
 
           if (msgNodeCollectInput) {
-            code += `${bodyIndent}# Устанавливаея новое ожидание ввода (collectUserInput=true)\n`;
+            code += `${bodyIndent}# Устанавливаея но��ое ожидание ввода (collectUserInput=true)\n`;
             code += `${bodyIndent}user_data[user_id]["waiting_for_input"] = {\n`;
             code += `${bodyIndent}    "type": "${targetNode.data.inputType || 'text'}",\n`;
             code += `${bodyIndent}    "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
@@ -4147,7 +4238,7 @@ if (userInputNodes.length > 0) {
     code += '        if saved_to_db:\n';
     code += '            logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
     code += '        else:\n';
-    code += '            logging.warning(f"⚠️ Не удалось сохранить в яД, данные сохранены локально")\n';
+    code += '            logging.warning(f"⚠️ Не удалось сохранить в яД, данные сохранены л��кально")\n';
     code += '    \n';
     code += '    # Отправляем сообщение об успехе только если оно задано\n';
     code += '    success_message = input_config.get("success_message", "")\n';
@@ -4161,7 +4252,7 @@ if (userInputNodes.length > 0) {
     code += '    \n';
     code += '    # Автоматическая навигация к следующему узлу после успешного ввода\n';
     code += '    next_node_id = input_config.get("next_node_id")\n';
-    code += '    logging.info(f"🔄 Проверяям навигацию: next_node_id = {next_node_id}")\n';
+    code += '    logging.info(f"🔄 Проверяям нави����ацию: next_node_id = {next_node_id}")\n';
     code += '    if next_node_id:\n';
     code += '        try:\n';
     code += '            logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
@@ -4223,7 +4314,7 @@ if (userInputNodes.length > 0) {
           code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
           code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
 
-          // Проверяем, нужно ли настроить ожядание текстового ввода
+          // Проверя����м, нужно ли настроить ожядание текстового ввода
           // ИСПРАВЛЕНИЕ: Используем универяальную функцию для настройки ожидания ввода
           if (targetNode.data.enableTextInput || targetNode.data.collectUserInput ||
             targetNode.data.enablePhotoInput || targetNode.data.enableVideoInput ||
@@ -5098,7 +5189,7 @@ if (userInputNodes.length > 0) {
     code += '        if button_text in selected_list:\n';
     code += '            # Убираем из яыбранных\n';
     code += '            selected_list.remove(button_text)\n';
-    code += '            logging.info(f"➖ Убрали яыбор: {button_text}")\n';
+    code += '            logging.info(f"➖ Уб��али яыбор: {button_text}")\n';
     code += '        else:\n';
     code += '            # Добавляем к выбранным\n';
     code += '            selected_list.append(button_text)\n';
@@ -5118,9 +5209,9 @@ if (userInputNodes.length > 0) {
         code += `        if node_id == "${node.id}":\n`;
 
         // Добавляем кнопки выбора с галочяами
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для у��ла ${node.id}`);
         selectionButtons.forEach((button: Button, index: number) => {
-          // ИСПРАВЛЕНИЕ: используем тот же формат callback_data как при создании кнопок
+          // ИСПРА��Л��НИЕ: используе�� тот же формат callback_data как при создании кнопок
           const shortNodeId = generateUniqueShortId(node.id, allNodeIds || []);
           const shortTarget = button.target || button.id || 'btn';
           const callbackData = `ms_${shortNodeId}_${shortTarget}`;
@@ -5159,7 +5250,7 @@ if (userInputNodes.length > 0) {
     code += '\n';
   }  // Закрываем if (multiSelectNodes.length > 0) для блока обработки выбора опций
 
-  // Генерируем обработчик для кнопок "Готово" многомерного выбора ТОЛЬКО если есть узла с множественным выбором
+  // Генерируем обработчик для кнопок "Готово" многомер��ого выбора ТОЛЬКО если есть узла с множественным выбором
   if (multiSelectNodes.length > 0) {
     code += '# Обработчик для кнопок завершения множественного выбора\n';
     code += '@dp.callback_query(lambda callback_query: callback_query.data and callback_query.data.startswith("multi_select_done_"))\n';
@@ -5654,7 +5745,7 @@ if (userInputNodes.length > 0) {
               // Используем текст кнопки как значение переменной
               const variableValue = 'button_text';
 
-              code += '    # Сохраняем правильную переменную в базу данных\n';
+              // Сохраняем переменную (если кнопка не имеет флага skipDataCollection, она сохраняется как обычное значение)
               code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
               code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
               code += '    \n';
@@ -5679,6 +5770,8 @@ if (userInputNodes.length > 0) {
           } else {
             code += '    # Кнопка настроена для пропуска сбора данных (skipDataCollection=true)\n';
             code += `    logging.info(f"Кнопка пропущена: {button_text} (не сохраняется из-за skipDataCollection)")\n`;
+            code += '    # Устанавливаем флаг, чтобы следующий узел не сохранил переменную\n';
+            code += '    user_data[user_id]["skipDataCollectionTransition"] = True\n';
           }
           code += '    \n';
 
@@ -5830,6 +5923,13 @@ if (userInputNodes.length > 0) {
                 // Генерируям код отправки с медиа
                 const parseModeStr = targetNode.data.formatMode || '';
                 const keyboardStr = 'keyboard if keyboard is not None else None';
+                // Определяем, собирает ли узел ввод (учитываем все типы ввода)
+                const collectUserInputFlag = targetNode.data.collectUserInput !== false ||
+                  targetNode.data.enableTextInput === true ||
+                  targetNode.data.enablePhotoInput === true ||
+                  targetNode.data.enableVideoInput === true ||
+                  targetNode.data.enableAudioInput === true ||
+                  targetNode.data.enableDocumentInput === true;
                 const mediaCode = generateAttachedMediaSendCode(
                   attachedMedia,
                   mediaVariablesMap,
@@ -5838,7 +5938,8 @@ if (userInputNodes.length > 0) {
                   keyboardStr,
                   targetNode.id,
                   '    ',
-                  targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo ? targetNode.data.autoTransitionTo : undefined
+                  targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo ? targetNode.data.autoTransitionTo : undefined,
+                  collectUserInputFlag
                 );
 
                 if (mediaCode) {
@@ -5886,18 +5987,25 @@ if (userInputNodes.length > 0) {
 
                 // АВяОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
                 // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
+                // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=false
                 if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-                  const autoTargetId = targetNode.data.autoTransitionTo;
-                  const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
-                  code += '    \n';
-                  code += '    # Пяоверяем, не ждем ли мы условный ввод перед автопереходом\n';
-                  code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
-                  code += '        logging.info(f"⏸️ Автопяреход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
-                  code += '    else:\n';
-                  code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                  code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                  code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
-                  code += `        return\n`;
+                  // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
+                  if (targetNode.data.collectUserInput !== false) {
+                    const autoTargetId = targetNode.data.autoTransitionTo;
+                    const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
+                    code += '    \n';
+                    code += '    # Пяоверяем, не ждем ли мы условный ввод перед автопереходом\n';
+                    code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
+                    code += '        logging.info(f"⏸️ Автопяреход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
+                    code += '    else:\n';
+                    code += `        # ⚡ Автопереход к узлу ${autoTargetId} (только если collectUserInput=true)\n`;
+                    code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                    code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                    code += `        return\n`;
+                  } else {
+                    code += '    # Автопереход пропущен: collectUserInput=false\n';
+                    code += `    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
+                  }
                 }
               }
 
@@ -5915,7 +6023,7 @@ if (userInputNodes.length > 0) {
 
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0 && !hasInputEnabled) {
                   code += '    \n';
-                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет inline кнопки БЕЗ текстового/медиа ввода - НЕ настраиваем ожидание ввода")\n`;
+                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет inline кнопки БЕЗ текстового/медиа ввода - ��Е наст��аиваем ожидание ввода")\n`;
                   code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового/медиа ввода\n`;
                 } else {
                   code += '    \n';
@@ -5942,7 +6050,7 @@ if (userInputNodes.length > 0) {
               code += '            else:\n';
               code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
               code += '        else:\n';
-              code += '            # Используем URL или file_id для стикеров\n';
+              code += '            # Использу��м URL или file_id для стикеров\n';
               code += '            sticker_file = sticker_url\n';
               code += '        \n';
 
@@ -6805,7 +6913,7 @@ async def download_and_save_photo(file_id: str, bot_token: str, filename: str = 
         filename: Имя файла для сохранения (опционально)
 
     Returns:
-        Путь к сохраненному файлу или None в случае ошибки
+        П��ть к сохраненному файлу или None в случае ошибки
     """
     try:
         import tempfile
@@ -6816,7 +6924,7 @@ async def download_and_save_photo(file_id: str, bot_token: str, filename: str = 
         async with aiohttp.ClientSession() as session:
             async with session.get(file_info_url) as response:
                 if response.status != 200:
-                    logging.error(f"❌ Не удалось получить информацию о файле: {response.status}")
+                    logging.error(f"❌ Не уда��ось получить информацию о файле: {response.status}")
                     return None
 
                 file_info = await response.json()
@@ -6829,7 +6937,7 @@ async def download_and_save_photo(file_id: str, bot_token: str, filename: str = 
                 # Формируем URL для скачивания файла
                 download_url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
 
-                # Определяем имя файла, если не задано
+                # Определ���ем имя файла, если не задано
                 if not filename:
                     filename = os.path.basename(file_path)
 
@@ -6846,7 +6954,7 @@ async def download_and_save_photo(file_id: str, bot_token: str, filename: str = 
                             async for chunk in file_response.content.iter_chunked(8192):
                                 f.write(chunk)
 
-                        logging.info(f"📷 Фото успешно скачано и сохранено: {file_path_full}")
+                        logging.info(f"📷 Фото успешно скача��о и сохранено: {file_path_full}")
                         return file_path_full
                     else:
                         logging.error(f"❌ Не удалось скачать фото: {file_response.status}")
@@ -6891,7 +6999,7 @@ async def send_photo_with_caption(chat_id: int, photo_source, caption: str = Non
 
         return result
     except Exception as e:
-        logging.error(f"Ошибка при отправке фото: {e}")
+        logging.error(f"Ошибка при отправк�� фото: {e}")
         # Если отправка с фото не удалась, пробуем отправить просто текст
         if caption:
             return await bot.send_message(chat_id, caption, **kwargs)

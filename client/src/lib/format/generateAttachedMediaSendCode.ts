@@ -12,7 +12,8 @@ export function generateAttachedMediaSendCode(
   keyboard: string,
   nodeId: string,
   indentLevel: string,
-  autoTransitionTo?: string): string {
+  autoTransitionTo?: string,
+  collectUserInput: boolean = true): string {
   if (!attachedMedia || attachedMedia.length === 0) {
     return '';
   }
@@ -68,13 +69,18 @@ export function generateAttachedMediaSendCode(
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
   if (autoTransitionTo) {
-    const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
     code += `${indentLevel}        \n`;
-    code += `${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
-    code += `${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
-    code += `${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)\n`;
-    code += `${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
-    code += `${indentLevel}        return\n`;
+    code += `${indentLevel}        # Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true\n`;
+    code += `${indentLevel}        if ${collectUserInput.toString()}:\n`;  // Convert boolean to string representation
+    const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
+    code += `${indentLevel}            # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
+    code += `${indentLevel}            logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
+    code += `${indentLevel}            await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+    code += `${indentLevel}            logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
+    code += `${indentLevel}            return\n`;
+    code += `${indentLevel}        else:\n`;
+    code += `${indentLevel}            # Автопереход пропущен: collectUserInput=false\n`;
+    code += `${indentLevel}            logging.info(f"ℹ️ Узел ${nodeId} не собирает ответы (collectUserInput=false)")\n`;
   }
 
   code += `${indentLevel}    except Exception as e:\n`;
@@ -85,17 +91,27 @@ export function generateAttachedMediaSendCode(
   code += `${indentLevel}else:\n`;
   code += `${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение\n`;
   code += `${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")\n`;
-  code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
+  // Если collectUserInput=true, не отправляем сообщение, так как узел ожидает ввод
+  code += `${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:\n`;
+  code += `${indentLevel}        # Узел ожидает ввод, не отправляем сообщение\n`;
+  code += `${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод, пропускаем отправку сообщения")\n`;
+  code += `${indentLevel}    else:\n`;
+  code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход и для случая без медиа
   if (autoTransitionTo) {
-    const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
     code += `${indentLevel}    \n`;
-    code += `${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
-    code += `${indentLevel}    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
-    code += `${indentLevel}    await handle_callback_${safeAutoTargetId}(callback_query)\n`;
-    code += `${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
-    code += `${indentLevel}    return\n`;
+    code += `${indentLevel}    # Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true\n`;
+    code += `${indentLevel}    if ${collectUserInput.toString()}:\n`;  // Convert boolean to string representation
+    const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
+    code += `${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
+    code += `${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
+    code += `${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+    code += `${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
+    code += `${indentLevel}        return\n`;
+    code += `${indentLevel}    else:\n`;
+    code += `${indentLevel}        # Автопереход пропущен: collectUserInput=false\n`;
+    code += `${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} не собирает ответы (collectUserInput=false)")\n`;
   }
 
   return code;

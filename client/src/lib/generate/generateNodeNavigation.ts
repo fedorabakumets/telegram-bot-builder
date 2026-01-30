@@ -49,28 +49,34 @@ export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNod
 
       // Проверяем автопереход
       if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-        code += `${baseIndent}    \n`;
-        code += `${baseIndent}    # Автопереход к следующему узлу\n`;
-        code += `${baseIndent}    auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
-        code += `${baseIndent}    logging.info(f"⚡ Автопереход от {${nextNodeIdVar}} к {auto_next_node_id}")\n`;
-        code += `${baseIndent}    # Создаем искусственный callback для вызова обработчика\n`;
-        code += `${baseIndent}    import types as aiogram_types\n`;
-        code += `${baseIndent}    fake_callback = aiogram_types.SimpleNamespace(\n`;
-        code += `${baseIndent}        id="auto_transition",\n`;
-        code += `${baseIndent}        from_user=${messageVar}.from_user,\n`;
-        code += `${baseIndent}        chat_instance="",\n`;
-        code += `${baseIndent}        data=auto_next_node_id,\n`;
-        code += `${baseIndent}        message=${messageVar},\n`;
-        code += `${baseIndent}        answer=lambda: None\n`;
-        code += `${baseIndent}    )\n`;
+        // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
+        if (targetNode.data.collectUserInput !== false) {
+          code += `${baseIndent}    \n`;
+          code += `${baseIndent}    # Автопереход к следующему узлу (только если collectUserInput=true)\n`;
+          code += `${baseIndent}    auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
+          code += `${baseIndent}    logging.info(f"⚡ Автопереход от {${nextNodeIdVar}} к {auto_next_node_id}")\n`;
+          code += `${baseIndent}    # Создаем искусственный callback для вызова обработчика\n`;
+          code += `${baseIndent}    import types as aiogram_types\n`;
+          code += `${baseIndent}    fake_callback = aiogram_types.SimpleNamespace(\n`;
+          code += `${baseIndent}        id="auto_transition",\n`;
+          code += `${baseIndent}        from_user=${messageVar}.from_user,\n`;
+          code += `${baseIndent}        chat_instance="",\n`;
+          code += `${baseIndent}        data=auto_next_node_id,\n`;
+          code += `${baseIndent}        message=${messageVar},\n`;
+          code += `${baseIndent}        answer=lambda: None\n`;
+          code += `${baseIndent}    )\n`;
 
-        // Вызываем callback-обработчик вместо инлайн-отправки
-        const autoTargetNode = nodes.find(n => n.id === targetNode.data.autoTransitionTo);
-        if (autoTargetNode) {
-          const safeFuncName = autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-          code += `${baseIndent}    await handle_callback_${safeFuncName}(fake_callback)\n`;
+          // Вызываем callback-обработчик вместо инлайн-отправки
+          const autoTargetNode = nodes.find(n => n.id === targetNode.data.autoTransitionTo);
+          if (autoTargetNode) {
+            const safeFuncName = autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            code += `${baseIndent}    await handle_callback_${safeFuncName}(fake_callback)\n`;
+          }
+          code += `${baseIndent}    logging.info(f"✅ Автопереход выполнен: {${nextNodeIdVar}} -> {auto_next_node_id}")\n`;
+        } else {
+          code += `${baseIndent}    # Автопереход пропущен: collectUserInput=false\n`;
+          code += `${baseIndent}    logging.info(f"ℹ️ Узел {${nextNodeIdVar}} не собирает ответы (collectUserInput=false)")\n`;
         }
-        code += `${baseIndent}    logging.info(f"✅ Автопереход выполнен: {${nextNodeIdVar}} -> {auto_next_node_id}")\n`;
       }
     });
     code += `${baseIndent}else:\n`;

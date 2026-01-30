@@ -229,24 +229,30 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
 
   // ИСПРАВЛЕНИЕ: Добавляем автопереход для узлов start, если он настроен
   if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
-    const autoTransitionTarget = node.data.autoTransitionTo;
-    const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
+    // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
+    if (node.data.collectUserInput !== false) {
+      const autoTransitionTarget = node.data.autoTransitionTo;
+      const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
 
-    code += keyboardCode;
-    code += '\n    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически\n';
-    code += `    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTransitionTarget}")\n`;
-    code += '    # Создаем временный callback_query объект для вызова обработчика\n';
-    code += '    from aiogram.types import CallbackQuery\n';
-    code += '    temp_callback = CallbackQuery(\n';
-    code += '        id="auto_transition",\n';
-    code += '        from_user=message.from_user,\n';
-    code += `        data="${autoTransitionTarget}",\n`;
-    code += '        chat_instance=str(message.chat.id),\n';
-    code += '        message=message\n';
-    code += '    )\n';
-    code += `    await handle_callback_${safeFunctionName}(temp_callback)\n`;
-    code += `    logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")\n`;
-    return code; // Возвращаем без добавления keyboardCode повторно
+      code += keyboardCode;
+      code += '\n    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически (только если collectUserInput=true)\n';
+      code += `    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTransitionTarget}")\n`;
+      code += '    # Создаем временный callback_query объект для вызова обработчика\n';
+      code += '    from aiogram.types import CallbackQuery\n';
+      code += '    temp_callback = CallbackQuery(\n';
+      code += '        id="auto_transition",\n';
+      code += '        from_user=message.from_user,\n';
+      code += `        data="${autoTransitionTarget}",\n`;
+      code += '        chat_instance=str(message.chat.id),\n';
+      code += '        message=message\n';
+      code += '    )\n';
+      code += `    await handle_callback_${safeFunctionName}(temp_callback)\n`;
+      code += `    logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")\n`;
+      return code; // Возвращаем без добавления keyboardCode повторно
+    } else {
+      code += '\n    # Автопереход пропущен: collectUserInput=false\n';
+      code += `    logging.info(f"ℹ️ Узел ${node.id} не собирает ответы (collectUserInput=false)")\n`;
+    }
   }
 
   // Если не было автоперехода, добавляем клавиатуру

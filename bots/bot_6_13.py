@@ -158,6 +158,11 @@ def get_api_base_url():
     if env_url:
         # Если URL начинается с http/https, используем как есть
         if env_url.startswith(("http://", "https://")):
+            # ИСПРАВЛЕНИЕ: Для локальных адресов всегда используем http, а не https
+            if "localhost" in env_url or "127.0.0.1" in env_url or "0.0.0.0" in env_url:
+                if env_url.startswith("https://"):
+                    # Заменяем https на http для локальных адресов
+                    env_url = "http://" + env_url[8:]  # Убираем "https://" и добавляем "http://"
             return env_url
         # Если нет, добавляем протокол
         elif ":" in env_url:  # содержит порт
@@ -1300,9 +1305,22 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "gender", callback_query.data)
-    logging.info(f"Переменная gender сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    # Устанавливаем флаг collectUserInput для узла f90r9k3FSLu2Tjn74cBn_
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_f90r9k3FSLu2Tjn74cBn_"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла f90r9k3FSLu2Tjn74cBn_: true")
+    
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "gender", callback_query.data)
+        logging.info(f"Переменная gender сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная gender не сохраняется (пользователь {user_id})")
     
     # Обрабатываем узел f90r9k3FSLu2Tjn74cBn_: f90r9k3FSLu2Tjn74cBn_
     text = "Теперь определимся с полом"
@@ -1348,7 +1366,8 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
         "variable": "gender",
         "save_to_database": True,
         "node_id": "f90r9k3FSLu2Tjn74cBn_",
-        "next_node_id": ""
+        "next_node_id": "",
+        "skip_buttons": []
     }
     logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной gender (узел f90r9k3FSLu2Tjn74cBn_)")
     return  # Возвращаемся чтобы не отправить сообщение дважды
@@ -1526,6 +1545,9 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла vxPv7G4n0QGyhnv4ucOM5")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_vxPv7G4n0QGyhnv4ucOM5", True) == True:
+                logging.info(f"ℹ️ Узел vxPv7G4n0QGyhnv4ucOM5 ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF
                 logging.info(f"⚡ Автопереход от узла vxPv7G4n0QGyhnv4ucOM5 к узлу 8xSJaWAJNz7Hz_54mjFTF")
@@ -1571,6 +1593,9 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла 8xSJaWAJNz7Hz_54mjFTF")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_8xSJaWAJNz7Hz_54mjFTF", True) == True:
+                logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC
                 logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
@@ -1633,9 +1658,9 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
             keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
             await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)
         else:
-            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+            logging.warning(f"Неиз��естный следующий узел: {next_node_id}")
     except Exception as e:
-        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+        logging.error(f"Ошибка при п����реходе к следующему узлу {next_node_id}: {e}")
     
     return  # Завершаем обработку после переадресации
     
@@ -1673,9 +1698,22 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "name", callback_query.data)
-    logging.info(f"Переменная name сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    # Устанавливаем флаг collectUserInput для узла tS2XGL2Mn4LkE63SnxhPy
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_tS2XGL2Mn4LkE63SnxhPy"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла tS2XGL2Mn4LkE63SnxhPy: true")
+    
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "name", callback_query.data)
+        logging.info(f"Переменная name сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная name не сохраняется (пользователь {user_id})")
     
     # Обрабатываем узел tS2XGL2Mn4LkE63SnxhPy: tS2XGL2Mn4LkE63SnxhPy
     text = "Как мне тебя называть?"
@@ -1862,6 +1900,11 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
         logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")
     elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
         logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла tS2XGL2Mn4LkE63SnxhPy")
+    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
+    elif user_id in user_data and user_data[user_id].get("collectUserInput_tS2XGL2Mn4LkE63SnxhPy", True) == True:
+        logging.info(f"ℹ️ Узел tS2XGL2Mn4LkE63SnxhPy ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")
+    elif True:  # Узел ожидает ввод (статическая проверка)
+        logging.info(f"ℹ️ Узел tS2XGL2Mn4LkE63SnxhPy ожидает ввод (collectUserInput=true из статической проверки), автопереход пропущен")
     else:
         # ⚡ Автопереход к узлу lBPy3gcGVLla0NGdSYb35
         logging.info(f"⚡ Автопереход от узла tS2XGL2Mn4LkE63SnxhPy к узлу lBPy3gcGVLla0NGdSYb35")
@@ -1906,9 +1949,22 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "info", callback_query.data)
-    logging.info(f"Переменная info сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    # Устанавливаем флаг collectUserInput для узла lBPy3gcGVLla0NGdSYb35
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_lBPy3gcGVLla0NGdSYb35"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла lBPy3gcGVLla0NGdSYb35: true")
+    
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "info", callback_query.data)
+        logging.info(f"Переменная info сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная info не сохраняется (пользователь {user_id})")
     
     # Обрабатываем узел lBPy3gcGVLla0NGdSYb35: lBPy3gcGVLla0NGdSYb35
     text = "Расскажи о себе и кого хочешь найти, чем предлагаешь заняться. Это поможет лучше подобрать тебе компанию."
@@ -2088,7 +2144,8 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
         "variable": "info",
         "save_to_database": True,
         "node_id": "lBPy3gcGVLla0NGdSYb35",
-        "next_node_id": ""
+        "next_node_id": "",
+        "skip_buttons": [{"text":"Пропустить","target":"Y9zLRp1BLpVhm-HcsNkJV"}]
     }
     logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной info (узел lBPy3gcGVLla0NGdSYb35)")
     return  # Возвращаемся чтобы не отправить сообщение дважды
@@ -2290,6 +2347,9 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла vxPv7G4n0QGyhnv4ucOM5")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_vxPv7G4n0QGyhnv4ucOM5", True) == True:
+                logging.info(f"ℹ️ Узел vxPv7G4n0QGyhnv4ucOM5 ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF
                 logging.info(f"⚡ Автопереход от узла vxPv7G4n0QGyhnv4ucOM5 к узлу 8xSJaWAJNz7Hz_54mjFTF")
@@ -2335,6 +2395,9 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла 8xSJaWAJNz7Hz_54mjFTF")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_8xSJaWAJNz7Hz_54mjFTF", True) == True:
+                logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC
                 logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
@@ -2397,9 +2460,9 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
             keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
             await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)
         else:
-            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+            logging.warning(f"Неиз��естный следующий узел: {next_node_id}")
     except Exception as e:
-        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+        logging.error(f"Ошибка при п����реходе к следующему узлу {next_node_id}: {e}")
     
     return  # Завершаем обработку после переадресации
     
@@ -2436,6 +2499,12 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
     
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла Y9zLRp1BLpVhm-HcsNkJV
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_Y9zLRp1BLpVhm-HcsNkJV"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла Y9zLRp1BLpVhm-HcsNkJV: true")
     
     # Обрабатываем узел Y9zLRp1BLpVhm-HcsNkJV: Y9zLRp1BLpVhm-HcsNkJV
     text = "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи"
@@ -2619,6 +2688,11 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
         logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")
     elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
         logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла Y9zLRp1BLpVhm-HcsNkJV")
+    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
+    elif user_id in user_data and user_data[user_id].get("collectUserInput_Y9zLRp1BLpVhm-HcsNkJV", True) == True:
+        logging.info(f"ℹ️ Узел Y9zLRp1BLpVhm-HcsNkJV ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")
+    elif True:  # Узел ожидает ввод (статическая проверка)
+        logging.info(f"ℹ️ Узел Y9zLRp1BLpVhm-HcsNkJV ожидает ввод (collectUserInput=true из статической проверки), автопереход пропущен")
     else:
         # ⚡ Автопереход к узлу vxPv7G4n0QGyhnv4ucOM5
         logging.info(f"⚡ Автопереход от узла Y9zLRp1BLpVhm-HcsNkJV к узлу vxPv7G4n0QGyhnv4ucOM5")
@@ -2674,6 +2748,12 @@ async def handle_callback_vxPv7G4n0QGyhnv4ucOM5(callback_query: types.CallbackQu
     
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла vxPv7G4n0QGyhnv4ucOM5
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_vxPv7G4n0QGyhnv4ucOM5"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла vxPv7G4n0QGyhnv4ucOM5: true")
     
     # Обрабатываем узел vxPv7G4n0QGyhnv4ucOM5: vxPv7G4n0QGyhnv4ucOM5
     text = "Так выглядит твоя анкета:"
@@ -2738,6 +2818,11 @@ async def handle_callback_vxPv7G4n0QGyhnv4ucOM5(callback_query: types.CallbackQu
         logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")
     elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
         logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла vxPv7G4n0QGyhnv4ucOM5")
+    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
+    elif user_id in user_data and user_data[user_id].get("collectUserInput_vxPv7G4n0QGyhnv4ucOM5", True) == True:
+        logging.info(f"ℹ️ Узел vxPv7G4n0QGyhnv4ucOM5 ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")
+    elif True:  # Узел ожидает ввод (статическая проверка)
+        logging.info(f"ℹ️ Узел vxPv7G4n0QGyhnv4ucOM5 ожидает ввод (collectUserInput=true из статической проверки), автопереход пропущен")
     else:
         # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF
         logging.info(f"⚡ Автопереход от узла vxPv7G4n0QGyhnv4ucOM5 к узлу 8xSJaWAJNz7Hz_54mjFTF")
@@ -2769,6 +2854,12 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
     
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла 8xSJaWAJNz7Hz_54mjFTF
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_8xSJaWAJNz7Hz_54mjFTF"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла 8xSJaWAJNz7Hz_54mjFTF: true")
     
     # Обрабатываем узел 8xSJaWAJNz7Hz_54mjFTF: 8xSJaWAJNz7Hz_54mjFTF
     text = """
@@ -2835,7 +2926,11 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
     else:
         # Медиа не найдено, отправляем обычное текстовое сообщение
         logging.info(f"📝 Медиа photo не найдено, отправка текстового сообщения")
-        await safe_edit_or_send(callback_query, text, node_id="8xSJaWAJNz7Hz_54mjFTF", reply_markup=keyboard if keyboard is not None else None)
+        if True:
+            # Узел ожидает ввод, не отправляем сообщение
+            logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод, пропускаем отправку сообщения")
+        else:
+            await safe_edit_or_send(callback_query, text, node_id="8xSJaWAJNz7Hz_54mjFTF", reply_markup=keyboard if keyboard is not None else None)
     # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла
     # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура
     user_id = callback_query.from_user.id
@@ -2844,6 +2939,11 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
         logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")
     elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
         logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла 8xSJaWAJNz7Hz_54mjFTF")
+    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
+    elif user_id in user_data and user_data[user_id].get("collectUserInput_8xSJaWAJNz7Hz_54mjFTF", True) == True:
+        logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")
+    elif True:  # Узел ожидает ввод (статическая проверка)
+        logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод (collectUserInput=true из статической проверки), автопереход пропущен")
     else:
         # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC
         logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
@@ -2875,6 +2975,12 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
     
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла KE-8sR9elPEefApjXtBxC
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_KE-8sR9elPEefApjXtBxC"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла KE-8sR9elPEefApjXtBxC: true")
     
     # Обрабатываем узел KE-8sR9elPEefApjXtBxC: KE-8sR9elPEefApjXtBxC
     text = "Все верно?"
@@ -3087,6 +3193,9 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла vxPv7G4n0QGyhnv4ucOM5")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_vxPv7G4n0QGyhnv4ucOM5", True) == True:
+                logging.info(f"ℹ️ Узел vxPv7G4n0QGyhnv4ucOM5 ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF
                 logging.info(f"⚡ Автопереход от узла vxPv7G4n0QGyhnv4ucOM5 к узлу 8xSJaWAJNz7Hz_54mjFTF")
@@ -3132,6 +3241,9 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла 8xSJaWAJNz7Hz_54mjFTF")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_8xSJaWAJNz7Hz_54mjFTF", True) == True:
+                logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC
                 logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
@@ -3194,9 +3306,9 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
             keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
             await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)
         else:
-            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+            logging.warning(f"Неиз��естный следующий узел: {next_node_id}")
     except Exception as e:
-        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+        logging.error(f"Ошибка при п����реходе к следующему узлу {next_node_id}: {e}")
     
     return  # Завершаем обработку после переадресации
     
@@ -3222,9 +3334,22 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "sex", callback_query.data)
-    logging.info(f"Переменная sex сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    # Устанавливаем флаг collectUserInput для узла RFTgm4KzC6dI39AMTPcmo
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_RFTgm4KzC6dI39AMTPcmo"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла RFTgm4KzC6dI39AMTPcmo: true")
+    
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "sex", callback_query.data)
+        logging.info(f"Переменная sex сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная sex не сохраняется (пользователь {user_id})")
     
     # Обрабатываем узел RFTgm4KzC6dI39AMTPcmo: RFTgm4KzC6dI39AMTPcmo
     text = "Кто тебе интересен?"
@@ -3271,7 +3396,8 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
         "variable": "sex",
         "save_to_database": True,
         "node_id": "RFTgm4KzC6dI39AMTPcmo",
-        "next_node_id": ""
+        "next_node_id": "",
+        "skip_buttons": []
     }
     logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
     return  # Возвращаемся чтобы не отправить сообщение дважды
@@ -3483,6 +3609,9 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла vxPv7G4n0QGyhnv4ucOM5")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_vxPv7G4n0QGyhnv4ucOM5", True) == True:
+                logging.info(f"ℹ️ Узел vxPv7G4n0QGyhnv4ucOM5 ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF
                 logging.info(f"⚡ Автопереход от узла vxPv7G4n0QGyhnv4ucOM5 к узлу 8xSJaWAJNz7Hz_54mjFTF")
@@ -3528,6 +3657,9 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла 8xSJaWAJNz7Hz_54mjFTF")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_8xSJaWAJNz7Hz_54mjFTF", True) == True:
+                logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC
                 logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
@@ -3590,9 +3722,9 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
             keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
             await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)
         else:
-            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+            logging.warning(f"Неиз��естный следующий узел: {next_node_id}")
     except Exception as e:
-        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+        logging.error(f"Ошибка при п����реходе к следующему узлу {next_node_id}: {e}")
     
     return  # Завершаем обработку после переадресации
     
@@ -3630,9 +3762,22 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "city", callback_query.data)
-    logging.info(f"Переменная city сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    # Устанавливаем флаг collectUserInput для узла sIh3xXKEtb_TtrhHqZQzX
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_sIh3xXKEtb_TtrhHqZQzX"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла sIh3xXKEtb_TtrhHqZQzX: true")
+    
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "city", callback_query.data)
+        logging.info(f"Переменная city сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная city не сохраняется (пользователь {user_id})")
     
     # Обрабатываем узел sIh3xXKEtb_TtrhHqZQzX: sIh3xXKEtb_TtrhHqZQzX
     text = "Из какого ты города?"
@@ -3819,6 +3964,11 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
         logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")
     elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
         logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла sIh3xXKEtb_TtrhHqZQzX")
+    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
+    elif user_id in user_data and user_data[user_id].get("collectUserInput_sIh3xXKEtb_TtrhHqZQzX", True) == True:
+        logging.info(f"ℹ️ Узел sIh3xXKEtb_TtrhHqZQzX ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")
+    elif True:  # Узел ожидает ввод (статическая проверка)
+        logging.info(f"ℹ️ Узел sIh3xXKEtb_TtrhHqZQzX ожидает ввод (collectUserInput=true из статической проверки), автопереход пропущен")
     else:
         # ⚡ Автопереход к узлу tS2XGL2Mn4LkE63SnxhPy
         logging.info(f"⚡ Автопереход от узла sIh3xXKEtb_TtrhHqZQzX к узлу tS2XGL2Mn4LkE63SnxhPy")
@@ -3900,6 +4050,12 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
     
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла yrsc8v81qQa5oQx538Dzn
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_yrsc8v81qQa5oQx538Dzn"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла yrsc8v81qQa5oQx538Dzn: true")
     
     # Обрабатываем узел yrsc8v81qQa5oQx538Dzn: yrsc8v81qQa5oQx538Dzn
     text = """1. Смотреть анкеты.
@@ -4141,6 +4297,9 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла vxPv7G4n0QGyhnv4ucOM5")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_vxPv7G4n0QGyhnv4ucOM5", True) == True:
+                logging.info(f"ℹ️ Узел vxPv7G4n0QGyhnv4ucOM5 ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF
                 logging.info(f"⚡ Автопереход от узла vxPv7G4n0QGyhnv4ucOM5 к узлу 8xSJaWAJNz7Hz_54mjFTF")
@@ -4186,6 +4345,9 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
             # Проверяем, не ждем ли мы ввод перед автопереходом
             if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
                 logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла 8xSJaWAJNz7Hz_54mjFTF")
+            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)
+            elif user_id in user_data and user_data[user_id].get("collectUserInput_8xSJaWAJNz7Hz_54mjFTF", True) == True:
+                logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод (collectUserInput=true), автопереход пропущен")
             else:
                 # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC
                 logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
@@ -4248,9 +4410,9 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
             keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
             await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)
         else:
-            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+            logging.warning(f"Неиз��естный следующий узел: {next_node_id}")
     except Exception as e:
-        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+        logging.error(f"Ошибка при п����реходе к следующему узлу {next_node_id}: {e}")
     
     return  # Завершаем обработку после переадресации
     
@@ -4330,7 +4492,8 @@ async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
         "modes": ["button", "text"],
         "variable": "sex",
         "save_to_database": True,
-        "node_id": "RFTgm4KzC6dI39AMTPcmo"
+        "node_id": "RFTgm4KzC6dI39AMTPcmo",
+        "skip_buttons": []
     }
     logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
     await message.answer(text, reply_markup=keyboard)
@@ -4427,7 +4590,8 @@ async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
         "modes": ["button", "text"],
         "variable": "sex",
         "save_to_database": True,
-        "node_id": "RFTgm4KzC6dI39AMTPcmo"
+        "node_id": "RFTgm4KzC6dI39AMTPcmo",
+        "skip_buttons": []
     }
     logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
     await message.answer(text, reply_markup=keyboard)
@@ -4645,7 +4809,8 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
             "modes": ["button", "text"],
             "variable": "city",
             "save_to_database": True,
-            "node_id": "sIh3xXKEtb_TtrhHqZQzX"
+            "node_id": "sIh3xXKEtb_TtrhHqZQzX",
+            "skip_buttons": []
         }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
@@ -4861,7 +5026,8 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
             "modes": ["button", "text"],
             "variable": "city",
             "save_to_database": True,
-            "node_id": "sIh3xXKEtb_TtrhHqZQzX"
+            "node_id": "sIh3xXKEtb_TtrhHqZQzX",
+            "skip_buttons": []
         }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
@@ -5077,7 +5243,8 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
             "modes": ["button", "text"],
             "variable": "city",
             "save_to_database": True,
-            "node_id": "sIh3xXKEtb_TtrhHqZQzX"
+            "node_id": "sIh3xXKEtb_TtrhHqZQzX",
+            "skip_buttons": []
         }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
@@ -5290,7 +5457,8 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
             "modes": ["button", "text"],
             "variable": "response_Y9zLRp1BLpVhm-HcsNkJV",
             "save_to_database": True,
-            "node_id": "Y9zLRp1BLpVhm-HcsNkJV"
+            "node_id": "Y9zLRp1BLpVhm-HcsNkJV",
+            "skip_buttons": []
         }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
@@ -5600,7 +5768,8 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
             "modes": ["button", "text"],
             "variable": "age",
             "save_to_database": True,
-            "node_id": "start"
+            "node_id": "start",
+            "skip_buttons": []
         }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
@@ -5816,7 +5985,8 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
             "modes": ["button", "text"],
             "variable": "age",
             "save_to_database": True,
-            "node_id": "start"
+            "node_id": "start",
+            "skip_buttons": []
         }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
@@ -6029,7 +6199,8 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
             "modes": ["button", "text"],
             "variable": "response_Y9zLRp1BLpVhm-HcsNkJV",
             "save_to_database": True,
-            "node_id": "Y9zLRp1BLpVhm-HcsNkJV"
+            "node_id": "Y9zLRp1BLpVhm-HcsNkJV",
+            "skip_buttons": []
         }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
@@ -6122,7 +6293,8 @@ async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
         "modes": ["button", "text"],
         "variable": "info",
         "save_to_database": True,
-        "node_id": "lBPy3gcGVLla0NGdSYb35"
+        "node_id": "lBPy3gcGVLla0NGdSYb35",
+        "skip_buttons": [{"text":"Пропустить","target":"Y9zLRp1BLpVhm-HcsNkJV"}]
     }
     logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной info (узел lBPy3gcGVLla0NGdSYb35)")
     await message.answer(text, reply_markup=keyboard)
@@ -6352,7 +6524,7 @@ async def handle_user_input(message: types.Message):
                             }
                             logging.info(f"✅ Показана условная клавиатура для узла start")
                         if not conditional_met:
-                            # Условие не выполнено - показываем основное сообщение
+                            # Условие не выполнено - показываем основно�� сообщение
                             text = "Сколько тебе лет?"
                             await message.answer(text)
                             user_data[user_id]["waiting_for_input"] = {
@@ -6404,7 +6576,8 @@ async def handle_user_input(message: types.Message):
                             "variable": "gender",
                             "save_to_database": True,
                             "node_id": "f90r9k3FSLu2Tjn74cBn_",
-                            "next_node_id": ""
+                            "next_node_id": "",
+                            "skip_buttons": []
                         }
                         logging.info(f"✅ Со����тояние ожидания настроено: modes=['button'] для переменной gender (узел f90r9k3FSLu2Tjn74cBn_)")
                     elif next_node_id == "RFTgm4KzC6dI39AMTPcmo":
@@ -6448,7 +6621,8 @@ async def handle_user_input(message: types.Message):
                             "variable": "sex",
                             "save_to_database": True,
                             "node_id": "RFTgm4KzC6dI39AMTPcmo",
-                            "next_node_id": ""
+                            "next_node_id": "",
+                            "skip_buttons": []
                         }
                         logging.info(f"✅ Со����тояние ожидания настроено: modes=['button'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
                     elif next_node_id == "sIh3xXKEtb_TtrhHqZQzX":
@@ -6516,7 +6690,7 @@ async def handle_user_input(message: types.Message):
                             }
                             logging.info(f"✅ Показана условная клавиатура для узла sIh3xXKEtb_TtrhHqZQzX")
                         if not conditional_met:
-                            # Условие не выполнено - показываем основное сообщение
+                            # Условие не выполнено - показываем основно�� сообщение
                             text = "Из какого ты города?"
                             await message.answer(text)
                             user_data[user_id]["waiting_for_input"] = {
@@ -6593,7 +6767,7 @@ async def handle_user_input(message: types.Message):
                             }
                             logging.info(f"✅ Показана условная клавиатура для узла tS2XGL2Mn4LkE63SnxhPy")
                         if not conditional_met:
-                            # Условие не выполнено - показываем основное сообщение
+                            # Условие не выполнено - показываем основно�� сообщение
                             text = "Как мне тебя называть?"
                             await message.answer(text)
                             user_data[user_id]["waiting_for_input"] = {
@@ -6666,7 +6840,7 @@ async def handle_user_input(message: types.Message):
                             }
                             logging.info(f"✅ Показана условная клавиатура для узла lBPy3gcGVLla0NGdSYb35")
                         if not conditional_met:
-                            # Условие не выполнено - показываем основное сообщение
+                            # Условие не выполнено - показываем основно�� сообщение
                             text = "Расскажи о себе и кого хочешь найти, чем предлагаешь заняться. Это поможет лучше подобрать тебе компанию."
                             await message.answer(text)
                             user_data[user_id]["waiting_for_input"] = {
@@ -6730,7 +6904,7 @@ async def handle_user_input(message: types.Message):
                             await safe_edit_or_send(callback_query, text, reply_markup=keyboard, node_id="Y9zLRp1BLpVhm-HcsNkJV")
                             logging.info(f"✅ Показана условная клавиатура (кнопяи ведут напрямую, автопереход НЕ выполняется)")
                         if not conditional_met:
-                            # Условие не выполнено - показываем основное сообщение
+                            # Условие не выполнено - показываем основно�� сообщение
                             text = "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи"
                             await message.answer(text)
                             user_data[user_id]["waiting_for_input"] = {
@@ -7600,7 +7774,7 @@ async def handle_user_input(message: types.Message):
                             
                             logging.info("✅ Переход к следующему уялу выполнен успешно")
                             
-                            # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF
+                            # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF (только если collectUserInput=true)
                             logging.info(f"⚡ Автопереход от узла vxPv7G4n0QGyhnv4ucOM5 к узлу 8xSJaWAJNz7Hz_54mjFTF")
                             import types as aiogram_types
                             async def noop(*args, **kwargs):
@@ -7656,7 +7830,7 @@ async def handle_user_input(message: types.Message):
                             
                             logging.info("✅ Переход к следующему уялу выполнен успешно")
                             
-                            # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC
+                            # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC (только если collectUserInput=true)
                             logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
                             import types as aiogram_types
                             async def noop(*args, **kwargs):
@@ -8729,7 +8903,7 @@ async def handle_photo_input(message: types.Message):
                     user_vars = user_data.get(user_id, {})
                 await message.answer(text)
                 
-                # Автопереход к следующему узлу
+                # Автопереход к следующему узлу (только если collectUserInput=true)
                 auto_next_node_id = "8xSJaWAJNz7Hz_54mjFTF"
                 logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")
                 # Создаем искусственный callback для вызова обработчика
@@ -8782,7 +8956,7 @@ async def handle_photo_input(message: types.Message):
                     await message.answer(text)
                     logging.warning(f"⚠️ Переменная photo не найдена, отправлен только текст")
                 
-                # Автопереход к следующему узлу
+                # Автопереход к следующему узлу (только если collectUserInput=true)
                 auto_next_node_id = "KE-8sR9elPEefApjXtBxC"
                 logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")
                 # Создаем искусственный callback для вызова обработчика
@@ -8916,7 +9090,7 @@ async def handle_photo_input(message: types.Message):
         if saved_to_db:
             logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")
         else:
-            logging.warning(f"⚠️ Не удалось сохранить в яД, данные сохранены локально")
+            logging.warning(f"⚠️ Не удалось сохранить в яД, данные сохранены л��кально")
     
     # Отправляем сообщение об успехе только если оно задано
     success_message = input_config.get("success_message", "")
@@ -8930,7 +9104,7 @@ async def handle_photo_input(message: types.Message):
     
     # Автоматическая навигация к следующему узлу после успешного ввода
     next_node_id = input_config.get("next_node_id")
-    logging.info(f"🔄 Проверяям навигацию: next_node_id = {next_node_id}")
+    logging.info(f"🔄 Проверяям нави����ацию: next_node_id = {next_node_id}")
     if next_node_id:
         try:
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
