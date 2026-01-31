@@ -3538,6 +3538,141 @@ if (userInputNodes.length > 0) {
     code += '            # Находим узел по ID и выполняем соответствующее действие\n';
 
     // Генерируем логику навигации для каждого типа узла
+    newFunction_1();
+  }
+
+  // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
+  if (hasConditionalValueButtons(nodes)) {
+    code += generateConditionalButtonHandlerCode();
+  }
+
+  // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логирояяяяяяяанием
+  const commandButtons = new Set<string>();
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАяМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
+
+  nodes.forEach(node => {
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
+
+    // Обычяые кнопки узла
+    if (node.data.buttons) {
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
+      node.data.buttons.forEach((button: Button, index: number) => {
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
+        if (button.action === 'command' && button.target) {
+          const commandCallback = `cmd_${button.target.replace('/', '')}`;
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
+          commandButtons.add(commandCallback);
+        }
+      });
+    } else {
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`❌ Узел ${node.id} не имеет кнопок`);
+    }
+
+    // Кнопки в условных сообщениях
+    if (node.data.conditionalMessages) {
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
+      node.data.conditionalMessages.forEach((condition: any) => {
+        if (condition.buttons) {
+          condition.buttons.forEach((button: Button) => {
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
+            if (button.action === 'command' && button.target) {
+              const commandCallback = `cmd_${button.target.replace('/', '')}`;
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды в условном сообщении: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
+              commandButtons.add(commandCallback);
+            }
+          });
+        }
+      });
+    }
+  });
+
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log('📝 Список найденных кнопок команд:', Array.from(commandButtons));
+
+  if (commandButtons.size > 0) {
+    code += '\n# Обработчики для кнопок команд\n';
+    code += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
+
+    commandButtons.forEach(commandCallback => {
+      const command = commandCallback.replace('cmd_', '');
+      code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
+      code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
+      code += '    await callback_query.answer()\n';
+      code += `    logging.info(f"Обработка кнопки команды: ${commandCallback} -> /${command} (пользователь {callback_query.from_user.id})")\n`;
+      code += `    # Симулияуем выполнение команды /${command}\n`;
+      code += '    \n';
+      code += '    # Создаем fake message object для команды\n';
+      code += '    from types import SimpleNamespace\n';
+      code += '    fake_message = SimpleNamespace()\n';
+      code += '    fake_message.from_user = callback_query.from_user\n';
+      code += '    fake_message.chat = callback_query.message.chat\n';
+      code += '    fake_message.date = callback_query.message.date\n';
+      code += '    fake_message.answer = callback_query.message.answer\n';
+      code += '    fake_message.edit_text = callback_query.message.edit_text\n';
+      code += '    \n';
+
+      // Найти соответствующий обработчик команды
+      const commandNode = nodes.find(n => n.data.command === `/${command}` || n.data.command === command);
+      if (commandNode) {
+        if (commandNode.type === 'start') {
+          code += '    # Вызываем start handler через edit_text\n';
+          code += '    # Создаем специальный объект для редактирования сообщения\n';
+          code += '    class FakeMessageEdit:\n';
+          code += '        def __init__(self, callback_query):\n';
+          code += '            self.from_user = callback_query.from_user\n';
+          code += '            self.chat = callback_query.message.chat\n';
+          code += '            self.date = callback_query.message.date\n';
+          code += '            self.message_id = callback_query.message.message_id\n';
+          code += '            self._callback_query = callback_query\n';
+          code += '        \n';
+          code += '        async def answer(self, text, parse_mode=None, reply_markup=None):\n';
+          code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
+          code += '        \n';
+          code += '        async def edit_text(self, text, parse_mode=None, reply_markup=None):\n';
+          code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
+          code += '    \n';
+          code += '    fake_edit_message = FakeMessageEdit(callback_query)\n';
+          code += '    await start_handler(fake_edit_message)\n';
+        } else if (commandNode.type === 'command') {
+          code += `    # Вызываем ${command} handler\n`;
+          code += `    await ${command}_handler(fake_message)\n`;
+        }
+      } else {
+        code += `    await callback_query.message.edit_text("Команда /${command} выполнена")\n`;
+      }
+      code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
+    });
+  }
+
+  // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком тттекста
+  code += '\n';
+
+  code += generateGroupHandlers(groups);
+
+  // Добавляем универсальные fallback-обработчики и основную функцию запуска бота
+  code += generateFallbackHandlersAndMainFunction(userDatabaseEnabled, menuCommands, nodes);
+
+  // Найдем узла с множественным выбором для использования в обработчиках
+  const multiSelectNodes = (nodes || []).filter((node: Node) =>
+    node.data.allowMultipleSelection
+  );
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
+
+  // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
+  code = generateMultiSelectHandlers(multiSelectNodes, nodes || [], connections, Array.from(allNodeIds), code);
+
+  code += generateMultiSelectDoneHandler(nodes || [], multiSelectNodes, allNodeIds, isLoggingEnabled);
+  // Закрываем if (multiSelectNodes.length > 0)
+
+  code += generateMultiSelectReplyHandler(nodes || [], allNodeIds, isLoggingEnabled);
+
+
+  code += 'if __name__ == "__main__":\n';
+  code += '    asyncio.run(main())\n';
+
+  return code;
+
+  function newFunction_1() {
     if (nodes.length > 0) {
       nodes.forEach((targetNode, index) => {
         const condition = index === 0 ? 'if' : 'elif';
@@ -3839,137 +3974,6 @@ if (userInputNodes.length > 0) {
     code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
     code += '\n';
   }
-
-  // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
-  if (hasConditionalValueButtons(nodes)) {
-    code += generateConditionalButtonHandlerCode();
-  }
-
-  // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логирояяяяяяяанием
-  const commandButtons = new Set<string>();
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАяМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
-
-  nodes.forEach(node => {
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
-
-    // Обычяые кнопки узла
-    if (node.data.buttons) {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
-      node.data.buttons.forEach((button: Button, index: number) => {
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
-        if (button.action === 'command' && button.target) {
-          const commandCallback = `cmd_${button.target.replace('/', '')}`;
-          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
-          commandButtons.add(commandCallback);
-        }
-      });
-    } else {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`❌ Узел ${node.id} не имеет кнопок`);
-    }
-
-    // Кнопки в условных сообщениях
-    if (node.data.conditionalMessages) {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
-      node.data.conditionalMessages.forEach((condition: any) => {
-        if (condition.buttons) {
-          condition.buttons.forEach((button: Button) => {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
-            if (button.action === 'command' && button.target) {
-              const commandCallback = `cmd_${button.target.replace('/', '')}`;
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды в условном сообщении: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
-              commandButtons.add(commandCallback);
-            }
-          });
-        }
-      });
-    }
-  });
-
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log('📝 Список найденных кнопок команд:', Array.from(commandButtons));
-
-  if (commandButtons.size > 0) {
-    code += '\n# Обработчики для кнопок команд\n';
-    code += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
-
-    commandButtons.forEach(commandCallback => {
-      const command = commandCallback.replace('cmd_', '');
-      code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
-      code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
-      code += '    await callback_query.answer()\n';
-      code += `    logging.info(f"Обработка кнопки команды: ${commandCallback} -> /${command} (пользователь {callback_query.from_user.id})")\n`;
-      code += `    # Симулияуем выполнение команды /${command}\n`;
-      code += '    \n';
-      code += '    # Создаем fake message object для команды\n';
-      code += '    from types import SimpleNamespace\n';
-      code += '    fake_message = SimpleNamespace()\n';
-      code += '    fake_message.from_user = callback_query.from_user\n';
-      code += '    fake_message.chat = callback_query.message.chat\n';
-      code += '    fake_message.date = callback_query.message.date\n';
-      code += '    fake_message.answer = callback_query.message.answer\n';
-      code += '    fake_message.edit_text = callback_query.message.edit_text\n';
-      code += '    \n';
-
-      // Найти соответствующий обработчик команды
-      const commandNode = nodes.find(n => n.data.command === `/${command}` || n.data.command === command);
-      if (commandNode) {
-        if (commandNode.type === 'start') {
-          code += '    # Вызываем start handler через edit_text\n';
-          code += '    # Создаем специальный объект для редактирования сообщения\n';
-          code += '    class FakeMessageEdit:\n';
-          code += '        def __init__(self, callback_query):\n';
-          code += '            self.from_user = callback_query.from_user\n';
-          code += '            self.chat = callback_query.message.chat\n';
-          code += '            self.date = callback_query.message.date\n';
-          code += '            self.message_id = callback_query.message.message_id\n';
-          code += '            self._callback_query = callback_query\n';
-          code += '        \n';
-          code += '        async def answer(self, text, parse_mode=None, reply_markup=None):\n';
-          code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
-          code += '        \n';
-          code += '        async def edit_text(self, text, parse_mode=None, reply_markup=None):\n';
-          code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
-          code += '    \n';
-          code += '    fake_edit_message = FakeMessageEdit(callback_query)\n';
-          code += '    await start_handler(fake_edit_message)\n';
-        } else if (commandNode.type === 'command') {
-          code += `    # Вызываем ${command} handler\n`;
-          code += `    await ${command}_handler(fake_message)\n`;
-        }
-      } else {
-        code += `    await callback_query.message.edit_text("Команда /${command} выполнена")\n`;
-      }
-      code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
-    });
-  }
-
-  // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком тттекста
-  code += '\n';
-
-  code += generateGroupHandlers(groups);
-
-  // Добавляем универсальные fallback-обработчики и основную функцию запуска бота
-  code += generateFallbackHandlersAndMainFunction(userDatabaseEnabled, menuCommands, nodes);
-
-  // Найдем узла с множественным выбором для использования в обработчиках
-  const multiSelectNodes = (nodes || []).filter((node: Node) =>
-    node.data.allowMultipleSelection
-  );
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
-
-  // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
-  code = generateMultiSelectHandlers(multiSelectNodes, nodes || [], connections, Array.from(allNodeIds), code);
-
-  code += generateMultiSelectDoneHandler(nodes || [], multiSelectNodes, allNodeIds, isLoggingEnabled);
-  // Закрываем if (multiSelectNodes.length > 0)
-
-  code += generateMultiSelectReplyHandler(nodes || [], allNodeIds, isLoggingEnabled);
-
-
-  code += 'if __name__ == "__main__":\n';
-  code += '    asyncio.run(main())\n';
-
-  return code;
 
   function newFunction(processedCallbacks: Set<string>) {
     inlineNodes.forEach(node => {
