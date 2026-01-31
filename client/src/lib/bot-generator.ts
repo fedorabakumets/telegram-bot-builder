@@ -58,6 +58,7 @@ import {
 import { generateConditionalMessageLogic } from './Conditional';
 import { generateStartNodeConditionalMessageCode } from './start-node-conditional-utils';
 import { generateStartNodeInlineKeyboardCode } from './start-node-keyboard-utils';
+import { generateMessageNodeConditionalMessageCode } from './message-node-conditional-utils';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from './Keyboard';
 import { hasConditionalButtons, hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions, hasMultiSelectNodes } from './has';
 import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
@@ -4242,36 +4243,11 @@ if (userInputNodes.length > 0) {
               code += generateUniversalVariableReplacement('    ');
 
               // Добавляем поддержку условных сообщений
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '    \n';
-                code += '    # Проверка условных сообщений\n';
-                code += '    conditional_parse_mode = None\n';
-                code += '    conditional_keyboard = None\n';
-                code += '    user_record = await get_user_from_db(user_id)\n';
-                code += '    if not user_record:\n';
-                code += '        user_record = user_data.get(user_id, {})\n';
-                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-                code += '    \n';
-
-                // Используем условное сообщение, если доступно, иначе используем стандартное
-                code += '    # Используем условное сообщение если есть подходящее условие\n';
-                code += '    if "text" not in locals():\n';
-                code += `        text = ${formattedText}\n`;
-                code += '    \n';
-                code += '    # Используем условную клавиатуру если есть\n';
-                code += '    # Инициализируем переменную conditional_keyboard, если она не была определена\n';
-                code += '    if "conditional_keyboard" not in locals():\n';
-                code += '        conditional_keyboard = None\n';
-                code += '    if conditional_keyboard is not None:\n';
-                code += '        keyboard = conditional_keyboard\n';
-                code += '    else:\n';
-                code += '        keyboard = None\n';
-              } else {
-                code += '    \n';
-                code += '    # Без условных сообщений - используем обычную клавиатуру\n';
-                code += '    keyboard = None\n';
-              }
+              code += generateMessageNodeConditionalMessageCode(
+                targetNode.data.conditionalMessages || [],
+                formattedText,
+                '    '
+              );
 
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем тип клавиатуры и генерируем правильный код
               const hasButtons = targetNode.data.buttons && targetNode.data.buttons.length > 0;
@@ -5186,7 +5162,7 @@ if (userInputNodes.length > 0) {
 
           // Создаем правильный вызов команды для callback кнопок
           if (button.target) {
-            // Определяем команду - убираем ведущий сл��ш если есть
+            // Определяем команду - убираем ведущий слш если есть
             const command = button.target.startsWith('/') ? button.target.replace('/', '') : button.target;
             const handlerName = `${command}_handler`;
 
