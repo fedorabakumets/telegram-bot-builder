@@ -29,6 +29,11 @@ import {
   generateLocationHandler,
   generateContactHandler
 } from './MediaHandler';
+import { generatePhotoHandlerCode, hasPhotoInput } from './photo-handler';
+import { generateVideoHandlerCode, hasVideoInput } from './video-handler';
+import { generateAudioHandlerCode, hasAudioInput } from './audio-handler';
+import { generateDocumentHandlerCode, hasDocumentInput } from './document-handler';
+import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './conditional-button-handler';
 import { generateHideAfterClickMiddleware } from './handlers/generateHideAfterClickHandler';
 import { generateReplyHideAfterClickHandler } from './handlers/generateReplyHideAfterClickHandler';
 import {
@@ -3311,7 +3316,7 @@ if (userInputNodes.length > 0) {
                 code += `${bodyIndent}await message.answer(text)\n`;
 
                 // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок (используем универсальную функцию)
-                code += `${bodyIndent}# Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)\n`;
+                code += `${bodyIndent}# Настраиваем ожидание ввода для message узла (универсальная функция оп����еделит тип: text/photo/video/audio/document)\n`;
                 code += generateWaitingStateCode(targetNode, bodyIndent);
               }
             } else {
@@ -3807,442 +3812,26 @@ if (userInputNodes.length > 0) {
     code += '    return\n';
 
     // Добавляем обработчик для фото
-    const hasPhotoInput = (nodes || []).some(node => node.data.enablePhotoInput);
-    if (hasPhotoInput) {
-      code += '\n\n# Обработчик получения фото от пользователя\n';
-      code += '@dp.message(F.photo)\n';
-      code += 'async def handle_photo_input(message: types.Message):\n';
-      code += '    user_id = message.from_user.id\n';
-      code += '    logging.info(f"📸 Получено фото от пользователя {user_id}")\n';
-      code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод фото - проверяем waiting_for_input с типом photo\n';
-      code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
-      code += '        logging.info(f"Фото от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    # Получаем конфигурацию ожидания\n';
-      code += '    waiting_config = user_data[user_id]["waiting_for_input"]\n';
-      code += '    # Проверяем, что тип ожидания - фото\n';
-      code += '    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "photo"):\n';
-      code += '        logging.info(f"Фото от пользователя {user_id} проигнорировано - ожидается другой тип ввода")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    photo_config = waiting_config\n';
-      code += '    photo_variable = photo_config.get("variable", "user_photo")\n';
-      code += '    node_id = photo_config.get("node_id", "unknown")\n';
-      code += '    next_node_id = photo_config.get("next_node_id")\n';
-      code += '    \n';
-      code += '    # Получаем file_id фото (берем последнее - лучшее качество)\n';
-      code += '    photo_file_id = message.photo[-1].file_id\n';
-      code += '    logging.info(f"Получен file_id фото: {photo_file_id}")\n';
-      code += '    \n';
-      code += '    # Регистрируем фото через API для получения URL\n';
-      code += '    photo_url = None\n';
-      code += '    try:\n';
-      code += '        if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):\n';
-      code += '            media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
-      code += '        else:\n';
-      code += '            media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"\n';
-      code += '        \n';
-      code += '        # Сначала сохраняем сообщение чтобы получить message_id\n';
-      code += '        saved_msg = await save_message_to_api(\n';
-      code += '            user_id=str(user_id),\n';
-      code += '            message_type="user",\n';
-      code += '            message_text="[Фото ответ]",\n';
-      code += '            node_id=node_id,\n';
-      code += '            message_data={"photo": {"file_id": photo_file_id}, "is_photo_answer": True}\n';
-      code += '        )\n';
-      code += '        \n';
-      code += '        if saved_msg and "id" in saved_msg:\n';
-      code += '            media_payload = {\n';
-      code += '                "messageId": saved_msg["id"],\n';
-      code += '                "fileId": photo_file_id,\n';
-      code += '                "botToken": BOT_TOKEN,\n';
-      code += '                "mediaType": "photo"\n';
-      code += '            }\n';
-      code += '            \n';
-      code += '            # Определяем, использовать ли SSL для медиа-запросов\n';
-      code += '            use_ssl_media3 = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)\n';
-      code += '            logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media3}")\n';
-      code += '            # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER\n';
-      code += '            if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url:\n';
-      code += '                use_ssl_media3 = False\n';
-      code += '                logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")\n';
-      code += '            \n';
-      code += '            if use_ssl_media3:\n';
-      code += '                # Для внешних соединений используем SSL-контекст\n';
-      code += '                connector = aiohttp.TCPConnector(ssl=True)\n';
-      code += '            else:\n';
-      code += '                # Для локальных соединений не используем SSL-контекст\n';
-      code += '                # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения\n';
-      code += '                import ssl\n';
-      code += '                ssl_context = ssl.create_default_context()\n';
-      code += '                ssl_context.check_hostname = False\n';
-      code += '                ssl_context.verify_mode = ssl.CERT_NONE\n';
-      code += '                connector = aiohttp.TCPConnector(ssl=ssl_context)\n';
-      code += '            \n';
-      code += '            async with aiohttp.ClientSession(connector=connector) as session:\n';
-      code += '                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:\n';
-      code += '                    if response.status == 200:\n';
-      code += '                        result = await response.json()\n';
-      code += '                        photo_url = result.get("url")\n';
-      code += '                        logging.info(f"Фото зарегистрировано, URL: {photo_url}")\n';
-      code += '                    else:\n';
-      code += '                        error_text = await response.text()\n';
-      code += '                        logging.warning(f"Не удалось зарегистрировать фото: {response.status} - {error_text}")\n';
-      code += '    except Exception as reg_error:\n';
-      code += '        logging.warning(f"Ошибка при регистрации фото: {reg_error}")\n';
-      code += '    \n';
-      code += '    # Сохраняем в пользовательские данные как объект с URL\n';
-      code += '    photo_data = {\n';
-      code += '        "value": photo_file_id,\n';
-      code += '        "type": "photo",\n';
-      code += '        "photoUrl": photo_url,\n';
-      code += '        "timestamp": datetime.now(timezone.utc).isoformat()\n';
-      code += '    }\n';
-      code += '    user_data[user_id][photo_variable] = photo_data\n';
-      code += '    \n';
-      code += '    # Сохраняем в базу данных\n';
-      code += '    saved_to_db = await update_user_data_in_db(user_id, photo_variable, photo_data)\n';
-      code += '    if saved_to_db:\n';
-      code += '        logging.info(f"Фото сохранено в БД: {photo_variable} (пользователь {user_id})")\n';
-      code += '    else:\n';
-      code += '        logging.warning(f"Не удалось сохранить фото в БД, данные сохранены локально")\n';
-      code += '    \n';
-      code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_input"]\n';
-      code += '    \n';
-      code += '    logging.info(f"Фото сохранено: {photo_variable} = {photo_file_id}, URL = {photo_url}")\n';
-      code += '    \n';
-      code += '    # Переходим к следующему узлу если указан\n';
-      code += '    if next_node_id:\n';
-      code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-      code += '        try:\n';
-      code += '            # Получаем данные пользователя для замены переменных\n';
-      code += '            user_record = await get_user_from_db(user_id)\n';
-      code += '            if user_record and "user_data" in user_record:\n';
-      code += '                user_vars = user_record["user_data"]\n';
-      code += '            else:\n';
-      code += '                user_vars = user_data.get(user_id, {})\n';
-      code += '            \n';
-
-      // Генерируем навигацию для каждого узла
-      code += generateNodeNavigation(nodes, '            ', 'next_node_id', 'message', 'user_vars');
-
-      code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-      code += '    \n';
-      code += '    return\n';
+    if (hasPhotoInput(nodes)) {
+      code += generatePhotoHandlerCode();
     }
 
     // Добавляем обработчик для видео
-    const hasVideoInput = (nodes || []).some(node => node.data.enableVideoInput);
-    if (hasVideoInput) {
-      code += '\n\n# Обработчик получения видео от пользователя\n';
-      code += '@dp.message(F.video)\n';
-      code += 'async def handle_video_input(message: types.Message):\n';
-      code += '    user_id = message.from_user.id\n';
-      code += '    logging.info(f"🎥 Получено видео от пользователя {user_id}")\n';
-      code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод видео - проверяем waiting_for_input с типом video\n';
-      code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
-      code += '        logging.info(f"Видео от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    # Получаем конфигурацию ожидания\n';
-      code += '    waiting_config = user_data[user_id]["waiting_for_input"]\n';
-      code += '    # Проверяем, что тип ожидания - видео\n';
-      code += '    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "video"):\n';
-      code += '        logging.info(f"Видео от пользователя {user_id} проигнорировано - ожидается другой тип ввода")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    video_config = waiting_config\n';
-      code += '    video_variable = video_config.get("variable", "user_video")\n';
-      code += '    node_id = video_config.get("node_id", "unknown")\n';
-      code += '    next_node_id = video_config.get("next_node_id")\n';
-      code += '    \n';
-      code += '    # Получаем file_id видео\n';
-      code += '    video_file_id = message.video.file_id\n';
-      code += '    logging.info(f"🎥 Получен file_id видео: {video_file_id}")\n';
-      code += '    \n';
-      code += '    # Сохраняем в пользовательские данные\n';
-      code += '    user_data[user_id][video_variable] = video_file_id\n';
-      code += '    \n';
-      code += '    # Сохраняем в базу данных\n';
-      code += '    saved_to_db = await update_user_data_in_db(user_id, video_variable, video_file_id)\n';
-      code += '    if saved_to_db:\n';
-      code += '        logging.info(f"✅ Видео сохранено в БД: {video_variable} = {video_file_id} (пользователь {user_id})")\n';
-      code += '    else:\n';
-      code += '        logging.warning(f"⚠️ Не удалось сохранить видео в БД, данные сохранены локально")\n';
-      code += '    \n';
-      code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_input"]\n';
-      code += '    \n';
-      code += '    logging.info(f"🎥 Видео сохранено: {video_variable} = {video_file_id}")\n';
-      code += '    \n';
-      code += '    # Переходим к следующему узлу если указан\n';
-      code += '    if next_node_id:\n';
-      code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-      code += '        try:\n';
-      code += '            # Получаем данные пользователя для замены переменных\n';
-      code += '            user_record = await get_user_from_db(user_id)\n';
-      code += '            if user_record and "user_data" in user_record:\n';
-      code += '                user_vars = user_record["user_data"]\n';
-      code += '            else:\n';
-      code += '                user_vars = user_data.get(user_id, {})\n';
-      code += '            \n';
-
-      // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
-      if (nodes.length > 0) {
-        nodes.forEach((targetNode, index) => {
-          const condition = index === 0 ? 'if' : 'elif';
-          code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-
-          // Получаем текст сообщения
-          const messageText = targetNode.data.messageText || targetNode.data.text || '';
-          const formattedText = formatTextForPython(messageText);
-          code += `                text = ${formattedText}\n`;
-
-          // Добавляем замену переменных
-          code += '                # Замена переменных\n';
-          code += generateUniversalVariableReplacement('                ');
-
-          // Проверяем attachedMedia
-          const attachedMedia = targetNode.data.attachedMedia || [];
-          if (attachedMedia.length > 0 && attachedMedia.includes('video')) {
-            // Отправляем видео с текстом
-            code += '                # Отправляем сохраненное видео с текстом узла\n';
-            code += `                if "${attachedMedia[0]}" in user_vars:\n`;
-            code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
-            code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
-            code += '                        media_file_id = media_file_id["value"]\n';
-            code += '                    await message.answer_video(media_file_id, caption=text)\n';
-            code += `                    logging.info(f"✅ Отправлено видео из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
-            code += '                else:\n';
-            code += '                    await message.answer(text)\n';
-            code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
-          } else {
-            // Обычное сообщение
-            code += '                await message.answer(text)\n';
-          }
-        });
-        code += '            else:\n';
-        code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-      }
-
-      code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при пярехояе к следующему узлу {next_node_id}: {e}")\n';
-      code += '    \n';
-      code += '    return\n';
+    if (hasVideoInput(nodes)) {
+      code += generateVideoHandlerCode();
     }
 
+
     // Добавляем обработчик для аудио
-    const hasAudioInput = (nodes || []).some(node => node.data.enableAudioInput);
-    if (hasAudioInput) {
-      code += '\n\n# Обработчик получения аудио от пользователя\n';
-      code += '@dp.message(F.audio | F.voice)\n';
-      code += 'async def handle_audio_input(message: types.Message):\n';
-      code += '    user_id = message.from_user.id\n';
-      code += '    logging.info(f"🎵 Получено аудио от пользователя {user_id}")\n';
-      code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод аудио - проверяем waiting_for_input с типом audio\n';
-      code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
-      code += '        logging.info(f"Аудио от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    # Получаем конфигурацию ожидания\n';
-      code += '    waiting_config = user_data[user_id]["waiting_for_input"]\n';
-      code += '    # Проверяем, что тип ожидания - аудио\n';
-      code += '    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "audio"):\n';
-      code += '        logging.info(f"Аудио от пользователя {user_id} проигнорировано - ожидается другой тип ввода")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    audio_config = waiting_config\n';
-      code += '    audio_variable = audio_config.get("variable", "user_audio")\n';
-      code += '    node_id = audio_config.get("node_id", "unknown")\n';
-      code += '    next_node_id = audio_config.get("next_node_id")\n';
-      code += '    \n';
-      code += '    # Получаем file_id аудио (поддерживаем и audio, и voice)\n';
-      code += '    if message.audio:\n';
-      code += '        audio_file_id = message.audio.file_id\n';
-      code += '    elif message.voice:\n';
-      code += '        audio_file_id = message.voice.file_id\n';
-      code += '    else:\n';
-      code += '        logging.error("Не удалось получить file_id аудио")\n';
-      code += '        return\n';
-      code += '    logging.info(f"🎵 Получен file_id аудио: {audio_file_id}")\n';
-      code += '    \n';
-      code += '    # Сохраняем в пользовательские данные\n';
-      code += '    user_data[user_id][audio_variable] = audio_file_id\n';
-      code += '    \n';
-      code += '    # Сохраняем в базу данных\n';
-      code += '    saved_to_db = await update_user_data_in_db(user_id, audio_variable, audio_file_id)\n';
-      code += '    if saved_to_db:\n';
-      code += '        logging.info(f"✅ Аудио сохранено в БД: {audio_variable} = {audio_file_id} (пользователь {user_id})")\n';
-      code += '    else:\n';
-      code += '        logging.warning(f"⚠️ Не удалось сохранить аудио в БД, данные сохранены локально")\n';
-      code += '    \n';
-      code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_input"]\n';
-      code += '    \n';
-      code += '    logging.info(f"🎵 Аудио сохранено: {audio_variable} = {audio_file_id}")\n';
-      code += '    \n';
-      code += '    # Переходим к следующему узлу если указан\n';
-      code += '    if next_node_id:\n';
-      code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-      code += '        try:\n';
-      code += '            # Получаем данные пользователя для замены переменных\n';
-      code += '            user_record = await get_user_from_db(user_id)\n';
-      code += '            if user_record and "user_data" in user_record:\n';
-      code += '                user_vars = user_record["user_data"]\n';
-      code += '            else:\n';
-      code += '                user_vars = user_data.get(user_id, {})\n';
-      code += '            \n';
-
-      // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
-      if (nodes.length > 0) {
-        nodes.forEach((targetNode, index) => {
-          const condition = index === 0 ? 'if' : 'elif';
-          code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-
-          // Получаем текст сообщения
-          const messageText = targetNode.data.messageText || targetNode.data.text || '';
-          const formattedText = formatTextForPython(messageText);
-          code += `                text = ${formattedText}\n`;
-
-          // Добавляем замену переменных
-          code += '                # Замена переменных\n';
-          code += generateUniversalVariableReplacement('                ');
-
-          // Проверяем attachedMedia
-          const attachedMedia = targetNode.data.attachedMedia || [];
-          if (attachedMedia.length > 0 && attachedMedia.includes('audio')) {
-            // Отправляем аудио с текстом
-            code += '                # Отправляем сохраненное аудио с текстом узла\n';
-            code += `                if "${attachedMedia[0]}" in user_vars:\n`;
-            code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
-            code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
-            code += '                        media_file_id = media_file_id["value"]\n';
-            code += '                    await message.answer_audio(media_file_id, caption=text)\n';
-            code += `                    logging.info(f"✅ Отправлено аудио из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
-            code += '                else:\n';
-            code += '                    await message.answer(text)\n';
-            code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
-          } else {
-            // Обычное сообщение
-            code += '                await message.answer(text)\n';
-          }
-        });
-        code += '            else:\n';
-        code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-      }
-
-      code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-      code += '    \n';
-      code += '    return\n';
+    if (hasAudioInput(nodes)) {
+      code += generateAudioHandlerCode();
     }
 
     // Добавляем обработчик для документов
-    const hasDocumentInput = (nodes || []).some(node => node.data.enableDocumentInput);
-    if (hasDocumentInput) {
-      code += '\n\n# Обработчик получения документа от пользователя\n';
-      code += '@dp.message(F.document)\n';
-      code += 'async def handle_document_input(message: types.Message):\n';
-      code += '    user_id = message.from_user.id\n';
-      code += '    logging.info(f"📄 Получен документ от пользователя {user_id}")\n';
-      code += '    \n';
-      code += '    # Проверяем, ожидаем ли мы ввод документа - проверяем waiting_for_input с типом document\n';
-      code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
-      code += '        logging.info(f"Документ от пользователя {user_id} проигнорирован - не ожидается ввод")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    # Получаем конфигурацию ожидания\n';
-      code += '    waiting_config = user_data[user_id]["waiting_for_input"]\n';
-      code += '    # Проверяем, что тип ожидания - документ\n';
-      code += '    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "document"):\n';
-      code += '        logging.info(f"Документ от пользователя {user_id} проигнорирован - ожидается другой тип ввода")\n';
-      code += '        return\n';
-      code += '    \n';
-      code += '    document_config = waiting_config\n';
-      code += '    document_variable = document_config.get("variable", "user_document")\n';
-      code += '    node_id = document_config.get("node_id", "unknown")\n';
-      code += '    next_node_id = document_config.get("next_node_id")\n';
-      code += '    \n';
-      code += '    # Получаем file_id документа\n';
-      code += '    document_file_id = message.document.file_id\n';
-      code += '    logging.info(f"📄 Получен file_id документа: {document_file_id}")\n';
-      code += '    \n';
-      code += '    # Сохраняем в пользовательские данные\n';
-      code += '    user_data[user_id][document_variable] = document_file_id\n';
-      code += '    \n';
-      code += '    # Сохраняем в базу данных\n';
-      code += '    saved_to_db = await update_user_data_in_db(user_id, document_variable, document_file_id)\n';
-      code += '    if saved_to_db:\n';
-      code += '        logging.info(f"✅ Документ сохранен в БД: {document_variable} = {document_file_id} (пользователь {user_id})")\n';
-      code += '    else:\n';
-      code += '        logging.warning(f"⚠️ Не удалось сохранить документ в БД, данные сохранены локально")\n';
-      code += '    \n';
-      code += '    # Очищаем состояние ожидания\n';
-      code += '    del user_data[user_id]["waiting_for_input"]\n';
-      code += '    \n';
-      code += '    logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}")\n';
-      code += '    \n';
-      code += '    # Переходим к следующему узлу если указан\n';
-      code += '    if next_node_id:\n';
-      code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-      code += '        try:\n';
-      code += '            # Получаем данные пользователя для замены переменных\n';
-      code += '            user_record = await get_user_from_db(user_id)\n';
-      code += '            if user_record and "user_data" in user_record:\n';
-      code += '                user_vars = user_record["user_data"]\n';
-      code += '            else:\n';
-      code += '                user_vars = user_data.get(user_id, {})\n';
-      code += '            \n';
-
-      // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
-      if (nodes.length > 0) {
-        nodes.forEach((targetNode, index) => {
-          const condition = index === 0 ? 'if' : 'elif';
-          code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-
-          // Получаем текст сообщения
-          const messageText = targetNode.data.messageText || targetNode.data.text || '';
-          const formattedText = formatTextForPython(messageText);
-          code += `                text = ${formattedText}\n`;
-
-          // Добавляем замену переменных
-          code += '                # Замена переменных\n';
-          code += generateUniversalVariableReplacement('                ');
-
-          // Проверяем attachedMedia
-          const attachedMedia = targetNode.data.attachedMedia || [];
-          if (attachedMedia.length > 0 && attachedMedia.includes('document')) {
-            // Отправляем документ с текстом
-            code += '                # Отправляем сохраненный документ с текстом узла\n';
-            code += `                if "${attachedMedia[0]}" in user_vars:\n`;
-            code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
-            code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
-            code += '                        media_file_id = media_file_id["value"]\n';
-            code += '                    await message.answer_document(media_file_id, caption=text)\n';
-            code += `                    logging.info(f"✅ Отправлен документ из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
-            code += '                else:\n';
-            code += '                    await message.answer(text)\n';
-            code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
-          } else {
-            // Обычное сообщение
-            code += '                await message.answer(text)\n';
-          }
-        });
-        code += '            else:\n';
-        code += '                logging.warning(f"Няизвестный следующий узел: {next_node_id}")\n';
-      }
-
-      code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при переходе к следующему уз��у {next_node_id}: {e}")\n';
-      code += '    \n';
-      code += '    return\n';
+    if (hasDocumentInput(nodes)) {
+      code += generateDocumentHandlerCode();
     }
+
 
     code += '    # Валидация длины тттекста\n';
     code += '    min_length = input_config.get("min_length", 0)\n';
@@ -4633,65 +4222,8 @@ if (userInputNodes.length > 0) {
   }
 
   // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
-  if (hasConditionalButtons(nodes)) {
-    code += '\n# Обработчик для условных кнопок\n';
-    code += '@dp.callback_query(lambda c: c.data.startswith("conditional_"))\n';
-    code += 'async def handle_conditional_button(callback_query: types.CallbackQuery):\n';
-    code += '    await callback_query.answer()\n';
-    code += '    \n';
-    code += '    # Парсим callback_data: conditional_variableName_value\n';
-    code += '    callback_parts = callback_query.data.split("_", 2)\n';
-    code += '    if len(callback_parts) >= 3:\n';
-    code += '        variable_name = callback_parts[1]\n';
-    code += '        variable_value = callback_parts[2]\n';
-    code += '        \n';
-    code += '        user_id = callback_query.from_user.id\n';
-    code += '        \n';
-    code += '        # Сохраняем значение в базу данных\n';
-    code += '        await update_user_data_in_db(user_id, variable_name, variable_value)\n';
-    code += '        \n';
-    code += '        # Сохраняем в локальные данные\n';
-    code += '        if user_id not in user_data:\n';
-    code += '            user_data[user_id] = {}\n';
-    code += '        user_data[user_id][variable_name] = variable_value\n';
-    code += '        \n';
-    code += '        logging.info(f"Условная кнопка: {variable_name} = {variable_value} (пользователь {user_id})")\n';
-    code += '        \n';
-    code += '        # После обновления значения автоматически вызываем профиль\n';
-    code += '        await callback_query.answer(f"✅ {variable_name} обновлено")\n';
-    code += '        \n';
-    code += '        # Создаем имитацию сообщения для вызова команды профиль\n';
-    code += '        class FakeMessage:\n';
-    code += '            def __init__(self, callback_query):\n';
-    code += '                self.from_user = callback_query.from_user\n';
-    code += '                self.chat = callback_query.message.chat\n';
-    code += '                self.date = callback_query.message.date\n';
-    code += '                self.message_id = callback_query.message.message_id\n';
-    code += '            \n';
-    code += '            async def answer(self, text, parse_mode=None, reply_markup=None):\n';
-    code += '                if reply_markup:\n';
-    code += '                    await bot.send_message(self.chat.id, text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
-    code += '                else:\n';
-    code += '                    await bot.send_message(self.chat.id, text, parse_mode=parse_mode)\n';
-    code += '            \n';
-    code += '            async def edit_text(self, text, parse_mode=None, reply_markup=None):\n';
-    code += '                try:\n';
-    code += '                    await bot.edit_message_text(text, self.chat.id, self.message_id, parse_mode=parse_mode, reply_markup=reply_markup)\n';
-    code += '                except Exception:\n';
-    code += '                    await self.answer(text, parse_mode, reply_markup)\n';
-    code += '        \n';
-    code += '        fake_message = FakeMessage(callback_query)\n';
-    code += '        \n';
-    code += '        # Вызываем обработчик профиля\n';
-    code += '        try:\n';
-    code += '            await profile_handler(fake_message)\n';
-    code += '        except Exception as e:\n';
-    code += '            logging.error(f"Ошибяа вызова profile_handler: {e}")\n';
-    code += '            await callback_query.message.answer(f"✅ Значение {variable_name} обновлено на: {variable_value}")\n';
-    code += '    else:\n';
-    code += '        logging.warning(f"Неверный формат условной кнопки: {callback_query.data}")\n';
-    code += '        await callback_query.answer("❌ Ошибка обработки кнопки", show_alert=True)\n';
-    code += '\n';
+  if (hasConditionalValueButtons(nodes)) {
+    code += generateConditionalButtonHandlerCode();
   }
 
   // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логирояяяяяяяанием
@@ -6998,7 +6530,7 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
         return None
 
 async def download_and_save_photo(file_id: str, bot_token: str, filename: str = None):
-    """Скачивает фото из Telegram и сохраняет его локально
+    """Скачивает фото из Telegram и сохраняет его локальн��
 
     Args:
         file_id: ID файла в Telegram
