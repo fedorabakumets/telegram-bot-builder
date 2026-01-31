@@ -7647,7 +7647,7 @@ async def handle_user_input(message: types.Message):
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
                             await message.answer(text)
-                            # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
+                            # Настраиваем ожидание ввода для message узла (универсальная функция оп����еделит тип: text/photo/video/audio/document)
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
                             user_data[message.from_user.id]["waiting_for_input"] = {
                                 "type": "text",
@@ -7688,7 +7688,7 @@ async def handle_user_input(message: types.Message):
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
                             await message.answer(text)
-                            # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
+                            # Настраиваем ожидание ввода для message узла (универсальная функция оп����еделит тип: text/photo/video/audio/document)
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
                             user_data[message.from_user.id]["waiting_for_input"] = {
                                 "type": "text",
@@ -7830,7 +7830,7 @@ async def handle_user_input(message: types.Message):
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
                             await message.answer(text)
-                            # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)
+                            # Настраиваем ожидание ввода для message узла (универсальная функция оп����еделит тип: text/photo/video/audio/document)
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
                             user_data[message.from_user.id]["waiting_for_input"] = {
                                 "type": "photo",
@@ -8687,7 +8687,6 @@ async def handle_user_input(message: types.Message):
     # Если нет активного ожидания ввода, игнорируем сообщение
     return
 
-
 # Обработчик получения фото от пользователя
 @dp.message(F.photo)
 async def handle_photo_input(message: types.Message):
@@ -8804,340 +8803,10 @@ async def handle_photo_input(message: types.Message):
             else:
                 user_vars = user_data.get(user_id, {})
             
-            if next_node_id == "start":
-                text = "Сколько тебе лет?"
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-            elif next_node_id == "f90r9k3FSLu2Tjn74cBn_":
-                text = "Теперь определимся с полом"
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-            elif next_node_id == "RFTgm4KzC6dI39AMTPcmo":
-                text = "Кто тебе интересен?"
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-            elif next_node_id == "sIh3xXKEtb_TtrhHqZQzX":
-                text = "Из какого ты города?"
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-            elif next_node_id == "tS2XGL2Mn4LkE63SnxhPy":
-                text = "Как мне тебя называть?"
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-            elif next_node_id == "lBPy3gcGVLla0NGdSYb35":
-                text = "Расскажи о себе и кого хочешь найти, чем предлагаешь заняться. Это поможет лучше подобрать тебе компанию."
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-            elif next_node_id == "Y9zLRp1BLpVhm-HcsNkJV":
-                text = "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи"
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-            elif next_node_id == "vxPv7G4n0QGyhnv4ucOM5":
-                text = "Так выглядит твоя анкета:"
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-                
-                # Автопереход к следующему узлу (только если collectUserInput=true)
-                auto_next_node_id = "8xSJaWAJNz7Hz_54mjFTF"
-                logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")
-                # Создаем искусственный callback для вызова обработчика
-                import types as aiogram_types
-                fake_callback = aiogram_types.SimpleNamespace(
-                    id="auto_transition",
-                    from_user=message.from_user,
-                    chat_instance="",
-                    data=auto_next_node_id,
-                    message=message,
-                    answer=lambda: None
-                )
-                await handle_callback_8xSJaWAJNz7Hz_54mjFTF(fake_callback)
-                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")
-            elif next_node_id == "8xSJaWAJNz7Hz_54mjFTF":
-                text = """
-{name}, {age}, {city} - {info}
-"""
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                # Отправляем сохраненное фото с текстом узла
-                if "photo" in user_vars:
-                    media_file_id = user_vars["photo"]
-                    if isinstance(media_file_id, dict) and "value" in media_file_id:
-                        media_file_id = media_file_id["value"]
-                    await message.answer_photo(media_file_id, caption=text)
-                    logging.info(f"✅ Отправлено фото из переменной photo с текстом узла {next_node_id}")
-                else:
-                    await message.answer(text)
-                    logging.warning(f"⚠️ Переменная photo не найдена, отправлен только текст")
-                
-                # Автопереход к следующему узлу (только если collectUserInput=true)
-                auto_next_node_id = "KE-8sR9elPEefApjXtBxC"
-                logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")
-                # Создаем искусственный callback для вызова обработчика
-                import types as aiogram_types
-                fake_callback = aiogram_types.SimpleNamespace(
-                    id="auto_transition",
-                    from_user=message.from_user,
-                    chat_instance="",
-                    data=auto_next_node_id,
-                    message=message,
-                    answer=lambda: None
-                )
-                await handle_callback_KE_8sR9elPEefApjXtBxC(fake_callback)
-                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")
-            elif next_node_id == "KE-8sR9elPEefApjXtBxC":
-                text = "Все верно?"
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-            elif next_node_id == "yrsc8v81qQa5oQx538Dzn":
-                text = """1. Смотреть анкеты.
-2. Заполнить анкету заново.
-3. Изменить фото/видео.
-4. Изменить текст анкеты."""
-                # Замена переменных
-                # Инициализируем базовые переменные пользователя если их нет
-                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                    # Получаем объект пользователя из сообщения или callback
-                    user_obj = None
-                    # Безопасно проверяем наличие message (для message handlers)
-                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                        user_obj = locals().get('message').from_user
-                    # Безопасно проверяем наличие callback_query (для callback handlers)
-                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                        user_obj = locals().get('callback_query').from_user
-
-                    if user_obj:
-                        init_user_variables(user_id, user_obj)
-                
-                # Подставляем все доступные переменные пользователя в текст
-                user_vars = await get_user_from_db(user_id)
-                if not user_vars:
-                    user_vars = user_data.get(user_id, {})
-                
-                # get_user_from_db теперь возвращает уже обработанные user_data
-                if not isinstance(user_vars, dict):
-                    user_vars = user_data.get(user_id, {})
-                await message.answer(text)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+            # Генерируем навигацию для каждого узла
+            # (здесь будет сгенерированный код навигации)
+            # Код навигации будет внедряться сюда во время генерации бота
+            
         except Exception as e:
             logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
     
