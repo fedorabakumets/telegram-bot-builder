@@ -18,6 +18,7 @@ import {
   generateUserManagementSynonymHandler
 } from './UserHandler';
 import { getCheckUserVariableFunction } from './python-utils';
+import { generateInputCollectionCode, generateNoInputCollectionCode } from './input-collection-utils';
 import {
   generateUnpinMessageHandler,
   generateDeleteMessageHandler,
@@ -1673,7 +1674,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         code += `                        "node_id": "${navTargetNode.id}",\n`;
                         code += `                        "next_node_id": "${inputTargetNodeId}"\n`;
                         code += `                    }\n`;
-                        code += `                    logging.info(f"🔧 Настроено fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
+                        code += `                    logging.info(f"🔧 Настрое����о fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
                         code += `                else:\n`;
                         code += `                    logging.info(f"⏭️ Переменная ${fallbackInputVariable} уже сохранена, пропускаем fallback ожидание ввода")\n`;
                       } else {
@@ -2509,7 +2510,7 @@ if (userInputNodes.length > 0) {
     code += '                            answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
     code += '                        )\n';
 
-    // Добавляем навигацию для skip_buttons медиа-узлов
+    // Добавляем нав��г��цию для skip_buttons медиа-узлов
     if (nodes.length > 0) {
       nodes.forEach((mediaSkipNode, mediaSkipIdx) => {
         const mediaSkipCond = mediaSkipIdx === 0 ? 'if' : 'elif';
@@ -3337,7 +3338,7 @@ if (userInputNodes.length > 0) {
     code += '            \n';
     code += '            # Находим и вызываем обработчик целевого узла\n';
 
-    // Добавляем навигацию к целевому узлу
+    // Добавл��ем навигацию к целевому узлу
     nodes.forEach((targetNode) => {
       code += `            if input_target_node_id == "${targetNode.id}":\n`;
       if (targetNode.type === 'message') {
@@ -4884,30 +4885,29 @@ if (userInputNodes.length > 0) {
                   targetNode.data.enableAudioInput === true ||
                   targetNode.data.enableDocumentInput === true;
 
-                if (textInputCollect) {
-                  // Находим следующий узел для перехода после успешного ввода
-                  const nextConnection = connections.find(conn => conn.source === targetNode.id);
-                  const nextNodeId = nextConnection ? nextConnection.target : null;
+                // Находим следующий узел для перехода после успешного ввода
+                const nextConnection = connections.find(conn => conn.source === targetNode.id);
+                const nextNodeId = nextConnection ? nextConnection.target : null;
 
-                  code += '    # Настраиваем ожидание ввода (collectUserInput=true)\n';
-                  code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-                  code += `        "type": "${inputType}",\n`;
-                  code += `        "variable": "${inputVariable}",\n`;
-                  code += `        "validation": "${inputValidation}",\n`;
-                  code += `        "min_length": ${minLength},\n`;
-                  code += `        "max_length": ${maxLength},\n`;
-                  code += `        "timeout": ${inputTimeout},\n`;
-                  code += `        "required": ${toPythonBoolean(inputRequired)},\n`;
-                  code += `        "allow_skip": ${toPythonBoolean(allowSkip)},\n`;
-                  code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
-                  code += `        "retry_message": "${escapeForJsonString(inputRetryMessage)}",\n`;
-                  code += `        "success_message": "${escapeForJsonString(inputSuccessMessage)}",\n`;
-                  code += `        "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
-                  code += `        "node_id": "${targetNode.id}",\n`;
-                  code += `        "next_node_id": "${nextNodeId || ''}"\n`;
-                  code += '    }\n';
+                if (textInputCollect) {
+                  code += generateInputCollectionCode(
+                    inputType,
+                    inputVariable,
+                    inputValidation,
+                    minLength,
+                    maxLength,
+                    inputTimeout,
+                    inputRequired,
+                    allowSkip,
+                    saveToDatabase,
+                    inputRetryMessage,
+                    inputSuccessMessage,
+                    inputPrompt,
+                    targetNode.id,
+                    nextNodeId
+                  );
                 } else {
-                  code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
+                  code += generateNoInputCollectionCode(targetNode.id);
                 }
               }
 
