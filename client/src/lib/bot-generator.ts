@@ -925,7 +925,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${replyAutoTransitionTarget}")\n`;
               }
 
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настраиваем waiting_for_input ��ля targetNode ТОЛЬК�� если collectUserInput=true
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настраиваем waiting_for_input ььля targetNode ТОЛЬКьь если collectUserInput=true
               const targetCollectInputReply = targetNode.data.collectUserInput === true ||
                 targetNode.data.enableTextInput === true ||
                 targetNode.data.enablePhotoInput === true ||
@@ -1677,7 +1677,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         code += `                        "node_id": "${navTargetNode.id}",\n`;
                         code += `                        "next_node_id": "${inputTargetNodeId}"\n`;
                         code += `                    }\n`;
-                        code += `                    logging.info(f"🔧 Настрое����о fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
+                        code += `                    logging.info(f"🔧 Настроеььььо fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
                         code += `                else:\n`;
                         code += `                    logging.info(f"⏭️ Переменная ${fallbackInputVariable} уже сохранена, пропускаем fallback ожидание ввода")\n`;
                       } else {
@@ -1716,7 +1716,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       } else {
                         code += `            await bot.send_message(callback_query.from_user.id, text)\n`;
                       }
-                      code += `            logging.info(f"✅ ��рямая навигация к узлу множественного выбора ${navTargetNode.id} в��пол��ена")\n`;
+                      code += `            logging.info(f"✅ ььрямая навигация к узлу множественного выбора ${navTargetNode.id} вььполььена")\n`;
                     } else {
                       const formattedText = formatTextForPython(messageText);
                       code += `            nav_text = ${formattedText}\n`;
@@ -1751,14 +1751,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               });
 
               code += '        else:\n';
-              code += '            logging.warning(f"Неиз��естный следующий узел: {next_node_id}")\n';
+              code += '            logging.warning(f"Неизььестный следующий узел: {next_node_id}")\n';
             } else {
               code += '        # No nodes available for navigation\n';
               code += '        logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
             }
 
             code += '    except Exception as e:\n';
-            code += '        logging.error(f"Ошибка при п����реходе к следующему узлу {next_node_id}: {e}")\n';
+            code += '        logging.error(f"Ошибка при пььььреходе к следующему узлу {next_node_id}: {e}")\n';
             code += '    \n';
             code += '    return  # Завершаем обработку после переадресации\n';
           }
@@ -1767,7 +1767,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Генерируем ответ на основе типа узла
           if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
             // Обрабатываем узла сбора ввода
-            const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "П���жалуйяяяа, введите ваш отяяяет:";
+            const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "Пьььжалуйяяяа, введите ваш отяяяет:";
             const responseType = targetNode.data.responseType || 'text';
             // Определяем тип ввода - если включены медиа-типы, используем их, иначе текст
             let inputType = 'text';
@@ -2202,7 +2202,7 @@ if (userInputNodes.length > 0) {
 
               // Fallback если условия не выпоянены
               code += `                        if not conditional_met:\n`;
-              code += `                            # Условие не выполнено - показываем основно�� сообщение\n`;
+              code += `                            # Условие не выполнено - показываем основноьь сообщение\n`;
               const messageText = targetNode.data.messageText || 'Сообщение';
               const formattedText = formatTextForPython(messageText);
               code += `                            text = ${formattedText}\n`;
@@ -2223,13 +2223,13 @@ if (userInputNodes.length > 0) {
               const messageText = targetNode.data.messageText || 'Сообщение';
               const formattedText = formatTextForPython(messageText);
 
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть к��опки - показываем ях И настраиваем ожидание ввода
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть кььопки - показываем ях И настраиваем ожидание ввода
               if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += `                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа\n`;
                 code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput=true")\n`;
                 code += `                        text = ${formattedText}\n`;
 
-                // До����авляем замену переменных
+                // Доььььавляем замену переменных
                 code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
                 code += generateUniversalVariableReplacement('                        ');
 
@@ -2271,7 +2271,7 @@ if (userInputNodes.length > 0) {
                 code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
                 code += `                            "skip_buttons": ${skipButtonsJson2572}\n`;
                 code += `                        }\n`;
-                code += `                        logging.info(f"✅ Со����тояние ожидания настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                code += `                        logging.info(f"✅ Соььььтояние ожидания настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
               } else {
                 // Обычное ожидание ввода если кнопок нет
                 code += `                        # Узел собирает пользовательский ввод\n`;
@@ -2513,7 +2513,7 @@ if (userInputNodes.length > 0) {
     code += '                            answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
     code += '                        )\n';
 
-    // Добавляем нав��г��цию для skip_buttons медиа-узлов
+    // Добавляем навььгььцию для skip_buttons медиа-узлов
     if (nodes.length > 0) {
       nodes.forEach((mediaSkipNode, mediaSkipIdx) => {
         const mediaSkipCond = mediaSkipIdx === 0 ? 'if' : 'elif';
@@ -2933,7 +2933,7 @@ if (userInputNodes.length > 0) {
                 code += `${bodyIndent}await message.answer(text)\n`;
 
                 // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок (используем универсальную функцию)
-                code += `${bodyIndent}# Настраиваем ожидание ввода для message узла (универсальная функция оп����еделит тип: text/photo/video/audio/document)\n`;
+                code += `${bodyIndent}# Настраиваем ожидание ввода для message узла (универсальная функция опььььеделит тип: text/photo/video/audio/document)\n`;
                 code += generateWaitingStateCode(targetNode, bodyIndent);
               }
             } else {
@@ -2998,7 +2998,7 @@ if (userInputNodes.length > 0) {
 
               // АВТОПЕРЕХОД: Если у узля есть autoTransitionTo, сразу вызываем callback обработчик
               if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-                // Проверя��м, нужно ли выполнять автопереход - только если collectUserInput=true
+                // Проверяььм, нужно ли выполнять автопереход - только если collectUserInput=true
                 if (targetNode.data.collectUserInput !== false) {
                   const autoTargetId = targetNode.data.autoTransitionTo;
                   const autoSafeFunctionName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -3039,7 +3039,7 @@ if (userInputNodes.length > 0) {
           code += `${bodyIndent}prompt_text = ${inputPrompt}\n`;
           code += `${bodyIndent}await message.answer(prompt_text)\n`;
 
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверя��м collectUserInput перед установкой waiting_for_input
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяььм collectUserInput перед установкой waiting_for_input
           const msgNodeCollectInput = targetNode.data.collectUserInput === true ||
             targetNode.data.enableTextInput === true ||
             targetNode.data.enablePhotoInput === true ||
@@ -3048,7 +3048,7 @@ if (userInputNodes.length > 0) {
             targetNode.data.enableDocumentInput === true;
 
           if (msgNodeCollectInput) {
-            code += `${bodyIndent}# Устанавливаея но��ое ожидание ввода (collectUserInput=true)\n`;
+            code += `${bodyIndent}# Устанавливаея ноььое ожидание ввода (collectUserInput=true)\n`;
             code += `${bodyIndent}user_data[user_id]["waiting_for_input"] = {\n`;
             code += `${bodyIndent}    "type": "${targetNode.data.inputType || 'text'}",\n`;
             code += `${bodyIndent}    "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
@@ -3073,7 +3073,7 @@ if (userInputNodes.length > 0) {
           // Для узлов команд яызываем соответствующий обработчик
           const commandName = targetNode.data.command?.replace('/', '') || 'unknown';
           const handlerName = `${commandName}_handler`;
-          code += `${bodyIndent}# Выполн��ем команду ${targetNode.data.command}\n`;
+          code += `${bodyIndent}# Выполнььем команду ${targetNode.data.command}\n`;
           code += `${bodyIndent}from types import SimpleNamespace\n`;
           code += `${bodyIndent}fake_message = SimpleNamespace()\n`;
           code += `${bodyIndent}fake_message.from_user = message.from_user\n`;
@@ -3339,9 +3339,9 @@ if (userInputNodes.length > 0) {
     code += '            if "input_target_node_id" in user_data[user_id]:\n';
     code += '                del user_data[user_id]["input_target_node_id"]\n';
     code += '            \n';
-    code += '            # Нахо����им и вызываем обработчик целевого узла\n';
+    code += '            # Нахоььььим и вызываем обработчик целевого узла\n';
 
-    // Добавл��ем навигацию к целевому узлу
+    // Добавлььем навигацию к целевому узлу
     nodes.forEach((targetNode) => {
       code += `            if input_target_node_id == "${targetNode.id}":\n`;
       if (targetNode.type === 'message') {
@@ -3510,7 +3510,7 @@ if (userInputNodes.length > 0) {
     code += '        if saved_to_db:\n';
     code += '            logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
     code += '        else:\n';
-    code += '            logging.warning(f"⚠️ Не удалось сохранить в яД, данные сохранены л��кально")\n';
+    code += '            logging.warning(f"⚠️ Не удалось сохранить в яД, данные сохранены льькально")\n';
     code += '    \n';
     code += '    # Отправляем сообщение об успехе только если оно задано\n';
     code += '    success_message = input_config.get("success_message", "")\n';
@@ -3524,7 +3524,7 @@ if (userInputNodes.length > 0) {
     code += '    \n';
     code += '    # Автоматическая навигация к следующему узлу после успешного ввода\n';
     code += '    next_node_id = input_config.get("next_node_id")\n';
-    code += '    logging.info(f"🔄 Проверяям нави����ацию: next_node_id = {next_node_id}")\n';
+    code += '    logging.info(f"🔄 Проверяям навиььььацию: next_node_id = {next_node_id}")\n';
     code += '    if next_node_id:\n';
     code += '        try:\n';
     code += '            logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
@@ -3586,7 +3586,7 @@ if (userInputNodes.length > 0) {
           code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
           code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
 
-          // Проверя����м, нужно ли настроить ожядание текстового ввода
+          // Проверяььььм, нужно ли настроить ожядание текстового ввода
           // ИСПРАВЛЕНИЕ: Используем универяальную функцию для настройки ожидания ввода
           if (targetNode.data.enableTextInput || targetNode.data.collectUserInput ||
             targetNode.data.enablePhotoInput || targetNode.data.enableVideoInput ||
@@ -3599,7 +3599,7 @@ if (userInputNodes.length > 0) {
           const formattedText = formatTextForPython(messageText);
 
           if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-            code += '                # Проверяем ус����овные сообщения\n';
+            code += '                # Проверяем усььььовные сообщения\n';
             code += '                text = None\n';
             code += '                \n';
             code += '                # Получаем данные пользователя для проверки условий\n';
@@ -3617,7 +3617,7 @@ if (userInputNodes.length > 0) {
             code += '                    user_data_dict = {}\n';
             code += '                \n';
 
-            // Генерируем условную логик�� с использованием вспомогательной функции
+            // Генерируем условную логикьь с использованием вспомогательной функции
             code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '                ');
 
             // Добавляем резервный вариант
@@ -4348,10 +4348,10 @@ if (userInputNodes.length > 0) {
                   code += '        except Exception as e:\n';
                   code += '            logging.debug(f"Не удалось удалить reply сообщение: {e}")\n';
                   code += '    \n';
-                  code += '    # Отправляем сообщение (с п��оверкой прякрепленного медиа)\n';
+                  code += '    # Отправляем сообщение (с пььоверкой прякрепленного медиа)\n';
                   code += mediaCode;
                 } else {
-                  // Резервный вариант ��сли не удалось сгенерировать код медиа
+                  // Резервный вариант ььсли не удалось сгенерировать код медиа
                   code += '    # Отправляем сообщение (обычное)\n';
                   const autoFlag1 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
                   code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag1}${parseMode})\n`;
@@ -4431,7 +4431,7 @@ if (userInputNodes.length > 0) {
 
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0 && !hasInputEnabled) {
                   code += '    \n';
-                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет inline кнопки БЕЗ текстового/медиа ввода - ��Е наст��аиваем ожидание ввода")\n`;
+                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет inline кнопки БЕЗ текстового/медиа ввода - ььЕ настььаиваем ожидание ввода")\n`;
                   code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового/медиа ввода\n`;
                 } else {
                   code += '    \n';
@@ -4458,7 +4458,7 @@ if (userInputNodes.length > 0) {
               code += '            else:\n';
               code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
               code += '        else:\n';
-              code += '            # Использу��м URL или file_id для стикеров\n';
+              code += '            # Используььм URL или file_id для стикеров\n';
               code += '            sticker_file = sticker_url\n';
               code += '        \n';
 
@@ -4547,7 +4547,7 @@ if (userInputNodes.length > 0) {
               code += '    try:\n';
               code += '        # Проверяем, является ли это локальным файлом\n';
               code += '        if is_local_file(animation_url):\n';
-              code += '            # Отп����авляем локальный файл\n';
+              code += '            # Отпььььавляем локальный файл\n';
               code += '            file_path = get_local_file_path(animation_url)\n';
               code += '            if os.path.exists(file_path):\n';
               code += '                animation_file = FSInputFile(file_path)\n';
@@ -4980,8 +4980,8 @@ if (userInputNodes.length > 0) {
               }
 
             } else {
-              // Универсальный обработчик для узлов сообщений и ��ругих текстовых узлов
-              code += `    # О��рабатываем узел типа ${targetNode.type}: ${targetNode.id}\n`;
+              // Универсальный обработчик для узлов сообщений и ььругих текстовых узлов
+              code += `    # Оььрабатываем узел типа ${targetNode.type}: ${targetNode.id}\n`;
 
               if (targetNode.type === 'message') {
                 // Обрабатываем узла сообщений и другие текстовые узла
@@ -5144,7 +5144,7 @@ if (userInputNodes.length > 0) {
           code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
           const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
-          code += '    # Проверяем флаг hideAfterClick ��ля кнопок\n';
+          code += '    # Проверяем флаг hideAfterClick ььля кнопок\n';
           code += `    # Обработка hideAfterClick не применяется в этом обработчике, так как он используется для специальных командных кнопок\n`;
           code += '    await callback_query.answer()\n';
           code += '    user_id = callback_query.from_user.id\n';

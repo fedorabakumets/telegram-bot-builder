@@ -4623,16 +4623,12 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
 async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
     text = "Кто тебе интересен?"
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "Я девушка"
@@ -4652,8 +4648,7 @@ async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -4696,41 +4691,17 @@ async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
     }
     logging.info(f"✅ Состояние ожидания настроено: type='text', modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
     await message.answer(text, reply_markup=keyboard)
-    
-    # Сохраняем нажатие reply кнопки если включен сбор ответов
-    user_id = message.from_user.id
-    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):
-        import datetime
-        timestamp = get_moscow_time()
-        input_node_id = user_data[user_id].get("input_node_id")
-        input_variable = user_data[user_id].get("input_variable", "button_response")
-        
-        response_data = {
-            "value": "{button_text}",
-            "type": "reply_button",
-            "timestamp": timestamp,
-            "nodeId": input_node_id,
-            "variable": input_variable,
-            "source": "reply_button_click"
-        }
-        
-        user_data[user_id][f"{input_variable}_button"] = response_data
-        logging.info(f"Reply кнопка сохранена: {input_variable}_button = {button_text} (пользователь {user_id})")
 
 @dp.message(lambda message: message.text == "Я парень")
 async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
     text = "Кто тебе интересен?"
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "Я парень"
@@ -4750,8 +4721,7 @@ async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -4794,41 +4764,17 @@ async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
     }
     logging.info(f"✅ Состояние ожидания настроено: type='text', modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
     await message.answer(text, reply_markup=keyboard)
-    
-    # Сохраняем нажатие reply кнопки если включен сбор ответов
-    user_id = message.from_user.id
-    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):
-        import datetime
-        timestamp = get_moscow_time()
-        input_node_id = user_data[user_id].get("input_node_id")
-        input_variable = user_data[user_id].get("input_variable", "button_response")
-        
-        response_data = {
-            "value": "{button_text}",
-            "type": "reply_button",
-            "timestamp": timestamp,
-            "nodeId": input_node_id,
-            "variable": input_variable,
-            "source": "reply_button_click"
-        }
-        
-        user_data[user_id][f"{input_variable}_button"] = response_data
-        logging.info(f"Reply кнопка сохранена: {input_variable}_button = {button_text} (пользователь {user_id})")
 
 @dp.message(lambda message: message.text == "Девушки")
 async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
     text = "Из какого ты города?"
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "Девушки"
@@ -4848,8 +4794,7 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -4996,27 +4941,13 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
-    # Отправляем сообщение с учетом условной клавиатуры
-    # Инициализируем переменную conditional_keyboard, если она не была определена
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        # Используем условную клавиатуру
-        # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
-        user_data[user_id]["waiting_for_input"] = {
-            "type": "button",
-            "modes": ["button", "text"],
-            "variable": "city",
-            "save_to_database": True,
-            "node_id": "sIh3xXKEtb_TtrhHqZQzX",
-            "skip_buttons": []
-        }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
-        # Удаляем предыдущие reply клавиатуры если они были
         await message.answer(text, reply_markup=ReplyKeyboardRemove())
     
-    # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "text",
@@ -5036,16 +4967,12 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
 async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
     text = "Из какого ты города?"
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "Парни"
@@ -5065,8 +4992,7 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5213,27 +5139,13 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
-    # Отправляем сообщение с учетом условной клавиатуры
-    # Инициализируем переменную conditional_keyboard, если она не была определена
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        # Используем условную клавиатуру
-        # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
-        user_data[user_id]["waiting_for_input"] = {
-            "type": "button",
-            "modes": ["button", "text"],
-            "variable": "city",
-            "save_to_database": True,
-            "node_id": "sIh3xXKEtb_TtrhHqZQzX",
-            "skip_buttons": []
-        }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
-        # Удаляем предыдущие reply клавиатуры если они были
         await message.answer(text, reply_markup=ReplyKeyboardRemove())
     
-    # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "text",
@@ -5253,16 +5165,12 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
 async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
     text = "Из какого ты города?"
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "Все равно"
@@ -5282,8 +5190,7 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5430,27 +5337,13 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
-    # Отправляем сообщение с учетом условной клавиатуры
-    # Инициализируем переменную conditional_keyboard, если она не была определена
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        # Используем условную клавиатуру
-        # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
-        user_data[user_id]["waiting_for_input"] = {
-            "type": "button",
-            "modes": ["button", "text"],
-            "variable": "city",
-            "save_to_database": True,
-            "node_id": "sIh3xXKEtb_TtrhHqZQzX",
-            "skip_buttons": []
-        }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
-        # Удаляем предыдущие reply клавиатуры если они были
         await message.answer(text, reply_markup=ReplyKeyboardRemove())
     
-    # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "text",
@@ -5470,16 +5363,12 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
 async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
     text = "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи"
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = True
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "Пропустить"
@@ -5499,8 +5388,7 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5644,27 +5532,13 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
         logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
-    # Отправляем сообщение с учетом условной клавиатуры
-    # Инициализируем переменную conditional_keyboard, если она не была определена
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        # Используем условную клавиатуру
-        # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
-        user_data[user_id]["waiting_for_input"] = {
-            "type": "button",
-            "modes": ["button", "text"],
-            "variable": "response_Y9zLRp1BLpVhm-HcsNkJV",
-            "save_to_database": True,
-            "node_id": "Y9zLRp1BLpVhm-HcsNkJV",
-            "skip_buttons": []
-        }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
-        # Удаляем предыдущие reply клавиатуры если они были
         await message.answer(text, reply_markup=ReplyKeyboardRemove())
     
-    # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "photo",
@@ -5687,16 +5561,12 @@ async def handle_reply_Y6DFar0NH2ejdlKLTFgwC(message: types.Message):
 3. Изменить фото/видео.
 4. Изменить текст анкеты."""
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "Да"
@@ -5716,8 +5586,7 @@ async def handle_reply_Y6DFar0NH2ejdlKLTFgwC(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5753,41 +5622,17 @@ async def handle_reply_Y6DFar0NH2ejdlKLTFgwC(message: types.Message):
     # Узел yrsc8v81qQa5oQx538Dzn имеет collectUserInput=false - НЕ устанавливаем waiting_for_input
     logging.info(f"ℹ️ Узел yrsc8v81qQa5oQx538Dzn не собирает ответы (collectUserInput=false)")
     await message.answer(text, reply_markup=keyboard)
-    
-    # Сохраняем нажатие reply кнопки если включен сбор ответов
-    user_id = message.from_user.id
-    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):
-        import datetime
-        timestamp = get_moscow_time()
-        input_node_id = user_data[user_id].get("input_node_id")
-        input_variable = user_data[user_id].get("input_variable", "button_response")
-        
-        response_data = {
-            "value": "{button_text}",
-            "type": "reply_button",
-            "timestamp": timestamp,
-            "nodeId": input_node_id,
-            "variable": input_variable,
-            "source": "reply_button_click"
-        }
-        
-        user_data[user_id][f"{input_variable}_button"] = response_data
-        logging.info(f"Reply кнопка сохранена: {input_variable}_button = {button_text} (пользователь {user_id})")
 
 @dp.message(lambda message: message.text == "Изменить анкету")
 async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
     text = "Сколько тебе лет?"
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "Изменить анкету"
@@ -5807,8 +5652,7 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -5955,27 +5799,13 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
-    # Отправляем сообщение с учетом условной клавиатуры
-    # Инициализируем переменную conditional_keyboard, если она не была определена
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        # Используем условную клавиатуру
-        # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
-        user_data[user_id]["waiting_for_input"] = {
-            "type": "button",
-            "modes": ["button", "text"],
-            "variable": "age",
-            "save_to_database": True,
-            "node_id": "start",
-            "skip_buttons": []
-        }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
-        # Удаляем предыдущие reply клавиатуры если они были
         await message.answer(text, reply_markup=ReplyKeyboardRemove())
     
-    # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "text",
@@ -5995,16 +5825,12 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
 async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
     text = "Сколько тебе лет?"
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "2"
@@ -6024,8 +5850,7 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -6172,27 +5997,13 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
-    # Отправляем сообщение с учетом условной клавиатуры
-    # Инициализируем переменную conditional_keyboard, если она не была определена
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        # Используем условную клавиатуру
-        # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
-        user_data[user_id]["waiting_for_input"] = {
-            "type": "button",
-            "modes": ["button", "text"],
-            "variable": "age",
-            "save_to_database": True,
-            "node_id": "start",
-            "skip_buttons": []
-        }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
-        # Удаляем предыдущие reply клавиатуры если они были
         await message.answer(text, reply_markup=ReplyKeyboardRemove())
     
-    # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "text",
@@ -6212,16 +6023,12 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
 async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
     text = "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи"
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "3"
@@ -6241,8 +6048,7 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -6386,27 +6192,13 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
         logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
-    # Отправляем сообщение с учетом условной клавиатуры
-    # Инициализируем переменную conditional_keyboard, если она не была определена
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        # Используем условную клавиатуру
-        # Устанавливаем waiting_for_input для условной reply клавиатуры (collectUserInput=true)
-        user_data[user_id]["waiting_for_input"] = {
-            "type": "button",
-            "modes": ["button", "text"],
-            "variable": "response_Y9zLRp1BLpVhm-HcsNkJV",
-            "save_to_database": True,
-            "node_id": "Y9zLRp1BLpVhm-HcsNkJV",
-            "skip_buttons": []
-        }
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
-        # Удаляем предыдущие reply клавиатуры если они были
         await message.answer(text, reply_markup=ReplyKeyboardRemove())
     
-    # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "photo",
@@ -6426,16 +6218,12 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
 async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
     text = "Расскажи о себе и кого хочешь найти, чем предлагаешь заняться. Это поможет лучше подобрать тебе компанию."
     user_id = message.from_user.id
-    
-    # Проверяем skipDataCollection - если true, пропускаем все проверки сохранения
     skip_collection = False
     
     if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
         waiting_config = user_data[user_id]["waiting_for_input"]
-        # Проверяем что это dict и что кнопки разрешены (button в modes или type == button)
         modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
         waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        # Проверяем что ждём ввода с поддержкой кнопок (node_id проверка убрана - для reply кнопок важен только modes)
         if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
             variable_name = waiting_config.get("variable", "button_response")
             button_text = "4"
@@ -6455,8 +6243,7 @@ async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
             logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
             del user_data[user_id]["waiting_for_input"]
         elif isinstance(waiting_config, dict):
-            # Если button не в modes - просто логируем (пользователь нажал кнопку, но ожидался другой тип ввода)
-            logging.info(f"ℹ️ waiting_for_input активен, яо button не в modes: {modes}, пропускаем сохранение")
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
     elif skip_collection:
         logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
@@ -6497,26 +6284,6 @@ async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
     }
     logging.info(f"✅ Состояние ожидания настроено: type='text', modes=['button', 'text'] для переменной info (узел lBPy3gcGVLla0NGdSYb35)")
     await message.answer(text, reply_markup=keyboard)
-    
-    # Сохраняем нажатие reply кнопки если включен сбор ответов
-    user_id = message.from_user.id
-    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):
-        import datetime
-        timestamp = get_moscow_time()
-        input_node_id = user_data[user_id].get("input_node_id")
-        input_variable = user_data[user_id].get("input_variable", "button_response")
-        
-        response_data = {
-            "value": "{button_text}",
-            "type": "reply_button",
-            "timestamp": timestamp,
-            "nodeId": input_node_id,
-            "variable": input_variable,
-            "source": "reply_button_click"
-        }
-        
-        user_data[user_id][f"{input_variable}_button"] = response_data
-        logging.info(f"Reply кнопка сохранена: {input_variable}_button = {button_text} (пользователь {user_id})")
 
 
 # Универсальный обработчик пользовательского ввода
@@ -9854,6 +9621,159 @@ async def handle_photo_input(message: types.Message):
         except Exception as e:
             logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
+
+
+# Обработчики для работы с группами
+from datetime import datetime, timezone
+import json
+
+# Конфигурация групп из параметров генерации
+CONNECTED_GROUPS = {}
+
+@dp.message(F.chat.type.in_(["group", "supergroup"]))
+async def handle_group_message(message: types.Message):
+    """
+    Обработчик сообщений в группах
+    """
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    username = message.from_user.username or "Неизвестный"
+    
+    # Проверяем, является ли группа подключенной
+    group_name = None
+    for name, config in CONNECTED_GROUPS.items():
+        if config.get("id") and str(config["id"]) == str(chat_id):
+            group_name = name
+            break
+    
+    if group_name:
+        logging.info(f"📢 Сообщение в подключенной группе {group_name}: {message.text[:50]}... от @{username}")
+        
+        # Здесь можно добавить логику обработки групповых сообщений
+        # Например, модерация, автоответы, статистика и т.д.
+        
+        # Сохраняем статистику сообщений
+        try:
+            await save_group_message_stats(chat_id, user_id, message.text, group_name)
+        except Exception as e:
+            logging.error(f"Ошибка сохранения статистики группы: {e}")
+    
+# Функция для сохранения статистики групповых сообщений
+async def save_group_message_stats(chat_id: int, user_id: int, message_text: str, group_name: str):
+    """
+    Сохраняет статистику сообщений в группе
+    """
+    try:
+        # Проверяем существование функции сохранения статистики
+        if 'save_user_message_stats' in globals():
+            # Если функция существует, используем её для общей статистики
+            await save_user_message_stats(user_id, message_text)
+        
+        # Логируем статистику для мониторинга
+        logging.info(f"📊 Статистика группы {group_name}: пользователь {user_id}, длина сообщения: {len(message_text or '')}")
+        
+        # Здесь можно добавить специфичную для групп логику сохранения
+        # например, в отдельную таблицу group_activity если она существует
+        try:
+            # Проверяем существование таблицы group_activity
+            # Этот код выполнится только если таблица существует
+            if 'db_pool' in globals() and db_pool:
+                async with db_pool.acquire() as conn:
+                    await conn.execute("""
+                        INSERT INTO group_activity (chat_id, user_id, message_length, group_name, created_at) 
+                        VALUES ($1, $2, $3, $4, $5)
+                        ON CONFLICT DO NOTHING
+                    """, chat_id, user_id, len(message_text or ""), group_name, datetime.now(timezone.utc))
+        except Exception as table_error:
+            # Если таблица не существует, просто логируем и продолжаем
+            logging.debug(f"Таблица group_activity не найдена: {table_error}")
+            
+    except Exception as e:
+        logging.error(f"Ошибка при сохранении статистики группы: {e}")
+    
+# Добавляем обработчик новых участников в группе
+@dp.message(F.new_chat_members)
+async def handle_new_member(message: types.Message):
+    """
+    Обработчик новых участников в группе
+    """
+    chat_id = message.chat.id
+    
+    # Проверяем, является ли группа подключенной
+    group_name = None
+    for name, config in CONNECTED_GROUPS.items():
+        if config.get("id") and str(config["id"]) == str(chat_id):
+            group_name = name
+            break
+    
+    if group_name:
+        for new_member in message.new_chat_members:
+            username = new_member.username or new_member.first_name or "Новый участник"
+            logging.info(f"👋 Новый участник в группе {group_name}: @{username}")
+            
+            # Приветственное сообщение (опционально)
+            # await message.answer(f"Добро пожаловать в группу, @{username}!")
+            
+            # Здесь можно добавить логику обработки новых участников
+            # Например, отправка приветственного сообщения, добавление в базу и т.д.
+
+# Обработчик ухода участников из группы
+@dp.message(F.left_chat_member)
+async def handle_left_member(message: types.Message):
+    """
+    Обработчик ухода участников из группы
+    """
+    chat_id = message.chat.id
+    
+    # Проверяем, является ли группа подключенной
+    group_name = None
+    for name, config in CONNECTED_GROUPS.items():
+        if config.get("id") and str(config["id"]) == str(chat_id):
+            group_name = name
+            break
+    
+    if group_name:
+        left_member = message.left_chat_member
+        username = left_member.username or left_member.first_name or "Участник"
+        logging.info(f"👋 Участник покинул группу {group_name}: @{username}")
+
+# Функция для проверки прав администратора бота в группе
+async def check_bot_admin_rights(chat_id: int, group_name: str) -> bool:
+    """
+    Проверяет, является ли бот администратором группы
+    """
+    try:
+        chat_member = await bot.get_chat_member(chat_id, bot.id)
+        return chat_member.status in ['administrator', 'creator']
+    except Exception as e:
+        logging.error(f"Ошибка при проверке прав бота в группе {group_name}: {e}")
+        return False
+
+# Функция для отправки сообщения в группу от имени бота
+async def send_group_message(chat_id: int, text: str, group_name: str = None) -> bool:
+    """
+    Отправляет сообщение в группу
+    """
+    try:
+        if not group_name:
+            # Определяем название группы если не передано
+            for name, config in CONNECTED_GROUPS.items():
+                if config.get("id") and str(config["id"]) == str(chat_id):
+                    group_name = name
+                    break
+        
+        # Проверяем права бота
+        if not await check_bot_admin_rights(chat_id, group_name):
+            logging.warning(f"Бот не имеет прав администратора в группе {group_name}")
+            return False
+        
+        await bot.send_message(chat_id, text)
+        logging.info(f"✅ Сообщение отправлено в группу {group_name}")
+        return True
+        
+    except Exception as e:
+        logging.error(f"Ошибка при отправке сообщения в группу {group_name}: {e}")
+        return False
 
 
 # Универсальный fallback-обработчик для всех необработанных текстовых сообщений
