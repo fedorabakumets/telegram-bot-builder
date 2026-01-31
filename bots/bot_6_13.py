@@ -1403,6 +1403,21 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
         else:
             await callback_query.message.answer(text)
     
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "button",
+        "modes": ["button", "text"],
+        "variable": "gender",
+        "save_to_database": True,
+        "node_id": "f90r9k3FSLu2Tjn74cBn_",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной gender (узел f90r9k3FSLu2Tjn74cBn_)")
     user_id = callback_query.from_user.id
     
     # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сояранения данных
@@ -1918,6 +1933,21 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
         logging.info(f"✅ Автопереход выполнен: tS2XGL2Mn4LkE63SnxhPy -> lBPy3gcGVLla0NGdSYb35")
         return
     
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "name",
+        "save_to_database": True,
+        "node_id": "tS2XGL2Mn4LkE63SnxhPy",
+        "next_node_id": "lBPy3gcGVLla0NGdSYb35",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной name (узел tS2XGL2Mn4LkE63SnxhPy)")
     user_id = callback_query.from_user.id
     
     
@@ -2225,6 +2255,21 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
         else:
             await callback_query.message.answer(text)
     
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "button",
+        "modes": ["button", "text"],
+        "variable": "info",
+        "save_to_database": True,
+        "node_id": "lBPy3gcGVLla0NGdSYb35",
+        "next_node_id": "Y9zLRp1BLpVhm-HcsNkJV",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной info (узел lBPy3gcGVLla0NGdSYb35)")
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
@@ -2750,6 +2795,21 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
         logging.info(f"✅ Автопереход выполнен: Y9zLRp1BLpVhm-HcsNkJV -> vxPv7G4n0QGyhnv4ucOM5")
         return
     
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "photo",
+        "modes": ["photo"],
+        "variable": "photo",
+        "save_to_database": True,
+        "node_id": "Y9zLRp1BLpVhm-HcsNkJV",
+        "next_node_id": "vxPv7G4n0QGyhnv4ucOM5",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['photo'] для переменной photo (узел Y9zLRp1BLpVhm-HcsNkJV)")
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
@@ -2805,8 +2865,8 @@ async def handle_callback_vxPv7G4n0QGyhnv4ucOM5(callback_query: types.CallbackQu
     # Устанавливаем флаг collectUserInput для узла vxPv7G4n0QGyhnv4ucOM5
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_vxPv7G4n0QGyhnv4ucOM5"] = True
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла vxPv7G4n0QGyhnv4ucOM5: true")
+    user_data[user_id]["collectUserInput_vxPv7G4n0QGyhnv4ucOM5"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла vxPv7G4n0QGyhnv4ucOM5: false")
     
     # Обрабатываем узел vxPv7G4n0QGyhnv4ucOM5: vxPv7G4n0QGyhnv4ucOM5
     text = "Так выглядит твоя анкета:"
@@ -2874,8 +2934,6 @@ async def handle_callback_vxPv7G4n0QGyhnv4ucOM5(callback_query: types.CallbackQu
     # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
     elif user_id in user_data and user_data[user_id].get("collectUserInput_vxPv7G4n0QGyhnv4ucOM5", True) == True:
         logging.info(f"ℹ️ Узел vxPv7G4n0QGyhnv4ucOM5 ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")
-    elif True:  # Узел ожидает ввод (статическая проверка)
-        logging.info(f"ℹ️ Узел vxPv7G4n0QGyhnv4ucOM5 ожидает ввод (collectUserInput=true из статической проверки), автопереход пропущен")
     else:
         # ⚡ Автопереход к узлу 8xSJaWAJNz7Hz_54mjFTF
         logging.info(f"⚡ Автопереход от узла vxPv7G4n0QGyhnv4ucOM5 к узлу 8xSJaWAJNz7Hz_54mjFTF")
@@ -2883,6 +2941,21 @@ async def handle_callback_vxPv7G4n0QGyhnv4ucOM5(callback_query: types.CallbackQu
         logging.info(f"✅ Автопереход выполнен: vxPv7G4n0QGyhnv4ucOM5 -> 8xSJaWAJNz7Hz_54mjFTF")
         return
     
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_vxPv7G4n0QGyhnv4ucOM5",
+        "save_to_database": True,
+        "node_id": "vxPv7G4n0QGyhnv4ucOM5",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_vxPv7G4n0QGyhnv4ucOM5 (узел vxPv7G4n0QGyhnv4ucOM5)")
     user_id = callback_query.from_user.id
     
     
@@ -2914,8 +2987,8 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
     # Устанавливаем флаг collectUserInput для узла 8xSJaWAJNz7Hz_54mjFTF
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_8xSJaWAJNz7Hz_54mjFTF"] = True
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла 8xSJaWAJNz7Hz_54mjFTF: true")
+    user_data[user_id]["collectUserInput_8xSJaWAJNz7Hz_54mjFTF"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла 8xSJaWAJNz7Hz_54mjFTF: false")
     
     # Обрабатываем узел 8xSJaWAJNz7Hz_54mjFTF: 8xSJaWAJNz7Hz_54mjFTF
     text = """
@@ -2982,7 +3055,7 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
     else:
         # Медиа не найдено, отправляем обычное текстовое сообщение
         logging.info(f"📝 Медиа photo не найдено, отправка текстового сообщения")
-        if True:
+        if False:
             # Узел ожидает ввод, не отправляем сообщение
             logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод, пропускаем отправку сообщения")
         else:
@@ -2998,8 +3071,6 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
     # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
     elif user_id in user_data and user_data[user_id].get("collectUserInput_8xSJaWAJNz7Hz_54mjFTF", True) == True:
         logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")
-    elif True:  # Узел ожидает ввод (статическая проверка)
-        logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод (collectUserInput=true из статической проверки), автопереход пропущен")
     else:
         # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC
         logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
@@ -3038,8 +3109,8 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
     # Устанавливаем флаг collectUserInput для узла KE-8sR9elPEefApjXtBxC
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_KE-8sR9elPEefApjXtBxC"] = True
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла KE-8sR9elPEefApjXtBxC: true")
+    user_data[user_id]["collectUserInput_KE-8sR9elPEefApjXtBxC"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла KE-8sR9elPEefApjXtBxC: false")
     
     # Обрабатываем узел KE-8sR9elPEefApjXtBxC: KE-8sR9elPEefApjXtBxC
     text = "Все верно?"
@@ -3107,6 +3178,21 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
         else:
             await callback_query.message.answer(text)
     
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "button",
+        "modes": ["button"],
+        "variable": "response_KE-8sR9elPEefApjXtBxC",
+        "save_to_database": True,
+        "node_id": "KE-8sR9elPEefApjXtBxC",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['button'] для переменной response_KE-8sR9elPEefApjXtBxC (узел KE-8sR9elPEefApjXtBxC)")
     user_id = callback_query.from_user.id
     
     # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сояранения данных
@@ -3492,6 +3578,21 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
         else:
             await callback_query.message.answer(text)
     
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "button",
+        "modes": ["button", "text"],
+        "variable": "sex",
+        "save_to_database": True,
+        "node_id": "RFTgm4KzC6dI39AMTPcmo",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
@@ -4041,6 +4142,21 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
         logging.info(f"✅ Автопереход выполнен: sIh3xXKEtb_TtrhHqZQzX -> tS2XGL2Mn4LkE63SnxhPy")
         return
     
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "city",
+        "save_to_database": True,
+        "node_id": "sIh3xXKEtb_TtrhHqZQzX",
+        "next_node_id": "tS2XGL2Mn4LkE63SnxhPy",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной city (узел sIh3xXKEtb_TtrhHqZQzX)")
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
@@ -4122,8 +4238,8 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
     # Устанавливаем флаг collectUserInput для узла yrsc8v81qQa5oQx538Dzn
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_yrsc8v81qQa5oQx538Dzn"] = True
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла yrsc8v81qQa5oQx538Dzn: true")
+    user_data[user_id]["collectUserInput_yrsc8v81qQa5oQx538Dzn"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла yrsc8v81qQa5oQx538Dzn: false")
     
     # Обрабатываем узел yrsc8v81qQa5oQx538Dzn: yrsc8v81qQa5oQx538Dzn
     text = """1. Смотреть анкеты.
@@ -4196,6 +4312,21 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
         else:
             await callback_query.message.answer(text)
     
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "button",
+        "modes": ["button"],
+        "variable": "response_yrsc8v81qQa5oQx538Dzn",
+        "save_to_database": True,
+        "node_id": "yrsc8v81qQa5oQx538Dzn",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['button'] для переменной response_yrsc8v81qQa5oQx538Dzn (узел yrsc8v81qQa5oQx538Dzn)")
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
@@ -4556,14 +4687,14 @@ async def handle_reply_iIkbMb2jlZRJOxGHMNl1a(message: types.Message):
     
     # Устанавливаем waiting_for_input для целевого узла (collectUserInput=true)
     user_data[user_id]["waiting_for_input"] = {
-        "type": "button",
-        "modes": ["button", "text"],
+        "type": "text",
+        "modes": ['button', 'text'],
         "variable": "sex",
         "save_to_database": True,
         "node_id": "RFTgm4KzC6dI39AMTPcmo",
         "skip_buttons": []
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
+    logging.info(f"✅ Состояние ожидания настроено: type='text', modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
     await message.answer(text, reply_markup=keyboard)
     
     # Сохраняем нажатие reply кнопки если включен сбор ответов
@@ -4654,14 +4785,14 @@ async def handle_reply_0dBjAkcTa9rEsjEP48XzB(message: types.Message):
     
     # Устанавливаем waiting_for_input для целевого узла (collectUserInput=true)
     user_data[user_id]["waiting_for_input"] = {
-        "type": "button",
-        "modes": ["button", "text"],
+        "type": "text",
+        "modes": ['button', 'text'],
         "variable": "sex",
         "save_to_database": True,
         "node_id": "RFTgm4KzC6dI39AMTPcmo",
         "skip_buttons": []
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
+    logging.info(f"✅ Состояние ожидания настроено: type='text', modes=['button', 'text'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
     await message.answer(text, reply_markup=keyboard)
     
     # Сохраняем нажатие reply кнопки если включен сбор ответов
@@ -6357,14 +6488,14 @@ async def handle_reply_En0QBjOLWkcEpIGLqy6EQ(message: types.Message):
     
     # Устанавливаем waiting_for_input для целевого узла (collectUserInput=true)
     user_data[user_id]["waiting_for_input"] = {
-        "type": "button",
-        "modes": ["button", "text"],
+        "type": "text",
+        "modes": ['button', 'text'],
         "variable": "info",
         "save_to_database": True,
         "node_id": "lBPy3gcGVLla0NGdSYb35",
         "skip_buttons": [{"text":"Пропустить","target":"Y9zLRp1BLpVhm-HcsNkJV"}]
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной info (узел lBPy3gcGVLla0NGdSYb35)")
+    logging.info(f"✅ Состояние ожидания настроено: type='text', modes=['button', 'text'] для переменной info (узел lBPy3gcGVLla0NGdSYb35)")
     await message.answer(text, reply_markup=keyboard)
     
     # Сохраняем нажатие reply кнопки если включен сбор ответов
@@ -7933,28 +8064,9 @@ async def handle_user_input(message: types.Message):
                                 del user_data[user_id]["waiting_for_input"]
                             
                             logging.info("✅ Переход к следующему уялу выполнен успешно")
-                            
-                            # ⚡ Автопереход к узлу KE-8sR9elPEefApjXtBxC (только если collectUserInput=true)
-                            logging.info(f"⚡ Автопереход от узла 8xSJaWAJNz7Hz_54mjFTF к узлу KE-8sR9elPEefApjXtBxC")
-                            import types as aiogram_types
-                            async def noop(*args, **kwargs):
-                                return None
-                            fake_message = aiogram_types.SimpleNamespace(
-                                chat=aiogram_types.SimpleNamespace(id=message.from_user.id),
-                                message_id=message.message_id,
-                                delete=noop,
-                                edit_text=noop,
-                                answer=lambda text, **kwargs: bot.send_message(message.from_user.id, text, **kwargs)
-                            )
-                            fake_callback = aiogram_types.SimpleNamespace(
-                                id="auto_transition",
-                                from_user=message.from_user,
-                                chat_instance="",
-                                data="KE-8sR9elPEefApjXtBxC",
-                                message=fake_message,
-                                answer=noop
-                            )
-                            await handle_callback_KE_8sR9elPEefApjXtBxC(fake_callback)
+                            # Автопереход пропущен: collectUserInput=false
+                            logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF не собирает ответы (collectUserInput=false)")
+                            break  # Нет автоперехода, завершаем цикл
                         elif current_node_id == "KE-8sR9elPEefApjXtBxC":
                             text = "Все верно?"
                             # Замена переменных в тексте
@@ -8804,7 +8916,327 @@ async def handle_photo_input(message: types.Message):
                 user_vars = user_data.get(user_id, {})
             
             # Генерируем навигацию для каждого узла
-            # (здесь будет сгенерированный код навигации)
+            if next_node_id == "start":
+                text = "Сколько тебе лет?"
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+            elif next_node_id == "f90r9k3FSLu2Tjn74cBn_":
+                text = "Теперь определимся с полом"
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+            elif next_node_id == "RFTgm4KzC6dI39AMTPcmo":
+                text = "Кто тебе интересен?"
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+            elif next_node_id == "sIh3xXKEtb_TtrhHqZQzX":
+                text = "Из какого ты города?"
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+            elif next_node_id == "tS2XGL2Mn4LkE63SnxhPy":
+                text = "Как мне тебя называть?"
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+            elif next_node_id == "lBPy3gcGVLla0NGdSYb35":
+                text = "Расскажи о себе и кого хочешь найти, чем предлагаешь заняться. Это поможет лучше подобрать тебе компанию."
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+            elif next_node_id == "Y9zLRp1BLpVhm-HcsNkJV":
+                text = "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи"
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+            elif next_node_id == "vxPv7G4n0QGyhnv4ucOM5":
+                text = "Так выглядит твоя анкета:"
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+                
+                # Автопереход к следующему узлу (только если collectUserInput=true)
+                auto_next_node_id = "8xSJaWAJNz7Hz_54mjFTF"
+                logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")
+                # Создаем искусственный callback для вызова обработчика
+                import types as aiogram_types
+                fake_callback = aiogram_types.SimpleNamespace(
+                    id="auto_transition",
+                    from_user=message.from_user,
+                    chat_instance="",
+                    data=auto_next_node_id,
+                    message=message,
+                    answer=lambda: None
+                )
+                await handle_callback_8xSJaWAJNz7Hz_54mjFTF(fake_callback)
+                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")
+            elif next_node_id == "8xSJaWAJNz7Hz_54mjFTF":
+                text = """
+{name}, {age}, {city} - {info}
+"""
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                # Отправляем сохраненное фото с текстом узла
+                if "photo" in user_vars:
+                    media_file_id = user_vars["photo"]
+                    if isinstance(media_file_id, dict) and "value" in media_file_id:
+                        media_file_id = media_file_id["value"]
+                    await message.answer_photo(media_file_id, caption=text)
+                    logging.info(f"✅ Отправлено фото из переменной photo с текстом узла {next_node_id}")
+                else:
+                    await message.answer(text)
+                    logging.warning(f"⚠️ Переменная photo не найдена, отправлен только текст")
+                # Автопереход пропущен: collectUserInput=false
+                logging.info(f"ℹ️ Узел {next_node_id} не собирает ответы (collectUserInput=false)")
+            elif next_node_id == "KE-8sR9elPEefApjXtBxC":
+                text = "Все верно?"
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+            elif next_node_id == "yrsc8v81qQa5oQx538Dzn":
+                text = """1. Смотреть анкеты.
+2. Заполнить анкету заново.
+3. Изменить фото/видео.
+4. Изменить текст анкеты."""
+                # Замена переменных
+                # Инициализируем базовые переменные пользователя если их нет
+                if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                    # Получаем объект пользователя из сообщения или callback
+                    user_obj = None
+                    # Безопасно проверяем наличие message (для message handlers)
+                    if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                        user_obj = locals().get('message').from_user
+                    # Безопасно проверяем наличие callback_query (для callback handlers)
+                    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                        user_obj = locals().get('callback_query').from_user
+
+                    if user_obj:
+                        init_user_variables(user_id, user_obj)
+                
+                # Подставляем все доступные переменные пользователя в текст
+                user_vars = await get_user_from_db(user_id)
+                if not user_vars:
+                    user_vars = user_data.get(user_id, {})
+                
+                # get_user_from_db теперь возвращает уже обработанные user_data
+                if not isinstance(user_vars, dict):
+                    user_vars = user_data.get(user_id, {})
+                await message.answer(text)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+
             # Код навигации будет внедряться сюда во время генерации бота
             
         except Exception as e:

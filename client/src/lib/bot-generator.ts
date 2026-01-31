@@ -575,8 +575,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    \n';
 
           // Устанавливаем флаг collectUserInput для текущего узла
-          // Узел собирает ввод, если включены любые типы ввода
-          const collectUserInputFlag = targetNode.data.collectUserInput !== false ||
+          const collectUserInputFlag = targetNode.data.collectUserInput === true ||
             targetNode.data.enableTextInput === true ||
             targetNode.data.enablePhotoInput === true ||
             targetNode.data.enableVideoInput === true ||
@@ -1119,7 +1118,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `    elif user_id in user_data and user_data[user_id].get("collectUserInput_${nodeId}", True) == True:\n`;
             code += `        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")\n`;
             // Добавляем статическую проверку collectUserInput как резервную
-            const staticCollectUserInput = targetNode.data.collectUserInput !== false ||
+            const staticCollectUserInput = targetNode.data.collectUserInput === true ||
               targetNode.data.enableTextInput === true ||
               targetNode.data.enablePhotoInput === true ||
               targetNode.data.enableVideoInput === true ||
@@ -1136,6 +1135,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTarget}")\n`;
             code += `        return\n`;
             code += '    \n';
+          }
+
+          // ИСПРАВЛЕНИЕ: Если автопереход не произошел, устанавливаем состояние ожидания
+          const collectInputAfterTransitionCheck = targetNode.data.collectUserInput !== false ||
+            targetNode.data.enableTextInput === true ||
+            targetNode.data.enablePhotoInput === true ||
+            targetNode.data.enableVideoInput === true ||
+            targetNode.data.enableAudioInput === true ||
+            targetNode.data.enableDocumentInput === true;
+
+          if (collectInputAfterTransitionCheck) {
+            code += '    # Устанавливаем waiting_for_input, так как автопереход не выполнен\n';
+            code += generateWaitingStateCode(targetNode, '    ', 'user_id');
           }
 
           // Сохраняем нажатие кнопки в базу данных ТОЛЬКО если это реальнаяя кнопка
@@ -1905,21 +1917,44 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 const targetVarName = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 code += '    \n';
                 // Собираем кнопки с skipDataCollection для целевого узла
-                const skipButtons1884 = (targetNode.data.buttons || [])
+                const skipButtons = (targetNode.data.buttons || [])
                   .filter((btn: any) => btn.skipDataCollection === true && btn.target)
                   .map((btn: any) => ({ text: btn.text, target: btn.target }));
-                const skipButtonsJson1884 = JSON.stringify(skipButtons1884);
+                const skipButtonsJson = JSON.stringify(skipButtons);
+
+                // Определяем modes для ввода
+                const modes: string[] = [];
+                if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons?.length > 0) {
+                  modes.push('button');
+                }
+                if (targetNode.data.enableTextInput !== false) {
+                  modes.push('text');
+                }
+                if (targetNode.data.enablePhotoInput) modes.push('photo');
+                if (targetNode.data.enableVideoInput) modes.push('video');
+                if (targetNode.data.enableAudioInput) modes.push('audio');
+                if (targetNode.data.enableDocumentInput) modes.push('document');
+
+                // Определяем основной тип ввода. Приоритет у медиа.
+                let primaryInputType = 'button'; // По умолчанию для reply клавиатур
+                if (targetNode.data.enablePhotoInput) primaryInputType = 'photo';
+                else if (targetNode.data.enableVideoInput) primaryInputType = 'video';
+                else if (targetNode.data.enableAudioInput) primaryInputType = 'audio';
+                else if (targetNode.data.enableDocumentInput) primaryInputType = 'document';
+                else if (targetNode.data.enableTextInput !== false) primaryInputType = 'text';
+
+                const modesStr = modes.length > 0 ? modes.map(m => `'${m}'`).join(', ') : "'button', 'text'";
 
                 code += '    # Устанавливаем waiting_for_input для целевого узла (collectUserInput=true)\n';
                 code += `    user_data[user_id]["waiting_for_input"] = {\n`;
-                code += `        "type": "button",\n`;
-                code += `        "modes": ["button", "text"],\n`;
+                code += `        "type": "${primaryInputType}",\n`;
+                code += `        "modes": [${modesStr}],\n`;
                 code += `        "variable": "${targetVarName}",\n`;
                 code += `        "save_to_database": True,\n`;
                 code += `        "node_id": "${targetNode.id}",\n`;
-                code += `        "skip_buttons": ${skipButtonsJson1884}\n`;
+                code += `        "skip_buttons": ${skipButtonsJson}\n`;
                 code += `    }\n`;
-                code += `    logging.info(f"✅ Состояние ожидания настроено: modes=['button', 'text'] для переменной ${targetVarName} (узел ${targetNode.id})")\n`;
+                code += `    logging.info(f"✅ Состояние ожидания настроено: type='${primaryInputType}', modes=[${modesStr}] для переменной ${targetVarName} (узел ${targetNode.id})")\n`;
               } else {
                 code += '    \n';
                 code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
@@ -3814,26 +3849,28 @@ if (userInputNodes.length > 0) {
     code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
     code += '    return\n';
 
-    // Добавляем обработчик для фото
-    if (hasPhotoInput(nodes)) {
-      code += generatePhotoHandlerCode();
-    }
-
-    // Добавляем обработчик для видео
-    if (hasVideoInput(nodes)) {
-      code += generateVideoHandlerCode();
-    }
-
-
-    // Добавляем обработчик для аудио
-    if (hasAudioInput(nodes)) {
-      code += generateAudioHandlerCode();
-    }
-
-    // Добавляем обработчик для документов
-    if (hasDocumentInput(nodes)) {
-      code += generateDocumentHandlerCode();
-    }
+  const navigationCode = generateNodeNavigation(nodes || [], '            ', 'next_node_id', 'message', 'user_vars');
+  // Генерируем обработчики для медиа-файлов
+  if (hasPhotoInput(nodes || [])) {
+    let photoCode = generatePhotoHandlerCode();
+    photoCode = photoCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+    code += photoCode;
+  }
+  if (hasVideoInput(nodes || [])) {
+    let videoCode = generateVideoHandlerCode();
+    videoCode = videoCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+    code += videoCode;
+  }
+  if (hasAudioInput(nodes || [])) {
+    let audioCode = generateAudioHandlerCode();
+    audioCode = audioCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+    code += audioCode;
+  }
+  if (hasDocumentInput(nodes || [])) {
+    let docCode = generateDocumentHandlerCode();
+    docCode = docCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+    code += docCode;
+  }
 
 
     code += '    # Валидация длины тттекста\n';
