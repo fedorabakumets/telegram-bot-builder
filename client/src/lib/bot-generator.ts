@@ -56,6 +56,7 @@ import {
   generateButtonText
 } from './format';
 import { generateConditionalMessageLogic } from './Conditional';
+import { generateStartNodeConditionalMessageCode } from './start-node-conditional-utils';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from './Keyboard';
 import { hasConditionalButtons, hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions, hasMultiSelectNodes } from './has';
 import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
@@ -3336,7 +3337,7 @@ if (userInputNodes.length > 0) {
     code += '            if "input_target_node_id" in user_data[user_id]:\n';
     code += '                del user_data[user_id]["input_target_node_id"]\n';
     code += '            \n';
-    code += '            # Находим и вызываем обработчик целевого узла\n';
+    code += '            # Нахо����им и вызываем обработчик целевого узла\n';
 
     // Добавл��ем навигацию к целевому узлу
     nodes.forEach((targetNode) => {
@@ -4926,34 +4927,11 @@ if (userInputNodes.length > 0) {
               code += generateUniversalVariableReplacement('    ');
 
               // Добавляем поддержку условных сообщений для start узлов
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '    \n';
-                code += '    # Проверка условных сообщений для start узла\n';
-                code += '    user_record = await get_user_from_db(user_id)\n';
-                code += '    if not user_record:\n';
-                code += '        user_record = user_data.get(user_id, {})\n';
-                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-                code += '    \n';
-
-                // Используем условное сообщение, если доступно, иначе используем стандартное
-                code += '    # Используем условное сообщение если есть подходящее условие\n';
-                code += '    if "text" not in locals():\n';
-                code += `        text = ${formattedText}\n`;
-                code += '    \n';
-                code += '    # Используем условную клавиатуру если есть\n';
-                code += '    # Инициализируем переменную conditional_keyboard, если она не была определена\n';
-                code += '    if "conditional_keyboard" not in locals():\n';
-                code += '        conditional_keyboard = None\n';
-                code += '    if conditional_keyboard is not None:\n';
-                code += '        keyboard = conditional_keyboard\n';
-                code += '    else:\n';
-                code += '        keyboard = None\n';
-              } else {
-                code += '    \n';
-                code += '    # Без условных сообщений - используем обычную клавиатуру\n';
-                code += '    keyboard = None\n';
-              }
+              code += generateStartNodeConditionalMessageCode(
+                targetNode.data.conditionalMessages || [],
+                formattedText,
+                '    '
+              );
 
               // Создаем inline клавиатуру для start узла (только если нет условной клавиатуры)
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
