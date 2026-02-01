@@ -4396,7 +4396,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Детали о найденных командных кнопках
    * - Статистика по узлам без кнопок
    * 
-   * @returns {Set<string>} Множество уникальных callback идентификаторов для команд
+   * @returns Множество уникальных callback идентификаторов для команд
    * 
    * @remarks
    * Функция обеспечивает полное обнаружение всех командных кнопок
@@ -4408,7 +4408,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * // - Кнопка "Настройки" с command="settings" -> "cmd_settings"
    * // - Условная кнопка "Админ" с command="/admin" -> "cmd_admin"
    */
-  function collectAllCommandCallbacksFromNodes() {
+  function collectAllCommandCallbacksFromNodes(): Set<string> {
     const commandButtons = new Set<string>();
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАяМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
 
@@ -4547,11 +4547,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Логирование факта выполнения команды
    * - Создание fake_message для передачи в обработчик
    * 
-   * **Параметры:**
-   * - commandCallback: string - идентификатор callback (например, "cmd_profile")
-   * 
-   * @param commandCallback - Уникальный идентификатор callback для команды
-   * @returns {string} Имя команды без префикса "cmd_"
+   * @param commandCallback Уникальный идентификатор callback для команды
+   * @returns Имя команды без префикса "cmd_"
    * 
    * @remarks
    * Функция подготавливает инфраструктуру для выполнения команды
@@ -4567,7 +4564,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * //     fake_message = SimpleNamespace()
    * //     fake_message.from_user = callback_query.from_user
    */
-  function generateCommandCallbackHandlerWithSimulatedMessage(commandCallback: string) {
+  function generateCommandCallbackHandlerWithSimulatedMessage(commandCallback: string): string {
     const command = commandCallback.replace('cmd_', '');
     code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
     code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
