@@ -67,6 +67,15 @@ interface UserDatabasePanelProps {
 type SortField = 'lastInteraction' | 'interactionCount' | 'createdAt' | 'firstName' | 'userName';
 type SortDirection = 'asc' | 'desc';
 
+/**
+ * Компонент для отображения и управления базой данных пользователей бота.
+ *
+ * @param {number} projectId - ID проекта
+ * @param {string} projectName - Название проекта
+ * @param {Function} [onOpenDialogPanel] - Функция для открытия панели диалога с пользователем
+ * @param {Function} [onOpenUserDetailsPanel] - Функция для открытия панели с деталями пользователя
+ * @returns {JSX.Element} Компонент UserDatabasePanel
+ */
 export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, onOpenUserDetailsPanel }: UserDatabasePanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
@@ -183,7 +192,9 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     refetchOnWindowFocus: true,
   });
 
-  // Function to scroll to bottom of messages
+  /**
+ * Функция для прокрутки списка сообщений до самого низа
+ */
   const scrollToBottom = () => {
     if (messagesScrollRef.current) {
       setTimeout(() => {
@@ -209,7 +220,12 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     staleTime: 0,
   });
 
-  // Helper function to find photo URL from messages by file_id
+  /**
+ * Вспомогательная функция для поиска URL фотографии из сообщений по file_id
+ *
+ * @param {string} fileId - ID файла фотографии
+ * @returns {string | null} URL фотографии или null, если не найдена
+ */
   const getPhotoUrlFromMessages = (fileId: string): string | null => {
     if (!fileId || !userDetailsMessages.length) return null;
 
@@ -244,7 +260,11 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     return null;
   };
 
-  // Calculate real message counts from loaded messages
+  /**
+ * Вычисляет реальное количество сообщений пользователя из загруженных сообщений
+ *
+ * @returns {{userSent: number, botSent: number, total: number}} Объект с количеством сообщений
+ */
   const userMessageCounts = useMemo(() => {
     if (!userDetailsMessages.length) {
       return { userSent: 0, botSent: 0, total: 0 };
@@ -476,11 +496,20 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     return result;
   }, [users, searchResults, searchQuery, filterActive, filterPremium, filterBlocked, sortField, sortDirection]);
 
+  /**
+ * Обработчик обновления данных пользователей и статистики
+ */
   const handleRefresh = () => {
     refetchUsers();
     refetchStats();
   };
 
+  /**
+ * Обработчик переключения статуса пользователя (активен/заблокирован/премиум)
+ *
+ * @param {UserBotData} user - Объект пользователя
+ * @param {'isActive' | 'isBlocked' | 'isPremium'} field - Поле статуса для переключения
+ */
   const handleUserStatusToggle = (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => {
     const currentValue = user[field];
     const newValue = currentValue === 1 ? 0 : 1;
@@ -506,6 +535,12 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     }
   };
 
+  /**
+ * Форматирует дату для отображения
+ *
+ * @param {string | Date | null} date - Дата для форматирования
+ * @returns {string} Отформатированная строка даты
+ */
   const formatDate = (date: string | Date | null) => {
     if (!date) return 'Никогда';
     return new Date(date).toLocaleString('ru-RU', {
@@ -518,6 +553,12 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     });
   };
 
+  /**
+ * Форматирует имя пользователя для отображения
+ *
+ * @param {UserBotData} user - Объект пользователя
+ * @returns {string} Отформатированное имя пользователя
+ */
   const formatUserName = (user: UserBotData) => {
     const firstName = user.firstName;
     const lastName = user.lastName;
@@ -986,7 +1027,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                                             {(() => {
                                               const responseValue = (responseData as any)?.value;
                                               if (responseValue) {
-                                                return responseValue.length > 50 ? `${responseValue.substring(0, 50)}...` : responseValue;
+                                                return String(responseValue).length > 50 ? `${String(responseValue).substring(0, 50)}...` : String(responseValue);
                                               }
                                               if (typeof value === 'string') {
                                                 return value.length > 50 ? `${value.substring(0, 50)}...` : value;
@@ -1084,8 +1125,8 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                                                 responseData = { value: value, type: 'text' };
                                               }
                                             }
-                                            const answer = responseData?.value ?
-                                              (responseData.value.length > 30 ? `${responseData.value.substring(0, 30)}...` : String(responseData.value)) :
+                                            const answer = responseData && 'value' in responseData && responseData.value ?
+                                              (String(responseData.value).length > 30 ? `${String(responseData.value).substring(0, 30)}...` : String(responseData.value)) :
                                               (typeof value === 'string' ? (value.length > 30 ? `${value.substring(0, 30)}...` : value) : '');
                                             return (
                                               <div key={key} className="text-xs text-muted-foreground truncate">

@@ -174,7 +174,7 @@ export const botGroups = pgTable("bot_groups", {
   memberCount: integer("member_count"), // Количество участников
   isActive: integer("is_active").default(1), // 0 = неактивная, 1 = активная
   description: text("description"), // Описание группы
-  settings: jsonb("settings").default({}), // Настройки группы
+  settings: jsonb("settings").default({}), // Настройки группа
   // Расширенные поля для управления группами
   avatarUrl: text("avatar_url"), // URL аватарки группы
   chatType: text("chat_type").default("group"), // "group", "supergroup", "channel"
