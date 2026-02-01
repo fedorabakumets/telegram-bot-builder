@@ -43,11 +43,9 @@ import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateButtonResponseHandlers } from './generate/generateButtonResponseHandlers';
 import { generateReplyButtonHandlers } from './generate-reply-button-handlers';
-import { generateMultiSelectReplyHandler } from './generateMultiSelectReplyHandler';
 import { generateGroupHandlers } from './generateGroupHandlers';
-import { generateMultiSelectDoneHandler } from './generateMultiSelectDoneHandler';
-import { generateMultiSelectCallbackLogic } from './generateMultiSelectCallbackLogic';
 import { generateMediaFileFunctions } from './generateMediaFileFunctions';
+import { generateCompleteBotScriptFromNodeGraph } from './generateCompleteBotScriptFromNodeGraph';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -353,7 +351,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
   generateMultiSelectCallbackDispatcherHandle();
 
-  return generateCompleteBotScriptFromNodeGraph();
+  return generateCompleteBotScriptFromNodeGraph(code, multiSelectNodes, allNodeIds, isLoggingEnabled, nodes);
 
   /**
    * Генерирует обработчики callback'ов для inline кнопок с поддержкой условных сообщений,
@@ -876,7 +874,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${targetNode.data.continueButtonTarget}`);
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: selectionButtons.length = ${selectionButtons.length}`);
 
-                // ВСЕГДА добавляем кнопку "Готово" если есть кнопки выбора
+                // ВСЕГДА добавляем кнопку "Готово" если есть ����нопки выбора
                 if (selectionButtons.length > 0) {
                   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "Готово" (есть ${selectionButtons.length} кнопок выбора)`);
                   code += '    # Кнопка "Готово" для множественного выбора\n';
@@ -5037,30 +5035,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     });
   }
 
-  /**
-   * Генерирует полный скрипт бота из графа узлов
-   * @returns {string} Сгенерированный код бота
-   */
-  function generateCompleteBotScriptFromNodeGraph() {
-    code += '        return\n';
-    code += '    \n';
-
-    // Добавляем логику обработки мультиселекта
-    code += generateMultiSelectCallbackLogic(multiSelectNodes, allNodeIds, isLoggingEnabled);
-
-    // Добавляем обработчик завершения мультиселекта
-    code += generateMultiSelectDoneHandler(nodes || [], multiSelectNodes, allNodeIds, isLoggingEnabled);
-
-    // Закрываем if (multiSelectNodes.length > 0)
-    // Добавляем обработчик ответов на мультиселект
-    code += generateMultiSelectReplyHandler(nodes || [], allNodeIds, isLoggingEnabled);
-
-    // Добавляем точку входа для запуска приложения
-    code += 'if __name__ == "__main__":\n';
-    code += '    asyncio.run(main())\n';
-
-    return code;
-  }
 
   /**
    * Обрабатывает кнопки узлов и генерирует обработчики callback-запросов для Telegram бота.
@@ -5980,7 +5954,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    # Удаляем старое сообщение\n';
               code += '    \n';
 
-              // Отправляем запрояя пользователю
+              // От��равляем запрояя пользователю
               const formattedPrompt = formatTextForPython(inputPrompt);
               code += `    text = ${formattedPrompt}\n`;
 
