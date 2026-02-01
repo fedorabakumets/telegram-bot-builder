@@ -5,11 +5,11 @@ import { BotData, BotGroup, buttonSchema } from '@shared/schema';
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';
 import { generateSynonymHandlers } from './generate/generate-synonym-handlers';
-import { generatePhotoHandlerCode, hasPhotoInput } from './photo-handler';
-import { generateVideoHandlerCode, hasVideoInput } from './video-handler';
-import { generateAudioHandlerCode, hasAudioInput } from './audio-handler';
-import { generateDocumentHandlerCode, hasDocumentInput } from './document-handler';
-import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './conditional-button-handler';
+import { generatePhotoHandlerCode, hasPhotoInput } from './MediaHandler/photo-handler';
+import { generateVideoHandlerCode, hasVideoInput } from './MediaHandler/video-handler';
+import { generateAudioHandlerCode, hasAudioInput } from './MediaHandler/audio-handler';
+import { generateDocumentHandlerCode, hasDocumentInput } from './MediaHandler/document-handler';
+import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './Conditional/conditional-button-handler';
 import { generateHideAfterClickMiddleware } from './handlers/generateHideAfterClickHandler';
 import { generateReplyHideAfterClickHandler } from './handlers/generateReplyHideAfterClickHandler';
 import {
@@ -30,30 +30,30 @@ import { hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions
 import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
 import { processInlineButtonNodes, processConnectionTargets } from './process';
 import { collectInputTargetNodes, } from './collect';
-import { filterInlineNodes } from './filterInlineNodes';
+import { filterInlineNodes } from './process/filterInlineNodes';
 import { addInputTargetNodes } from './add';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration, generateUtilityFunctions } from './generate';
 import { generateMessageLoggingCode } from './generate/generate-message-logging';
-import { extractNodeData } from './extractNodeData';
+import { extractNodeData } from './utils/extractNodeData';
 import { generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
 import { collectConditionalMessageButtons } from './collect/collectConditionalMessageButtons';
 import { addAutoTransitionNodes } from './add/addAutoTransitionNodes';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateButtonResponseHandlers } from './generate/generateButtonResponseHandlers';
-import { generateReplyButtonHandlers } from './generate-reply-button-handlers';
-import { generateMediaFileFunctions } from './generateMediaFileFunctions';
-import { generateCompleteBotScriptFromNodeGraph } from './generateCompleteBotScriptFromNodeGraph';
-import { processNodeButtonsAndGenerateHandlers } from './processNodeButtonsAndGenerateHandlers';
-import { generateMultiSelectDataPersistenceAndCleanupCode } from './generateMultiSelectDataPersistenceAndCleanupCode';
-import { generateTransitionLogicForMultiSelectCompletion } from './generateTransitionLogicForMultiSelectCompletion';
-import { generateGroupBasedEventHandlers } from './generateGroupBasedEventHandlers';
-import { generateFallbackHandlers } from './generateFallbackHandlers';
-import { generateMainFunctionScaffoldWithSignalHandlers } from './generateMainFunctionScaffoldWithSignalHandlers';
-import { generateBotInitializationAndMiddlewareSetup } from './generateBotInitializationAndMiddlewareSetup';
-import { generateMainPollingLoopWithGracefulShutdown } from './generateMainPollingLoopWithGracefulShutdown';
-import { identifyNodesRequiringMultiSelectLogic } from './identifyNodesRequiringMultiSelectLogic';
-import { generateMultiSelectCallbackDispatcherHandle } from './generateMultiSelectCallbackDispatcherHandle';
+import { generateReplyButtonHandlers } from './generate/generate-reply-button-handlers';
+import { generateMediaFileFunctions } from './generate/generateMediaFileFunctions';
+import { generateCompleteBotScriptFromNodeGraph } from './generate/generateCompleteBotScriptFromNodeGraph';
+import { processNodeButtonsAndGenerateHandlers } from './process/processNodeButtonsAndGenerateHandlers';
+import { generateMultiSelectDataPersistenceAndCleanupCode } from './generate/generateMultiSelectDataPersistenceAndCleanupCode';
+import { generateTransitionLogicForMultiSelectCompletion } from './generate/generateTransitionLogicForMultiSelectCompletion';
+import { generateGroupBasedEventHandlers } from './generate/generateGroupBasedEventHandlers';
+import { generateFallbackHandlers } from './generate/generateFallbackHandlers';
+import { generateMainFunctionScaffoldWithSignalHandlers } from './generate/generateMainFunctionScaffoldWithSignalHandlers';
+import { generateBotInitializationAndMiddlewareSetup } from './generate/generateBotInitializationAndMiddlewareSetup';
+import { generateMainPollingLoopWithGracefulShutdown } from './generate/generateMainPollingLoopWithGracefulShutdown';
+import { identifyNodesRequiringMultiSelectLogic } from './utils/identifyNodesRequiringMultiSelectLogic';
+import { generateMultiSelectCallbackDispatcherHandle } from './generate/generateMultiSelectCallbackDispatcherHandle';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -894,7 +894,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   const callbackData = `ms_${shortNodeId}_${shortTarget}`;
                   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
                   code += `    # Кн����ка выбора ${index + 1}: ${button.text}\n`;
-                  code += `    logging.info(f"🔘 Создаем кн��пку: ${button.text} -> ${callbackData}")\n`;
+                  code += `    logging.info(f"🔘 Создаем кн����пку: ${button.text} -> ${callbackData}")\n`;
                   code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
                   code += `    builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
                 });
@@ -3308,7 +3308,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     } else if (btn.action === "url" && btn.url) {
                       code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url}"))\n`;
                     } else if (btn.action === "command" && btn.target) {
-                      // КРИТИЧяяСКОЕ ИСПРАВЛЕНИЕ: Добавляем я��ддержку кно��ок команд
+                      // КРИТИЧяяСКОЕ ИСПРАВЛЕНИЕ: Добавляем я��ддер��ку кно��ок команд
                       const commandCallback = `cmd_${btn.target.replace('/', '')}`;
                       code += `${bodyIndent}logging.info(f"Создана кнопка команды: ${btn.text} -> ${commandCallback}")\n`;
                       code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
@@ -4201,7 +4201,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
           // Добавляем кнопки если есть
           if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-            // Используем универсальную функцию для соз��ания inline клавиатуры
+            // Используем универсальную функцию дл�� соз��ан��я inline клавиатуры
             code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
             code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
           } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {

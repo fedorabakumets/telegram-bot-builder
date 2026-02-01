@@ -1,5 +1,5 @@
-import { isLoggingEnabled } from './bot-generator';
-import { collectMediaVariables } from './variable';
+import { isLoggingEnabled } from '../bot-generator';
+import { collectMediaVariables } from '../variable';
 
 /**
  * Вспомогательная функция для извлечения идентификаторов узлов и карты медиапеременных
