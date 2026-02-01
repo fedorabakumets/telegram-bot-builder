@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Node, buttonSchema } from '@shared/schema';
-import { generateUniqueShortId, generateButtonText } from './format';
+import { generateUniqueShortId, generateButtonText } from '../format';
 
 export type Button = z.infer<typeof buttonSchema>;
 

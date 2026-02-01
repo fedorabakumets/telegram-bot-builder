@@ -1,8 +1,8 @@
-import { isLoggingEnabled, Button, ResponseOption } from './bot-generator';
-import { generateConditionalMessageLogic } from './Conditional';
-import { stripHtmlTags, formatTextForPython, getParseMode, generateAttachedMediaSendCode, generateWaitingStateCode, generateButtonText, toPythonBoolean, escapeForJsonString, calculateOptimalColumns } from './format';
-import { generateInlineKeyboardCode, generateReplyKeyboardCode } from './Keyboard';
-import { generateUniversalVariableReplacement } from './utils';
+import { isLoggingEnabled, Button, ResponseOption } from '../bot-generator';
+import { generateConditionalMessageLogic } from '../Conditional';
+import { stripHtmlTags, formatTextForPython, getParseMode, generateAttachedMediaSendCode, generateWaitingStateCode, generateButtonText, toPythonBoolean, escapeForJsonString, calculateOptimalColumns } from '../format';
+import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
+import { generateUniversalVariableReplacement } from '../utils';
 
 export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], processedCallbacks: Set<string>, nodes: any[], code: string, allNodeIds: any[], connections: any[], mediaVariablesMap: Map<string, { type: string; variable: string; }>) {
   inlineNodes.forEach(node => {

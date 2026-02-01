@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { Node, buttonSchema } from '@shared/schema';
-import { formatTextForPython, toPythonBoolean, generateButtonText, calculateOptimalColumns, generateWaitingStateCode } from "./format";
-import { generateUniversalVariableReplacement } from "./utils/generateUniversalVariableReplacement";
-import { generateConditionalMessageLogic } from "./Conditional";
+import { formatTextForPython, toPythonBoolean, generateButtonText, calculateOptimalColumns, generateWaitingStateCode } from "../format";
+import { generateUniversalVariableReplacement } from "../utils/generateUniversalVariableReplacement";
+import { generateConditionalMessageLogic } from "../Conditional";
 
 export type Button = z.infer<typeof buttonSchema>;
 

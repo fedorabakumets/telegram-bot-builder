@@ -1,11 +1,26 @@
 // Main bot generator
-export * from './bot-generator';
+export {
+  globalLoggingEnabled,
+  isLoggingEnabled,
+  generatePythonCode,
+} from './bot-generator';
+export type {
+  ResponseOption,
+  CodeNodeRange,
+  CodeWithMap,
+} from './bot-generator';
+export {
+  generateRequirementsTxt,
+  generateDockerfile,
+  generateReadme,
+  generateConfigYaml
+} from './bot-generator';
 export * from './commands';
 export * from './queryClient';
 export * from './generate/generateButtonResponseHandlers';
 export * from './generate/generateMediaFileFunctions';
-export * from './extractNodeData';
-export * from './filterInlineNodes';
+export * from './utils/extractNodeData';
+export * from './process/filterInlineNodes';
 export * from './add/addAutoTransitionNodes';
 export * from './generate/generate-synonym-handlers';
 export * from './bot-commands-setup';
@@ -68,4 +83,31 @@ export * from './utils';
 // Validation utilities
 // NOTE: Already exported via commands.ts to prevent conflicts
 // export * from './validate';
+
+// Multi-select and node processing utilities
+export * from './process/newprocessNodeButtonsAndGenerateHandlers';
+export * from './process/processNodeButtonsAndGenerateHandlers';
+export * from './generate/generateGroupBasedEventHandlers';
+export * from './generate/generateFallbackHandlers';
+export * from './generate/generateMainFunctionScaffoldWithSignalHandlers';
+export * from './generate/generateBotInitializationAndMiddlewareSetup';
+export * from './generate/generateMainPollingLoopWithGracefulShutdown';
+export * from './utils/identifyNodesRequiringMultiSelectLogic';
+export * from './generate/generateMultiSelectDataPersistenceAndCleanupCode';
+export * from './generate/generateTransitionLogicForMultiSelectCompletion';
+export * from './generate/generateMultiSelectCallbackDispatcherHandle';
+
+// Additional handlers
+export * from './MediaHandler/audio-handler';
+export * from './Conditional/conditional-button-handler';
+export * from './MediaHandler/document-handler';
+export * from './MediaHandler/photo-handler';
+export * from './MediaHandler/video-handler';
+
+// Additional code generation utilities
+export * from './generate/generateCompleteBotScriptFromNodeGraph';
+export * from './generate/generateGroupHandlers';
+export * from './generate/generateMultiSelectCallbackLogic';
+export * from './generate/generateMultiSelectDoneHandler';
+export * from './generate/generateMultiSelectReplyHandler';
 
