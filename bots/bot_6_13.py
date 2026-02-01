@@ -1490,6 +1490,7 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная gender уже сохранена
             if "gender" not in user_data[user_id] or not user_data[user_id]["gender"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -1539,6 +1540,7 @@ async def handle_callback_f90r9k3FSLu2Tjn74cBn_(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная sex уже сохранена
             if "sex" not in user_data[user_id] or not user_data[user_id]["sex"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -2398,6 +2400,7 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная gender уже сохранена
             if "gender" not in user_data[user_id] or not user_data[user_id]["gender"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -2447,6 +2450,7 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная sex уже сохранена
             if "sex" not in user_data[user_id] or not user_data[user_id]["sex"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -3317,6 +3321,7 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная gender уже сохранена
             if "gender" not in user_data[user_id] or not user_data[user_id]["gender"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -3366,6 +3371,7 @@ async def handle_callback_KE_8sR9elPEefApjXtBxC(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная sex уже сохранена
             if "sex" not in user_data[user_id] or not user_data[user_id]["sex"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -3751,6 +3757,7 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная gender уже сохранена
             if "gender" not in user_data[user_id] or not user_data[user_id]["gender"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -3800,6 +3807,7 @@ async def handle_callback_RFTgm4KzC6dI39AMTPcmo(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная sex уже сохранена
             if "sex" not in user_data[user_id] or not user_data[user_id]["sex"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -4491,6 +4499,7 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная gender уже сохранена
             if "gender" not in user_data[user_id] or not user_data[user_id]["gender"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -4540,6 +4549,7 @@ async def handle_callback_yrsc8v81qQa5oQx538Dzn(callback_query: types.CallbackQu
             # Проверяем, не была ли переменная sex уже сохранена
             if "sex" not in user_data[user_id] or not user_data[user_id]["sex"]:
                 # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода
+                # Тип ввода: text
                             user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
                             user_data[callback_query.from_user.id]["waiting_for_input"] = {
                                 "type": "button",
@@ -7420,7 +7430,7 @@ async def handle_user_input(message: types.Message):
             if skip_btn.get("text") == user_text:
                 skip_target = skip_btn.get("target")
                 logging.info(f"⏭️ Нажата кнопка skipDataCollection для медиа-узла: {user_text} -> {skip_target}")
-                # Очищаем pending_skip_buttons и любые медиа-ожидания
+                # Очищаем pending_skip_buttons и любые медиа-ож��дания
                 if "pending_skip_buttons" in user_data[user_id]:
                     del user_data[user_id]["pending_skip_buttons"]
                 # Проверяем и очищаем waiting_for_input если тип соответствует медиа

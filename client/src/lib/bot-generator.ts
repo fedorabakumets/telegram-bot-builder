@@ -4,31 +4,7 @@ import { BotData, Node, BotGroup, buttonSchema } from '@shared/schema';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';
-import { generateSynonymHandler, generateMessageSynonymHandler } from './Synonyms';
 import { generateSynonymHandlers } from './generate/generate-synonym-handlers';
-import {
-  generateBanUserHandler,
-  generateUnbanUserHandler,
-  generateMuteUserHandler,
-  generateUnmuteUserHandler,
-  generateKickUserHandler,
-  generatePromoteUserHandler,
-  generateAdminRightsHandler,
-  generateDemoteUserHandler,
-  generateUserManagementSynonymHandler
-} from './UserHandler';
-import {
-  generateUnpinMessageHandler,
-  generateDeleteMessageHandler,
-  generatePinMessageHandler
-} from './MessageHandler';
-import {
-  generateStickerHandler,
-  generateVoiceHandler,
-  generateAnimationHandler,
-  generateLocationHandler,
-  generateContactHandler
-} from './MediaHandler';
 import { generatePhotoHandlerCode, hasPhotoInput } from './photo-handler';
 import { generateVideoHandlerCode, hasVideoInput } from './video-handler';
 import { generateAudioHandlerCode, hasAudioInput } from './audio-handler';
@@ -36,10 +12,6 @@ import { generateDocumentHandlerCode, hasDocumentInput } from './document-handle
 import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './conditional-button-handler';
 import { generateHideAfterClickMiddleware } from './handlers/generateHideAfterClickHandler';
 import { generateReplyHideAfterClickHandler } from './handlers/generateReplyHideAfterClickHandler';
-import {
-  generateCommandHandler,
-  generateStartHandler
-} from './CommandHandler';
 import {
   toPythonBoolean,
   generateWaitingStateCode,
@@ -55,7 +27,7 @@ import {
 } from './format';
 import { generateConditionalMessageLogic } from './Conditional';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from './Keyboard';
-import { hasConditionalButtons, hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions, hasMultiSelectNodes } from './has';
+import { hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions } from './has';
 import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
 import { processInlineButtonNodes, processConnectionTargets } from './process';
 import { collectInputTargetNodes, } from './collect';
@@ -341,7 +313,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     // Основные обработчики обратного вызова ниже будут правильно обрабатывать все взаимодействия с кнопками
 
     // Затем обрабатываем узла inline кнопок - создаем обработчики для каждого уникального идентификатора кнопки
-    newFunction(processedCallbacks);
+    processNodeButtonsAndGenerateHandlers(processedCallbacks);
 
     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Убедиться, что interests_result получает обработчик, НО избегать дубликатов
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР CRITICAL FIX: Проверяем interests_result обработяик');
@@ -839,7 +811,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const totalButtons = selectionButtons.length + (targetNode.data.continueButtonTarget ? 1 : 0) + regularButtons.length;
               // Для множественного выбора всегда используем nodeData с включенным флагом
               const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
-              const columns = calculateOptimalColumns(selectionButtons, multiSelectNodeData);
+              // Создаем массив с нужным количеством элементов для расчета колонок
+              const allButtonsForCalculation = Array(totalButtons).fill({});
+              const columns = calculateOptimalColumns(allButtonsForCalculation, multiSelectNodeData);
               code += `    builder.adjust(${columns})\n`;
               code += '    keyboard = builder.as_markup()\n';
             }
@@ -1408,7 +1382,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         const inputType = navTargetNode.data.inputType || 'text';
                         // ИСПРАВЛЕНИЕ: Берем inputVariable именно из целевого узла, а не из родительского
                         const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
-                        const inputTargetNodeId = navTargetNode.data.inputTargetNodeId;
 
                         code += '            # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n';
                         code += '            user_id = callback_query.from_user.id\n';
@@ -1417,6 +1390,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         code += `            # Проверяем, не была ли переменная ${inputVariable} уже сохранена\n`;
                         code += `            if "${inputVariable}" not in user_data[user_id] or not user_data[user_id]["${inputVariable}"]:\n`;
                         code += '                # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода\n';
+                        code += `                # Тип ввода: ${inputType}\n`;
                         // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode с правильным контекстом callback_query
                         code += generateWaitingStateCode(navTargetNode, '                ', 'callback_query.from_user.id').split('\n').map(line => line ? '            ' + line : '').join('\n');
                         code += '            else:\n';
@@ -1680,7 +1654,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     }
                   } else {
                     // Обычный узел без условных сообщений
-                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
+                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, им��ет ли узел множественный выбор
                     if (navTargetNode.data.allowMultipleSelection === true) {
                       // Для узлов с множественным выбором создаем прямую навигацию
                       const messageText = navTargetNode.data.messageText || 'Сообщение';
@@ -2509,7 +2483,7 @@ if (userInputNodes.length > 0) {
     code += '            if skip_btn.get("text") == user_text:\n';
     code += '                skip_target = skip_btn.get("target")\n';
     code += '                logging.info(f"⏭️ Нажата кнопка skipDataCollection для медиа-узла: {user_text} -> {skip_target}")\n';
-    code += '                # Очищаем pending_skip_buttons и любые медиа-ожидания\n';
+    code += '                # Очищаем pending_skip_buttons и любые медиа-ож��дания\n';
     code += '                if "pending_skip_buttons" in user_data[user_id]:\n';
     code += '                    del user_data[user_id]["pending_skip_buttons"]\n';
     code += '                # Проверяем и очищаем waiting_for_input если тип соответствует медиа\n';
@@ -3341,6 +3315,74 @@ if (userInputNodes.length > 0) {
       }
     });
 
+    generateAdHocInputCollectionHandler();
+
+    // Добавляем навигацию к целевому узлу
+    const navigationCode = generateContinuationLogicForButtonBasedInput();
+  // Генерируем обработчики для медиа-файлов
+  if (hasPhotoInput(nodes || [])) {
+    let photoCode = generatePhotoHandlerCode();
+    photoCode = photoCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+    code += photoCode;
+  }
+  if (hasVideoInput(nodes || [])) {
+    let videoCode = generateVideoHandlerCode();
+    videoCode = videoCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+    code += videoCode;
+  }
+  if (hasAudioInput(nodes || [])) {
+    let audioCode = generateAudioHandlerCode();
+    audioCode = audioCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+    code += audioCode;
+  }
+  if (hasDocumentInput(nodes || [])) {
+    let docCode = generateDocumentHandlerCode();
+    docCode = docCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+    code += docCode;
+  }
+
+
+    generateUserInputValidationAndContinuationLogic();
+
+    // Генерируем логику навигации для каждого типа узла
+    generateStateTransitionAndRenderLogic();
+  }
+
+  // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
+  if (hasConditionalValueButtons(nodes)) {
+    code += generateConditionalButtonHandlerCode();
+  }
+
+  // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логирояяяяяяяанием
+  const commandButtons = collectAllCommandCallbacksFromNodes();
+
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log('📝 Список найденных кнопок команд:', Array.from(commandButtons));
+
+  addCommandCallbackHandlers();
+
+  // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком тттекста
+  generateGroupBasedEventHandlers();
+
+  // Добавляем универсальный fallback-обработчик для всех текстовых сообщений
+  // Этот обработчик ОБЯЗАТЕЛЬНО нужен, чтобы middleware сохранял ВСЕ сообщения
+  // Middleware вызывается только для зарегистрированных обработчиков!
+  // ВАЖНО: Добавляем только если база данных включена
+  generateFallbackHandlers();
+
+  generateMainFunctionScaffoldWithSignalHandlers();
+  generateBotInitializationAndMiddlewareSetup();
+  generateMainPollingLoopWithGracefulShutdown();
+
+  // Найдем узла с множественным выбором для использования в обработчиках
+  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic();
+
+  // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
+  generateMultiSelectCallbackDispatcherHandle();
+
+  return generateCompleteBotScriptFromNodeGraph();
+
+  function generateAdHocInputCollectionHandler() {
     code += '        \n';
     code += '        # Если узел не найден\n';
     code += '        logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")\n';
@@ -3383,8 +3425,9 @@ if (userInputNodes.length > 0) {
     code += '                del user_data[user_id]["input_target_node_id"]\n';
     code += '            \n';
     code += '            # Находим и вызываем обработчик целевого узла\n';
+  }
 
-    // Добавляем навигацию к целевому узлу
+  function generateContinuationLogicForButtonBasedInput() {
     nodes.forEach((targetNode) => {
       code += `            if input_target_node_id == "${targetNode.id}":\n`;
       if (targetNode.type === 'message') {
@@ -3471,30 +3514,11 @@ if (userInputNodes.length > 0) {
     code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
     code += '    return\n';
 
-  const navigationCode = generateNodeNavigation(nodes || [], '            ', 'next_node_id', 'message', 'user_vars');
-  // Генерируем обработчики для медиа-файлов
-  if (hasPhotoInput(nodes || [])) {
-    let photoCode = generatePhotoHandlerCode();
-    photoCode = photoCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
-    code += photoCode;
-  }
-  if (hasVideoInput(nodes || [])) {
-    let videoCode = generateVideoHandlerCode();
-    videoCode = videoCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
-    code += videoCode;
-  }
-  if (hasAudioInput(nodes || [])) {
-    let audioCode = generateAudioHandlerCode();
-    audioCode = audioCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
-    code += audioCode;
-  }
-  if (hasDocumentInput(nodes || [])) {
-    let docCode = generateDocumentHandlerCode();
-    docCode = docCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
-    code += docCode;
+    const navigationCode = generateNodeNavigation(nodes || [], '            ', 'next_node_id', 'message', 'user_vars');
+    return navigationCode;
   }
 
-
+  function generateUserInputValidationAndContinuationLogic() {
     code += '    # Валидация длины тттекста\n';
     code += '    min_length = input_config.get("min_length", 0)\n';
     code += '    max_length = input_config.get("max_length", 0)\n';
@@ -3579,8 +3603,9 @@ if (userInputNodes.length > 0) {
     code += '            fake_message.delete = lambda: None\n';
     code += '            \n';
     code += '            # Находим узел по ID и выполняем соответствующее действие\n';
+  }
 
-    // Генерируем логику навигации для каждого типа узла
+  function generateStateTransitionAndRenderLogic() {
     if (nodes.length > 0) {
       nodes.forEach((targetNode, index) => {
         const condition = index === 0 ? 'if' : 'elif';
@@ -3883,119 +3908,130 @@ if (userInputNodes.length > 0) {
     code += '\n';
   }
 
-  // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
-  if (hasConditionalValueButtons(nodes)) {
-    code += generateConditionalButtonHandlerCode();
-  }
+  function collectAllCommandCallbacksFromNodes() {
+    const commandButtons = new Set<string>();
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАяМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
 
-  // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логирояяяяяяяанием
-  const commandButtons = new Set<string>();
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАяМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
+    nodes.forEach(node => {
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
 
-  nodes.forEach(node => {
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
-
-    // Обычяые кнопки узла
-    if (node.data.buttons) {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
-      node.data.buttons.forEach((button: Button, index: number) => {
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
-        if (button.action === 'command' && button.target) {
-          const commandCallback = `cmd_${button.target.replace('/', '')}`;
-          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
-          commandButtons.add(commandCallback);
-        }
-      });
-    } else {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`❌ Узел ${node.id} не имеет кнопок`);
-    }
-
-    // Кнопки в условных сообщениях
-    if (node.data.conditionalMessages) {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
-      node.data.conditionalMessages.forEach((condition: any) => {
-        if (condition.buttons) {
-          condition.buttons.forEach((button: Button) => {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
-            if (button.action === 'command' && button.target) {
-              const commandCallback = `cmd_${button.target.replace('/', '')}`;
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды в условном сообщении: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
-              commandButtons.add(commandCallback);
-            }
-          });
-        }
-      });
-    }
-  });
-
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log('📝 Список найденных кнопок команд:', Array.from(commandButtons));
-
-  if (commandButtons.size > 0) {
-    code += '\n# Обработчики для кнопок команд\n';
-    code += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
-
-    commandButtons.forEach(commandCallback => {
-      const command = commandCallback.replace('cmd_', '');
-      code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
-      code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
-      code += '    await callback_query.answer()\n';
-      code += `    logging.info(f"Обработка кнопки команды: ${commandCallback} -> /${command} (пользователь {callback_query.from_user.id})")\n`;
-      code += `    # Симулияуем выполнение команды /${command}\n`;
-      code += '    \n';
-      code += '    # Создаем fake message object для команды\n';
-      code += '    from types import SimpleNamespace\n';
-      code += '    fake_message = SimpleNamespace()\n';
-      code += '    fake_message.from_user = callback_query.from_user\n';
-      code += '    fake_message.chat = callback_query.message.chat\n';
-      code += '    fake_message.date = callback_query.message.date\n';
-      code += '    fake_message.answer = callback_query.message.answer\n';
-      code += '    fake_message.edit_text = callback_query.message.edit_text\n';
-      code += '    \n';
-
-      // Найти соответствующий обработчик команды
-      const commandNode = nodes.find(n => n.data.command === `/${command}` || n.data.command === command);
-      if (commandNode) {
-        if (commandNode.type === 'start') {
-          code += '    # Вызываем start handler через edit_text\n';
-          code += '    # Создаем специальный объект для редактирования сообщения\n';
-          code += '    class FakeMessageEdit:\n';
-          code += '        def __init__(self, callback_query):\n';
-          code += '            self.from_user = callback_query.from_user\n';
-          code += '            self.chat = callback_query.message.chat\n';
-          code += '            self.date = callback_query.message.date\n';
-          code += '            self.message_id = callback_query.message.message_id\n';
-          code += '            self._callback_query = callback_query\n';
-          code += '        \n';
-          code += '        async def answer(self, text, parse_mode=None, reply_markup=None):\n';
-          code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
-          code += '        \n';
-          code += '        async def edit_text(self, text, parse_mode=None, reply_markup=None):\n';
-          code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
-          code += '    \n';
-          code += '    fake_edit_message = FakeMessageEdit(callback_query)\n';
-          code += '    await start_handler(fake_edit_message)\n';
-        } else if (commandNode.type === 'command') {
-          code += `    # Вызываем ${command} handler\n`;
-          code += `    await ${command}_handler(fake_message)\n`;
-        }
+      // Обычяые кнопки узла
+      if (node.data.buttons) {
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
+        node.data.buttons.forEach((button: Button, index: number) => {
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
+          if (button.action === 'command' && button.target) {
+            const commandCallback = `cmd_${button.target.replace('/', '')}`;
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
+            commandButtons.add(commandCallback);
+          }
+        });
       } else {
-        code += `    await callback_query.message.edit_text("Команда /${command} выполнена")\n`;
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`❌ Узел ${node.id} не имеет кнопок`);
       }
-      code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
+
+      // Кнопки в условных сообщениях
+      if (node.data.conditionalMessages) {
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
+        node.data.conditionalMessages.forEach((condition: any) => {
+          if (condition.buttons) {
+            condition.buttons.forEach((button: Button) => {
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
+              if (button.action === 'command' && button.target) {
+                const commandCallback = `cmd_${button.target.replace('/', '')}`;
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды в условном сообщении: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
+                commandButtons.add(commandCallback);
+              }
+            });
+          }
+        });
+      }
     });
+    return commandButtons;
   }
 
-  // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком тттекста
-  code += '\n';
+  function addCommandCallbackHandlers() {
+    if (commandButtons.size > 0) {
+      code += '\n# Обработчики для кнопок команд\n';
+      code += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
 
-  code += generateGroupHandlers(groups);
+      commandButtons.forEach(commandCallback => {
+        const command = generateCommandCallbackHandlerWithSimulatedMessage(commandCallback);
 
-  // Добавляем универсальный fallback-обработчик для всех текстовых сообщений
-  // Этот обработчик ОБЯЗАТЕЛЬНО нужен, чтобы middleware сохранял ВСЕ сообщения
-  // Middleware вызывается только для зарегистрированных обработчиков!
-  // ВАЖНО: Добавляем только если база данных включена
-  if (userDatabaseEnabled) {
+        // Найти соответствующий обработчик команды
+        generateCommandTriggerFromCallbackWithWrapper(command);
+      });
+    }
+  }
+
+  function generateCommandCallbackHandlerWithSimulatedMessage(commandCallback: string) {
+    const command = commandCallback.replace('cmd_', '');
+    code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
+    code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
+    code += '    await callback_query.answer()\n';
+    code += `    logging.info(f"Обработка кнопки команды: ${commandCallback} -> /${command} (пользователь {callback_query.from_user.id})")\n`;
+    code += `    # Симулияуем выполнение команды /${command}\n`;
+    code += '    \n';
+    code += '    # Создаем fake message object для команды\n';
+    code += '    from types import SimpleNamespace\n';
+    code += '    fake_message = SimpleNamespace()\n';
+    code += '    fake_message.from_user = callback_query.from_user\n';
+    code += '    fake_message.chat = callback_query.message.chat\n';
+    code += '    fake_message.date = callback_query.message.date\n';
+    code += '    fake_message.answer = callback_query.message.answer\n';
+    code += '    fake_message.edit_text = callback_query.message.edit_text\n';
+    code += '    \n';
+    return command;
+  }
+
+  function generateCommandTriggerFromCallbackWithWrapper(command: string) {
+    const commandNode = nodes.find(n => n.data.command === `/${command}` || n.data.command === command);
+    if (commandNode) {
+      if (commandNode.type === 'start') {
+        code += '    # Вызываем start handler через edit_text\n';
+        code += '    # Создаем специальный объект для редактирования сообщения\n';
+        code += '    class FakeMessageEdit:\n';
+        code += '        def __init__(self, callback_query):\n';
+        code += '            self.from_user = callback_query.from_user\n';
+        code += '            self.chat = callback_query.message.chat\n';
+        code += '            self.date = callback_query.message.date\n';
+        code += '            self.message_id = callback_query.message.message_id\n';
+        code += '            self._callback_query = callback_query\n';
+        code += '        \n';
+        code += '        async def answer(self, text, parse_mode=None, reply_markup=None):\n';
+        code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
+        code += '        \n';
+        code += '        async def edit_text(self, text, parse_mode=None, reply_markup=None):\n';
+        code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
+        code += '    \n';
+        code += '    fake_edit_message = FakeMessageEdit(callback_query)\n';
+        code += '    await start_handler(fake_edit_message)\n';
+      } else if (commandNode.type === 'command') {
+        code += `    # Вызываем ${command} handler\n`;
+        code += `    await ${command}_handler(fake_message)\n`;
+      }
+    } else {
+      code += `    await callback_query.message.edit_text("Команда /${command} выполнена")\n`;
+    }
+    code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
+  }
+
+  function generateGroupBasedEventHandlers() {
+    code += '\n';
+
+    code += generateGroupHandlers(groups);
+  }
+
+  function generateFallbackHandlers() {
+    if (userDatabaseEnabled) {
+      generateFallbackTextMessageHandler();
+
+      // Добавляем универсальный обработчик для фотографий
+      generateFallbackPhotoMessageHandler();
+    }
+  }
+
+  function generateFallbackTextMessageHandler() {
     code += '\n# Универсальный fallback-обработчик для всех необработанных текстовых сообщений\n';
     code += '@dp.message(F.text)\n';
     code += 'async def fallback_text_handler(message: types.Message):\n';
@@ -4007,8 +4043,9 @@ if (userInputNodes.length > 0) {
     code += '    logging.info(f"💬 Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")\n';
     code += '    # Можно отправить ответ пользователю (опционально)\n';
     code += '    # await message.answer("Извините, я не понимаю эту команду. Используйте /start для начала.")\n\n';
+  }
 
-    // Добавляем универсальный обработчик для фотографий
+  function generateFallbackPhotoMessageHandler() {
     code += '\n# Универсальный обработчик для необработанных фото\n';
     code += '@dp.message(F.photo)\n';
     code += 'async def handle_unhandled_photo(message: types.Message):\n';
@@ -4021,103 +4058,120 @@ if (userInputNodes.length > 0) {
     code += '\n';
   }
 
-  code += '\n\n# Запуск бота\n';
-  code += 'async def main():\n';
-  if (userDatabaseEnabled) {
-    code += '    global db_pool\n';
+  function generateMainFunctionScaffoldWithSignalHandlers() {
+    code += '\n\n# Запуск бота\n';
+    code += 'async def main():\n';
+    if (userDatabaseEnabled) {
+      code += '    global db_pool\n';
+    }
+    code += '    \n';
+    code += '    # Обработчик сигналов для корректного завершения\n';
+    code += '    def signal_handler(signum, frame):\n';
+    code += '        print(f"🛑 Получен сигнал {signum}, начинаем корректное завершение...")\n';
+    code += '        raise KeyboardInterrupt()\n';
+    code += '    \n';
+    code += '    # Регистрируем обработчики сигналов\n';
+    code += '    signal.signal(signal.SIGTERM, signal_handler)\n';
+    code += '    signal.signal(signal.SIGINT, signal_handler)\n';
+    code += '    \n';
+    code += '    try:\n';
   }
-  code += '    \n';
-  code += '    # Обработчик сигналов для корректного завершения\n';
-  code += '    def signal_handler(signum, frame):\n';
-  code += '        print(f"🛑 Получен сигнал {signum}, начинаем корректное завершение...")\n';
-  code += '        raise KeyboardInterrupt()\n';
-  code += '    \n';
-  code += '    # Регистрируем обработчики сигналов\n';
-  code += '    signal.signal(signal.SIGTERM, signal_handler)\n';
-  code += '    signal.signal(signal.SIGINT, signal_handler)\n';
-  code += '    \n';
-  code += '    try:\n';
-  if (userDatabaseEnabled) {
-    code += '        # Инициализируем базу данных\n';
-    code += '        await init_database()\n';
-  }
-  if (menuCommands.length > 0) {
-    code += '        await set_bot_commands()\n';
-  }
-  code += '        \n';
-  if (userDatabaseEnabled) {
-    code += '        # Регистрация middleware для сохранения сообщений\n';
-    code += '        dp.message.middleware(message_logging_middleware)\n';
-    // Регистрируем callback_query middleware только если в боте есть inline кнопки
-    if (hasInlineButtons(nodes || [])) {
-      code += '        dp.callback_query.middleware(callback_query_logging_middleware)\n';
+
+  function generateBotInitializationAndMiddlewareSetup() {
+    if (userDatabaseEnabled) {
+      code += '        # Инициализируем базу данных\n';
+      code += '        await init_database()\n';
+    }
+    if (menuCommands.length > 0) {
+      code += '        await set_bot_commands()\n';
     }
     code += '        \n';
+    if (userDatabaseEnabled) {
+      code += '        # Регистрация middleware для сохранения сообщений\n';
+      code += '        dp.message.middleware(message_logging_middleware)\n';
+      // Регистрируем callback_query middleware только если в боте есть inline кнопки
+      if (hasInlineButtons(nodes || [])) {
+        code += '        dp.callback_query.middleware(callback_query_logging_middleware)\n';
+      }
+      code += '        \n';
+    }
   }
-  code += '        print("🤖 Бот запущен и готов к работе!")\n';
-  code += '        await dp.start_polling(bot)\n';
-  code += '    except KeyboardInterrupt:\n';
-  code += '        print("🛑 Получен сигнал остановки, завершаем работу...")\n';
-  code += '    except SystemExit:\n';
-  code += '        print("🛑 Системное завершение, завершаем работу...")\n';
-  code += '    except Exception as e:\n';
-  code += '        logging.error(f"Критическая ошибка: {e}")\n';
-  code += '    finally:\n';
-  code += '        # Правильно закрываем все соединения\n';
-  if (userDatabaseEnabled) {
-    code += '        if db_pool:\n';
-    code += '            await db_pool.close()\n';
-    code += '            print("🔌 Соединение с базой данных закрыто")\n';
-  }
-  code += '        \n';
-  code += '        # Закрываем сессию бота\n';
-  code += '        await bot.session.close()\n';
-  code += '        print("🔌 Сессия бота закрыта")\n';
-  code += '        print("✅ Бот корректно завершил работу")\n\n';
 
-  // Найдем узла с множественным выбором для использования в обработчиках
-  const multiSelectNodes = (nodes || []).filter((node: Node) =>
-    node.data.allowMultipleSelection
-  );
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
-
-  // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
-  if (multiSelectNodes.length > 0) {
-    code += '\n# Обработчики для множественного выбора\n';
-
-    // Обработчик для inline кнопок множественного выбора
-    code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
-    code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
-    code += '    await callback_query.answer()\n';
-    code += '    user_id = callback_query.from_user.id\n';
-    code += '    # Инициализируем базовые переменные пользователя\n';
-    code += '    user_name = init_user_variables(user_id, callback_query.from_user)\n';
-    code += '    \n';
-    code += '    callback_data = callback_query.data\n';
-    code += '    \n';
-    code += '    # Обработка кнопки "Готово"\n';
-    code += '    if callback_data.startswith("done_"):\n';
-    code += '        # Завершение множественного выбора (новый формат)\n';
-    code += '        logging.info(f"🏁 Обработка кнопки Готово: {callback_data}")\n';
-    code += '        short_node_id = callback_data.replace("done_", "")\n';
-    code += '        # Находим полный node_id по короткому суффиксу\n';
-    code += '        node_id = None\n';
-    multiSelectNodes.forEach((node: Node) => {
-      const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
-      code += `        if short_node_id == "${shortNodeId}":\n`;
-      code += `            node_id = "${node.id}"\n`;
-      code += `            logging.info(f"✅ Найден узел: ${node.id}")\n`;
-    });
-    code += '    elif callback_data.startswith("multi_select_done_"):\n';
-    code += '        # Завершение множественного выбора (старый формат)\n';
-    code += '        node_id = callback_data.replace("multi_select_done_", "")\n';
-    code += '        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n';
+  function generateMainPollingLoopWithGracefulShutdown() {
+    code += '        print("🤖 Бот запущен и готов к работе!")\n';
+    code += '        await dp.start_polling(bot)\n';
+    code += '    except KeyboardInterrupt:\n';
+    code += '        print("🛑 Получен сигнал остановки, завершаем работу...")\n';
+    code += '    except SystemExit:\n';
+    code += '        print("🛑 Системное завершение, завершаем работу...")\n';
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Критическая ошибка: {e}")\n';
+    code += '    finally:\n';
+    code += '        # Правильно закрываем все соединения\n';
+    if (userDatabaseEnabled) {
+      code += '        if db_pool:\n';
+      code += '            await db_pool.close()\n';
+      code += '            print("🔌 Соединение с базой данных закрыто")\n';
+    }
     code += '        \n';
-    code += '        # Сохраняем выбранные опции в базу данных\n';
-    code += '        if selected_options:\n';
-    code += '            selected_text = ", ".join(selected_options)\n';
+    code += '        # Закрываем сессию бота\n';
+    code += '        await bot.session.close()\n';
+    code += '        print("🔌 Сессия бота закрыта")\n';
+    code += '        print("✅ Бот корректно завершил работу")\n\n';
+  }
 
-    // Генерируем сохранение для каждого узла с его переменной
+  function identifyNodesRequiringMultiSelectLogic() {
+    const multiSelectNodes = (nodes || []).filter((node: Node) => node.data.allowMultipleSelection
+    );
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
+    return multiSelectNodes;
+  }
+
+  function generateMultiSelectCallbackDispatcherHandle() {
+    if (multiSelectNodes.length > 0) {
+      code += '\n# Обработчики для множественного выбора\n';
+
+      // Обработчик для inline кнопок множественного выбора
+      code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
+      code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
+      code += '    await callback_query.answer()\n';
+      code += '    user_id = callback_query.from_user.id\n';
+      code += '    # Инициализируем базовые переменные пользователя\n';
+      code += '    user_name = init_user_variables(user_id, callback_query.from_user)\n';
+      code += '    \n';
+      code += '    callback_data = callback_query.data\n';
+      code += '    \n';
+      code += '    # Обработка кнопки "Готово"\n';
+      code += '    if callback_data.startswith("done_"):\n';
+      code += '        # Завершение множественного выбора (новый формат)\n';
+      code += '        logging.info(f"🏁 Обработка кнопки Готово: {callback_data}")\n';
+      code += '        short_node_id = callback_data.replace("done_", "")\n';
+      code += '        # Находим полный node_id по короткому суффиксу\n';
+      code += '        node_id = None\n';
+      multiSelectNodes.forEach((node: Node) => {
+        const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
+        code += `        if short_node_id == "${shortNodeId}":\n`;
+        code += `            node_id = "${node.id}"\n`;
+        code += `            logging.info(f"✅ Найден узел: ${node.id}")\n`;
+      });
+      code += '    elif callback_data.startswith("multi_select_done_"):\n';
+      code += '        # Завершение множественного выбора (старый формат)\n';
+      code += '        node_id = callback_data.replace("multi_select_done_", "")\n';
+      code += '        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n';
+      code += '        \n';
+      code += '        # Сохраняем выбранные опции в базу данных\n';
+      code += '        if selected_options:\n';
+      code += '            selected_text = ", ".join(selected_options)\n';
+
+      // Генерируем сохранение для каждого узла с его переменной
+      generateMultiSelectDataPersistenceAndCleanupCode();
+
+      // Добавим переходы для узлов с множественным выбором
+      generateTransitionLogicForMultiSelectCompletion();
+    }
+  }
+
+  function generateMultiSelectDataPersistenceAndCleanupCode() {
     multiSelectNodes.forEach((node: Node) => {
       const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
       code += `            if node_id == "${node.id}":\n`;
@@ -4134,8 +4188,9 @@ if (userInputNodes.length > 0) {
     code += '            user_data[user_id].pop("multi_select_node", None)\n';
     code += '        \n';
     code += '        # Переходим к следующему узлу, если указан\n';
+  }
 
-    // Добавим переходы для узлов с множественным выбором
+  function generateTransitionLogicForMultiSelectCompletion() {
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
     code += '        # Определяем следующий узел для каждого node_id\n';
     multiSelectNodes.forEach((node: Node) => {
@@ -4254,24 +4309,25 @@ if (userInputNodes.length > 0) {
     });
   }
 
-  code += '        return\n';
-  code += '    \n';
+  function generateCompleteBotScriptFromNodeGraph() {
+    code += '        return\n';
+    code += '    \n';
 
     code += generateMultiSelectCallbackLogic(multiSelectNodes, allNodeIds, isLoggingEnabled);
 
-  
-  code += generateMultiSelectDoneHandler(nodes || [], multiSelectNodes, allNodeIds, isLoggingEnabled);
-  // Закрываем if (multiSelectNodes.length > 0)
 
-  code += generateMultiSelectReplyHandler(nodes || [], allNodeIds, isLoggingEnabled);
+    code += generateMultiSelectDoneHandler(nodes || [], multiSelectNodes, allNodeIds, isLoggingEnabled);
+    // Закрываем if (multiSelectNodes.length > 0)
+    code += generateMultiSelectReplyHandler(nodes || [], allNodeIds, isLoggingEnabled);
 
 
-  code += 'if __name__ == "__main__":\n';
-  code += '    asyncio.run(main())\n';
+    code += 'if __name__ == "__main__":\n';
+    code += '    asyncio.run(main())\n';
 
-  return code;
+    return code;
+  }
 
-  function newFunction(processedCallbacks: Set<string>) {
+  function processNodeButtonsAndGenerateHandlers(processedCallbacks: Set<string>) {
     inlineNodes.forEach(node => {
       node.data.buttons.forEach((button: { action: string; id: any; target: string; text: any; skipDataCollection: boolean; }) => {
         if (button.action === 'goto' && button.id) {
@@ -4746,7 +4802,6 @@ if (userInputNodes.length > 0) {
                   inputType = targetNode.data.inputType || 'text';
                 }
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                const inputTargetNodeId = targetNode.data.inputTargetNodeId;
 
                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть inline кнопки И НЕТ текстового/медиа ввода, НЕ настраиваем ожидание ввода
                 // Для reply кнопояя ВСЕГДА настраиваем ожидание ввода если enableTextInput === true
@@ -5095,7 +5150,7 @@ if (userInputNodes.length > 0) {
               code += '    # Удаляем старое сообщение\n';
               code += '    \n';
 
-              // Отправляем запрос пользователю
+              // Отправляем запро�� пользователю
               const formattedPrompt = formatTextForPython(inputPrompt);
               code += `    text = ${formattedPrompt}\n`;
 
