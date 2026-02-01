@@ -9,6 +9,8 @@
           "data": {
             "buttons": [],
             "command": "/start",
+            "imageUrl": "/uploads/7/2026-02-01/1769975082845-400007702-photo_2026-02-01_16-20-53.jpg",
+            "markdown": false,
             "adminOnly": false,
             "showInMenu": true,
             "description": "Запустить бота",
@@ -16,16 +18,19 @@
             "keyboardType": "none",
             "requiresAuth": false,
             "isPrivateOnly": false,
-            "imageUrl": "/uploads/7/2026-02-01/1769975082845-400007702-photo_2026-02-01_16-20-53.jpg"
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
           },
           "type": "start",
           "position": {
-            "x": 400,
-            "y": 300
+            "x": 140,
+            "y": 160
           }
         }
       ],
-      "connections": [],
+      "createdAt": "2026-02-01T19:43:28.509Z",
+      "updatedAt": "2026-02-01T20:00:05.820Z",
       "viewState": {
         "pan": {
           "x": 0,
@@ -33,10 +38,9 @@
         },
         "zoom": 100
       },
-      "createdAt": "2026-02-01T19:43:28.509Z",
-      "updatedAt": "2026-02-01T19:43:28.509Z"
+      "connections": []
     }
   ],
-  "activeSheetId": "bVC2gd1NxEvFjofEd7j4x",
-  "version": 2
+  "version": 2,
+  "activeSheetId": "bVC2gd1NxEvFjofEd7j4x"
 }

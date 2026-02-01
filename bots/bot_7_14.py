@@ -810,36 +810,98 @@ async def start_handler(message: types.Message):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = "Привет! Я ваш новый бот. Нажмите /help для получения помощи."
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
+    # Сохраняем значение переменной image_url_start в базу данных
+    await update_user_data_in_db(user_id, "image_url_start", "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg")
 
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
+    # Обновляем user_vars, чтобы включить только что сохраненную переменную
     user_vars = await get_user_from_db(user_id)
     if not user_vars:
         user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    text = replace_variables_in_text(text, user_vars)
-    
-    has_regular_buttons = False
-    has_input_collection = False
-    logging.info(f"DEBUG: generateKeyboard для узла start - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=undefined, enableTextInput=undefined, enablePhotoInput=undefined, enableVideoInput=undefined, enableAudioInput=undefined, enableDocumentInput=undefined")
-    # DEBUG: Узел start - hasRegularButtons=False, hasInputCollection=False
-    logging.info(f"DEBUG: Узел start обработка кнопок - keyboardType=none, buttons=0")
-    await message.answer(text)
+
+    # Проверяем наличие прикрепленного медиа из переменной
+    attached_media = None
+    if user_vars and "image_url_start" in user_vars:
+        media_data = user_vars["image_url_start"]
+        if isinstance(media_data, dict) and "value" in media_data:
+            attached_media = media_data["value"]
+        elif isinstance(media_data, str):
+            attached_media = media_data
+        # Также проверяем, может быть переменная хранится напрямую в user_data
+    elif "image_url_start" in user_data.get(user_id, {}):
+        attached_media = user_data[user_id]["image_url_start"]
+
+    # Если медиа найдено, отправляем с медиа, иначе обычное сообщение
+    if attached_media and str(attached_media).strip():
+        logging.info(f"📎 Отправка фото из переменной image_url_start: {attached_media}")
+        try:
+            # Заменяем переменные в тексте перед отправкой медиа
+            processed_caption = replace_variables_in_text(text, user_vars)
+            # Проверяем, является ли путь внутренним (uploads)
+            if attached_media.startswith("/uploads/"):
+                # Для внутренних файлов пытаемся загрузить их в Telegram и получить file_id
+                try:
+                    # Проверяем, доступен ли файл локально
+                    import os
+                    # Формируем полный путь к файлу на сервере
+                    server_file_path = os.getcwd() + attached_media  # Предполагаем, что путь относительно рабочей директории
+                    if os.path.exists(server_file_path):
+                        # Загружаем файл в Telegram и получаем file_id
+                        from aiogram.types import FSInputFile
+                        photo_file = FSInputFile(server_file_path)
+                        result = await bot.send_photo(message.chat.id, photo_file, caption=processed_caption)
+                        logging.info(f"🖼️ Фото успешно отправлено из локального файла: {attached_media}")
+                        return  # Завершаем выполнение, так как фото уже отправлено
+                    else:
+                        logging.error(f"❌ Файл не найден на сервере: {server_file_path}")
+                        # Если файл не найден, используем публичный URL как резервный вариант
+                        public_url = attached_media
+                        if "localhost" in API_BASE_URL or "127.0.0.1" in API_BASE_URL or "0.0.0.0" in API_BASE_URL:
+                            # Для локальных адресов используем публичный URL (например, с доменом ngrok или другим публичным адресом)
+                            logging.warning(f"⚠️ Локальный URL не доступен для Telegram: {attached_media}")
+                            # Вместо этого отправляем текстовое сообщение с уведомлением
+                            await message.answer(processed_caption + "\n(Изображение недоступно в тестовом режиме)")
+                            return  # Прерываем выполнение, чтобы не отправлять фото
+                        else:
+                            # Для публичных адресов формируем полный URL
+                            if API_BASE_URL.endswith("/"):
+                                public_url = API_BASE_URL + attached_media[1:]  # Убираем начальный слэш
+                            else:
+                                public_url = API_BASE_URL + attached_media
+                        
+                        await bot.send_photo(message.chat.id, public_url, caption=processed_caption)
+                except Exception as upload_error:
+                    logging.error(f"Ошибка при загрузке локального файла: {upload_error}")
+                    # В случае ошибки используем публичный URL как резервный вариант
+                    public_url = attached_media
+                    if "localhost" in API_BASE_URL or "127.0.0.1" in API_BASE_URL or "0.0.0.0" in API_BASE_URL:
+                        # Для локальных адресов используем публичный URL (например, с доменом ngrok или другим публичным адресом)
+                        logging.warning(f"⚠️ Локальный URL не доступен для Telegram: {attached_media}")
+                        # Вместо этого отправляем текстовое сообщение с уведомлением
+                        await message.answer(processed_caption + "\n(Изображение недоступно в тестовом режиме)")
+                        return  # Прерываем выполнение, чтобы не отправлять фото
+                    else:
+                        # Для публичных адресов формируем полный URL
+                        if API_BASE_URL.endswith("/"):
+                            public_url = API_BASE_URL + attached_media[1:]  # Убираем начальный слэш
+                        else:
+                            public_url = API_BASE_URL + attached_media
+                    
+                    await bot.send_photo(message.chat.id, public_url, caption=processed_caption)
+            else:
+                # Для публичных URL используем стандартную логику
+                await bot.send_photo(message.chat.id, attached_media, caption=processed_caption)
+        except Exception as e:
+            logging.error(f"Ошибка отправки фото: {e}")
+            # Fallback на обычное сообщение при ошибке
+            await message.answer(text)
+    else:
+        # Медиа не найдено, отправляем обычное текстовое сообщение
+        logging.info(f"📝 Медиа image_url_start не найдено, отправка текстового сообщения")
+        # Заменяем переменные в тексте перед отправкой
+        processed_text = replace_variables_in_text(text, user_vars)
+        await message.answer(processed_text)
 # @@NODE_END:start@@
 
 # Обработчики для групп бота
