@@ -191,34 +191,34 @@ export const useCustomLayout = (initialConfig?: CustomLayoutConfig) => {
     const presets: Record<string, Partial<CustomLayoutConfig>> = {
       'classic': {
         elements: [
-          { id: 'header', type: 'header', name: 'Шапка', content: null, position: 'top', size: 8, visible: true, order: 1 },
-          { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', content: null, position: 'left', size: 20, visible: true, order: 2 },
-          { id: 'canvas', type: 'canvas', name: 'Холст', content: null, position: 'center', size: 55, visible: true, order: 3 },
-          { id: 'properties', type: 'properties', name: 'Свойства', content: null, position: 'right', size: 25, visible: true, order: 4 }
+          { id: 'header', position: 'top', size: 8, visible: true, order: 1 },
+          { id: 'sidebar', position: 'left', size: 20, visible: true, order: 2 },
+          { id: 'canvas', position: 'center', size: 55, visible: true, order: 3 },
+          { id: 'properties', position: 'right', size: 25, visible: true, order: 4 }
         ]
       },
       'bottom-header': {
         elements: [
-          { id: 'header', type: 'header', name: 'Шапка', content: null, position: 'bottom', size: 8, visible: true, order: 4 },
-          { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', content: null, position: 'left', size: 20, visible: true, order: 1 },
-          { id: 'canvas', type: 'canvas', name: 'Холст', content: null, position: 'center', size: 55, visible: true, order: 2 },
-          { id: 'properties', type: 'properties', name: 'Свойства', content: null, position: 'right', size: 25, visible: true, order: 3 }
+          { id: 'header', position: 'bottom', size: 8, visible: true, order: 4 },
+          { id: 'sidebar', position: 'left', size: 20, visible: true, order: 1 },
+          { id: 'canvas', position: 'center', size: 55, visible: true, order: 2 },
+          { id: 'properties', position: 'right', size: 25, visible: true, order: 3 }
         ]
       },
       'minimal': {
         elements: [
-          { id: 'header', type: 'header', name: 'Шапка', content: null, position: 'top', size: 6, visible: true, order: 1 },
-          { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', content: null, position: 'left', size: 15, visible: true, order: 2 },
-          { id: 'canvas', type: 'canvas', name: 'Холст', content: null, position: 'center', size: 70, visible: true, order: 3 },
-          { id: 'properties', type: 'properties', name: 'Свойства', content: null, position: 'right', size: 15, visible: true, order: 4 }
+          { id: 'header', position: 'top', size: 6, visible: true, order: 1 },
+          { id: 'sidebar', position: 'left', size: 15, visible: true, order: 2 },
+          { id: 'canvas', position: 'center', size: 70, visible: true, order: 3 },
+          { id: 'properties', position: 'right', size: 15, visible: true, order: 4 }
         ]
       },
       'fullscreen': {
         elements: [
-          { id: 'header', type: 'header', name: 'Шапка', content: null, position: 'top', size: 5, visible: true, order: 1 },
-          { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', content: null, position: 'left', size: 0, visible: false, order: 2 },
-          { id: 'canvas', type: 'canvas', name: 'Холст', content: null, position: 'center', size: 95, visible: true, order: 3 },
-          { id: 'properties', type: 'properties', name: 'Свойства', content: null, position: 'right', size: 0, visible: false, order: 4 }
+          { id: 'header', position: 'top', size: 5, visible: true, order: 1 },
+          { id: 'sidebar', position: 'left', size: 0, visible: false, order: 2 },
+          { id: 'canvas', position: 'center', size: 95, visible: true, order: 3 },
+          { id: 'properties', position: 'right', size: 0, visible: false, order: 4 }
         ]
       }
     };

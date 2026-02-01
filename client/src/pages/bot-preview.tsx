@@ -355,11 +355,11 @@ export default function BotPreview() {
     // Parse command if it starts with '/'
     if (inputText.startsWith('/')) {
       const command = parseCommandFromText(inputText);
-      if (command) {
+      if (command && command.command) {
         // Find node with matching command
-        const commandNode = nodes.find(node =>
-          node.data.command === command ||
-          (node.data.text || node.data.messageText)?.includes(command)
+        const commandNode = nodes.find(node => 
+          node.data.command === command.command || 
+          (node.data.text || node.data.messageText)?.includes(command.command)
         );
         if (commandNode) {
           setTimeout(() => processNode(commandNode), 500);

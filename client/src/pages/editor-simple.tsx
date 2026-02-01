@@ -42,7 +42,7 @@ import { BotProject, Connection, ComponentDefinition, BotData } from '@shared/sc
 
 export default function EditorSimple() {
   const [, setLocation] = useLocation();
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
+  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database' | 'responses'>('editor');
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -179,7 +179,7 @@ export default function EditorSimple() {
     updateProjectMutation.mutate({});
   }, [updateProjectMutation]);
 
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
+  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database' | 'responses') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
       updateProjectMutation.mutate({});
@@ -188,11 +188,15 @@ export default function EditorSimple() {
       setShowExport(true);
     } else if (tab === 'bot') {
       updateProjectMutation.mutate({});
-    } else if (tab === 'users' || tab === 'groups') {
+    } else if (tab === 'connections') {
+      updateProjectMutation.mutate({});
+    } else if (tab === 'database') {
+      // Перенаправляем на страницу базы данных
+      setLocation('/database');
+    } else if (tab === 'responses') {
       updateProjectMutation.mutate({});
     }
   }, [updateProjectMutation, setLocation]);
-
 
   const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
     updateNode(nodeId, { position });
@@ -301,10 +305,12 @@ export default function EditorSimple() {
       projectName={currentProject.name}
       currentTab={currentTab}
       onTabChange={handleTabChange}
+      onSave={handleSave}
       onExport={() => setShowExport(true)}
       onSaveAsTemplate={handleSaveAsTemplate}
       onLoadTemplate={handleLoadTemplate}
       onLayoutSettings={() => {}}
+      isSaving={updateProjectMutation.isPending}
     />
   );
 
@@ -340,6 +346,62 @@ export default function EditorSimple() {
               projectName={currentProject.name}
             />
           </div>
+        </div>
+      ) : currentTab === 'connections' ? (
+        <div className="h-full bg-background">
+          <div className="h-full flex">
+            <div className="w-1/2 p-4 space-y-4 overflow-auto">
+              <SmartConnectionCreator
+                nodes={nodes}
+                connections={connections}
+                onConnectionAdd={addConnection}
+                onNodesChange={updateNodes}
+                autoButtonCreation={autoButtonCreation}
+                selectedNodeId={selectedNodeId || undefined}
+              />
+              
+              <EnhancedConnectionControls
+                nodes={nodes}
+                connections={connections}
+                onConnectionAdd={addConnection}
+                onConnectionDelete={deleteConnection}
+                onConnectionUpdate={updateConnection}
+                onNodesChange={updateNodes}
+                autoButtonCreation={autoButtonCreation}
+                onAutoButtonCreationChange={setAutoButtonCreation}
+                selectedConnection={selectedConnection || undefined}
+                onConnectionSelect={setSelectedConnection}
+              />
+            </div>
+            
+            <div className="w-1/2 p-4 overflow-auto border-l">
+              <ConnectionVisualization
+                nodes={nodes}
+                connections={connections}
+                onConnectionSelect={handleConnectionSelect}
+                onConnectionDelete={handleConnectionDelete}
+                onConnectionEdit={handleConnectionEdit}
+                selectedConnectionId={selectedConnectionId || undefined}
+                showLabels={true}
+                showMetrics={true}
+                interactive={true}
+              />
+            </div>
+          </div>
+        </div>
+      ) : currentTab === 'database' ? (
+        <div className="h-full">
+          <UserDatabasePanel
+            projectId={currentProject.id}
+            projectName={currentProject.name}
+          />
+        </div>
+      ) : currentTab === 'responses' ? (
+        <div className="h-full">
+          <ResponsesPanel
+            projectId={currentProject.id}
+            projectName={currentProject.name}
+          />
         </div>
       ) : null}
     </div>
@@ -390,7 +452,6 @@ export default function EditorSimple() {
           setShowExport(false);
           setCurrentTab('editor');
         }}
-        projectId={currentProject.id}
         botData={currentProject?.data as any}
         projectName={currentProject.name}
       />

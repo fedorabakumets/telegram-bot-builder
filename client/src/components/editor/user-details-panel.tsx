@@ -169,8 +169,8 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
 
   const handleUserStatusToggle = (field: 'isActive') => {
     if (!user) return;
-    const currentValue = Boolean(user && user[field]);
-    updateUserMutation.mutate({ [field]: currentValue ? 0 : 1 });
+    const currentValue = Boolean(user[field as keyof UserBotData]);
+    updateUserMutation.mutate({ [field]: !currentValue });
   };
 
   if (!user) {
@@ -380,17 +380,17 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                       }
                     }
 
-                    const getQuestionText = (questionKey: string, data: any): string => {
+                    const getQuestionText = (questionKey: string, data: any) => {
                       if (variableToQuestionMap[questionKey]) {
-                        return String(variableToQuestionMap[questionKey]);
+                        return variableToQuestionMap[questionKey];
                       }
                       if (data?.prompt && data.prompt.trim()) {
-                        return String(data.prompt);
+                        return data.prompt;
                       }
-                      return String(questionKey);
+                      return questionKey;
                     };
 
-                    const questionText: string = getQuestionText(key, responseData);
+                    const questionText: string = String(getQuestionText(key, responseData));
                     const answerValue: string = String(responseData?.value !== undefined ? responseData.value : 
                                         (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)));
 

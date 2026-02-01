@@ -515,7 +515,7 @@ export function UrlDownloader({
                   onClick={() => downloadSingle(urlData)}
                   size="sm"
                   className="w-full"
-                  disabled={isProcessing}
+                  disabled={urlData.status === 'downloading' || urlData.status === 'checking'}
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Загрузить этот файл
