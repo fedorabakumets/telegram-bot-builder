@@ -2175,7 +2175,7 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
             "condition_id": "cond-info-1",
             "wait_for_input": True,
             "input_variable": "info",
-            "next_node_id": "vxPv7G4n0QGyhnv4ucOM5",
+            "next_node_id": "Y9zLRp1BLpVhm-HcsNkJV",
             "source_type": "conditional_message",
             "skip_buttons": [{"text":"Оставить текущий текст","target":"Y9zLRp1BLpVhm-HcsNkJV"}]
         }
@@ -6834,7 +6834,7 @@ async def handle_user_input(message: types.Message):
                                 "variable": "info",
                                 "save_to_database": True,
                                 "node_id": "lBPy3gcGVLla0NGdSYb35",
-                                "next_node_id": "vxPv7G4n0QGyhnv4ucOM5"
+                                "next_node_id": "Y9zLRp1BLpVhm-HcsNkJV"
                             }
                             logging.info(f"✅ Показана условная клавиатура для узла lBPy3gcGVLla0NGdSYb35")
                         if not conditional_met:
@@ -7679,7 +7679,7 @@ async def handle_user_input(message: types.Message):
                                     "variable": "info",
                                     "save_to_database": True,
                                     "node_id": "lBPy3gcGVLla0NGdSYb35",
-                                    "next_node_id": "vxPv7G4n0QGyhnv4ucOM5",
+                                    "next_node_id": "Y9zLRp1BLpVhm-HcsNkJV",
                                     "skip_buttons": [{"text":"Оставить текущий текст","target":"Y9zLRp1BLpVhm-HcsNkJV"}]
                                 }
                                 logging.info(f"🔧 Установлено ожидание ввода для условного сообщения: {user_data[message.from_user.id]['waiting_for_input']}")
