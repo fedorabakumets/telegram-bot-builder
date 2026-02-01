@@ -40,6 +40,34 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
         variable: node.data.documentInputVariable
       });
     }
+
+    // Собираем переменные из attachedMedia (включая imageUrl)
+    if (node.data.attachedMedia && Array.isArray(node.data.attachedMedia)) {
+      node.data.attachedMedia.forEach((mediaVar: string) => {
+        // Проверяем, является ли переменная imageUrl (обычно имеет формат image_url_{nodeId})
+        if (mediaVar.startsWith('image_url_')) {
+          mediaVars.set(mediaVar, {
+            type: 'photo',
+            variable: mediaVar
+          });
+        } else if (mediaVar.startsWith('video_url_')) {
+          mediaVars.set(mediaVar, {
+            type: 'video',
+            variable: mediaVar
+          });
+        } else if (mediaVar.startsWith('audio_url_')) {
+          mediaVars.set(mediaVar, {
+            type: 'audio',
+            variable: mediaVar
+          });
+        } else if (mediaVar.startsWith('document_url_')) {
+          mediaVars.set(mediaVar, {
+            type: 'document',
+            variable: mediaVar
+          });
+        }
+      });
+    }
   });
 
   return mediaVars;

@@ -3,6 +3,7 @@ import { formatTextForPython } from '../format/formatTextForPython';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
+import { generateAttachedMediaSendCode } from '../format/generateAttachedMediaSendCode';
 import { Node } from '@shared/schema';
 
 // ============================================================================
@@ -252,6 +253,63 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     } else {
       code += '\n    # Автопереход пропущен: collectUserInput=false\n';
       code += `    logging.info(f"ℹ️ Узел ${node.id} не собирает ответы (collectUserInput=false)")\n`;
+    }
+  }
+
+  // Проверяем наличие attachedMedia (включая imageUrl) и генерируем соответствующий код
+  const attachedMedia = node.data.attachedMedia || [];
+  if (attachedMedia.length > 0) {
+    // Создаем карту медиапеременных для этого узла
+    const mediaVariablesMap = new Map();
+    attachedMedia.forEach(mediaVar => {
+      // Определяем тип медиа по имени переменной
+      let mediaType = 'photo'; // по умолчанию
+      if (mediaVar.startsWith('video_url_')) mediaType = 'video';
+      else if (mediaVar.startsWith('audio_url_')) mediaType = 'audio';
+      else if (mediaVar.startsWith('document_url_')) mediaType = 'document';
+
+      mediaVariablesMap.set(mediaVar, {
+        type: mediaType,
+        variable: mediaVar
+      });
+    });
+
+    // Генерируем код для отправки медиа, адаптируя его для использования в start_handler
+    let mediaCode = '';
+    mediaCode += '    # Проверяем наличие прикрепленного медиа из переменной\n';
+    mediaCode += '    attached_media = None\n';
+    mediaCode += `    if user_vars and "${attachedMedia[0]}" in user_vars:\n`;
+    mediaCode += `        media_data = user_vars["${attachedMedia[0]}"]\n`;
+    mediaCode += '        if isinstance(media_data, dict) and "value" in media_data:\n';
+    mediaCode += '            attached_media = media_data["value"]\n';
+    mediaCode += '        elif isinstance(media_data, str):\n';
+    mediaCode += '            attached_media = media_data\n';
+    mediaCode += '\n';
+    mediaCode += '    # Если медиа найдено, отправляем с медиа, иначе обычное сообщение\n';
+    mediaCode += '    if attached_media and str(attached_media).strip():\n';
+    mediaCode += `        logging.info(f"📎 Отправка фото из переменной ${attachedMedia[0]}: {attached_media}")\n`;
+    mediaCode += '        try:\n';
+    mediaCode += '            # Заменяем переменные в тексте перед отправкой медиа\n';
+    mediaCode += '            processed_caption = replace_variables_in_text(text, user_vars)\n';
+
+    const keyboardParam = (node.data.allowMultipleSelection || node.data.keyboardType !== 'none') ? ', reply_markup=keyboard' : '';
+    const parseModeParam = node.data.formatMode && node.data.formatMode !== 'none' ? `, parse_mode=ParseMode.${node.data.formatMode.toUpperCase()}` : '';
+
+    mediaCode += `            await bot.send_photo(message.chat.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
+    mediaCode += '        except Exception as e:\n';
+    mediaCode += '            logging.error(f"Ошибка отправки фото: {e}")\n';
+    mediaCode += '            # Fallback на обычное сообщение при ошибке\n';
+    mediaCode += `            await message.answer(text${parseModeParam}${keyboardParam})\n`;
+    mediaCode += '    else:\n';
+    mediaCode += '        # Медиа не найдено, отправляем обычное текстовое сообщение\n';
+    mediaCode += `        logging.info(f"📝 Медиа ${attachedMedia[0]} не найдено, отправка текстового сообщения")\n`;
+    mediaCode += '        # Заменяем переменные в тексте перед отправкой\n';
+    mediaCode += '        processed_text = replace_variables_in_text(text, user_vars)\n';
+    mediaCode += `        await message.answer(processed_text${parseModeParam}${keyboardParam})\n`;
+
+    if (mediaCode) {
+      // Если есть медиа, возвращаем код с медиа вместо обычного сообщения
+      return code + mediaCode;
     }
   }
 
