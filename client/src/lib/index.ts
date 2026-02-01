@@ -16,7 +16,7 @@ export {
   generateConfigYaml
 } from './bot-generator';
 export * from './commands';
-export * from './queryClient';
+export * from './utils/queryClient';
 export * from './generate/generateButtonResponseHandlers';
 export * from './generate/generateMediaFileFunctions';
 export * from './utils/extractNodeData';
