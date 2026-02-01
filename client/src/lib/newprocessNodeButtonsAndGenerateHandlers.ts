@@ -490,10 +490,13 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
 
               // АВяОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
               // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=false
+              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
               if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-                // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
+                // Проверяем, нужно ли выполнять автопереход - автопереход НЕ выполняется только если collectUserInput=true
                 if (targetNode.data.collectUserInput === true) {
+                  code += '    # Автопереход пропущен: collectUserInput=true, узел ожидает ввод\n';
+                  code += `    logging.info(f"ℹ️ Узел ${targetNode.id} ожидает ввод (collectUserInput=true), автопереход пропущен")\n`;
+                } else {
                   const autoTargetId = targetNode.data.autoTransitionTo;
                   const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                   code += '    \n';
@@ -501,13 +504,10 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                   code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
                   code += '        logging.info(f"⏸️ Автопяреход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
                   code += '    else:\n';
-                  code += `        # ⚡ Автопереход к узлу ${autoTargetId} (только если collectUserInput=true)\n`;
+                  code += `        # ⚡ Автопереход к узлу ${autoTargetId} (если collectUserInput!=true)\n`;
                   code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
                   code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
                   code += `        return\n`;
-                } else {
-                  code += '    # Автопереход пропущен: collectUserInput=false\n';
-                  code += `    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
                 }
               }
             }

@@ -68,6 +68,39 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
         }
       });
     }
+
+    // Собираем переменные из imageUrl и documentUrl напрямую из данных узла
+    if (node.data.imageUrl) {
+      const mediaVar = `image_url_${node.id}`;
+      mediaVars.set(mediaVar, {
+        type: 'photo',
+        variable: mediaVar
+      });
+    }
+
+    if (node.data.documentUrl) {
+      const mediaVar = `document_url_${node.id}`;
+      mediaVars.set(mediaVar, {
+        type: 'document',
+        variable: mediaVar
+      });
+    }
+
+    if (node.data.videoUrl) {
+      const mediaVar = `video_url_${node.id}`;
+      mediaVars.set(mediaVar, {
+        type: 'video',
+        variable: mediaVar
+      });
+    }
+
+    if (node.data.audioUrl) {
+      const mediaVar = `audio_url_${node.id}`;
+      mediaVars.set(mediaVar, {
+        type: 'audio',
+        variable: mediaVar
+      });
+    }
   });
 
   return mediaVars;

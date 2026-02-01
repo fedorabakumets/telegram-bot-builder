@@ -885,6 +885,9 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
+    # Сохраняем imageUrl в переменную image_url_start
+    user_data[user_id]["image_url_start"] = "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg"
+    await update_user_data_in_db(user_id, "image_url_start", "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg")
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
@@ -908,101 +911,50 @@ async def start_handler(message: types.Message):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = "Привет! Я ваш новый бот. Нажмите /help для получения помощи."
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
 
-    # Автопереход пропущен: collectUserInput=false
-    logging.info(f"ℹ️ Узел start не собирает ответы (collectUserInput=false)")
-    # Сохраняем значение переменной image_url_start в базу данных
-    await update_user_data_in_db(user_id, "image_url_start", "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg")
-
-    # Обновляем user_vars, чтобы включить только что сохраненную переменную
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
     if not user_vars:
         user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    text = replace_variables_in_text(text, user_vars)
+    
+    has_regular_buttons = False
+    has_input_collection = False
+    logging.info(f"DEBUG: generateKeyboard для узла start - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=undefined, enableTextInput=undefined, enablePhotoInput=undefined, enableVideoInput=undefined, enableAudioInput=undefined, enableDocumentInput=undefined")
+    # DEBUG: Узел start - hasRegularButtons=False, hasInputCollection=False
+    logging.info(f"DEBUG: Узел start обработка кнопок - keyboardType=none, buttons=0")
+    await message.answer(text)
 
-    # Проверяем наличие прикрепленного медиа из переменной
-    attached_media = None
-    if user_vars and "image_url_start" in user_vars:
-        media_data = user_vars["image_url_start"]
-        if isinstance(media_data, dict) and "value" in media_data:
-            attached_media = media_data["value"]
-        elif isinstance(media_data, str):
-            attached_media = media_data
-        # Также проверяем, может быть переменная хранится напрямую в user_data
-    elif "image_url_start" in user_data.get(user_id, {}):
-        attached_media = user_data[user_id]["image_url_start"]
-
-    # Если медиа найдено, отправляем с медиа, иначе обычное сообщение
-    if attached_media and str(attached_media).strip():
-        logging.info(f"📎 Отправка фото из переменной image_url_start: {attached_media}")
-        try:
-            # Заменяем переменные в тексте перед отправкой медиа
-            processed_caption = replace_variables_in_text(text, user_vars)
-            # Проверяем, является ли путь внутренним (uploads)
-            if attached_media.startswith("/uploads/"):
-                # Для внутренних файлов пытаемся загрузить их в Telegram и получить file_id
-                try:
-                    # Проверяем, доступен ли файл локально
-                    import os
-                    # Формируем полный путь к файлу на сервере
-                    server_file_path = os.getcwd() + attached_media  # Предполагаем, что путь относительно рабочей директории
-                    if os.path.exists(server_file_path):
-                        # Загружаем файл в Telegram и получаем file_id
-                        from aiogram.types import FSInputFile
-                        photo_file = FSInputFile(server_file_path)
-                        result = await bot.send_photo(message.chat.id, photo_file, caption=processed_caption)
-                        logging.info(f"🖼️ Фото успешно отправлено из локального файла: {attached_media}")
-                        return  # Завершаем выполнение, так как фото уже отправлено
-                    else:
-                        logging.error(f"❌ Файл не найден на сервере: {server_file_path}")
-                        # Если файл не найден, используем публичный URL как резервный вариант
-                        public_url = attached_media
-                        if "localhost" in API_BASE_URL or "127.0.0.1" in API_BASE_URL or "0.0.0.0" in API_BASE_URL:
-                            # Для локальных адресов используем публичный URL (например, с доменом ngrok или другим публичным адресом)
-                            logging.warning(f"⚠️ Локальный URL не доступен для Telegram: {attached_media}")
-                            # Вместо этого отправляем текстовое сообщение с уведомлением
-                            await message.answer(processed_caption + "\n(Изображение недоступно в тестовом режиме)")
-                            return  # Прерываем выполнение, чтобы не отправлять фото
-                        else:
-                            # Для публичных адресов формируем полный URL
-                            if API_BASE_URL.endswith("/"):
-                                public_url = API_BASE_URL + attached_media[1:]  # Убираем начальный слэш
-                            else:
-                                public_url = API_BASE_URL + attached_media
-                        
-                        await bot.send_photo(message.chat.id, public_url, caption=processed_caption)
-                except Exception as upload_error:
-                    logging.error(f"Ошибка при загрузке локального файла: {upload_error}")
-                    # В случае ошибки используем публичный URL как резервный вариант
-                    public_url = attached_media
-                    if "localhost" in API_BASE_URL or "127.0.0.1" in API_BASE_URL or "0.0.0.0" in API_BASE_URL:
-                        # Для локальных адресов используем публичный URL (например, с доменом ngrok или другим публичным адресом)
-                        logging.warning(f"⚠️ Локальный URL не доступен для Telegram: {attached_media}")
-                        # Вместо этого отправляем текстовое сообщение с уведомлением
-                        await message.answer(processed_caption + "\n(Изображение недоступно в тестовом режиме)")
-                        return  # Прерываем выполнение, чтобы не отправлять фото
-                    else:
-                        # Для публичных адресов формируем полный URL
-                        if API_BASE_URL.endswith("/"):
-                            public_url = API_BASE_URL + attached_media[1:]  # Убираем начальный слэш
-                        else:
-                            public_url = API_BASE_URL + attached_media
-                    
-                    await bot.send_photo(message.chat.id, public_url, caption=processed_caption)
-            else:
-                # Для публичных URL используем стандартную логику
-                await bot.send_photo(message.chat.id, attached_media, caption=processed_caption)
-        except Exception as e:
-            logging.error(f"Ошибка отправки фото: {e}")
-            # Fallback на обычное сообщение при ошибке
-            await message.answer(text)
-    else:
-        # Медиа не найдено, отправляем обычное текстовое сообщение
-        logging.info(f"📝 Медиа image_url_start не найдено, отправка текстового сообщения")
-        # Заменяем переменные в тексте перед отправкой
-        processed_text = replace_variables_in_text(text, user_vars)
-        await message.answer(processed_text)
+    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически (если collectUserInput!=true)
+    logging.info(f"⚡ Автопереход от узла start к узлу DDmAXMnH_Dyd8T7J-wm9S")
+    # Создаем временный callback_query объект для вызова обработчика
+    from aiogram.types import CallbackQuery
+    temp_callback = CallbackQuery(
+        id="auto_transition",
+        from_user=message.from_user,
+        data="DDmAXMnH_Dyd8T7J-wm9S",
+        chat_instance=str(message.chat.id),
+        message=message
+    )
+    await handle_callback_DDmAXMnH_Dyd8T7J_wm9S(temp_callback)
+    logging.info(f"✅ Автопереход выполнен: start -> DDmAXMnH_Dyd8T7J-wm9S")
 # @@NODE_END:start@@
 
 # @@NODE_START:DDmAXMnH_Dyd8T7J-wm9S@@
@@ -1042,6 +994,9 @@ async def settings_handler(message: types.Message):
     user_data[user_id]["commands_used"]["/settings"] = user_data[user_id]["commands_used"].get("/settings", 0) + 1
 
     text = "⚙️ Настройки бота:"
+    # Сохраняем documentUrl в переменную document_url_2pmaMDNyVr3oVOHL98LwP
+    user_data[user_id]["document_url_2pmaMDNyVr3oVOHL98LwP"] = "​https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg?semt=ais_hybrid&w=740"
+    await update_user_data_in_db(user_id, "document_url_2pmaMDNyVr3oVOHL98LwP", "​https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg?semt=ais_hybrid&w=740")
     
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -1131,6 +1086,9 @@ async def handle_callback_DDmAXMnH_Dyd8T7J_wm9S(callback_query: types.CallbackQu
     # Обрабатываем узел DDmAXMnH_Dyd8T7J-wm9S: DDmAXMnH_Dyd8T7J-wm9S
     text = "Новое сообщение"
     
+    # Сохраняем imageUrl в переменную image_url_DDmAXMnH_Dyd8T7J-wm9S
+    user_data[user_id]["image_url_DDmAXMnH_Dyd8T7J-wm9S"] = "https://i.pinimg.com/originals/22/ea/6c/22ea6c80800709ebd03e3ba2c0c12499.jpg"
+    await update_user_data_in_db(user_id, "image_url_DDmAXMnH_Dyd8T7J-wm9S", "https://i.pinimg.com/originals/22/ea/6c/22ea6c80800709ebd03e3ba2c0c12499.jpg")
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
@@ -1178,6 +1136,12 @@ async def handle_callback_DDmAXMnH_Dyd8T7J_wm9S(callback_query: types.CallbackQu
             attached_media = media_data["value"]
         elif isinstance(media_data, str):
             attached_media = media_data
+    else:
+        # Проверяем, есть ли медиа в переменных пользователя
+        user_id = callback_query.from_user.id
+        user_node_vars = user_data.get(user_id, {})
+        if "image_url_DDmAXMnH_Dyd8T7J-wm9S" in user_node_vars:
+            attached_media = user_node_vars["image_url_DDmAXMnH_Dyd8T7J-wm9S"]
     
     # Если медиа найдено, отправляем с медиа, иначе обычное сообщение
     if attached_media and str(attached_media).strip():
@@ -1255,6 +1219,9 @@ async def handle_callback_2pmaMDNyVr3oVOHL98LwP(callback_query: types.CallbackQu
     # Обрабатываем узел 2pmaMDNyVr3oVOHL98LwP: 2pmaMDNyVr3oVOHL98LwP
     text = "⚙️ Настройки бота:"
     
+    # Сохраняем documentUrl в переменную document_url_2pmaMDNyVr3oVOHL98LwP
+    user_data[user_id]["document_url_2pmaMDNyVr3oVOHL98LwP"] = "​https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg?semt=ais_hybrid&w=740"
+    await update_user_data_in_db(user_id, "document_url_2pmaMDNyVr3oVOHL98LwP", "​https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg?semt=ais_hybrid&w=740")
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
@@ -1293,20 +1260,43 @@ async def handle_callback_2pmaMDNyVr3oVOHL98LwP(callback_query: types.CallbackQu
     else:
         user_data[user_id]["_has_conditional_keyboard"] = False
     
-    # Отправляем сообщение
-    try:
-        if keyboard:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        else:
-            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
-            await callback_query.message.answer(text)
-    except Exception as e:
-        logging.debug(f"Ошибка отправки сообщения: {e}")
-        if keyboard:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
+    # Отправляем сообщение (с проверкой прикрепленного медиа)
+    # Проверяем наличие прикрепленного медиа из переменной document_url_2pmaMDNyVr3oVOHL98LwP
+    attached_media = None
+    if user_vars and "document_url_2pmaMDNyVr3oVOHL98LwP" in user_vars:
+        media_data = user_vars["document_url_2pmaMDNyVr3oVOHL98LwP"]
+        if isinstance(media_data, dict) and "value" in media_data:
+            attached_media = media_data["value"]
+        elif isinstance(media_data, str):
+            attached_media = media_data
+    else:
+        # Проверяем, есть ли медиа в переменных пользователя
+        user_id = callback_query.from_user.id
+        user_node_vars = user_data.get(user_id, {})
+        if "document_url_2pmaMDNyVr3oVOHL98LwP" in user_node_vars:
+            attached_media = user_node_vars["document_url_2pmaMDNyVr3oVOHL98LwP"]
     
+    # Если медиа найдено, отправляем с медиа, иначе обычное сообщение
+    if attached_media and str(attached_media).strip():
+        logging.info(f"📎 Отправка document медиа из переменной document_url_2pmaMDNyVr3oVOHL98LwP: {attached_media}")
+        try:
+            # Заменяем переменные в тексте перед отправкой медиа
+            processed_caption = replace_variables_in_text(text, user_vars)
+            await bot.send_document(callback_query.from_user.id, attached_media, caption=processed_caption, reply_markup=keyboard)
+        except Exception as e:
+            logging.error(f"Ошибка отправки document: {e}")
+            # Fallback на обычное сообщение при ошибке
+            await safe_edit_or_send(callback_query, text, node_id="2pmaMDNyVr3oVOHL98LwP", reply_markup=keyboard if keyboard is not None else None)
+    else:
+        # Медиа не найдено, отправляем обычное текстовое сообщение
+        logging.info(f"📝 Медиа document_url_2pmaMDNyVr3oVOHL98LwP не найдено, отправка текстового сообщения")
+        # Заменяем переменные в тексте перед отправкой
+        processed_text = replace_variables_in_text(text, user_vars)
+        if False:
+            # Узел ожидает ввод, не отправляем сообщение
+            logging.info(f"ℹ️ Узел 2pmaMDNyVr3oVOHL98LwP ожидает ввод, пропускаем отправку сообщения")
+        else:
+            await safe_edit_or_send(callback_query, processed_text, node_id="2pmaMDNyVr3oVOHL98LwP", reply_markup=keyboard if keyboard is not None else None)
     user_id = callback_query.from_user.id
     
     

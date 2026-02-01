@@ -745,6 +745,29 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             const formattedText = formatTextForPython(messageText);
             code += `    text = ${formattedText}\n`;
             code += '    \n';
+
+            // Сохраняем медиа-переменные из данных узла в user_data
+            if (targetNode.data.imageUrl) {
+              code += `    # Сохраняем imageUrl в переменную image_url_${nodeId}\n`;
+              code += `    user_data[user_id]["image_url_${nodeId}"] = "${targetNode.data.imageUrl}"\n`;
+              code += `    await update_user_data_in_db(user_id, "image_url_${nodeId}", "${targetNode.data.imageUrl}")\n`;
+            }
+            if (targetNode.data.documentUrl) {
+              code += `    # Сохраняем documentUrl в переменную document_url_${nodeId}\n`;
+              code += `    user_data[user_id]["document_url_${nodeId}"] = "${targetNode.data.documentUrl}"\n`;
+              code += `    await update_user_data_in_db(user_id, "document_url_${nodeId}", "${targetNode.data.documentUrl}")\n`;
+            }
+            if (targetNode.data.videoUrl) {
+              code += `    # Сохраняем videoUrl в переменную video_url_${nodeId}\n`;
+              code += `    user_data[user_id]["video_url_${nodeId}"] = "${targetNode.data.videoUrl}"\n`;
+              code += `    await update_user_data_in_db(user_id, "video_url_${nodeId}", "${targetNode.data.videoUrl}")\n`;
+            }
+            if (targetNode.data.audioUrl) {
+              code += `    # Сохраняем audioUrl в переменную audio_url_${nodeId}\n`;
+              code += `    user_data[user_id]["audio_url_${nodeId}"] = "${targetNode.data.audioUrl}"\n`;
+              code += `    await update_user_data_in_db(user_id, "audio_url_${nodeId}", "${targetNode.data.audioUrl}")\n`;
+            }
+
             code += generateUniversalVariableReplacement('    ');
 
             // ============================================================================
@@ -1101,7 +1124,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // ОБРАБОТКА МЕДИА-КОНТЕНТА
             // ============================================================================
             // ИСПРАВЛЕНИЕ: Проверяем наличие прикрепленных медиа перед отправкой
-            const attachedMedia = targetNode.data.attachedMedia || [];
+            // Сначала проверяем attachedMedia, затем imageUrl/documentUrl/videoUrl/audioUrl
+            let attachedMedia = targetNode.data.attachedMedia || [];
+
+            // Если attachedMedia пустой, проверяем другие поля медиа
+            if (!attachedMedia || attachedMedia.length === 0) {
+              if (targetNode.data.imageUrl) {
+                attachedMedia = [`image_url_${nodeId}`];
+              } else if (targetNode.data.documentUrl) {
+                attachedMedia = [`document_url_${nodeId}`];
+              } else if (targetNode.data.videoUrl) {
+                attachedMedia = [`video_url_${nodeId}`];
+              } else if (targetNode.data.audioUrl) {
+                attachedMedia = [`audio_url_${nodeId}`];
+              }
+            }
 
             if (attachedMedia.length > 0) {
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} имеет attachedMedia:`, attachedMedia);

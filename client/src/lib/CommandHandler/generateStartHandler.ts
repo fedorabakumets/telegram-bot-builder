@@ -69,6 +69,28 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     code += '    \n';
   }
 
+  // Сохраняем медиа-переменные из данных узла в user_data
+  if (node.data.imageUrl) {
+    code += `    # Сохраняем imageUrl в переменную image_url_${node.id}\n`;
+    code += `    user_data[user_id]["image_url_${node.id}"] = "${node.data.imageUrl}"\n`;
+    code += `    await update_user_data_in_db(user_id, "image_url_${node.id}", "${node.data.imageUrl}")\n`;
+  }
+  if (node.data.documentUrl) {
+    code += `    # Сохраняем documentUrl в переменную document_url_${node.id}\n`;
+    code += `    user_data[user_id]["document_url_${node.id}"] = "${node.data.documentUrl}"\n`;
+    code += `    await update_user_data_in_db(user_id, "document_url_${node.id}", "${node.data.documentUrl}")\n`;
+  }
+  if (node.data.videoUrl) {
+    code += `    # Сохраняем videoUrl в переменную video_url_${node.id}\n`;
+    code += `    user_data[user_id]["video_url_${node.id}"] = "${node.data.videoUrl}"\n`;
+    code += `    await update_user_data_in_db(user_id, "video_url_${node.id}", "${node.data.videoUrl}")\n`;
+  }
+  if (node.data.audioUrl) {
+    code += `    # Сохраняем audioUrl в переменную audio_url_${node.id}\n`;
+    code += `    user_data[user_id]["audio_url_${node.id}"] = "${node.data.audioUrl}"\n`;
+    code += `    await update_user_data_in_db(user_id, "audio_url_${node.id}", "${node.data.audioUrl}")\n`;
+  }
+
   // Используем универсальную замену переменных для инициализации
   code += generateUniversalVariableReplacement('    ');
 
@@ -230,13 +252,16 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
 
   // ИСПРАВЛЕНИЕ: Добавляем автопереход для узлов start, если он настроен
   if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
-    // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
+    // Проверяем, нужно ли выполнять автопереход - автопереход НЕ выполняется только если collectUserInput=true
     if (node.data.collectUserInput === true) {
+      code += '\n    # Автопереход пропущен: collectUserInput=true, узел ожидает ввод\n';
+      code += `    logging.info(f"ℹ️ Узел ${node.id} ожидает ввод (collectUserInput=true), автопереход пропущен")\n`;
+    } else {
       const autoTransitionTarget = node.data.autoTransitionTo;
       const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
 
       code += keyboardCode;
-      code += '\n    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически (только если collectUserInput=true)\n';
+      code += '\n    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически (если collectUserInput!=true)\n';
       code += `    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTransitionTarget}")\n`;
       code += '    # Создаем временный callback_query объект для вызова обработчика\n';
       code += '    from aiogram.types import CallbackQuery\n';
@@ -250,14 +275,24 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
       code += `    await handle_callback_${safeFunctionName}(temp_callback)\n`;
       code += `    logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")\n`;
       return code; // Возвращаем без добавления keyboardCode повторно
-    } else {
-      code += '\n    # Автопереход пропущен: collectUserInput=false\n';
-      code += `    logging.info(f"ℹ️ Узел ${node.id} не собирает ответы (collectUserInput=false)")\n`;
     }
   }
 
-  // Проверяем наличие attachedMedia (включая imageUrl) и генерируем соответствующий код
-  const attachedMedia = node.data.attachedMedia || [];
+  // Проверяем наличие attachedMedia или прямых URL (imageUrl, documentUrl и т.д.) и генерируем соответствующий код
+  let attachedMedia = node.data.attachedMedia || [];
+  // Если attachedMedia пустой, проверяем другие поля медиа
+  if (!attachedMedia || attachedMedia.length === 0) {
+    if (node.data.imageUrl) {
+      attachedMedia = [`image_url_${node.id}`];
+    } else if (node.data.documentUrl) {
+      attachedMedia = [`document_url_${node.id}`];
+    } else if (node.data.videoUrl) {
+      attachedMedia = [`video_url_${node.id}`];
+    } else if (node.data.audioUrl) {
+      attachedMedia = [`audio_url_${node.id}`];
+    }
+  }
+
   if (attachedMedia.length > 0) {
     // Создаем карту медиапеременных для этого узла
     const mediaVariablesMap = new Map();
@@ -267,6 +302,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
       if (mediaVar.startsWith('video_url_')) mediaType = 'video';
       else if (mediaVar.startsWith('audio_url_')) mediaType = 'audio';
       else if (mediaVar.startsWith('document_url_')) mediaType = 'document';
+      else if (mediaVar.startsWith('image_url_')) mediaType = 'photo';
 
       mediaVariablesMap.set(mediaVar, {
         type: mediaType,
@@ -278,8 +314,9 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     let mediaCode = '';
 
     // Сначала сохраняем значение переменной из imageUrl в базу данных
+    const mediaUrl = node.data.imageUrl || node.data.documentUrl || node.data.videoUrl || node.data.audioUrl;
     mediaCode += `    # Сохраняем значение переменной ${attachedMedia[0]} в базу данных\n`;
-    mediaCode += `    await update_user_data_in_db(user_id, "${attachedMedia[0]}", "${node.data.imageUrl}")\n`;
+    mediaCode += `    await update_user_data_in_db(user_id, "${attachedMedia[0]}", "${mediaUrl}")\n`;
     mediaCode += '\n';
     mediaCode += '    # Обновляем user_vars, чтобы включить только что сохраненную переменную\n';
     mediaCode += '    user_vars = await get_user_from_db(user_id)\n';
@@ -302,7 +339,14 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     mediaCode += '\n';
     mediaCode += '    # Если медиа найдено, отправляем с медиа, иначе обычное сообщение\n';
     mediaCode += '    if attached_media and str(attached_media).strip():\n';
-    mediaCode += `        logging.info(f"📎 Отправка фото из переменной ${attachedMedia[0]}: {attached_media}")\n`;
+
+    // Определяем тип медиа и метод отправки
+    let mediaType = 'photo';
+    if (attachedMedia[0].startsWith('video_url_')) mediaType = 'video';
+    else if (attachedMedia[0].startsWith('audio_url_')) mediaType = 'audio';
+    else if (attachedMedia[0].startsWith('document_url_')) mediaType = 'document';
+
+    mediaCode += `        logging.info(f"📎 Отправка ${mediaType} из переменной ${attachedMedia[0]}: {attached_media}")\n`;
     mediaCode += '        try:\n';
     mediaCode += '            # Заменяем переменные в тексте перед отправкой медиа\n';
     mediaCode += '            processed_caption = replace_variables_in_text(text, user_vars)\n';
@@ -322,10 +366,24 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     mediaCode += '                    if os.path.exists(server_file_path):\n';
     mediaCode += '                        # Загружаем файл в Telegram и получаем file_id\n';
     mediaCode += '                        from aiogram.types import FSInputFile\n';
-    mediaCode += '                        photo_file = FSInputFile(server_file_path)\n';
-    mediaCode += '                        result = await bot.send_photo(message.chat.id, photo_file, caption=processed_caption)\n';
-    mediaCode += '                        logging.info(f"🖼️ Фото успешно отправлено из локального файла: {attached_media}")\n';
-    mediaCode += '                        return  # Завершаем выполнение, так как фото уже отправлено\n';
+
+    // Определяем метод отправки в зависимости от типа медиа
+    if (mediaType === 'photo') {
+      mediaCode += '                        photo_file = FSInputFile(server_file_path)\n';
+      mediaCode += '                        result = await bot.send_photo(message.chat.id, photo_file, caption=processed_caption)\n';
+    } else if (mediaType === 'document') {
+      mediaCode += '                        doc_file = FSInputFile(server_file_path)\n';
+      mediaCode += '                        result = await bot.send_document(message.chat.id, doc_file, caption=processed_caption)\n';
+    } else if (mediaType === 'video') {
+      mediaCode += '                        video_file = FSInputFile(server_file_path)\n';
+      mediaCode += '                        result = await bot.send_video(message.chat.id, video_file, caption=processed_caption)\n';
+    } else if (mediaType === 'audio') {
+      mediaCode += '                        audio_file = FSInputFile(server_file_path)\n';
+      mediaCode += '                        result = await bot.send_audio(message.chat.id, audio_file, caption=processed_caption)\n';
+    }
+
+    mediaCode += '                        logging.info(f"🖼️ ' + (mediaType.charAt(0).toUpperCase() + mediaType.slice(1)) + ' успешно отправлено из локального файла: {attached_media}")\n';
+    mediaCode += '                        return  # Завершаем выполнение, так как медиа уже отправлено\n';
     mediaCode += '                    else:\n';
     mediaCode += '                        logging.error(f"❌ Файл не найден на сервере: {server_file_path}")\n';
     mediaCode += '                        # Если файл не найден, используем публичный URL как резервный вариант\n';
@@ -334,8 +392,8 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     mediaCode += '                            # Для локальных адресов используем публичный URL (например, с доменом ngrok или другим публичным адресом)\n';
     mediaCode += '                            logging.warning(f"⚠️ Локальный URL не доступен для Telegram: {attached_media}")\n';
     mediaCode += '                            # Вместо этого отправляем текстовое сообщение с уведомлением\n';
-    mediaCode += '                            await message.answer(processed_caption + "\\n(Изображение недоступно в тестовом режиме)")\n';
-    mediaCode += '                            return  # Прерываем выполнение, чтобы не отправлять фото\n';
+    mediaCode += '                            await message.answer(processed_caption + "\\n(Медиа недоступно в тестовом режиме)")\n';
+    mediaCode += '                            return  # Прерываем выполнение, чтобы не отправлять медиа\n';
     mediaCode += '                        else:\n';
     mediaCode += '                            # Для публичных адресов формируем полный URL\n';
     mediaCode += '                            if API_BASE_URL.endswith("/"):\n';
@@ -343,7 +401,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     mediaCode += '                            else:\n';
     mediaCode += '                                public_url = API_BASE_URL + attached_media\n';
     mediaCode += '                        \n';
-    mediaCode += `                        await bot.send_photo(message.chat.id, public_url, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
+    mediaCode += `                        await bot.send_${mediaType}(message.chat.id, public_url, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
     mediaCode += '                except Exception as upload_error:\n';
     mediaCode += '                    logging.error(f"Ошибка при загрузке локального файла: {upload_error}")\n';
     mediaCode += '                    # В случае ошибки используем публичный URL как резервный вариант\n';
@@ -352,8 +410,8 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     mediaCode += '                        # Для локальных адресов используем публичный URL (например, с доменом ngrok или другим публичным адресом)\n';
     mediaCode += '                        logging.warning(f"⚠️ Локальный URL не доступен для Telegram: {attached_media}")\n';
     mediaCode += '                        # Вместо этого отправляем текстовое сообщение с уведомлением\n';
-    mediaCode += '                        await message.answer(processed_caption + "\\n(Изображение недоступно в тестовом режиме)")\n';
-    mediaCode += '                        return  # Прерываем выполнение, чтобы не отправлять фото\n';
+    mediaCode += '                        await message.answer(processed_caption + "\\n(Медиа недоступно в тестовом режиме)")\n';
+    mediaCode += '                        return  # Прерываем выполнение, чтобы не отправлять медиа\n';
     mediaCode += '                    else:\n';
     mediaCode += '                        # Для публичных адресов формируем полный URL\n';
     mediaCode += '                        if API_BASE_URL.endswith("/"):\n';
@@ -361,12 +419,12 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     mediaCode += '                        else:\n';
     mediaCode += '                            public_url = API_BASE_URL + attached_media\n';
     mediaCode += '                    \n';
-    mediaCode += `                    await bot.send_photo(message.chat.id, public_url, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
+    mediaCode += `                    await bot.send_${mediaType}(message.chat.id, public_url, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
     mediaCode += '            else:\n';
     mediaCode += '                # Для публичных URL используем стандартную логику\n';
-    mediaCode += `                await bot.send_photo(message.chat.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
+    mediaCode += `                await bot.send_${mediaType}(message.chat.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
     mediaCode += '        except Exception as e:\n';
-    mediaCode += '            logging.error(f"Ошибка отправки фото: {e}")\n';
+    mediaCode += `            logging.error(f"Ошибка отправки ${mediaType}: {e}")\n`;
     mediaCode += '            # Fallback на обычное сообщение при ошибке\n';
     mediaCode += `            await message.answer(text${parseModeParam}${keyboardParam})\n`;
     mediaCode += '    else:\n';
