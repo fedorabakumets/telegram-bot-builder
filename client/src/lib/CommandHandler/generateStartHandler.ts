@@ -276,6 +276,11 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
 
     // Генерируем код для отправки медиа, адаптируя его для использования в start_handler
     let mediaCode = '';
+
+    // Сначала сохраняем значение переменной из imageUrl в базу данных
+    mediaCode += `    # Сохраняем значение переменной ${attachedMedia[0]} в базу данных\n`;
+    mediaCode += `    await update_user_data_in_db(user_id, "${attachedMedia[0]}", "${node.data.imageUrl}")\n`;
+    mediaCode += '\n';
     mediaCode += '    # Проверяем наличие прикрепленного медиа из переменной\n';
     mediaCode += '    attached_media = None\n';
     mediaCode += `    if user_vars and "${attachedMedia[0]}" in user_vars:\n`;
@@ -284,6 +289,9 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     mediaCode += '            attached_media = media_data["value"]\n';
     mediaCode += '        elif isinstance(media_data, str):\n';
     mediaCode += '            attached_media = media_data\n';
+    mediaCode += '        # Также проверяем, может быть переменная хранится напрямую в user_vars\n';
+    mediaCode += `    elif "${attachedMedia[0]}" in user_data.get(user_id, {}):\n`;
+    mediaCode += `        attached_media = user_data[user_id]["${attachedMedia[0]}"]\n`;
     mediaCode += '\n';
     mediaCode += '    # Если медиа найдено, отправляем с медиа, иначе обычное сообщение\n';
     mediaCode += '    if attached_media and str(attached_media).strip():\n';
