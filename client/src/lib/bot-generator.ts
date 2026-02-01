@@ -4963,18 +4963,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     });
   }
 
+  /**
+   * Генерирует полный скрипт бота из графа узлов
+   * @returns {string} Сгенерированный код бота
+   */
   function generateCompleteBotScriptFromNodeGraph() {
     code += '        return\n';
     code += '    \n';
 
+    // Добавляем логику обработки мультиселекта
     code += generateMultiSelectCallbackLogic(multiSelectNodes, allNodeIds, isLoggingEnabled);
 
-
+    // Добавляем обработчик завершения мультиселекта
     code += generateMultiSelectDoneHandler(nodes || [], multiSelectNodes, allNodeIds, isLoggingEnabled);
+
     // Закрываем if (multiSelectNodes.length > 0)
+    // Добавляем обработчик ответов на мультиселект
     code += generateMultiSelectReplyHandler(nodes || [], allNodeIds, isLoggingEnabled);
 
-
+    // Добавляем точку входа для запуска приложения
     code += 'if __name__ == "__main__":\n';
     code += '    asyncio.run(main())\n';
 
