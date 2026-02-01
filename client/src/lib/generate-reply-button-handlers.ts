@@ -103,7 +103,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons?.length > 0) {
                   modes.push('button');
                 }
-                if (targetNode.data.enableTextInput !== false) {
+                if (targetNode.data.enableTextInput === true) {
                   modes.push('text');
                 }
                 if (targetNode.data.enablePhotoInput) modes.push('photo');
@@ -116,7 +116,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 else if (targetNode.data.enableVideoInput) primaryInputType = 'video';
                 else if (targetNode.data.enableAudioInput) primaryInputType = 'audio';
                 else if (targetNode.data.enableDocumentInput) primaryInputType = 'document';
-                else if (targetNode.data.enableTextInput !== false) primaryInputType = 'text';
+                else if (targetNode.data.enableTextInput === true) primaryInputType = 'text';
 
                 const modesStr = modes.length > 0 ? modes.map(m => `'${m}'`).join(', ') : "'button', 'text'";
 

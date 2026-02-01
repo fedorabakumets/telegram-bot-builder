@@ -231,7 +231,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
   // ИСПРАВЛЕНИЕ: Добавляем автопереход для узлов start, если он настроен
   if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
     // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
-    if (node.data.collectUserInput !== false) {
+    if (node.data.collectUserInput === true) {
       const autoTransitionTarget = node.data.autoTransitionTo;
       const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
 

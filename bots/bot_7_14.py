@@ -3,7 +3,8 @@
 Сгенерировано с помощью TelegramBot Builder
 
 Команды для @BotFather:
-start - Запустить бота"""
+start - Запустить бота
+settings - Настройки бота"""
 
 # -*- coding: utf-8 -*-
 import os
@@ -39,6 +40,97 @@ from datetime import datetime, timezone, timedelta
 import json
 import aiohttp
 from aiohttp import TCPConnector
+
+# Safe helper for editing messages with fallback to new message
+async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, **kwargs):
+    """
+    Безопасное редактирование сообщения с fallback на новое сообщение
+    При автопереходе сразу отправляет новое сообщение без попытки редактирования
+    """
+    result = None
+    user_id = None
+    
+    # Получаем user_id для сохранения
+    if hasattr(cbq, "from_user") and cbq.from_user:
+        user_id = str(cbq.from_user.id)
+    elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):
+        user_id = str(cbq.message.chat.id)
+    
+    try:
+        # При автопереходе сразу отправляем новое сообщение без редактирования
+        if is_auto_transition:
+            logging.info(f"⚡ Автопереход: отправляем новое сообщение вместо редактирования")
+            if hasattr(cbq, "message") and cbq.message:
+                result = await cbq.message.answer(text, **kwargs)
+            else:
+                raise Exception("Cannot send message in auto-transition")
+        else:
+            # Пробуем редактировать сообщение
+            if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):
+                result = await cbq.edit_text(text, **kwargs)
+            elif (hasattr(cbq, "message") and cbq.message):
+                result = await cbq.message.edit_text(text, **kwargs)
+            else:
+                raise Exception("No valid edit method found")
+    except Exception as e:
+        # При любой ошибке отправляем новое сообщение
+        if is_auto_transition:
+            logging.info(f"⚡ Автопереход: {e}, отправляем новое сообщение")
+        else:
+            logging.warning(f"Не удалось отредактировать сообщение: {e}, отправляем новое")
+        if hasattr(cbq, "message") and cbq.message:
+            result = await cbq.message.answer(text, **kwargs)
+        else:
+            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")
+            raise
+    
+    # Сохраняем сообщение в базу данных
+    if result and user_id:
+        message_data_obj = {"message_id": result.message_id if hasattr(result, "message_id") else None}
+        
+        # Извлекаем кнопки из reply_markup
+        if "reply_markup" in kwargs:
+            try:
+                reply_markup = kwargs["reply_markup"]
+                buttons_data = []
+                # Обработка inline клавиатуры
+                if hasattr(reply_markup, "inline_keyboard"):
+                    for row in reply_markup.inline_keyboard:
+                        for btn in row:
+                            button_info = {"text": btn.text}
+                            if hasattr(btn, "url") and btn.url:
+                                button_info["url"] = btn.url
+                            if hasattr(btn, "callback_data") and btn.callback_data:
+                                button_info["callback_data"] = btn.callback_data
+                            buttons_data.append(button_info)
+                    if buttons_data:
+                        message_data_obj["buttons"] = buttons_data
+                        message_data_obj["keyboard_type"] = "inline"
+                # Обработка reply клавиатуры
+                elif hasattr(reply_markup, "keyboard"):
+                    for row in reply_markup.keyboard:
+                        for btn in row:
+                            button_info = {"text": btn.text}
+                            if hasattr(btn, "request_contact") and btn.request_contact:
+                                button_info["request_contact"] = True
+                            if hasattr(btn, "request_location") and btn.request_location:
+                                button_info["request_location"] = True
+                            buttons_data.append(button_info)
+                    if buttons_data:
+                        message_data_obj["buttons"] = buttons_data
+                        message_data_obj["keyboard_type"] = "reply"
+            except Exception as btn_error:
+                logging.warning(f"Не удалось извлечь кнопки в safe_edit_or_send: {btn_error}")
+        
+        await save_message_to_api(
+            user_id=user_id,
+            message_type="bot",
+            message_text=text,
+            node_id=node_id,
+            message_data=message_data_obj
+        )
+    
+    return result
 
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = "7713154819:AAGtj0O7RFLMM1rRhQhFJoWT9JikU5GiRoQ"
@@ -650,6 +742,10 @@ async def handle_command_start(message):
     """Алиас для start_handler, используется в callback обработчиках"""
     await start_handler(message)
 
+async def handle_command_settings(message):
+    """Алиас для settings_handler, используется в callback обработчиках"""
+    await settings_handler(message)
+
 async def update_user_data_in_db(user_id: int, data_key: str, data_value):
     """Обновляет пользовательские данные в базе данных"""
     if not db_pool:
@@ -748,6 +844,8 @@ async def set_bot_commands():
     commands = [
         # Команда start - Запустить бота
         BotCommand(command="start", description="Запустить бота"),
+        # Команда settings - Настройки бота
+        BotCommand(command="settings", description="Настройки бота"),
     ]
 # Устанавливаем команды для бота
     await bot.set_my_commands(commands)
@@ -810,6 +908,9 @@ async def start_handler(message: types.Message):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = "Привет! Я ваш новый бот. Нажмите /help для получения помощи."
+
+    # Автопереход пропущен: collectUserInput=false
+    logging.info(f"ℹ️ Узел start не собирает ответы (collectUserInput=false)")
     # Сохраняем значение переменной image_url_start в базу данных
     await update_user_data_in_db(user_id, "image_url_start", "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg")
 
@@ -903,6 +1004,352 @@ async def start_handler(message: types.Message):
         processed_text = replace_variables_in_text(text, user_vars)
         await message.answer(processed_text)
 # @@NODE_END:start@@
+
+# @@NODE_START:DDmAXMnH_Dyd8T7J-wm9S@@
+# @@NODE_END:DDmAXMnH_Dyd8T7J-wm9S@@
+
+# @@NODE_START:2pmaMDNyVr3oVOHL98LwP@@
+
+@dp.message(Command("settings"))
+async def settings_handler(message: types.Message):
+    logging.info(f"Команда /settings вызвана пользователем {message.from_user.id}")
+    # Сохраняем пользователя и статистику использования команд
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    
+    # Сохраняем пользователя в базу данных
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, message.from_user)
+    await update_user_data_in_db(user_id, "user_name", user_name)
+    await update_user_data_in_db(user_id, "first_name", first_name)
+    await update_user_data_in_db(user_id, "last_name", last_name)
+    await update_user_data_in_db(user_id, "username", username)
+    
+    # Обновляем статистику команд в БД
+    if saved_to_db:
+        await update_user_data_in_db(user_id, "command_settings", datetime.now().isoformat())
+    
+    # Сохранение в локальное хранилище
+    # Инициализируем базовые переменные пользователя в локальном хранилище
+    user_name = init_user_variables(user_id, message.from_user)
+    
+    if "commands_used" not in user_data[user_id]:
+        user_data[user_id]["commands_used"] = {}
+    user_data[user_id]["commands_used"]["/settings"] = user_data[user_id]["commands_used"].get("/settings", 0) + 1
+
+    text = "⚙️ Настройки бота:"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    text = replace_variables_in_text(text, user_vars)
+    
+    has_regular_buttons = False
+    has_input_collection = False
+    logging.info(f"DEBUG: generateKeyboard для узла 2pmaMDNyVr3oVOHL98LwP - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=undefined, enableTextInput=undefined, enablePhotoInput=undefined, enableVideoInput=undefined, enableAudioInput=undefined, enableDocumentInput=undefined")
+    # DEBUG: Узел 2pmaMDNyVr3oVOHL98LwP - hasRegularButtons=False, hasInputCollection=False
+    logging.info(f"DEBUG: Узел 2pmaMDNyVr3oVOHL98LwP обработка кнопок - keyboardType=none, buttons=2")
+    await message.answer(text, parse_mode=ParseMode.MARKDOWN)
+# @@NODE_END:2pmaMDNyVr3oVOHL98LwP@@
+
+# Обработчики автопереходов
+
+@dp.callback_query(lambda c: c.data == "DDmAXMnH_Dyd8T7J-wm9S" or c.data.startswith("DDmAXMnH_Dyd8T7J-wm9S_btn_") or c.data == "done_d8T7J-wm9S")
+async def handle_callback_DDmAXMnH_Dyd8T7J_wm9S(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_DDmAXMnH_Dyd8T7J_wm9S для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_DDmAXMnH_Dyd8T7J_wm9S: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла DDmAXMnH_Dyd8T7J-wm9S
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_DDmAXMnH_Dyd8T7J-wm9S"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла DDmAXMnH_Dyd8T7J-wm9S: false")
+    
+    # Обрабатываем узел DDmAXMnH_Dyd8T7J-wm9S: DDmAXMnH_Dyd8T7J-wm9S
+    text = "Новое сообщение"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение (с проверкой прикрепленного медиа)
+    # Проверяем наличие прикрепленного медиа из переменной image_url_DDmAXMnH_Dyd8T7J-wm9S
+    attached_media = None
+    if user_vars and "image_url_DDmAXMnH_Dyd8T7J-wm9S" in user_vars:
+        media_data = user_vars["image_url_DDmAXMnH_Dyd8T7J-wm9S"]
+        if isinstance(media_data, dict) and "value" in media_data:
+            attached_media = media_data["value"]
+        elif isinstance(media_data, str):
+            attached_media = media_data
+    
+    # Если медиа найдено, отправляем с медиа, иначе обычное сообщение
+    if attached_media and str(attached_media).strip():
+        logging.info(f"📎 Отправка photo медиа из переменной image_url_DDmAXMnH_Dyd8T7J-wm9S: {attached_media}")
+        try:
+            # Заменяем переменные в тексте перед отправкой медиа
+            processed_caption = replace_variables_in_text(text, user_vars)
+            await bot.send_photo(callback_query.from_user.id, attached_media, caption=processed_caption, reply_markup=keyboard)
+        except Exception as e:
+            logging.error(f"Ошибка отправки photo: {e}")
+            # Fallback на обычное сообщение при ошибке
+            await safe_edit_or_send(callback_query, text, node_id="DDmAXMnH_Dyd8T7J-wm9S", reply_markup=keyboard if keyboard is not None else None)
+    else:
+        # Медиа не найдено, отправляем обычное текстовое сообщение
+        logging.info(f"📝 Медиа image_url_DDmAXMnH_Dyd8T7J-wm9S не найдено, отправка текстового сообщения")
+        # Заменяем переменные в тексте перед отправкой
+        processed_text = replace_variables_in_text(text, user_vars)
+        if False:
+            # Узел ожидает ввод, не отправляем сообщение
+            logging.info(f"ℹ️ Узел DDmAXMnH_Dyd8T7J-wm9S ожидает ввод, пропускаем отправку сообщения")
+        else:
+            await safe_edit_or_send(callback_query, processed_text, node_id="DDmAXMnH_Dyd8T7J-wm9S", reply_markup=keyboard if keyboard is not None else None)
+    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла
+    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура
+    user_id = callback_query.from_user.id
+    has_conditional_keyboard = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if has_conditional_keyboard:
+        logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")
+    elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
+        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла DDmAXMnH_Dyd8T7J-wm9S")
+    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
+    elif user_id in user_data and user_data[user_id].get("collectUserInput_DDmAXMnH_Dyd8T7J-wm9S", True) == True:
+        logging.info(f"ℹ️ Узел DDmAXMnH_Dyd8T7J-wm9S ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")
+    else:
+        # ⚡ Автопереход к узлу 2pmaMDNyVr3oVOHL98LwP
+        logging.info(f"⚡ Автопереход от узла DDmAXMnH_Dyd8T7J-wm9S к узлу 2pmaMDNyVr3oVOHL98LwP")
+        await handle_callback_2pmaMDNyVr3oVOHL98LwP(callback_query)
+        logging.info(f"✅ Автопереход выполнен: DDmAXMnH_Dyd8T7J-wm9S -> 2pmaMDNyVr3oVOHL98LwP")
+        return
+    
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "2pmaMDNyVr3oVOHL98LwP" or c.data.startswith("2pmaMDNyVr3oVOHL98LwP_btn_") or c.data == "done_oVOHL98LwP")
+async def handle_callback_2pmaMDNyVr3oVOHL98LwP(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_2pmaMDNyVr3oVOHL98LwP для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_2pmaMDNyVr3oVOHL98LwP: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла 2pmaMDNyVr3oVOHL98LwP
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_2pmaMDNyVr3oVOHL98LwP"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла 2pmaMDNyVr3oVOHL98LwP: false")
+    
+    # Обрабатываем узел 2pmaMDNyVr3oVOHL98LwP: 2pmaMDNyVr3oVOHL98LwP
+    text = "⚙️ Настройки бота:"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+# Обработчики для кнопок команд
+# Найдено 2 кнопок команд: cmd_language, cmd_notifications
+
+@dp.callback_query(lambda c: c.data == "cmd_language")
+async def handle_cmd_language(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    logging.info(f"Обработка кнопки команды: cmd_language -> /language (пользователь {callback_query.from_user.id})")
+    # Симулияуем выполнение команды /language
+    
+    # Создаем fake message object для команды
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.date = callback_query.message.date
+    fake_message.answer = callback_query.message.answer
+    fake_message.edit_text = callback_query.message.edit_text
+    
+    await callback_query.message.edit_text("Команда /language выполнена")
+    logging.info(f"Команда /language выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
+
+@dp.callback_query(lambda c: c.data == "cmd_notifications")
+async def handle_cmd_notifications(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    logging.info(f"Обработка кнопки команды: cmd_notifications -> /notifications (пользователь {callback_query.from_user.id})")
+    # Симулияуем выполнение команды /notifications
+    
+    # Создаем fake message object для команды
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.date = callback_query.message.date
+    fake_message.answer = callback_query.message.answer
+    fake_message.edit_text = callback_query.message.edit_text
+    
+    await callback_query.message.edit_text("Команда /notifications выполнена")
+    logging.info(f"Команда /notifications выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
 
 # Обработчики для групп бота
 

@@ -50,7 +50,7 @@ export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNod
       // Проверяем автопереход
       if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
         // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
-        if (targetNode.data.collectUserInput !== false) {
+        if (targetNode.data.collectUserInput === true) {
           code += `${baseIndent}    \n`;
           code += `${baseIndent}    # Автопереход к следующему узлу (только если collectUserInput=true)\n`;
           code += `${baseIndent}    auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;

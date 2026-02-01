@@ -1020,7 +1020,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons?.length > 0) {
                     modes.push('button');
                   }
-                  if (targetNode.data.enableTextInput !== false) {
+                  if (targetNode.data.enableTextInput === true) {
                     modes.push('text');
                   }
                   if (targetNode.data.enablePhotoInput) modes.push('photo');
@@ -1109,7 +1109,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const parseModeStr = targetNode.data.formatMode || '';
               const keyboardStr = 'keyboard if keyboard is not None else None';
               // Определяем, собирает ли узел ввод (учитываем все типы ввода)
-              const collectUserInputFlag = targetNode.data.collectUserInput !== false ||
+              const collectUserInputFlag = targetNode.data.collectUserInput === true ||
                 targetNode.data.enableTextInput === true ||
                 targetNode.data.enablePhotoInput === true ||
                 targetNode.data.enableVideoInput === true ||
@@ -1227,7 +1227,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             }
 
             // ИСПРАВЛЕНИЕ: Если автопереход не произошел, устанавливаем состояние ожидания
-            const collectInputAfterTransitionCheck = targetNode.data.collectUserInput !== false ||
+            const collectInputAfterTransitionCheck = targetNode.data.collectUserInput === true ||
               targetNode.data.enableTextInput === true ||
               targetNode.data.enablePhotoInput === true ||
               targetNode.data.enableVideoInput === true ||
@@ -3320,7 +3320,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 // АВТОПЕРЕХОД: Если у узля есть autoTransitionTo, сразу вызываем callback обработчик
                 if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                   // Проверяяям, нужно ли выполнять автопереход - только если collectUserInput=true
-                  if (targetNode.data.collectUserInput !== false) {
+                  if (targetNode.data.collectUserInput === true) {
                     const autoTargetId = targetNode.data.autoTransitionTo;
                     const autoSafeFunctionName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
                     code += `${bodyIndent}\n`;

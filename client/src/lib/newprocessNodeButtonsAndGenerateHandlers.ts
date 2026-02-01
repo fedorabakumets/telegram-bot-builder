@@ -427,7 +427,7 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
               const parseModeStr = targetNode.data.formatMode || '';
               const keyboardStr = 'keyboard if keyboard is not None else None';
               // Определяем, собирает ли узел ввод (учитываем все типы ввода)
-              const collectUserInputFlag = targetNode.data.collectUserInput !== false ||
+              const collectUserInputFlag = targetNode.data.collectUserInput === true ||
                 targetNode.data.enableTextInput === true ||
                 targetNode.data.enablePhotoInput === true ||
                 targetNode.data.enableVideoInput === true ||
@@ -493,7 +493,7 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
               // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=false
               if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                 // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
-                if (targetNode.data.collectUserInput !== false) {
+                if (targetNode.data.collectUserInput === true) {
                   const autoTargetId = targetNode.data.autoTransitionTo;
                   const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                   code += '    \n';
@@ -879,7 +879,7 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
 
             code += '    except Exception as e:\n';
             code += '        logging.error(f"Ошибка отправки контакта: {e}")\n';
-            code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось отправить контакт")\n';
+            code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось о����править контакт")\n';
 
             /**
              * БЛОК 8: Обработка узлов пользовательского ввода
