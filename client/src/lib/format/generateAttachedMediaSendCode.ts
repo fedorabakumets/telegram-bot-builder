@@ -43,6 +43,8 @@ export function generateAttachedMediaSendCode(
   code += `${indentLevel}if attached_media and str(attached_media).strip():\n`;
   code += `${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")\n`;
   code += `${indentLevel}    try:\n`;
+  code += `${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа\n`;
+  code += `${indentLevel}        processed_caption = replace_variables_in_text(text, user_vars)\n`;
 
   // Генерируем код отправки в зависимости от типа медиа
   const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
@@ -50,21 +52,21 @@ export function generateAttachedMediaSendCode(
 
   switch (mediaType) {
     case 'photo':
-      code += `${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media, caption=text${parseModeParam}${keyboardParam})\n`;
+      code += `${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
       break;
     case 'video':
-      code += `${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media, caption=text${parseModeParam}${keyboardParam})\n`;
+      code += `${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
       break;
     case 'audio':
-      code += `${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media, caption=text${parseModeParam}${keyboardParam})\n`;
+      code += `${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
       break;
     case 'document':
-      code += `${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media, caption=text${parseModeParam}${keyboardParam})\n`;
+      code += `${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
       break;
     default:
       code += `${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение\n`;
       const autoTransitionFlagDefault = autoTransitionTo ? ', is_auto_transition=True' : '';
-      code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseMode})\n`;
+      code += `${indentLevel}        await safe_edit_or_send(callback_query, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseMode})\n`;
   }
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
@@ -91,12 +93,14 @@ export function generateAttachedMediaSendCode(
   code += `${indentLevel}else:\n`;
   code += `${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение\n`;
   code += `${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")\n`;
+  code += `${indentLevel}    # Заменяем переменные в тексте перед отправкой\n`;
+  code += `${indentLevel}    processed_text = replace_variables_in_text(text, user_vars)\n`;
   // Если collectUserInput=true, не отправляем сообщение, так как узел ожидает ввод
   code += `${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:\n`;
   code += `${indentLevel}        # Узел ожидает ввод, не отправляем сообщение\n`;
   code += `${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод, пропускаем отправку сообщения")\n`;
   code += `${indentLevel}    else:\n`;
-  code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
+  code += `${indentLevel}        await safe_edit_or_send(callback_query, processed_text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход и для случая без медиа
   if (autoTransitionTo) {

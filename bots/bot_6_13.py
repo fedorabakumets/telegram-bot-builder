@@ -3047,7 +3047,9 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
     if attached_media and str(attached_media).strip():
         logging.info(f"📎 Отправка photo медиа из переменной photo: {attached_media}")
         try:
-            await bot.send_photo(callback_query.from_user.id, attached_media, caption=text, reply_markup=keyboard)
+            # Заменяем переменные в тексте перед отправкой медиа
+            processed_caption = replace_variables_in_text(text, user_vars)
+            await bot.send_photo(callback_query.from_user.id, attached_media, caption=processed_caption, reply_markup=keyboard)
         except Exception as e:
             logging.error(f"Ошибка отправки photo: {e}")
             # Fallback на обычное сообщение при ошибке
@@ -3055,11 +3057,13 @@ async def handle_callback_8xSJaWAJNz7Hz_54mjFTF(callback_query: types.CallbackQu
     else:
         # Медиа не найдено, отправляем обычное текстовое сообщение
         logging.info(f"📝 Медиа photo не найдено, отправка текстового сообщения")
+        # Заменяем переменные в тексте перед отправкой
+        processed_text = replace_variables_in_text(text, user_vars)
         if False:
             # Узел ожидает ввод, не отправляем сообщение
             logging.info(f"ℹ️ Узел 8xSJaWAJNz7Hz_54mjFTF ожидает ввод, пропускаем отправку сообщения")
         else:
-            await safe_edit_or_send(callback_query, text, node_id="8xSJaWAJNz7Hz_54mjFTF", reply_markup=keyboard if keyboard is not None else None)
+            await safe_edit_or_send(callback_query, processed_text, node_id="8xSJaWAJNz7Hz_54mjFTF", reply_markup=keyboard if keyboard is not None else None)
     # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла
     # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура
     user_id = callback_query.from_user.id
