@@ -4862,6 +4862,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   }
 
+  /**
+   * Генерирует код сохранения данных множественного выбора и очистки состояния
+   * Создает Python код для сохранения выбранных опций множественного выбора в базу данных
+   * и очистки временных данных пользователя после завершения операции
+   */
   function generateMultiSelectDataPersistenceAndCleanupCode() {
     multiSelectNodes.forEach((node: Node) => {
       const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
