@@ -310,7 +310,17 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     const keyboardParam = (node.data.allowMultipleSelection || node.data.keyboardType !== 'none') ? ', reply_markup=keyboard' : '';
     const parseModeParam = node.data.formatMode && node.data.formatMode !== 'none' ? `, parse_mode=ParseMode.${node.data.formatMode.toUpperCase()}` : '';
 
-    mediaCode += `            await bot.send_photo(message.chat.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
+    // Преобразуем внутренний путь в публичный URL, если это внутренний путь
+    mediaCode += '            # Преобразуем внутренний путь в публичный URL\n';
+    mediaCode += '            public_url = attached_media\n';
+    mediaCode += '            if attached_media.startswith("/uploads/"):\n';
+    mediaCode += '                # Получаем базовый URL сервера из API_BASE_URL и добавляем путь\n';
+    mediaCode += '                if API_BASE_URL.endswith("/"):\n';
+    mediaCode += '                    public_url = API_BASE_URL + attached_media[1:]  # Убираем начальный слэш\n';
+    mediaCode += '                else:\n';
+    mediaCode += '                    public_url = API_BASE_URL + attached_media\n';
+    mediaCode += '            \n';
+    mediaCode += `            await bot.send_photo(message.chat.id, public_url, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
     mediaCode += '        except Exception as e:\n';
     mediaCode += '            logging.error(f"Ошибка отправки фото: {e}")\n';
     mediaCode += '            # Fallback на обычное сообщение при ошибке\n';
