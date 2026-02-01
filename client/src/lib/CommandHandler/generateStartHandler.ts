@@ -281,6 +281,13 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     mediaCode += `    # Сохраняем значение переменной ${attachedMedia[0]} в базу данных\n`;
     mediaCode += `    await update_user_data_in_db(user_id, "${attachedMedia[0]}", "${node.data.imageUrl}")\n`;
     mediaCode += '\n';
+    mediaCode += '    # Обновляем user_vars, чтобы включить только что сохраненную переменную\n';
+    mediaCode += '    user_vars = await get_user_from_db(user_id)\n';
+    mediaCode += '    if not user_vars:\n';
+    mediaCode += '        user_vars = user_data.get(user_id, {})\n';
+    mediaCode += '    if not isinstance(user_vars, dict):\n';
+    mediaCode += '        user_vars = user_data.get(user_id, {})\n';
+    mediaCode += '\n';
     mediaCode += '    # Проверяем наличие прикрепленного медиа из переменной\n';
     mediaCode += '    attached_media = None\n';
     mediaCode += `    if user_vars and "${attachedMedia[0]}" in user_vars:\n`;
@@ -289,7 +296,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     mediaCode += '            attached_media = media_data["value"]\n';
     mediaCode += '        elif isinstance(media_data, str):\n';
     mediaCode += '            attached_media = media_data\n';
-    mediaCode += '        # Также проверяем, может быть переменная хранится напрямую в user_vars\n';
+    mediaCode += '        # Также проверяем, может быть переменная хранится напрямую в user_data\n';
     mediaCode += `    elif "${attachedMedia[0]}" in user_data.get(user_id, {}):\n`;
     mediaCode += `        attached_media = user_data[user_id]["${attachedMedia[0]}"]\n`;
     mediaCode += '\n';
