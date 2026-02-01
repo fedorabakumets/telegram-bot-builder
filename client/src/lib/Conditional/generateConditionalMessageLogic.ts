@@ -93,6 +93,22 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
   code += `${indentLevel}        elif variable_data is not None and str(variable_data).strip() != "":\n`;
   code += `${indentLevel}            return True, str(variable_data)\n`;
   code += `${indentLevel}    \n`;
+  code += `${indentLevel}    # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате\n`;
+  code += `${indentLevel}    # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого\n`;
+  code += `${indentLevel}    if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):\n`;
+  code += `${indentLevel}        nested_data = user_data_dict["user_data"]\n`;
+  code += `${indentLevel}        if var_name in nested_data:\n`;
+  code += `${indentLevel}            raw_value = nested_data[var_name]\n`;
+  code += `${indentLevel}            if isinstance(raw_value, dict) and "value" in raw_value:\n`;
+  code += `${indentLevel}                var_value = raw_value["value"]\n`;
+  code += `${indentLevel}                # Проверяем, что значение действительно существует и не пустое\n`;
+  code += `${indentLevel}                if var_value is not None and str(var_value).strip() != "":\n`;
+  code += `${indentLevel}                    return True, str(var_value)\n`;
+  code += `${indentLevel}            else:\n`;
+  code += `${indentLevel}                # Проверяем, что значение действительно существует и не пустое\n`;
+  code += `${indentLevel}                if raw_value is not None and str(raw_value).strip() != "":\n`;
+  code += `${indentLevel}                    return True, str(raw_value)\n`;
+  code += `${indentLevel}    \n`;
   code += `${indentLevel}    return False, None\n`;
   code += `${indentLevel}\n`;
 

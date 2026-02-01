@@ -1,4 +1,4 @@
-import { BotData } from "../../../../shared/schema";
+import { BotData } from '@shared/schema';
 import { generateBotFatherCommands } from "../commands";
 
 

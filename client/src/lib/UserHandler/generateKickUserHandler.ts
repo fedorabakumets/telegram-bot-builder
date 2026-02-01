@@ -1,4 +1,4 @@
-import { Node } from '../../../../shared/schema';
+import { Node } from '@shared/schema';
 
 export function generateKickUserHandler(node: Node): string {
   let code = `\n# Kick User Handler\n`;

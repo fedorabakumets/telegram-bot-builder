@@ -1,4 +1,4 @@
-import { Node } from '../../../../shared/schema';
+import { Node } from '@shared/schema';
 
 export function generateDeleteMessageHandler(node: Node): string {
   let code = `\n# Delete Message Handler\n`;

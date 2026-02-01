@@ -1,4 +1,4 @@
-import { BotGroup } from '../../../shared/schema';
+import { BotGroup } from '@shared/schema';
 
 export function generateGroupHandlers(groups: BotGroup[]): string {
   let code = '';

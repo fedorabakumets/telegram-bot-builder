@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Node, buttonSchema } from '../../../shared/schema';
+import { Node, buttonSchema } from '@shared/schema';
 import { formatTextForPython, toPythonBoolean, generateButtonText, calculateOptimalColumns, generateWaitingStateCode } from "./format";
 import { generateUniversalVariableReplacement } from "./utils/generateUniversalVariableReplacement";
 import { generateConditionalMessageLogic } from "./Conditional";

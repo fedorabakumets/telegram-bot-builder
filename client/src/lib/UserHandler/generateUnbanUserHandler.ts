@@ -1,4 +1,4 @@
-import { Node } from '../../../../shared/schema';
+import { Node } from '@shared/schema';
 
 export function generateUnbanUserHandler(node: Node): string {
   let code = `\n# Unban User Handler\n`;

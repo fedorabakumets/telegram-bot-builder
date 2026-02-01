@@ -1,4 +1,4 @@
-import { Node, Button } from '../../../shared/schema';
+import { Node, Button } from '@shared/schema';
 import { formatTextForPython, generateUniqueShortId } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
 

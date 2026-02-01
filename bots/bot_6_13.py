@@ -1031,6 +1031,22 @@ async def start_handler(message: types.Message):
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
+        
         return False, None
     
     # Условие 1: user_data_exists для переменных: age
@@ -1173,6 +1189,22 @@ async def start_handler(message: types.Message):
                     return True, str(var_value)
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
+        
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
         
         return False, None
     
@@ -1843,6 +1875,22 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
+        
         return False, None
     
     # Условие 1: user_data_exists для переменных: name
@@ -2149,6 +2197,22 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
                     return True, str(var_value)
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
+        
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
         
         return False, None
     
@@ -2707,6 +2771,22 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
                     return True, str(var_value)
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
+        
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
         
         return False, None
     
@@ -4056,6 +4136,22 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
+        
         return False, None
     
     # Условие 1: user_data_exists для переменных: city
@@ -4905,6 +5001,22 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
+        
         return False, None
     
     # Условие 1: user_data_exists для переменных: city
@@ -5102,6 +5214,22 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
                     return True, str(var_value)
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
+        
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
         
         return False, None
     
@@ -5301,6 +5429,22 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
+        
         return False, None
     
     # Условие 1: user_data_exists для переменных: city
@@ -5498,6 +5642,22 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
                     return True, str(var_value)
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
+        
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
         
         return False, None
     
@@ -5763,6 +5923,22 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
+        
         return False, None
     
     # Условие 1: user_data_exists для переменных: age
@@ -5961,6 +6137,22 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
+        
         return False, None
     
     # Условие 1: user_data_exists для переменных: age
@@ -6158,6 +6350,22 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
                     return True, str(var_value)
             elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
+        
+        # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+        # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+        if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+            nested_data = user_data_dict["user_data"]
+            if var_name in nested_data:
+                raw_value = nested_data[var_name]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value = raw_value["value"]
+                    # Проверяем, что значение действительно существует и не пустое
+                    if var_value is not None and str(var_value).strip() != "":
+                        return True, str(var_value)
+                else:
+                    # Проверяем, что значение действительно существует и не пустое
+                    if raw_value is not None and str(raw_value).strip() != "":
+                        return True, str(raw_value)
         
         return False, None
     
@@ -9235,6 +9443,22 @@ async def handle_photo_input(message: types.Message):
                         elif variable_data is not None and str(variable_data).strip() != "":
                             return True, str(variable_data)
                     
+                    # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+                    # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+                    if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+                        nested_data = user_data_dict["user_data"]
+                        if var_name in nested_data:
+                            raw_value = nested_data[var_name]
+                            if isinstance(raw_value, dict) and "value" in raw_value:
+                                var_value = raw_value["value"]
+                                # Проверяем, что значение действительно существует и не пустое
+                                if var_value is not None and str(var_value).strip() != "":
+                                    return True, str(var_value)
+                            else:
+                                # Проверяем, что значение действительно существует и не пустое
+                                if raw_value is not None and str(raw_value).strip() != "":
+                                    return True, str(raw_value)
+                    
                     return False, None
                 
                 # Условие 1: user_data_exists для переменных: city
@@ -9375,6 +9599,22 @@ async def handle_photo_input(message: types.Message):
                                 return True, str(var_value)
                         elif variable_data is not None and str(variable_data).strip() != "":
                             return True, str(variable_data)
+                    
+                    # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+                    # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+                    if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+                        nested_data = user_data_dict["user_data"]
+                        if var_name in nested_data:
+                            raw_value = nested_data[var_name]
+                            if isinstance(raw_value, dict) and "value" in raw_value:
+                                var_value = raw_value["value"]
+                                # Проверяем, что значение действительно существует и не пустое
+                                if var_value is not None and str(var_value).strip() != "":
+                                    return True, str(var_value)
+                            else:
+                                # Проверяем, что значение действительно существует и не пустое
+                                if raw_value is not None and str(raw_value).strip() != "":
+                                    return True, str(raw_value)
                     
                     return False, None
                 
@@ -9536,6 +9776,22 @@ async def handle_photo_input(message: types.Message):
                                 return True, str(var_value)
                         elif variable_data is not None and str(variable_data).strip() != "":
                             return True, str(variable_data)
+                    
+                    # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате
+                    # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого
+                    if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):
+                        nested_data = user_data_dict["user_data"]
+                        if var_name in nested_data:
+                            raw_value = nested_data[var_name]
+                            if isinstance(raw_value, dict) and "value" in raw_value:
+                                var_value = raw_value["value"]
+                                # Проверяем, что значение действительно существует и не пустое
+                                if var_value is not None and str(var_value).strip() != "":
+                                    return True, str(var_value)
+                            else:
+                                # Проверяем, что значение действительно существует и не пустое
+                                if raw_value is not None and str(raw_value).strip() != "":
+                                    return True, str(raw_value)
                     
                     return False, None
                 

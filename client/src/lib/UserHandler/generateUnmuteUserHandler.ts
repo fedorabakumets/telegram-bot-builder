@@ -1,4 +1,4 @@
-import { Node } from '../../../../shared/schema';
+import { Node } from '@shared/schema';
 
 export function generateUnmuteUserHandler(node: Node): string {
   let code = `\n# Unmute User Handler\n`;

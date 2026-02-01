@@ -1,5 +1,5 @@
 import { generateButtonText } from '../format/generateButtonText';
-import { Node } from '../../../../shared/schema';
+import { Node } from '@shared/schema';
 
 // ============================================================================
 // ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ МЕДИА

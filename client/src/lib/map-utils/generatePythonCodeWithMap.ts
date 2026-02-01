@@ -1,4 +1,4 @@
-import { BotData, BotGroup } from "../../../../shared/schema";
+import { BotData, BotGroup } from '@shared/schema';
 import { CodeWithMap, generatePythonCode } from "../bot-generator";
 import { parseCodeMap } from './parseCodeMap';
 

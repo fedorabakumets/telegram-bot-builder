@@ -1,4 +1,4 @@
-import { Button, Node } from "../../../../shared/schema";
+import { Button, Node } from '@shared/schema';
 
 // ============================================================================
 // ПАРСЕРЫ И ОСНОВНЫЕ ГЕНЕРАТОРЫ

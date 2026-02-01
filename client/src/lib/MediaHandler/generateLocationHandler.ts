@@ -1,5 +1,5 @@
 import { generateButtonText } from '../format/generateButtonText';
-import { Node } from '../../../../shared/schema';
+import { Node } from '@shared/schema';
 
 export function generateLocationHandler(node: Node): string {
   let code = `\n# Обработчик геолокации для узла ${node.id}\n`;

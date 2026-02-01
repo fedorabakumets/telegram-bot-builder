@@ -1,6 +1,6 @@
 ﻿// Внешние зависимости
 import { z } from 'zod';
-import { BotData, Node, BotGroup, buttonSchema } from '../../../shared/schema';
+import { BotData, Node, BotGroup, buttonSchema } from '@shared/schema';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';

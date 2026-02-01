@@ -5,7 +5,7 @@ import { generateUniversalVariableReplacement } from '../utils/generateUniversal
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';
-import { Node } from '../../../../shared/schema';
+import { Node } from '@shared/schema';
 
 
 export function generateKeyboard(node: Node): string {

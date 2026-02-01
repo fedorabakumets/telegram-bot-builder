@@ -1,4 +1,4 @@
-import { Node } from '../../../shared/schema';
+import { Node } from '@shared/schema';
 import { formatTextForPython } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
 

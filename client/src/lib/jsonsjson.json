@@ -312,9 +312,10 @@
                 "variableNames": [
                   "info"
                 ],
+                "collectUserInput": true,
                 "waitForTextInput": true,
-                "nextNodeAfterInput": "vxPv7G4n0QGyhnv4ucOM5",
-                "showCustomMessage": false
+                "showCustomMessage": false,
+                "nextNodeAfterInput": "Y9zLRp1BLpVhm-HcsNkJV"
               }
             ],
             "enableConditionalMessages": true
@@ -527,7 +528,7 @@
         }
       ],
       "createdAt": "2026-01-30T19:45:55.920Z",
-      "updatedAt": "2026-02-01T10:38:12.066Z",
+      "updatedAt": "2026-02-01T11:31:48.789Z",
       "viewState": {
         "zoom": 1,
         "position": {

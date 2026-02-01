@@ -2,7 +2,7 @@ import { createSafeFunctionName } from '../format/createSafeFunctionName';
 import { formatTextForPython } from '../format/formatTextForPython';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { generateAdminRightsToggleHandlers } from './generateAdminRightsToggleHandlers';
-import { Node } from '../../../../shared/schema';
+import { Node } from '@shared/schema';
 
 export function generateAdminRightsHandler(node: Node): string {
   let code = `\n# Interactive Admin Rights Handler for ${node.id}\n`;

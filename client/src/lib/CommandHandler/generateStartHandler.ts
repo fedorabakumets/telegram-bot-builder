@@ -3,7 +3,7 @@ import { formatTextForPython } from '../format/formatTextForPython';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
-import { Node } from '../../../../shared/schema';
+import { Node } from '@shared/schema';
 
 // ============================================================================
 // ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ КОМАНД И СООБЩЕНИЙ
