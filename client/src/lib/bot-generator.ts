@@ -4670,12 +4670,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
   }
 
+  /**
+   * Генерирует обработчики событий для групп бота
+   * Создает Python код для обработки групповых событий и взаимодействий
+   */
   function generateGroupBasedEventHandlers() {
     code += '\n';
 
     code += generateGroupHandlers(groups);
   }
 
+  /**
+   * Генерирует fallback обработчики для необработанных сообщений
+   * Создает обработчики для текстовых сообщений и фотографий, которые не были обработаны основными обработчиками
+   */
   function generateFallbackHandlers() {
     if (userDatabaseEnabled) {
       generateFallbackTextMessageHandler();
@@ -4685,6 +4693,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   }
 
+  /**
+   * Генерирует fallback обработчик для необработанных текстовых сообщений
+   * Создает Python функцию для обработки всех текстовых сообщений, которые не были обработаны основными обработчиками
+   */
   function generateFallbackTextMessageHandler() {
     code += '\n# Универсальный fallback-обработчик для всех необработанных текстовых сообщений\n';
     code += '@dp.message(F.text)\n';
@@ -4699,6 +4711,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    # await message.answer("Извините, я не понимаю эту команду. Используйте /start для начала.")\n\n';
   }
 
+  /**
+   * Генерирует fallback обработчик для необработанных фотографий
+   * Создает Python функцию для обработки всех фотографий, которые не были обработаны основными обработчиками
+   */
   function generateFallbackPhotoMessageHandler() {
     code += '\n# Универсальный обработчик для необработанных фото\n';
     code += '@dp.message(F.photo)\n';
@@ -4712,6 +4728,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '\n';
   }
 
+  /**
+   * Генерирует каркас основной функции с обработчиками сигналов
+   * Создает Python функцию main() с обработчиками сигналов для корректного завершения работы бота
+   */
   function generateMainFunctionScaffoldWithSignalHandlers() {
     code += '\n\n# Запуск бота\n';
     code += 'async def main():\n';
@@ -4731,6 +4751,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    try:\n';
   }
 
+  /**
+   * Генерирует код инициализации бота и настройки middleware
+   * Создает Python код для инициализации базы данных, команд меню и middleware для логирования
+   */
   function generateBotInitializationAndMiddlewareSetup() {
     if (userDatabaseEnabled) {
       code += '        # Инициализируем базу данных\n';
@@ -4751,6 +4775,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   }
 
+  /**
+   * Генерирует основной цикл опроса с корректным завершением работы
+   * Создает Python код для запуска polling бота и корректного закрытия всех соединений при завершении
+   */
   function generateMainPollingLoopWithGracefulShutdown() {
     code += '        print("🤖 Бот запущен и готов к работе!")\n';
     code += '        await dp.start_polling(bot)\n';
@@ -4774,6 +4802,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '        print("✅ Бот корректно завершил работу")\n\n';
   }
 
+  /**
+   * Идентифицирует узлы, требующие логику множественного выбора
+   * Находит все узлы в графе с включенной опцией множественного выбора и возвращает их список
+   * @returns {Array<Node>} Массив узлов с множественным выбором
+   */
   function identifyNodesRequiringMultiSelectLogic() {
     const multiSelectNodes = (nodes || []).filter((node: Node) => node.data.allowMultipleSelection
     );
@@ -4781,6 +4814,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     return multiSelectNodes;
   }
 
+  /**
+   * Генерирует обработчик callback-запросов для множественного выбора
+   * Создает Python функцию для обработки inline кнопок множественного выбора, включая кнопки "Готово"
+   */
   function generateMultiSelectCallbackDispatcherHandle() {
     if (multiSelectNodes.length > 0) {
       code += '\n# Обработчики для множественного выбора\n';
