@@ -1,9 +1,5 @@
-import { z } from 'zod';
-import { Node, buttonSchema } from '@shared/schema';
+import { Node, Button } from '@shared/schema';
 import { generateUniqueShortId, generateButtonText } from '../format';
-
-// Import Button type from the main bot-generator to avoid duplicates
-import { Button } from '../../bot-generator';
 
 export function generateMultiSelectCallbackLogic(
   multiSelectNodes: Node[],
