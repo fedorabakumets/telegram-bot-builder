@@ -1,11 +1,7 @@
-import { z } from 'zod';
-import { Node, buttonSchema } from '@shared/schema';
+import { Node, Button } from '@shared/schema';
 import { formatTextForPython, toPythonBoolean, generateButtonText, calculateOptimalColumns, generateWaitingStateCode } from "../format";
 import { generateUniversalVariableReplacement } from "../utils/generateUniversalVariableReplacement";
 import { generateConditionalMessageLogic } from "../Conditional";
-
-// Import Button type from the main bot-generator to avoid duplicates
-import { Button } from "../../bot-generator";
 
 export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
   let code = '';
