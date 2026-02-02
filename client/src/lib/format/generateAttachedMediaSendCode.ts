@@ -32,12 +32,34 @@ export function generateAttachedMediaSendCode(
   let code = '';
   code += `${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable}\n`;
   code += `${indentLevel}attached_media = None\n`;
-  code += `${indentLevel}if user_vars and "${mediaVariable}" in user_vars:\n`;
-  code += `${indentLevel}    media_data = user_vars["${mediaVariable}"]\n`;
-  code += `${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:\n`;
-  code += `${indentLevel}        attached_media = media_data["value"]\n`;
-  code += `${indentLevel}    elif isinstance(media_data, str):\n`;
-  code += `${indentLevel}        attached_media = media_data\n`;
+
+  // Проверяем, является ли переменная imageUrl или documentUrl (прямые URL-адреса)
+  if (mediaVariable.startsWith('image_url_') || mediaVariable.startsWith('document_url_') ||
+      mediaVariable.startsWith('video_url_') || mediaVariable.startsWith('audio_url_')) {
+    // Для переменных типа image_url_{nodeId} используем прямое значение из переменной
+    // Вместо поиска по полю вроде imageUrl, ищем по самой переменной image_url_{nodeId}
+    code += `${indentLevel}if user_vars and "${mediaVariable}" in user_vars:\n`;
+    code += `${indentLevel}    media_data = user_vars["${mediaVariable}"]\n`;
+    code += `${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:\n`;
+    code += `${indentLevel}        attached_media = media_data["value"]\n`;
+    code += `${indentLevel}    elif isinstance(media_data, str):\n`;
+    code += `${indentLevel}        attached_media = media_data\n`;
+    code += `${indentLevel}else:\n`;
+    code += `${indentLevel}    # Проверяем, есть ли медиа в переменных пользователя\n`;
+    code += `${indentLevel}    user_id = callback_query.from_user.id\n`;
+    code += `${indentLevel}    user_node_vars = user_data.get(user_id, {})\n`;
+    code += `${indentLevel}    if "${mediaVariable}" in user_node_vars:\n`;
+    code += `${indentLevel}        attached_media = user_node_vars["${mediaVariable}"]\n`;
+  } else {
+    // Для других типов переменных используем стандартную логику
+    code += `${indentLevel}if user_vars and "${mediaVariable}" in user_vars:\n`;
+    code += `${indentLevel}    media_data = user_vars["${mediaVariable}"]\n`;
+    code += `${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:\n`;
+    code += `${indentLevel}        attached_media = media_data["value"]\n`;
+    code += `${indentLevel}    elif isinstance(media_data, str):\n`;
+    code += `${indentLevel}        attached_media = media_data\n`;
+  }
+
   code += `${indentLevel}\n`;
   code += `${indentLevel}# Если медиа найдено, отправляем с медиа, иначе обычное сообщение\n`;
   code += `${indentLevel}if attached_media and str(attached_media).strip():\n`;
