@@ -42,7 +42,7 @@ import { collectConditionalMessageButtons } from './Conditional/collectCondition
 import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateBotCommandsSetup } from './bot-commands-setup';
-import { generateButtonResponseHandlers } from './generate/generateButtonResponseHandlers';
+import { generateButtonResponseHandlers } from './Keyboard/generateButtonResponseHandlers';
 import { generateReplyButtonHandlers } from './Keyboard/generate-reply-button-handlers';
 import { generateMultiSelectReplyHandler } from './Keyboard/generateMultiSelectReplyHandler';
 import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';

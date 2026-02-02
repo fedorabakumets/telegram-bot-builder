@@ -8,7 +8,7 @@ export { generateGroupsConfiguration } from './generateGroupsConfiguration';
 export { generateMessageLoggingCode } from './generate-message-logging';
 export { generateNodeHandlers } from './generate-node-handlers';
 export { generateSynonymHandlers } from './generate-synonym-handlers';
-export { generateButtonResponseHandlers } from './generateButtonResponseHandlers';
+export { generateButtonResponseHandlers } from '../Keyboard/generateButtonResponseHandlers';
 export { generateLocationFunctions } from './generateLocationFunctions';
 export { generateMediaFileFunctions } from './generateMediaFileFunctions';
 export { generateUniversalVariableReplacement } from './generateUniversalVariableReplacement';
