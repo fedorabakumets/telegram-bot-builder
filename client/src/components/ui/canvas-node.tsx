@@ -701,12 +701,12 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         </div>
       )}
       
-      {/* Media attachment indicator for message nodes */}
-      {node.type === 'message' && node.data.imageUrl && (
+      {/* Media attachment indicator for message, command, and start nodes */}
+      {(node.type === 'message' || node.type === 'command' || node.type === 'start') && (node.data.imageUrl || node.data.documentUrl || node.data.videoUrl || node.data.audioUrl) && (
         <div className="mb-4 rounded-lg overflow-hidden border-2 border-amber-200 dark:border-amber-700/50">
-          <img 
-            src={node.data.imageUrl} 
-            alt="Attached" 
+          <img
+            src={node.data.imageUrl || node.data.documentUrl || node.data.videoUrl || node.data.audioUrl}
+            alt="Attached"
             className="w-full h-auto max-h-48 object-cover"
             onError={(e) => {
               (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23f5f5f5" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" font-family="Arial" font-size="12" fill="%23999"%3EОшибка%3C/text%3E%3C/svg%3E';
