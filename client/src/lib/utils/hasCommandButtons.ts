@@ -1,4 +1,4 @@
-import { Node } from "@shared/schema";
+import { Node, Button } from "@shared/schema";
 
 // Функция для проверки наличия кнопок команд
 export function hasCommandButtons(nodes: Node[]): boolean {

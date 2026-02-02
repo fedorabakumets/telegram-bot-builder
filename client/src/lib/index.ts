@@ -53,8 +53,6 @@ export * from './Synonyms';
 // User management handlers
 export * from './UserHandler';
 
-// Types
-export * from './types/bot-node';
 
 // Additional utilities
 export { addInputTargetNodes } from './utils/addInputTargetNodes';
