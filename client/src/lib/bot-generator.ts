@@ -1546,7 +1546,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     navTargetNode.data.enableDocumentInput)) {
                     // Обрабатываем уялы ввода тттекста/медиа с поддержкой условных сообщений
                     const messageText = navTargetNode.data.messageText || 'Введите ваш ответ:';
-                    const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                     const inputTargetNodeId = navTargetNode.data.inputTargetNodeId || '';
 
                     // Проверяем, есть ли условные сообщения для этого узла
@@ -2119,7 +2118,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       if (nodes.length > 0) {
         nodes.forEach((targetNode, index) => {
           const condition = index === 0 ? 'if' : 'elif';
-          const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
 
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
@@ -2453,7 +2451,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `                        }\n`;
                   code += `                        logging.info(f"✅ Сояяяятояние ожид��ния настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
                 } else {
-                  // Обычное ожидание ввода если кнопок нет
+                  // Обычн����е ожидание ввода если кнопок нет
                   code += `                        # Узел собирает пользовательский ввод\n`;
                   code += `                        logging.info(f"🔧 Условная навигация к узлу с вводом: ${targetNode.id}")\n`;
                   code += `                        text = ${formattedText}\n`;
@@ -2991,7 +2989,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         };
       };
 
-      const { whileIndent, conditionIndent, bodyIndent } = getIndents(6);
+      const { conditionIndent, bodyIndent } = getIndents(6);
 
       // Добавляем навигацию для каждого узла
       if (nodes.length > 0) {
@@ -3043,17 +3041,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // Если узел message собирает ввод, настраиваем ожидание
               if (targetNode.data.collectUserInput === true) {
                 // Определяем тип ввода - если включены медиа-типы, используем их, иначе текст
-                let inputType = 'text';
                 if (targetNode.data.enablePhotoInput) {
-                  inputType = 'photo';
                 } else if (targetNode.data.enableVideoInput) {
-                  inputType = 'video';
                 } else if (targetNode.data.enableAudioInput) {
-                  inputType = 'audio';
                 } else if (targetNode.data.enableDocumentInput) {
-                  inputType = 'document';
                 } else {
-                  inputType = targetNode.data.inputType || 'text';
                 }
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 const inputTargetNodeId = targetNode.data.inputTargetNodeId;
@@ -3069,7 +3061,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
 
                   // Добавляем кнопки для узла с collectUserInput + buttons
-                  targetNode.data.buttons.forEach((btn: Button, btnIndex: number) => {
+                  targetNode.data.buttons.forEach((btn: Button) => {
                     if (btn.action === "goto" && btn.target) {
                       const callbackData = `${btn.target}`;
                       code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
@@ -3271,7 +3263,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
 
                   // Добавляем кнопки
-                  targetNode.data.buttons.forEach((btn: Button, btnIndex: number) => {
+                  targetNode.data.buttons.forEach((btn: Button) => {
                     if (btn.action === "goto" && btn.target) {
                       const callbackData = `${btn.target}`;
                       code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
@@ -4069,7 +4061,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
           code += `                text = ${formattedText}\n`;
           code += '                builder = InlineKeyboardBuilder()\n';
-          targetNode.data.buttons.forEach((button: Button, buttonIndex: number) => {
+          targetNode.data.buttons.forEach((button: Button) => {
             if (button.action === "url") {
               code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
             } else if (button.action === 'goto') {
@@ -5137,9 +5129,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 5. Обра��отка прикрепленных медиа и разл��чных типов контента
    * 6. Управление состоянием ожидания пользовательского ввода
    * 7. Обработка специальных медиа-узлов (стикеры, голос, анимации, локация, контакты)
-   * 8. Обработка узлов пользовательского ввода с валидацией
-   * 9. Обработка start узлов - начальные сообщения
-   * 10. Обработка command узлов - выполнение команд
+   * 8. Обработка узлов пользовательского ввода �� валидацией
+   * 9. Обработка start узлов - начальны�� сообщения
+   * 10. Обработ����������а command узлов - выполнение команд
    * 11. Универсальный обработчик для остальных типов узлов
    * 12. Fallback обработка кнопок без настроенной цели
    * 13. Обработка кнопок с действием 'command' - создание обработчиков для выполнения команд
@@ -5642,20 +5634,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
               // КРИТИЧЕСКИ ВАЖНАЯ ЛОГИКА: Если этот узел имеет collectUserInput, настраиваем состояние ожидания
               if (targetNode.data.collectUserInput === true) {
-                // Определяем тип ввода - если включены медиа-типы, используем их, иначе текст
-                let inputType = 'text';
-                if (targetNode.data.enablePhotoInput) {
-                  inputType = 'photo';
-                } else if (targetNode.data.enableVideoInput) {
-                  inputType = 'video';
-                } else if (targetNode.data.enableAudioInput) {
-                  inputType = 'audio';
-                } else if (targetNode.data.enableDocumentInput) {
-                  inputType = 'document';
-                } else {
-                  inputType = targetNode.data.inputType || 'text';
-                }
-                const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
 
                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть inline кнопки И НЕТ текстового/медиа ввода, НЕ настраиваем ожидание ввода
                 // Для reply кнопояя ВСЕГДА настраиваем ожидание ввода если enableTextInput === true
@@ -5839,8 +5817,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               let longitude = targetNode.data.longitude || 37.6176;
               const title = targetNode.data.title || "";
               const address = targetNode.data.address || "";
-              const city = targetNode.data.city || "";
-              const country = targetNode.data.country || "";
               const mapService = targetNode.data.mapService || 'custom';
               const generateMapPreview = targetNode.data.generateMapPreview !== false;
 
@@ -6044,7 +6020,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 if (buttonType === 'reply') {
                   code += '    builder = ReplyKeyboardBuilder()\n';
 
-                  (responseOptions as ResponseOption[]).forEach((option: ResponseOption, index: number) => {
+                  (responseOptions as ResponseOption[]).forEach((option: ResponseOption, _index: number) => {
                     code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
                   });
 
@@ -6058,7 +6034,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    builder = InlineKeyboardBuilder()\n';
 
                   (responseOptions as ResponseOption[]).forEach((option: ResponseOption, index: number) => {
-                    const optionValue = option.value || option.text;
                     code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
                   });
 
@@ -6312,7 +6287,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 const targetText = targetNode.data.messageText || "Сообщение";
                 const cleanedText = stripHtmlTags(targetText);
                 const formattedTargetText = formatTextForPython(cleanedText);
-                const parseMode = getParseMode(targetNode.data.formatMode);
 
                 code += `    text = ${formattedTargetText}\n`;
 
