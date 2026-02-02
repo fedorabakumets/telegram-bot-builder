@@ -5,11 +5,11 @@ import { BotData, Node, BotGroup, buttonSchema } from '@shared/schema';
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';
 import { generateSynonymHandlers } from './generate/generate-synonym-handlers';
-import { generatePhotoHandlerCode, hasPhotoInput } from './photo-handler';
-import { generateVideoHandlerCode, hasVideoInput } from './video-handler';
-import { generateAudioHandlerCode, hasAudioInput } from './audio-handler';
-import { generateDocumentHandlerCode, hasDocumentInput } from './document-handler';
-import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './conditional-button-handler';
+import { generatePhotoHandlerCode, hasPhotoInput } from './MediaHandler/photo-handler';
+import { generateVideoHandlerCode, hasVideoInput } from './MediaHandler/video-handler';
+import { generateAudioHandlerCode, hasAudioInput } from './MediaHandler/audio-handler';
+import { generateDocumentHandlerCode, hasDocumentInput } from './MediaHandler/document-handler';
+import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './Conditional/conditional-button-handler';
 import { generateHideAfterClickMiddleware } from './handlers/generateHideAfterClickHandler';
 import { generateReplyHideAfterClickHandler } from './handlers/generateReplyHideAfterClickHandler';
 import {
@@ -29,9 +29,10 @@ import { generateConditionalMessageLogic } from './Conditional';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from './Keyboard';
 import { hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions } from './has';
 import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
-import { processInlineButtonNodes, processConnectionTargets } from './process';
+import { processInlineButtonNodes } from './Keyboard/processInlineButtonNodes';
+import { processConnectionTargets } from './utils/processConnectionTargets';
 import { collectInputTargetNodes, } from './collect';
-import { filterInlineNodes } from './filterInlineNodes';
+import { filterInlineNodes } from './Keyboard/filterInlineNodes';
 import { addInputTargetNodes } from './add';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration, generateUtilityFunctions } from './generate';
 import { generateMessageLoggingCode } from './generate/generate-message-logging';
@@ -42,12 +43,12 @@ import { addAutoTransitionNodes } from './add/addAutoTransitionNodes';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateButtonResponseHandlers } from './generate/generateButtonResponseHandlers';
-import { generateReplyButtonHandlers } from './generate-reply-button-handlers';
-import { generateMultiSelectReplyHandler } from './generateMultiSelectReplyHandler';
-import { generateGroupHandlers } from './generateGroupHandlers';
-import { generateMultiSelectDoneHandler } from './generateMultiSelectDoneHandler';
-import { generateMultiSelectCallbackLogic } from './generateMultiSelectCallbackLogic';
-import { generateMediaFileFunctions } from './generateMediaFileFunctions';
+import { generateReplyButtonHandlers } from './Keyboard/generate-reply-button-handlers';
+import { generateMultiSelectReplyHandler } from './Keyboard/generateMultiSelectReplyHandler';
+import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';
+import { generateMultiSelectDoneHandler } from './Keyboard/generateMultiSelectDoneHandler';
+import { generateMultiSelectCallbackLogic } from './Keyboard/generateMultiSelectCallbackLogic';
+import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -2449,7 +2450,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
                   code += `                            "skip_buttons": ${skipButtonsJson2572}\n`;
                   code += `                        }\n`;
-                  code += `                        logging.info(f"✅ Сояяяятояние ожид��ния настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                  code += `                        logging.info(f"✅ Сояяяятояние ожид����ия настроено: modes=${btnModesList} для пер��менной ${inputVariable} (узел ${targetNode.id})")\n`;
                 } else {
                   // Обычн����е ожидание ввода если кнопок нет
                   code += `                        # Узел собирает пользовательский ввод\n`;
@@ -5131,7 +5132,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 7. Обработка специальных медиа-узлов (стикеры, голос, анимации, локация, контакты)
    * 8. Обработка узлов пользовательского ввода �� валидацией
    * 9. Обработка start узлов - начальны�� сообщения
-   * 10. Обработ����������а command узлов - выполнение команд
+   * 10. Обработ����������а command узлов - выполнение ком��нд
    * 11. Универсальный обработчик для остальных типов узлов
    * 12. Fallback обработка кнопок без настроенной цели
    * 13. Обработка кнопок с действием 'command' - создание обработчиков для выполнения команд

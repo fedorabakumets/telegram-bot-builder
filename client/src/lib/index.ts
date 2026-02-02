@@ -5,7 +5,7 @@ export * from './queryClient';
 export * from './generate/generateButtonResponseHandlers';
 export * from './generate/generateMediaFileFunctions';
 export * from './extractNodeData';
-export * from './filterInlineNodes';
+export * from './Keyboard/filterInlineNodes';
 export * from './add/addAutoTransitionNodes';
 export * from './generate/generate-synonym-handlers';
 export * from './bot-commands-setup';
@@ -59,8 +59,6 @@ export * from './collect';
 // NOTE: Individual exports added above to prevent conflicts
 // export * from './generate';
 
-// Processing utilities
-export * from './process';
 
 // General utilities
 export * from './utils';

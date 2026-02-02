@@ -592,16 +592,6 @@ async def send_photo_with_logging(chat_id, photo, *args, caption=None, node_id=N
 
 bot.send_photo = send_photo_with_logging
 
-
-# Функция для сохранения статистики сообщений пользователя
-async def save_user_message_stats(user_id: str, message_text: str):
-    """Сохраняет статистику сообщения пользователя в базу данных"""
-    await save_message_to_api(
-        user_id=user_id,
-        message_type="user",
-        message_text=message_text
-    )
-
 # Хранилище пользователей (временное состояние)
 user_data = {}
 
@@ -1079,7 +1069,6 @@ async def start_handler(message: types.Message):
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "condition-1763692642023",
@@ -1094,7 +1083,6 @@ async def start_handler(message: types.Message):
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -1238,7 +1226,6 @@ async def start_handler(message: types.Message):
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "condition-1763692642023",
@@ -1253,7 +1240,6 @@ async def start_handler(message: types.Message):
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -1273,7 +1259,6 @@ async def start_handler(message: types.Message):
         current_parse_mode = None
     has_regular_buttons = False
     has_input_collection = True
-    logging.info(f"DEBUG: generateKeyboard для узла start - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=true, enableTextInput=true, enablePhotoInput=undefined, enableVideoInput=undefined, enableAudioInput=undefined, enableDocumentInput=undefined")
     
     # Проверяем, нужно ли использовать условную клавиатуру
     if use_conditional_keyboard:
@@ -1299,33 +1284,43 @@ async def start_handler(message: types.Message):
 # @@NODE_END:start@@
 
 # @@NODE_START:f90r9k3FSLu2Tjn74cBn_@@
+    # Обработчик для узла f90r9k3FSLu2Tjn74cBn_ типа message будет сгенерирован отдельно
 # @@NODE_END:f90r9k3FSLu2Tjn74cBn_@@
 
 # @@NODE_START:RFTgm4KzC6dI39AMTPcmo@@
+    # Обработчик для узла RFTgm4KzC6dI39AMTPcmo типа message будет сгенерирован отдельно
 # @@NODE_END:RFTgm4KzC6dI39AMTPcmo@@
 
 # @@NODE_START:sIh3xXKEtb_TtrhHqZQzX@@
+    # Обработчик для узла sIh3xXKEtb_TtrhHqZQzX типа message будет сгенерирован отдельно
 # @@NODE_END:sIh3xXKEtb_TtrhHqZQzX@@
 
 # @@NODE_START:tS2XGL2Mn4LkE63SnxhPy@@
+    # Обработчик для узла tS2XGL2Mn4LkE63SnxhPy типа message будет сгенерирован отдельно
 # @@NODE_END:tS2XGL2Mn4LkE63SnxhPy@@
 
 # @@NODE_START:lBPy3gcGVLla0NGdSYb35@@
+    # Обработчик для узла lBPy3gcGVLla0NGdSYb35 типа message будет сгенерирован отдельно
 # @@NODE_END:lBPy3gcGVLla0NGdSYb35@@
 
 # @@NODE_START:Y9zLRp1BLpVhm-HcsNkJV@@
+    # Обработчик для узла Y9zLRp1BLpVhm-HcsNkJV типа message будет сгенерирован отдельно
 # @@NODE_END:Y9zLRp1BLpVhm-HcsNkJV@@
 
 # @@NODE_START:vxPv7G4n0QGyhnv4ucOM5@@
+    # Обработчик для узла vxPv7G4n0QGyhnv4ucOM5 типа message будет сгенерирован отдельно
 # @@NODE_END:vxPv7G4n0QGyhnv4ucOM5@@
 
 # @@NODE_START:8xSJaWAJNz7Hz_54mjFTF@@
+    # Обработчик для узла 8xSJaWAJNz7Hz_54mjFTF типа message будет сгенерирован отдельно
 # @@NODE_END:8xSJaWAJNz7Hz_54mjFTF@@
 
 # @@NODE_START:KE-8sR9elPEefApjXtBxC@@
+    # Обработчик для узла KE-8sR9elPEefApjXtBxC типа message будет сгенерирован отдельно
 # @@NODE_END:KE-8sR9elPEefApjXtBxC@@
 
 # @@NODE_START:yrsc8v81qQa5oQx538Dzn@@
+    # Обработчик для узла yrsc8v81qQa5oQx538Dzn типа message будет сгенерирован отдельно
 # @@NODE_END:yrsc8v81qQa5oQx538Dzn@@
 
 # Обработчики inline кнопок
@@ -1925,7 +1920,6 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "cond-name-1",
@@ -1940,7 +1934,6 @@ async def handle_callback_tS2XGL2Mn4LkE63SnxhPy(callback_query: types.CallbackQu
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -2210,7 +2203,6 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "cond-info-1",
@@ -2225,7 +2217,6 @@ async def handle_callback_lBPy3gcGVLla0NGdSYb35(callback_query: types.CallbackQu
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -2786,7 +2777,6 @@ async def handle_callback_Y9zLRp1BLpVhm_HcsNkJV(callback_query: types.CallbackQu
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "cond-photo-1",
@@ -4169,7 +4159,6 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "cond-city-1",
@@ -4184,7 +4173,6 @@ async def handle_callback_sIh3xXKEtb_TtrhHqZQzX(callback_query: types.CallbackQu
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -5036,7 +5024,6 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "cond-city-1",
@@ -5051,7 +5038,6 @@ async def handle_reply_6bA3YPgWd20pCqPAeyuLe(message: types.Message):
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -5250,7 +5236,6 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "cond-city-1",
@@ -5265,7 +5250,6 @@ async def handle_reply_hI7nsCdodrcUnft1SXYpg(message: types.Message):
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -5464,7 +5448,6 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "cond-city-1",
@@ -5479,7 +5462,6 @@ async def handle_reply_VhOGaPeyFpFV9a7QDBfzo(message: types.Message):
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -5678,7 +5660,6 @@ async def handle_reply_g9KWWguVciHEUMMeyZ_WN(message: types.Message):
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "cond-photo-1",
@@ -5958,7 +5939,6 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "condition-1763692642023",
@@ -5973,7 +5953,6 @@ async def handle_reply_e1ZTOjUMpLqjln0LWH3JD(message: types.Message):
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -6172,7 +6151,6 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "condition-1763692642023",
@@ -6187,7 +6165,6 @@ async def handle_reply_YqVio9545knVkcQWVLbgT(message: types.Message):
             if user_id not in user_data:
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
             # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
             # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
             # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -6386,7 +6363,6 @@ async def handle_reply_vMzKMEg84JLzu6EEnrQ5W(message: types.Message):
         keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
         conditional_keyboard = keyboard
         # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-        logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "cond-photo-1",
@@ -6760,7 +6736,7 @@ async def handle_user_input(message: types.Message):
                             "next_node_id": "",
                             "skip_buttons": []
                         }
-                        logging.info(f"✅ Сояяяятояние ожидания настроено: modes=['button'] для переменной gender (узел f90r9k3FSLu2Tjn74cBn_)")
+                        logging.info(f"✅ Сояяяятояние ожид��ния настроено: modes=['button'] для переменной gender (узел f90r9k3FSLu2Tjn74cBn_)")
                     elif next_node_id == "RFTgm4KzC6dI39AMTPcmo":
                         # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа
                         logging.info(f"✅ Показаны кнопки для узла RFTgm4KzC6dI39AMTPcmo с collectUserInput=true")
@@ -6805,7 +6781,7 @@ async def handle_user_input(message: types.Message):
                             "next_node_id": "",
                             "skip_buttons": []
                         }
-                        logging.info(f"✅ Сояяяятояние ожидания настроено: modes=['button'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
+                        logging.info(f"✅ Сояяяятояние ожид��ния настроено: modes=['button'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
                     elif next_node_id == "sIh3xXKEtb_TtrhHqZQzX":
                         # Узел с условными сообщениями - проверяем условия
                         logging.info(f"🔧 Условная навигация к узлу с условными сообщениями: sIh3xXKEtb_TtrhHqZQzX")
@@ -9582,7 +9558,6 @@ async def handle_photo_input(message: types.Message):
                     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
                     conditional_keyboard = keyboard
                     # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-                    logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
                     # Настраиваем ожидание текстового ввода для условного сообщения
                     conditional_message_config = {
                         "condition_id": "cond-city-1",
@@ -9597,7 +9572,6 @@ async def handle_photo_input(message: types.Message):
                         if user_id not in user_data:
                             user_data[user_id] = {}
                         user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-                        logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
                         # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
                         # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
                         # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -9739,7 +9713,6 @@ async def handle_photo_input(message: types.Message):
                     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
                     conditional_keyboard = keyboard
                     # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-                    logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
                     # Настраиваем ожидание текстового ввода для условного сообщения
                     conditional_message_config = {
                         "condition_id": "cond-name-1",
@@ -9754,7 +9727,6 @@ async def handle_photo_input(message: types.Message):
                         if user_id not in user_data:
                             user_data[user_id] = {}
                         user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-                        logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")
                         # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход
                         # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода
                         # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break
@@ -9916,7 +9888,6 @@ async def handle_photo_input(message: types.Message):
                     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
                     conditional_keyboard = keyboard
                     # ВАЖНО: Логируем состояние условной клавиатуры для отладки
-                    logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")
                     # Настраиваем ожидание текстового ввода для условного сообщения
                     conditional_message_config = {
                         "condition_id": "cond-photo-1",
@@ -10028,9 +9999,11 @@ async def save_group_message_stats(chat_id: int, user_id: int, message_text: str
     Сохраняет статистику сообщений в группе
     """
     try:
-        # Вызываем общую функцию сохранения статистики сообщений пользователя
-        await save_user_message_stats(user_id, message_text)
-
+        # Проверяем существование функции сохранения статистики
+        if 'save_user_message_stats' in globals():
+            # Если функция существует, используем её для общей статистики
+            await save_user_message_stats(user_id, message_text)
+        
         # Логируем статистику для мониторинга
         logging.info(f"📊 Статистика группы {group_name}: пользователь {user_id}, длина сообщения: {len(message_text or '')}")
         
