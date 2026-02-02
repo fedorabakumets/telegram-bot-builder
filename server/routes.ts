@@ -557,13 +557,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`❌ Ошибка удаления пользовательских данных:`, userDataError);
         }
         
-        // 5. Удаляем файл бота
-        const filePath = join(process.cwd(), 'bots', `bot_${id}.py`);
-        if (existsSync(filePath)) {
-          unlinkSync(filePath);
-          console.log(`✅ Файл бота ${id} удален`);
+        // 5. Удаляем папку бота со всеми файлами
+        const botsDir = join(process.cwd(), 'bots');
+
+        // Удаляем папку бота, если она существует
+        const fs = await import('fs');
+        const path = await import('path');
+        const { promisify } = await import('util');
+
+        const exec = promisify(require('child_process').exec);
+
+        // Проверяем, существует ли папка бота
+        const botDir = path.join(botsDir, `bot_${id}_*`);
+
+        // Найдем все папки, соответствующие шаблону bot_{id}_*
+        if (existsSync(botsDir)) {
+          const allFiles = fs.readdirSync(botsDir);
+          const botDirs = allFiles.filter(file =>
+            file.startsWith(`bot_${id}_`)
+          );
+
+          for (const botDirName of botDirs) {
+            const botDirPath = path.join(botsDir, botDirName);
+
+            try {
+              // Удаляем папку рекурсивно, используя fs.rm с опцией recursive
+              await fs.promises.rm(botDirPath, { recursive: true, force: true });
+
+              console.log(`✅ Папка бота удалена: ${botDirPath}`);
+            } catch (err) {
+              console.error(`❌ Ошибка удаления папки ${botDirPath}:`, err);
+            }
+          }
+
+          if (botDirs.length === 0) {
+            console.log(`📄 Нет папок бота для проекта ${id}`);
+          } else {
+            console.log(`🗑️ Удалено ${botDirs.length} папок бота для проекта ${id}`);
+          }
         } else {
-          console.log(`📄 Файл бота ${id} не существует`);
+          console.log(`📄 Директория bots не существует`);
         }
       } catch (cleanupError) {
         console.error(`❌ Ошибка очистки данных бота ${id}:`, cleanupError);

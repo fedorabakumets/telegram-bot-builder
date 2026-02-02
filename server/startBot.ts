@@ -1,7 +1,8 @@
 import { spawn } from "node:child_process";
 import { URL } from "node:url";
+import { dirname } from "node:path";
 import { botProcesses } from "./routes";
-import { createBotFile } from "./createBotFile";
+import { createCompleteBotFiles } from "./createBotFile";
 import { storage } from "./storage";
 
 // Функция для запуска бота
@@ -123,14 +124,20 @@ export async function startBot(projectId: number, token: string, tokenId: number
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
     const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false).replace('YOUR_BOT_TOKEN_HERE', token);
 
-    // Создаем файл бота (уникальный для каждого токена)
-    const filePath = createBotFile(botCode, projectId, tokenId);
+    // Создаем все файлы бота (основной файл + сопутствующие)
+    const { mainFile, assets } = await createCompleteBotFiles(botCode, project.name, project.data, projectId, tokenId);
+
+    console.log(`📁 Созданы файлы бота:`);
+    console.log(`   - Основной файл: ${mainFile}`);
+    console.log(`   - Дополнительные файлы: ${assets.length} шт.`);
+    assets.forEach(asset => console.log(`     * ${asset}`));
 
     // Запускаем бота
     const pythonPath = process.platform === 'win32' ? 'python' : 'python3';
-    const botProcess = spawn(pythonPath, [filePath], {
+    const botProcess = spawn(pythonPath, [mainFile], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
+      cwd: dirname(mainFile), // Устанавливаем рабочую директорию в папку бота
       env: {
         ...process.env,
         PROJECT_ID: projectId.toString(),
