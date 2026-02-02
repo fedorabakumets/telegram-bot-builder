@@ -25,9 +25,9 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   // Проверяем наличие данных Telegram пользователя в сессии
   if (req.session?.telegramUser) {
     req.user = req.session.telegramUser;
-    console.log(`🔐 Auth middleware: User ${req.user.id} found in session`);
+    // console.log(`🔐 Auth middleware: User ${req.user.id} found in session`);
   } else {
-    console.log(`🔓 Auth middleware: No user in session`);
+    // console.log(`🔓 Auth middleware: No user in session`);
   }
   
   next();
