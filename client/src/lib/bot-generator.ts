@@ -11,7 +11,7 @@ import { generateAudioHandlerCode, hasAudioInput } from './MediaHandler/audio-ha
 import { generateDocumentHandlerCode, hasDocumentInput } from './MediaHandler/document-handler';
 import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './Conditional/conditional-button-handler';
 import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
-import { generateReplyHideAfterClickHandler } from './generate/generateReplyHideAfterClickHandler';
+import { generateReplyHideAfterClickHandler } from './Keyboard/generateReplyHideAfterClickHandler';
 import {
   toPythonBoolean,
   generateWaitingStateCode,
@@ -49,6 +49,7 @@ import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';
 import { generateMultiSelectDoneHandler } from './Keyboard/generateMultiSelectDoneHandler';
 import { generateMultiSelectCallbackLogic } from './Keyboard/generateMultiSelectCallbackLogic';
 import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
+import { Button } from './bot-generator';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -6533,5 +6534,17 @@ export interface CodeWithMap {
 
 // Повторный экспорт функций каркаса
 export { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml };
+// ============================================================================
+  // ТИПЫ ДЛЯ УЗЛОВ БОТА
+  // ============================================================================
+
+  export interface BotNode {
+    type: string;
+    data: {
+      buttons?: Button[];
+      [key: string]: any;
+    };
+    [key: string]: any;
+  }
 
 

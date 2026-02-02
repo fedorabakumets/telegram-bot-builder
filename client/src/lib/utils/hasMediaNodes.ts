@@ -1,4 +1,4 @@
-import { BotNode } from "../types/bot-node";
+import { BotNode } from "../bot-generator";
 
 // Функция для проверки наличия медиа-файлов
 export function hasMediaNodes(nodes: BotNode[]): boolean {

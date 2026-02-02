@@ -1,4 +1,4 @@
-import { BotNode } from "../types/bot-node";
+import { BotNode } from "../bot-generator";
 
 // Функция для проверки наличия узлов с множественным выбором
 export function hasMultiSelectNodes(nodes: BotNode[]): boolean {
