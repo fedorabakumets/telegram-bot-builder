@@ -88,7 +88,7 @@ export function generateKeyboard(node: Node): string {
   // Добавляем логирование для отладки (используем Python переменные)
   code += `    has_regular_buttons = ${toPythonBoolean(hasRegularButtons)}\n`;
   code += `    has_input_collection = ${toPythonBoolean(hasInputCollection)}\n`;
-  code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=${node.data.collectUserInput}, enableTextInput=${node.data.enableTextInput}, enablePhotoInput=${node.data.enablePhotoInput}, enableVideoInput=${node.data.enableVideoInput}, enableAudioInput=${node.data.enableAudioInput}, enableDocumentInput=${node.data.enableDocumentInput}")\n`;
+  // code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=${node.data.collectUserInput}, enableTextInput=${node.data.enableTextInput}, enablePhotoInput=${node.data.enablePhotoInput}, enableVideoInput=${node.data.enableVideoInput}, enableAudioInput=${node.data.enableAudioInput}, enableDocumentInput=${node.data.enableDocumentInput}")\n`;
 
   // CASE 1: Есть обычные кнопки + сбор ввода = обычные кнопки работают + дополнительно сохраняются как ответы
   if (hasRegularButtons && hasInputCollection) {
@@ -220,7 +220,7 @@ export function generateKeyboard(node: Node): string {
   // CASE 3: Только обычные кнопки БЕЗ сбора ввода = работает как раньше
   else {
     code += `    # DEBUG: Узел ${node.id} - hasRegularButtons=${toPythonBoolean(hasRegularButtons)}, hasInputCollection=${toPythonBoolean(hasInputCollection)}\n`;
-    code += `    logging.info(f"DEBUG: Узел ${node.id} обработка кнопок - keyboardType=${node.data.keyboardType}, buttons=${node.data.buttons ? node.data.buttons.length : 0}")\n`;
+    // code += `    logging.info(f"DEBUG: Узел ${node.id} обработка кнопок - keyboardType=${node.data.keyboardType}, buttons=${node.data.buttons ? node.data.buttons.length : 0}")\n`;
 
     // Проверяем условную клавиатуру только если есть условные сообщения
     if (hasConditionalMessages) {
@@ -395,7 +395,7 @@ export function generateKeyboard(node: Node): string {
       } else {
         // Обычная inline клавиатура
         code += `${indent3}# Создаем inline клавиатуру с кнопками\n`;
-        code += `${indent3}logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${node.id} с ${node.data.buttons ? node.data.buttons.length : 0} кнопками")\n`;
+        // code += `${indent3}logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${node.id} с ${node.data.buttons ? node.data.buttons.length : 0} кнопками")\n`;
         code += `${indent3}builder = InlineKeyboardBuilder()\n`;
         node.data.buttons.forEach((button: Button) => {
           if (button.action === "url") {
