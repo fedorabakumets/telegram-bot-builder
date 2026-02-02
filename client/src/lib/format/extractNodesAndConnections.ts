@@ -3,22 +3,51 @@ import { BotData } from '@shared/schema';
 // ============================================================================
 // УТИЛИТЫ ДЛЯ РАБОТЫ С ДАННЫМИ БОТА
 // ============================================================================
-// Функция для преобразования imageUrl в attachedMedia
+// Функция для преобразования медиа-URL в attachedMedia
 function transformNodeData(nodes: any[]): any[] {
   return nodes.map(node => {
-    // Если у узла есть imageUrl, но нет attachedMedia, добавляем imageUrl в attachedMedia
-    if (node.data?.imageUrl && (!node.data.attachedMedia || !Array.isArray(node.data.attachedMedia))) {
-      // Создаем переменную для хранения URL изображения
-      const imageUrlVariable = `image_url_${node.id}`;
+    // Проверяем наличие любых медиа-URL и добавляем их в attachedMedia
+    const hasImage = node.data?.imageUrl;
+    const hasVideo = node.data?.videoUrl;
+    const hasAudio = node.data?.audioUrl;
+    const hasDocument = node.data?.documentUrl;
+
+    // Если у узла есть какие-либо медиа-URL и нет attachedMedia, добавляем их в attachedMedia
+    if ((hasImage || hasVideo || hasAudio || hasDocument) && (!node.data.attachedMedia || !Array.isArray(node.data.attachedMedia))) {
+      // Создаем переменные для хранения URL медиа
+      const mediaVariables = [];
+
+      if (hasImage) {
+        const imageUrlVariable = `image_url_${node.id}`;
+        mediaVariables.push(imageUrlVariable);
+      }
+
+      if (hasVideo) {
+        const videoUrlVariable = `video_url_${node.id}`;
+        mediaVariables.push(videoUrlVariable);
+      }
+
+      if (hasAudio) {
+        const audioUrlVariable = `audio_url_${node.id}`;
+        mediaVariables.push(audioUrlVariable);
+      }
+
+      if (hasDocument) {
+        const documentUrlVariable = `document_url_${node.id}`;
+        mediaVariables.push(documentUrlVariable);
+      }
 
       // Обновляем данные узла
       const updatedNode = {
         ...node,
         data: {
           ...node.data,
-          attachedMedia: [imageUrlVariable],
-          // Также сохраняем сам URL в переменной, чтобы система могла его использовать
-          [imageUrlVariable]: node.data.imageUrl
+          attachedMedia: mediaVariables,
+          // Также сохраняем сами URL в переменных, чтобы система могла их использовать
+          ...(hasImage && { [`image_url_${node.id}`]: node.data.imageUrl }),
+          ...(hasVideo && { [`video_url_${node.id}`]: node.data.videoUrl }),
+          ...(hasAudio && { [`audio_url_${node.id}`]: node.data.audioUrl }),
+          ...(hasDocument && { [`document_url_${node.id}`]: node.data.documentUrl })
         }
       };
 

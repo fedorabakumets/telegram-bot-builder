@@ -1,4 +1,4 @@
-import { Node, Button } from '@shared/schema';
+import { Node } from '@shared/schema';
 import { generateStartHandler, generateCommandHandler } from '../CommandHandler';
 import { generateStickerHandler, generateVoiceHandler, generateAnimationHandler, generateLocationHandler, generateContactHandler } from '../MediaHandler';
 import {
@@ -12,6 +12,11 @@ import {
   generateDemoteUserHandler
 } from '../UserHandler';
 import { generateUnpinMessageHandler, generateDeleteMessageHandler, generatePinMessageHandler } from '../MessageHandler';
+import { generateMediaEnhancedHandlers } from '../media-enhanced-generator';
+
+function isMediaNode(node: Node): boolean {
+  return !!(node.data.imageUrl || node.data.videoUrl || node.data.audioUrl || node.data.documentUrl);
+}
 
 /**
  * Генерирует обработчики для каждого узла
@@ -43,14 +48,31 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     admin_rights: generateAdminRightsHandler,
   };
 
+  // Сначала генерируем обработчики для узлов с медиа-контентом
+  nodeCode += generateMediaEnhancedHandlers(nodes);
+
   nodes.forEach((node: Node) => {
     nodeCode += `\n# @@NODE_START:${node.id}@@\n`;
 
-    const handler = nodeHandlers[node.type];
-    if (handler) {
-      nodeCode += handler(node);
+    // Пропускаем узлы с медиа-контентом, так как они уже обработаны
+    if (isMediaNode(node)) {
+      // Для узлов с медиа-контентом мы уже сгенерировали обработчики выше
+      nodeCode += `    # Обработчик для узла ${node.id} с медиа-контентом уже сгенерирован\n`;
+    } else {
+      const handler = nodeHandlers[node.type];
+      if (handler) {
+        nodeCode += handler(node);
+      } else {
+        // Если нет специфического обработчика, проверим, может быть, это обычный узел сообщения
+        if (node.type === 'message' || node.type === 'command') {
+          // Для узлов типа message и command без медиа-контента используем стандартную логику
+          nodeCode += `    # Обработчик для узла ${node.id} типа ${node.type} будет сгенерирован отдельно\n`;
+        } else {
+          nodeCode += `    # Нет обработчика для узла типа ${node.type}\n`;
+        }
+      }
+      // Примечание: узлы ввода пользователя и сообщений обрабатываются через обработчики обратного вызова, а не как отдельные обработчики команд
     }
-    // Примечание: узлы ввода пользователя и сообщений обрабатываются через обработчики обратного вызова, а не как отдельные обработчики команд
 
     nodeCode += `# @@NODE_END:${node.id}@@\n`;
   });

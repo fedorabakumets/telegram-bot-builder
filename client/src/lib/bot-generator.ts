@@ -2451,7 +2451,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
                   code += `                            "skip_buttons": ${skipButtonsJson2572}\n`;
                   code += `                        }\n`;
-                  code += `                        logging.info(f"✅ Сояяяятояние ожидания настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                  code += `                        logging.info(f"✅ Сояяяятояние ожид��ния настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
                 } else {
                   // Обычное ожидание ввода если кнопок нет
                   code += `                        # Узел собирает пользовательский ввод\n`;
@@ -4169,22 +4169,71 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '                    parse_mode = None\n';
           }
 
-          // Добавляем кнопки если есть
-          if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-            // Используем универсальную функцию для создания inline клавиатуры
-            code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-            code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
-          } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
-            code += '                builder = ReplyKeyboardBuilder()\n';
-            targetNode.data.buttons.forEach((button: { text: string; }) => {
-              code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
-            });
-            const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-            const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-            code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-            code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
+          // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
+          if (targetNode.data.imageUrl) {
+            code += `                # Сохраняем imageUrl в переменную image_url_${targetNode.id}\n`;
+            code += `                user_id = message.from_user.id\n`;
+            code += `                user_data[user_id] = user_data.get(user_id, {})\n`;
+            code += `                user_data[user_id]["image_url_${targetNode.id}"] = "${targetNode.data.imageUrl}"\n`;
+            code += `                await update_user_data_in_db(user_id, "image_url_${targetNode.id}", "${targetNode.data.imageUrl}")\n`;
+          }
+          if (targetNode.data.documentUrl) {
+            code += `                # Сохраняем documentUrl в переменную document_url_${targetNode.id}\n`;
+            code += `                user_id = message.from_user.id\n`;
+            code += `                user_data[user_id] = user_data.get(user_id, {})\n`;
+            code += `                user_data[user_id]["document_url_${targetNode.id}"] = "${targetNode.data.documentUrl}"\n`;
+            code += `                await update_user_data_in_db(user_id, "document_url_${targetNode.id}", "${targetNode.data.documentUrl}")\n`;
+          }
+          if (targetNode.data.videoUrl) {
+            code += `                # Сохраняем videoUrl в переменную video_url_${targetNode.id}\n`;
+            code += `                user_id = message.from_user.id\n`;
+            code += `                user_data[user_id] = user_data.get(user_id, {})\n`;
+            code += `                user_data[user_id]["video_url_${targetNode.id}"] = "${targetNode.data.videoUrl}"\n`;
+            code += `                await update_user_data_in_db(user_id, "video_url_${targetNode.id}", "${targetNode.data.videoUrl}")\n`;
+          }
+          if (targetNode.data.audioUrl) {
+            code += `                # Сохраняем audioUrl в переменную audio_url_${targetNode.id}\n`;
+            code += `                user_id = message.from_user.id\n`;
+            code += `                user_data[user_id] = user_data.get(user_id, {})\n`;
+            code += `                user_data[user_id]["audio_url_${targetNode.id}"] = "${targetNode.data.audioUrl}"\n`;
+            code += `                await update_user_data_in_db(user_id, "audio_url_${targetNode.id}", "${targetNode.data.audioUrl}")\n`;
+          }
+
+          // Проверяем наличие медиа-контента (imageUrl, videoUrl, audioUrl, documentUrl)
+          const hasImage = targetNode.data.imageUrl;
+          const hasVideo = targetNode.data.videoUrl;
+          const hasAudio = targetNode.data.audioUrl;
+          const hasDocument = targetNode.data.documentUrl;
+
+          if (hasImage || hasVideo || hasAudio || hasDocument) {
+            // Отправляем медиа с текстом в качестве подписи (caption)
+            if (hasImage) {
+              code += `                await bot.send_photo(message.chat.id, "${targetNode.data.imageUrl}", caption=text, parse_mode=parse_mode)\n`;
+            } else if (hasVideo) {
+              code += `                await bot.send_video(message.chat.id, "${targetNode.data.videoUrl}", caption=text, parse_mode=parse_mode)\n`;
+            } else if (hasAudio) {
+              code += `                await bot.send_audio(message.chat.id, "${targetNode.data.audioUrl}", caption=text, parse_mode=parse_mode)\n`;
+            } else if (hasDocument) {
+              code += `                await bot.send_document(message.chat.id, "${targetNode.data.documentUrl}", caption=text, parse_mode=parse_mode)\n`;
+            }
           } else {
-            code += '                await message.answer(text, parse_mode=parse_mode)\n';
+            // Добавляем кнопки если есть
+            if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+              // Используем универсальную функцию для создания inline клавиатуры
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
+              code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
+            } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
+              code += '                builder = ReplyKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach((button: { text: string; }) => {
+                code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+              });
+              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+              code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
+            } else {
+              code += '                await message.answer(text, parse_mode=parse_mode)\n';
+            }
           }
         } else if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
           const inputPrompt = formatTextForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
@@ -5088,7 +5137,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 2. Обработка множественного выбора - логика кнопки "Готово" при выборе нескольких опций
    * 3. Генерация обработчиков для различных типов целевых узлов (message, sticker, voice, etc.)
    * 4. Поддержка условных сообщений на основе данных пользователя
-   * 5. Обработка прикрепленных медиа и различных типов контента
+   * 5. Обра��отка прикрепленных медиа и разл��чных типов контента
    * 6. Управление состоянием ожидания пользовательского ввода
    * 7. Обработка специальных медиа-узлов (стикеры, голос, анимации, локация, контакты)
    * 8. Обработка узлов пользовательского ввода с валидацией
@@ -5122,7 +5171,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Находим целевой узел (может быть null если нет target)
           const targetNode = button.target ? nodes.find(n => n.id === button.target) : null;
 
-          // Создаем обработчик для каждой кнопки используя target как callback_data
+          // Создаем ��бработчик для каждой кнопки используя target как callback_data
           const actualCallbackData = button.target || callbackData;
 
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем target узел перед созданием обработчика
