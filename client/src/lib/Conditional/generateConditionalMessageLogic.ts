@@ -187,7 +187,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
         code += `${indentLevel}    # ВАЖНО: Логируем состояние условной клавиатуры для отладки\n`;
-        code += `${indentLevel}    logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")\n`;
+        // code += `${indentLevel}    logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")\n`;
 
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
@@ -214,7 +214,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}        if user_id not in user_data:\n`;
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")\n`;
+          // code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")\n`;
           code += `${indentLevel}        # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход\n`;
           code += `${indentLevel}        # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода\n`;
           code += `${indentLevel}        # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break\n`;
@@ -291,7 +291,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}        if user_id not in user_data:\n`;
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+          // code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
 
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
@@ -373,7 +373,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}        if user_id not in user_data:\n`;
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+          // code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
 
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
@@ -455,7 +455,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}        if user_id not in user_data:\n`;
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+          // code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
 
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
