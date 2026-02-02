@@ -892,10 +892,6 @@ async def set_bot_commands():
     commands = [
         # Команда start - Приветствие и источник
         BotCommand(command="start", description="Приветствие и источник"),
-        # Команда profile - Показать и редактировать профиль пользователя
-        BotCommand(command="profile", description="Показать и редактировать профиль пользователя"),
-        # Команда link - Получить ссылку на чат сообщества
-        BotCommand(command="link", description="Получить ссылку на чат сообщества"),
         # Команда help - Полная справка по всем командам бота и модерации
         BotCommand(command="help", description="Полная справка по всем командам бота и модерации"),
     ]
@@ -937,9 +933,6 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    # Сохраняем imageUrl в переменную image_url_start
-    user_data[user_id]["image_url_start"] = "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg"
-    await update_user_data_in_db(user_id, "image_url_start", "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg")
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
@@ -967,95 +960,51 @@ async def start_handler(message: types.Message):
 Этот бот поможет тебе найти интересных людей в Санкт-Петербурге!
 
 Откуда ты узнал о нашем чате? 😎"""
-    # Сохраняем значение переменной image_url_start в базу данных
-    await update_user_data_in_db(user_id, "image_url_start", "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg")
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
 
-    # Обновляем user_vars, чтобы включить только что сохраненную переменную
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
     if not user_vars:
         user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-
-    # Проверяем наличие прикрепленного медиа из переменной
-    attached_media = None
-    if user_vars and "image_url_start" in user_vars:
-        media_data = user_vars["image_url_start"]
-        if isinstance(media_data, dict) and "value" in media_data:
-            attached_media = media_data["value"]
-        elif isinstance(media_data, str):
-            attached_media = media_data
-        # Также проверяем, может быть переменная хранится напрямую в user_data
-    elif "image_url_start" in user_data.get(user_id, {}):
-        attached_media = user_data[user_id]["image_url_start"]
-
-    # Если медиа найдено, отправляем с медиа, иначе обычное сообщение
-    if attached_media and str(attached_media).strip():
-        logging.info(f"📎 Отправка photo из переменной image_url_start: {attached_media}")
-        try:
-            # Заменяем переменные в тексте перед отправкой медиа
-            processed_caption = replace_variables_in_text(text, user_vars)
-            # Проверяем, является ли путь внутренним (uploads)
-            if attached_media.startswith("/uploads/"):
-                # Для внутренних файлов пытаемся загрузить их в Telegram и получить file_id
-                try:
-                    # Проверяем, доступен ли файл локально
-                    import os
-                    # Формируем полный путь к файлу на сервере
-                    server_file_path = os.getcwd() + attached_media  # Предполагаем, что путь относительно рабочей директории
-                    if os.path.exists(server_file_path):
-                        # Загружаем файл в Telegram и получаем file_id
-                        from aiogram.types import FSInputFile
-                        photo_file = FSInputFile(server_file_path)
-                        result = await bot.send_photo(message.chat.id, photo_file, caption=processed_caption)
-                        logging.info(f"🖼️ Photo успешно отправлено из локального файла: {attached_media}")
-                    else:
-                        logging.error(f"❌ Файл не найден на сервере: {server_file_path}")
-                        # Если файл не найден, используем публичный URL как резервный вариант
-                        public_url = attached_media
-                        if "localhost" in API_BASE_URL or "127.0.0.1" in API_BASE_URL or "0.0.0.0" in API_BASE_URL:
-                            # Для локальных адресов используем публичный URL (например, с доменом ngrok или другим публичным адресом)
-                            logging.warning(f"⚠️ Локальный URL не доступен для Telegram: {attached_media}")
-                            # Вместо этого отправляем текстовое сообщение с уведомлением
-                            await message.answer(processed_caption + "\n(Медиа недоступно в тестовом режиме)")
-                        else:
-                            # Для публичных адресов формируем полный URL
-                            if API_BASE_URL.endswith("/"):
-                                public_url = API_BASE_URL + attached_media[1:]  # Убираем начальный слэш
-                            else:
-                                public_url = API_BASE_URL + attached_media
-                        
-                        await bot.send_photo(message.chat.id, public_url, caption=processed_caption)
-                except Exception as upload_error:
-                    logging.error(f"Ошибка при загрузке локального файла: {upload_error}")
-                    # В случае ошибки используем публичный URL как резервный вариант
-                    public_url = attached_media
-                    if "localhost" in API_BASE_URL or "127.0.0.1" in API_BASE_URL or "0.0.0.0" in API_BASE_URL:
-                        # Для локальных адресов используем публичный URL (например, с доменом ngrok или другим публичным адресом)
-                        logging.warning(f"⚠️ Локальный URL не доступен для Telegram: {attached_media}")
-                        # Вместо этого отправляем текстовое сообщение с уведомлением
-                        await message.answer(processed_caption + "\n(Медиа недоступно в тестовом режиме)")
-                    else:
-                        # Для публичных адресов формируем полный URL
-                        if API_BASE_URL.endswith("/"):
-                            public_url = API_BASE_URL + attached_media[1:]  # Убираем начальный слэш
-                        else:
-                            public_url = API_BASE_URL + attached_media
-                    
-                    await bot.send_photo(message.chat.id, public_url, caption=processed_caption)
-            else:
-                # Для публичных URL используем стандартную логику
-                await bot.send_photo(message.chat.id, attached_media, caption=processed_caption)
-        except Exception as e:
-            logging.error(f"Ошибка отправки photo: {e}")
-            # Fallback на обычное сообщение при ошибке
-            await message.answer(text)
-    else:
-        # Медиа не найдено, отправляем обычное текстовое сообщение
-        logging.info(f"📝 Медиа image_url_start не найдено, отправка текстового сообщения")
-        # Заменяем переменные в тексте перед отправкой
-        processed_text = replace_variables_in_text(text, user_vars)
-        await message.answer(processed_text)
+    text = replace_variables_in_text(text, user_vars)
+    
+    has_regular_buttons = False
+    has_input_collection = True
+    logging.info(f"DEBUG: generateKeyboard для узла start - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=true, enableTextInput=true, enablePhotoInput=undefined, enableVideoInput=undefined, enableAudioInput=undefined, enableDocumentInput=undefined")
+    
+    await message.answer(text)
+    
+    # Устанавливаем состояние ожидания ввода с полной структурой
+    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+    user_data[message.from_user.id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "user_source",
+        "save_to_database": True,
+        "node_id": "start",
+        "next_node_id": "join_request",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_source (узел start)")
 # @@NODE_END:start@@
 
 # @@NODE_START:join_request@@
@@ -15974,14 +15923,30 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            # ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания тттекста
+                            # Устанавливаем состояние ожидания ввода для узла join_request
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "join_request_response",
+                                "save_to_database": True,
+                                "node_id": "join_request",
+                                "next_node_id": "",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел join_request)")
+                            logging.info(f"✅ Узел join_request настроен для сбора ввода (collectUserInput=true)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
                             builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
                             builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
-                            logging.info(f"✅ Показаны inline кнопки для узла join_request с collectUserInput")
+                            logging.info(f"✅ Показаны inline кнопки для узла join_request с collectUserInput (ожидание ввода активно)")
                         elif current_node_id == "decline_response":
                             text = "Понятно! Если передумаешь, напиши /start! 😊"
                             # Замена переменных в тексте
@@ -16040,14 +16005,30 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            # ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания тттекста
+                            # Устанавливаем состояние ожидания ввода для узла gender_selection
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "gender",
+                                "save_to_database": True,
+                                "node_id": "gender_selection",
+                                "next_node_id": "",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной gender (узел gender_selection)")
+                            logging.info(f"✅ Узел gender_selection настроен для сбора ввода (collectUserInput=true)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
                             builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input"))
                             builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
-                            logging.info(f"✅ Показаны inline кнопки для узла gender_selection с collectUserInput")
+                            logging.info(f"✅ Показаны inline кнопки для узла gender_selection с collectUserInput (ожидание ввода активно)")
                         elif current_node_id == "name_input":
                             text = """Как тебя зовут? ✏️
 
@@ -16075,6 +16056,22 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            # Устанавливаем состояние ожидания ввода для узла name_input
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "user_name",
+                                "save_to_database": True,
+                                "node_id": "name_input",
+                                "next_node_id": "age_input",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_name (узел name_input)")
+                            logging.info(f"✅ Узел name_input настроен для сбора ввода (collectUserInput=true)")
                             await message.answer(text)
                             # Настраиваем ожидание ввода для message узла (универсальная функция опяяяяеделит тип: text/photo/video/audio/document)
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
@@ -16118,6 +16115,22 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            # Устанавливаем состояние ожидания ввода для узла age_input
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "user_age",
+                                "save_to_database": True,
+                                "node_id": "age_input",
+                                "next_node_id": "metro_selection",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_age (узел age_input)")
+                            logging.info(f"✅ Узел age_input настроен для сбора ввода (collectUserInput=true)")
                             await message.answer(text)
                             # Настраиваем ожидание ввода для message узла (универсальная функция опяяяяеделит тип: text/photo/video/audio/document)
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
@@ -16161,7 +16174,23 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            # ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания тттекста
+                            # Устанавливаем состояние ожидания ввода для узла metro_selection
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "metro_stations",
+                                "save_to_database": True,
+                                "node_id": "metro_selection",
+                                "next_node_id": "",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной metro_stations (узел metro_selection)")
+                            logging.info(f"✅ Узел metro_selection настроен для сбора ввода (collectUserInput=true)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
                             builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line_stations"))
                             builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line_stations"))
@@ -16172,7 +16201,7 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             builder.adjust(2)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
-                            logging.info(f"✅ Показаны inline кнопки для узла metro_selection с collectUserInput")
+                            logging.info(f"✅ Показаны inline кнопки для узла metro_selection с collectUserInput (ожидание ввода активно)")
                         elif current_node_id == "red_line_stations":
                             # Прямая навигация к узлу с множественным выбором red_line_stations
                             logging.info(f"🔧 Переходим к узлу с множественным выбором: red_line_stations")
@@ -17770,7 +17799,23 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            # ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания тттекста
+                            # Устанавливаем состояние ожидания ввода для узла marital_status
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "marital_status",
+                                "save_to_database": True,
+                                "node_id": "marital_status",
+                                "next_node_id": "",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной marital_status (узел marital_status)")
+                            logging.info(f"✅ Узел marital_status настроен для сбора ввода (collectUserInput=true)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
                             builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
                             builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
@@ -17779,7 +17824,7 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
-                            logging.info(f"✅ Показаны inline кнопки для узла marital_status с collectUserInput")
+                            logging.info(f"✅ Показаны inline кнопки для узла marital_status с collectUserInput (ожидание ввода активно)")
                         elif current_node_id == "sexual_orientation":
                             text = "Твоя ориентация: 🌈"
                             # Замена переменных в тексте
@@ -17805,7 +17850,23 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            # ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания тттекста
+                            # Устанавливаем состояние ожидания ввода для узла sexual_orientation
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "sexual_orientation",
+                                "save_to_database": True,
+                                "node_id": "sexual_orientation",
+                                "next_node_id": "",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной sexual_orientation (узел sexual_orientation)")
+                            logging.info(f"✅ Узел sexual_orientation настроен для сбора ввода (collectUserInput=true)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
                             builder.add(InlineKeyboardButton(text="Гетеро 👫", callback_data="channel_choice"))
                             builder.add(InlineKeyboardButton(text="Гей 👬", callback_data="channel_choice"))
@@ -17815,7 +17876,7 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
-                            logging.info(f"✅ Показаны inline кнопки для узла sexual_orientation с collectUserInput")
+                            logging.info(f"✅ Показаны inline кнопки для узла sexual_orientation с collectUserInput (ожидание ввода активно)")
                         elif current_node_id == "channel_choice":
                             text = """Хочешь указать свой телеграм-канал? 📢
 
@@ -17843,13 +17904,29 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            # ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания тттекста
+                            # Устанавливаем состояние ожидания ввода для узла channel_choice
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "telegram_channel",
+                                "save_to_database": True,
+                                "node_id": "channel_choice",
+                                "next_node_id": "extra_info",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной telegram_channel (узел channel_choice)")
+                            logging.info(f"✅ Узел channel_choice настроен для сбора ввода (collectUserInput=true)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
                             builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="extra_info"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
-                            logging.info(f"✅ Показаны inline кнопки для узла channel_choice с collectUserInput")
+                            logging.info(f"✅ Показаны inline кнопки для узла channel_choice с collectUserInput (ожидание ввода активно)")
                         elif current_node_id == "extra_info":
                             text = """Хочешь добавить что-то ещё о себе? 📝
 
@@ -17877,13 +17954,29 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
-                            # ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания тттекста
+                            # Устанавливаем состояние ожидания ввода для узла extra_info
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "extra_info",
+                                "save_to_database": True,
+                                "node_id": "extra_info",
+                                "next_node_id": "profile_complete",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной extra_info (узел extra_info)")
+                            logging.info(f"✅ Узел extra_info настроен для сбора ввода (collectUserInput=true)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
                             builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="profile_complete"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
-                            logging.info(f"✅ Показаны inline кнопки для узла extra_info с collectUserInput")
+                            logging.info(f"✅ Показаны inline кнопки для узла extra_info с collectUserInput (ожидание ввода активно)")
                         elif current_node_id == "profile_complete":
                             text = """🎉 Отлично! Твой профиль заполнен!
 

@@ -3058,9 +3058,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 const inputTargetNodeId = targetNode.data.inputTargetNodeId;
 
-                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки, показываем их ВМЕСТО ожидания тттекста
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
+                code += `${bodyIndent}# Устанавливаем состояние ожидания ввода для узла ${targetNode.id}\n`;
+                code += generateWaitingStateCode(targetNode, bodyIndent);
+                code += `${bodyIndent}logging.info(f"✅ Узел ${targetNode.id} настроен для сбора ввода (collectUserInput=true)")\n`;
+
+                // Если у узла есть кнопки, показываем их ВМЕСТЕ с ожиданием ввода
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                  code += `${bodyIndent}# ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания тттекста\n`;
+                  code += `${bodyIndent}# У узла есть inline кнопки - показываем их вместе с ожиданием ввода\n`;
                   code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
 
                   // Добавляем кнопки для узла с collectUserInput + buttons
@@ -3080,7 +3085,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `${bodyIndent}builder.adjust(${columns})\n`;
                   code += `${bodyIndent}keyboard = builder.as_markup()\n`;
                   code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
-                  code += `${bodyIndent}logging.info(f"✅ Показаны inline кнопки для узла ${targetNode.id} с collectUserInput")\n`;
+                  code += `${bodyIndent}logging.info(f"✅ Показаны inline кнопки для узла ${targetNode.id} с collectUserInput (ожидание ввода активно)")\n`;
                 } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                   // Проверяем, есть ли условные сообщения
                   if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {

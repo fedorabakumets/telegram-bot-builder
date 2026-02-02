@@ -1,7 +1,7 @@
 {
   "sheets": [
     {
-      "id": "QnD5rv3wYLVkGtvFfAVlM",
+      "id": "CP4Y9QCOW7g5oruftsGM-",
       "name": "🎉 Приветствие",
       "nodes": [
         {
@@ -10,7 +10,6 @@
           "data": {
             "buttons": [],
             "command": "/start",
-            "imageUrl": "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg",
             "markdown": false,
             "synonyms": [
               "старт",
@@ -41,7 +40,7 @@
           }
         },
         {
-          "_y": 810.25,
+          "_y": 300,
           "id": "join_request",
           "data": {
             "buttons": [
@@ -62,7 +61,6 @@
                 "buttonType": "option"
               }
             ],
-            "imageUrl": "https://i.pinimg.com/originals/24/ac/ef/24acef8b3a6a45d7239480bcc4ff0193.jpg",
             "markdown": false,
             "synonyms": [],
             "adminOnly": false,
@@ -80,11 +78,11 @@
           "type": "message",
           "position": {
             "x": 100,
-            "y": 810.25
+            "y": 300
           }
         },
         {
-          "_y": 1306.859375,
+          "_y": 500,
           "id": "decline_response",
           "data": {
             "buttons": [],
@@ -103,13 +101,13 @@
           },
           "type": "message",
           "position": {
-            "x": 836.875,
-            "y": 1306.859375
+            "x": 940,
+            "y": 500
           }
         }
       ],
-      "createdAt": "2026-02-02T01:32:11.920Z",
-      "updatedAt": "2026-02-02T11:52:11.461Z",
+      "createdAt": "2026-02-02T16:31:02.493Z",
+      "updatedAt": "2026-02-02T16:31:04.432Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -135,7 +133,7 @@
       ]
     },
     {
-      "id": "l4tJKt0nGdc36gx8UAAy1",
+      "id": "Zg8ueORYB7j2W4OIZ11ux",
       "name": "👤 Основная информация",
       "nodes": [
         {
@@ -228,8 +226,8 @@
           }
         }
       ],
-      "createdAt": "2026-02-02T01:32:11.920Z",
-      "updatedAt": "2026-02-02T01:32:11.920Z",
+      "createdAt": "2026-02-02T16:31:02.493Z",
+      "updatedAt": "2026-02-02T16:31:02.493Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -240,7 +238,7 @@
       "connections": []
     },
     {
-      "id": "ZeagUKK9ZUNu60gZmmW0Y",
+      "id": "GgDce_oGkIrqXjUumFMny",
       "name": "🚇 Метро и местоположение",
       "nodes": [
         {
@@ -864,8 +862,8 @@
           }
         }
       ],
-      "createdAt": "2026-02-02T01:32:11.920Z",
-      "updatedAt": "2026-02-02T01:32:11.920Z",
+      "createdAt": "2026-02-02T16:31:02.493Z",
+      "updatedAt": "2026-02-02T16:31:02.493Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -876,7 +874,7 @@
       "connections": []
     },
     {
-      "id": "F6-oz9PhP-LOx1o35csvo",
+      "id": "rZ-Qnh3ZWckXWSirJ1qc9",
       "name": "🎯 Интересы",
       "nodes": [
         {
@@ -1529,8 +1527,8 @@
           }
         }
       ],
-      "createdAt": "2026-02-02T01:32:11.920Z",
-      "updatedAt": "2026-02-02T01:32:11.920Z",
+      "createdAt": "2026-02-02T16:31:02.493Z",
+      "updatedAt": "2026-02-02T16:31:02.493Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -1541,7 +1539,7 @@
       "connections": []
     },
     {
-      "id": "29nqhada8ItRkMskhw6_j",
+      "id": "CO1wHaDq8B5mOrdVFn7RH",
       "name": "💝 Личная информация",
       "nodes": [
         {
@@ -1735,8 +1733,8 @@
           }
         }
       ],
-      "createdAt": "2026-02-02T01:32:11.920Z",
-      "updatedAt": "2026-02-02T01:32:11.920Z",
+      "createdAt": "2026-02-02T16:31:02.493Z",
+      "updatedAt": "2026-02-02T16:31:02.493Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -1747,7 +1745,7 @@
       "connections": []
     },
     {
-      "id": "iRbJNa9WvrJnxZCYFg-5p",
+      "id": "wXxU8MNW8yZ44g5Q-xlwY",
       "name": "👤 Профиль",
       "nodes": [
         {
@@ -1865,14 +1863,10 @@
               "мои данные",
               "редактировать"
             ],
-            "adminOnly": false,
-            "showInMenu": true,
             "commandName": "/profile",
             "description": "Показать и редактировать профиль пользователя",
             "messageText": "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\n\n💬 Источник: {user_source}\n\n✏️ Выберите действие:",
-            "keyboardType": "inline",
-            "requiresAuth": false,
-            "isPrivateOnly": false
+            "keyboardType": "inline"
           },
           "type": "command",
           "position": {
@@ -1893,14 +1887,10 @@
               "впрогулке",
               "линк"
             ],
-            "adminOnly": false,
-            "showInMenu": true,
             "commandName": "/link",
             "description": "Получить ссылку на чат сообщества",
             "messageText": "🔗 Актуальная ссылка на чат:\n\nhttps://t.me/+agkIVgCzHtY2ZTA6\n\nДобро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉",
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "isPrivateOnly": false
+            "keyboardType": "none"
           },
           "type": "command",
           "position": {
@@ -1963,8 +1953,8 @@
           }
         }
       ],
-      "createdAt": "2026-02-02T01:32:11.920Z",
-      "updatedAt": "2026-02-02T01:32:11.920Z",
+      "createdAt": "2026-02-02T16:31:02.493Z",
+      "updatedAt": "2026-02-02T16:31:02.493Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -1975,7 +1965,7 @@
       "connections": []
     },
     {
-      "id": "QfxOgKH8pu9shHhG8OaOY",
+      "id": "vL1fm4Ba08GcJ2rjGnmkv",
       "name": "📝 Управление контентом",
       "nodes": [
         {
@@ -2037,8 +2027,8 @@
           }
         }
       ],
-      "createdAt": "2026-02-02T01:32:11.920Z",
-      "updatedAt": "2026-02-02T01:32:11.920Z",
+      "createdAt": "2026-02-02T16:31:02.493Z",
+      "updatedAt": "2026-02-02T16:31:02.493Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -2049,7 +2039,7 @@
       "connections": []
     },
     {
-      "id": "HwInDeFM7T6FbmIEnN_b7",
+      "id": "qZFSZn8xwNr_sC065Q6MG",
       "name": "👥 Управление пользователями",
       "nodes": [
         {
@@ -2246,8 +2236,8 @@
           }
         }
       ],
-      "createdAt": "2026-02-02T01:32:11.920Z",
-      "updatedAt": "2026-02-02T01:32:11.920Z",
+      "createdAt": "2026-02-02T16:31:02.493Z",
+      "updatedAt": "2026-02-02T16:31:02.493Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -2259,7 +2249,7 @@
     }
   ],
   "version": 2,
-  "activeSheetId": "QnD5rv3wYLVkGtvFfAVlM",
+  "activeSheetId": "CP4Y9QCOW7g5oruftsGM-",
   "interSheetConnections": [
     {
       "id": "inter-welcome-basic",

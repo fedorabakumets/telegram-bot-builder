@@ -1,4 +1,5 @@
 import { isLoggingEnabled } from "../bot-generator";
+import { generateWaitingStateCode } from "./generateWaitingStateCode";
 
 // ============================================================================
 // ГЕНЕРАТОРЫ МЕДИА И УСЛОВНЫХ СООБЩЕНИЙ
@@ -7,13 +8,14 @@ import { isLoggingEnabled } from "../bot-generator";
 export function generateAttachedMediaSendCode(
   attachedMedia: string[],
   mediaVariablesMap: Map<string, { type: string; variable: string; }>,
-  text: string,
+  _text: string,
   parseMode: string,
   keyboard: string,
   nodeId: string,
   indentLevel: string,
   autoTransitionTo?: string,
-  collectUserInput: boolean = true): string {
+  collectUserInput: boolean = true,
+  nodeData?: any): string {
   if (!attachedMedia || attachedMedia.length === 0) {
     return '';
   }
@@ -61,6 +63,14 @@ export function generateAttachedMediaSendCode(
   }
 
   code += `${indentLevel}\n`;
+  
+  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
+  if (collectUserInput && nodeData) {
+    code += `${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}\n`;
+    code += generateWaitingStateCode(nodeData, indentLevel);
+    code += `${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки медиа")\n`;
+  }
+
   code += `${indentLevel}# Если медиа найдено, отправляем с медиа, иначе обычное сообщение\n`;
   code += `${indentLevel}if attached_media and str(attached_media).strip():\n`;
   code += `${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")\n`;
@@ -95,7 +105,7 @@ export function generateAttachedMediaSendCode(
   if (autoTransitionTo) {
     code += `${indentLevel}        \n`;
     code += `${indentLevel}        # Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true\n`;
-    code += `${indentLevel}        if ${collectUserInput.toString()}:\n`;  // Convert boolean to string representation
+    code += `${indentLevel}        if ${collectUserInput.toString()}:  // Convert boolean to string representation\n`;
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
     code += `${indentLevel}            # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
     code += `${indentLevel}            logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
@@ -117,7 +127,8 @@ export function generateAttachedMediaSendCode(
   code += `${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")\n`;
   code += `${indentLevel}    # Заменяем переменные в тексте перед отправкой\n`;
   code += `${indentLevel}    processed_text = replace_variables_in_text(text, user_vars)\n`;
-  // Если collectUserInput=true, не отправляем сообщение, так как узел ожидает ввод
+  
+  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если collectUserInput=true, не отправляем сообщение, так как узел ожидает ввод
   code += `${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:\n`;
   code += `${indentLevel}        # Узел ожидает ввод, не отправляем сообщение\n`;
   code += `${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод, пропускаем отправку сообщения")\n`;
@@ -128,7 +139,7 @@ export function generateAttachedMediaSendCode(
   if (autoTransitionTo) {
     code += `${indentLevel}    \n`;
     code += `${indentLevel}    # Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true\n`;
-    code += `${indentLevel}    if ${collectUserInput.toString()}:\n`;  // Convert boolean to string representation
+    code += `${indentLevel}    if ${collectUserInput.toString()}:  // Convert boolean to string representation\n`;
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
     code += `${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
     code += `${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
