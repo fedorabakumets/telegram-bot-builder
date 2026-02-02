@@ -3,7 +3,6 @@ export * from './bot-generator';
 export * from './commands';
 export * from './queryClient';
 export * from './Keyboard/generateButtonResponseHandlers';
-export * from './generate/generateMediaFileFunctions';
 export * from './utils/extractNodeData';
 export * from './Keyboard/filterInlineNodes';
 export * from './utils/addAutoTransitionNodes';
@@ -53,22 +52,12 @@ export * from './Synonyms';
 // User management handlers
 export * from './UserHandler';
 
-
 // Additional utilities
 export { addInputTargetNodes } from './utils/addInputTargetNodes';
 
 // Collection utilities
 export { collectInputTargetNodes } from './utils/collectInputTargetNodes';
 
-// Code generation utilities
-// NOTE: Individual exports added above to prevent conflicts
-// export * from './generate';
-
-
 // General utilities
 export * from './utils';
-
-// Validation utilities
-// NOTE: Already exported via commands.ts to prevent conflicts
-// export * from './validate';
 

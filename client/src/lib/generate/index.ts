@@ -1,15 +1,13 @@
-// Экспорт всех функций из папки generate
-export { generateDatabaseCode } from './generateDatabaseCode';
-export { generateNodeNavigation } from './generateNodeNavigation';
-export { generateUtf8EncodingCode } from './generateUtf8EncodingCode';
-export { generateSafeEditOrSendCode } from './generateSafeEditOrSendCode';
-export { generateBasicBotSetupCode } from './generateBasicBotSetupCode';
-export { generateGroupsConfiguration } from './generateGroupsConfiguration';
-export { generateMessageLoggingCode } from './generate-message-logging';
-export { generateNodeHandlers } from './generate-node-handlers';
-export { generateSynonymHandlers } from '../Synonyms';
-export { generateButtonResponseHandlers } from '../Keyboard/generateButtonResponseHandlers';
-export { generateLocationFunctions } from './generateLocationFunctions';
-export { generateMediaFileFunctions } from './generateMediaFileFunctions';
-export { generateUniversalVariableReplacement } from './generateUniversalVariableReplacement';
-export { generateUtilityFunctions } from './generateUtilityFunctions';
+// Generate Module
+// Модуль для генерации различных частей кода Telegram ботов
+
+export * from './generate-message-logging';
+export * from './generate-node-handlers';
+export * from './generateDatabaseCode';
+export * from './generateNodeNavigation';
+export * from './generateUtf8EncodingCode';
+export * from './generateSafeEditOrSendCode';
+export * from './generateBasicBotSetupCode';
+export * from './generateGroupsConfiguration';
+export * from './generateUtilityFunctions';
+export * from './generateMediaFileFunctions';

@@ -42,7 +42,7 @@ export async function createCompleteBotFiles(
     generateReadme,
     generateDockerfile,
     generateConfigYaml
-  } = await import("../client/src/lib/bot-generator.ts");
+  } = await import("../client/src/lib/scaffolding");
 
   // Генерируем и сохраняем дополнительные файлы в папке бота
   const assets: string[] = [];

@@ -4,7 +4,8 @@ import { formatTextForPython, toPythonBoolean, generateButtonText, calculateOpti
 import { generateUniversalVariableReplacement } from "../utils/generateUniversalVariableReplacement";
 import { generateConditionalMessageLogic } from "../Conditional";
 
-export type Button = z.infer<typeof buttonSchema>;
+// Import Button type from the main bot-generator to avoid duplicates
+import { Button } from "../../bot-generator";
 
 export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
   let code = '';

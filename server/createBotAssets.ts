@@ -16,14 +16,12 @@ export async function createBotAssets(
   }
 
   // Динамический импорт генераторов
-  const modUrl = new URL("../client/src/lib/bot-generator.ts", import.meta.url);
-  modUrl.searchParams.set("t", Date.now().toString());
-  const { 
-    generateRequirementsTxt, 
-    generateReadme, 
-    generateDockerfile, 
-    generateConfigYaml 
-  } = await import(modUrl.href);
+  const {
+    generateRequirementsTxt,
+    generateReadme,
+    generateDockerfile,
+    generateConfigYaml
+  } = await import("../client/src/lib/scaffolding");
 
   const baseFileName = `bot_${projectId}_${tokenId}`;
   const botDir = join(botsDir, baseFileName);
