@@ -27,6 +27,7 @@ from functools import lru_cache
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logging.getLogger("asyncpg").setLevel(logging.CRITICAL)
 
 @dataclass
 class CoordinateBounds:

@@ -4847,13 +4847,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     if (userDatabaseEnabled) {
       code += '        if db_pool:\n';
       code += '            await db_pool.close()\n';
-      code += '            print("🔌 Соединение с базой данных закрыто")\n';
     }
     code += '        \n';
     code += '        # Закрываем сессию бота\n';
     code += '        await bot.session.close()\n';
-    code += '        print("🔌 Сессия бота закрыта")\n';
-    code += '        print("✅ Бот корректно завершил работу")\n\n';
   }
 
   /**

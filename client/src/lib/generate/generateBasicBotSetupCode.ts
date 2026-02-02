@@ -15,6 +15,8 @@ export function generateBasicBotSetupCode(): string {
   code += '        logging.StreamHandler(sys.stdout)\n';
   code += '    ]\n';
   code += ')\n\n';
+  code += '# Подавление всех сообщений от asyncpg\n';
+  code += 'logging.getLogger("asyncpg").setLevel(logging.CRITICAL)\n\n';
 
   code += '# Создание бота и диспетчера\n';
   code += 'bot = Bot(token=BOT_TOKEN)\n';
