@@ -12,9 +12,6 @@ import {
   generateDemoteUserHandler
 } from '../UserHandler';
 import { generateUnpinMessageHandler, generateDeleteMessageHandler, generatePinMessageHandler } from '../MessageHandler';
-function isMediaNode(node: Node): boolean {
-  return !!(node.data.imageUrl || node.data.videoUrl || node.data.audioUrl || node.data.documentUrl);
-}
 
 /**
  * Генерирует обработчики для каждого узла

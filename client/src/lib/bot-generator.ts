@@ -235,7 +235,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += generateBasicBotSetupCode();
 
   // Импортируем и добавляем код логирования сообщений, если включена БД
-  code += generateMessageLoggingCode(userDatabaseEnabled, nodes || [], projectId, hasInlineButtons(nodes || []));
+  code += generateMessageLoggingCode(userDatabaseEnabled, projectId, hasInlineButtons(nodes || []));
 
   // Добавляем конфигурацию групп
   code += generateGroupsConfiguration(groups);
@@ -3281,7 +3281,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     }
                   });
 
-                  // ВОССТАНОВ��ЕНИЕ: Добав��яем ум��ое расположение кнопок по колонкам
+                  // ВОССТАНОВ��ЕНИЕ: Добав��яем ум��ое р��сположение кнопок по колонкам
                   const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
                   code += `${bodyIndent}builder.adjust(${columns})\n`;
                   code += `${bodyIndent}keyboard = builder.as_markup()\n`;

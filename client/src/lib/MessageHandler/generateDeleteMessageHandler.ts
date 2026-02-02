@@ -58,7 +58,7 @@ export function generateDeleteMessageHandler(node: Node): string {
   if (targetGroupId) {
     const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
 
-    synonyms.forEach((synonym, index) => {
+    synonyms.forEach((synonym) => {
       const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
       code += `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
       code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
@@ -171,7 +171,7 @@ export function generateDeleteMessageHandler(node: Node): string {
     code += `\n`;
 
     // Генерируем обработчики для синонимов
-    synonyms.forEach((synonym, index) => {
+    synonyms.forEach((synonym) => {
       const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
       code += `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
       code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;

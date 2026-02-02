@@ -5,7 +5,7 @@ import { validateCommand } from "./validateCommand";
 
 export function validateBotStructure(botData: BotData): { isValid: boolean; errors: string[]; } {
   const errors: string[] = [];
-  const { nodes, connections } = extractNodesAndConnections(botData);
+  const { nodes } = extractNodesAndConnections(botData);
 
   // Check if there's a start node
   const startNodes = (nodes || []).filter(node => node.type === 'start');

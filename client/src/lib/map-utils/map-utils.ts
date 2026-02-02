@@ -191,9 +191,8 @@ export function extractCoordinatesFromUrl(url: string): {coordinates: Coordinate
 /**
  * Генерирует ссылки на различные картографические сервисы
  */
-export function generateMapUrls(latitude: number, longitude: number, title: string = ''): Record<string, string> {
-  const encodedTitle = encodeURIComponent(title);
-  
+export function generateMapUrls(latitude: number, longitude: number): Record<string, string> {
+
   return {
     yandex: `https://yandex.ru/maps/?ll=${longitude},${latitude}&z=15&l=map&pt=${longitude},${latitude}`,
     google: `https://maps.google.com/?q=${latitude},${longitude}`,

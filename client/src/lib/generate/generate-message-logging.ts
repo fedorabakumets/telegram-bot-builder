@@ -2,8 +2,6 @@
  * Функции для логирования сообщений в базу данных
  */
 
-import { BotData } from '@shared/schema';
-
 /**
  * Экранирует строковое значение для безопасного использования в Python-коде
  * @param {string} value - Значение для экранирования
@@ -31,12 +29,11 @@ function escapePythonString(value: string | number | null | undefined): string {
 /**
  * Генерирует код для логирования сообщений в базу данных
  * @param {boolean} userDatabaseEnabled - Флаг включения пользовательской базы данных
- * @param {BotData['nodes']} nodes - Узлы бота
  * @param {number | null} projectId - ID проекта
  * @param {boolean} hasInlineButtonsValue - Результат вызова hasInlineButtons
  * @returns {string} Сгенерированный код для логирования сообщений
  */
-export function generateMessageLoggingCode(userDatabaseEnabled: boolean, nodes: BotData['nodes'], projectId: number | null, hasInlineButtonsValue: boolean): string {
+export function generateMessageLoggingCode(userDatabaseEnabled: boolean, projectId: number | null, hasInlineButtonsValue: boolean): string {
   if (!userDatabaseEnabled) {
     return '';
   }

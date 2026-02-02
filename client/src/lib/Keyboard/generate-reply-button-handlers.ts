@@ -77,7 +77,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
             // Обрабатываем клавиатуру для целевого узла
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               code += '    builder = ReplyKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn: Button, index: number) => {
+              targetNode.data.buttons.forEach((btn: Button) => {
                 code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
               });
               const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);

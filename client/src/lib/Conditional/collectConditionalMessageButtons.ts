@@ -1,41 +1,8 @@
 import { Button } from "../bot-generator";
 import { Node } from "@shared/schema";
 
-/**
- * Интерфейс условной кнопки сообщения
- */
-interface ConditionalMessageButton {
-  action: string;
-  label: string;
-  [key: string]: unknown;
-}
 
-/**
- * Интерфейс условного сообщения
- */
-interface ConditionalMessage {
-  condition: string;
-  message: string;
-  buttons?: Button[];
-  [key: string]: unknown;
-}
 
-/**
- * Интерфейс данных узла
- */
-interface NodeData {
-  conditionalMessageButtons?: ConditionalMessageButton[];
-  conditionalMessages?: ConditionalMessage[];
-  [key: string]: unknown;
-}
-
-/**
- * Интерфейс узла
- */
-interface LocalNode {
-  data: NodeData;
-  [key: string]: unknown;
-}
 
 /**
  * Вспомогательная функция для сбора кнопок из условных сообщений

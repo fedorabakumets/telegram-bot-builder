@@ -6736,7 +6736,7 @@ async def handle_user_input(message: types.Message):
                             "next_node_id": "",
                             "skip_buttons": []
                         }
-                        logging.info(f"✅ Сояяяятояние ожид��ния настроено: modes=['button'] для переменной gender (узел f90r9k3FSLu2Tjn74cBn_)")
+                        logging.info(f"✅ Сояяяятояние ожид����ия настроено: modes=['button'] для пер��менной gender (узел f90r9k3FSLu2Tjn74cBn_)")
                     elif next_node_id == "RFTgm4KzC6dI39AMTPcmo":
                         # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа
                         logging.info(f"✅ Показаны кнопки для узла RFTgm4KzC6dI39AMTPcmo с collectUserInput=true")
@@ -6781,7 +6781,7 @@ async def handle_user_input(message: types.Message):
                             "next_node_id": "",
                             "skip_buttons": []
                         }
-                        logging.info(f"✅ Сояяяятояние ожид��ния настроено: modes=['button'] для переменной sex (узел RFTgm4KzC6dI39AMTPcmo)")
+                        logging.info(f"✅ Сояяяятояние ожид����ия настроено: modes=['button'] для пер��менной sex (узел RFTgm4KzC6dI39AMTPcmo)")
                     elif next_node_id == "sIh3xXKEtb_TtrhHqZQzX":
                         # Узел с условными сообщениями - проверяем условия
                         logging.info(f"🔧 Условная навигация к узлу с условными сообщениями: sIh3xXKEtb_TtrhHqZQzX")

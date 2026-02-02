@@ -1,7 +1,7 @@
-// client/src/lib/variable/generateVariableReplacement.ts
+// client/src/lib/utils/generateVariableReplacement.ts
 // Функция для генерации замены переменных
 
-export function generateVariableReplacement(variableName: string, value: any): string {
+export function generateVariableReplacement(value: any): string {
   // Генерирует строку замены для переменной
   return String(value);
 }

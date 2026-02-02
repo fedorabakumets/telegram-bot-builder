@@ -119,7 +119,6 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     code += '    # Инициализируем состояние множественного выбора\n';
     code += '    if user_id not in user_data:\n';
     code += '        user_data[user_id] = {}\n';
-    const multiSelectVariable = node.data.multiSelectVariable || 'user_interests';
     code += `    user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy() if saved_interests else []\n`;
     code += `    user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
     code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n';
@@ -175,7 +174,6 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     });
 
     // Добавляем кнопку "Готово"
-    const continueTarget = node.data.continueButtonTarget || 'next';
     const continueText = node.data.continueButtonText || 'Готово';
     code += `    builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
     code += '    builder.adjust(2)  # Используем 2 колонки для консистентности\n';

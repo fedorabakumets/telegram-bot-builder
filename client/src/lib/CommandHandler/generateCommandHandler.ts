@@ -1,4 +1,3 @@
-import { getParseMode } from '../format/getParseMode';
 import { stripHtmlTags } from '../format/stripHtmlTags';
 import { formatTextForPython } from '../format/formatTextForPython';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
@@ -72,7 +71,6 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean)
   const messageText = node.data.messageText || "🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка\n/settings - Настройки";
   const cleanedMessageText = stripHtmlTags(messageText); // Удаляем HTML теги
   const formattedText = formatTextForPython(cleanedMessageText);
-  const parseMode = getParseMode(node.data.formatMode || (node.data.markdown ? 'markdown' : ''));
 
   if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
     code += '\n    # Проверяем условные сообщения\n';

@@ -12,7 +12,6 @@ export function generatePromoteUserHandler(node: Node): string {
   const canBanUsers = node.data.canBanUsers || false;
   const canInviteUsers = node.data.canInviteUsers || true;
   const canPinMessages = node.data.canPinMessages || true;
-  const canAddAdmins = node.data.canAddAdmins || false;
   const canRestrictMembers = node.data.canRestrictMembers || false;
   const canPromoteMembers = node.data.canPromoteMembers || false;
   const canManageVideoChats = node.data.canManageVideoChats || false;

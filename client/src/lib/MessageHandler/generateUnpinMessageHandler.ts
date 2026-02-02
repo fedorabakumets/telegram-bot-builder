@@ -98,7 +98,7 @@ export function generateUnpinMessageHandler(node: Node): string {
   code += `\n`;
 
   // Создаем универсальный обработчик, который работает в любых группах
-  synonyms.forEach((synonym, index) => {
+  synonyms.forEach((synonym) => {
     const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
 
     // Условие: проверяем синоним и что сообщение пришло из группы
