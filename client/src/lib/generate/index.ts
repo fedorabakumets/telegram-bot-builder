@@ -7,7 +7,7 @@ export { generateBasicBotSetupCode } from './generateBasicBotSetupCode';
 export { generateGroupsConfiguration } from './generateGroupsConfiguration';
 export { generateMessageLoggingCode } from './generate-message-logging';
 export { generateNodeHandlers } from './generate-node-handlers';
-export { generateSynonymHandlers } from './generate-synonym-handlers';
+export { generateSynonymHandlers } from '../Synonyms';
 export { generateButtonResponseHandlers } from '../Keyboard/generateButtonResponseHandlers';
 export { generateLocationFunctions } from './generateLocationFunctions';
 export { generateMediaFileFunctions } from './generateMediaFileFunctions';

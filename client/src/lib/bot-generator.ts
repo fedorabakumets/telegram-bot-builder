@@ -4,7 +4,7 @@ import { BotData, Node, BotGroup, buttonSchema } from '@shared/schema';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';
-import { generateSynonymHandlers } from './generate/generate-synonym-handlers';
+import { generateSynonymHandlers } from './Synonyms';
 import { generatePhotoHandlerCode, hasPhotoInput } from './MediaHandler/photo-handler';
 import { generateVideoHandlerCode, hasVideoInput } from './MediaHandler/video-handler';
 import { generateAudioHandlerCode, hasAudioInput } from './MediaHandler/audio-handler';
@@ -27,13 +27,16 @@ import {
 } from './format';
 import { generateConditionalMessageLogic } from './Conditional';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from './Keyboard';
-import { hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions } from './utils/has';
+import { hasMediaNodes } from './utils/hasMediaNodes';
+import { hasInputCollection } from './utils/hasInputCollection';
+import { hasInlineButtons } from './utils/hasInlineButtons';
+import { hasAutoTransitions } from './utils/hasAutoTransitions';
 import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
 import { processInlineButtonNodes } from './Keyboard/processInlineButtonNodes';
 import { processConnectionTargets } from './utils/processConnectionTargets';
-import { collectInputTargetNodes, } from './collect';
+import { collectInputTargetNodes } from './utils/collectInputTargetNodes';
 import { filterInlineNodes } from './Keyboard/filterInlineNodes';
-import { addInputTargetNodes } from './add';
+import { addInputTargetNodes } from './utils/addInputTargetNodes';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration, generateUtilityFunctions } from './generate';
 import { generateMessageLoggingCode } from './generate/generate-message-logging';
 import { extractNodeData } from './utils/extractNodeData';
@@ -49,7 +52,6 @@ import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';
 import { generateMultiSelectDoneHandler } from './Keyboard/generateMultiSelectDoneHandler';
 import { generateMultiSelectCallbackLogic } from './Keyboard/generateMultiSelectCallbackLogic';
 import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
-import { Button } from './bot-generator';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -1646,7 +1648,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, не установлено ли keyboardType="none" на РОДИТЕЛЬСКОМ узле
                           const shouldGenerateKeyboard = navTargetNode.data.keyboardType !== 'none' && condition.keyboardType && condition.keyboardType !== 'none' && condition.buttons && condition.buttons.length > 0;
                           if (shouldGenerateKeyboard) {
-                            code += '                # Создаем клавиатуру для условного сообщения\n';
+                            code += '                # Создаем клавиатуру для у��ловного сообщения\n';
 
                             if (condition.keyboardType === 'inline') {
                               code += '                builder = InlineKeyboardBuilder()\n';
@@ -3279,7 +3281,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     }
                   });
 
-                  // ВОССТАНОВЛЕНИЕ: Добавляем умное расположение кнопок по колонкам
+                  // ВОССТАНОВ��ЕНИЕ: Добав��яем ум��ое расположение кнопок по колонкам
                   const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
                   code += `${bodyIndent}builder.adjust(${columns})\n`;
                   code += `${bodyIndent}keyboard = builder.as_markup()\n`;
@@ -5131,7 +5133,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 5. Обра��отка прикрепленных медиа и разл��чных типов контента
    * 6. Управление состоянием ожидания пользовательского ввода
    * 7. Обработка специальных медиа-узлов (стикеры, голос, анимации, локация, контакты)
-   * 8. Обработка узлов пользовательского ввода �� валидацией
+   * 8. Обработка узлов пол��зовательског�� в��ода �� ��алидацией
    * 9. Обработка start узлов - начальны�� сообщения
    * 10. Обработ����������а command узлов - выполнение ком��нд
    * 11. Универсальный обработчик для остальных типов узлов

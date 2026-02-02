@@ -1,6 +1,6 @@
 import { Node } from '@shared/schema';
-import { formatTextForPython } from './format';
-import { generateInlineKeyboardCode } from './Keyboard';
+import { formatTextForPython } from '../format';
+import { generateInlineKeyboardCode } from '../Keyboard';
 
 /**
  * Checks if there are any nodes with multi-select reply buttons.

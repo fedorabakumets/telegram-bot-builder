@@ -7,7 +7,7 @@ export * from './generate/generateMediaFileFunctions';
 export * from './utils/extractNodeData';
 export * from './Keyboard/filterInlineNodes';
 export * from './utils/addAutoTransitionNodes';
-export * from './generate/generate-synonym-handlers';
+export * from './Synonyms';
 export * from './bot-commands-setup';
 
 // Command handlers
@@ -20,7 +20,14 @@ export * from './Conditional';
 export * from './format';
 
 // Feature detection
-export * from './utils/has';
+export { hasMediaNodes } from './utils/hasMediaNodes';
+export { hasInputCollection } from './utils/hasInputCollection';
+export { hasInlineButtons } from './utils/hasInlineButtons';
+export { hasAutoTransitions } from './utils/hasAutoTransitions';
+export { hasMultiSelectNodes } from './utils/hasMultiSelectNodes';
+export { hasCommandButtons } from './utils/hasCommandButtons';
+export { hasConditionalButtons } from './utils/hasConditionalButtons';
+export { hasLocationFeatures } from './utils/hasLocationFeatures';
 
 // Keyboard generators
 export * from './Keyboard';
@@ -50,10 +57,10 @@ export * from './UserHandler';
 export * from './types/bot-node';
 
 // Additional utilities
-export * from './add';
+export { addInputTargetNodes } from './utils/addInputTargetNodes';
 
 // Collection utilities
-export * from './collect';
+export { collectInputTargetNodes } from './utils/collectInputTargetNodes';
 
 // Code generation utilities
 // NOTE: Individual exports added above to prevent conflicts
