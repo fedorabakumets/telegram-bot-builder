@@ -4,9 +4,9 @@ export * from './commands';
 export * from './queryClient';
 export * from './generate/generateButtonResponseHandlers';
 export * from './generate/generateMediaFileFunctions';
-export * from './extractNodeData';
+export * from './utils/extractNodeData';
 export * from './Keyboard/filterInlineNodes';
-export * from './add/addAutoTransitionNodes';
+export * from './utils/addAutoTransitionNodes';
 export * from './generate/generate-synonym-handlers';
 export * from './bot-commands-setup';
 
@@ -20,7 +20,7 @@ export * from './Conditional';
 export * from './format';
 
 // Feature detection
-export * from './has';
+export * from './utils/has';
 
 // Keyboard generators
 export * from './Keyboard';

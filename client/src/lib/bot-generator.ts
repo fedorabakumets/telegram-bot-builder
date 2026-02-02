@@ -10,8 +10,8 @@ import { generateVideoHandlerCode, hasVideoInput } from './MediaHandler/video-ha
 import { generateAudioHandlerCode, hasAudioInput } from './MediaHandler/audio-handler';
 import { generateDocumentHandlerCode, hasDocumentInput } from './MediaHandler/document-handler';
 import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './Conditional/conditional-button-handler';
-import { generateHideAfterClickMiddleware } from './handlers/generateHideAfterClickHandler';
-import { generateReplyHideAfterClickHandler } from './handlers/generateReplyHideAfterClickHandler';
+import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
+import { generateReplyHideAfterClickHandler } from './generate/generateReplyHideAfterClickHandler';
 import {
   toPythonBoolean,
   generateWaitingStateCode,
@@ -27,7 +27,7 @@ import {
 } from './format';
 import { generateConditionalMessageLogic } from './Conditional';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from './Keyboard';
-import { hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions } from './has';
+import { hasMediaNodes, hasInputCollection, hasInlineButtons, hasAutoTransitions } from './utils/has';
 import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
 import { processInlineButtonNodes } from './Keyboard/processInlineButtonNodes';
 import { processConnectionTargets } from './utils/processConnectionTargets';
@@ -36,10 +36,10 @@ import { filterInlineNodes } from './Keyboard/filterInlineNodes';
 import { addInputTargetNodes } from './add';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration, generateUtilityFunctions } from './generate';
 import { generateMessageLoggingCode } from './generate/generate-message-logging';
-import { extractNodeData } from './extractNodeData';
+import { extractNodeData } from './utils/extractNodeData';
 import { generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
-import { collectConditionalMessageButtons } from './collect/collectConditionalMessageButtons';
-import { addAutoTransitionNodes } from './add/addAutoTransitionNodes';
+import { collectConditionalMessageButtons } from './Conditional/collectConditionalMessageButtons';
+import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateButtonResponseHandlers } from './generate/generateButtonResponseHandlers';
