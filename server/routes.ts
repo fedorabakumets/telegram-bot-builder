@@ -448,7 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      // console.log("Request body:", JSON.stringify(req.body, null, 2));
       const validatedData = insertBotProjectSchema.partial().parse(req.body);
       const project = await storage.updateBotProject(projectId, validatedData);
       if (!project) {
@@ -3295,10 +3295,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid project ID" });
       }
       
-      console.log("=== CREATE GROUP DEBUG ===");
-      console.log("Request body:", JSON.stringify(req.body, null, 2));
-      console.log("Project ID:", projectId);
-      console.log("Data to validate:", JSON.stringify({ ...req.body, projectId }, null, 2));
+      // console.log("=== CREATE GROUP DEBUG ===");
+      // console.log("Request body:", JSON.stringify(req.body, null, 2));
+      // console.log("Project ID:", projectId);
+      // console.log("Data to validate:", JSON.stringify({ ...req.body, projectId }, null, 2));
       
       const result = insertBotGroupSchema.safeParse({ ...req.body, projectId });
       if (!result.success) {
