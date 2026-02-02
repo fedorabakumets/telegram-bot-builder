@@ -44,15 +44,15 @@ pool.on('error', (err: Error) => {
 });
 
 pool.on('connect', (client) => {
-  console.log('✅ Connected to database');
+  // console.log('✅ Connected to database');
 });
 
 pool.on('acquire', () => {
-  console.log('🔗 Database connection acquired');
+  // console.log('🔗 Database connection acquired');
 });
 
 pool.on('remove', () => {
-  console.log('🔌 Database connection removed');
+  // console.log('🔌 Database connection removed');
 });
 
 // Устанавливаем начальное состояние пула
@@ -63,23 +63,23 @@ export const db = drizzle(pool, { schema });
 // Test connection on startup
 async function testConnection() {
   try {
-    console.log('🧪 Testing database connection...');
+    // console.log('🧪 Testing database connection...');
     const client = await pool.connect();
     const result = await client.query('SELECT NOW() as current_time, version() as version');
-    console.log('✅ Database connection test successful:', {
-      time: result.rows[0].current_time,
-      version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1]
-    });
+    // console.log('✅ Database connection test successful:', {
+    //   time: result.rows[0].current_time,
+    //   version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1]
+    // });
     client.release();
   } catch (error: any) {
-    console.error('❌ Database connection test failed:', error.message);
-    console.error('Connection details:', {
-      code: (error as any).code,
-      errno: (error as any).errno,
-      syscall: (error as any).syscall,
-      hostname: (error as any).hostname,
-      port: (error as any).port
-    });
+    // console.error('❌ Database connection test failed:', error.message);
+    // console.error('Connection details:', {
+    //   code: (error as any).code,
+    //   errno: (error as any).errno,
+    //   syscall: (error as any).syscall,
+    //   hostname: (error as any).hostname,
+    //   port: (error as any).port
+    // });
 
     // Don't throw error here, let the app try to continue
     // The health checks will catch ongoing issues
@@ -91,17 +91,17 @@ setTimeout(testConnection, 2000);
 
 // Graceful shutdown - обновляем флаг перед закрытием пула
 process.on('SIGTERM', () => {
-  console.log('🛑 Получен сигнал SIGTERM, закрываем пул соединений...');
+  // console.log('🛑 Получен сигнал SIGTERM, закрываем пул соединений...');
   globalThis.__dbPoolActive = false;
   pool.end(() => {
-    console.log('🔌 Пул соединений закрыт');
+    // console.log('🔌 Пул соединений закрыт');
   });
 });
 
 process.on('SIGINT', () => {
-  console.log('🛑 Получен сигнал SIGINT, закрываем пул соединений...');
+  // console.log('🛑 Получен сигнал SIGINT, закрываем пул соединений...');
   globalThis.__dbPoolActive = false;
   pool.end(() => {
-    console.log('🔌 Пул соединений закрыт');
+    // console.log('🔌 Пул соединений закрыт');
   });
 });
