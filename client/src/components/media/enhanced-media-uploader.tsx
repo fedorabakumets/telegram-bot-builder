@@ -1,35 +1,53 @@
-import React, { useState, useCallback } from 'react';
+/**
+ * @fileoverview Расширенный компонент загрузки медиафайлов
+ *
+ * Этот компонент предоставляет расширенный интерфейс для загрузки медиафайлов
+ * с поддержкой множественной загрузки, предварительного просмотра, оптимизации,
+ * валидации и настройки метаданных файлов.
+ *
+ * @module EnhancedMediaUploader
+ */
+
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useUploadMedia, useUploadMultipleMedia } from "@/hooks/use-media";
 import { FileOptimizer } from "./file-optimizer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  Upload, 
-  X, 
-  FileImage, 
-  FileVideo, 
-  FileAudio, 
+import {
+  Upload,
+  X,
+  FileImage,
+  FileVideo,
+  FileAudio,
   FileText,
   AlertTriangle,
   CheckCircle2,
   Loader2,
   Eye,
   Trash2,
-  Tag,
   Settings,
   Zap
 } from "lucide-react";
 import type { MediaFile } from "@shared/schema";
 
+/**
+ * Интерфейс файла с предварительным просмотром
+ *
+ * @interface FileWithPreview
+ * @extends {File}
+ * @property {string} [preview] - URL для предварительного просмотра файла
+ * @property {string} id - Уникальный идентификатор файла
+ * @property {number} [uploadProgress] - Прогресс загрузки (0-100)
+ * @property {'pending' | 'uploading' | 'success' | 'error'} [uploadStatus] - Статус загрузки
+ * @property {string} [uploadError] - Ошибка загрузки (если есть)
+ */
 interface FileWithPreview extends File {
   preview?: string;
   id: string;
@@ -38,6 +56,16 @@ interface FileWithPreview extends File {
   uploadError?: string;
 }
 
+/**
+ * Свойства компонента EnhancedMediaUploader
+ *
+ * @interface EnhancedMediaUploaderProps
+ * @property {number} projectId - ID проекта для загрузки файлов
+ * @property {Function} [onUploadComplete] - Обработчик завершения загрузки
+ * @property {Function} [onClose] - Обработчик закрытия компонента
+ * @property {number} [maxFiles] - Максимальное количество файлов для загрузки (по умолчанию 20)
+ * @property {string[]} [acceptedTypes] - Поддерживаемые типы файлов (по умолчанию изображения, видео, аудио, документы)
+ */
 interface EnhancedMediaUploaderProps {
   projectId: number;
   onUploadComplete?: (files: MediaFile[]) => void;
@@ -46,17 +74,27 @@ interface EnhancedMediaUploaderProps {
   acceptedTypes?: string[];
 }
 
-export function EnhancedMediaUploader({ 
-  projectId, 
-  onUploadComplete, 
+/**
+ * Расширенный компонент загрузки медиафайлов
+ *
+ * Предоставляет интерфейс для загрузки медиафайлов с поддержкой множественной загрузки,
+ * предварительного просмотра, оптимизации, валидации и настройки метаданных файлов.
+ *
+ * @component
+ * @param {EnhancedMediaUploaderProps} props - Свойства компонента
+ * @returns {JSX.Element} Элемент компонента EnhancedMediaUploader
+ */
+export function EnhancedMediaUploader({
+  projectId,
+  onUploadComplete,
   onClose,
   maxFiles = 20,
   acceptedTypes = [
-    'image/*', 
-    'video/*', 
-    'audio/*', 
-    '.pdf', 
-    '.doc', 
+    'image/*',
+    'video/*',
+    'audio/*',
+    '.pdf',
+    '.doc',
     '.docx',
     '.txt',
     '.xls',
@@ -69,21 +107,74 @@ export function EnhancedMediaUploader({
     'text/plain'
   ]
 }: EnhancedMediaUploaderProps) {
+  /**
+   * Хук для показа уведомлений
+   */
   const { toast } = useToast();
+
+  /**
+   * Состояние списка файлов для загрузки
+   */
   const [files, setFiles] = useState<FileWithPreview[]>([]);
+
+  /**
+   * Состояние публичности файлов
+   */
   const [isPublic, setIsPublic] = useState(false);
+
+  /**
+   * Состояние описания по умолчанию
+   */
   const [defaultDescription, setDefaultDescription] = useState('');
+
+  /**
+   * Состояние тегов по умолчанию
+   */
   const [defaultTags, setDefaultTags] = useState('');
+
+  /**
+   * Состояние процесса загрузки
+   */
   const [isUploading, setIsUploading] = useState(false);
+
+  /**
+   * Состояние прогресса загрузки
+   */
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  /**
+   * Состояние показа дополнительных настроек
+   */
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  /**
+   * Состояние показа оптимизатора файлов
+   */
   const [showOptimizer, setShowOptimizer] = useState(false);
+
+  /**
+   * Состояние показа предпросмотра файлов
+   */
   const [showPreview, setShowPreview] = useState(false);
 
+  /**
+   * Мутация для загрузки одного файла
+   */
   const uploadSingleMutation = useUploadMedia(projectId);
+
+  /**
+   * Мутация для загрузки нескольких файлов
+   */
   const uploadMultipleMutation = useUploadMultipleMedia(projectId);
 
-  // Расширенная валидация файла
+  /**
+   * Расширенная валидация файла
+   *
+   * Проверяет тип, размер и имя файла на соответствие требованиям.
+   *
+   * @param {File} file - Файл для валидации
+   * @returns {string | null} Сообщение об ошибке или null, если файл валиден
+   */
   const validateFile = useCallback((file: File): string | null => {
     // Определяем максимальные размеры по типу файла
     const maxSizes = {
@@ -129,7 +220,14 @@ export function EnhancedMediaUploader({
     return null;
   }, []);
 
-  // Обработка добавления файлов
+  /**
+   * Обработка добавления файлов
+   *
+   * Обрабатывает принятые и отклоненные файлы, валидирует их и добавляет в список.
+   *
+   * @param {File[]} acceptedFiles - Принятые файлы
+   * @param {any[]} rejectedFiles - Отклоненные файлы
+   */
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     // Обрабатываем отклоненные файлы
     rejectedFiles.forEach(({ file, errors }) => {
@@ -194,7 +292,13 @@ export function EnhancedMediaUploader({
     multiple: true
   });
 
-  // Удаление файла из списка
+  /**
+   * Удаление файла из списка
+   *
+   * Удаляет файл из списка и освобождает память для превью.
+   *
+   * @param {string} fileId - ID файла для удаления
+   */
   const removeFile = useCallback((fileId: string) => {
     setFiles(prev => {
       const updated = prev.filter(f => f.id !== fileId);
@@ -207,7 +311,14 @@ export function EnhancedMediaUploader({
     });
   }, []);
 
-  // Получение иконки файла
+  /**
+   * Получение иконки файла
+   *
+   * Возвращает соответствующую иконку в зависимости от типа файла.
+   *
+   * @param {File} file - Файл для получения иконки
+   * @returns {JSX.Element} Иконка файла
+   */
   const getFileIcon = (file: File) => {
     const type = file.type.split('/')[0];
     switch (type) {
@@ -218,7 +329,14 @@ export function EnhancedMediaUploader({
     }
   };
 
-  // Форматирование размера файла
+  /**
+   * Форматирование размера файла
+   *
+   * Преобразует размер файла в байтах в человекочитаемый формат.
+   *
+   * @param {number} bytes - Размер файла в байтах
+   * @returns {string} Размер файла в человекочитаемом формате
+   */
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -227,7 +345,11 @@ export function EnhancedMediaUploader({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Загрузка файлов
+  /**
+   * Загрузка файлов
+   *
+   * Выполняет загрузку файлов с отслеживанием прогресса и обработкой ошибок.
+   */
   const handleUpload = async () => {
     if (files.length === 0) return;
 
@@ -240,8 +362,8 @@ export function EnhancedMediaUploader({
       if (files.length === 1) {
         // Одиночная загрузка
         const file = files[0];
-        setFiles(prev => prev.map(f => 
-          f.id === file.id 
+        setFiles(prev => prev.map(f =>
+          f.id === file.id
             ? { ...f, uploadStatus: 'uploading', uploadProgress: 0 }
             : f
         ));
@@ -253,16 +375,16 @@ export function EnhancedMediaUploader({
           isPublic,
           onProgress: (progress) => {
             setUploadProgress(progress);
-            setFiles(prev => prev.map(f => 
-              f.id === file.id 
+            setFiles(prev => prev.map(f =>
+              f.id === file.id
                 ? { ...f, uploadProgress: progress }
                 : f
             ));
           }
         });
 
-        setFiles(prev => prev.map(f => 
-          f.id === file.id 
+        setFiles(prev => prev.map(f =>
+          f.id === file.id
             ? { ...f, uploadStatus: 'success', uploadProgress: 100 }
             : f
         ));
@@ -315,12 +437,12 @@ export function EnhancedMediaUploader({
 
     } catch (error) {
       console.error('Upload error:', error);
-      setFiles(prev => prev.map(f => ({ 
-        ...f, 
-        uploadStatus: 'error', 
+      setFiles(prev => prev.map(f => ({
+        ...f,
+        uploadStatus: 'error',
         uploadError: error instanceof Error ? error.message : 'Неизвестная ошибка'
       })));
-      
+
       toast({
         title: "Ошибка загрузки",
         description: error instanceof Error ? error.message : 'Неизвестная ошибка',
@@ -643,7 +765,7 @@ export function EnhancedMediaUploader({
           <FileOptimizer
             files={files}
             onOptimizedFiles={(optimizedFiles) => {
-              setFiles(optimizedFiles.map((file, index) => ({
+              setFiles(optimizedFiles.map((file, _index) => ({
                 ...file,
                 preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
                 id: Math.random().toString(36).substr(2, 9),
