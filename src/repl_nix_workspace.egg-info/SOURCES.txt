@@ -1,8 +1,0 @@
-LICENSE
-README.md
-pyproject.toml
-src/repl_nix_workspace.egg-info/PKG-INFO
-src/repl_nix_workspace.egg-info/SOURCES.txt
-src/repl_nix_workspace.egg-info/dependency_links.txt
-src/repl_nix_workspace.egg-info/requires.txt
-src/repl_nix_workspace.egg-info/top_level.txt
