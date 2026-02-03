@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Button } from '@/components/ui/button';
@@ -8,22 +8,32 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Layout, 
-  GripVertical, 
-  Move, 
-  RotateCcw, 
-  Eye, 
+import {
+  Layout,
+  GripVertical,
+  Move,
+  RotateCcw,
+  Eye,
   EyeOff,
   Settings,
   ArrowUp,
   ArrowDown,
   ArrowLeft,
   ArrowRight,
-  Maximize2,
-  Minimize2
-} from 'lucide-react';
+  Maximize2} from 'lucide-react';
 
+/**
+ * @interface DragLayoutElement
+ * @description Описывает элемент макета с возможностью перетаскивания
+ * @property {string} id - Уникальный идентификатор элемента
+ * @property {'header' | 'sidebar' | 'canvas' | 'properties'} type - Тип элемента
+ * @property {string} title - Заголовок элемента
+ * @property {'top' | 'bottom' | 'left' | 'right' | 'center'} position - Позиция элемента в макете
+ * @property {number} size - Размер элемента (процент от общей площади)
+ * @property {boolean} visible - Видимость элемента
+ * @property {boolean} locked - Заблокирован ли элемент
+ * @property {React.ReactNode} content - Контент элемента
+ */
 export interface DragLayoutElement {
   id: string;
   type: 'header' | 'sidebar' | 'canvas' | 'properties';
@@ -35,6 +45,14 @@ export interface DragLayoutElement {
   content: React.ReactNode;
 }
 
+/**
+ * @interface DragLayoutConfig
+ * @description Конфигурация макета с возможностью перетаскивания
+ * @property {DragLayoutElement[]} elements - Массив элементов макета
+ * @property {boolean} gridSnap - Привязка к сетке
+ * @property {boolean} showGrid - Показывать сетку
+ * @property {boolean} compactMode - Компактный режим
+ */
 export interface DragLayoutConfig {
   elements: DragLayoutElement[];
   gridSnap: boolean;
@@ -43,8 +61,17 @@ export interface DragLayoutConfig {
 }
 
 const DRAG_TYPE = 'layout-element';
-const DROP_ZONES = ['top', 'bottom', 'left', 'right', 'center'] as const;
 
+/**
+ * @interface DragLayoutManagerProps
+ * @description Свойства компонента управления макетом с перетаскиванием
+ * @property {React.ReactNode} headerContent - Контент заголовка
+ * @property {React.ReactNode} sidebarContent - Контент боковой панели
+ * @property {React.ReactNode} canvasContent - Контент холста
+ * @property {React.ReactNode} propertiesContent - Контент панели свойств
+ * @property {(config: DragLayoutConfig) => void} [onLayoutChange] - Функция обратного вызова при изменении макета
+ * @property {string} [className] - Дополнительный CSS класс
+ */
 interface DragLayoutManagerProps {
   headerContent: React.ReactNode;
   sidebarContent: React.ReactNode;
@@ -65,7 +92,6 @@ interface DraggableElementProps {
 const DraggableElement: React.FC<DraggableElementProps> = ({ 
   element, 
   isPreview = false, 
-  onMove, 
   onToggleVisibility, 
   onToggleLock 
 }) => {
@@ -207,6 +233,13 @@ const DropZone: React.FC<DropZoneProps> = ({ position, onDrop, isActive, childre
   );
 };
 
+/**
+ * @function DragLayoutManager
+ * @description Компонент управления макетом с возможностью перетаскивания элементов
+ * Позволяет пользователю настраивать расположение и видимость элементов интерфейса
+ * @param {DragLayoutManagerProps} props - Свойства компонента
+ * @returns {JSX.Element} Компонент управления макетом с перетаскиванием
+ */
 const DragLayoutManager: React.FC<DragLayoutManagerProps> = ({
   headerContent,
   sidebarContent,
@@ -266,39 +299,69 @@ const DragLayoutManager: React.FC<DragLayoutManagerProps> = ({
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
 
+  /**
+   * @function handleElementMove
+   * @description Обработчик перемещения элемента в макете
+   * Обновляет позицию элемента в конфигурации
+   * @param {string} elementId - Идентификатор элемента
+   * @param {string} newPosition - Новая позиция элемента
+   * @returns {void}
+   */
   const handleElementMove = useCallback((elementId: string, newPosition: string) => {
     setConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(el => 
-        el.id === elementId 
+      elements: prev.elements.map(el =>
+        el.id === elementId
           ? { ...el, position: newPosition as any }
           : el
       )
     }));
   }, []);
 
+  /**
+   * @function handleToggleVisibility
+   * @description Обработчик переключения видимости элемента
+   * Обновляет состояние видимости элемента в конфигурации
+   * @param {string} elementId - Идентификатор элемента
+   * @returns {void}
+   */
   const handleToggleVisibility = useCallback((elementId: string) => {
     setConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(el => 
-        el.id === elementId 
+      elements: prev.elements.map(el =>
+        el.id === elementId
           ? { ...el, visible: !el.visible }
           : el
       )
     }));
   }, []);
 
+  /**
+   * @function handleToggleLock
+   * @description Обработчик переключения блокировки элемента
+   * Обновляет состояние блокировки элемента в конфигурации
+   * @param {string} elementId - Идентификатор элемента
+   * @returns {void}
+   */
   const handleToggleLock = useCallback((elementId: string) => {
     setConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(el => 
-        el.id === elementId 
+      elements: prev.elements.map(el =>
+        el.id === elementId
           ? { ...el, locked: !el.locked }
           : el
       )
     }));
   }, []);
 
+  /**
+   * @function handleConfigChange
+   * @description Обработчик изменения конфигурации макета
+   * Обновляет указанное свойство конфигурации
+   * @param {keyof DragLayoutConfig} key - Ключ свойства конфигурации
+   * @param {any} value - Новое значение свойства
+   * @returns {void}
+   */
   const handleConfigChange = useCallback((key: keyof DragLayoutConfig, value: any) => {
     setConfig(prev => ({
       ...prev,
@@ -306,6 +369,12 @@ const DragLayoutManager: React.FC<DragLayoutManagerProps> = ({
     }));
   }, []);
 
+  /**
+   * @function handleReset
+   * @description Обработчик сброса макета к значениям по умолчанию
+   * Восстанавливает начальную конфигурацию макета
+   * @returns {void}
+   */
   const handleReset = useCallback(() => {
     setConfig({
       elements: [
@@ -356,6 +425,12 @@ const DragLayoutManager: React.FC<DragLayoutManagerProps> = ({
     });
   }, [headerContent, sidebarContent, canvasContent, propertiesContent]);
 
+  /**
+   * @function handleApply
+   * @description Обработчик применения изменений макета
+   * Вызывает функцию обратного вызова с новой конфигурацией и закрывает режим настройки
+   * @returns {void}
+   */
   const handleApply = useCallback(() => {
     onLayoutChange?.(config);
     setIsCustomizing(false);
@@ -649,4 +724,8 @@ const DragLayoutManager: React.FC<DragLayoutManagerProps> = ({
   );
 };
 
+/**
+ * @exports DragLayoutManager
+ * @description Экспортирует компонент DragLayoutManager по умолчанию
+ */
 export default DragLayoutManager;
