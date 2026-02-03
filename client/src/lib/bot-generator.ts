@@ -3281,7 +3281,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     }
                   });
 
-                  // ВОССТАНОВ��ЕНИЕ: Добав��яем ум��ое р��сположение кнопок по колонкам
+                  // ВОССТАНОВ��ЕНИЕ: Добав��яем ум��ое р���сположение кнопок по колонкам
                   const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
                   code += `${bodyIndent}builder.adjust(${columns})\n`;
                   code += `${bodyIndent}keyboard = builder.as_markup()\n`;
@@ -4792,7 +4792,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    # Обработчик сигналов для корректного завершения\n';
     code += '    def signal_handler(signum, frame):\n';
     code += '        print(f"🛑 Получен сигнал {signum}, начинаем корректное завершение...")\n';
-    code += '        raise KeyboardInterrupt()\n';
+    code += '        import sys\n';
+    code += '        sys.exit(0)\n';
     code += '    \n';
     code += '    # Регистрируем обработчики сигналов\n';
     code += '    signal.signal(signal.SIGTERM, signal_handler)\n';

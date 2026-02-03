@@ -1,4 +1,4 @@
-import { type BotProject, type BotTemplate, type InsertBotProject, type InsertBotTemplate, type BotToken, type BotGroup, botGroups, type InsertBotGroup, type BotMessage, type MediaFile, botMessages, mediaFiles, botMessageMedia, type TelegramUserDB, telegramUsers, type InsertTelegramUser } from "@shared/schema";
+import { type BotProject, type BotTemplate, type InsertBotProject, type InsertBotTemplate, type BotToken, type BotGroup, botGroups, type InsertBotGroup, type BotMessage, type MediaFile, botMessages, mediaFiles, botMessageMedia, type TelegramUserDB, telegramUsers, type InsertTelegramUser, type BotInstance, botInstances } from "@shared/schema";
 import { eq, desc, and, asc } from "drizzle-orm";
 import { cachedOps } from "./db-cache";
 import { dbManager } from "./db-utils";
@@ -274,5 +274,27 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
 
   async deleteTelegramUser(_id: number): Promise<boolean> {
     return true;
+  }
+
+  // Переопределяем метод получения экземпляра бота для обработки закрытия пула соединений
+  async getBotInstance(projectId: number): Promise<BotInstance | undefined> {
+    try {
+      // Проверяем, активен ли пул соединений
+      if (globalThis.__dbPoolActive === false) {
+        console.log(`⚠️ Пропускаем запрос к базе данных для бота ${projectId} - пул соединений закрыт`);
+        return undefined;
+      }
+
+      const [instance] = await this.db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
+      return instance || undefined;
+    } catch (error: any) {
+      // Проверяем, является ли ошибка связанной с закрытием пула
+      if (error.message && error.message.includes('Cannot use a pool after calling end on the pool')) {
+        console.log(`⚠️ Пропускаем обновление статуса бота в базе данных - пул соединений закрыт`);
+        return undefined;
+      }
+      // Для других ошибок пробрасываем исключение
+      throw error;
+    }
   }
 }

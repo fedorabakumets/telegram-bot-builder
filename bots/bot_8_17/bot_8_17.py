@@ -10143,7 +10143,8 @@ async def main():
     # Обработчик сигналов для корректного завершения
     def signal_handler(signum, frame):
         print(f"🛑 Получен сигнал {signum}, начинаем корректное завершение...")
-        raise KeyboardInterrupt()
+        import sys
+        sys.exit(0)
     
     # Регистрируем обработчики сигналов
     signal.signal(signal.SIGTERM, signal_handler)
