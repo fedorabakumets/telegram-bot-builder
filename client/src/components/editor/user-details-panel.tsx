@@ -151,13 +151,19 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
   /**
    * @function formatDate
    * @description Форматирует дату в удобочитаемый формат на русском языке
-   * @param {Date|string|null|undefined} date - Дата для форматирования
+   * @param {unknown} date - Дата для форматирования (может быть любого типа)
    * @returns {string} Отформатированная строка даты или 'Не указано'
    */
-  const formatDate = (date: Date | string | null | undefined): string => {
+  const formatDate = (date: unknown): string => {
     if (!date) return 'Не указано';
     try {
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const dateObj = typeof date === 'string' ? new Date(date) :
+                     date instanceof Date ? date :
+                     typeof date === 'number' ? new Date(date) :
+                     'Не указано';
+
+      if (dateObj === 'Не указано') return 'Не указано';
+
       return format(dateObj, 'PPp', { locale: ru });
     } catch {
       return 'Не указано';
@@ -264,12 +270,12 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
             <div className="grid gap-3 pl-6">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground min-w-[100px]">Имя:</span>
-                <span className="text-sm font-medium">{user.firstName || 'Не указано'}</span>
+                <span className="text-sm font-medium">{user.firstName && typeof user.firstName === 'string' ? user.firstName : 'Не указано'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground min-w-[100px]">Username:</span>
                 <span className="text-sm font-medium">
-                  {user.userName ? (
+                  {user.userName && typeof user.userName === 'string' ? (
                     <span className="flex items-center gap-1">
                       <AtSign className="w-3 h-3" />
                       {user.userName}
@@ -279,7 +285,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground min-w-[100px]">Telegram ID:</span>
-                <span className="text-sm font-mono bg-muted px-2 py-0.5 rounded">{user.userId}</span>
+                <span className="text-sm font-mono bg-muted px-2 py-0.5 rounded">{String(user.userId)}</span>
               </div>
             </div>
           </div>
@@ -333,7 +339,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
           {/* Status */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              {user.isActive ? (
+              {user.isActive && Number(user.isActive) !== 0 ? (
                 <UserCheck className="w-4 h-4 text-green-500" />
               ) : (
                 <UserX className="w-4 h-4 text-red-500" />
@@ -369,17 +375,17 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="w-3 h-3 text-muted-foreground" />
                 <span className="text-muted-foreground">Регистрация:</span>
-                <span className="font-medium">{formatDate(user.createdAt)}</span>
+                <span className="font-medium">{formatDate(user.createdAt) as string}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="w-3 h-3 text-muted-foreground" />
                 <span className="text-muted-foreground">Обновление:</span>
-                <span className="font-medium">{formatDate(user.updatedAt)}</span>
+                <span className="font-medium">{formatDate(user.updatedAt) as string}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="w-3 h-3 text-muted-foreground" />
                 <span className="text-muted-foreground">Активность:</span>
-                <span className="font-medium">{formatDate(user.lastInteraction)}</span>
+                <span className="font-medium">{formatDate(user.lastInteraction) as string}</span>
               </div>
             </div>
           </div>

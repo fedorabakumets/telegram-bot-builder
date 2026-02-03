@@ -500,16 +500,27 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     }
   };
 
-  const formatDate = (date: string | Date | null) => {
+  const formatDate = (date: unknown) => {
     if (!date) return 'Никогда';
-    return new Date(date).toLocaleString('ru-RU', {
-      timeZone: 'Europe/Moscow',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) :
+                     date instanceof Date ? date :
+                     typeof date === 'number' ? new Date(date) :
+                     null;
+
+      if (!dateObj) return 'Никогда';
+
+      return dateObj.toLocaleString('ru-RU', {
+        timeZone: 'Europe/Moscow',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Никогда';
+    }
   };
 
   const formatUserName = (user: UserBotData) => {
@@ -930,8 +941,8 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
 
                               {/* Status Badges */}
                               <div className="flex flex-wrap gap-2">
-                                <Badge variant={user.isActive === 1 ? "default" : "secondary"}>
-                                  {user.isActive === 1 ? "Активен" : "Неактивен"}
+                                <Badge variant={Number(user.isActive) === 1 ? "default" : "secondary"}>
+                                  {Number(user.isActive) === 1 ? "Активен" : "Неактивен"}
                                 </Badge>
                                 {Number(user.isPremium) === 1 && (
                                   <Badge variant="outline" className="text-yellow-600">
