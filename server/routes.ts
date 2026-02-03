@@ -5,10 +5,9 @@ import { existsSync, mkdirSync, unlinkSync } from "fs";
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, insertBotTemplateSchema, insertBotTokenSchema, insertUserBotDataSchema, insertBotGroupSchema, insertBotMessageSchema, botDataSchema, sendMessageSchema } from "@shared/schema";
+import { insertBotProjectSchema, insertBotTemplateSchema, insertBotTokenSchema, insertUserBotDataSchema, insertBotGroupSchema, insertBotMessageSchema, sendMessageSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
-import { pipeline } from "stream/promises";
 import { URL } from "url";
 import dbRoutes from "./db-routes";
 import { Pool } from "pg";
@@ -16,7 +15,7 @@ import { downloadTelegramPhoto, downloadTelegramVideo, downloadTelegramAudio, do
 import { Octokit } from '@octokit/rest';
 import { initializeDatabaseTables } from "./init-db";
 import { telegramClientManager, initializeTelegramManager } from "./telegram-client";
-import { serverCache, getCachedOrExecute } from "./cache";
+import { getCachedOrExecute } from "./cache";
 import { authMiddleware, getOwnerIdFromRequest } from "./auth-middleware";
 import session from "express-session";
 import PostgresStore from "connect-pg-simple";
@@ -55,11 +54,11 @@ export const botProcesses = new Map<string, ChildProcess>();
 
 // Расширенная настройка multer для загрузки файлов
 const storage_multer = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (req, _file, cb) => {
     const projectId = req.params.projectId;
     const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const uploadDir = join(process.cwd(), 'uploads', projectId, date);
-    
+
     if (!existsSync(uploadDir)) {
       mkdirSync(uploadDir, { recursive: true });
     }
