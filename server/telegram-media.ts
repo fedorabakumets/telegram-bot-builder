@@ -36,7 +36,7 @@ export async function downloadTelegramPhoto(
             if (parsed.ok) {
               resolve(parsed.result);
             } else {
-              reject(new Error(`Telegram API error: ${parsed.description || 'Unknown error'}`));
+              reject(new Error(`Ошибка Telegram API: ${parsed.description || 'Неизвестная ошибка'}`));
             }
           } catch (err) {
             reject(err);
@@ -46,7 +46,7 @@ export async function downloadTelegramPhoto(
 
       request.on('timeout', () => {
         request.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error('Таймаут запроса'));
       });
     });
 
@@ -62,7 +62,7 @@ export async function downloadTelegramPhoto(
     // Валидировать расширение (только безопасные форматы изображений)
     const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     if (!allowedExtensions.includes(extension)) {
-      throw new Error('Invalid file type');
+      throw new Error('Некорректный тип файла');
     }
     
     const mimeTypeMap: { [key: string]: string } = {
@@ -75,7 +75,7 @@ export async function downloadTelegramPhoto(
     const mimeType = mimeTypeMap[extension] || 'image/jpeg';
 
     // Шаг 2: Создаем директорию для сохранения
-    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const date = new Date().toISOString().split('T')[0]; // ГГГГ-ММ-ДД
     const uploadDir = join(process.cwd(), 'uploads', String(projectId), date);
     
     if (!existsSync(uploadDir)) {
@@ -92,7 +92,7 @@ export async function downloadTelegramPhoto(
     const normalizedPath = normalize(localFilePath);
     const rel = relative(uploadDir, normalizedPath);
     if (rel.startsWith('..') || isAbsolute(rel)) {
-      throw new Error('Invalid file path - potential directory traversal');
+      throw new Error('Некорректный путь к файлу - возможна попытка обхода каталогов');
     }
 
     // Шаг 4: Скачиваем файл
@@ -101,7 +101,7 @@ export async function downloadTelegramPhoto(
     await new Promise<void>((resolve, reject) => {
       const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
         if (res.statusCode !== 200) {
-          reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
+          reject(new Error(`Не удалось скачать файл: HTTP ${res.statusCode}`));
           return;
         }
         
@@ -113,7 +113,7 @@ export async function downloadTelegramPhoto(
 
       request.on('timeout', () => {
         request.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error('Таймаут запроса'));
       });
     });
 
@@ -127,8 +127,8 @@ export async function downloadTelegramPhoto(
       fileName,
     };
   } catch (error) {
-    console.error('Error downloading Telegram photo:', error);
-    throw new Error(`Failed to download photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('Ошибка при скачивании фото из Telegram:', error);
+    throw new Error(`Не удалось скачать фото: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
   }
 }
 
@@ -157,7 +157,7 @@ export async function downloadTelegramVideo(
             if (parsed.ok) {
               resolve(parsed.result);
             } else {
-              reject(new Error(`Telegram API error: ${parsed.description || 'Unknown error'}`));
+              reject(new Error(`Ошибка Telegram API: ${parsed.description || 'Неизвестная ошибка'}`));
             }
           } catch (err) {
             reject(err);
@@ -167,7 +167,7 @@ export async function downloadTelegramVideo(
 
       request.on('timeout', () => {
         request.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error('Таймаут запроса'));
       });
     });
 
@@ -182,7 +182,7 @@ export async function downloadTelegramVideo(
     // Валидировать расширение (только безопасные форматы видео)
     const allowedExtensions = ['mp4', 'webm', 'avi', 'mov'];
     if (!allowedExtensions.includes(extension)) {
-      throw new Error('Invalid file type');
+      throw new Error('Некорректный тип файла');
     }
     
     const mimeTypeMap: { [key: string]: string } = {
@@ -209,7 +209,7 @@ export async function downloadTelegramVideo(
     const normalizedPath = normalize(localFilePath);
     const rel = relative(uploadDir, normalizedPath);
     if (rel.startsWith('..') || isAbsolute(rel)) {
-      throw new Error('Invalid file path - potential directory traversal');
+      throw new Error('Некорректный путь к файлу - возможна попытка обхода каталогов');
     }
 
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
@@ -217,7 +217,7 @@ export async function downloadTelegramVideo(
     await new Promise<void>((resolve, reject) => {
       const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
         if (res.statusCode !== 200) {
-          reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
+          reject(new Error(`Не удалось скачать файл: HTTP ${res.statusCode}`));
           return;
         }
         
@@ -229,7 +229,7 @@ export async function downloadTelegramVideo(
 
       request.on('timeout', () => {
         request.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error('Таймаут запроса'));
       });
     });
 
@@ -242,8 +242,8 @@ export async function downloadTelegramVideo(
       fileName,
     };
   } catch (error) {
-    console.error('Error downloading Telegram video:', error);
-    throw new Error(`Failed to download video: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('Ошибка при скачивании видео из Telegram:', error);
+    throw new Error(`Не удалось скачать видео: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
   }
 }
 
@@ -272,7 +272,7 @@ export async function downloadTelegramAudio(
             if (parsed.ok) {
               resolve(parsed.result);
             } else {
-              reject(new Error(`Telegram API error: ${parsed.description || 'Unknown error'}`));
+              reject(new Error(`Ошибка Telegram API: ${parsed.description || 'Неизвестная ошибка'}`));
             }
           } catch (err) {
             reject(err);
@@ -282,7 +282,7 @@ export async function downloadTelegramAudio(
 
       request.on('timeout', () => {
         request.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error('Таймаут запроса'));
       });
     });
 
@@ -297,7 +297,7 @@ export async function downloadTelegramAudio(
     // Валидировать расширение (только безопасные форматы аудио)
     const allowedExtensions = ['mp3', 'ogg', 'wav', 'aac'];
     if (!allowedExtensions.includes(extension)) {
-      throw new Error('Invalid file type');
+      throw new Error('Некорректный тип файла');
     }
     
     const mimeTypeMap: { [key: string]: string } = {
@@ -324,7 +324,7 @@ export async function downloadTelegramAudio(
     const normalizedPath = normalize(localFilePath);
     const rel = relative(uploadDir, normalizedPath);
     if (rel.startsWith('..') || isAbsolute(rel)) {
-      throw new Error('Invalid file path - potential directory traversal');
+      throw new Error('Некорректный путь к файлу - возможна попытка обхода каталогов');
     }
 
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
@@ -332,7 +332,7 @@ export async function downloadTelegramAudio(
     await new Promise<void>((resolve, reject) => {
       const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
         if (res.statusCode !== 200) {
-          reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
+          reject(new Error(`Не удалось скачать файл: HTTP ${res.statusCode}`));
           return;
         }
         
@@ -344,7 +344,7 @@ export async function downloadTelegramAudio(
 
       request.on('timeout', () => {
         request.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error('Таймаут запроса'));
       });
     });
 
@@ -357,8 +357,8 @@ export async function downloadTelegramAudio(
       fileName,
     };
   } catch (error) {
-    console.error('Error downloading Telegram audio:', error);
-    throw new Error(`Failed to download audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('Ошибка при скачивании аудио из Telegram:', error);
+    throw new Error(`Не удалось скачать аудио: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
   }
 }
 
@@ -389,7 +389,7 @@ export async function downloadTelegramDocument(
             if (parsed.ok) {
               resolve(parsed.result);
             } else {
-              reject(new Error(`Telegram API error: ${parsed.description || 'Unknown error'}`));
+              reject(new Error(`Ошибка Telegram API: ${parsed.description || 'Неизвестная ошибка'}`));
             }
           } catch (err) {
             reject(err);
@@ -399,7 +399,7 @@ export async function downloadTelegramDocument(
 
       request.on('timeout', () => {
         request.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error('Таймаут запроса'));
       });
     });
 
@@ -414,10 +414,10 @@ export async function downloadTelegramDocument(
     // Валидировать расширение (только безопасные форматы документов)
     const allowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'zip', 'rar'];
     if (!allowedExtensions.includes(extension)) {
-      throw new Error('Invalid file type');
+      throw new Error('Некорректный тип файла');
     }
     
-    const mimeType = 'application/octet-stream'; // Общий тип для документов
+    const mimeType = 'application/octet-stream'; // Общий MIME-тип для документов
 
     const date = new Date().toISOString().split('T')[0];
     const uploadDir = join(process.cwd(), 'uploads', String(projectId), date);
@@ -438,7 +438,7 @@ export async function downloadTelegramDocument(
     const normalizedPath = normalize(localFilePath);
     const rel = relative(uploadDir, normalizedPath);
     if (rel.startsWith('..') || isAbsolute(rel)) {
-      throw new Error('Invalid file path - potential directory traversal');
+      throw new Error('Некорректный путь к файлу - возможна попытка обхода каталогов');
     }
 
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
@@ -446,7 +446,7 @@ export async function downloadTelegramDocument(
     await new Promise<void>((resolve, reject) => {
       const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
         if (res.statusCode !== 200) {
-          reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
+          reject(new Error(`Не удалось скачать файл: HTTP ${res.statusCode}`));
           return;
         }
         
@@ -458,7 +458,7 @@ export async function downloadTelegramDocument(
 
       request.on('timeout', () => {
         request.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error('Таймаут запроса'));
       });
     });
 
@@ -471,7 +471,7 @@ export async function downloadTelegramDocument(
       fileName,
     };
   } catch (error) {
-    console.error('Error downloading Telegram document:', error);
-    throw new Error(`Failed to download document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('Ошибка при скачивании документа из Telegram:', error);
+    throw new Error(`Не удалось скачать документ: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
   }
 }
