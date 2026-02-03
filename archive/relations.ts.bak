@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { botProjects, botInstances, botTokens, telegramUsers, botTemplates, botMessages, mediaFiles, botMessageMedia, botGroups, groupMembers, userBotData } from "./schema";
+import { botProjects, botInstances, botTokens, telegramUsers, botTemplates, botMessages, mediaFiles, botMessageMedia, botGroups, groupMembers, userBotData } from "../shared/schema";
 
 export const botInstancesRelations = relations(botInstances, ({one}) => ({
 	botProject: one(botProjects, {
