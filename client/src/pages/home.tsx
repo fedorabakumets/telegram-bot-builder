@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Bot, Edit, Trash2, Calendar, User, Download, LogOut, Shield } from 'lucide-react';
+import { Plus, Bot, Edit, Trash2, Calendar, User, Download, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { TelegramAuth } from '@/components/telegram-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +26,25 @@ const createProjectSchema = z.object({
 
 type CreateProjectForm = z.infer<typeof createProjectSchema>;
 
+/**
+ * Компонент главной страницы приложения BotCraft Studio.
+ *
+ * @component
+ * @description
+ * Главная страница приложения, предоставляющая интерфейс для управления проектами Telegram ботов.
+ * Позволяет создавать новые проекты, просматривать существующие, удалять их и переходить к редактированию.
+ * Также предоставляет доступ к шаблонам ботов и возможность авторизации через Telegram.
+ *
+ * @example
+ * // Использование компонента:
+ * import Home from '@/pages/home';
+ *
+ * return <Home />;
+ *
+ * @returns {JSX.Element} Возвращает JSX элемент, представляющий собой главную страницу приложения.
+ * Страница содержит заголовок с названием приложения, кнопки для создания новых проектов,
+ * список существующих проектов с информацией о них и действиями, а также панель навигации.
+ */
 export default function Home() {
   const [, setLocation] = useLocation();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
