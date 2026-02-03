@@ -28,6 +28,6 @@
     "server",
     "types",
     "client/types"
-  ],
+, "scripts/check-env.ts"  ],
   "exclude": ["node_modules", "dist"]
 }

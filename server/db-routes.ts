@@ -26,7 +26,7 @@ const router = Router();
  * Маршрут для проверки работоспособности базы данных
  * Возвращает информацию о здоровье базы данных и статистику соединений
  */
-router.get('/health', async (req, res) => {
+router.get('/health', async (_req, res) => {
   try {
     const isHealthy = await dbManager.performHealthCheck();
     const stats = dbManager.getConnectionStats();
@@ -45,7 +45,7 @@ router.get('/health', async (req, res) => {
  * Маршрут для получения статистики базы данных
  * Возвращает подробную статистику о проектах, шаблонах и других данных
  */
-router.get('/stats', async (req, res) => {
+router.get('/stats', async (_req, res) => {
   try {
     const stats = await (storage as any).getDetailedStats();
     res.json(stats);
@@ -58,7 +58,7 @@ router.get('/stats', async (req, res) => {
  * Маршрут для получения метрик базы данных
  * Возвращает метрики производительности таблиц базы данных
  */
-router.get('/metrics', async (req, res) => {
+router.get('/metrics', async (_req, res) => {
   try {
     const metrics = await dbManager.getDatabaseMetrics();
     res.json(metrics);
@@ -71,7 +71,7 @@ router.get('/metrics', async (req, res) => {
  * Маршрут для получения статистики кэша
  * Возвращает информацию о состоянии кэша
  */
-router.get('/cache/stats', async (req, res) => {
+router.get('/cache/stats', async (_req, res) => {
   try {
     const stats = dbCache.getStats();
     res.json(stats);
@@ -104,7 +104,7 @@ router.post('/cache/clear', async (req, res) => {
  * Маршрут для выполнения обслуживания базы данных
  * Выполняет различные задачи обслуживания базы данных
  */
-router.post('/maintenance', async (req, res) => {
+router.post('/maintenance', async (_req, res) => {
   try {
     await (storage as any).performMaintenance();
     res.json({ message: 'Database maintenance completed successfully' });
@@ -117,7 +117,7 @@ router.post('/maintenance', async (req, res) => {
  * Маршрут для создания резервной копии базы данных
  * Создает резервную копию базы данных и возвращает информацию о ней
  */
-router.post('/backup', async (req, res) => {
+router.post('/backup', async (_req, res) => {
   try {
     const backupName = await (storage as any).createBackup();
     res.json({ message: 'Backup created successfully', backupName });
@@ -130,7 +130,7 @@ router.post('/backup', async (req, res) => {
  * Маршрут для оптимизации соединений с базой данных
  * Выполняет оптимизацию текущих соединений с базой данных
  */
-router.post('/optimize', async (req, res) => {
+router.post('/optimize', async (_req, res) => {
   try {
     await dbManager.optimizeConnections();
     res.json({ message: 'Database connections optimized' });
@@ -157,7 +157,7 @@ router.post('/cleanup', async (req, res) => {
  * Маршрут для получения информации о пуле соединений
  * Возвращает информацию о текущем состоянии пула соединений
  */
-router.get('/pool', async (req, res) => {
+router.get('/pool', async (_req, res) => {
   try {
     const stats = dbManager.getConnectionStats();
     res.json(stats.poolInfo);
@@ -172,7 +172,7 @@ router.get('/pool', async (req, res) => {
  */
 const upload = multer({
   dest: './backups',
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     // Разрешить только JSON файлы
     if (file.mimetype === 'application/json' || file.originalname.endsWith('.json')) {
       cb(null, true);
@@ -215,7 +215,7 @@ router.post('/backup', async (req, res) => {
  * Маршрут для получения списка резервных копий
  * Возвращает список всех доступных резервных копий
  */
-router.get('/backups', async (req, res) => {
+router.get('/backups', async (_req, res) => {
   try {
     const backups = await dbBackup.listBackups();
     res.json({
@@ -371,7 +371,7 @@ router.delete('/backup/:filename', async (req, res) => {
  * Маршрут для получения подробной статистики базы данных
  * Возвращает расширенную статистику о состоянии базы данных
  */
-router.get('/stats/detailed', async (req, res) => {
+router.get('/stats/detailed', async (_req, res) => {
   try {
     const stats = await dbBackup.getDatabaseStats();
     res.json({

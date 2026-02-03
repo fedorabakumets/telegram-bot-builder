@@ -21,7 +21,7 @@ declare global {
  * Middleware для установки req.user из Telegram сессии
  * Если пользователь авторизован через Telegram, его данные будут доступны в req.user
  */
-export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+export function authMiddleware(req: Request, _res: Response, next: NextFunction) {
   // Проверяем наличие данных Telegram пользователя в сессии
   if (req.session?.telegramUser) {
     req.user = req.session.telegramUser;
