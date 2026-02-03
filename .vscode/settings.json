@@ -1,3 +1,4 @@
 {
-    "typescript.autoClosingTags": false
+  "css.validate": false,
+  "scss.validate": false
 }
