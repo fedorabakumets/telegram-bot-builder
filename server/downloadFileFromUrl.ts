@@ -3,7 +3,39 @@ import https from "https";
 import { createWriteStream, existsSync, unlinkSync } from "node:fs";
 import { URL } from "node:url";
 
-// Функция для загрузки файла по URL с улучшенной обработкой ошибок
+/**
+ * Загружает файл по указанному URL-адресу и сохраняет его в заданное место назначения.
+ *
+ * @param url - URL-адрес файла для загрузки. Поддерживаются только HTTP и HTTPS протоколы.
+ * @param destination - Путь к месту назначения, где будет сохранен загруженный файл.
+ *
+ * @returns Promise объект с информацией о результате загрузки:
+ * - success: флаг успешности операции
+ * - filePath: путь к сохраненному файлу (при успехе)
+ * - size: размер файла в байтах (при успехе)
+ * - mimeType: MIME-тип файла (при успехе)
+ * - fileName: имя файла (при успехе)
+ * - error: сообщение об ошибке (при неудаче)
+ *
+ * @description
+ * Функция загружает файл по URL с использованием HTTP/HTTPS протоколов.
+ * Она автоматически обрабатывает редиректы, проверяет статус ответа сервера,
+ * ограничивает размер загружаемого файла (50 МБ для обычных файлов, 200 МБ для видео),
+ * эмулирует заголовки браузера для лучшей совместимости,
+ * и предоставляет подробную информацию о загруженном файле.
+ *
+ * @example
+ * ```typescript
+ * const result = await downloadFileFromUrl('https://example.com/image.jpg', './downloads/image.jpg');
+ * if (result.success) {
+ *   console.log(`Файл успешно загружен: ${result.filePath}`);
+ *   console.log(`Размер: ${result.size} байт`);
+ *   console.log(`MIME-тип: ${result.mimeType}`);
+ * } else {
+ *   console.error(`Ошибка загрузки: ${result.error}`);
+ * }
+ * ```
+ */
 export async function downloadFileFromUrl(url: string, destination: string): Promise<{
   success: boolean;
   filePath?: string;
