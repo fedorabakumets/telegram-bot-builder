@@ -1,5 +1,4 @@
 import https from 'https';
-import http from 'http';
 import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import { join, normalize, relative, isAbsolute } from 'path';
 import { pipeline } from 'stream/promises';
