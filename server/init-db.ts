@@ -1,6 +1,21 @@
 import { sql } from 'drizzle-orm';
 import { db } from './db';
 
+/**
+ * Асинхронная функция для выполнения SQL-запроса с повторными попытками
+ *
+ * @param db - Объект базы данных для выполнения запроса
+ * @param query - SQL-запрос для выполнения
+ * @param description - Описание операции для логирования
+ * @param maxRetries - Максимальное количество попыток выполнения (по умолчанию 3)
+ * @returns void
+ *
+ * @description
+ * Функция выполняет SQL-запрос с возможностью повторных попыток в случае ошибки.
+ * При каждой неудачной попытке выводится предупреждение с информацией об ошибке.
+ * После каждой неудачной попытки происходит задержка перед следующей попыткой,
+ * длительность которой увеличивается с каждой попыткой.
+ */
 async function executeWithRetry(db: any, query: any, description: string, maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -18,34 +33,71 @@ async function executeWithRetry(db: any, query: any, description: string, maxRet
   }
 }
 
+/**
+ * Асинхронная функция инициализации таблиц базы данных
+ *
+ * @returns Promise<boolean> - Возвращает true при успешной инициализации, false в случае ошибки
+ *
+ * @description
+ * Функция проверяет подключение к базе данных и создает необходимые таблицы,
+ * если они не существуют. Поддерживает механизм повторных попыток подключения
+ * с экспоненциальным увеличением времени ожидания между попытками.
+ *
+ * Создает следующие таблицы:
+ * - telegram_users: информация о пользователях Telegram
+ * - bot_projects: проекты ботов
+ * - bot_tokens: токены для ботов
+ * - bot_instances: экземпляры запущенных ботов
+ * - bot_templates: шаблоны ботов
+ * - media_files: медиафайлы, используемые в ботах
+ * - user_bot_data: данные пользователей ботов
+ * - bot_groups: группы, в которых работают боты
+ * - group_members: участники групп
+ * - bot_users: пользователи ботов
+ * - user_telegram_settings: настройки Telegram API пользователей
+ * - bot_messages: сообщения ботов
+ * - bot_message_media: медиафайлы к сообщениям ботов
+ *
+ * Также выполняет миграции для добавления новых столбцов в существующие таблицы,
+ * если они отсутствуют.
+ *
+ * @example
+ * // Пример использования функции
+ * const success = await initializeDatabaseTables();
+ * if (success) {
+ *   console.log('База данных успешно инициализирована');
+ * } else {
+ *   console.log('Ошибка инициализации базы данных');
+ * }
+ */
 export async function initializeDatabaseTables() {
   console.log('🔧 Initializing database tables...');
-  
+
   try {
     // Test the connection with extended timeout and retry logic
     console.log('🧪 Testing database connection...');
-    
+
     let connectionAttempts = 0;
     const maxConnectionAttempts = 5;
     let connected = false;
-    
+
     while (!connected && connectionAttempts < maxConnectionAttempts) {
       connectionAttempts++;
       try {
         console.log(`📡 Connection attempt ${connectionAttempts}/${maxConnectionAttempts}...`);
-        
+
         const healthCheckPromise = db.execute(sql`SELECT 1 as health`);
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Database connection timeout after 30 seconds')), 30000)
         );
-        
+
         await Promise.race([healthCheckPromise, timeoutPromise]);
         connected = true;
         console.log('✅ Database connection successful!');
-        
+
       } catch (error: any) {
         console.error(`❌ Connection attempt ${connectionAttempts} failed:`, error.message);
-        
+
         if (connectionAttempts >= maxConnectionAttempts) {
           console.error('💥 All connection attempts failed. Database may be unavailable.');
           console.error('🔍 Error details:', {
@@ -54,24 +106,24 @@ export async function initializeDatabaseTables() {
             syscall: error.syscall,
             message: error.message
           });
-          
+
           // Return false instead of throwing to allow app to start without DB
           console.log('⚠️ Starting application without database initialization...');
           return false;
         }
-        
+
         // Wait before retry with exponential backoff
         const waitTime = Math.min(1000 * Math.pow(2, connectionAttempts - 1), 10000);
         console.log(`⏳ Waiting ${waitTime}ms before retry...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
-    
+
     if (!connected) {
       console.error('💥 Could not establish database connection after all attempts');
       return false;
     }
-    
+
     // Создаем таблицы если их нет (с поддержкой IF NOT EXISTS)
     // Сначала создаем telegram_users, так как на неё ссылаются другие таблицы
     await executeWithRetry(db, sql`
@@ -332,16 +384,16 @@ export async function initializeDatabaseTables() {
     // Миграция: добавление primary_media_id в bot_messages если его нет
     try {
       const columnCheck = await db.execute(sql`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'bot_messages' 
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'bot_messages'
         AND column_name = 'primary_media_id';
       `);
-      
+
       if (columnCheck.rows.length === 0) {
         console.log('🔄 Добавляем колонку primary_media_id в таблицу bot_messages...');
         await executeWithRetry(db, sql`
-          ALTER TABLE bot_messages 
+          ALTER TABLE bot_messages
           ADD COLUMN primary_media_id INTEGER REFERENCES media_files(id) ON DELETE SET NULL;
         `, "Миграция: добавление primary_media_id");
         console.log('✅ Колонка primary_media_id успешно добавлена');
@@ -353,16 +405,16 @@ export async function initializeDatabaseTables() {
     // Миграция: добавление owner_id в bot_projects если его нет
     try {
       const columnCheck = await db.execute(sql`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'bot_projects' 
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'bot_projects'
         AND column_name = 'owner_id';
       `);
-      
+
       if (columnCheck.rows.length === 0) {
         console.log('🔄 Добавляем колонку owner_id в таблицу bot_projects...');
         await executeWithRetry(db, sql`
-          ALTER TABLE bot_projects 
+          ALTER TABLE bot_projects
           ADD COLUMN owner_id BIGINT REFERENCES telegram_users(id) ON DELETE CASCADE;
         `, "Миграция: добавление owner_id в bot_projects");
         console.log('✅ Колонка owner_id успешно добавлена в bot_projects');
@@ -374,16 +426,16 @@ export async function initializeDatabaseTables() {
     // Миграция: добавление owner_id в bot_templates если его нет
     try {
       const columnCheck = await db.execute(sql`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'bot_templates' 
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'bot_templates'
         AND column_name = 'owner_id';
       `);
-      
+
       if (columnCheck.rows.length === 0) {
         console.log('🔄 Добавляем колонку owner_id в таблицу bot_templates...');
         await executeWithRetry(db, sql`
-          ALTER TABLE bot_templates 
+          ALTER TABLE bot_templates
           ADD COLUMN owner_id BIGINT REFERENCES telegram_users(id) ON DELETE CASCADE;
         `, "Миграция: добавление owner_id в bot_templates");
         console.log('✅ Колонка owner_id успешно добавлена в bot_templates');
@@ -395,16 +447,16 @@ export async function initializeDatabaseTables() {
     // Миграция: добавление owner_id в bot_tokens если его нет
     try {
       const columnCheck = await db.execute(sql`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'bot_tokens' 
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'bot_tokens'
         AND column_name = 'owner_id';
       `);
-      
+
       if (columnCheck.rows.length === 0) {
         console.log('🔄 Добавляем колонку owner_id в таблицу bot_tokens...');
         await executeWithRetry(db, sql`
-          ALTER TABLE bot_tokens 
+          ALTER TABLE bot_tokens
           ADD COLUMN owner_id BIGINT REFERENCES telegram_users(id) ON DELETE CASCADE;
         `, "Миграция: добавление owner_id в bot_tokens");
         console.log('✅ Колонка owner_id успешно добавлена в bot_tokens');
@@ -416,16 +468,16 @@ export async function initializeDatabaseTables() {
     // Миграция: добавление track_execution_time в bot_tokens если его нет
     try {
       const columnCheck = await db.execute(sql`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'bot_tokens' 
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'bot_tokens'
         AND column_name = 'track_execution_time';
       `);
-      
+
       if (columnCheck.rows.length === 0) {
         console.log('🔄 Добавляем колонку track_execution_time в таблицу bot_tokens...');
         await executeWithRetry(db, sql`
-          ALTER TABLE bot_tokens 
+          ALTER TABLE bot_tokens
           ADD COLUMN track_execution_time INTEGER DEFAULT 0;
         `, "Миграция: добавление track_execution_time в bot_tokens");
         console.log('✅ Колонка track_execution_time успешно добавлена в bot_tokens');
@@ -437,16 +489,16 @@ export async function initializeDatabaseTables() {
     // Миграция: добавление total_execution_seconds в bot_tokens если его нет
     try {
       const columnCheck = await db.execute(sql`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'bot_tokens' 
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'bot_tokens'
         AND column_name = 'total_execution_seconds';
       `);
-      
+
       if (columnCheck.rows.length === 0) {
         console.log('🔄 Добавляем колонку total_execution_seconds в таблицу bot_tokens...');
         await executeWithRetry(db, sql`
-          ALTER TABLE bot_tokens 
+          ALTER TABLE bot_tokens
           ADD COLUMN total_execution_seconds INTEGER DEFAULT 0;
         `, "Миграция: добавление total_execution_seconds в bot_tokens");
         console.log('✅ Колонка total_execution_seconds успешно добавлена в bot_tokens');
