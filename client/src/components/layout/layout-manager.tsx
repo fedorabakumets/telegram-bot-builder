@@ -6,12 +6,12 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Settings, 
-  RotateCcw, 
-  Layout, 
-  Sidebar, 
-  Navigation, 
+import {
+  Settings,
+  RotateCcw,
+  Layout,
+  Sidebar,
+  Navigation,
   Maximize,
   ArrowUp,
   ArrowDown,
@@ -19,6 +19,20 @@ import {
   ArrowRight
 } from 'lucide-react';
 
+/**
+ * @interface LayoutConfig
+ * @description Описывает конфигурацию макета интерфейса
+ * @property {'top' | 'bottom' | 'left' | 'right'} headerPosition - Позиция заголовка
+ * @property {'left' | 'right'} sidebarPosition - Позиция боковой панели
+ * @property {'right' | 'left'} propertiesPosition - Позиция панели свойств
+ * @property {boolean} canvasFullscreen - Режим полноэкранного холста
+ * @property {boolean} compactMode - Компактный режим интерфейса
+ * @property {boolean} showGrid - Показывать сетку
+ * @property {Object} panelSizes - Размеры панелей
+ * @property {number} panelSizes.sidebar - Размер боковой панели
+ * @property {number} panelSizes.properties - Размер панели свойств
+ * @property {number} panelSizes.canvas - Размер холста
+ */
 export interface LayoutConfig {
   headerPosition: 'top' | 'bottom' | 'left' | 'right';
   sidebarPosition: 'left' | 'right';
@@ -33,6 +47,11 @@ export interface LayoutConfig {
   };
 }
 
+/**
+ * @constant DEFAULT_LAYOUT
+ * @description Конфигурация макета по умолчанию
+ * @type {LayoutConfig}
+ */
 const DEFAULT_LAYOUT: LayoutConfig = {
   headerPosition: 'top',
   sidebarPosition: 'left',
@@ -47,6 +66,14 @@ const DEFAULT_LAYOUT: LayoutConfig = {
   }
 };
 
+/**
+ * @interface LayoutManagerProps
+ * @description Свойства компонента управления макетом
+ * @property {LayoutConfig} config - Текущая конфигурация макета
+ * @property {(config: LayoutConfig) => void} onConfigChange - Функция обратного вызова при изменении конфигурации
+ * @property {() => void} onApply - Функция обратного вызова при применении настроек
+ * @property {() => void} onReset - Функция обратного вызова при сбросе настроек
+ */
 interface LayoutManagerProps {
   config: LayoutConfig;
   onConfigChange: (config: LayoutConfig) => void;
@@ -54,15 +81,37 @@ interface LayoutManagerProps {
   onReset: () => void;
 }
 
+/**
+ * @function LayoutManager
+ * @description Компонент управления макетом интерфейса
+ * Позволяет пользователю настраивать расположение и размеры элементов интерфейса
+ * @param {LayoutManagerProps} props - Свойства компонента
+ * @returns {JSX.Element} Компонент управления макетом
+ */
 export function LayoutManager({ config, onConfigChange, onApply, onReset }: LayoutManagerProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
 
+  /**
+   * @function handleConfigUpdate
+   * @description Обработчик обновления конфигурации макета
+   * @param {keyof LayoutConfig} key - Ключ параметра конфигурации
+   * @param {any} value - Новое значение параметра
+   * @returns {void}
+   */
   const handleConfigUpdate = (key: keyof LayoutConfig, value: any) => {
     const newConfig = { ...config, [key]: value };
     onConfigChange(newConfig);
   };
 
+  /**
+   * @function handlePanelSizeUpdate
+   * @description Обработчик обновления размеров панелей
+   * Нормализует размеры панелей, чтобы в сумме они составляли 100%
+   * @param {keyof LayoutConfig['panelSizes']} panel - Панель, размер которой обновляется
+   * @param {number} value - Новый размер панели
+   * @returns {void}
+   */
   const handlePanelSizeUpdate = (panel: keyof LayoutConfig['panelSizes'], value: number) => {
     const newSizes = { ...config.panelSizes, [panel]: value };
     // Нормализуем размеры чтобы они составляли 100%
@@ -70,7 +119,7 @@ export function LayoutManager({ config, onConfigChange, onApply, onReset }: Layo
     const normalizedSizes = Object.fromEntries(
       Object.entries(newSizes).map(([key, size]) => [key, Math.round((size / total) * 100)])
     ) as LayoutConfig['panelSizes'];
-    
+
     handleConfigUpdate('panelSizes', normalizedSizes);
   };
 
@@ -419,23 +468,50 @@ export function LayoutManager({ config, onConfigChange, onApply, onReset }: Layo
   );
 }
 
-// Хук для управления настройками макета
+/**
+ * @function useLayoutManager
+ * @description Хук для управления настройками макета
+ * Обеспечивает состояние и методы для работы с конфигурацией макета
+ * @returns {Object} Объект с состоянием и методами управления макетом
+ * @returns {LayoutConfig} return.config - Текущая конфигурация макета
+ * @returns {(newConfig: LayoutConfig) => void} return.updateConfig - Функция обновления конфигурации
+ * @returns {() => void} return.resetConfig - Функция сброса конфигурации
+ * @returns {() => void} return.applyConfig - Функция применения конфигурации
+ */
 export function useLayoutManager() {
   const [config, setConfig] = useState<LayoutConfig>(() => {
     const saved = localStorage.getItem('telegram-bot-builder-layout');
     return saved ? JSON.parse(saved) : DEFAULT_LAYOUT;
   });
 
+  /**
+   * @function saveConfig
+   * @description Сохраняет новую конфигурацию макета в состояние и в localStorage
+   * @param {LayoutConfig} newConfig - Новая конфигурация макета
+   * @returns {void}
+   */
   const saveConfig = (newConfig: LayoutConfig) => {
     setConfig(newConfig);
     localStorage.setItem('telegram-bot-builder-layout', JSON.stringify(newConfig));
   };
 
+  /**
+   * @function resetConfig
+   * @description Сбрасывает конфигурацию макета к значению по умолчанию
+   * Удаляет данные из localStorage и устанавливает конфигурацию по умолчанию
+   * @returns {void}
+   */
   const resetConfig = () => {
     setConfig(DEFAULT_LAYOUT);
     localStorage.removeItem('telegram-bot-builder-layout');
   };
 
+  /**
+   * @function applyConfig
+   * @description Применяет текущую конфигурацию макета
+   * Выполняет дополнительную логику применения настроек
+   * @returns {void}
+   */
   const applyConfig = () => {
     // Дополнительная логика применения настроек
     console.log('Applying layout config:', config);
