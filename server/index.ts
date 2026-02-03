@@ -5,6 +5,15 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { stopCleanup } from "./cache";
 
+/**
+ * Основное приложение Express
+ *
+ * @description
+ * Создает экземпляр приложения Express и настраивает основные middleware:
+ * - парсинг JSON с лимитом 50MB
+ * - парсинг URL-encoded данных с лимитом 50MB
+ * - обслуживание статических файлов из директории uploads
+ */
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
@@ -12,6 +21,18 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 // Отдача загруженных файлов
 app.use('/uploads', express.static('uploads'));
 
+/**
+ * Middleware для логирования запросов к API
+ *
+ * @description
+ * Этот middleware записывает информацию о каждом запросе к API,
+ * включая метод, путь, код ответа и время выполнения.
+ * Также захватывает JSON-ответы для логирования.
+ *
+ * @param req - Объект запроса Express
+ * @param res - Объект ответа Express
+ * @param next - Функция перехода к следующему middleware
+ */
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -26,7 +47,7 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      // Skip logging frequent HEAD requests to /api and /api/health to reduce noise
+      // Пропускаем логирование частых HEAD-запросов к /api и /api/health для уменьшения шума
       if (req.method === "HEAD" && (path === "/api" || path === "/api/health")) {
         return;
       }
@@ -47,12 +68,32 @@ app.use((req, res, next) => {
   next();
 });
 
+/**
+ * Основной асинхронный блок инициализации сервера
+ *
+ * @description
+ * Этот блок регистрирует маршруты, настраивает Vite в режиме разработки,
+ * устанавливает обработчик ошибок и запускает сервер на порту 5000.
+ * Также настраивает корректное завершение работы сервера при получении сигнала SIGTERM.
+ */
 (async () => {
   const server = await registerRoutes(app);
 
+  /**
+   * Глобальный обработчик ошибок
+   *
+   * @description
+   * Обрабатывает все ошибки, возникающие в приложении.
+   * Отправляет клиенту JSON-ответ с кодом состояния и сообщением об ошибке.
+   *
+   * @param err - Объект ошибки
+   * @param _req - Объект запроса (не используется)
+   * @param res - Объект ответа
+   * @param _next - Функция перехода (не используется)
+   */
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const message = err.message || "Внутренняя ошибка сервера";
 
     if (!res.headersSent) {
       res.status(status).json({ message });
@@ -60,32 +101,32 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Важно настраивать Vite только в режиме разработки и после
+  // настройки всех остальных маршрутов, чтобы маршрут catch-all
+  // не мешал работе других маршрутов
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
+  // ВСЕГДА запускаем приложение на порту 5000
+  // это обслуживает как API, так и клиент.
+  // Это единственный порт, который не заблокирован брандмауэром.
   const port = process.env.PORT || 5000;
   const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
   server.listen(Number(port), host, () => {
-    // Display localhost in logs even when binding to 0.0.0.0 for external connections
+    // Отображаем localhost в логах даже при привязке к 0.0.0.0 для внешних подключений
     const displayHost = host === '0.0.0.0' ? 'localhost' : host;
-    log(`serving on http://${displayHost}:${port}`);
+    log(`сервер запущен на http://${displayHost}:${port}`);
   });
 
-  // Graceful shutdown
+  // Корректное завершение работы
   process.on('SIGTERM', () => {
-    log('SIGTERM signal received: closing HTTP server');
+    log('получен сигнал SIGTERM: закрытие HTTP-сервера');
     stopCleanup();
     server.close(() => {
-      log('HTTP server closed');
+      log('HTTP-сервер закрыт');
     });
   });
 })();
