@@ -1,8 +1,53 @@
+/**
+ * Модуль для выполнения системных команд
+ * @external child_process
+ */
 import { execSync } from "node:child_process";
+
+/**
+ * Глобальная коллекция активных процессов ботов
+ * @external botProcesses
+ * @see {@link ./routes}
+ */
 import { botProcesses } from "./routes";
+
+/**
+ * Модуль для взаимодействия с хранилищем данных
+ * @external storage
+ * @see {@link ./storage}
+ */
 import { storage } from "./storage";
 
-// Функция для остановки бота по токену
+/**
+ * Останавливает запущенный экземпляр Telegram-бота по идентификатору проекта и токена
+ *
+ * @param {number} projectId - Идентификатор проекта, к которому относится бот
+ * @param {number} tokenId - Идентификатор токена, используемого для запуска бота
+ *
+ * @returns {Promise<{ success: boolean; error?: string; }>} Объект с результатом операции:
+ *   - success: true если бот успешно остановлен, false в случае ошибки
+ *   - error: строка с описанием ошибки, если она произошла
+ *
+ * @description
+ * Функция выполняет следующие действия:
+ * 1. Формирует ключ в формате "projectId_tokenId" для поиска соответствующего процесса
+ * 2. Проверяет наличие процесса бота в глобальной коллекции botProcesses
+ * 3. Убивает все Python-процессы, связанные с этим проектом (включая зависшие)
+ * 4. Мягко завершает процесс бота, если он найден в памяти (сигнал SIGTERM)
+ * 5. При необходимости принудительно завершает процесс (сигнал SIGKILL) спустя 2 секунды
+ * 6. Удаляет все процессы, связанные с проектом, из коллекции botProcesses
+ * 7. Останавливает экземпляр бота в хранилище
+ *
+ * @example
+ * ```typescript
+ * const result = await stopBot(123, 456);
+ * if (result.success) {
+ *   console.log('Бот успешно остановлен');
+ * } else {
+ *   console.error('Ошибка при остановке бота:', result.error);
+ * }
+ * ```
+ */
 export async function stopBot(projectId: number, tokenId: number): Promise<{ success: boolean; error?: string; }> {
   try {
     const processKey = `${projectId}_${tokenId}`;
