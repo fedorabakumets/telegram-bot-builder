@@ -3,8 +3,46 @@ import * as TabsPrimitive from "@radix-ui/react-tabs"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Компонент вкладок (Tabs)
+ *
+ * @description Используется как контейнер для элементов вкладок.
+ * Представляет собой реализацию Radix UI Tabs Root.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root>} props - Свойства компонента
+ *
+ * @example
+ * <Tabs defaultValue="account" className="w-[400px]">
+ *   <TabsList>
+ *     <TabsTrigger value="account">Account</TabsTrigger>
+ *     <TabsTrigger value="password">Password</TabsTrigger>
+ *   </TabsList>
+ *   <TabsContent value="account">Make changes to your account here.</TabsContent>
+ *   <TabsContent value="password">Change your password here.</TabsContent>
+ * </Tabs>
+ *
+ * @returns {JSX.Element} Вкладки
+ */
 const Tabs = TabsPrimitive.Root
 
+/**
+ * Компонент списка вкладок
+ *
+ * @component
+ * @description Контейнер для триггеров вкладок.
+ *
+ * @param {React.Ref<React.ElementRef<typeof TabsPrimitive.List>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <TabsList>
+ *   <TabsTrigger value="tab1">Вкладка 1</TabsTrigger>
+ *   <TabsTrigger value="tab2">Вкладка 2</TabsTrigger>
+ * </TabsList>
+ *
+ * @returns {JSX.Element} Список вкладок
+ */
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
@@ -20,6 +58,21 @@ const TabsList = React.forwardRef<
 ))
 TabsList.displayName = TabsPrimitive.List.displayName
 
+/**
+ * Компонент триггера вкладки
+ *
+ * @component
+ * @description Элемент, при клике на который отображается соответствующее содержимое вкладки.
+ *
+ * @param {React.Ref<React.ElementRef<typeof TabsPrimitive.Trigger>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <TabsTrigger value="profile">Профиль</TabsTrigger>
+ *
+ * @returns {JSX.Element} Триггер вкладки
+ */
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
@@ -35,6 +88,23 @@ const TabsTrigger = React.forwardRef<
 ))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
+/**
+ * Компонент содержимого вкладки
+ *
+ * @component
+ * @description Содержимое, которое отображается при активации соответствующей вкладки.
+ *
+ * @param {React.Ref<React.ElementRef<typeof TabsPrimitive.Content>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <TabsContent value="profile">
+ *   <p>Содержимое профильной вкладки</p>
+ * </TabsContent>
+ *
+ * @returns {JSX.Element} Содержимое вкладки
+ */
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>

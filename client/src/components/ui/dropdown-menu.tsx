@@ -4,18 +4,89 @@ import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Основной компонент выпадающего меню
+ *
+ * @description Используется как контейнер для элементов выпадающего меню.
+ * Представляет собой реализацию Radix UI Dropdown Menu Root.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Root>} props - Свойства компонента
+ * @returns {JSX.Element} Корневой элемент выпадающего меню
+ */
 const DropdownMenu = DropdownMenuPrimitive.Root
 
+/**
+ * Компонент триггера выпадающего меню
+ *
+ * @description Используется для вызова выпадающего меню.
+ * Представляет собой реализацию Radix UI Dropdown Menu Trigger.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>} props - Свойства компонента
+ * @returns {JSX.Element} Триггер выпадающего меню
+ */
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
 
+/**
+ * Компонент группы элементов выпадающего меню
+ *
+ * @description Используется для группировки элементов выпадающего меню.
+ * Представляет собой реализацию Radix UI Dropdown Menu Group.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Group>} props - Свойства компонента
+ * @returns {JSX.Element} Группа элементов выпадающего меню
+ */
 const DropdownMenuGroup = DropdownMenuPrimitive.Group
 
+/**
+ * Компонент портала выпадающего меню
+ *
+ * @description Используется для рендеринга содержимого меню вне обычного дерева DOM.
+ * Представляет собой реализацию Radix UI Dropdown Menu Portal.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Portal>} props - Свойства компонента
+ * @returns {JSX.Element} Портал выпадающего меню
+ */
 const DropdownMenuPortal = DropdownMenuPrimitive.Portal
 
+/**
+ * Компонент подменю выпадающего меню
+ *
+ * @description Используется для создания вложенного подменю.
+ * Представляет собой реализацию Radix UI Dropdown Menu Sub.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Sub>} props - Свойства компонента
+ * @returns {JSX.Element} Подменю выпадающего меню
+ */
 const DropdownMenuSub = DropdownMenuPrimitive.Sub
 
+/**
+ * Компонент группы радио-кнопок выпадающего меню
+ *
+ * @description Используется для создания группы взаимоисключающих элементов.
+ * Представляет собой реализацию Radix UI Dropdown Menu RadioGroup.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioGroup>} props - Свойства компонента
+ * @returns {JSX.Element} Группа радио-кнопок выпадающего меню
+ */
 const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
 
+/**
+ * Компонент триггера подменю выпадающего меню
+ *
+ * @component
+ * @description Используется для вызова вложенного подменю.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {boolean} inset - Добавить отступ слева
+ * @param {React.ReactNode} children - Дочерние элементы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DropdownMenuSubTrigger>Подменю</DropdownMenuSubTrigger>
+ *
+ * @returns {JSX.Element} Триггер подменю выпадающего меню
+ */
 const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
@@ -38,6 +109,24 @@ const DropdownMenuSubTrigger = React.forwardRef<
 DropdownMenuSubTrigger.displayName =
   DropdownMenuPrimitive.SubTrigger.displayName
 
+/**
+ * Компонент содержимого подменю выпадающего меню
+ *
+ * @component
+ * @description Содержимое вложенного подменю.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.SubContent>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DropdownMenuSubContent>
+ *   <DropdownMenuItem>Элемент 1</DropdownMenuItem>
+ *   <DropdownMenuItem>Элемент 2</DropdownMenuItem>
+ * </DropdownMenuSubContent>
+ *
+ * @returns {JSX.Element} Содержимое подменю выпадающего меню
+ */
 const DropdownMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
@@ -54,6 +143,27 @@ const DropdownMenuSubContent = React.forwardRef<
 DropdownMenuSubContent.displayName =
   DropdownMenuPrimitive.SubContent.displayName
 
+/**
+ * Компонент содержимого выпадающего меню
+ *
+ * @component
+ * @description Основное содержимое выпадающего меню.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.Content>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {number} sideOffset - Смещение содержимого относительно триггера (по умолчанию 4)
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DropdownMenuContent>
+ *   <DropdownMenuItem>Элемент 1</DropdownMenuItem>
+ *   <DropdownMenuItem>Элемент 2</DropdownMenuItem>
+ *   <DropdownMenuSeparator />
+ *   <DropdownMenuItem>Элемент 3</DropdownMenuItem>
+ * </DropdownMenuContent>
+ *
+ * @returns {JSX.Element} Содержимое выпадающего меню
+ */
 const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
@@ -72,6 +182,22 @@ const DropdownMenuContent = React.forwardRef<
 ))
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
 
+/**
+ * Компонент элемента выпадающего меню
+ *
+ * @component
+ * @description Отдельный элемент в выпадающем меню.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.Item>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {boolean} inset - Добавить отступ слева
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DropdownMenuItem>Сохранить</DropdownMenuItem>
+ *
+ * @returns {JSX.Element} Элемент выпадающего меню
+ */
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
@@ -90,6 +216,25 @@ const DropdownMenuItem = React.forwardRef<
 ))
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 
+/**
+ * Компонент чекбокса в выпадающем меню
+ *
+ * @component
+ * @description Элемент с чекбоксом в выпадающем меню.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {React.ReactNode} children - Дочерние элементы
+ * @param {boolean} checked - Состояние чекбокса
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DropdownMenuCheckboxItem checked={isChecked} onCheckedChange={setChecked}>
+ *   Включить уведомления
+ * </DropdownMenuCheckboxItem>
+ *
+ * @returns {JSX.Element} Чекбокс в выпадающем меню
+ */
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
@@ -114,6 +259,25 @@ const DropdownMenuCheckboxItem = React.forwardRef<
 DropdownMenuCheckboxItem.displayName =
   DropdownMenuPrimitive.CheckboxItem.displayName
 
+/**
+ * Компонент радио-кнопки в выпадающем меню
+ *
+ * @component
+ * @description Элемент с радио-кнопкой в выпадающем меню.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {React.ReactNode} children - Дочерние элементы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DropdownMenuRadioGroup value={selectedValue} onValueChange={setSelectedValue}>
+ *   <DropdownMenuRadioItem value="option1">Опция 1</DropdownMenuRadioItem>
+ *   <DropdownMenuRadioItem value="option2">Опция 2</DropdownMenuRadioItem>
+ * </DropdownMenuRadioGroup>
+ *
+ * @returns {JSX.Element} Радио-кнопка в выпадающем меню
+ */
 const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
@@ -136,6 +300,22 @@ const DropdownMenuRadioItem = React.forwardRef<
 ))
 DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
 
+/**
+ * Компонент метки в выпадающем меню
+ *
+ * @component
+ * @description Метка для группировки элементов выпадающего меню.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.Label>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {boolean} inset - Добавить отступ слева
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DropdownMenuLabel>Настройки</DropdownMenuLabel>
+ *
+ * @returns {JSX.Element} Метка в выпадающем меню
+ */
 const DropdownMenuLabel = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
@@ -154,6 +334,21 @@ const DropdownMenuLabel = React.forwardRef<
 ))
 DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName
 
+/**
+ * Компонент разделителя в выпадающем меню
+ *
+ * @component
+ * @description Горизонтальная линия для разделения элементов меню.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.Separator>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DropdownMenuSeparator />
+ *
+ * @returns {JSX.Element} Разделитель в выпадающем меню
+ */
 const DropdownMenuSeparator = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
@@ -166,6 +361,23 @@ const DropdownMenuSeparator = React.forwardRef<
 ))
 DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName
 
+/**
+ * Компонент горячей клавиши в выпадающем меню
+ *
+ * @component
+ * @description Отображает сочетание клавиш для элемента меню.
+ *
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DropdownMenuItem>
+ *   Копировать
+ *   <DropdownMenuShortcut>⌘C</DropdownMenuShortcut>
+ * </DropdownMenuItem>
+ *
+ * @returns {JSX.Element} Горячая клавиша в выпадающем меню
+ */
 const DropdownMenuShortcut = ({
   className,
   ...props

@@ -2,6 +2,32 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Компонент поля ввода
+ *
+ * @component
+ * @description Интерактивный элемент управления для ввода текста или других данных.
+ *
+ * @param {React.Ref<HTMLInputElement>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {string} type - Тип поля ввода (text, email, password и т.д.)
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * // Простой пример использования
+ * <Input type="text" placeholder="Введите текст" />
+ *
+ * @example
+ * // Пример с email
+ * <Input type="email" placeholder="Введите email" />
+ *
+ * @example
+ * // Пример с управляемым состоянием
+ * const [value, setValue] = useState("");
+ * <Input value={value} onChange={(e) => setValue(e.target.value)} />
+ *
+ * @returns {JSX.Element} Поле ввода
+ */
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
     return (

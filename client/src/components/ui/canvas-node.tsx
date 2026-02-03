@@ -237,7 +237,7 @@ const nodeColors = {
   condition: 'bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
 };
 
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onMove, onMoveEnd, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onMove, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -894,7 +894,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                 { key: 'can_invite_users', name: '📨 Приглашения' },
                 { key: 'can_pin_messages', name: '📌 Закрепление' },
                 { key: 'can_manage_video_chats', name: '🎥 Видеочаты' }
-              ].map((right, index) => (
+              ].map((right) => (
                 <div key={right.key} className="group relative">
                   <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200 shadow-sm">
                     <div className="flex items-center justify-center space-x-1">

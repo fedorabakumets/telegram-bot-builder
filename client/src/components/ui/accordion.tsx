@@ -4,8 +4,35 @@ import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Основной компонент аккордеона
+ *
+ * @description Используется как контейнер для элементов аккордеона.
+ * Представляет собой реализацию Radix UI Accordion Root.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Root>} props - Свойства компонента
+ * @returns {JSX.Element} Корневой элемент аккордеона
+ */
 const Accordion = AccordionPrimitive.Root
 
+/**
+ * Компонент элемента аккордеона
+ *
+ * @component
+ * @description Отдельный элемент внутри аккордеона, который может быть раскрыт или свернут.
+ *
+ * @param {React.Ref<React.ElementRef<typeof AccordionPrimitive.Item>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <AccordionItem value="item-1">
+ *   <AccordionTrigger>Заголовок</AccordionTrigger>
+ *   <AccordionContent>Содержимое</AccordionContent>
+ * </AccordionItem>
+ *
+ * @returns {JSX.Element} Элемент аккордеона
+ */
 const AccordionItem = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
@@ -18,6 +45,22 @@ const AccordionItem = React.forwardRef<
 ))
 AccordionItem.displayName = "AccordionItem"
 
+/**
+ * Компонент триггера аккордеона (заголовок с возможностью раскрытия)
+ *
+ * @component
+ * @description Заголовок элемента аккордеона, при клике на который происходит раскрытие/сворачивание содержимого.
+ *
+ * @param {React.Ref<React.ElementRef<typeof AccordionPrimitive.Trigger>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {React.ReactNode} children - Дочерние элементы (обычно текст заголовка)
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <AccordionTrigger>Заголовок аккордеона</AccordionTrigger>
+ *
+ * @returns {JSX.Element} Триггер аккордеона
+ */
 const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
@@ -40,6 +83,22 @@ const AccordionTrigger = React.forwardRef<
 ))
 AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
 
+/**
+ * Компонент содержимого аккордеона
+ *
+ * @component
+ * @description Содержимое элемента аккордеона, которое показывается или скрывается при нажатии на триггер.
+ *
+ * @param {React.Ref<React.ElementRef<typeof AccordionPrimitive.Content>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {React.ReactNode} children - Дочерние элементы (содержимое аккордеона)
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <AccordionContent>Содержимое аккордеона</AccordionContent>
+ *
+ * @returns {JSX.Element} Содержимое аккордеона
+ */
 const AccordionContent = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>

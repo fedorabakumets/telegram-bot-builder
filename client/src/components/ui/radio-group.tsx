@@ -4,6 +4,30 @@ import { Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Компонент группы радио-кнопок
+ *
+ * @component
+ * @description Контейнер для набора радио-кнопок, позволяющий выбрать только один вариант.
+ *
+ * @param {React.Ref<React.ElementRef<typeof RadioGroupPrimitive.Root>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <RadioGroup value={selectedValue} onValueChange={setSelectedValue}>
+ *   <div className="flex items-center space-x-2">
+ *     <RadioGroupItem value="option1" id="option1" />
+ *     <Label htmlFor="option1">Опция 1</Label>
+ *   </div>
+ *   <div className="flex items-center space-x-2">
+ *     <RadioGroupItem value="option2" id="option2" />
+ *     <Label htmlFor="option2">Опция 2</Label>
+ *   </div>
+ * </RadioGroup>
+ *
+ * @returns {JSX.Element} Группа радио-кнопок
+ */
 const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
@@ -18,6 +42,21 @@ const RadioGroup = React.forwardRef<
 })
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 
+/**
+ * Компонент элемента группы радио-кнопок
+ *
+ * @component
+ * @description Отдельная радио-кнопка в группе.
+ *
+ * @param {React.Ref<React.ElementRef<typeof RadioGroupPrimitive.Item>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <RadioGroupItem value="option1" id="option1" />
+ *
+ * @returns {JSX.Element} Элемент группы радио-кнопок
+ */
 const RadioGroupItem = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>

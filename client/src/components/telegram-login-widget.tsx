@@ -56,7 +56,7 @@ declare global {
  * />
  * ```
  */
-export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLoginWidgetProps) {
+export function TelegramLoginWidget({ botInfo, onLogout }: TelegramLoginWidgetProps) {
   const { toast } = useToast();
   const { user, logout, isLoading } = useTelegramAuth();
 

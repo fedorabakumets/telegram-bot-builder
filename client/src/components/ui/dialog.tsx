@@ -6,14 +6,65 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Основной компонент диалогового окна
+ *
+ * @description Используется как контейнер для элементов диалогового окна.
+ * Представляет собой реализацию Radix UI Dialog Root.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>} props - Свойства компонента
+ * @returns {JSX.Element} Корневой элемент диалога
+ */
 const Dialog = DialogPrimitive.Root
 
+/**
+ * Компонент триггера диалогового окна
+ *
+ * @description Используется для вызова диалогового окна.
+ * Представляет собой реализацию Radix UI Dialog Trigger.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>} props - Свойства компонента
+ * @returns {JSX.Element} Триггер диалога
+ */
 const DialogTrigger = DialogPrimitive.Trigger
 
+/**
+ * Компонент портала диалогового окна
+ *
+ * @description Используется для рендеринга содержимого диалога вне обычного дерева DOM.
+ * Представляет собой реализацию Radix UI Dialog Portal.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DialogPrimitive.Portal>} props - Свойства компонента
+ * @returns {JSX.Element} Портал диалога
+ */
 const DialogPortal = DialogPrimitive.Portal
 
+/**
+ * Компонент закрытия диалогового окна
+ *
+ * @description Используется для закрытия диалогового окна.
+ * Представляет собой реализацию Radix UI Dialog Close.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>} props - Свойства компонента
+ * @returns {JSX.Element} Компонент закрытия диалога
+ */
 const DialogClose = DialogPrimitive.Close
 
+/**
+ * Компонент оверлея диалогового окна
+ *
+ * @component
+ * @description Полупрозрачный фон, который появляется под диалоговым окном для выделения содержимого.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DialogPrimitive.Overlay>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DialogOverlay />
+ *
+ * @returns {JSX.Element} Оверлей диалога
+ */
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
@@ -29,6 +80,31 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+/**
+ * Компонент содержимого диалогового окна
+ *
+ * @component
+ * @description Основное содержимое диалогового окна.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DialogPrimitive.Content>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {React.ReactNode} children - Дочерние элементы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DialogContent>
+ *   <DialogHeader>
+ *     <DialogTitle>Заголовок</DialogTitle>
+ *     <DialogDescription>Описание</DialogDescription>
+ *   </DialogHeader>
+ *   <DialogFooter>
+ *     <Button>Подтвердить</Button>
+ *     <Button variant="outline">Отмена</Button>
+ *   </DialogFooter>
+ * </DialogContent>
+ *
+ * @returns {JSX.Element} Содержимое диалога
+ */
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
@@ -53,6 +129,23 @@ const DialogContent = React.forwardRef<
 ))
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
+/**
+ * Компонент заголовка диалогового окна
+ *
+ * @component
+ * @description Контейнер для заголовка и описания диалога.
+ *
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DialogHeader>
+ *   <DialogTitle>Заголовок</DialogTitle>
+ *   <DialogDescription>Описание</DialogDescription>
+ * </DialogHeader>
+ *
+ * @returns {JSX.Element} Заголовок диалога
+ */
 const DialogHeader = ({
   className,
   ...props
@@ -67,6 +160,23 @@ const DialogHeader = ({
 )
 DialogHeader.displayName = "DialogHeader"
 
+/**
+ * Компонент нижнего колонтитула диалогового окна
+ *
+ * @component
+ * @description Контейнер для кнопок действия в диалоге.
+ *
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DialogFooter>
+ *   <Button>Подтвердить</Button>
+ *   <Button variant="outline">Отмена</Button>
+ * </DialogFooter>
+ *
+ * @returns {JSX.Element} Нижний колонтитул диалога
+ */
 const DialogFooter = ({
   className,
   ...props
@@ -81,6 +191,21 @@ const DialogFooter = ({
 )
 DialogFooter.displayName = "DialogFooter"
 
+/**
+ * Компонент заголовка диалогового окна
+ *
+ * @component
+ * @description Заголовок диалогового окна.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DialogPrimitive.Title>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DialogTitle>Важное уведомление</DialogTitle>
+ *
+ * @returns {JSX.Element} Заголовок диалога
+ */
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
@@ -96,6 +221,21 @@ const DialogTitle = React.forwardRef<
 ))
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
+/**
+ * Компонент описания диалогового окна
+ *
+ * @component
+ * @description Описание или дополнительная информация в диалоговом окне.
+ *
+ * @param {React.Ref<React.ElementRef<typeof DialogPrimitive.Description>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <DialogDescription>Дополнительная информация о диалоге</DialogDescription>
+ *
+ * @returns {JSX.Element} Описание диалога
+ */
 const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>

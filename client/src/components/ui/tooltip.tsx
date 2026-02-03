@@ -5,28 +5,68 @@ import { cn } from "@/lib/utils"
 
 /**
  * Провайдер тултипов
- * Обеспечивает контекст для компонентов тултипа
+ *
+ * @description Обеспечивает контекст для компонентов тултипа.
+ * Представляет собой реализацию Radix UI Tooltip Provider.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Provider>} props - Свойства компонента
+ *
+ * @example
+ * <TooltipProvider>
+ *   <App />
+ * </TooltipProvider>
+ *
+ * @returns {JSX.Element} Провайдер тултипов
  */
 const TooltipProvider = TooltipPrimitive.Provider
 
 /**
  * Корневой компонент тултипа
- * Обертывает триггер и контент тултипа
+ *
+ * @description Обертывает триггер и контент тултипа.
+ * Представляет собой реализацию Radix UI Tooltip Root.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>} props - Свойства компонента
+ *
+ * @example
+ * <Tooltip>
+ *   <TooltipTrigger>Наведи на меня</TooltipTrigger>
+ *   <TooltipContent>Это тултип!</TooltipContent>
+ * </Tooltip>
+ *
+ * @returns {JSX.Element} Корневой компонент тултипа
  */
 const Tooltip = TooltipPrimitive.Root
 
 /**
  * Триггер тултипа
- * Элемент, при взаимодействии с которым отображается тултип
+ *
+ * @description Элемент, при взаимодействии с которым отображается тултип.
+ * Представляет собой реализацию Radix UI Tooltip Trigger.
+ *
+ * @param {React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigger>} props - Свойства компонента
+ *
+ * @example
+ * <TooltipTrigger>Наведи на меня</TooltipTrigger>
+ *
+ * @returns {JSX.Element} Триггер тултипа
  */
 const TooltipTrigger = TooltipPrimitive.Trigger
 
 /**
  * Контент тултипа
- * Содержимое тултипа, которое отображается при наведении на триггер
  *
- * @param {React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>} props - Свойства компонента
- * @param {React.Ref<HTMLDivElement>} ref - Ссылка на DOM-элемент
+ * @component
+ * @description Содержимое тултипа, которое отображается при наведении на триггер.
+ *
+ * @param {React.Ref<React.ElementRef<typeof TooltipPrimitive.Content>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {number} sideOffset - Смещение контента относительно триггера (по умолчанию 4)
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <TooltipContent>Это тултип!</TooltipContent>
+ *
  * @returns {JSX.Element} Компонент контента тултипа
  */
 const TooltipContent = React.forwardRef<
@@ -45,11 +85,4 @@ const TooltipContent = React.forwardRef<
 ))
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
-/**
- * Экспортируемые компоненты тултипа
- * @exports {React.Component} Tooltip - Корневой компонент тултипа
- * @exports {React.Component} TooltipTrigger - Триггер тултипа
- * @exports {React.Component} TooltipContent - Контент тултипа
- * @exports {React.Component} TooltipProvider - Провайдер тултипов
- */
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }

@@ -3,6 +3,29 @@ import * as SwitchPrimitives from "@radix-ui/react-switch"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Компонент переключателя (Switch)
+ *
+ * @component
+ * @description Интерактивный элемент управления для включения/выключения определенного параметра.
+ *
+ * @param {React.Ref<React.ElementRef<typeof SwitchPrimitives.Root>>} ref - Ссылка на DOM-элемент
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * // Простой пример использования
+ * <Switch checked={enabled} onCheckedChange={setEnabled} />
+ *
+ * @example
+ * // Пример с меткой
+ * <div className="flex items-center space-x-2">
+ *   <Switch id="airplane-mode" checked={airplaneMode} onCheckedChange={setAirplaneMode} />
+ *   <Label htmlFor="airplane-mode">Режим в самолете</Label>
+ * </div>
+ *
+ * @returns {JSX.Element} Переключатель
+ */
 const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>

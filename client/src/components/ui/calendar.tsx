@@ -5,8 +5,46 @@ import { DayPicker } from "react-day-picker"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
+/**
+ * Тип свойств календаря
+ *
+ * @typedef {React.ComponentProps<typeof DayPicker>} CalendarProps
+ * @description Определяет тип свойств, которые принимает компонент Calendar
+ */
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
+/**
+ * Компонент календаря
+ *
+ * @component
+ * @description Интерактивный компонент для выбора даты.
+ *
+ * @param {CalendarProps} props - Свойства компонента
+ * @param {string} props.className - Дополнительные CSS-классы
+ * @param {object} props.classNames - Переопределение классов для различных частей календаря
+ * @param {boolean} props.showOutsideDays - Показывать ли дни, выходящие за пределы месяца (по умолчанию true)
+ * @param {object} props.props - Прочие свойства, передаваемые в компонент DayPicker
+ *
+ * @example
+ * // Простой пример использования
+ * <Calendar
+ *   mode="single"
+ *   selected={date}
+ *   onSelect={setDate}
+ *   className="rounded-md border"
+ * />
+ *
+ * @example
+ * // Пример с ограничением диапазона дат
+ * <Calendar
+ *   mode="range"
+ *   selected={range}
+ *   onSelect={setRange}
+ *   fromDate={new Date()}
+ * />
+ *
+ * @returns {JSX.Element} Календарь
+ */
 function Calendar({
   className,
   classNames,

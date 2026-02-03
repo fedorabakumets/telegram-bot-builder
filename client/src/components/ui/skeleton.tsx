@@ -1,5 +1,19 @@
 import { cn } from "@/lib/utils";
 
+/**
+ * Компонент скелетона
+ *
+ * @component
+ * @description Временный элемент-заполнитель, который используется во время загрузки контента.
+ *
+ * @param {string} className - Дополнительные CSS-классы
+ * @param {object} props - Прочие свойства, передаваемые в компонент
+ *
+ * @example
+ * <Skeleton className="h-10 w-full" />
+ *
+ * @returns {JSX.Element} Скелетон
+ */
 function Skeleton({
   className,
   ...props
@@ -12,7 +26,17 @@ function Skeleton({
   );
 }
 
-// Предустановленные скелетоны для разных элементов
+/**
+ * Скелетон для редактора
+ *
+ * @component
+ * @description Предустановленный скелетон для интерфейса редактора.
+ *
+ * @example
+ * <EditorSkeleton />
+ *
+ * @returns {JSX.Element} Скелетон редактора
+ */
 function EditorSkeleton() {
   return (
     <div className="flex h-screen">
@@ -26,7 +50,7 @@ function EditorSkeleton() {
           <Skeleton className="h-12 w-full" />
         </div>
       </div>
-      
+
       {/* Основная область */}
       <div className="flex-1 flex flex-col">
         {/* Заголовок */}
@@ -35,7 +59,7 @@ function EditorSkeleton() {
           <Skeleton className="h-8 w-24" />
           <Skeleton className="h-8 w-20" />
         </div>
-        
+
         {/* Холст */}
         <div className="flex-1 flex">
           <div className="flex-1 p-6">
@@ -45,7 +69,7 @@ function EditorSkeleton() {
               <Skeleton className="h-32 w-full" />
             </div>
           </div>
-          
+
           {/* Панель свойств */}
           <div className="w-80 border-l p-4 space-y-4">
             <Skeleton className="h-8 w-full" />
@@ -61,6 +85,17 @@ function EditorSkeleton() {
   );
 }
 
+/**
+ * Скелетон для проектов
+ *
+ * @component
+ * @description Предустановленный скелетон для страницы проектов.
+ *
+ * @example
+ * <ProjectsSkeleton />
+ *
+ * @returns {JSX.Element} Скелетон проектов
+ */
 function ProjectsSkeleton() {
   return (
     <div className="container mx-auto px-6 py-8">
@@ -71,7 +106,7 @@ function ProjectsSkeleton() {
           <Skeleton className="h-10 w-24" />
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="border rounded-lg p-4 space-y-4">
@@ -89,6 +124,17 @@ function ProjectsSkeleton() {
   );
 }
 
+/**
+ * Скелетон для шаблонов
+ *
+ * @component
+ * @description Предустановленный скелетон для страницы шаблонов.
+ *
+ * @example
+ * <TemplatesSkeleton />
+ *
+ * @returns {JSX.Element} Скелетон шаблонов
+ */
 function TemplatesSkeleton() {
   return (
     <div className="container mx-auto px-6 py-8">
@@ -100,7 +146,7 @@ function TemplatesSkeleton() {
           <Skeleton className="h-10 w-24" />
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="border rounded-lg p-4 space-y-3">
