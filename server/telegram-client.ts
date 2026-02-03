@@ -230,7 +230,7 @@ class TelegramClientManager {
 
       return {
         success: true,
-        phoneCodeHash: (result as any).phoneCodeHash
+        phoneCodeHash: result.phoneCodeHash
       };
 
     } catch (error: any) {
@@ -257,13 +257,18 @@ class TelegramClientManager {
         throw new Error('Клиент не найден. Сначала отправьте код.');
       }
 
-      const result = await client.invoke(
+      const signInResult = await client.invoke(
         new Api.auth.SignIn({
           phoneNumber: phoneNumber,
           phoneCodeHash: phoneCodeHash,
           phoneCode: phoneCode,
         })
       );
+
+      // Используем результат для подтверждения успешного входа
+      if (!signInResult || !signInResult.user) {
+        throw new Error('Не удалось получить данные пользователя после входа');
+      }
 
       // Сохраняем сессию
       const sessionString = (client.session.save() as any) || '';
@@ -341,7 +346,7 @@ class TelegramClientManager {
       const passwordCheck = await computeCheck(passwordInfo, password);
 
       // Используем прямой API вызов для проверки пароля
-      const result = await client.invoke(
+      await client.invoke(
         new Api.auth.CheckPassword({
           password: passwordCheck
         })
