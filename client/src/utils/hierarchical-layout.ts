@@ -330,7 +330,6 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
       const currentNode = levelNodes[i];
       const prevNode = levelNodes[i - 1];
 
-      const currentSize = getNodeSize(currentNode.id, options);
       const prevSize = getNodeSize(prevNode.id, options);
 
       const prevBottom = prevNode.position.y + prevSize.height;
@@ -459,12 +458,9 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
   });
 
   // Проверяем, является ли узел частью цепочки автопереходов
-  function isInAutoChain(nodeId: string): boolean {
-    return autoTransitionChains.some(chain => chain.includes(nodeId));
-  }
 
   // Назначаем y позиции строго по порядку уровней (сверху вниз)
-  function assignYPositions(levelIndex: number, nodeInLevel: LayoutNode, yPosition: number): number {
+  function assignYPositions(_levelIndex: number, nodeInLevel: LayoutNode, yPosition: number): number {
     const nodeSize = getNodeSize(nodeInLevel.id, options);
     (nodeInLevel as any)._y = yPosition;
     return yPosition + nodeSize.height + options.verticalSpacing;
@@ -639,33 +635,13 @@ function arrangeNodesLinear(nodes: LayoutNode[], options: HierarchicalLayoutOpti
  * Использует заранее определенные позиции для каждого типа узла в соответствии с логикой бота.
  *
  * @param nodes - массив узлов для размещения
- * @param connections - массив соединений между узлами
+ * @param _connections - массив соединений между узлами
  * @returns массив узлов с заранее определенными позициями для шаблона VProgulke
  */
-export function createVProgulkeHierarchicalLayout(nodes: Node[], connections: Connection[]): Node[] {
+export function createVProgulkeHierarchicalLayout(nodes: Node[], _connections: Connection[]): Node[] {
   // Определяем последовательность узлов для VProgulke бота
-  const nodeSequence = [
-    'start',
-    'join_request',
-    'decline_response',
-    'gender_selection',
-    'name_input',
-    'age_input',
-    'metro_selection',
-    'interests_categories',
-    'hobby_interests',
-    'relationship_status',
-    'sexual_orientation',
-    'telegram_channel_ask',
-    'telegram_channel_input',
-    'additional_info',
-    'profile_complete',
-    'chat_link',
-    'show_profile'
-  ];
 
   // Создаем карту узлов для быстрого доступа
-  const nodeMap = new Map(nodes.map(node => [node.id, node]));
 
   // Специальные позиции для узлов VProgulke
   const specialPositions: Record<string, {x: number, y: number}> = {
