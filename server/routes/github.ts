@@ -37,7 +37,7 @@ githubRouter.post('/push-to-github', async (_req, res) => {
     const changedFiles = execSync('git diff --cached --name-only', { encoding: 'utf-8' }).split('\n').filter(f => f);
 
     if (changedFiles.length === 0) {
-      return res.status(400).json({ error: 'No changes to push' });
+      return res.status(400).json({ error: 'Нет изменений для отправки' });
     }
 
     const octokit = new Octokit({ auth: token });
@@ -69,7 +69,7 @@ githubRouter.post('/push-to-github', async (_req, res) => {
     const commitResponse = await octokit.git.createCommit({
       owner: 'fedorabakumets',
       repo: 'telegram-bot-builder',
-      message: 'Implement comprehensive action history system with real-time tracking',
+      message: 'Реализовать комплексную систему истории действий с отслеживанием в реальном времени',
       tree: treeResponse.data.sha,
       parents: [currentRef]
     });
@@ -84,11 +84,11 @@ githubRouter.post('/push-to-github', async (_req, res) => {
 
     res.json({
       success: true,
-      message: 'Successfully pushed to GitHub!',
+      message: 'Успешно отправлено в GitHub!',
       commit: commitResponse.data.sha
     });
   } catch (error) {
-    console.error('GitHub push error:', error);
+    console.error('Ошибка отправки в GitHub:', error);
     res.status(500).json({ error: (error as any).message });
   }
 });
