@@ -1,4 +1,14 @@
-import React, { useState, useCallback } from 'react';
+/**
+ * @fileoverview Компонент оптимизации файлов
+ *
+ * Этот компонент предоставляет интерфейс для оптимизации файлов (изображений, видео, аудио)
+ * перед загрузкой. Позволяет настраивать параметры сжатия и просматривать статистику
+ * до и после оптимизации.
+ *
+ * @module FileOptimizer
+ */
+
+import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -8,14 +18,39 @@ import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Image, FileVideo, FileAudio, Download, Settings, CheckCircle2 } from "lucide-react";
+import { Zap, Image, FileVideo, FileAudio, Download, CheckCircle2 } from "lucide-react";
 
+/**
+ * Свойства компонента FileOptimizer
+ *
+ * @interface FileOptimizerProps
+ * @property {File[]} files - Массив файлов для оптимизации
+ * @property {Function} [onOptimizedFiles] - Обработчик, вызываемый при успешной оптимизации файлов
+ * @property {Function} [onClose] - Обработчик, вызываемый при закрытии компонента
+ */
 interface FileOptimizerProps {
   files: File[];
   onOptimizedFiles?: (files: File[]) => void;
   onClose?: () => void;
 }
 
+/**
+ * Настройки оптимизации файлов
+ *
+ * @interface OptimizationSettings
+ * @property {Object} images - Настройки оптимизации изображений
+ * @property {boolean} images.compress - Сжимать ли изображения
+ * @property {number} images.quality - Качество сжатия (0-100)
+ * @property {number} images.maxWidth - Максимальная ширина изображения
+ * @property {'original' | 'jpeg' | 'webp'} images.format - Формат изображения
+ * @property {Object} videos - Настройки оптимизации видео
+ * @property {boolean} videos.compress - Сжимать ли видео
+ * @property {'low' | 'medium' | 'high'} videos.quality - Качество видео
+ * @property {number} videos.maxSize - Максимальный размер видео в МБ
+ * @property {Object} audio - Настройки оптимизации аудио
+ * @property {boolean} audio.compress - Сжимать ли аудио
+ * @property {number} audio.bitrate - Битрейт аудио
+ */
 interface OptimizationSettings {
   images: {
     compress: boolean;
@@ -34,11 +69,41 @@ interface OptimizationSettings {
   };
 }
 
+/**
+ * Компонент оптимизации файлов
+ *
+ * Предоставляет интерфейс для оптимизации файлов перед загрузкой.
+ * Позволяет настраивать параметры сжатия и просматривать статистику
+ * до и после оптимизации.
+ *
+ * @component
+ * @param {FileOptimizerProps} props - Свойства компонента
+ * @returns {JSX.Element} Элемент компонента FileOptimizer
+ */
 export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimizerProps) {
+  /**
+   * Хук для показа уведомлений
+   */
   const { toast } = useToast();
+
+  /**
+   * Состояние процесса оптимизации
+   */
   const [isOptimizing, setIsOptimizing] = useState(false);
+
+  /**
+   * Прогресс оптимизации (в процентах)
+   */
   const [optimizationProgress, setOptimizationProgress] = useState(0);
+
+  /**
+   * Оптимизированные файлы
+   */
   const [optimizedFiles, setOptimizedFiles] = useState<File[]>([]);
+
+  /**
+   * Настройки оптимизации
+   */
   const [settings, setSettings] = useState<OptimizationSettings>({
     images: {
       compress: true,
@@ -57,7 +122,11 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
     }
   });
 
-  // Статистика файлов
+  /**
+   * Статистика файлов
+   *
+   * Подсчитывает количество файлов по типам и общий размер
+   */
   const fileStats = files.reduce((acc, file) => {
     const type = file.type.split('/')[0];
     acc[type] = (acc[type] || 0) + 1;
@@ -65,29 +134,36 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
     return acc;
   }, {} as Record<string, number>);
 
-  // Сжатие изображений
+  /**
+   * Сжатие изображений
+   *
+   * Сжимает изображение в соответствии с настройками
+   *
+   * @param {File} file - Файл изображения для сжатия
+   * @returns {Promise<File>} Сжатый файл изображения
+   */
   const compressImage = useCallback(async (file: File): Promise<File> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new (window as any).Image() as HTMLImageElement;
-      
+
       img.onload = () => {
         // Вычисляем новые размеры
         let { width, height } = img;
         const maxWidth = settings.images.maxWidth;
-        
+
         if (width > maxWidth) {
           height = (height * maxWidth) / width;
           width = maxWidth;
         }
-        
+
         canvas.width = width;
         canvas.height = height;
-        
+
         // Рисуем сжатое изображение
         ctx?.drawImage(img, 0, 0, width, height);
-        
+
         // Конвертируем в Blob
         canvas.toBlob((blob) => {
           if (blob) {
@@ -101,47 +177,51 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
           }
         }, settings.images.format === 'original' ? file.type : `image/${settings.images.format}`, settings.images.quality / 100);
       };
-      
+
       img.src = URL.createObjectURL(file);
     });
   }, [settings.images]);
 
-  // Оптимизация файлов
+  /**
+   * Оптимизация файлов
+   *
+   * Выполняет оптимизацию всех файлов в соответствии с настройками
+   */
   const optimizeFiles = useCallback(async () => {
     setIsOptimizing(true);
     setOptimizationProgress(0);
-    
+
     try {
       const optimized: File[] = [];
-      
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         let optimizedFile = file;
-        
+
         // Оптимизируем изображения
         if (file.type.startsWith('image/') && settings.images.compress) {
           optimizedFile = await compressImage(file);
         }
-        
+
         optimized.push(optimizedFile);
         setOptimizationProgress(Math.round(((i + 1) / files.length) * 100));
-        
+
         // Небольшая задержка для показа прогресса
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-      
+
       setOptimizedFiles(optimized);
-      
+
       // Вычисляем статистику сжатия
       const originalSize = files.reduce((sum, file) => sum + file.size, 0);
       const optimizedSize = optimized.reduce((sum, file) => sum + file.size, 0);
       const savedPercentage = Math.round(((originalSize - optimizedSize) / originalSize) * 100);
-      
+
       toast({
         title: "Оптимизация завершена",
         description: `Сэкономлено ${savedPercentage}% места (${formatFileSize(originalSize - optimizedSize)})`,
       });
-      
+
     } catch (error) {
       console.error('Optimization error:', error);
       toast({
@@ -154,7 +234,14 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
     }
   }, [files, settings, compressImage, toast]);
 
-  // Форматирование размера файла
+  /**
+   * Форматирование размера файла
+   *
+   * Преобразует размер файла в байтах в человекочитаемый формат
+   *
+   * @param {number} bytes - Размер файла в байтах
+   * @returns {string} Размер файла в человекочитаемом формате
+   */
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -163,7 +250,11 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Применение оптимизированных файлов
+  /**
+   * Применение оптимизированных файлов
+   *
+   * Вызывает колбэк с оптимизированными файлами и закрывает компонент
+   */
   const applyOptimizedFiles = () => {
     onOptimizedFiles?.(optimizedFiles);
     onClose?.();
@@ -171,7 +262,7 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
 
   return (
     <div className="p-6 space-y-6">
-      {/* Заголовок */}
+      {/* Заголовок компонента */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold flex items-center">
@@ -240,24 +331,24 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
                   <Switch
                     id="compress-images"
                     checked={settings.images.compress}
-                    onCheckedChange={(checked) => 
-                      setSettings(prev => ({ 
-                        ...prev, 
+                    onCheckedChange={(checked) =>
+                      setSettings(prev => ({
+                        ...prev,
                         images: { ...prev.images, compress: checked }
                       }))
                     }
                   />
                 </div>
-                
+
                 {settings.images.compress && (
                   <>
                     <div className="space-y-2">
                       <Label>Качество: {settings.images.quality}%</Label>
                       <Slider
                         value={[settings.images.quality]}
-                        onValueChange={([value]) => 
-                          setSettings(prev => ({ 
-                            ...prev, 
+                        onValueChange={([value]) =>
+                          setSettings(prev => ({
+                            ...prev,
                             images: { ...prev.images, quality: value }
                           }))
                         }
@@ -266,14 +357,14 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
                         step={5}
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Максимальная ширина: {settings.images.maxWidth}px</Label>
                       <Slider
                         value={[settings.images.maxWidth]}
-                        onValueChange={([value]) => 
-                          setSettings(prev => ({ 
-                            ...prev, 
+                        onValueChange={([value]) =>
+                          setSettings(prev => ({
+                            ...prev,
                             images: { ...prev.images, maxWidth: value }
                           }))
                         }
@@ -333,7 +424,7 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
                 Оптимизация завершена успешно
               </span>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Исходный размер:</span>
@@ -355,10 +446,10 @@ export function FileOptimizer({ files, onOptimizedFiles, onClose }: FileOptimize
         <Button variant="outline" onClick={onClose} disabled={isOptimizing}>
           Отмена
         </Button>
-        
+
         {optimizedFiles.length === 0 ? (
-          <Button 
-            onClick={optimizeFiles} 
+          <Button
+            onClick={optimizeFiles}
             disabled={isOptimizing || !settings.images.compress}
             className="flex items-center"
           >
