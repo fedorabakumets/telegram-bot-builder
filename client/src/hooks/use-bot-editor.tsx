@@ -3,27 +3,50 @@ import { Node, Connection, Button, BotData } from '@shared/schema';
 import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 import { generateAutoTransitionConnections } from '@/utils/auto-transition-connections';
 
+/**
+ * Интерфейс для состояния истории изменений
+ */
 interface HistoryState {
+  /** Массив узлов в определенный момент времени */
   nodes: Node[];
+  /** Массив соединений в определенный момент времени */
   connections: Connection[];
 }
 
+/**
+ * Хук для управления редактором бота
+ * 
+ * Предоставляет полный набор функций для работы с узлами и соединениями бота,
+ * включая создание, редактирование, удаление, копирование и управление историей изменений.
+ * 
+ * @param initialData - Начальные данные бота (узлы и соединения)
+ * @returns Объект с состоянием и методами для управления редактором
+ */
 export function useBotEditor(initialData?: BotData) {
+  /** Массив всех узлов в редакторе */
   const [nodes, setNodes] = useState<Node[]>(initialData?.nodes || []);
+  /** Массив всех соединений между узлами */
   const [connections, setConnections] = useState<Connection[]>(initialData?.connections || []);
+  /** ID выбранного в данный момент узла */
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   
-  // Состояние для отслеживания перетаскивания узлов
+  /** Флаг, указывающий на то, что узел в данный момент перетаскивается */
   const [isNodeBeingDragged, setIsNodeBeingDragged] = useState(false);
   
-  // История для undo/redo
+  /** История состояний для функций отмены/повтора */
   const [history, setHistory] = useState<HistoryState[]>([]);
+  /** Текущий индекс в истории состояний */
   const [historyIndex, setHistoryIndex] = useState(-1);
+  /** Флаг для предотвращения сохранения в историю при операциях undo/redo */
   const isRedoUndoActionRef = useRef(false);
 
+  /** Объект выбранного узла или null, если ничего не выбрано */
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
 
-  // Сохранить текущее состояние в историю
+  /**
+   * Сохраняет текущее состояние узлов и соединений в историю
+   * Используется для реализации функций отмены и повтора действий
+   */
   const saveToHistory = useCallback(() => {
     if (isRedoUndoActionRef.current) {
       return; // Не сохраняем состояние при undo/redo операциях
@@ -50,7 +73,9 @@ export function useBotEditor(initialData?: BotData) {
     setHistoryIndex(prev => Math.min(prev + 1, 49));
   }, [nodes, connections, historyIndex, history.length]);
 
-  // Отменить последнее действие
+  /**
+   * Отменяет последнее действие, возвращая состояние к предыдущему в истории
+   */
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       const prevIndex = historyIndex - 1;
@@ -70,7 +95,9 @@ export function useBotEditor(initialData?: BotData) {
     }
   }, [history, historyIndex]);
 
-  // Повторить отмененное действие
+  /**
+   * Повторяет отмененное действие, переходя к следующему состоянию в истории
+   */
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       const nextIndex = historyIndex + 1;
@@ -90,11 +117,14 @@ export function useBotEditor(initialData?: BotData) {
     }
   }, [history, historyIndex]);
 
-  // Проверяем, доступны ли операции undo/redo
+  /** Проверяет, доступна ли операция отмены */
   const canUndo = historyIndex > 0;
+  /** Проверяет, доступна ли операция повтора */
   const canRedo = historyIndex < history.length - 1;
 
-  // Инициализируем историю при первой загрузке
+  /**
+   * Инициализирует историю при первой загрузке данных
+   */
   useEffect(() => {
     if (history.length === 0 && (nodes.length > 0 || connections.length > 0)) {
       const initialState: HistoryState = {
@@ -106,7 +136,10 @@ export function useBotEditor(initialData?: BotData) {
     }
   }, [nodes, connections, history.length]);
 
-  // Сохраняем состояние в историю при изменении nodes или connections
+  /**
+   * Автоматически сохраняет состояние в историю при изменении узлов или соединений
+   * Использует дебаунс для предотвращения частых сохранений
+   */
   useEffect(() => {
     if (!isRedoUndoActionRef.current && history.length > 0) {
       const timeoutId = setTimeout(saveToHistory, 300); // Увеличен дебаунс для избежания частых сохранений
@@ -114,7 +147,9 @@ export function useBotEditor(initialData?: BotData) {
     }
   }, [nodes, connections, saveToHistory, history.length]);
 
-  // Автоматически генерируем соединения для узлов с autoTransitionTo
+  /**
+   * Автоматически генерирует соединения для узлов с настройкой autoTransitionTo
+   */
   useEffect(() => {
     if (!isRedoUndoActionRef.current && nodes.length > 0) {
       setConnections(prevConnections => {
@@ -144,16 +179,29 @@ export function useBotEditor(initialData?: BotData) {
     }
   }, [nodes, connections]);
 
+  /**
+   * Добавляет новый узел в редактор
+   * @param node - Узел для добавления
+   */
   const addNode = useCallback((node: Node) => {
     setNodes(prev => [...prev, node]);
   }, []);
 
+  /**
+   * Обновляет существующий узел
+   * @param nodeId - ID узла для обновления
+   * @param updates - Частичные данные для обновления
+   */
   const updateNode = useCallback((nodeId: string, updates: Partial<Node>) => {
     setNodes(prev => prev.map(node => 
       node.id === nodeId ? { ...node, ...updates } : node
     ));
   }, []);
 
+  /**
+   * Удаляет узел и все связанные с ним соединения
+   * @param nodeId - ID узла для удаления
+   */
   const deleteNode = useCallback((nodeId: string) => {
     setNodes(prev => prev.filter(node => node.id !== nodeId));
     setConnections(prev => prev.filter(conn => 
@@ -164,10 +212,19 @@ export function useBotEditor(initialData?: BotData) {
     }
   }, [selectedNodeId]);
 
+  /**
+   * Добавляет новое соединение между узлами
+   * @param connection - Соединение для добавления
+   */
   const addConnection = useCallback((connection: Connection) => {
     setConnections(prev => [...prev, connection]);
   }, []);
 
+  /**
+   * Удаляет соединение между узлами
+   * @param connectionId - ID соединения для удаления
+   * @returns true если соединение было удалено, false если это автогенерированное соединение
+   */
   const deleteConnection = useCallback((connectionId: string) => {
     let wasDeleted = false;
     setConnections(prev => {
@@ -182,12 +239,22 @@ export function useBotEditor(initialData?: BotData) {
     return wasDeleted;
   }, []);
 
+  /**
+   * Обновляет существующее соединение
+   * @param connectionId - ID соединения для обновления
+   * @param updates - Частичные данные для обновления
+   */
   const updateConnection = useCallback((connectionId: string, updates: Partial<Connection>) => {
     setConnections(prev => prev.map(conn => 
       conn.id === connectionId ? { ...conn, ...updates } : conn
     ));
   }, []);
 
+  /**
+   * Обновляет данные узла
+   * @param nodeId - ID узла
+   * @param data - Частичные данные узла для обновления
+   */
   const updateNodeData = useCallback((nodeId: string, data: Partial<Node['data']>) => {
     setNodes(prev => prev.map(node => 
       node.id === nodeId 
@@ -196,6 +263,11 @@ export function useBotEditor(initialData?: BotData) {
     ));
   }, []);
 
+  /**
+   * Добавляет кнопку к узлу
+   * @param nodeId - ID узла
+   * @param button - Кнопка для добавления
+   */
   const addButton = useCallback((nodeId: string, button: Button) => {
     setNodes(prev => prev.map(node => 
       node.id === nodeId 
@@ -210,6 +282,12 @@ export function useBotEditor(initialData?: BotData) {
     ));
   }, []);
 
+  /**
+   * Обновляет существующую кнопку узла
+   * @param nodeId - ID узла
+   * @param buttonId - ID кнопки
+   * @param updates - Частичные данные кнопки для обновления
+   */
   const updateButton = useCallback((nodeId: string, buttonId: string, updates: Partial<Button>) => {
     setNodes(prev => prev.map(node => 
       node.id === nodeId 
@@ -226,6 +304,11 @@ export function useBotEditor(initialData?: BotData) {
     ));
   }, []);
 
+  /**
+   * Удаляет кнопку из узла
+   * @param nodeId - ID узла
+   * @param buttonId - ID кнопки для удаления
+   */
   const deleteButton = useCallback((nodeId: string, buttonId: string) => {
     setNodes(prev => prev.map(node => 
       node.id === nodeId 
@@ -240,11 +323,20 @@ export function useBotEditor(initialData?: BotData) {
     ));
   }, []);
 
+  /**
+   * Обновляет весь массив узлов
+   * @param newNodes - Новый массив узлов
+   */
   const updateNodes = useCallback((newNodes: Node[]) => {
     setNodes(newNodes);
   }, []);
 
-  // Функция нормализации данных узла (клиентская версия серверной нормализации)
+  /**
+   * Нормализует данные узла, применяя значения по умолчанию
+   * Клиентская версия серверной нормализации данных
+   * @param node - Узел для нормализации
+   * @returns Нормализованный узел
+   */
   const normalizeNodeData = useCallback((node: Node): Node => {
     if (!node || !node.type) return node;
 
@@ -288,6 +380,13 @@ export function useBotEditor(initialData?: BotData) {
     };
   }, []);
 
+  /**
+   * Устанавливает данные бота (узлы и соединения) с возможностью применения шаблона компоновки
+   * @param botData - Данные бота для установки
+   * @param templateName - Название шаблона компоновки (опционально)
+   * @param nodeSizes - Карта размеров узлов (опционально)
+   * @param skipLayout - Флаг для отключения автоматической компоновки (опционально)
+   */
   const setBotData = useCallback((
     botData: BotData, 
     templateName?: string, 
@@ -317,6 +416,10 @@ export function useBotEditor(initialData?: BotData) {
     // setBotData завершен
   }, [normalizeNodeData]);
 
+  /**
+   * Создает копию узла с новым ID и смещенной позицией
+   * @param nodeId - ID узла для дублирования
+   */
   const duplicateNode = useCallback((nodeId: string) => {
     const nodeToDuplicate = nodes.find(node => node.id === nodeId);
     if (!nodeToDuplicate) return;
@@ -335,6 +438,10 @@ export function useBotEditor(initialData?: BotData) {
     setSelectedNodeId(duplicatedNode.id); // Выбираем скопированный узел
   }, [nodes]);
 
+  /**
+   * Создает копии нескольких узлов со всеми связями между ними
+   * @param nodeIds - Массив ID узлов для дублирования
+   */
   const duplicateNodes = useCallback((nodeIds: string[]) => {
     const nodesToDuplicate = nodes.filter(node => nodeIds.includes(node.id));
     if (nodesToDuplicate.length === 0) return;
@@ -344,7 +451,7 @@ export function useBotEditor(initialData?: BotData) {
 
     // Создаем копии узлов с новыми ID
     nodesToDuplicate.forEach(node => {
-      const newId = `${node.id}_copy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const newId = `${node.id}_copy_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       idMapping[node.id] = newId;
 
       const duplicatedNode: Node = {
@@ -369,7 +476,7 @@ export function useBotEditor(initialData?: BotData) {
       if (sourceId && targetId) {
         const duplicatedConnection: Connection = {
           ...JSON.parse(JSON.stringify(connection)), // Глубокое копирование
-          id: `${connection.id}_copy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: `${connection.id}_copy_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
           source: sourceId,
           target: targetId
         };
@@ -386,12 +493,20 @@ export function useBotEditor(initialData?: BotData) {
     }
   }, [nodes, connections]);
 
+  /**
+   * Возвращает текущие данные бота (узлы и соединения)
+   * @returns Объект с текущими узлами и соединениями
+   */
   const getBotData = useCallback((): BotData => ({
     nodes,
     connections
   }), [nodes, connections]);
 
-  // Копирование элементов в буфер обмена для вставки в другие проекты
+  /**
+   * Копирует выбранные узлы и их соединения в буфер обмена для межпроектного использования
+   * @param nodeIds - Массив ID узлов для копирования
+   * @returns Объект с скопированными данными
+   */
   const copyToClipboard = useCallback((nodeIds: string[]) => {
     const nodesToCopy = nodes.filter(node => nodeIds.includes(node.id));
     const connectionsToCopy = connections.filter(conn => 
@@ -411,7 +526,12 @@ export function useBotEditor(initialData?: BotData) {
     return clipboardData;
   }, [nodes, connections]);
 
-  // Вставка элементов из буфера обмена
+  /**
+   * Вставляет элементы из буфера обмена с заданным смещением
+   * @param offsetX - Смещение по горизонтали (по умолчанию 100)
+   * @param offsetY - Смещение по вертикали (по умолчанию 100)
+   * @returns true если вставка прошла успешно, false в противном случае
+   */
   const pasteFromClipboard = useCallback((offsetX: number = 100, offsetY: number = 100) => {
     try {
       const clipboardDataStr = localStorage.getItem('bot-clipboard');
@@ -430,7 +550,7 @@ export function useBotEditor(initialData?: BotData) {
 
       // Создаем новые ID для всех узлов
       clipboardData.nodes.forEach((node: Node) => {
-        const newId = `${node.id}_paste_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const newId = `${node.id}_paste_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
         idMapping[node.id] = newId;
 
         const pastedNode: Node = {
@@ -454,7 +574,7 @@ export function useBotEditor(initialData?: BotData) {
         if (sourceId && targetId) {
           const pastedConnection: Connection = {
             ...JSON.parse(JSON.stringify(connection)),
-            id: `${connection.id}_paste_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: `${connection.id}_paste_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
             source: sourceId,
             target: targetId
           };
@@ -478,7 +598,10 @@ export function useBotEditor(initialData?: BotData) {
     }
   }, []);
 
-  // Проверка наличия данных в буфере обмена
+  /**
+   * Проверяет наличие валидных данных в буфере обмена
+   * @returns true если в буфере есть валидные данные, false в противном случае
+   */
   const hasClipboardData = useCallback(() => {
     try {
       const clipboardDataStr = localStorage.getItem('bot-clipboard');
