@@ -7,12 +7,47 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { LayoutConfig } from './layout-manager';
 
+/**
+ * @interface BotInfo
+ * @description Информация о боте
+ * @property {string} first_name - Имя бота
+ * @property {string} [username] - Имя пользователя бота
+ * @property {string} [description] - Описание бота
+ * @property {string} [short_description] - Краткое описание бота
+ */
+
 interface BotInfo {
   first_name: string;
   username?: string;
   description?: string;
   short_description?: string;
 }
+
+/**
+ * @interface AdaptiveHeaderProps
+ * @description Свойства адаптивного заголовка
+ * @property {LayoutConfig} config - Конфигурация макета
+ * @property {string} projectName - Название проекта
+ * @property {BotInfo | null} [botInfo] - Информация о боте
+ * @property {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} currentTab - Текущая вкладка
+ * @property {(tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => void} onTabChange - Функция изменения вкладки
+ * @property {() => void} onExport - Функция экспорта
+ * @property {() => void} [onSaveAsTemplate] - Функция сохранения как шаблон
+ * @property {() => void} [onLoadTemplate] - Функция загрузки шаблона
+ * @property {() => void} [onLayoutSettings] - Функция настройки макета
+ * @property {() => void} [onToggleHeader] - Функция переключения видимости заголовка
+ * @property {() => void} [onToggleSidebar] - Функция переключения видимости боковой панели
+ * @property {() => void} [onToggleProperties] - Функция переключения видимости панели свойств
+ * @property {() => void} [onToggleCanvas] - Функция переключения видимости холста
+ * @property {() => void} [onToggleCode] - Функция переключения видимости панели кода
+ * @property {boolean} [headerVisible] - Видимость заголовка
+ * @property {boolean} [sidebarVisible] - Видимость боковой панели
+ * @property {boolean} [propertiesVisible] - Видимость панели свойств
+ * @property {boolean} [canvasVisible] - Видимость холста
+ * @property {boolean} [codeVisible] - Видимость панели кода
+ * @property {() => void} [onOpenMobileSidebar] - Функция открытия мобильной боковой панели
+ * @property {() => void} [onOpenMobileProperties] - Функция открытия мобильной панели свойств
+ */
 
 interface AdaptiveHeaderProps {
   config: LayoutConfig;
@@ -40,14 +75,21 @@ interface AdaptiveHeaderProps {
   onOpenMobileProperties?: () => void;
 }
 
-export function AdaptiveHeader({ 
+/**
+ * @function AdaptiveHeader
+ * @description Адаптивный компонент заголовка, который изменяет свое поведение в зависимости от конфигурации макета
+ * Поддерживает различные позиции заголовка и режимы отображения
+ * @param {AdaptiveHeaderProps} props - Свойства компонента
+ * @returns {JSX.Element} Адаптивный компонент заголовка
+ */
+export function AdaptiveHeader({
   config,
   projectName,
   botInfo,
-  currentTab, 
-  onTabChange, 
-  onExport, 
-  onSaveAsTemplate, 
+  currentTab,
+  onTabChange,
+  onExport,
+  onSaveAsTemplate,
   onLoadTemplate,
   onToggleHeader,
   onToggleSidebar,
@@ -62,26 +104,32 @@ export function AdaptiveHeader({
   onOpenMobileSidebar,
   onOpenMobileProperties
 }: AdaptiveHeaderProps) {
-  
+
   // Состояние для мобильного меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   // Проверка авторизации пользователя
   const { user, logout } = useTelegramAuth();
-  
+
+  /**
+   * @function handleTelegramLogin
+   * @description Обработчик входа через Telegram
+   * Открывает окно авторизации Telegram
+   * @returns {void}
+   */
   // Функция для открытия окна авторизации Telegram
   const handleTelegramLogin = () => {
     const width = 500;
     const height = 600;
     const left = window.innerWidth / 2 - width / 2;
     const top = window.innerHeight / 2 - height / 2;
-    
+
     window.open('/api/auth/login', 'telegram_login', `width=${width},height=${height},left=${left},top=${top}`);
   };
-  
+
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
-  
+
   // Определяем ориентацию заголовка
   const isVertical = config.headerPosition === 'left' || config.headerPosition === 'right';
   const isCompact = config.compactMode;
