@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -9,10 +8,10 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Layout, 
-  Settings, 
-  RotateCcw, 
+import {
+  Layout,
+  Settings,
+  RotateCcw,
   ArrowUp,
   ArrowDown,
   ArrowLeft,
@@ -23,22 +22,24 @@ import {
   Sliders,
   Grid,
   Save,
-  Eye,
-  EyeOff,
   Palette,
   Zap,
   Download,
   Upload,
   Maximize2,
   Minimize2,
-  Move,
-  ArrowUpDown,
-  ArrowLeftRight,
-  LayoutDashboard,
-  Smartphone,
-  Tablet
-} from 'lucide-react';
+  LayoutDashboard} from 'lucide-react';
 
+/**
+ * @interface SimpleLayoutElement
+ * @description Описывает элемент макета интерфейса
+ * @property {string} id - Уникальный идентификатор элемента
+ * @property {'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'dialog' | 'userDetails'} type - Тип элемента интерфейса
+ * @property {string} name - Отображаемое имя элемента
+ * @property {'top' | 'bottom' | 'left' | 'right' | 'center'} position - Позиция элемента в макете
+ * @property {number} size - Размер элемента в процентах
+ * @property {boolean} visible - Видимость элемента
+ */
 export interface SimpleLayoutElement {
   id: string;
   type: 'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'dialog' | 'userDetails';
@@ -48,18 +49,37 @@ export interface SimpleLayoutElement {
   visible: boolean;
 }
 
+/**
+ * @interface SimpleLayoutConfig
+ * @description Описывает конфигурацию простого макета интерфейса
+ * @property {SimpleLayoutElement[]} elements - Массив элементов макета
+ * @property {boolean} compactMode - Режим компактного отображения
+ * @property {boolean} showGrid - Показывать сетку макета
+ */
 export interface SimpleLayoutConfig {
   elements: SimpleLayoutElement[];
   compactMode: boolean;
   showGrid: boolean;
 }
 
+/**
+ * @interface SimpleLayoutCustomizerProps
+ * @description Свойства компонента настройки макета
+ * @property {SimpleLayoutConfig} config - Текущая конфигурация макета
+ * @property {(config: SimpleLayoutConfig) => void} onConfigChange - Функция обратного вызова для обновления конфигурации
+ * @property {React.ReactNode} [children] - Дочерние элементы компонента
+ */
 interface SimpleLayoutCustomizerProps {
   config: SimpleLayoutConfig;
   onConfigChange: (config: SimpleLayoutConfig) => void;
   children?: React.ReactNode;
 }
 
+/**
+ * @constant DEFAULT_CONFIG
+ * @description Конфигурация макета по умолчанию
+ * @type {SimpleLayoutConfig}
+ */
 const DEFAULT_CONFIG: SimpleLayoutConfig = {
   elements: [
     {
@@ -99,6 +119,13 @@ const DEFAULT_CONFIG: SimpleLayoutConfig = {
   showGrid: true
 };
 
+/**
+ * @function SimpleLayoutCustomizer
+ * @description Компонент для настройки макета интерфейса
+ * Позволяет пользователю настраивать расположение и видимость элементов интерфейса
+ * @param {SimpleLayoutCustomizerProps} props - Свойства компонента
+ * @returns {JSX.Element} Компонент настройки макета
+ */
 export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
   config,
   onConfigChange,
@@ -107,6 +134,13 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [tempConfig, setTempConfig] = useState<SimpleLayoutConfig>(config);
 
+  /**
+   * @function handleElementUpdate
+   * @description Обработчик обновления свойств элемента макета
+   * @param {string} elementId - Идентификатор элемента для обновления
+   * @param {Partial<SimpleLayoutElement>} updates - Обновляемые свойства элемента
+   * @returns {void}
+   */
   const handleElementUpdate = useCallback((elementId: string, updates: Partial<SimpleLayoutElement>) => {
     setTempConfig(prev => ({
       ...prev,
@@ -118,22 +152,46 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
     }));
   }, []);
 
+  /**
+   * @function handleApply
+   * @description Обработчик применения изменений конфигурации
+   * Вызывает функцию обратного вызова с новой конфигурацией и закрывает диалог
+   * @returns {void}
+   */
   const handleApply = useCallback(() => {
     onConfigChange(tempConfig);
     setIsOpen(false);
   }, [tempConfig, onConfigChange]);
 
+  /**
+   * @function handleCancel
+   * @description Обработчик отмены изменений
+   * Восстанавливает исходную конфигурацию и закрывает диалог
+   * @returns {void}
+   */
   const handleCancel = useCallback(() => {
     setTempConfig(config);
     setIsOpen(false);
   }, [config]);
 
+  /**
+   * @function handleReset
+   * @description Обработчик сброса настроек к значениям по умолчанию
+   * Устанавливает конфигурацию в значение по умолчанию
+   * @returns {void}
+   */
   const handleReset = useCallback(() => {
     setTempConfig(DEFAULT_CONFIG);
   }, []);
 
 
 
+  /**
+   * @function getIcon
+   * @description Возвращает иконку для указанного типа элемента
+   * @param {string} type - Тип элемента макета
+   * @returns {JSX.Element} Иконка, соответствующая типу элемента
+   */
   const getIcon = (type: string) => {
     switch (type) {
       case 'header':
@@ -149,6 +207,12 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
     }
   };
 
+  /**
+   * @function getPositionIcon
+   * @description Возвращает иконку для указанной позиции элемента
+   * @param {string} position - Позиция элемента в макете
+   * @returns {JSX.Element | null} Иконка, соответствующая позиции элемента, или null
+   */
   const getPositionIcon = (position: string) => {
     switch (position) {
       case 'top':
@@ -472,4 +536,8 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
   );
 };
 
+/**
+ * @exports SimpleLayoutCustomizer
+ * @description Экспортирует компонент SimpleLayoutCustomizer по умолчанию
+ */
 export default SimpleLayoutCustomizer;
