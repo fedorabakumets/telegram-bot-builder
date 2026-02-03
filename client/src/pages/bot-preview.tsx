@@ -1,16 +1,30 @@
+/**
+ * @fileoverview Компонент предварительного просмотра бота
+ *
+ * Этот компонент предоставляет интерфейс для предварительного просмотра
+ * телеграм-бота с возможностью взаимодействия с ним в режиме чата.
+ *
+ * @module BotPreview
+ */
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Header } from '@/components/editor/header';
 import { useQuery } from '@tanstack/react-query';
-import { BotProject, Node, Connection, BotData, BotDataWithSheets } from '@shared/schema';
+import { BotProject, Node, BotData } from '@shared/schema';
 import { parseCommandFromText } from '@/lib/commands';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { ArrowLeft, Send, Phone, MessageCircle, Users, Bot } from 'lucide-react';
 import { SheetsManager } from '@/utils/sheets-manager';
 
-// Функция для рендеринга markdown в HTML
+/**
+ * Функция для рендеринга markdown в HTML
+ *
+ * @param {string} text - Текст с markdown разметкой
+ * @returns {string} Текст с HTML разметкой
+ */
 const renderMarkdown = (text: string): string => {
   return text
     // Жирный текст: **text** → <strong>text</strong>
@@ -25,32 +39,65 @@ const renderMarkdown = (text: string): string => {
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>');
 };
 
+/**
+ * Компонент предварительного просмотра бота
+ *
+ * @returns {JSX.Element} Компонент предварительного просмотра бота
+ */
 export default function BotPreview() {
+  /**
+   * Функция навигации для перемещения между страницами
+   */
   const [, setLocation] = useLocation();
+
+  /**
+   * Параметры URL
+   */
   const params = useParams();
+
+  /**
+   * ID проекта из URL
+   * @type {number|null}
+   */
   const projectId = params.id ? parseInt(params.id) : null;
 
-  // Load project data
+  /**
+   * Запрос для загрузки данных проектов
+   *
+   * @type {Object}
+   * @property {BotProject[]} data - Данные проектов
+   */
   const { data: projects } = useQuery<BotProject[]>({
     queryKey: ['/api/projects'],
   });
 
+  /**
+   * Текущий проект, соответствующий ID из URL
+   * @type {BotProject|undefined}
+   */
   const currentProject = projects?.find(p => p.id === projectId);
 
-  // Extract nodes and connections from project data
+  /**
+   * Извлечение узлов и соединений из данных проекта
+   *
+   * @function getNodesAndConnections
+   * @returns {Object} Объект с узлами и соединениями
+   * @returns {Node[]} return.nodes - Массив узлов
+   * @returns {Connection[]} return.connections - Массив соединений
+   */
   const getNodesAndConnections = useCallback(() => {
     if (!currentProject?.data) return { nodes: [], connections: [] };
 
     const projectData = currentProject.data as any;
 
-    // Check if it's new format with sheets
+    // Проверяем, является ли формат новым с листами
     if (SheetsManager.isNewFormat(projectData)) {
       const activeSheet = SheetsManager.getActiveSheet(projectData);
       if (activeSheet) {
         return { nodes: activeSheet.nodes, connections: activeSheet.connections };
       }
     } else {
-      // Legacy format
+      // Устаревший формат
       const botData = projectData as BotData;
       return { nodes: botData.nodes || [], connections: botData.connections || [] };
     }
@@ -60,8 +107,16 @@ export default function BotPreview() {
 
   const { nodes, connections } = getNodesAndConnections();
 
-  // Preview state
+  /**
+   * Состояние ID текущего узла
+   * @type {string}
+   */
   const [currentNodeId, setCurrentNodeId] = useState<string>('');
+
+  /**
+   * История сообщений в чате
+   * @type {Array<Object>}
+   */
   const [messageHistory, setMessageHistory] = useState<Array<{
     id: string;
     type: 'bot' | 'user';
@@ -74,19 +129,52 @@ export default function BotPreview() {
     mediaCaption?: string;
     mediaData?: any;
   }>>([]);
+
+  /**
+   * Текущая клавиатура ответов
+   * @type {Array<Object>|null}
+   */
   const [currentReplyKeyboard, setCurrentReplyKeyboard] = useState<Array<{ text: string; target?: string; action?: string; }> | null>(null);
+
+  /**
+   * Текст ввода пользователя
+   * @type {string}
+   */
   const [textInput, setTextInput] = useState('');
+
+  /**
+   * Флаг ожидания ввода от пользователя
+   * @type {boolean}
+   */
   const [waitingForInput, setWaitingForInput] = useState(false);
+
+  /**
+   * Ссылка на элемент ввода
+   */
   const inputRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Ссылка на область чата
+   */
   const chatAreaRef = useRef<HTMLDivElement>(null);
 
-  // Find start node or first node
+  /**
+   * Начальный узел (стартовый или первый)
+   * @type {Node|undefined}
+   */
   const startNode = nodes.find(node => node.type === 'start') || nodes[0];
 
-  // Helper function to find next node based on connections
-  const findNextNode = (currentNodeId: string, isSuccess: boolean = true) => {
+  /**
+   * Вспомогательная функция для поиска следующего узла на основе соединений
+   *
+   * @function findNextNode
+   * @param {string} currentNodeId - ID текущего узла
+   * @param {boolean} _isSuccess - Флаг успеха (не используется)
+   * @returns {Node|null} Следующий узел или null, если не найден
+   */
+  const findNextNode = (currentNodeId: string, _isSuccess: boolean = true) => {
     const fromConnections = connections.filter(conn => conn.source === currentNodeId);
-    
+
     if (fromConnections.length === 0) {
       return null;
     }
@@ -95,7 +183,13 @@ export default function BotPreview() {
     return nextConnection ? nodes.find(node => node.id === nextConnection.target) : null;
   };
 
-  // Helper function to get media information from a node
+  /**
+   * Вспомогательная функция для получения информации о медиа из узла
+   *
+   * @function getMediaInfo
+   * @param {Node} node - Узел, из которого извлекается информация о медиа
+   * @returns {Object|null} Объект с информацией о медиа или null
+   */
   const getMediaInfo = (node: Node) => {
     switch (node.type) {
       case 'photo':
@@ -194,14 +288,21 @@ export default function BotPreview() {
     }
   };
 
-  // Process node and add to chat
+  /**
+   * Обработка узла и добавление его в чат
+   *
+   * @function processNode
+   * @param {Node} node - Узел для обработки
+   * @param {string} [userMessage] - Сообщение пользователя (опционально)
+   * @returns {void}
+   */
   const processNode = useCallback((node: Node, userMessage?: string) => {
     if (!node) return;
 
     const now = new Date();
     const timeString = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-    // Add user message first if provided
+    // Добавляем сообщение пользователя, если оно предоставлено
     if (userMessage) {
       setMessageHistory(prev => [...prev, {
         id: `user-${Date.now()}`,
@@ -211,10 +312,10 @@ export default function BotPreview() {
       }]);
     }
 
-    // Get media info for the node
+    // Получаем информацию о медиа для узла
     const mediaInfo = getMediaInfo(node);
 
-    // Create bot message
+    // Создаем сообщение бота
     const botMessage: any = {
       id: node.id,
       type: 'bot',
@@ -224,16 +325,16 @@ export default function BotPreview() {
       keyboardType: 'none'
     };
 
-    // Add media info if present
+    // Добавляем информацию о медиа, если она есть
     if (mediaInfo) {
       Object.assign(botMessage, mediaInfo);
     }
 
-    // Handle different node types
+    // Обрабатываем различные типы узлов
     switch (node.type) {
       case 'message':
       case 'start':
-        // Add buttons if they exist
+        // Добавляем кнопки, если они существуют
         if (node.data.buttons && node.data.buttons.length > 0) {
           botMessage.buttons = node.data.buttons.map((btn: any) => ({
             text: btn.text,
@@ -254,7 +355,7 @@ export default function BotPreview() {
         break;
 
       case 'condition':
-        // For condition nodes, automatically proceed to next node
+        // Для условных узлов автоматически переходим к следующему узлу
         const nextNode = findNextNode(node.id, true);
         if (nextNode) {
           setTimeout(() => processNode(nextNode), 500);
@@ -263,24 +364,24 @@ export default function BotPreview() {
         break;
     }
 
-    // Add bot message to history
+    // Добавляем сообщение бота в историю
     setMessageHistory(prev => [...prev, botMessage]);
 
-    // Set current reply keyboard
+    // Устанавливаем текущую клавиатуру ответов
     if (botMessage.buttons && botMessage.buttons.length > 0 && botMessage.keyboardType === 'reply') {
       setCurrentReplyKeyboard(botMessage.buttons);
     } else if (botMessage.keyboardType === 'inline' || botMessage.keyboardType === 'none') {
       setCurrentReplyKeyboard(null);
     }
 
-    // Auto scroll to bottom
+    // Автоматическая прокрутка вниз
     setTimeout(() => {
       if (chatAreaRef.current) {
         chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
       }
     }, 100);
 
-    // Check for auto transition first
+    // Проверяем автопередачу сначала
     if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
       console.log(`⚡ Автопереход от ${node.id} к ${node.data.autoTransitionTo}`);
       const autoTransitionNode = nodes.find(n => n.id === node.data.autoTransitionTo);
@@ -290,8 +391,8 @@ export default function BotPreview() {
         return;
       }
     }
-    
-    // If not an input node and not a node with buttons, automatically proceed to next
+
+    // Если это не узел ввода и не узел с кнопками, автоматически переходим к следующему
     if (!(node.type === 'keyboard' && node.data.action === 'input') && (!botMessage.buttons || botMessage.buttons.length === 0)) {
       const nextNode = findNextNode(node.id);
       if (nextNode) {
@@ -302,12 +403,21 @@ export default function BotPreview() {
     setCurrentNodeId(node.id);
   }, [connections, findNextNode, nodes]);
 
-  // Handle button click
+  /**
+   * Обработка клика по кнопке
+   *
+   * @function handleButtonClick
+   * @param {Object} button - Объект кнопки
+   * @param {string} button.text - Текст кнопки
+   * @param {string} [button.target] - Целевой узел
+   * @param {string} [button.action] - Действие кнопки
+   * @returns {void}
+   */
   const handleButtonClick = (button: { text: string; target?: string; action?: string; }) => {
     const now = new Date();
     const timeString = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-    // Add user message
+    // Добавляем сообщение пользователя
     setMessageHistory(prev => [...prev, {
       id: `user-${Date.now()}`,
       type: 'user',
@@ -315,17 +425,17 @@ export default function BotPreview() {
       time: timeString
     }]);
 
-    // Clear reply keyboard after button click
+    // Очищаем клавиатуру ответов после клика по кнопке
     setCurrentReplyKeyboard(null);
 
-    // Find target node and process it
+    // Находим целевой узел и обрабатываем его
     if (button.target) {
       const targetNode = nodes.find(node => node.id === button.target);
       if (targetNode) {
         setTimeout(() => processNode(targetNode), 500);
       }
     } else {
-      // If no target, find next node from current
+      // Если нет цели, находим следующий узел из текущего
       const nextNode = findNextNode(currentNodeId);
       if (nextNode) {
         setTimeout(() => processNode(nextNode), 500);
@@ -333,14 +443,19 @@ export default function BotPreview() {
     }
   };
 
-  // Handle text input
+  /**
+   * Обработка текстового ввода
+   *
+   * @function handleSendMessage
+   * @returns {void}
+   */
   const handleSendMessage = () => {
     if (!textInput.trim()) return;
 
     const now = new Date();
     const timeString = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-    // Add user message
+    // Добавляем сообщение пользователя
     setMessageHistory(prev => [...prev, {
       id: `user-${Date.now()}`,
       type: 'user',
@@ -352,13 +467,13 @@ export default function BotPreview() {
     setTextInput('');
     setWaitingForInput(false);
 
-    // Parse command if it starts with '/'
+    // Разбор команды, если она начинается с '/'
     if (inputText.startsWith('/')) {
       const command = parseCommandFromText(inputText);
       if (command && command.command) {
-        // Find node with matching command
-        const commandNode = nodes.find(node => 
-          node.data.command === command.command || 
+        // Поиск узла с соответствующей командой
+        const commandNode = nodes.find(node =>
+          node.data.command === command.command ||
           (node.data.text || node.data.messageText)?.includes(command.command)
         );
         if (commandNode) {
@@ -368,7 +483,7 @@ export default function BotPreview() {
       }
     }
 
-    // For input nodes, proceed to next node
+    // Для узлов ввода переходим к следующему узлу
     const currentNode = nodes.find(node => node.id === currentNodeId);
     if (currentNode?.type === 'keyboard' && currentNode.data.action === 'input') {
       const nextNode = findNextNode(currentNodeId);
@@ -378,7 +493,13 @@ export default function BotPreview() {
     }
   };
 
-  // Handle keyboard enter
+  /**
+   * Обработка нажатия клавиши Enter
+   *
+   * @function handleKeyPress
+   * @param {React.KeyboardEvent} e - Объект события клавиатуры
+   * @returns {void}
+   */
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -386,56 +507,93 @@ export default function BotPreview() {
     }
   };
 
-  // Handle reply keyboard button click
+  /**
+   * Обработка клика по кнопке клавиатуры ответов
+   *
+   * @function handleReplyKeyboardClick
+   * @param {Object} button - Объект кнопки
+   * @param {string} button.text - Текст кнопки
+   * @param {string} [button.target] - Целевой узел
+   * @param {string} [button.action] - Действие кнопки
+   * @returns {void}
+   */
   const handleReplyKeyboardClick = (button: { text: string; target?: string; action?: string; }) => {
     setTextInput(button.text);
     handleSendMessage();
   };
 
-  // Reset chat
+  /**
+   * Сброс чата
+   *
+   * @function resetChat
+   * @returns {void}
+   */
   const resetChat = () => {
     setMessageHistory([]);
     setCurrentNodeId('');
     setCurrentReplyKeyboard(null);
     setTextInput('');
     setWaitingForInput(false);
-    
+
     if (startNode) {
       setTimeout(() => processNode(startNode), 500);
     }
   };
 
-  // Initialize chat when component mounts or nodes change
+  /**
+   * Инициализация чата при монтировании компонента или изменении узлов
+   */
   useEffect(() => {
     if (startNode && messageHistory.length === 0) {
       processNode(startNode);
     }
   }, [startNode, processNode, messageHistory.length]);
 
-  // Go back to editor
+  /**
+   * Возврат к редактору
+   *
+   * @function handleGoBack
+   * @returns {void}
+   */
   const handleGoBack = () => {
     setLocation(`/editor/${projectId}`);
   };
 
-  // Handle tab change for header
+  /**
+   * Обработка изменения вкладки для заголовка
+   *
+   * @function handleTabChange
+   * @param {'editor' | 'preview' | 'export' | 'bot'} tab - Выбранная вкладка
+   * @returns {void}
+   */
   const handleTabChange = (tab: 'editor' | 'preview' | 'export' | 'bot') => {
     if (tab === 'editor') {
       handleGoBack();
     } else if (tab === 'preview') {
-      // Already on preview
+      // Уже на вкладке предварительного просмотра
       return;
     }
-    // Other tabs would need navigation logic if implemented
+    // Для других вкладок потребуется логика навигации, если она реализована
   };
 
-  // Handle save (no-op for preview)
+  /**
+   * Обработка сохранения (пустая операция для предварительного просмотра)
+   *
+   * @function handleSave
+   * @returns {void}
+   */
   const handleSave = () => {
-    // Preview page doesn't save
+    // Страница предварительного просмотра не сохраняет
   };
 
-  // Handle export (could navigate to export or show modal)
+  /**
+   * Обработка экспорта (может осуществлять навигацию к экспорту или показывать модальное окно)
+   *
+   * @function handleExport
+   * @returns {void}
+   */
   const handleExport = () => {
-    // Could implement export functionality
+    // Можно реализовать функциональность экспорта
   };
 
   if (!currentProject) {
