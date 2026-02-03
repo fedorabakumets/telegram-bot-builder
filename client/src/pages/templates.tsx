@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link, useLocation } from 'wouter';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,19 +9,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield, ArrowLeft, Layout } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { BotTemplate } from '@shared/schema';
 import type { BotData } from '@/types/bot';
-import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { SimpleLayoutCustomizer, SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 import { FlexibleLayout } from '@/components/layout/flexible-layout';
 
+/**
+ * Интерфейс свойств компонента TemplatesPage
+ * Определяет возможные параметры, которые могут быть переданы в компонент
+ */
 interface TemplatesPageProps {
+  /** Функция обратного вызова, вызываемая при выборе шаблона */
   onSelectTemplate?: (template: BotTemplate) => void;
 }
 
+/**
+ * Компонент страницы шаблонов
+ *
+ * Отображает список доступных шаблонов ботов с возможностью поиска, фильтрации,
+ * просмотра деталей, оценки и использования шаблонов.
+ *
+ * @param props - свойства компонента
+ * @param props.onSelectTemplate - функция обратного вызова при выборе шаблона
+ * @returns JSX элемент страницы шаблонов
+ */
 export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,7 +100,12 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     staleTime: 0, // Always refetch when needed
   });
 
-  // Мутация для увеличения счетчика использования
+  /**
+   * Мутация для увеличения счетчика использования шаблона
+   *
+   * Эта мутация вызывается при использовании шаблона пользователем
+   * и увеличивает счетчик использования на сервере.
+   */
   const useTemplateMutation = useMutation({
     mutationFn: async (templateId: number) => {
       const response = await fetch(`/api/templates/${templateId}/use`, {
@@ -100,7 +119,12 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     },
   });
 
-  // Мутация для оценки шаблона
+  /**
+   * Мутация для оценки шаблона
+   *
+   * Позволяет пользователю оценить шаблон, отправляя рейтинг на сервер.
+   * После успешной оценки инвалидирует кэш шаблонов и показывает уведомление.
+   */
   const rateTemplateMutation = useMutation({
     mutationFn: async ({ templateId, rating }: { templateId: number; rating: number }) => {
       const response = await fetch(`/api/templates/${templateId}/rate`, {
@@ -120,7 +144,12 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     },
   });
 
-  // Мутация для удаления шаблона
+  /**
+   * Мутация для удаления шаблона
+   *
+   * Позволяет пользователю удалить собственный шаблон из библиотеки.
+   * После успешного удаления инвалидирует кэш шаблонов и показывает уведомление.
+   */
   const deleteTemplateMutation = useMutation({
     mutationFn: async (templateId: number) => {
       const response = await fetch(`/api/templates/${templateId}`, {
@@ -139,7 +168,12 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     },
   });
 
-  // Мутация для лайка шаблона
+  /**
+   * Мутация для лайка шаблона
+   *
+   * Позволяет пользователю отметить шаблон как понравившийся.
+   * После успешного лайка инвалидирует кэш шаблонов и показывает уведомление.
+   */
   const likeTemplateMutation = useMutation({
     mutationFn: async ({ templateId, liked }: { templateId: number; liked: boolean }) => {
       const response = await fetch(`/api/templates/${templateId}/like`, {
@@ -159,7 +193,12 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     },
   });
 
-  // Мутация для добавления в закладки
+  /**
+   * Мутация для добавления шаблона в закладки
+   *
+   * Позволяет пользователю добавить шаблон в избранные для быстрого доступа.
+   * После успешного добавления инвалидирует кэш шаблонов и показывает уведомление.
+   */
   const bookmarkTemplateMutation = useMutation({
     mutationFn: async ({ templateId, bookmarked }: { templateId: number; bookmarked: boolean }) => {
       const response = await fetch(`/api/templates/${templateId}/bookmark`, {
@@ -179,7 +218,12 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     },
   });
 
-  // Мутация для скачивания шаблона
+  /**
+   * Мутация для скачивания шаблона
+   *
+   * Увеличивает счетчик скачиваний шаблона при его использовании.
+   * После успешного скачивания инвалидирует кэш шаблонов.
+   */
   const downloadTemplateMutation = useMutation({
     mutationFn: async (templateId: number) => {
       const response = await fetch(`/api/templates/${templateId}/download`, {
@@ -206,10 +250,19 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     { value: 'custom', label: 'Пользовательские' },
   ];
 
+  /**
+   * Функция для получения статистики шаблона
+   *
+   * Вычисляет количество узлов, связей, команд и кнопок в шаблоне.
+   * Обрабатывает как обычные, так и многолистовые шаблоны.
+   *
+   * @param data - данные шаблона (BotData или любой другой объект с узлами и связями)
+   * @returns объект с количеством узлов, связей, команд и кнопок
+   */
   const getTemplateStats = (data: BotData | any) => {
     let allNodes: any[] = [];
     let allConnections: any[] = [];
-    
+
     // Проверяем, это многолистовой шаблон или обычный
     if (data.sheets && Array.isArray(data.sheets)) {
       // Многолистовой шаблон - собираем все узлы и связи из всех листов
@@ -226,7 +279,7 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
       allNodes = data.nodes || [];
       allConnections = data.connections || [];
     }
-    
+
     const nodes = allNodes.length;
     const connections = allConnections.length;
     const commands = allNodes.filter(node => node.type === 'command').length;
@@ -282,20 +335,29 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     return sorted;
   }, [templates, featuredTemplates, myTemplates, currentTab, searchTerm, selectedCategory, sortBy]);
 
+  /**
+   * Обработчик использования шаблона
+   *
+   * Вызывается при выборе пользователем шаблона для использования.
+   * Обновляет счетчики использования и скачиваний, сохраняет шаблон в localStorage
+   * и перенаправляет пользователя в редактор.
+   *
+   * @param template - выбранный шаблон
+   */
   const handleUseTemplate = (template: BotTemplate) => {
     useTemplateMutation.mutate(template.id);
     downloadTemplateMutation.mutate(template.id);
-    
+
     if (onSelectTemplate) {
       onSelectTemplate(template);
     } else {
       // Сохраняем выбранный шаблон в localStorage для загрузки в редакторе
       localStorage.setItem('selectedTemplate', JSON.stringify(template));
-      
+
       // Пытаемся получить ID текущего проекта из истории браузера или localStorage
       const lastProjectId = localStorage.getItem('lastProjectId');
       const referrer = document.referrer;
-      
+
       // Если пришли из редактора, возвращаемся туда
       if (referrer && referrer.includes('/editor/') && lastProjectId) {
         setLocation(`/editor/${lastProjectId}`);
@@ -304,38 +366,78 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
         setLocation('/');
       }
     }
-    
+
     toast({
       title: 'Шаблон загружен!',
       description: `Шаблон "${template.name}" будет применен к вашему проекту`,
     });
   };
 
+  /**
+   * Обработчик предварительного просмотра шаблона
+   *
+   * Открывает модальное окно с деталями выбранного шаблона.
+   *
+   * @param template - шаблон для предварительного просмотра
+   */
   const handlePreview = (template: BotTemplate) => {
     setSelectedTemplate(template);
     setShowPreview(true);
   };
 
+  /**
+   * Обработчик оценки шаблона
+   *
+   * Отправляет оценку шаблона на сервер.
+   *
+   * @param template - шаблон для оценки
+   * @param rating - оценка (от 1 до 5)
+   */
   const handleRateTemplate = (template: BotTemplate, rating: number) => {
     rateTemplateMutation.mutate({ templateId: template.id, rating });
   };
 
+  /**
+   * Обработчик удаления шаблона
+   *
+   * Запрашивает подтверждение и удаляет шаблон, если пользователь подтверждает.
+   *
+   * @param template - шаблон для удаления
+   */
   const handleDeleteTemplate = (template: BotTemplate) => {
     if (confirm(`Вы уверены, что хотите удалить шаблон "${template.name}"?`)) {
       deleteTemplateMutation.mutate(template.id);
     }
   };
 
-  const TemplateGrid = ({ 
-    templates, 
-    isLoading, 
-    onPreview, 
-    onUse, 
-    onRate, 
-    onDelete, 
-    searchTerm, 
+  /**
+   * Компонент сетки шаблонов
+   *
+   * Отображает шаблоны в виде сетки карточек с возможностью просмотра,
+   * использования, оценки и удаления.
+   *
+   * @param props - свойства компонента
+   * @param props.templates - массив шаблонов для отображения
+   * @param props.isLoading - флаг загрузки данных
+   * @param props.onPreview - функция обратного вызова для предварительного просмотра
+   * @param props.onUse - функция обратного вызова для использования шаблона
+   * @param props.onRate - функция обратного вызова для оценки шаблона
+   * @param props.onDelete - функция обратного вызова для удаления шаблона
+   * @param props.searchTerm - строка поиска
+   * @param props.selectedCategory - выбранная категория
+   * @param props.showDeleteButton - флаг отображения кнопки удаления
+   * @returns JSX элемент сетки шаблонов
+   */
+  const TemplateGrid = ({
+    templates,
+    isLoading,
+    onPreview,
+    onUse,
+    onRate,
+    onDelete,
+    searchTerm,
     selectedCategory,
-    showDeleteButton = false 
+    showDeleteButton = false
   }: {
     templates: BotTemplate[];
     isLoading: boolean;
@@ -580,9 +682,18 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     );
   };
 
+  /**
+   * Компонент предварительного просмотра шаблона
+   *
+   * Отображает детали выбранного шаблона с основной статистикой и кнопкой использования.
+   *
+   * @param props - свойства компонента
+   * @param props.template - шаблон для предварительного просмотра
+   * @returns JSX элемент предварительного просмотра шаблона
+   */
   const TemplatePreview = ({ template }: { template: BotTemplate }) => {
     const stats = getTemplateStats(template.data as BotData);
-    
+
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -591,11 +702,11 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
             Закрыть
           </Button>
         </div>
-        
+
         {template.description && (
           <p className="text-muted-foreground">{template.description}</p>
         )}
-        
+
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="p-3 bg-muted dark:bg-muted/50 rounded-lg">
             <div className="font-medium">Узлов</div>
@@ -614,7 +725,7 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
             <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.buttons}</div>
           </div>
         </div>
-        
+
         {template.tags && template.tags.length > 0 && (
           <div>
             <h4 className="font-medium mb-2">Теги:</h4>
@@ -625,7 +736,7 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
             </div>
           </div>
         )}
-        
+
         <div className="flex gap-2 pt-4">
           <Button onClick={() => handleUseTemplate(template)} className="flex-1">
             <Download className="h-4 w-4 mr-2" />
@@ -941,4 +1052,7 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
   );
 }
 
+/**
+ * Экспортируем компонент TemplatesPage по умолчанию
+ */
 export default TemplatesPage;
