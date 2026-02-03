@@ -1,7 +1,19 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Eye, EyeOff, Layout, Sidebar, Square, Settings } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
+/**
+ * @interface VisibilityControlsProps
+ * @description Свойства компонента управления видимостью
+ * @property {boolean} headerVisible - Видимость заголовка
+ * @property {boolean} sidebarVisible - Видимость боковой панели
+ * @property {boolean} canvasVisible - Видимость холста
+ * @property {boolean} propertiesVisible - Видимость панели свойств
+ * @property {() => void} onToggleHeader - Функция переключения видимости заголовка
+ * @property {() => void} onToggleSidebar - Функция переключения видимости боковой панели
+ * @property {() => void} onToggleCanvas - Функция переключения видимости холста
+ * @property {() => void} onToggleProperties - Функция переключения видимости панели свойств
+ */
 interface VisibilityControlsProps {
   headerVisible: boolean;
   sidebarVisible: boolean;
@@ -13,6 +25,13 @@ interface VisibilityControlsProps {
   onToggleProperties: () => void;
 }
 
+/**
+ * @function VisibilityControls
+ * @description Компонент управления видимостью элементов интерфейса
+ * Отображает панель с кнопками для переключения видимости различных элементов интерфейса
+ * @param {VisibilityControlsProps} props - Свойства компонента
+ * @returns {JSX.Element | null} Компонент управления видимостью или null, если все элементы видимы
+ */
 export function VisibilityControls({
   headerVisible,
   sidebarVisible,
