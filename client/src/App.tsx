@@ -22,7 +22,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ServerStatus } from "@/components/server-status";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import type { TelegramUser } from "@/hooks/use-telegram-auth";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
