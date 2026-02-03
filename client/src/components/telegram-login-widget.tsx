@@ -1,9 +1,7 @@
-import React, { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramAuth, type TelegramUser } from '@/hooks/use-telegram-auth';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
-import { queryClient } from '@/lib/queryClient';
 
 /**
  * Интерфейс информации о боте Telegram
@@ -24,7 +22,7 @@ interface BotInfo {
  * Свойства компонента TelegramLoginWidget
  * @interface TelegramLoginWidgetProps
  * @property {BotInfo | null} [botInfo] - Информация о боте (опционально)
- * @property {Function} [onAuth] - Коллбэк, вызываемый при успешной аутентификации
+ * @property {Function} [onAuth] - Коллбэк, вызываемый при успешной аутентификации (в настоящее время не используется в компоненте)
  * @property {Function} [onLogout] - Коллбэк, вызываемый при выходе из системы
  */
 interface TelegramLoginWidgetProps {
@@ -60,10 +58,10 @@ declare global {
  */
 export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLoginWidgetProps) {
   const { toast } = useToast();
-  const { user, login, logout, isLoading } = useTelegramAuth();
+  const { user, logout, isLoading } = useTelegramAuth();
 
   // Используем username бота из env или botInfo
-  let botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || botInfo?.username;
+  let botUsername = (import.meta as any).env.VITE_TELEGRAM_BOT_USERNAME || botInfo?.username;
 
   // Удаляем @ в начале если есть
   if (botUsername && botUsername.startsWith('@')) {
