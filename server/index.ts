@@ -4,6 +4,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { stopCleanup } from "./cache";
+import { shutdownAllBots } from "./graceful-shutdown";
 
 /**
  * Основное приложение Express
@@ -122,11 +123,33 @@ app.use((req, res, next) => {
   });
 
   // Корректное завершение работы
-  process.on('SIGTERM', () => {
+  process.on('SIGTERM', async () => {
     log('получен сигнал SIGTERM: закрытие HTTP-сервера');
+    await shutdownAllBots();
     stopCleanup();
     server.close(() => {
       log('HTTP-сервер закрыт');
+    });
+  });
+
+  process.on('SIGINT', async () => {
+    log('получен сигнал SIGINT (Ctrl+C): закрытие HTTP-сервера');
+    await shutdownAllBots();
+    stopCleanup();
+    server.close(() => {
+      log('HTTP-сервер закрыт');
+      process.exit(0);
+    });
+  });
+
+  // Обработка SIGHUP (часто используется в терминалах)
+  process.on('SIGHUP', async () => {
+    log('получен сигнал SIGHUP: закрытие HTTP-сервера');
+    await shutdownAllBots();
+    stopCleanup();
+    server.close(() => {
+      log('HTTP-сервер закрыт');
+      process.exit(0);
     });
   });
 })();
