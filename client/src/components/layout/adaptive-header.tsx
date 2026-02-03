@@ -79,8 +79,8 @@ interface AdaptiveHeaderProps {
  * @function AdaptiveHeader
  * @description Адаптивный компонент заголовка, который изменяет свое поведение в зависимости от конфигурации макета
  * Поддерживает различные позиции заголовка и режимы отображения
- * @param {AdaptiveHeaderProps} props - Свойства компонента
- * @returns {JSX.Element} Адаптивный компонент заголовка
+ * @param props - Свойства компонента
+ * @returns Адаптивный компонент заголовка
  */
 export function AdaptiveHeader({
   config,
@@ -115,7 +115,7 @@ export function AdaptiveHeader({
    * @function handleTelegramLogin
    * @description Обработчик входа через Telegram
    * Открывает окно авторизации Telegram
-   * @returns {void}
+   * @returns
    */
   // Функция для открытия окна авторизации Telegram
   const handleTelegramLogin = () => {
