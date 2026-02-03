@@ -476,12 +476,12 @@ export default function BotPreview() {
 
     // Разбор команды, если она начинается с '/'
     if (inputText.startsWith('/')) {
-      const command = parseCommandFromText(inputText);
-      if (command && command.command) {
+      const parsedCommand = parseCommandFromText(inputText);
+      if (parsedCommand) {
         // Поиск узла с соответствующей командой
         const commandNode = nodes.find(node =>
-          node.data.command === command.command ||
-          (node.data.text || node.data.messageText)?.includes(command.command)
+          node.data.command === parsedCommand ||
+          (node.data.text || node.data.messageText)?.includes(parsedCommand)
         );
         if (commandNode) {
           setTimeout(() => processNode(commandNode), 500);
