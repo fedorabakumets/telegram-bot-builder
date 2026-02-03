@@ -242,7 +242,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return messagesArray;
   }
 
-  // Telegram users
+  // Пользователи Telegram
   async getTelegramUser(id: number): Promise<TelegramUserDB | undefined> {
     const [user] = await this.db.select().from(telegramUsers).where(eq(telegramUsers.id, id));
     return user || undefined;
