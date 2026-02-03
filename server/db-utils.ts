@@ -1,20 +1,35 @@
 import { db, pool } from './db';
 import { sql } from 'drizzle-orm';
 
-// Database connection monitoring and optimization utilities
+/**
+ * Класс для управления и мониторинга подключения к базе данных
+ * Предоставляет функции для проверки работоспособности, оптимизации соединений,
+ * выполнения операций с повторными попытками и другие утилиты для работы с базой данных
+ */
 export class DatabaseManager {
   private static instance: DatabaseManager;
   private healthCheckInterval: NodeJS.Timeout | null = null;
+
+  /**
+   * Статистика подключения к базе данных
+   */
   private connectionStats = {
-    totalConnections: 0,
-    activeConnections: 0,
-    idleConnections: 0,
-    errors: 0,
-    lastHealthCheck: new Date()
+    totalConnections: 0,      // Общее количество соединений
+    activeConnections: 0,     // Активные соединения
+    idleConnections: 0,       // Неиспользуемые соединения
+    errors: 0,                // Количество ошибок
+    lastHealthCheck: new Date() // Время последней проверки работоспособности
   };
 
+  /**
+   * Приватный конструктор для реализации паттерна Singleton
+   */
   private constructor() { }
 
+  /**
+   * Получить экземпляр класса DatabaseManager (реализация паттерна Singleton)
+   * @returns Экземпляр класса DatabaseManager
+   */
   static getInstance(): DatabaseManager {
     if (!DatabaseManager.instance) {
       DatabaseManager.instance = new DatabaseManager();
@@ -22,7 +37,10 @@ export class DatabaseManager {
     return DatabaseManager.instance;
   }
 
-  // Start monitoring database health
+  /**
+   * Запускает мониторинг работоспособности базы данных
+   * @param intervalMs Интервал проверки в миллисекундах (по умолчанию 30000 мс)
+   */
   startHealthMonitoring(intervalMs: number = 30000): void {
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
@@ -32,30 +50,35 @@ export class DatabaseManager {
       try {
         await this.performHealthCheck();
       } catch (error) {
-        console.error('Database health check failed:', error);
+        console.error('Проверка работоспособности базы данных не удалась:', error);
         this.connectionStats.errors++;
       }
     }, intervalMs);
 
-    console.log('Database health monitoring started');
+    console.log('Мониторинг работоспособности базы данных запущен');
   }
 
-  // Stop monitoring
+  /**
+   * Останавливает мониторинг работоспособности базы данных
+   */
   stopHealthMonitoring(): void {
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
       this.healthCheckInterval = null;
     }
-    console.log('Database health monitoring stopped');
+    console.log('Мониторинг работоспособности базы данных остановлен');
   }
 
-  // Perform health check
+  /**
+   * Выполняет проверку работоспособности базы данных
+   * @returns Promise<boolean> - true, если проверка прошла успешно, иначе false
+   */
   async performHealthCheck(): Promise<boolean> {
     try {
-      // Test connection with a simple query
+      // Проверка соединения с помощью простого запроса
       await db.execute(sql`SELECT 1 as health`);
 
-      // Update connection stats if pool is available
+      // Обновление статистики соединений, если пул доступен
       if (pool) {
         this.connectionStats.totalConnections = pool.totalCount || 0;
         this.connectionStats.activeConnections = (pool.totalCount || 0) - (pool.idleCount || 0);
@@ -63,17 +86,20 @@ export class DatabaseManager {
       }
       this.connectionStats.lastHealthCheck = new Date();
 
-      console.log('Database health check passed');
+      console.log('Проверка работоспособности базы данных прошла успешно');
       return true;
     } catch (error: any) {
-      console.error('Database health check failed:', error?.message);
-      console.error('Detailed error:', error);
+      console.error('Проверка работоспособности базы данных не удалась:', error?.message);
+      console.error('Подробная ошибка:', error);
       this.connectionStats.errors++;
       return false;
     }
   }
 
-  // Get connection statistics
+  /**
+   * Получает статистику подключения к базе данных
+   * @returns Объект со статистикой подключения
+   */
   getConnectionStats() {
     return {
       ...this.connectionStats,
@@ -87,40 +113,49 @@ export class DatabaseManager {
     };
   }
 
-  // Optimize database connections
+  /**
+   * Оптимизирует соединения с базой данных
+   * @returns Promise<void>
+   */
   async optimizeConnections(): Promise<void> {
     try {
-      // Close idle connections if there are too many
+      // Закрытие неиспользуемых соединений, если их слишком много
       if (this.connectionStats.idleConnections > 5) {
-        console.log('Optimizing database connections...');
-        // Note: pg_terminate_backend requires superuser privileges
-        // Instead, we'll just log the optimization attempt
-        console.log('Would optimize connections if superuser privileges were available');
+        console.log('Оптимизация соединений с базой данных...');
+        // Примечание: pg_terminate_backend требует прав суперпользователя
+        // Вместо этого просто регистрируем попытку оптимизации
+        console.log('Оптимизация соединений возможна при наличии прав суперпользователя');
       }
 
-      // Try to analyze database performance (if pg_stat_statements is available)
+      // Попытка анализа производительности базы данных (если pg_stat_statements доступна)
       try {
         const slowQueries = await db.execute(sql`
           SELECT query, calls, total_exec_time, mean_exec_time
-          FROM pg_stat_statements 
-          WHERE mean_exec_time > 1000 
-          ORDER BY mean_exec_time DESC 
+          FROM pg_stat_statements
+          WHERE mean_exec_time > 1000
+          ORDER BY mean_exec_time DESC
           LIMIT 10
         `);
 
         if (slowQueries.rows.length > 0) {
-          console.log('Found slow queries:', slowQueries.rows);
+          console.log('Найдены медленные запросы:', slowQueries.rows);
         }
       } catch (error) {
-        // pg_stat_statements might not be available, that's okay
-        console.log('pg_stat_statements not available, skipping slow query analysis');
+        // pg_stat_statements может быть недоступна, это нормально
+        console.log('pg_stat_statements недоступна, пропускаем анализ медленных запросов');
       }
     } catch (error: any) {
-      console.warn('Connection optimization warning:', error?.message);
+      console.warn('Предупреждение об оптимизации соединений:', error?.message);
     }
   }
 
-  // Execute query with retry logic
+  /**
+   * Выполняет операцию с базой данных с логикой повторных попыток
+   * @param operation Функция, представляющая операцию с базой данных
+   * @param maxRetries Максимальное количество повторных попыток (по умолчанию 3)
+   * @param retryDelay Задержка между попытками в миллисекундах (по умолчанию 1000)
+   * @returns Promise<T> Результат выполнения операции
+   */
   async executeWithRetry<T>(
     operation: () => Promise<T>,
     maxRetries: number = 3,
@@ -133,13 +168,13 @@ export class DatabaseManager {
         return await operation();
       } catch (error) {
         lastError = error as Error;
-        console.warn(`Database operation failed (attempt ${attempt}/${maxRetries}):`, error);
+        console.warn(`Операция с базой данных не удалась (попытка ${attempt}/${maxRetries}):`, error);
 
         if (attempt === maxRetries) {
           break;
         }
 
-        // Wait before retry
+        // Ожидание перед повторной попыткой
         await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
       }
     }
@@ -147,7 +182,11 @@ export class DatabaseManager {
     throw lastError;
   }
 
-  // Transaction wrapper with automatic rollback
+  /**
+   * Обертка для выполнения транзакции с автоматическим откатом
+   * @param operation Функция, представляющая операции в транзакции
+   * @returns Promise<T> Результат выполнения транзакции
+   */
   async transaction<T>(
     operation: (txDb: any) => Promise<T>
   ): Promise<T> {
@@ -156,64 +195,74 @@ export class DatabaseManager {
         const result = await operation(tx);
         return result;
       } catch (error: any) {
-        console.error('Detailed error:', error?.message, error?.stack);
-        throw new Error(`Transaction failed: ${error?.message || 'Unknown error'}`);
+        console.error('Подробная ошибка:', error?.message, error?.stack);
+        throw new Error(`Транзакция не удалась: ${error?.message || 'Неизвестная ошибка'}`);
       }
     });
   }
 
-  // Backup database (basic implementation)
+  /**
+   * Создает резервную копию базы данных (базовая реализация)
+   * @returns Promise<string> Имя файла резервной копии
+   */
   async createBackup(): Promise<string> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupName = `backup_${timestamp}`;
 
     try {
-      // This is a simplified backup - in production you'd use pg_dump
+      // Это упрощенная резервная копия - в продакшене следует использовать pg_dump
       await db.execute(sql`
         SELECT pg_terminate_backend(pid)
         FROM pg_stat_activity
         WHERE datname = current_database() AND pid <> pg_backend_pid()
       `);
 
-      console.log(`Backup created: ${backupName}`);
+      console.log(`Резервная копия создана: ${backupName}`);
       return backupName;
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      throw new Error(`Backup operation failed: ${error?.message || 'Unknown error'}`);
+      console.error('Подробная ошибка:', error?.message, error?.stack);
+      throw new Error(`Операция резервного копирования не удалась: ${error?.message || 'Неизвестная ошибка'}`);
     }
   }
 
-  // Clean up old data
+  /**
+   * Очищает старые данные из базы данных
+   * @param daysToKeep Количество дней хранения данных (по умолчанию 30)
+   * @returns Promise<void>
+   */
   async cleanupOldData(daysToKeep: number = 30): Promise<void> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
     try {
-      // Clean up old bot instances
+      // Очистка старых экземпляров ботов
       const cleanupResult = await db.execute(sql`
-        DELETE FROM bot_instances 
+        DELETE FROM bot_instances
         WHERE status = 'stopped' AND stopped_at < ${cutoffDate}
       `);
 
-      console.log(`Cleaned up ${cleanupResult.rowCount} old bot instances`);
+      console.log(`Очищено ${cleanupResult.rowCount} старых экземпляров ботов`);
 
-      // Clean up old user interactions (optional)
+      // Очистка старых взаимодействий пользователей (опционально)
       await db.execute(sql`
-        DELETE FROM user_bot_data 
+        DELETE FROM user_bot_data
         WHERE is_active = 0 AND updated_at < ${cutoffDate}
       `);
 
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      throw new Error(`Cleanup operation failed: ${error?.message || 'Unknown error'}`);
+      console.error('Подробная ошибка:', error?.message, error?.stack);
+      throw new Error(`Операция очистки не удалась: ${error?.message || 'Неизвестная ошибка'}`);
     }
   }
 
-  // Get database metrics
+  /**
+   * Получает метрики базы данных
+   * @returns Promise<any[]> Массив с метриками таблиц базы данных
+   */
   async getDatabaseMetrics() {
     try {
       const metrics = await db.execute(sql`
-        SELECT 
+        SELECT
           schemaname,
           tablename,
           n_tup_ins as inserts,
@@ -227,23 +276,32 @@ export class DatabaseManager {
 
       return metrics.rows;
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
+      console.error('Подробная ошибка:', error?.message, error?.stack);
       return [];
     }
   }
 }
 
-// Export singleton instance
+/**
+ * Экземпляр менеджера базы данных (реализация паттерна Singleton)
+ */
 export const dbManager = DatabaseManager.getInstance();
 
-// Auto-start monitoring when module is imported
+// Автоматический запуск мониторинга при импорте модуля
 dbManager.startHealthMonitoring();
 
-// Graceful shutdown
+/**
+ * Обработка корректного завершения работы приложения
+ * Останавливает мониторинг работоспособности базы данных
+ */
 process.on('SIGTERM', () => {
   dbManager.stopHealthMonitoring();
 });
 
+/**
+ * Обработка завершения работы через сигнал прерывания
+ * Останавливает мониторинг работоспособности базы данных
+ */
 process.on('SIGINT', () => {
   dbManager.stopHealthMonitoring();
 });
