@@ -1,12 +1,25 @@
+/**
+ * @fileoverview Модуль для создания дополнительных файлов бота
+ *
+ * Этот файл предоставляет функции для создания сопутствующих файлов бота,
+ * таких как requirements.txt, README.md, Dockerfile, config.yaml и JSON-файл с данными проекта.
+ */
+
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { URL } from "node:url";
 
-// Функция для создания всех дополнительных файлов бота
-
+/**
+ * Создает все дополнительные файлы для бота
+ *
+ * @param projectId - Идентификатор проекта
+ * @param tokenId - Идентификатор токена
+ * @param botName - Имя бота
+ * @param botData - Данные проекта бота
+ * @returns Массив путей к созданным файлам
+ */
 export async function createBotAssets(
-  projectId: number, 
-  tokenId: number, 
+  projectId: number,
+  tokenId: number,
   botName: string,
   botData: any
 ): Promise<string[]> {
