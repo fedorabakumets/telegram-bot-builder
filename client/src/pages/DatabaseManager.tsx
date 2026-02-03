@@ -1,4 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+/**
+ * @fileoverview Компонент управления базой данных
+ *
+ * Этот компонент предоставляет интерфейс для управления базой данных,
+ * включая создание резервных копий, восстановление из резервных копий,
+ * загрузку и скачивание резервных копий, а также просмотр статистики
+ * базы данных.
+ *
+ * @module DatabaseManager
+ */
+
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,33 +19,42 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useLocation } from 'wouter';
-import { 
-  Download, 
-  Upload, 
-  Database, 
-  Shield, 
-  Trash2, 
-  RefreshCw, 
-  FileText, 
-  Calendar, 
-  HardDrive, 
+import {
+  Download,
+  Upload,
+  Database,
+  Shield,
+  Trash2,
+  RefreshCw,
+  FileText,
+  Calendar,
+  HardDrive,
   BarChart3,
   AlertTriangle,
   CheckCircle,
-  Clock,
-  Settings,
   Archive,
   CloudDownload,
   Plus,
-  ArrowLeft,
-  Home
-} from 'lucide-react';
+  ArrowLeft} from 'lucide-react';
 
+/**
+ * Интерфейс файла резервной копии
+ *
+ * @interface BackupFile
+ * @property {string} filename - Имя файла резервной копии
+ * @property {string} filepath - Путь к файлу резервной копии
+ * @property {number} size - Размер файла в байтах
+ * @property {Date} created - Дата создания резервной копии
+ * @property {Object} [metadata] - Метаданные резервной копии
+ * @property {string} metadata.version - Версия резервной копии
+ * @property {string} metadata.timestamp - Временная метка создания
+ * @property {string} [metadata.description] - Описание резервной копии
+ * @property {string[]} metadata.tables - Список таблиц в резервной копии
+ */
 interface BackupFile {
   filename: string;
   filepath: string;
@@ -48,6 +68,17 @@ interface BackupFile {
   };
 }
 
+/**
+ * Интерфейс статистики базы данных
+ *
+ * @interface DatabaseStats
+ * @property {Array<Object>} tables - Массив информации о таблицах
+ * @property {string} tables[].name - Название таблицы
+ * @property {number} tables[].count - Количество записей в таблице
+ * @property {string} tables[].size - Размер таблицы
+ * @property {number} totalRecords - Общее количество записей в базе данных
+ * @property {string} estimatedSize - Оценочный размер базы данных
+ */
 interface DatabaseStats {
   tables: Array<{
     name: string;
@@ -58,35 +89,97 @@ interface DatabaseStats {
   estimatedSize: string;
 }
 
+/**
+ * Компонент управления базой данных
+ *
+ * @returns {JSX.Element} Компонент управления базой данных
+ */
 export default function DatabaseManager() {
+  /**
+   * Функция навигации для перемещения между страницами
+   */
   const [, navigate] = useLocation();
+
+  /**
+   * Описание новой резервной копии
+   * @type {string}
+   */
   const [newBackupDescription, setNewBackupDescription] = useState('');
+
+  /**
+   * Загружаемый файл резервной копии
+   * @type {File | null}
+   */
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+
+  /**
+   * Флаг немедленного восстановления после загрузки
+   * @type {boolean}
+   */
   const [restoreImmediately, setRestoreImmediately] = useState(false);
+
+  /**
+   * Флаг очистки существующих данных при восстановлении
+   * @type {boolean}
+   */
   const [clearExisting, setClearExisting] = useState(false);
-  const [selectedBackup, setSelectedBackup] = useState<string | null>(null);
+
+  /**
+   * Состояние процесса загрузки
+   * @type {boolean}
+   */
   const [isUploading, setIsUploading] = useState(false);
+
+  /**
+   * Ссылка на элемент ввода файла
+   */
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Функция показа уведомлений
+   */
   const { toast } = useToast();
+
+  /**
+   * Клиент для работы с кэшем запросов
+   */
   const queryClient = useQueryClient();
 
-  // Получить список резервных копий
+  /**
+   * Запрос для получения списка резервных копий
+   *
+   * @type {Object}
+   * @property {Array<BackupFile>} data - Данные резервных копий
+   * @property {boolean} isLoading - Состояние загрузки
+   */
   const { data: backupsData, isLoading: backupsLoading } = useQuery({
     queryKey: ['database/backups'],
     queryFn: () => apiRequest('GET', '/api/database/backups'),
     staleTime: 30000
   });
 
-  // Получить статистику базы данных
+  /**
+   * Запрос для получения статистики базы данных
+   *
+   * @type {Object}
+   * @property {DatabaseStats} data - Данные статистики базы данных
+   * @property {boolean} isLoading - Состояние загрузки
+   */
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['database/stats'],
     queryFn: () => apiRequest('GET', '/api/database/stats/detailed'),
     staleTime: 60000
   });
 
-  // Мутация для создания резервной копии
+  /**
+   * Мутация для создания резервной копии
+   *
+   * @type {Object}
+   * @property {Function} mutate - Функция вызова мутации
+   * @property {boolean} isPending - Состояние выполнения
+   */
   const createBackupMutation = useMutation({
-    mutationFn: (description: string) => 
+    mutationFn: (description: string) =>
       apiRequest('POST', '/api/database/backup', { description }),
     onSuccess: () => {
       toast({
@@ -105,9 +198,15 @@ export default function DatabaseManager() {
     }
   });
 
-  // Мутация для восстановления из резервной копии
+  /**
+   * Мутация для восстановления из резервной копии
+   *
+   * @type {Object}
+   * @property {Function} mutate - Функция вызова мутации
+   * @property {boolean} isPending - Состояние выполнения
+   */
   const restoreBackupMutation = useMutation({
-    mutationFn: ({ filename, options }: { filename: string; options: any }) => 
+    mutationFn: ({ filename, options }: { filename: string; options: any }) =>
       apiRequest('POST', '/api/database/restore', { filename, options }),
     onSuccess: () => {
       toast({
@@ -125,9 +224,15 @@ export default function DatabaseManager() {
     }
   });
 
-  // Мутация для удаления резервной копии
+  /**
+   * Мутация для удаления резервной копии
+   *
+   * @type {Object}
+   * @property {Function} mutate - Функция вызова мутации
+   * @property {boolean} isPending - Состояние выполнения
+   */
   const deleteBackupMutation = useMutation({
-    mutationFn: (filename: string) => 
+    mutationFn: (filename: string) =>
       apiRequest('DELETE', `/api/database/backup/${filename}`),
     onSuccess: () => {
       toast({
@@ -145,7 +250,13 @@ export default function DatabaseManager() {
     }
   });
 
-  // Обработчик загрузки файла
+  /**
+   * Обработчик загрузки файла резервной копии
+   *
+   * @async
+   * @function handleFileUpload
+   * @returns {Promise<void>} Промис, разрешающийся после завершения загрузки
+   */
   const handleFileUpload = async () => {
     if (!uploadFile) return;
 
@@ -162,7 +273,7 @@ export default function DatabaseManager() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         toast({
           title: "Файл загружен",
@@ -187,7 +298,13 @@ export default function DatabaseManager() {
     }
   };
 
-  // Обработчик скачивания резервной копии
+  /**
+   * Обработчик скачивания резервной копии
+   *
+   * @function handleDownloadBackup
+   * @param {string} filename - Имя файла резервной копии для скачивания
+   * @returns {void}
+   */
   const handleDownloadBackup = (filename: string) => {
     const downloadUrl = `/api/database/backup/${filename}`;
     const link = document.createElement('a');
@@ -198,7 +315,13 @@ export default function DatabaseManager() {
     document.body.removeChild(link);
   };
 
-  // Форматирование размера файла
+  /**
+   * Форматирование размера файла в удобочитаемый формат
+   *
+   * @function formatFileSize
+   * @param {number} bytes - Размер файла в байтах
+   * @returns {string} Размер файла в удобочитаемом формате (например, "1.2 MB")
+   */
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -207,7 +330,16 @@ export default function DatabaseManager() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  /**
+   * Список резервных копий из данных запроса
+   * @type {BackupFile[]}
+   */
   const backups: BackupFile[] = backupsData?.backups || [];
+
+  /**
+   * Статистика базы данных из данных запроса
+   * @type {DatabaseStats}
+   */
   const stats: DatabaseStats = statsData?.stats || { tables: [], totalRecords: 0, estimatedSize: 'N/A' };
 
   return (
