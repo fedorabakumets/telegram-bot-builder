@@ -259,11 +259,30 @@ export class ConnectionManager {
    * @param action - тип действия кнопки
    * @returns текст кнопки
    */
-  private generateButtonText(targetNode: Node, action: 'goto' | 'command' | 'url'): string {
-    if (action === 'command' && targetNode.data.command) {
-      return targetNode.data.command;
+  private generateButtonText(targetNode: Node, action: 'goto' | 'command' | 'url' | 'contact' | 'location' | 'selection' | 'default'): string {
+    // Обработка специфичных для действия текстов
+    switch (action) {
+      case 'command':
+        if (targetNode.data.command) {
+          return targetNode.data.command;
+        }
+        break;
+      case 'contact':
+        return '👤 Отправить контакт';
+      case 'location':
+        return '📍 Отправить геолокацию';
+      case 'selection':
+        return '🔘 Выбор опции';
+      case 'default':
+        return '➡️ Продолжить';
+      case 'url':
+        return '🔗 Перейти по ссылке';
+      case 'goto':
+        // Для goto используем текст на основе типа узла
+        break;
     }
 
+    // Стандартные тексты на основе типа узла
     const textMap: Record<Node['type'], string> = {
       start: '🏠 Главное меню',
       message: targetNode.data.messageText?.slice(0, 25) + '...' || '💬 Сообщение',
