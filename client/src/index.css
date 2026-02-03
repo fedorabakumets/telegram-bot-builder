@@ -23,114 +23,130 @@
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * Переменные цветовой схемы для светлой темы
+ * Определяют основные цвета интерфейса, включая фон, текст, акцентные цвета и т.д.
+ */
 :root {
-  --background: hsl(240, 30%, 97%);
-  --foreground: hsl(240, 10%, 20%);
-  --muted: hsl(240, 20%, 91%);
-  --muted-foreground: hsl(240, 12%, 45%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(240, 10%, 20%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(240, 10%, 20%);
-  --border: hsl(240, 15%, 88%);
-  --input: hsl(240, 20%, 92%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(240, 20%, 91%);
-  --secondary-foreground: hsl(240, 10%, 25%);
-  --accent: hsl(240, 20%, 91%);
-  --accent-foreground: hsl(240, 10%, 25%);
-  --destructive: hsl(0, 75%, 63%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(240, 10%, 20%);
-  --radius: 0.5rem;
-  
-  /* Enhanced theme variables */
-  --success: hsl(142, 76%, 43%);
-  --success-foreground: hsl(355, 7%, 97%);
-  --warning: hsl(38, 92%, 55%);
-  --warning-foreground: hsl(48, 96%, 89%);
-  --info: hsl(199, 89%, 52%);
-  --info-foreground: hsl(210, 20%, 98%);
-  
-  /* Gradient colors */
-  --gradient-primary-start: hsl(207, 90%, 54%);
-  --gradient-primary-end: hsl(217, 100%, 64%);
-  --gradient-secondary-start: hsl(240, 20%, 91%);
-  --gradient-secondary-end: hsl(240, 20%, 85%);
-  
-  /* Shadow colors */
-  --shadow-light: hsl(240, 10%, 50% / 0.08);
-  --shadow-medium: hsl(240, 10%, 30% / 0.12);
-  --shadow-heavy: hsl(240, 10%, 10% / 0.15);
+  --background: hsl(240, 30%, 97%); /* Цвет фона */
+  --foreground: hsl(240, 10%, 20%); /* Основной цвет текста */
+  --muted: hsl(240, 20%, 91%); /* Приглушенный цвет */
+  --muted-foreground: hsl(240, 12%, 45%); /* Приглушенный цвет текста */
+  --popover: hsl(0, 0%, 100%); /* Цвет всплывающих окон */
+  --popover-foreground: hsl(240, 10%, 20%); /* Цвет текста всплывающих окон */
+  --card: hsl(0, 0%, 100%); /* Цвет карточек */
+  --card-foreground: hsl(240, 10%, 20%); /* Цвет текста карточек */
+  --border: hsl(240, 15%, 88%); /* Цвет границ */
+  --input: hsl(240, 20%, 92%); /* Цвет полей ввода */
+  --primary: hsl(207, 90%, 54%); /* Основной акцентный цвет */
+  --primary-foreground: hsl(211, 100%, 99%); /* Цвет текста на акцентном фоне */
+  --secondary: hsl(240, 20%, 91%); /* Вторичный цвет */
+  --secondary-foreground: hsl(240, 10%, 25%); /* Цвет текста на вторичном фоне */
+  --accent: hsl(240, 20%, 91%); /* Акцентный цвет */
+  --accent-foreground: hsl(240, 10%, 25%); /* Цвет текста на акцентном фоне */
+  --destructive: hsl(0, 75%, 63%); /* Цвет для опасных действий */
+  --destructive-foreground: hsl(60, 9.1%, 97.8%); /* Цвет текста для опасных действий */
+  --ring: hsl(240, 10%, 20%); /* Цвет кольца фокуса */
+  --radius: 0.5rem; /* Радиус скругления элементов */
+
+  /* Расширенные переменные темы */
+  --success: hsl(142, 76%, 43%); /* Цвет успеха */
+  --success-foreground: hsl(355, 7%, 97%); /* Цвет текста успеха */
+  --warning: hsl(38, 92%, 55%); /* Цвет предупреждения */
+  --warning-foreground: hsl(48, 96%, 89%); /* Цвет текста предупреждения */
+  --info: hsl(199, 89%, 52%); /* Цвет информации */
+  --info-foreground: hsl(210, 20%, 98%); /* Цвет текста информации */
+
+  /* Градиентные цвета */
+  --gradient-primary-start: hsl(207, 90%, 54%); /* Начальный цвет основного градиента */
+  --gradient-primary-end: hsl(217, 100%, 64%); /* Конечный цвет основного градиента */
+  --gradient-secondary-start: hsl(240, 20%, 91%); /* Начальный цвет вторичного градиента */
+  --gradient-secondary-end: hsl(240, 20%, 85%); /* Конечный цвет вторичного градиента */
+
+  /* Цвета теней */
+  --shadow-light: hsl(240, 10%, 50% / 0.08); /* Легкая тень */
+  --shadow-medium: hsl(240, 10%, 30% / 0.12); /* Средняя тень */
+  --shadow-heavy: hsl(240, 10%, 10% / 0.15); /* Тяжелая тень */
 }
 
+/**
+ * Переменные цветовой схемы для темной темы
+ * Определяют основные цвета интерфейса в темном режиме
+ */
 .dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 7%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 18%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(207, 90%, 60%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(240, 3.7%, 20%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(240, 3.7%, 20%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 75%, 60%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
-  --radius: 0.5rem;
-  
-  /* Enhanced dark theme variables */
-  --success: hsl(142, 76%, 45%);
-  --success-foreground: hsl(355, 7%, 97%);
-  --warning: hsl(38, 92%, 55%);
-  --warning-foreground: hsl(48, 96%, 89%);
-  --info: hsl(199, 89%, 55%);
-  --info-foreground: hsl(210, 20%, 98%);
-  
-  /* Dark gradient colors */
-  --gradient-primary-start: hsl(207, 90%, 60%);
-  --gradient-primary-end: hsl(217, 100%, 70%);
-  --gradient-secondary-start: hsl(240, 3.7%, 20%);
-  --gradient-secondary-end: hsl(240, 3.7%, 30%);
-  
-  /* Dark shadow colors */
-  --shadow-light: hsl(0, 0%, 0% / 0.2);
-  --shadow-medium: hsl(0, 0%, 0% / 0.3);
-  --shadow-heavy: hsl(0, 0%, 0% / 0.5);
-  
-  /* Surface colors for better depth */
-  --surface-1: hsl(240, 8%, 8%);
-  --surface-2: hsl(240, 8%, 12%);
-  --surface-3: hsl(240, 8%, 16%);
-  
-  /* Glass effect colors */
-  --glass-bg: hsl(240, 10%, 10% / 0.8);
-  --glass-border: hsl(240, 10%, 30% / 0.2);
-  
-  /* Switch colors for better visibility */
-  --switch-unchecked-bg: hsl(240, 8%, 25%);
-  --switch-unchecked-border: hsl(240, 10%, 40%);
-  --switch-unchecked-thumb: hsl(240, 5%, 60%);
+  --background: hsl(240, 10%, 3.9%); /* Цвет фона */
+  --foreground: hsl(0, 0%, 98%); /* Основной цвет текста */
+  --muted: hsl(240, 3.7%, 15.9%); /* Приглушенный цвет */
+  --muted-foreground: hsl(240, 5%, 64.9%); /* Приглушенный цвет текста */
+  --popover: hsl(240, 10%, 3.9%); /* Цвет всплывающих окон */
+  --popover-foreground: hsl(0, 0%, 98%); /* Цвет текста всплывающих окон */
+  --card: hsl(240, 10%, 7%); /* Цвет карточек */
+  --card-foreground: hsl(0, 0%, 98%); /* Цвет текста карточек */
+  --border: hsl(240, 3.7%, 18%); /* Цвет границ */
+  --input: hsl(240, 3.7%, 15.9%); /* Цвет полей ввода */
+  --primary: hsl(207, 90%, 60%); /* Основной акцентный цвет */
+  --primary-foreground: hsl(211, 100%, 99%); /* Цвет текста на акцентном фоне */
+  --secondary: hsl(240, 3.7%, 20%); /* Вторичный цвет */
+  --secondary-foreground: hsl(0, 0%, 98%); /* Цвет текста на вторичном фоне */
+  --accent: hsl(240, 3.7%, 20%); /* Акцентный цвет */
+  --accent-foreground: hsl(0, 0%, 98%); /* Цвет текста на акцентном фоне */
+  --destructive: hsl(0, 75%, 60%); /* Цвет для опасных действий */
+  --destructive-foreground: hsl(0, 0%, 98%); /* Цвет текста для опасных действий */
+  --ring: hsl(240, 4.9%, 83.9%); /* Цвет кольца фокуса */
+  --radius: 0.5rem; /* Радиус скругления элементов */
+
+  /* Расширенные переменные темной темы */
+  --success: hsl(142, 76%, 45%); /* Цвет успеха */
+  --success-foreground: hsl(355, 7%, 97%); /* Цвет текста успеха */
+  --warning: hsl(38, 92%, 55%); /* Цвет предупреждения */
+  --warning-foreground: hsl(48, 96%, 89%); /* Цвет текста предупреждения */
+  --info: hsl(199, 89%, 55%); /* Цвет информации */
+  --info-foreground: hsl(210, 20%, 98%); /* Цвет текста информации */
+
+  /* Темные градиентные цвета */
+  --gradient-primary-start: hsl(207, 90%, 60%); /* Начальный цвет основного градиента */
+  --gradient-primary-end: hsl(217, 100%, 70%); /* Конечный цвет основного градиента */
+  --gradient-secondary-start: hsl(240, 3.7%, 20%); /* Начальный цвет вторичного градиента */
+  --gradient-secondary-end: hsl(240, 3.7%, 30%); /* Конечный цвет вторичного градиента */
+
+  /* Темные цвета теней */
+  --shadow-light: hsl(0, 0%, 0% / 0.2); /* Легкая тень */
+  --shadow-medium: hsl(0, 0%, 0% / 0.3); /* Средняя тень */
+  --shadow-heavy: hsl(0, 0%, 0% / 0.5); /* Тяжелая тень */
+
+  /* Поверхностные цвета для лучшей глубины */
+  --surface-1: hsl(240, 8%, 8%); /* Первый уровень поверхности */
+  --surface-2: hsl(240, 8%, 12%); /* Второй уровень поверхности */
+  --surface-3: hsl(240, 8%, 16%); /* Третий уровень поверхности */
+
+  /* Цвета эффекта стекла */
+  --glass-bg: hsl(240, 10%, 10% / 0.8); /* Фон стеклянного эффекта */
+  --glass-border: hsl(240, 10%, 30% / 0.2); /* Граница стеклянного эффекта */
+
+  /* Цвета переключателя для лучшей видимости */
+  --switch-unchecked-bg: hsl(240, 8%, 25%); /* Фон непроверенного переключателя */
+  --switch-unchecked-border: hsl(240, 10%, 40%); /* Граница непроверенного переключателя */
+  --switch-unchecked-thumb: hsl(240, 5%, 60%); /* Ползунок непроверенного переключателя */
 }
 
+/**
+ * Базовые стили для всех элементов
+ * Устанавливают общие свойства для всего приложения
+ */
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border; /* Применяет цвет границы из переменных темы */
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased bg-background text-foreground; /* Устанавливает шрифт, сглаживание и цвета фона и текста */
   }
 }
 
+/**
+ * Пользовательские утилиты для стилизации
+ * Определяют специфические классы для различных эффектов
+ */
 @layer utilities {
   .line-clamp-3 {
     display: -webkit-box;
@@ -139,42 +155,42 @@
     overflow: hidden;
   }
 
-  /* Hide scrollbar */
+  /* Скрытие полосы прокрутки */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 
-  /* Grid background patterns */
+  /* Шаблоны сетки фона */
   .bg-grid-small {
     background-image: radial-gradient(circle, hsl(var(--muted-foreground) / 0.3) 1px, transparent 1px);
     background-size: 20px 20px;
   }
-  
-  /* Enhanced Switch visibility in dark theme */
+
+  /* Улучшенная видимость переключателя в темной теме */
   .dark [data-state="unchecked"][role="switch"] {
     background-color: var(--switch-unchecked-bg) !important;
     border: 1px solid var(--switch-unchecked-border) !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.1) !important;
   }
-  
+
   .dark [data-state="unchecked"][role="switch"] > span {
     background-color: var(--switch-unchecked-thumb) !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
   }
-  
-  /* Hover effects for better interaction feedback */
+
+  /* Эффекты наведения для лучшей обратной связи при взаимодействии */
   .dark [data-state="unchecked"][role="switch"]:hover {
     background-color: hsl(240, 8%, 30%) !important;
     border-color: hsl(240, 10%, 50%) !important;
     transform: translateY(-1px);
     transition: all 0.2s ease;
   }
-  
+
   .dark [data-state="unchecked"][role="switch"]:hover > span {
     background-color: hsl(240, 5%, 70%) !important;
   }
@@ -190,274 +206,274 @@
   }
 }
 
-/* Custom scrollbar */
+/* Стилизация полосы прокрутки */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--muted);
+  background: var(--muted); /* Фон трека полосы прокрутки */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--muted-foreground);
+  background: var(--muted-foreground); /* Цвет ползунка полосы прокрутки */
   border-radius: 3px;
   transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground);
+  background: var(--foreground); /* Цвет ползунка при наведении */
 }
 
-/* Dark theme improvements */
+/* Улучшения темной темы */
 .dark {
-  color-scheme: dark;
+  color-scheme: dark; /* Устанавливает цветовую схему для правильного отображения системных элементов */
 }
 
-/* Smooth transitions for theme switching */
+/* Плавные переходы для переключения темы */
 * {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; /* Обеспечивает плавные переходы при смене темы */
 }
 
-/* Enhanced focus styles for dark theme */
+/* Улучшенные стили фокуса для темной темы */
 .dark .focus\:ring-primary:focus {
-  --tw-ring-color: hsl(var(--primary) / 0.5);
+  --tw-ring-color: hsl(var(--primary) / 0.5); /* Устанавливает цвет кольца фокуса */
 }
 
-/* Better shadow for dark theme */
+/* Лучшие тени для темной темы */
 .dark .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2); /* Улучшенная тень для больших элементов */
 }
 
 .dark .shadow-xl {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2); /* Улучшенная тень для очень больших элементов */
 }
 
-/* Enhanced hover effects for dark theme */
+/* Улучшенные эффекты наведения для темной темы */
 .dark .hover\:shadow-xl:hover {
-  box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.4), 0 15px 15px -5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.4), 0 15px 15px -5px rgba(0, 0, 0, 0.3); /* Улучшенная тень при наведении */
 }
 
-/* ResizablePanel enhancements for dark theme */
+/* Улучшения для панелей с изменяемым размером в темной теме */
 [data-panel-resize-handle-enabled="true"]:hover {
-  background: var(--primary) !important;
-  opacity: 0.8;
+  background: var(--primary) !important; /* Цвет фона при наведении */
+  opacity: 0.8; /* Прозрачность при наведении */
 }
 
 [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"] {
-  background: var(--primary) !important;
-  opacity: 1;
+  background: var(--primary) !important; /* Цвет фона при активном состоянии */
+  opacity: 1; /* Полная непрозрачность в активном состоянии */
 }
 
 .dark [data-panel-resize-handle-enabled="true"] {
-  background: hsl(var(--border));
-  box-shadow: 0 0 0 1px hsl(var(--border));
+  background: hsl(var(--border)); /* Цвет фона в темной теме */
+  box-shadow: 0 0 0 1px hsl(var(--border)); /* Тень границы */
 }
 
 .dark [data-panel-resize-handle-enabled="true"]:hover {
-  background: hsl(var(--primary) / 0.6) !important;
-  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.8);
+  background: hsl(var(--primary) / 0.6) !important; /* Цвет фона при наведении в темной теме */
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.8); /* Тень при наведении */
 }
 
 .dark [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"] {
-  background: hsl(var(--primary)) !important;
-  box-shadow: 0 0 0 1px hsl(var(--primary)), 0 0 8px hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary)) !important; /* Цвет фона в активном состоянии в темной теме */
+  box-shadow: 0 0 0 1px hsl(var(--primary)), 0 0 8px hsl(var(--primary) / 0.3); /* Тень в активном состоянии */
 }
 
-/* Enhanced resize handle cursor */
+/* Улучшенный курсор для ручки изменения размера */
 [data-panel-resize-handle-enabled="true"] {
-  cursor: col-resize;
-  transition: all 0.2s ease;
+  cursor: col-resize; /* Курсор изменения размера по горизонтали */
+  transition: all 0.2s ease; /* Плавный переход для всех свойств */
 }
 
 [data-panel-resize-handle-enabled="true"][data-panel-group-direction="vertical"] {
-  cursor: row-resize;
+  cursor: row-resize; /* Курсор изменения размера по вертикали */
 }
 
-/* Smooth panel transitions */
+/* Плавные переходы панелей */
 [data-panel-group] > [data-panel] {
-  transition: flex-basis 0.2s ease;
+  transition: flex-basis 0.2s ease; /* Плавный переход изменения размера панели */
 }
 
-/* Enhanced visual feedback for resize handles */
+/* Улучшенная визуальная обратная связь для ручек изменения размера */
 [data-panel-resize-handle-enabled="true"] {
-  position: relative;
-  isolation: isolate;
+  position: relative; /* Относительное позиционирование */
+  isolation: isolate; /* Изоляция слоя для правильного наложения */
 }
 
 [data-panel-resize-handle-enabled="true"]::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: transparent;
-  transition: background-color 0.15s ease;
-  z-index: -1;
+  background: transparent; /* Фон до наведения */
+  transition: background-color 0.15s ease; /* Плавный переход цвета фона */
+  z-index: -1; /* Позиционирование под элементом */
 }
 
 [data-panel-resize-handle-enabled="true"]:hover::before {
-  background: hsl(var(--primary) / 0.05);
+  background: hsl(var(--primary) / 0.05); /* Легкий фон при наведении */
 }
 
 .dark [data-panel-resize-handle-enabled="true"]:hover::before {
-  background: hsl(var(--primary) / 0.1);
+  background: hsl(var(--primary) / 0.1); /* Легкий фон при наведении в темной теме */
 }
 
 [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"]::before {
-  background: hsl(var(--primary) / 0.15);
-  animation: pulse-resize 0.6s ease-in-out infinite alternate;
+  background: hsl(var(--primary) / 0.15); /* Фон при активном состоянии */
+  animation: pulse-resize 0.6s ease-in-out infinite alternate; /* Анимация пульсации */
 }
 
 .dark [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"]::before {
-  background: hsl(var(--primary) / 0.2);
+  background: hsl(var(--primary) / 0.2); /* Фон при активном состоянии в темной теме */
 }
 
-/* Pulse animation for active resize handles */
+/* Анимация пульсации для активных ручек изменения размера */
 @keyframes pulse-resize {
   from {
-    background: hsl(var(--primary) / 0.1);
+    background: hsl(var(--primary) / 0.1); /* Начальный цвет фона */
   }
   to {
-    background: hsl(var(--primary) / 0.25);
+    background: hsl(var(--primary) / 0.25); /* Конечный цвет фона */
   }
 }
 
-/* Connection line animations */
+/* Анимации линий соединения */
 @keyframes dash {
-  0% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -20; }
+  0% { stroke-dashoffset: 0; } /* Начальное положение пунктирной линии */
+  100% { stroke-dashoffset: -20; } /* Конечное положение пунктирной линии */
 }
 
 @keyframes connection-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.3; } /* Начальная и конечная прозрачность */
+  50% { opacity: 1; } /* Средняя прозрачность */
 }
 
 @keyframes connection-glow {
-  0% { filter: drop-shadow(0 0 2px hsl(var(--primary) / 0.3)); }
-  50% { filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.6)); }
-  100% { filter: drop-shadow(0 0 2px hsl(var(--primary) / 0.3)); }
+  0% { filter: drop-shadow(0 0 2px hsl(var(--primary) / 0.3)); } /* Начальный эффект свечения */
+  50% { filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.6)); } /* Средний эффект свечения */
+  100% { filter: drop-shadow(0 0 2px hsl(var(--primary) / 0.3)); } /* Конечный эффект свечения */
 }
 
-/* Glow effect for dark theme */
+/* Эффект свечения для темной темы */
 .dark [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"] {
-  box-shadow: 
-    0 0 0 1px hsl(var(--primary)), 
+  box-shadow:
+    0 0 0 1px hsl(var(--primary)),
     0 0 8px hsl(var(--primary) / 0.3),
-    0 0 16px hsl(var(--primary) / 0.1);
+    0 0 16px hsl(var(--primary) / 0.1); /* Улучшенная тень в активном состоянии */
 }
 
-/* Improved handle visibility in dark theme */
+/* Улучшенная видимость ручки в темной теме */
 .dark [data-panel-resize-handle-enabled="true"] .grip-handle {
-  background: hsl(var(--muted));
-  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted)); /* Фон ручки захвата */
+  border: 1px solid hsl(var(--border)); /* Граница ручки захвата */
 }
 
 .dark [data-panel-resize-handle-enabled="true"]:hover .grip-handle {
-  background: hsl(var(--muted-foreground) / 0.1);
-  border-color: hsl(var(--primary) / 0.5);
-  box-shadow: 0 2px 4px hsl(var(--background) / 0.1);
+  background: hsl(var(--muted-foreground) / 0.1); /* Фон ручки захвата при наведении */
+  border-color: hsl(var(--primary) / 0.5); /* Цвет границы при наведении */
+  box-shadow: 0 2px 4px hsl(var(--background) / 0.1); /* Тень ручки захвата */
 }
 
-/* Smooth resize cursor transitions */
+/* Плавные переходы курсора изменения размера */
 body {
-  cursor-transition: cursor 0.1s ease;
+  cursor-transition: cursor 0.1s ease; /* Плавный переход курсора */
 }
 
-/* Panel borders enhancement for dark theme */
+/* Улучшение границ панелей для темной темы */
 .dark [data-panel-group] {
-  border-color: hsl(var(--border));
+  border-color: hsl(var(--border)); /* Цвет границы группы панелей */
 }
 
-/* Responsive resize handles */
+/* Адаптивные ручки изменения размера */
 @media (max-width: 768px) {
   [data-panel-resize-handle-enabled="true"] {
-    width: 8px !important;
+    width: 8px !important; /* Ширина ручки на мобильных устройствах */
   }
-  
+
   [data-panel-resize-handle-enabled="true"][data-panel-group-direction="vertical"] {
-    height: 8px !important;
+    height: 8px !important; /* Высота ручки на мобильных устройствах */
   }
-  
+
   .grip-handle {
-    width: 20px !important;
-    height: 24px !important;
+    width: 20px !important; /* Ширина ручки захвата */
+    height: 24px !important; /* Высота ручки захвата */
   }
 }
 
-/* Empty State Enhancements for Dark Theme */
+/* Улучшения для состояния "пусто" в темной теме */
 .empty-state-icon {
-  position: relative;
-  transition: transform 0.3s ease;
+  position: relative; /* Относительное позиционирование для эффектов */
+  transition: transform 0.3s ease; /* Плавный переход трансформации */
 }
 
 .empty-state-icon:hover {
-  transform: scale(1.05);
+  transform: scale(1.05); /* Увеличение при наведении */
 }
 
 .empty-state-icon::before {
   content: '';
   position: absolute;
-  inset: -4px;
-  background: linear-gradient(45deg, transparent, hsl(var(--primary) / 0.1), transparent);
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: -1;
+  inset: -4px; /* Позиционирование вокруг элемента */
+  background: linear-gradient(45deg, transparent, hsl(var(--primary) / 0.1), transparent); /* Градиентный фон */
+  border-radius: inherit; /* Наследование радиуса скругления */
+  opacity: 0; /* Невидимость по умолчанию */
+  transition: opacity 0.3s ease; /* Плавный переход прозрачности */
+  z-index: -1; /* Позиционирование под элементом */
 }
 
 .empty-state-icon:hover::before {
-  opacity: 1;
+  opacity: 1; /* Видимость при наведении */
 }
 
-/* Dark theme specific enhancements for empty state */
+/* Специфические улучшения темной темы для состояния "пусто" */
 .dark .empty-state-container {
-  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.3) 100%);
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.3) 100%); /* Градиентный фон контейнера */
 }
 
 .dark .empty-state-icon-bg {
-  background: linear-gradient(135deg, hsl(var(--muted) / 0.4) 0%, hsl(var(--muted) / 0.6) 100%);
-  border: 1px solid hsl(var(--border));
-  box-shadow: 
+  background: linear-gradient(135deg, hsl(var(--muted) / 0.4) 0%, hsl(var(--muted) / 0.6) 100%); /* Градиентный фон иконки */
+  border: 1px solid hsl(var(--border)); /* Граница иконки */
+  box-shadow:
     0 4px 6px -1px hsl(var(--background) / 0.1),
-    0 2px 4px -1px hsl(var(--background) / 0.06);
+    0 2px 4px -1px hsl(var(--background) / 0.06); /* Тени иконки */
 }
 
 .dark .empty-state-tip {
-  background: hsl(var(--muted) / 0.2);
-  border: 1px solid hsl(var(--border) / 0.5);
-  border-radius: 6px;
-  padding: 8px 12px;
-  transition: all 0.2s ease;
+  background: hsl(var(--muted) / 0.2); /* Фон подсказки */
+  border: 1px solid hsl(var(--border) / 0.5); /* Граница подсказки */
+  border-radius: 6px; /* Скругление углов подсказки */
+  padding: 8px 12px; /* Внутренние отступы подсказки */
+  transition: all 0.2s ease; /* Плавный переход всех свойств */
 }
 
 .dark .empty-state-tip:hover {
-  background: hsl(var(--muted) / 0.3);
-  border-color: hsl(var(--primary) / 0.3);
-  transform: translateY(-1px);
+  background: hsl(var(--muted) / 0.3); /* Изменение фона при наведении */
+  border-color: hsl(var(--primary) / 0.3); /* Изменение цвета границы */
+  transform: translateY(-1px); /* Легкое смещение при наведении */
 }
 
-/* Gradient text effect for dark theme */
+/* Эффект градиентного текста для темной темы */
 .dark .gradient-text {
-  background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--muted-foreground)) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--muted-foreground)) 100%); /* Градиентный фон текста */
+  -webkit-background-clip: text; /* Обрезка фона под текст */
+  -webkit-text-fill-color: transparent; /* Прозрачный цвет текста */
+  background-clip: text; /* Обрезка фона под текст */
 }
 
-/* Enhanced pulse animation for dark theme */
+/* Улучшенная анимация пульсации для темной темы */
 .dark .pulse-primary {
-  animation: pulse-primary-dark 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-primary-dark 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; /* Анимация пульсации */
 }
 
 @keyframes pulse-primary-dark {
   0%, 100% {
-    opacity: 0.3;
-    transform: scale(1);
+    opacity: 0.3; /* Начальная и конечная прозрачность */
+    transform: scale(1); /* Начальный и конечный масштаб */
   }
   50% {
-    opacity: 0.6;
-    transform: scale(1.05);
+    opacity: 0.6; /* Средняя прозрачность */
+    transform: scale(1.05); /* Средний масштаб */
   }
 }
 
