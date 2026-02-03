@@ -2,22 +2,28 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDrag, useDrop, DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { 
-  GripVertical, 
-  Move, 
-  RotateCcw, 
-  Layout, 
-  Eye, 
+import {
+  GripVertical,
+  RotateCcw,
+  Layout,
+  Eye,
   EyeOff,
   Lock,
-  Unlock,
-  Settings
-} from 'lucide-react';
+  Unlock} from 'lucide-react';
 
+/**
+ * @interface DraggableLayoutConfig
+ * @description Конфигурация перетаскиваемого макета
+ * @property {LayoutElement[]} elements - Массив элементов макета
+ * @property {number} gridSize - Размер сетки для привязки
+ * @property {boolean} snapToGrid - Включить привязку к сетке
+ * @property {boolean} showGrid - Показывать сетку
+ * @property {boolean} lockElements - Заблокировать элементы
+ * @property {boolean} previewMode - Режим предпросмотра
+ */
 export interface DraggableLayoutConfig {
   elements: LayoutElement[];
   gridSize: number;
@@ -27,6 +33,22 @@ export interface DraggableLayoutConfig {
   previewMode: boolean;
 }
 
+/**
+ * @interface LayoutElement
+ * @description Описывает элемент макета
+ * @property {string} id - Уникальный идентификатор элемента
+ * @property {'header' | 'sidebar' | 'canvas' | 'properties'} type - Тип элемента
+ * @property {{x: number; y: number}} position - Позиция элемента
+ * @property {{width: number; height: number}} size - Размер элемента
+ * @property {boolean} visible - Видимость элемента
+ * @property {boolean} locked - Заблокирован ли элемент
+ * @property {number} zIndex - Z-индекс элемента
+ * @property {{width: number; height: number}} minSize - Минимальный размер элемента
+ * @property {{width: number; height: number}} maxSize - Максимальный размер элемента
+ * @property {boolean} resizable - Можно ли изменять размер элемента
+ * @property {boolean} draggable - Можно ли перетаскивать элемент
+ * @property {React.ReactNode} [content] - Контент элемента
+ */
 export interface LayoutElement {
   id: string;
   type: 'header' | 'sidebar' | 'canvas' | 'properties';
@@ -417,6 +439,19 @@ export const DraggableLayout: React.FC<DraggableLayoutProps> = ({
   );
 };
 
+/**
+ * @function useDraggableLayout
+ * @description Хук для управления перетаскиваемым макетом
+ * Обеспечивает состояние и методы для работы с конфигурацией макета
+ * @returns {Object} Объект с состоянием и методами управления макетом
+ * @returns {DraggableLayoutConfig} return.config - Текущая конфигурация макета
+ * @returns {Function} return.updateConfig - Функция обновления конфигурации
+ * @returns {Function} return.moveElement - Функция перемещения элемента
+ * @returns {Function} return.resizeElement - Функция изменения размера элемента
+ * @returns {Function} return.toggleElementVisibility - Функция переключения видимости элемента
+ * @returns {Function} return.toggleElementLock - Функция переключения блокировки элемента
+ * @returns {Function} return.resetLayout - Функция сброса макета
+ */
 export const useDraggableLayout = () => {
   const [config, setConfig] = useState<DraggableLayoutConfig>({
     elements: DEFAULT_ELEMENTS,
@@ -427,27 +462,60 @@ export const useDraggableLayout = () => {
     previewMode: false,
   });
 
+  /**
+   * @function updateConfig
+   * @description Обновляет конфигурацию макета
+   * @param {Partial<DraggableLayoutConfig>} newConfig - Новая конфигурация
+   * @returns {void}
+   */
   const updateConfig = useCallback((newConfig: Partial<DraggableLayoutConfig>) => {
     setConfig(prev => ({ ...prev, ...newConfig }));
   }, []);
 
+  /**
+   * @function updateElement
+   * @description Обновляет элемент макета
+   * @param {string} id - Идентификатор элемента
+   * @param {Partial<LayoutElement>} updates - Обновления элемента
+   * @returns {void}
+   */
   const updateElement = useCallback((id: string, updates: Partial<LayoutElement>) => {
     setConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(el => 
+      elements: prev.elements.map(el =>
         el.id === id ? { ...el, ...updates } : el
       )
     }));
   }, []);
 
+  /**
+   * @function moveElement
+   * @description Перемещает элемент макета
+   * @param {string} id - Идентификатор элемента
+   * @param {{x: number; y: number}} position - Новая позиция элемента
+   * @returns {void}
+   */
   const moveElement = useCallback((id: string, position: { x: number; y: number }) => {
     updateElement(id, { position });
   }, [updateElement]);
 
+  /**
+   * @function resizeElement
+   * @description Изменяет размер элемента макета
+   * @param {string} id - Идентификатор элемента
+   * @param {{width: number; height: number}} size - Новый размер элемента
+   * @returns {void}
+   */
   const resizeElement = useCallback((id: string, size: { width: number; height: number }) => {
     updateElement(id, { size });
   }, [updateElement]);
 
+  /**
+   * @function toggleElementVisibility
+   * @description Переключает видимость элемента макета
+   * @param {string} id - Идентификатор элемента
+   * @returns {void}
+   */
   const toggleElementVisibility = useCallback((id: string) => {
     setConfig(prev => ({
       ...prev,
@@ -457,6 +525,12 @@ export const useDraggableLayout = () => {
     }));
   }, []);
 
+  /**
+   * @function toggleElementLock
+   * @description Переключает блокировку элемента макета
+   * @param {string} id - Идентификатор элемента
+   * @returns {void}
+   */
   const toggleElementLock = useCallback((id: string) => {
     setConfig(prev => ({
       ...prev,
@@ -466,6 +540,11 @@ export const useDraggableLayout = () => {
     }));
   }, []);
 
+  /**
+   * @function resetLayout
+   * @description Сбрасывает макет к значению по умолчанию
+   * @returns {void}
+   */
   const resetLayout = useCallback(() => {
     setConfig({
       elements: DEFAULT_ELEMENTS,
