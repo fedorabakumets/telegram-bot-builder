@@ -10,7 +10,7 @@ import { DatabaseStorage } from "./DatabaseStorage";
  */
 
 export class EnhancedDatabaseStorage extends DatabaseStorage {
-  // Override methods to add caching and monitoring
+  // Переопределение методов для добавления кэширования и мониторинга
   /**
    * Получить проект бота по ID с использованием кэширования
    * @param id - ID проекта
@@ -72,9 +72,9 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     });
   }
 
-  // Transaction support for complex operations
+  // Поддержка транзакций для сложных операций
   async createProjectWithTemplate(projectData: InsertBotProject, templateData: InsertBotTemplate): Promise<{ project: BotProject; template: BotTemplate; }> {
-    return await dbManager.transaction(async (tx) => {
+    return await dbManager.transaction(async (_tx) => {
       const project = await super.createBotProject(projectData);
       const template = await super.createBotTemplate({ ...templateData, authorId: project.id.toString() });
 
@@ -85,7 +85,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     });
   }
 
-  // Bulk operations with better performance
+  // Массовые операции с лучшей производительностью
   async bulkCreateTemplates(templates: InsertBotTemplate[]): Promise<BotTemplate[]> {
     return await dbManager.executeWithRetry(async () => {
       const results = await Promise.all(
@@ -96,7 +96,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     });
   }
 
-  // Enhanced statistics with caching
+  // Расширенная статистика с кэшированием
   async getDetailedStats(): Promise<{
     projects: number;
     templates: number;
@@ -122,33 +122,33 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     };
   }
 
-  // Database maintenance operations
+  // Операции обслуживания базы данных
   async performMaintenance(): Promise<void> {
-    console.log('Starting database maintenance...');
+    console.log('Запуск обслуживания базы данных...');
 
-    // Optimize connections
+    // Оптимизация соединений
     await dbManager.optimizeConnections();
 
-    // Clean up old data (older than 30 days)
+    // Очистка старых данных (старше 30 дней)
     await dbManager.cleanupOldData(30);
 
-    // Clear expired cache entries
+    // Очистка устаревших записей кэша
     cachedOps.cleanup();
 
-    console.log('Database maintenance completed');
+    console.log('Обслуживание базы данных завершено');
   }
 
-  // Backup operations
+  // Операции резервного копирования
   async createBackup(): Promise<string> {
     return await dbManager.createBackup();
   }
 
-  // Health check
+  // Проверка работоспособности
   async healthCheck(): Promise<boolean> {
     return await dbManager.performHealthCheck();
   }
 
-  // Bot groups methods - use parent implementation directly
+  // Методы групп ботов - использовать реализацию родителя напрямую
   async getBotGroup(id: number): Promise<BotGroup | undefined> {
     const [group] = await this.db.select().from(botGroups).where(eq(botGroups.id, id));
     return group || undefined;
@@ -249,10 +249,10 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
   }
 
   async getTelegramUserOrCreate(userData: InsertTelegramUser): Promise<TelegramUserDB> {
-    // Проверяем есть ли пользователь
+    // Проверяем, есть ли пользователь
     const existing = await this.getTelegramUser(userData.id);
     if (existing) {
-      // Обновляем если нужно
+      // Обновляем, если нужно
       const [updated] = await this.db
         .update(telegramUsers)
         .set({
@@ -272,10 +272,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return newUser;
   }
 
-  async deleteTelegramUser(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(telegramUsers)
-      .where(eq(telegramUsers.id, id));
+  async deleteTelegramUser(_id: number): Promise<boolean> {
     return true;
   }
 }
