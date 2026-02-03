@@ -29,7 +29,7 @@ export async function ensureDefaultProject() {
   try {
     const projects = await storage.getAllBotProjects();
     if (projects.length === 0) {
-      // Create a default project if none exists
+      // Создать проект по умолчанию, если ни одного не существует
       const defaultProject: InsertBotProject = {
         name: "Мой первый бот",
         description: "Базовый бот с приветствием",
