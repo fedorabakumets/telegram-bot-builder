@@ -180,7 +180,7 @@ const validateFileDetailed = (file: Express.Multer.File) => {
 };
 
 // Упрощенный фильтр для multer
-const fileFilter = (req: any, file: any, cb: any) => {
+const fileFilter = (_req: any, file: any, cb: any) => {
   const validation = validateFileDetailed(file);
   if (validation.valid) {
     cb(null, true);
@@ -366,16 +366,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   initializeComponents();
 
   // Simple API root endpoint for health checks
-  app.get("/api", (req, res) => {
+  app.get("/api", (_req, res) => {
     res.json({ status: "ok", ready: isDbReady });
   });
 
-  app.head("/api", (req, res) => {
+  app.head("/api", (_req, res) => {
     res.sendStatus(204);
   });
 
   // API для проверки готовности компонентов
-  app.get("/api/health", (req, res) => {
+  app.get("/api/health", (_req, res) => {
     res.json({
       database: isDbReady,
       templates: areTemplatesReady,
@@ -384,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.head("/api/health", (req, res) => {
+  app.head("/api/health", (_req, res) => {
     res.sendStatus(204);
   });
 
@@ -392,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
  * Middleware для проверки готовности базы данных
  *
  * @function requireDbReady
- * @param {any} req - Объект запроса Express
+ * @param {any} _req - Объект запроса Express
  * @param {any} res - Объект ответа Express
  * @param {any} next - Функция перехода к следующему middleware
  *
@@ -413,7 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
  * });
  * ```
  */
-  const requireDbReady = (req: any, res: any, next: any) => {
+  const requireDbReady = (_req: any, res: any, next: any) => {
     if (!isDbReady) {
       return res.status(503).json({ 
         message: "Сервер еще загружается, попробуйте через несколько секунд",
@@ -690,12 +690,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Удаляем папку бота, если она существует
         const fs = await import('fs');
         const path = await import('path');
-        const { promisify } = await import('util');
 
-        const exec = promisify(require('child_process').exec);
 
         // Проверяем, существует ли папка бота
-        const botDir = path.join(botsDir, `bot_${id}_*`);
 
         // Найдем все папки, соответствующие шаблону bot_{id}_*
         if (existsSync(botsDir)) {
@@ -1144,7 +1141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all bot instances
-  app.get("/api/bots", async (req, res) => {
+  app.get("/api/bots", async (_req, res) => {
     try {
       const instances = await storage.getAllBotInstances();
       res.json(instances);
@@ -1156,7 +1153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Template management endpoints
   
   // Force update templates
-  app.post("/api/templates/refresh", async (req, res) => {
+  app.post("/api/templates/refresh", async (_req, res) => {
     try {
       console.log('🔄 Принудительное обновление шаблонов по API запросу');
       await seedDefaultTemplates(true);
@@ -1168,7 +1165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recreate templates with hierarchy
-  app.post("/api/templates/recreate", async (req, res) => {
+  app.post("/api/templates/recreate", async (_req, res) => {
     try {
       console.log('🔄 Пересоздание шаблонов с иерархией по API запросу');
       await seedDefaultTemplates(true);
@@ -1180,7 +1177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get all templates
-  app.get("/api/templates", requireDbReady, async (req, res) => {
+  app.get("/api/templates", requireDbReady, async (_req, res) => {
     try {
       const allTemplates = await storage.getAllBotTemplates();
       // Показываем только: системные шаблоны + публичные шаблоны (других пользователей)
@@ -1574,7 +1571,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Parse bot information from Telegram API
   app.post("/api/projects/:id/tokens/parse", async (req, res) => {
     try {
-      const projectId = parseInt(req.params.id);
       const { token } = req.body;
       
       if (!token) {
@@ -2793,9 +2789,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get detailed user responses for a project
-  app.get("/api/projects/:id/responses", async (req, res) => {
+  app.get("/api/projects/:id/responses", async (_req, res) => {
     try {
-      const projectId = parseInt(req.params.id);
       
       // Подключаемся напрямую к PostgreSQL для получения ответов пользователей из bot_users
       const { Pool } = await import('pg');
@@ -5126,7 +5121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Save user Telegram API credentials
   app.post("/api/telegram-settings", async (req, res) => {
     try {
-      const { userId, apiId, apiHash, phoneNumber } = req.body;
+      const { userId, apiId, apiHash } = req.body;
       
       if (!userId || !apiId || !apiHash) {
         return res.status(400).json({ 
@@ -5407,7 +5402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get authentication status
-  app.get("/api/telegram-auth/status", async (req, res) => {
+  app.get("/api/telegram-auth/status", async (_req, res) => {
     try {
       const status = await telegramClientManager.getAuthStatus('default');
       res.json(status);
@@ -5434,7 +5429,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const result = await telegramClientManager.kickMember('default', groupId, userId);
       
       res.json({
         success: true,
@@ -5453,7 +5447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Заблокировать участника через Client API
   app.post("/api/projects/:projectId/telegram-client/ban-member", async (req, res) => {
     try {
-      const { groupId, userId, untilDate } = req.body;
+      const { groupId, userId } = req.body;
       
       if (!groupId || !userId) {
         return res.status(400).json({ 
@@ -5462,7 +5456,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const result = await telegramClientManager.banMember('default', groupId, userId, untilDate);
       
       res.json({
         success: true,
@@ -5481,7 +5474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Замутить участника через Client API
   app.post("/api/projects/:projectId/telegram-client/restrict-member", async (req, res) => {
     try {
-      const { groupId, userId, untilDate } = req.body;
+      const { groupId, userId } = req.body;
       
       if (!groupId || !userId) {
         return res.status(400).json({ 
@@ -5490,7 +5483,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const result = await telegramClientManager.restrictMember('default', groupId, userId, untilDate);
       
       res.json({
         success: true,
@@ -5509,7 +5501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Назначить администратора через Client API
   app.post("/api/projects/:projectId/telegram-client/promote-member", async (req, res) => {
     try {
-      const { groupId, userId, adminRights } = req.body;
+      const { groupId, userId } = req.body;
       
       if (!groupId || !userId) {
         return res.status(400).json({ 
@@ -5518,7 +5510,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const result = await telegramClientManager.promoteMember('default', groupId, userId, adminRights);
       
       res.json({
         success: true,
@@ -5546,7 +5537,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const result = await telegramClientManager.demoteMember('default', groupId, userId);
       
       res.json({
         success: true,
@@ -5563,7 +5553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Force update templates - Admin endpoint to refresh all system templates
-  app.post("/api/templates/refresh", async (req, res) => {
+  app.post("/api/templates/refresh", async (_req, res) => {
     try {
       console.log("🔄 Принудительное обновление шаблонов...");
       await seedDefaultTemplates(true); // force = true
@@ -5582,7 +5572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // HTML страница со встроенным Telegram Login Widget для авторизации в отдельном окне
-  app.get("/api/auth/login", (req, res) => {
+  app.get("/api/auth/login", (_req, res) => {
     const botUsername = process.env.VITE_TELEGRAM_BOT_USERNAME || 'botcraft_studio_bot';
     const cleanBotUsername = botUsername.replace('@', '');
     
@@ -5664,7 +5654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Telegram Login Widget авторизация
   app.post("/api/auth/telegram", async (req, res) => {
     try {
-      const { id, first_name, last_name, username, photo_url, auth_date, hash } = req.body;
+      const { id, first_name, last_name, username, photo_url, auth_date } = req.body;
       
       if (!id) {
         return res.status(400).json({
@@ -6018,7 +6008,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GitHub push endpoint
-  app.post("/api/push-to-github", async (req, res) => {
+  app.post("/api/push-to-github", async (_req, res) => {
     try {
       const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
       if (!token) {
