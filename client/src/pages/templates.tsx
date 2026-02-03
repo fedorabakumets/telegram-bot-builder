@@ -748,6 +748,11 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
   };
 
   // Компоненты для layout
+  /**
+   * Содержимое шапки страницы шаблонов
+   *
+   * Содержит логотип, навигационные элементы и кнопки управления
+   */
   const headerContent = (
     <div className="h-16 bg-background border-b border-border px-6 flex items-center justify-between relative">
       {/* Левая часть - логотип и название */}
@@ -828,6 +833,11 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     </div>
   );
 
+  /**
+   * Содержимое боковой панели страницы шаблонов
+   *
+   * Содержит навигационные вкладки, фильтры по категориям и настройки сортировки
+   */
   const sidebarContent = (
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-2 mb-4">
@@ -891,6 +901,12 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     </div>
   );
 
+  /**
+   * Содержимое основного холста страницы шаблонов
+   *
+   * Содержит область поиска, фильтрации и отображения шаблонов
+   * или предварительного просмотра выбранного шаблона
+   */
   const canvasContent = (
     <div className="p-4 h-full">
       {showPreview && selectedTemplate ? (
@@ -963,6 +979,11 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     </div>
   );
 
+  /**
+   * Содержимое панели свойств страницы шаблонов
+   *
+   * Содержит информацию о выбранном шаблоне или общую информацию о фильтрах и статистике
+   */
   const propertiesContent = (
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-2 mb-4">
