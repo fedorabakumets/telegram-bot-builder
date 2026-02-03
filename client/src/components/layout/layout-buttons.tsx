@@ -1,14 +1,28 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { 
-  PanelTop, 
-  PanelLeft, 
+import {
+  PanelTop,
+  PanelLeft,
   LayoutGrid,
   PanelRight,
   EyeOff,
   Eye
 } from 'lucide-react';
 
+/**
+ * @interface LayoutButtonsProps
+ * @description Свойства компонента кнопок управления макетом
+ * @property {() => void} [onToggleCanvas] - Функция переключения видимости холста
+ * @property {() => void} [onToggleHeader] - Функция переключения видимости заголовка
+ * @property {() => void} [onToggleSidebar] - Функция переключения видимости боковой панели
+ * @property {() => void} [onToggleProperties] - Функция переключения видимости панели свойств
+ * @property {() => void} [onShowFullLayout] - Функция отображения полного макета
+ * @property {boolean} [canvasVisible] - Видимость холста
+ * @property {boolean} [headerVisible] - Видимость заголовка
+ * @property {boolean} [sidebarVisible] - Видимость боковой панели
+ * @property {boolean} [propertiesVisible] - Видимость панели свойств
+ * @property {string} [className] - Дополнительный CSS класс
+ */
 interface LayoutButtonsProps {
   onToggleCanvas?: () => void;
   onToggleHeader?: () => void;
@@ -22,9 +36,16 @@ interface LayoutButtonsProps {
   className?: string;
 }
 
-export function LayoutButtons({ 
-  onToggleCanvas, 
-  onToggleHeader, 
+/**
+ * @function LayoutButtons
+ * @description Компонент кнопок управления макетом интерфейса
+ * Предоставляет кнопки для переключения видимости различных элементов интерфейса
+ * @param {LayoutButtonsProps} props - Свойства компонента
+ * @returns {JSX.Element} Компонент кнопок управления макетом
+ */
+export function LayoutButtons({
+  onToggleCanvas,
+  onToggleHeader,
   onToggleSidebar,
   onToggleProperties,
   onShowFullLayout,
@@ -32,7 +53,7 @@ export function LayoutButtons({
   headerVisible = true,
   sidebarVisible = true,
   propertiesVisible = true,
-  className = "" 
+  className = ""
 }: LayoutButtonsProps) {
   return (
     <TooltipProvider>
