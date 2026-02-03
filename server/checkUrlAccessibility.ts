@@ -1,8 +1,25 @@
+/**
+ * @fileoverview Модуль для проверки доступности URL-адресов
+ *
+ * Этот файл предоставляет функции для проверки доступности URL-адресов,
+ * включая информацию о типе содержимого, размере и имени файла.
+ */
+
 import http from "http";
 import https from "https";
 import { URL } from "node:url";
 
-// Функция для проверки доступности URL
+/**
+ * Проверяет доступность URL-адреса
+ *
+ * @param url - URL-адрес для проверки
+ * @returns Promise объект с информацией о доступности URL:
+ * - accessible: флаг доступности URL
+ * - mimeType: MIME-тип содержимого (если доступно)
+ * - size: размер содержимого в байтах (если доступно)
+ * - fileName: имя файла (если можно определить)
+ * - error: сообщение об ошибке (если произошла ошибка)
+ */
 export async function checkUrlAccessibility(url: string): Promise<{
   accessible: boolean;
   mimeType?: string;
