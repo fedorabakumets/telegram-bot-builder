@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Node, Connection } from '@/types/bot';
 import { ConnectionSuggestion, generateAutoConnections } from '@/utils/auto-connection';
 
