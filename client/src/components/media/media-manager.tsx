@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Компонент управления медиафайлами
+ *
+ * Этот компонент предоставляет интерфейс для загрузки, просмотра, редактирования
+ * и удаления медиафайлов. Поддерживает различные типы файлов (фото, видео, аудио, документы),
+ * перетаскивание файлов, поиск, фильтрацию и камеру для съемки.
+ *
+ * @module MediaManager
+ */
+
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from "@/components/ui/button";
@@ -6,16 +16,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage } from "@/hooks/use-media";
 import { CameraCapture } from "./camera-capture";
 import { EnhancedMediaUploader } from "./enhanced-media-uploader";
 import type { MediaFile, InsertMediaFile } from "@shared/schema";
-import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Download, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap, Smartphone, Plus } from "lucide-react";
+import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap, Plus } from "lucide-react";
 
+/**
+ * Свойства компонента MediaManager
+ *
+ * @interface MediaManagerProps
+ * @property {number} projectId - ID проекта, к которому относятся медиафайлы
+ * @property {Function} [onSelectFile] - Обработчик выбора файла
+ * @property {'photo' | 'video' | 'audio' | 'document'} [selectedType] - Тип файла для фильтрации
+ * @property {boolean} [showUploader] - Показывать ли uploader
+ */
 interface MediaManagerProps {
   projectId: number;
   onSelectFile?: (file: MediaFile) => void;
@@ -23,6 +41,15 @@ interface MediaManagerProps {
   showUploader?: boolean;
 }
 
+/**
+ * Интерфейс для загружаемого файла
+ *
+ * @interface UploadingFile
+ * @property {File} file - Файл для загрузки
+ * @property {number} progress - Прогресс загрузки (в процентах)
+ * @property {'uploading' | 'success' | 'error'} status - Статус загрузки
+ * @property {string} [error] - Ошибка загрузки (если есть)
+ */
 interface UploadingFile {
   file: File;
   progress: number;
@@ -30,30 +57,117 @@ interface UploadingFile {
   error?: string;
 }
 
+/**
+ * Компонент управления медиафайлами
+ *
+ * Предоставляет интерфейс для загрузки, просмотра, редактирования и удаления
+ * медиафайлов. Поддерживает различные типы файлов, перетаскивание, поиск и фильтрацию.
+ *
+ * @component
+ * @param {MediaManagerProps} props - Свойства компонента
+ * @returns {JSX.Element} Элемент компонента MediaManager
+ */
 export function MediaManager({ projectId, onSelectFile, selectedType }: MediaManagerProps) {
+  /**
+   * Хук для показа уведомлений
+   */
   const { toast } = useToast();
+
+  /**
+   * Текущая вкладка (все, фото, видео, аудио, документы)
+   */
   const [currentTab, setCurrentTab] = useState(selectedType || 'all');
+
+  /**
+   * Запрос поиска файлов
+   */
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
+
+  /**
+   * Выбранный файл (не используется напрямую)
+   */
+  const [, setSelectedFile] = useState<MediaFile | null>(null);
+
+  /**
+   * Файл, который редактируется
+   */
   const [editingFile, setEditingFile] = useState<MediaFile | null>(null);
+
+  /**
+   * Список загружаемых файлов
+   */
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+
+  /**
+   * Показывать ли детали загрузки
+   */
   const [showUploadDetails, setShowUploadDetails] = useState(false);
+
+  /**
+   * Показывать ли захват с камеры
+   */
   const [showCameraCapture, setShowCameraCapture] = useState(false);
+
+  /**
+   * Показывать ли расширенный загрузчик
+   */
   const [showEnhancedUploader, setShowEnhancedUploader] = useState(false);
+
+  /**
+   * Есть ли доступ к камере
+   */
   const [hasCamera, setHasCamera] = useState(false);
 
+  /**
+   * Все файлы проекта
+   */
   const { data: allFiles, isLoading } = useMediaFiles(projectId);
+
+  /**
+   * Фото файлы проекта
+   */
   const { data: photoFiles } = useMediaFiles(projectId, 'photo');
+
+  /**
+   * Видео файлы проекта
+   */
   const { data: videoFiles } = useMediaFiles(projectId, 'video');
+
+  /**
+   * Аудио файлы проекта
+   */
   const { data: audioFiles } = useMediaFiles(projectId, 'audio');
+
+  /**
+   * Документы проекта
+   */
   const { data: documentFiles } = useMediaFiles(projectId, 'document');
 
+  /**
+   * Мутация для загрузки файлов
+   */
   const uploadMutation = useUploadMedia(projectId);
+
+  /**
+   * Мутация для удаления файлов
+   */
   const deleteMutation = useDeleteMedia();
+
+  /**
+   * Мутация для обновления файлов
+   */
   const updateMutation = useUpdateMedia();
+
+  /**
+   * Мутация для увеличения счетчика использования файла
+   */
   const incrementUsage = useIncrementUsage();
 
-  // Проверяем доступность камеры
+  /**
+   * Эффект для проверки доступности камеры
+   *
+   * Проверяет, есть ли доступ к камере пользователя, и устанавливает состояние hasCamera
+   */
   React.useEffect(() => {
     if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       navigator.mediaDevices.enumerateDevices()
@@ -65,6 +179,15 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     }
   }, []);
 
+  /**
+   * Валидация файла перед загрузкой
+   *
+   * Проверяет размер файла и тип. Возвращает сообщение об ошибке, если
+   * файл не соответствует требованиям, или null, если файл валиден.
+   *
+   * @param {File} file - Файл для валидации
+   * @returns {string | null} Сообщение об ошибке или null, если файл валиден
+   */
   const validateFile = (file: File): string | null => {
     // Check file size with different limits for different types
     const maxSize = file.type.startsWith('video/') ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
@@ -81,7 +204,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       // Аудио
       'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg', 'audio/webm', 'audio/aac', 'audio/flac', 'audio/m4a',
       // Документы
-      'application/pdf', 
+      'application/pdf',
       'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -97,6 +220,14 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     return null;
   };
 
+  /**
+   * Обработчик события drop файлов
+   *
+   * Обрабатывает принятые и отклоненные файлы, валидирует их и начинает процесс загрузки.
+   *
+   * @param {File[]} acceptedFiles - Принятые файлы
+   * @param {any[]} rejectedFiles - Отклоненные файлы
+   */
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     // Handle rejected files
     rejectedFiles.forEach(rejection => {
@@ -138,9 +269,9 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
         tags: []
       }, {
         onSuccess: () => {
-          setUploadingFiles(prev => 
-            prev.map(uf => 
-              uf.file === file 
+          setUploadingFiles(prev =>
+            prev.map(uf =>
+              uf.file === file
                 ? { ...uf, progress: 100, status: 'success' }
                 : uf
             )
@@ -155,9 +286,9 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
           }, 3000);
         },
         onError: (error) => {
-          setUploadingFiles(prev => 
-            prev.map(uf => 
-              uf.file === file 
+          setUploadingFiles(prev =>
+            prev.map(uf =>
+              uf.file === file
                 ? { ...uf, status: 'error', error: error.message }
                 : uf
             )
@@ -172,7 +303,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
 
       // Simulate progress (since we don't have real progress from backend)
       const progressInterval = setInterval(() => {
-        setUploadingFiles(prev => 
+        setUploadingFiles(prev =>
           prev.map(uf => {
             if (uf.file === file && uf.status === 'uploading' && uf.progress < 90) {
               return { ...uf, progress: Math.min(uf.progress + Math.random() * 20, 90) };
@@ -186,7 +317,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     });
   }, [uploadMutation, toast]);
 
-  const { getRootProps, getInputProps, isDragActive, isDragReject, fileRejections } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'],
@@ -226,6 +357,13 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     }
   });
 
+  /**
+   * Обработчик удаления файла
+   *
+   * Удаляет файл через мутацию и показывает уведомление об успехе или ошибке.
+   *
+   * @param {MediaFile} file - Файл для удаления
+   */
   const handleDeleteFile = (file: MediaFile) => {
     deleteMutation.mutate(file.id, {
       onSuccess: () => {
@@ -245,6 +383,14 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     });
   };
 
+  /**
+   * Обработчик выбора файла
+   *
+   * Если предоставлен onSelectFile, вызывает его и увеличивает счетчик использования.
+   * В противном случае устанавливает выбранный файл в состояние.
+   *
+   * @param {MediaFile} file - Выбранный файл
+   */
   const handleSelectFile = (file: MediaFile) => {
     if (onSelectFile) {
       onSelectFile(file);
@@ -254,6 +400,14 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     }
   };
 
+  /**
+   * Обработчик обновления файла
+   *
+   * Обновляет информацию о файле через мутацию и показывает уведомление об успехе или ошибке.
+   *
+   * @param {MediaFile} file - Файл для обновления
+   * @param {Partial<InsertMediaFile>} updates - Обновления для файла
+   */
   const handleUpdateFile = (file: MediaFile, updates: Partial<InsertMediaFile>) => {
     updateMutation.mutate({
       id: file.id,
@@ -279,6 +433,14 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     });
   };
 
+  /**
+   * Получение иконки для типа файла
+   *
+   * Возвращает соответствующую иконку в зависимости от типа файла.
+   *
+   * @param {string} fileType - Тип файла ('photo', 'video', 'audio', 'document')
+   * @returns {JSX.Element} Иконка для типа файла
+   */
   const getFileIcon = (fileType: string) => {
     switch (fileType) {
       case 'photo': return <Image className="w-4 h-4" />;
@@ -289,9 +451,16 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     }
   };
 
+  /**
+   * Получение файлов для отображения
+   *
+   * Возвращает файлы текущей вкладки, отфильтрованные по поисковому запросу.
+   *
+   * @returns {MediaFile[]} Массив файлов для отображения
+   */
   const getFilesToDisplay = () => {
     let files: MediaFile[] = [];
-    
+
     switch (currentTab) {
       case 'photo': files = photoFiles || []; break;
       case 'video': files = videoFiles || []; break;
@@ -301,7 +470,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     }
 
     if (searchQuery) {
-      files = files.filter(file => 
+      files = files.filter(file =>
         file.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (file.description && file.description.toLowerCase().includes(searchQuery.toLowerCase()))
       );
@@ -310,6 +479,14 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     return files;
   };
 
+  /**
+   * Форматирование размера файла
+   *
+   * Преобразует размер файла в байтах в человекочитаемый формат.
+   *
+   * @param {number} bytes - Размер файла в байтах
+   * @returns {string} Размер файла в человекочитаемом формате
+   */
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Б';
     const k = 1024;
@@ -328,7 +505,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Upload Area */}
+      {/* Область загрузки файлов */}
       <Card className="relative overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -339,8 +516,8 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
               Загрузить медиафайлы
             </div>
             {uploadingFiles.length > 0 && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => setShowUploadDetails(!showUploadDetails)}
                 className="flex items-center gap-2"
@@ -357,7 +534,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
             className={`
               relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 group
               ${isDragActive && !isDragReject
-                ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 scale-105' 
+                ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 scale-105'
                 : isDragReject
                 ? 'border-red-500 bg-red-50 dark:bg-red-950/20'
                 : uploadingFiles.some(uf => uf.status === 'uploading')
@@ -367,8 +544,8 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
             `}
           >
             <input {...getInputProps()} />
-            
-            {/* Upload Icon with Animation */}
+
+            {/* Иконка загрузки с анимацией */}
             <div className="relative mb-4">
               {uploadingFiles.some(uf => uf.status === 'uploading') ? (
                 <Loader2 className="w-16 h-16 mx-auto text-blue-500 animate-spin" />
@@ -390,7 +567,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
               )}
             </div>
 
-            {/* Upload Text */}
+            {/* Текст загрузки */}
             {isDragActive && !isDragReject ? (
               <div>
                 <p className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-2">
@@ -447,21 +624,21 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
               </div>
             )}
 
-            {/* Background Pattern */}
+            {/* Фоновый узор */}
             <div className="absolute inset-0 opacity-5 dark:opacity-10">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500" />
             </div>
           </div>
 
-          {/* Upload Progress */}
+          {/* Прогресс загрузки */}
           {showUploadDetails && uploadingFiles.length > 0 && (
             <div className="mt-6 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">
                   Прогресс загрузки ({uploadingFiles.length} файлов)
                 </h4>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="sm"
                   onClick={() => setShowUploadDetails(false)}
                   className="h-6 w-6 p-0"
@@ -502,9 +679,9 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
             </div>
           )}
 
-          {/* Quick Actions */}
+          {/* Быстрые действия */}
           <div className="mt-6 space-y-4">
-            {/* Quick Upload Actions */}
+            {/* Быстрые действия по загрузке */}
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Button
                 onClick={() => setShowEnhancedUploader(true)}
@@ -515,7 +692,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                 <Plus className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                 Расширенная загрузка
               </Button>
-              
+
               {hasCamera && (
                 <Button
                   onClick={() => setShowCameraCapture(true)}
@@ -527,8 +704,8 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                   Сделать фото
                 </Button>
               )}
-              
-              {/* Hidden file inputs for specific types */}
+
+              {/* Скрытые поля ввода файлов для конкретных типов */}
               <div className="flex gap-2">
                 <input
                   type="file"
@@ -552,7 +729,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                   <Image className="w-4 h-4" />
                   Фото
                 </Button>
-                
+
                 <input
                   type="file"
                   id="video-input"
@@ -575,7 +752,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                   <Play className="w-4 h-4" />
                   Видео
                 </Button>
-                
+
                 <input
                   type="file"
                   id="document-input"
@@ -600,8 +777,8 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                 </Button>
               </div>
             </div>
-            
-            {/* Stats */}
+
+            {/* Статистика */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <span>Макс. размер: 100МБ (видео), 50МБ (остальное)</span>
@@ -619,7 +796,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
         </CardContent>
       </Card>
 
-      {/* Enhanced Search and Filter */}
+      {/* Расширенный поиск и фильтрация */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
@@ -632,8 +809,8 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                 className="pl-10"
               />
             </div>
-            
-            {/* Upload Stats */}
+
+            {/* Статистика загрузки */}
             {allFiles && allFiles.length > 0 && (
               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-1">
@@ -655,7 +832,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
               </div>
             )}
           </div>
-          
+
           {searchQuery && (
             <div className="mt-2 flex items-center gap-2">
               <span className="text-sm text-gray-500">
@@ -675,7 +852,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
         </CardContent>
       </Card>
 
-      {/* Tabs */}
+      {/* Вкладки */}
       <Tabs value={currentTab} onValueChange={setCurrentTab}>
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="all">Все</TabsTrigger>
@@ -723,7 +900,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                     </div>
                   </div>
 
-                  {/* Preview */}
+                  {/* Предварительный просмотр */}
                   <div className="mb-3">
                     {file.fileType === 'photo' && (
                       <img
@@ -792,7 +969,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
         </TabsContent>
       </Tabs>
 
-      {/* Edit Dialog */}
+      {/* Диалог редактирования */}
       {editingFile && (
         <Dialog open={!!editingFile} onOpenChange={() => setEditingFile(null)}>
           <DialogContent aria-describedby="edit-file-description">
@@ -841,7 +1018,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
         </Dialog>
       )}
 
-      {/* Camera Capture */}
+      {/* Захват с камеры */}
       <CameraCapture
         projectId={projectId}
         isOpen={showCameraCapture}
@@ -874,9 +1051,9 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
             tags: ['камера', 'фото']
           }, {
             onSuccess: () => {
-              setUploadingFiles(prev => 
-                prev.map(uf => 
-                  uf.file === file 
+              setUploadingFiles(prev =>
+                prev.map(uf =>
+                  uf.file === file
                     ? { ...uf, progress: 100, status: 'success' }
                     : uf
                 )
@@ -890,9 +1067,9 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
               }, 3000);
             },
             onError: (error) => {
-              setUploadingFiles(prev => 
-                prev.map(uf => 
-                  uf.file === file 
+              setUploadingFiles(prev =>
+                prev.map(uf =>
+                  uf.file === file
                     ? { ...uf, status: 'error', error: error.message }
                     : uf
                 )
@@ -907,7 +1084,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
         }}
       />
 
-      {/* Enhanced Media Uploader Dialog */}
+      {/* Диалог расширенного загрузчика медиафайлов */}
       <Dialog open={showEnhancedUploader} onOpenChange={setShowEnhancedUploader}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="enhanced-upload-description">
           <DialogHeader>
