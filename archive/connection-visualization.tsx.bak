@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { Node, Connection, Button } from '@/types/bot';
+import { useState, useCallback, useMemo } from 'react';
+import { Node, Connection } from '@/types/bot';
 import { Badge } from '@/components/ui/badge';
 import { Button as UIButton } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,13 +11,10 @@ import {
   CheckCircle, 
   XCircle, 
   Zap,
-  Eye,
   Edit3,
   Trash2,
   MousePointer,
-  Network,
-  Target
-} from 'lucide-react';
+  Network} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ConnectionVisualizationProps {
@@ -51,8 +48,6 @@ export function ConnectionVisualization({
   onConnectionDelete,
   onConnectionEdit,
   selectedConnectionId,
-  showLabels = true,
-  showMetrics = true,
   interactive = true
 }: ConnectionVisualizationProps) {
   const [hoveredConnectionId, setHoveredConnectionId] = useState<string | null>(null);
@@ -156,9 +151,6 @@ export function ConnectionVisualization({
   }, []);
 
   // Получение толщины линии
-  const getConnectionWidth = useCallback((metrics: ConnectionMetrics) => {
-    return Math.max(1, Math.floor(metrics.strength * 5));
-  }, []);
 
   // Получение названия узла
   const getNodeName = useCallback((nodeId: string) => {
