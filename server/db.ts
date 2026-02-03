@@ -23,7 +23,7 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-console.log('🔍 Database configuration:', {
+console.log('🔍 Конфигурация базы данных:', {
   url: process.env.DATABASE_URL?.substring(0, 30) + '...',
   nodeEnv: process.env.NODE_ENV,
   sslEnabled: process.env.NODE_ENV === 'production'
@@ -56,8 +56,8 @@ export const pool = new Pool(poolConfig);
  * Логирует неожиданные ошибки на неиспользуемых клиентах
  */
 pool.on('error', (err: Error) => {
-  console.error('❌ Unexpected error on idle client:', err.message);
-  console.error('Error details:', {
+  console.error('❌ Неожиданная ошибка на неиспользуемом клиенте:', err.message);
+  console.error('Детали ошибки:', {
     code: (err as any).code,
     errno: (err as any).errno,
     syscall: (err as any).syscall
@@ -106,17 +106,17 @@ export const db = drizzle(pool, { schema });
  */
 async function testConnection() {
   try {
-    // console.log('🧪 Testing database connection...');
+    // console.log('🧪 Тестирование подключения к базе данных...');
     const client = await pool.connect();
     const result = await client.query('SELECT NOW() as current_time, version() as version');
-    // console.log('✅ Database connection test successful:', {
+    // console.log('✅ Тест подключения к базе данных прошел успешно:', {
     //   time: result.rows[0].current_time,
     //   version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1]
     // });
     client.release();
   } catch (error: any) {
-    // console.error('❌ Database connection test failed:', error.message);
-    // console.error('Connection details:', {
+    // console.error('❌ Тест подключения к базе данных не удался:', error.message);
+    // console.error('Детали подключения:', {
     //   code: (error as any).code,
     //   errno: (error as any).errno,
     //   syscall: (error as any).syscall,
