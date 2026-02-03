@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, unlinkSync } from "fs";
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, insertBotMessageSchema, insertBotMessageMediaSchema, nodeSchema, connectionSchema, botDataSchema, sendMessageSchema } from "@shared/schema";
+import { insertBotProjectSchema, insertBotTemplateSchema, insertBotTokenSchema, insertUserBotDataSchema, insertBotGroupSchema, insertBotMessageSchema, botDataSchema, sendMessageSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 import { pipeline } from "stream/promises";
