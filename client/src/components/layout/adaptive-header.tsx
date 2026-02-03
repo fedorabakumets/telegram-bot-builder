@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github, LogOut, MessageCircle } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Menu, Code, Github, LogOut, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { LayoutConfig } from './layout-manager';
@@ -49,7 +49,6 @@ export function AdaptiveHeader({
   onExport, 
   onSaveAsTemplate, 
   onLoadTemplate,
-  onLayoutSettings,
   onToggleHeader,
   onToggleSidebar,
   onToggleProperties,

@@ -4,7 +4,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Badge } from '@/components/ui/badge';
 import { 
   Layout, 
-  Settings, 
   Move, 
   Eye,
   EyeOff,
