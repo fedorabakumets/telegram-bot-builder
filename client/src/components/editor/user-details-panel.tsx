@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -27,6 +27,11 @@ import { UserBotData, BotMessage, BotProject } from '@shared/schema';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
+/**
+ * @typedef {Object} BotMessageWithMedia
+ * @property {BotMessage} - Расширенное сообщение бота с дополнительными полями медиа
+ * @property {Array<{id: number, url: string, type: string, width?: number, height?: number}>} [media] - Массив медиафайлов, прикрепленных к сообщению
+ */
 type BotMessageWithMedia = BotMessage & {
   media?: Array<{
     id: number;
@@ -37,6 +42,14 @@ type BotMessageWithMedia = BotMessage & {
   }>;
 };
 
+/**
+ * @interface UserDetailsPanelProps
+ * @description Интерфейс свойств компонента панели деталей пользователя
+ * @property {number} projectId - Идентификатор проекта
+ * @property {UserBotData | null} user - Данные пользователя или null, если пользователь не выбран
+ * @property {Function} onClose - Функция закрытия панели
+ * @property {Function} [onOpenDialog] - Необязательная функция открытия диалога с пользователем
+ */
 interface UserDetailsPanelProps {
   projectId: number;
   user: UserBotData | null;
@@ -44,20 +57,38 @@ interface UserDetailsPanelProps {
   onOpenDialog?: (user: UserBotData) => void;
 }
 
+/**
+ * @function UserDetailsPanel
+ * @description Компонент панели с детальной информацией о пользователе
+ * @param {UserDetailsPanelProps} props - Свойства компонента
+ * @returns {JSX.Element} Элемент интерфейса с информацией о пользователе
+ */
 export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: UserDetailsPanelProps) {
   const { toast } = useToast();
   const qClient = useQueryClient();
 
+  /**
+   * @constant {BotProject} project - Данные проекта, полученные через react-query
+   */
   const { data: project } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectId}`],
   });
 
+  /**
+   * @constant {BotMessageWithMedia[]} messages - Массив сообщений пользователя, полученных через react-query
+   */
   const { data: messages = [] } = useQuery<BotMessageWithMedia[]>({
     queryKey: [`/api/projects/${projectId}/users/${user?.userId}/messages`],
     enabled: !!user?.userId,
     staleTime: 0,
   });
 
+  /**
+   * @constant {Object} userMessageCounts - Подсчет сообщений пользователя
+   * @property {number} total - Общее количество сообщений
+   * @property {number} userSent - Количество сообщений от пользователя
+   * @property {number} botSent - Количество сообщений от бота
+   */
   const userMessageCounts = useMemo(() => {
     const userSent = messages.filter(m => m.messageType === 'user').length;
     const botSent = messages.filter(m => m.messageType === 'bot').length;
@@ -68,25 +99,30 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
     };
   }, [messages]);
 
+  /**
+   * @constant {Record<string, string>} variableToQuestionMap - Карта соответствия переменных вопросам из проекта
+   * @description Создает карту соответствия между переменными ввода и текстами вопросов из проекта
+   * для отображения контекста ответов пользователя
+   */
   const variableToQuestionMap = useMemo(() => {
     const mapping: Record<string, string> = {};
     if (!project?.data) return mapping;
-    
+
     try {
-      const flowData = typeof project.data === 'string' 
-        ? JSON.parse(project.data as string) 
+      const flowData = typeof project.data === 'string'
+        ? JSON.parse(project.data as string)
         : project.data as any;
-      
+
       const sheets = flowData?.sheets || [];
       for (const sheet of sheets) {
         const nodes = sheet?.nodes || [];
         for (const node of nodes) {
           const data = node?.data;
           if (!data) continue;
-          
+
           const questionText = data.messageText;
           if (!questionText) continue;
-          
+
           if (data.inputVariable) {
             mapping[data.inputVariable] = questionText;
           }
@@ -107,23 +143,17 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
     } catch (e) {
       console.error('Error parsing project data for variable mapping:', e);
     }
-    
+
     return mapping;
   }, [project?.data]);
 
-  const getPhotoUrlFromMessages = (fileId: string): string | null => {
-    for (const msg of messages) {
-      if (msg.media && Array.isArray(msg.media)) {
-        for (const m of msg.media) {
-          if (m.url) {
-            return m.url;
-          }
-        }
-      }
-    }
-    return null;
-  };
 
+  /**
+   * @function formatDate
+   * @description Форматирует дату в удобочитаемый формат на русском языке
+   * @param {Date|string|null|undefined} date - Дата для форматирования
+   * @returns {string} Отформатированная строка даты или 'Не указано'
+   */
   const formatDate = (date: Date | string | null | undefined): string => {
     if (!date) return 'Не указано';
     try {
@@ -134,6 +164,12 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
     }
   };
 
+  /**
+   * @function formatUserName
+   * @description Форматирует имя пользователя для отображения
+   * @param {UserBotData|null} userData - Данные пользователя
+   * @returns {string} Отформатированное имя пользователя
+   */
   const formatUserName = (userData: UserBotData | null): string => {
     if (!userData) return '';
     const parts = [];
@@ -143,6 +179,11 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
     return parts.length > 0 ? parts.join(' ') : `ID: ${userData.userId}`;
   };
 
+  /**
+   * @constant {Object} updateUserMutation - Мутация для обновления данных пользователя
+   * @description Реализует логику обновления данных пользователя через API запрос
+   * и управляет состоянием после успешного или неудачного обновления
+   */
   const updateUserMutation = useMutation({
     mutationFn: async (updates: Partial<UserBotData>) => {
       if (!user) throw new Error('No user selected');
@@ -167,12 +208,18 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
     }
   });
 
+  /**
+   * @function handleUserStatusToggle
+   * @description Переключает статус активности пользователя
+   * @param {'isActive'} field - Поле статуса, которое нужно переключить
+   */
   const handleUserStatusToggle = (field: 'isActive') => {
     if (!user) return;
     const currentValue = Boolean(user[field as keyof UserBotData]);
-    updateUserMutation.mutate({ [field]: !currentValue });
+    updateUserMutation.mutate({ [field]: !currentValue ? 1 : 0 } as Partial<UserBotData>);
   };
 
+  // Если пользователь не выбран, отобразить сообщение
   if (!user) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-4">
@@ -378,6 +425,10 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                       } catch {
                         responseData = { value: value, type: 'text' };
                       }
+                    } else if (typeof value === 'object' && value !== null) {
+                      responseData = value;
+                    } else {
+                      responseData = { value: String(value), type: 'text' };
                     }
 
                     const getQuestionText = (questionKey: string, data: any) => {
@@ -391,8 +442,8 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                     };
 
                     const questionText: string = String(getQuestionText(key, responseData));
-                    const answerValue: string = String(responseData?.value !== undefined ? responseData.value : 
-                                        (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)));
+                    const answerValue: string = String(responseData?.value !== undefined ? responseData.value :
+                                        (typeof value === 'object' && value !== null ? JSON.stringify(value as object) : String(value as string)));
 
                     return (
                       <div key={key} className="border rounded-lg p-3 bg-muted/30 space-y-2">
@@ -402,11 +453,11 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                           </span>
                           {responseData?.type && (
                             <Badge variant="outline" className="text-xs">
-                              {responseData.type === 'text' ? 'Текст' : 
+                              {responseData.type === 'text' ? 'Текст' :
                                responseData.type === 'number' ? 'Число' :
                                responseData.type === 'email' ? 'Email' :
                                responseData.type === 'phone' ? 'Телефон' :
-                               responseData.type}
+                               String(responseData.type)}
                             </Badge>
                           )}
                         </div>
@@ -489,7 +540,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                         {responseData?.timestamp && (
                           <div className="text-xs text-muted-foreground flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {formatDate(responseData.timestamp)}
+                            {formatDate(responseData.timestamp as Date | string | null | undefined)}
                           </div>
                         )}
                       </div>

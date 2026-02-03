@@ -1,12 +1,12 @@
-import { useState, useMemo, useEffect, useRef, ReactNode } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -15,21 +15,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
 import {
   Users,
   Search,
-  Filter,
-  Download,
   Trash2,
-  Plus,
   BarChart3,
   Activity,
   Shield,
   Crown,
   MessageSquare,
   Calendar,
-  Settings,
   RefreshCw,
   Eye,
   UserCheck,
@@ -44,8 +40,6 @@ import {
 import { UserBotData, BotProject, BotMessage } from '@shared/schema';
 import { DatabaseBackupPanel } from './database-backup-panel';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 
 type BotMessageWithMedia = BotMessage & {
   media?: Array<{
@@ -71,15 +65,15 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
   const [showUserDetails, setShowUserDetails] = useState(false);
-  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [] = useState(false);
   const [sortField, setSortField] = useState<SortField>('lastInteraction');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [filterActive, setFilterActive] = useState<boolean | null>(null);
   const [filterPremium, setFilterPremium] = useState<boolean | null>(null);
-  const [filterBlocked, setFilterBlocked] = useState<boolean | null>(null);
-  const [filterDateRange, setFilterDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
-  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [filterBlocked] = useState<boolean | null>(null);
+  const [] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [] = useState<number[]>([]);
+  const [] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedUserForDialog, setSelectedUserForDialog] = useState<UserBotData | null>(null);
   const [messageText, setMessageText] = useState('');
@@ -168,7 +162,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
   });
 
   // Search users
-  const { data: searchResults = [], isFetching: searchLoading } = useQuery<UserBotData[]>({
+  const { data: searchResults = [] } = useQuery<UserBotData[]>({
     queryKey: [`/api/projects/${projectId}/users/search`, searchQuery],
     enabled: searchQuery.length > 0,
     queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users/search?q=${encodeURIComponent(searchQuery)}`),
@@ -362,7 +356,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
   const toggleDatabaseMutation = useMutation({
     mutationFn: (enabled: boolean) =>
       apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
-    onSuccess: (data, enabled) => {
+    onSuccess: (_data, enabled) => {
       qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
       toast({
         title: enabled ? "База данных включена" : "База данных выключена",
@@ -1251,7 +1245,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={Boolean(selectedUser?.isActive)}
-                      onCheckedChange={(checked) => selectedUser && handleUserStatusToggle(selectedUser, 'isActive')}
+                      onCheckedChange={() => selectedUser && handleUserStatusToggle(selectedUser, 'isActive')}
                     />
                     <Label>Активен</Label>
                     <span className="text-xs text-muted-foreground ml-2">
