@@ -40,7 +40,7 @@ export function AdaptiveLayout({
   /**
    * @function containerClasses
    * @description Вычисляет CSS классы для контейнера на основе конфигурации
-   * @returns {string} Строка с CSS классами
+   * @returns Строка с CSS классами
    */
   // Вычисляем CSS классы для контейнера на основе конфигурации
   const containerClasses = useMemo(() => {
@@ -56,7 +56,7 @@ export function AdaptiveLayout({
   /**
    * @function headerSize
    * @description Вычисляет размеры заголовка в зависимости от его позиции и режима компактности
-   * @returns {number} Размер заголовка в пикселях
+   * @returns Размер заголовка в пикселях
    */
   // Вычисляем размеры заголовка
   const headerSize = useMemo(() => {
