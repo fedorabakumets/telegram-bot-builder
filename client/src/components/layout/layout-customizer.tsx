@@ -1,26 +1,34 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DraggableLayout, useDraggableLayout, LayoutElement } from './draggable-layout';
-import { 
-  Layout, 
-  Move, 
-  Settings, 
-  Grid, 
-  Eye, 
-  EyeOff, 
-  Lock, 
+import {
+  Layout,
+  Move,
+  Grid,
+  Eye,
+  EyeOff,
+  Lock,
   Unlock,
   RotateCcw,
   Play,
   Pause
 } from 'lucide-react';
 
+/**
+ * @interface LayoutCustomizerProps
+ * @description Свойства компонента настройки макета
+ * @property {React.ReactNode} headerContent - Контент заголовка
+ * @property {React.ReactNode} sidebarContent - Контент боковой панели
+ * @property {React.ReactNode} canvasContent - Контент холста
+ * @property {React.ReactNode} propertiesContent - Контент панели свойств
+ * @property {(elements: LayoutElement[]) => void} [onLayoutChange] - Функция обратного вызова при изменении макета
+ */
 interface LayoutCustomizerProps {
   headerContent: React.ReactNode;
   sidebarContent: React.ReactNode;
@@ -29,6 +37,13 @@ interface LayoutCustomizerProps {
   onLayoutChange?: (elements: LayoutElement[]) => void;
 }
 
+/**
+ * @function LayoutCustomizer
+ * @description Компонент настройки макета интерфейса
+ * Позволяет пользователю настраивать расположение и видимость элементов интерфейса
+ * @param {LayoutCustomizerProps} props - Свойства компонента
+ * @returns {JSX.Element} Компонент настройки макета
+ */
 export const LayoutCustomizer: React.FC<LayoutCustomizerProps> = ({
   headerContent,
   sidebarContent,
@@ -66,6 +81,12 @@ export const LayoutCustomizer: React.FC<LayoutCustomizerProps> = ({
     })()
   }));
 
+  /**
+   * @function handleApplyLayout
+   * @description Обработчик применения настроек макета
+   * Вызывает функцию обратного вызова с новыми настройками и закрывает режим настройки
+   * @returns {void}
+   */
   const handleApplyLayout = useCallback(() => {
     if (onLayoutChange) {
       onLayoutChange(elementsWithContent);
@@ -73,6 +94,12 @@ export const LayoutCustomizer: React.FC<LayoutCustomizerProps> = ({
     setIsCustomizing(false);
   }, [elementsWithContent, onLayoutChange]);
 
+  /**
+   * @function handleToggleCustomizer
+   * @description Обработчик переключения режима настройки
+   * Переключает состояние видимости диалога настройки макета
+   * @returns {void}
+   */
   const handleToggleCustomizer = useCallback(() => {
     setIsCustomizing(!isCustomizing);
   }, [isCustomizing]);
@@ -329,4 +356,8 @@ export const LayoutCustomizer: React.FC<LayoutCustomizerProps> = ({
   );
 };
 
+/**
+ * @exports LayoutCustomizer
+ * @description Экспортирует компонент LayoutCustomizer по умолчанию
+ */
 export default LayoutCustomizer;
