@@ -305,3 +305,11 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
   dbManager.stopHealthMonitoring();
 });
+
+/**
+ * Обработка завершения работы через SIGHUP
+ * Останавливает мониторинг работоспособности базы данных
+ */
+process.on('SIGHUP', () => {
+  dbManager.stopHealthMonitoring();
+});
