@@ -1,3 +1,14 @@
+/**
+ * @fileoverview Маршруты для управления базой данных
+ *
+ * Этот файл содержит маршруты для выполнения различных операций с базой данных:
+ * - проверка работоспособности
+ * - получение статистики
+ * - управление кэшем
+ * - выполнение обслуживания
+ * - создание и восстановление резервных копий
+ */
+
 import { Router } from 'express';
 import { storage } from './storage';
 import { dbManager } from './db-utils';
@@ -6,14 +17,20 @@ import { dbBackup } from './db-backup';
 import multer from 'multer';
 import { join } from 'path';
 
+/**
+ * Маршрутизатор для операций с базой данных
+ */
 const router = Router();
 
-// Database health and statistics endpoints
+/**
+ * Маршрут для проверки работоспособности базы данных
+ * Возвращает информацию о здоровье базы данных и статистику соединений
+ */
 router.get('/health', async (req, res) => {
   try {
     const isHealthy = await dbManager.performHealthCheck();
     const stats = dbManager.getConnectionStats();
-    
+
     res.json({
       healthy: isHealthy,
       stats,
@@ -24,7 +41,10 @@ router.get('/health', async (req, res) => {
   }
 });
 
-// Database statistics
+/**
+ * Маршрут для получения статистики базы данных
+ * Возвращает подробную статистику о проектах, шаблонах и других данных
+ */
 router.get('/stats', async (req, res) => {
   try {
     const stats = await (storage as any).getDetailedStats();
@@ -34,7 +54,10 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// Database metrics
+/**
+ * Маршрут для получения метрик базы данных
+ * Возвращает метрики производительности таблиц базы данных
+ */
 router.get('/metrics', async (req, res) => {
   try {
     const metrics = await dbManager.getDatabaseMetrics();
@@ -44,7 +67,10 @@ router.get('/metrics', async (req, res) => {
   }
 });
 
-// Cache statistics
+/**
+ * Маршрут для получения статистики кэша
+ * Возвращает информацию о состоянии кэша
+ */
 router.get('/cache/stats', async (req, res) => {
   try {
     const stats = dbCache.getStats();
@@ -54,24 +80,30 @@ router.get('/cache/stats', async (req, res) => {
   }
 });
 
-// Clear cache
+/**
+ * Маршрут для очистки кэша
+ * Очищает весь кэш или кэш по указанному шаблону
+ */
 router.post('/cache/clear', async (req, res) => {
   try {
     const { pattern } = req.body;
-    
+
     if (pattern) {
       dbCache.clearByPattern(pattern);
     } else {
       dbCache.clear();
     }
-    
+
     res.json({ message: 'Cache cleared successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to clear cache', message: error instanceof Error ? error.message : 'Неизвестная ошибка' });
   }
 });
 
-// Database maintenance
+/**
+ * Маршрут для выполнения обслуживания базы данных
+ * Выполняет различные задачи обслуживания базы данных
+ */
 router.post('/maintenance', async (req, res) => {
   try {
     await (storage as any).performMaintenance();
@@ -81,7 +113,10 @@ router.post('/maintenance', async (req, res) => {
   }
 });
 
-// Database backup
+/**
+ * Маршрут для создания резервной копии базы данных
+ * Создает резервную копию базы данных и возвращает информацию о ней
+ */
 router.post('/backup', async (req, res) => {
   try {
     const backupName = await (storage as any).createBackup();
@@ -91,7 +126,10 @@ router.post('/backup', async (req, res) => {
   }
 });
 
-// Database optimization
+/**
+ * Маршрут для оптимизации соединений с базой данных
+ * Выполняет оптимизацию текущих соединений с базой данных
+ */
 router.post('/optimize', async (req, res) => {
   try {
     await dbManager.optimizeConnections();
@@ -101,7 +139,10 @@ router.post('/optimize', async (req, res) => {
   }
 });
 
-// Cleanup old data
+/**
+ * Маршрут для очистки старых данных
+ * Удаляет данные, старше указанного количества дней
+ */
 router.post('/cleanup', async (req, res) => {
   try {
     const { days = 30 } = req.body;
@@ -112,7 +153,10 @@ router.post('/cleanup', async (req, res) => {
   }
 });
 
-// Connection pool information
+/**
+ * Маршрут для получения информации о пуле соединений
+ * Возвращает информацию о текущем состоянии пула соединений
+ */
 router.get('/pool', async (req, res) => {
   try {
     const stats = dbManager.getConnectionStats();
@@ -122,7 +166,10 @@ router.get('/pool', async (req, res) => {
   }
 });
 
-// Настройка multer для загрузки резервных копий
+/**
+ * Конфигурация multer для загрузки резервных копий
+ * Ограничивает размер файла и разрешает только JSON формат
+ */
 const upload = multer({
   dest: './backups',
   fileFilter: (req, file, cb) => {
@@ -140,12 +187,15 @@ const upload = multer({
 
 // BACKUP AND RESTORE ENDPOINTS
 
-// Создать резервную копию базы данных
+/**
+ * Маршрут для создания резервной копии базы данных
+ * Принимает описание резервной копии и создает полную резервную копию
+ */
 router.post('/backup', async (req, res) => {
   try {
     const { description } = req.body;
     const filepath = await dbBackup.createFullBackup(description);
-    
+
     res.json({
       success: true,
       message: 'Резервная копия создана успешно',
@@ -153,15 +203,18 @@ router.post('/backup', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Не удалось создать резервную копию',
       message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
 
-// Получить список резервных копий
+/**
+ * Маршрут для получения списка резервных копий
+ * Возвращает список всех доступных резервных копий
+ */
 router.get('/backups', async (req, res) => {
   try {
     const backups = await dbBackup.listBackups();
@@ -171,26 +224,29 @@ router.get('/backups', async (req, res) => {
       count: backups.length
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Не удалось получить список резервных копий',
       message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
 
-// Скачать резервную копию
+/**
+ * Маршрут для скачивания резервной копии
+ * Позволяет скачать конкретную резервную копию по имени файла
+ */
 router.get('/backup/:filename', async (req, res) => {
   try {
     const { filename } = req.params;
     const filepath = join('./backups', filename);
-    
+
     // Проверить что файл существует
     const fs = await import('fs');
     if (!fs.existsSync(filepath)) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Резервная копия не найдена' 
+      return res.status(404).json({
+        success: false,
+        error: 'Резервная копия не найдена'
       });
     }
 
@@ -198,56 +254,62 @@ router.get('/backup/:filename', async (req, res) => {
     res.download(filepath, filename, (err) => {
       if (err) {
         console.error('Download error:', err);
-        res.status(500).json({ 
-          success: false, 
-          error: 'Не удалось скачать файл' 
+        res.status(500).json({
+          success: false,
+          error: 'Не удалось скачать файл'
         });
       }
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Не удалось скачать резервную копию',
       message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
 
-// Восстановить из резервной копии
+/**
+ * Маршрут для восстановления из резервной копии
+ * Восстанавливает базу данных из указанной резервной копии
+ */
 router.post('/restore', async (req, res) => {
   try {
     const { filename, options } = req.body;
     const filepath = join('./backups', filename);
-    
+
     await dbBackup.restoreFromBackup(filepath, options);
-    
+
     res.json({
       success: true,
       message: 'База данных восстановлена успешно',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Не удалось восстановить базу данных',
       message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
 
-// Загрузить резервную копию
+/**
+ * Маршрут для загрузки резервной копии
+ * Загружает резервную копию на сервер и при необходимости сразу восстанавливает
+ */
 router.post('/backup/upload', upload.single('backup'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Файл не загружен' 
+      return res.status(400).json({
+        success: false,
+        error: 'Файл не загружен'
       });
     }
 
     const { restoreImmediately, clearExisting } = req.body;
     const filepath = req.file.path;
-    
+
     // Переименовать файл чтобы иметь правильное расширение
     const fs = await import('fs');
     const newFilepath = filepath + '.json';
@@ -275,34 +337,40 @@ router.post('/backup/upload', upload.single('backup'), async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Не удалось загрузить файл',
       message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
 
-// Удалить резервную копию
+/**
+ * Маршрут для удаления резервной копии
+ * Удаляет указанную резервную копию с сервера
+ */
 router.delete('/backup/:filename', async (req, res) => {
   try {
     const { filename } = req.params;
     await dbBackup.deleteBackup(filename);
-    
+
     res.json({
       success: true,
       message: 'Резервная копия удалена успешно'
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Не удалось удалить резервную копию',
       message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
 
-// Получить статистику базы данных
+/**
+ * Маршрут для получения подробной статистики базы данных
+ * Возвращает расширенную статистику о состоянии базы данных
+ */
 router.get('/stats/detailed', async (req, res) => {
   try {
     const stats = await dbBackup.getDatabaseStats();
@@ -311,12 +379,15 @@ router.get('/stats/detailed', async (req, res) => {
       stats
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Не удалось получить статистику',
       message: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
   }
 });
 
+/**
+ * Экспорт маршрутизатора для операций с базой данных
+ */
 export default router;
