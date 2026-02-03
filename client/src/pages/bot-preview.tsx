@@ -195,18 +195,21 @@ export default function BotPreview() {
       case 'photo':
         return {
           mediaType: 'photo' as const,
+          // Заглушка для фото - можно заменить на изображение по умолчанию
           mediaUrl: node.data.imageUrl || 'https://picsum.photos/800/600?random=1',
           mediaCaption: node.data.mediaCaption
         };
       case 'video':
         return {
           mediaType: 'video' as const,
+          // Заглушка для видео - можно заменить на видео по умолчанию
           mediaUrl: node.data.videoUrl || 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
           mediaCaption: node.data.mediaCaption
         };
       case 'audio':
         return {
           mediaType: 'audio' as const,
+          // Заглушка для аудио - можно заменить на аудио по умолчанию
           mediaUrl: node.data.audioUrl || 'https://www.soundjay.com/misc/beep-07a.wav',
           mediaCaption: node.data.mediaCaption,
           mediaData: {
@@ -217,6 +220,7 @@ export default function BotPreview() {
       case 'document':
         return {
           mediaType: 'document' as const,
+          // Заглушка для документа - можно заменить на документ по умолчанию
           mediaUrl: node.data.documentUrl || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
           mediaCaption: node.data.mediaCaption,
           mediaData: {
@@ -226,12 +230,14 @@ export default function BotPreview() {
       case 'sticker':
         return {
           mediaType: 'sticker' as const,
+          // Заглушка для стикера - можно заменить на стикер по умолчанию
           mediaUrl: node.data.stickerUrl || 'https://telegram.org/img/t_logo.png',
           mediaCaption: node.data.mediaCaption
         };
       case 'voice':
         return {
           mediaType: 'voice' as const,
+          // Заглушка для голосового сообщения - можно заменить на голосовое сообщение по умолчанию
           mediaUrl: node.data.voiceUrl || 'https://www.soundjay.com/misc/beep-07a.wav',
           mediaCaption: node.data.mediaCaption,
           mediaData: {
@@ -241,6 +247,7 @@ export default function BotPreview() {
       case 'animation':
         return {
           mediaType: 'animation' as const,
+          // Заглушка для анимации - можно заменить на анимацию по умолчанию
           mediaUrl: node.data.animationUrl || 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif',
           mediaCaption: node.data.mediaCaption
         };
@@ -610,7 +617,7 @@ export default function BotPreview() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Заголовок */}
       <Header
         projectName={currentProject.name}
         currentTab="preview"
@@ -620,7 +627,7 @@ export default function BotPreview() {
         isSaving={false}
       />
 
-      {/* Chat Interface */}
+      {/* Интерфейс чата */}
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <Card className="h-[calc(100vh-200px)] flex flex-col">
           <CardHeader className="pb-3">
@@ -631,17 +638,17 @@ export default function BotPreview() {
                 {messageHistory.length} сообщений
               </span>
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={resetChat}
                   data-testid="button-reset"
                 >
                   Перезапустить
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleGoBack}
                   data-testid="button-back"
                 >
@@ -651,25 +658,25 @@ export default function BotPreview() {
               </div>
             </CardTitle>
           </CardHeader>
-          
+
           <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-            {/* Chat messages */}
-            <div 
+            {/* Сообщения чата */}
+            <div
               ref={chatAreaRef}
               className="flex-1 overflow-y-auto space-y-3 p-2 border rounded bg-muted/20"
               data-testid="chat-area"
             >
               {messageHistory.map((message, index) => (
-                <div 
-                  key={`${message.id}-${index}-${message.time}`} 
+                <div
+                  key={`${message.id}-${index}-${message.time}`}
                   className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
-                    message.type === 'user' 
-                      ? 'bg-primary text-primary-foreground' 
+                    message.type === 'user'
+                      ? 'bg-primary text-primary-foreground'
                       : 'bg-card border'
                   }`}>
-                    {/* Media content */}
+                    {/* Содержимое медиа */}
                     {message.mediaType && message.mediaType !== 'location' && message.mediaType !== 'contact' && message.mediaType !== 'poll' && message.mediaType !== 'dice' && (
                       <div className="mb-2">
                         {message.mediaType === 'photo' && (
@@ -720,7 +727,7 @@ export default function BotPreview() {
                       </div>
                     )}
 
-                    {/* Special media types */}
+                    {/* Специальные типы медиа */}
                     {message.mediaType === 'location' && (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 p-2 bg-muted rounded">
@@ -769,22 +776,22 @@ export default function BotPreview() {
                       </div>
                     )}
 
-                    {/* Text content */}
+                    {/* Текстовое содержимое */}
                     {message.text && (
-                      <div 
+                      <div
                         className="text-sm whitespace-pre-wrap"
                         dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }}
                       />
                     )}
-                    
-                    {/* Caption for media */}
+
+                    {/* Подпись к медиа */}
                     {message.mediaCaption && (
                       <div className="text-xs text-muted-foreground mt-1">
                         {message.mediaCaption}
                       </div>
                     )}
 
-                    {/* Inline buttons */}
+                    {/* Встроенные кнопки */}
                     {message.buttons && message.buttons.length > 0 && message.keyboardType === 'inline' && (
                       <div className="mt-2 space-y-1">
                         {message.buttons.map((button, index) => (
@@ -810,7 +817,7 @@ export default function BotPreview() {
               ))}
             </div>
 
-            {/* Reply keyboard */}
+            {/* Клавиатура ответов */}
             {currentReplyKeyboard && currentReplyKeyboard.length > 0 && (
               <div className="border rounded p-2 bg-muted/20">
                 <div className="text-xs text-muted-foreground mb-2">Быстрые ответы:</div>
@@ -830,7 +837,7 @@ export default function BotPreview() {
               </div>
             )}
 
-            {/* Input area */}
+            {/* Область ввода */}
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
@@ -841,8 +848,8 @@ export default function BotPreview() {
                 className="flex-1"
                 data-testid="input-message"
               />
-              <Button 
-                onClick={handleSendMessage} 
+              <Button
+                onClick={handleSendMessage}
                 disabled={!textInput.trim()}
                 data-testid="button-send"
               >
