@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { RefreshCw, CheckCircle, Loader2 } from 'lucide-react';
 
+/**
+ * Интерфейс статуса работоспособности сервера
+ * @interface ServerHealthStatus
+ * @property {boolean} database - Статус подключения к базе данных
+ * @property {boolean} templates - Статус загрузки шаблонов
+ * @property {boolean} telegram - Статус подключения к Telegram
+ * @property {boolean} ready - Общий статус готовности сервера
+ */
 interface ServerHealthStatus {
   database: boolean;
   templates: boolean;
@@ -10,16 +18,37 @@ interface ServerHealthStatus {
   ready: boolean;
 }
 
+/**
+ * Компонент отображения статуса сервера
+ *
+ * Отображает индикатор загрузки и статуса работоспособности сервера,
+ * включая подключение к базе данных, загрузку шаблонов и подключение к Telegram.
+ * Компонент автоматически проверяет статус сервера и обновляет отображение.
+ *
+ * @returns {JSX.Element | null} Компонент индикатора статуса сервера или null, если статус известен и сервер готов
+ *
+ * @example
+ * ```tsx
+ * <ServerStatus />
+ * ```
+ */
 export function ServerStatus() {
   const [status, setStatus] = useState<ServerHealthStatus | null>(null);
   const [isVisible, setIsVisible] = useState(true);
 
+  /**
+   * Асинхронная функция проверки работоспособности сервера
+   *
+   * Выполняет запрос к эндпоинту /api/health для получения статуса сервера
+   * и обновляет состояние компонента. При успешной проверке может автоматически
+   * скрывать индикатор, если сервер полностью готов.
+   */
   const checkHealth = async () => {
     try {
       const response = await fetch('/api/health');
       const data = await response.json();
       setStatus(data);
-      
+
       // Автоматически скрываем индикатор когда все готово
       if (data.ready) {
         setTimeout(() => setIsVisible(false), 2000);
@@ -33,15 +62,15 @@ export function ServerStatus() {
 
   useEffect(() => {
     checkHealth();
-    
+
     // Только делаем один запрос при загрузке, дальше полагаемся на кеширование
     let interval: NodeJS.Timeout | null = null;
-    
+
     if (!status?.ready) {
       // Проверяем каждые 5 секунд только если сервер не готов
       interval = setInterval(checkHealth, 5000);
     }
-    
+
     return () => {
       if (interval) {
         clearInterval(interval);
@@ -73,16 +102,16 @@ export function ServerStatus() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="font-medium">Загрузка сервера...</span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={checkHealth}
               className="h-6 w-6 p-0"
             >
               <RefreshCw className="h-3 w-3" />
             </Button>
           </div>
-          
+
           <div className="space-y-1 text-sm">
             <div className="flex items-center gap-2">
               {status.database ? (
@@ -94,7 +123,7 @@ export function ServerStatus() {
                 База данных
               </span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {status.templates ? (
                 <CheckCircle className="h-3 w-3 text-green-600" />
@@ -105,7 +134,7 @@ export function ServerStatus() {
                 Шаблоны
               </span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {status.telegram ? (
                 <CheckCircle className="h-3 w-3 text-green-600" />
@@ -117,7 +146,7 @@ export function ServerStatus() {
               </span>
             </div>
           </div>
-          
+
           {!status.ready && (
             <div className="text-xs text-muted-foreground mt-2">
               Некоторые функции могут быть временно недоступны
