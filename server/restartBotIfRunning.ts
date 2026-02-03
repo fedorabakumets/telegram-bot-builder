@@ -4,10 +4,31 @@ import { startBot } from "./startBot";
 import { stopBot } from "./stopBot";
 import { storage } from "./storage";
 
-// Функция для перезапуска бота (если он запущен)
+/**
+ * Асинхронная функция для перезапуска Telegram-бота, если он запущен
+ *
+ * @param projectId - Уникальный идентификатор проекта бота
+ * @returns Объект с результатом операции:
+ *          - success: boolean - успешность выполнения операции
+ *          - error?: string - текст ошибки при наличии
+ *
+ * @description
+ * Эта функция проверяет статус бота по projectId. Если бот запущен, то:
+ * 1. Останавливает текущий экземпляр бота
+ * 2. Ждет полного завершения процесса
+ * 3. Проверяет, что процесс действительно завершен
+ * 4. Запускает бота снова с теми же параметрами
+ *
+ * В случае ошибки при остановке бота, функция возвращает success: true,
+ * чтобы не блокировать сохранение проекта. При других ошибках возвращается
+ * объект с success: false и описанием ошибки.
+ */
 export async function restartBotIfRunning(projectId: number): Promise<{ success: boolean; error?: string; }> {
   try {
+    // Получаем информацию об экземпляре бота из хранилища
     const instance = await storage.getBotInstance(projectId);
+
+    // Если бот не существует или не запущен, возвращаем успех без действий
     if (!instance || instance.status !== 'running') {
       return { success: true }; // Бот не запущен, ничего не делаем
     }

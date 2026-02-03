@@ -287,10 +287,10 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   /**
    * Переключить лайк шаблона и очистить кэш
    * @param id - ID шаблона
-   * @param liked - true для лайка, false для анлайка
+   * @param _liked - true для лайка, false для анлайка
    * @returns true, если статус лайка был изменен, иначе false
    */
-  async toggleTemplateLike(id: number, liked: boolean): Promise<boolean> {
+  async toggleTemplateLike(id: number, _liked: boolean): Promise<boolean> {
     this.templateCache.delete(id);
     return true;
   }
@@ -298,10 +298,10 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   /**
    * Переключить закладку шаблона и очистить кэш
    * @param id - ID шаблона
-   * @param bookmarked - true для добавления в закладки, false для удаления
+   * @param _bookmarked - true для добавления в закладки, false для удаления
    * @returns true, если статус закладки был изменен, иначе false
    */
-  async toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean> {
+  async toggleTemplateBookmark(id: number, _bookmarked: boolean): Promise<boolean> {
     this.templateCache.delete(id);
     return true;
   }
@@ -309,10 +309,10 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   /**
    * Оценить шаблон и очистить кэш
    * @param id - ID шаблона
-   * @param rating - Оценка (обычно от 1 до 5)
+   * @param _rating - Оценка (обычно от 1 до 5)
    * @returns true, если оценка была сохранена, иначе false
    */
-  async rateTemplate(id: number, rating: number): Promise<boolean> {
+  async rateTemplate(id: number, _rating: number): Promise<boolean> {
     this.templateCache.delete(id);
     return true;
   }
