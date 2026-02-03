@@ -11,7 +11,7 @@ interface ConnectionLineProps {
 }
 
 export function ConnectionLine({ connection, nodes, isSelected, onClick, onDelete }: ConnectionLineProps) {
-  const { path, midPoint, distance } = useMemo(() => {
+  const { path, midPoint } = useMemo(() => {
     const sourceNode = nodes.find(n => n.id === connection.source);
     const targetNode = nodes.find(n => n.id === connection.target);
     

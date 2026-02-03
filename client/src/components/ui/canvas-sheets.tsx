@@ -6,7 +6,6 @@ import {
   Plus, 
   X, 
   Copy, 
-  Trash2, 
   ChevronLeft, 
   ChevronRight,
   FileText

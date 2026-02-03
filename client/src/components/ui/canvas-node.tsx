@@ -2,18 +2,28 @@ import { Node } from '@/types/bot';
 import { cn } from '@/lib/utils';
 import { useState, useRef, useEffect } from 'react';
 
-// Function to parse and render formatted text
+/**
+ * Функция для парсинга и отображения форматированного текста
+ *
+ * @description Парсит текст с HTML или Markdown разметкой и возвращает JSX элемент с применённым форматированием
+ *
+ * @param {string} text - Текст для парсинга
+ * @param {string} [formatMode] - Режим форматирования ('html', 'markdown', 'none')
+ * @param {boolean} [markdown] - Использовать ли Markdown разметку (устаревший параметр)
+ *
+ * @returns {JSX.Element} Отформатированный текст в виде JSX элемента
+ */
 function parseFormattedText(text: string, formatMode?: string, markdown?: boolean): JSX.Element {
   if (!text) return <span>{text}</span>;
-  
+
   // Убрали debug логи для улучшения производительности
-  
+
   // Remove HTML tags and replace with styled spans
   const parseHTML = (htmlText: string): JSX.Element[] => {
     const parts: JSX.Element[] = [];
     let remaining = htmlText;
     let key = 0;
-    
+
     while (remaining.length > 0) {
       // Bold text (both <b> and <strong> tags)
       const boldMatch = remaining.match(/^(.*?)<(?:b|strong)>(.*?)<\/(?:b|strong)>(.*)/);
@@ -23,7 +33,7 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = boldMatch[3];
         continue;
       }
-      
+
       // Italic text (both <i> and <em> tags)
       const italicMatch = remaining.match(/^(.*?)<(?:i|em)>(.*?)<\/(?:i|em)>(.*)/);
       if (italicMatch) {
@@ -32,7 +42,7 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = italicMatch[3];
         continue;
       }
-      
+
       // Underline text
       const underlineMatch = remaining.match(/^(.*?)<u>(.*?)<\/u>(.*)/);
       if (underlineMatch) {
@@ -41,7 +51,7 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = underlineMatch[3];
         continue;
       }
-      
+
       // Strikethrough text
       const strikeMatch = remaining.match(/^(.*?)<s>(.*?)<\/s>(.*)/);
       if (strikeMatch) {
@@ -50,7 +60,7 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = strikeMatch[3];
         continue;
       }
-      
+
       // Code text
       const codeMatch = remaining.match(/^(.*?)<code>(.*?)<\/code>(.*)/);
       if (codeMatch) {
@@ -59,21 +69,21 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = codeMatch[3];
         continue;
       }
-      
+
       // No more matches, add remaining text
       parts.push(<span key={key++}>{remaining}</span>);
       break;
     }
-    
+
     return parts;
   };
-  
+
   // Parse Markdown format
   const parseMarkdown = (mdText: string): JSX.Element[] => {
     const parts: JSX.Element[] = [];
     let remaining = mdText;
     let key = 0;
-    
+
     while (remaining.length > 0) {
       // Bold text
       const boldMatch = remaining.match(/^(.*?)\*\*(.*?)\*\*(.*)/);
@@ -83,7 +93,7 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = boldMatch[3];
         continue;
       }
-      
+
       // Italic text
       const italicMatch = remaining.match(/^(.*?)\*(.*?)\*(.*)/);
       if (italicMatch) {
@@ -92,7 +102,7 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = italicMatch[3];
         continue;
       }
-      
+
       // Underline text
       const underlineMatch = remaining.match(/^(.*?)__(.*?)__(.*)/);
       if (underlineMatch) {
@@ -101,7 +111,7 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = underlineMatch[3];
         continue;
       }
-      
+
       // Strikethrough text
       const strikeMatch = remaining.match(/^(.*?)~~(.*?)~~(.*)/);
       if (strikeMatch) {
@@ -110,7 +120,7 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = strikeMatch[3];
         continue;
       }
-      
+
       // Code text
       const codeMatch = remaining.match(/^(.*?)`(.*?)`(.*)/);
       if (codeMatch) {
@@ -119,18 +129,18 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         remaining = codeMatch[3];
         continue;
       }
-      
+
       // No more matches, add remaining text
       parts.push(<span key={key++}>{remaining}</span>);
       break;
     }
-    
+
     return parts;
   };
-  
+
   // Determine formatting mode based on node properties
   let shouldUseHTML = false;
-  
+
   if (formatMode === 'html') {
     shouldUseHTML = true;
   } else if (formatMode === 'markdown') {
@@ -138,8 +148,8 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
   } else if (formatMode === 'none') {
     // For 'none' mode, check if text contains HTML tags and parse them
     // Look for common HTML tags used in formatting
-    const hasHTMLTags = text.includes('<b>') || text.includes('<i>') || text.includes('<u>') || 
-                       text.includes('<s>') || text.includes('<code>') || text.includes('<strong>') || 
+    const hasHTMLTags = text.includes('<b>') || text.includes('<i>') || text.includes('<u>') ||
+                       text.includes('<s>') || text.includes('<code>') || text.includes('<strong>') ||
                        text.includes('<em>') || text.includes('<a href');
     shouldUseHTML = hasHTMLTags;
   } else if (markdown === true) {
@@ -147,18 +157,39 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
     shouldUseHTML = false;
   } else {
     // Auto-detect: if text contains HTML formatting tags, use HTML parser
-    const hasHTMLTags = text.includes('<b>') || text.includes('<i>') || text.includes('<u>') || 
-                       text.includes('<s>') || text.includes('<code>') || text.includes('<strong>') || 
+    const hasHTMLTags = text.includes('<b>') || text.includes('<i>') || text.includes('<u>') ||
+                       text.includes('<s>') || text.includes('<code>') || text.includes('<strong>') ||
                        text.includes('<em>') || text.includes('<a href');
     shouldUseHTML = hasHTMLTags;
   }
-  
-  
+
+
   const parsedParts = shouldUseHTML ? parseHTML(text) : parseMarkdown(text);
-  
+
   return <span>{parsedParts}</span>;
 }
 
+/**
+ * Интерфейс свойств компонента CanvasNode
+ *
+ * @interface CanvasNodeProps
+ * @property {Node} node - Узел, который будет отображен
+ * @property {Node[]} [allNodes] - Все узлы на холсте (опционально)
+ * @property {boolean} [isSelected] - Выделен ли узел (опционально)
+ * @property {Function} [onClick] - Обработчик клика по узлу (опционально)
+ * @property {Function} [onDelete] - Обработчик удаления узла (опционально)
+ * @property {Function} [onDuplicate] - Обработчик дублирования узла (опционально)
+ * @property {Function} [onMove] - Обработчик перемещения узла (опционально)
+ * @property {Function} [onMoveEnd] - Обработчик завершения перемещения узла (опционально)
+ * @property {Function} [onConnectionStart] - Обработчик начала соединения (опционально)
+ * @property {Object} [connectionStart] - Информация о начатом соединении (опционально)
+ * @property {string} connectionStart.nodeId - ID узла, с которым начинается соединение
+ * @property {'source' | 'target'} connectionStart.handle - Тип соединения (источник или цель)
+ * @property {number} [zoom] - Уровень масштабирования (по умолчанию 100)
+ * @property {{x: number, y: number}} [pan] - Позиция панорамирования (по умолчанию {x: 0, y: 0})
+ * @property {Function} [setIsNodeBeingDragged] - Обработчик установки состояния перетаскивания (опционально)
+ * @property {Function} [onSizeChange] - Обработчик изменения размера узла (опционально)
+ */
 interface CanvasNodeProps {
   node: Node;
   allNodes?: Node[];
@@ -179,6 +210,11 @@ interface CanvasNodeProps {
   onSizeChange?: (nodeId: string, size: { width: number; height: number }) => void;
 }
 
+/**
+ * Иконки для различных типов узлов
+ *
+ * @description Объект, сопоставляющий типы узлов с соответствующими им иконками
+ */
 const nodeIcons = {
   start: 'fas fa-play',
   message: 'fas fa-comment',
@@ -208,6 +244,11 @@ const nodeIcons = {
   condition: 'fas fa-code-branch'
 };
 
+/**
+ * Цвета для различных типов узлов
+ *
+ * @description Объект, сопоставляющий типы узлов с соответствующими им цветовыми стилями
+ */
 const nodeColors = {
   start: 'bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
   message: 'bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800',
@@ -237,6 +278,44 @@ const nodeColors = {
   condition: 'bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
 };
 
+/**
+ * Компонент узла на холсте
+ *
+ * @component
+ * @description Отображает узел на холсте с возможностью перемещения, выделения и взаимодействия
+ *
+ * @param {CanvasNodeProps} props - Свойства компонента
+ * @param {Node} props.node - Узел, который будет отображен
+ * @param {Node[]} [props.allNodes] - Все узлы на холсте (опционально)
+ * @param {boolean} [props.isSelected=false] - Выделен ли узел (опционально)
+ * @param {Function} [props.onClick] - Обработчик клика по узлу (опционально)
+ * @param {Function} [props.onDelete] - Обработчик удаления узла (опционально)
+ * @param {Function} [props.onDuplicate] - Обработчик дублирования узла (опционально)
+ * @param {Function} [props.onMove] - Обработчик перемещения узла (опционально)
+ * @param {Function} [props.onMoveEnd] - Обработчик завершения перемещения узла (опционально)
+ * @param {Function} [props.onConnectionStart] - Обработчик начала соединения (опционально)
+ * @param {Object} [props.connectionStart] - Информация о начатом соединении (опционально)
+ * @param {number} [props.zoom=100] - Уровень масштабирования
+ * @param {{x: number, y: number}} [props.pan={x: 0, y: 0}] - Позиция панорамирования
+ * @param {Function} [props.setIsNodeBeingDragged] - Обработчик установки состояния перетаскивания (опционально)
+ * @param {Function} [props.onSizeChange] - Обработчик изменения размера узла (опционально)
+ *
+ * @example
+ * // Пример использования компонента CanvasNode
+ * <CanvasNode
+ *   node={nodeData}
+ *   isSelected={isSelected}
+ *   onClick={handleClick}
+ *   onDelete={handleDelete}
+ *   onDuplicate={handleDuplicate}
+ *   onMove={handleMove}
+ *   onMoveEnd={handleMoveEnd}
+ *   zoom={zoomLevel}
+ *   pan={panPosition}
+ * />
+ *
+ * @returns {JSX.Element} Компонент узла на холсте
+ */
 export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onMove, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });

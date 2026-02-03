@@ -1,13 +1,11 @@
 
 import { useMemo } from 'react';
 import { Connection, Node } from '@/types/bot';
-import { Badge } from '@/components/ui/badge';
 import { 
   ArrowRight, 
   Mouse, 
   Terminal, 
   ExternalLink, 
-  AlertCircle,
   Zap
 } from 'lucide-react';
 
@@ -28,7 +26,7 @@ export function EnhancedConnectionLine({
   onDelete,
   showButtonInfo = true
 }: EnhancedConnectionLineProps) {
-  const { path, midPoint, distance, buttonInfo, hasButton } = useMemo(() => {
+  const { path, midPoint, buttonInfo, hasButton } = useMemo(() => {
     const sourceNode = nodes.find(n => n.id === connection.source);
     const targetNode = nodes.find(n => n.id === connection.target);
     
