@@ -2,6 +2,16 @@ import { ReactNode, useMemo } from 'react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { LayoutConfig } from './layout-manager';
 
+/**
+ * @interface AdaptiveLayoutProps
+ * @description Свойства адаптивного компонента макета
+ * @property {LayoutConfig} config - Конфигурация макета
+ * @property {ReactNode} header - Контент заголовка
+ * @property {ReactNode} sidebar - Контент боковой панели
+ * @property {ReactNode} canvas - Контент холста
+ * @property {ReactNode} properties - Контент панели свойств
+ * @property {ReactNode} [children] - Дочерние элементы
+ */
 interface AdaptiveLayoutProps {
   config: LayoutConfig;
   header: ReactNode;
@@ -11,6 +21,13 @@ interface AdaptiveLayoutProps {
   children?: ReactNode;
 }
 
+/**
+ * @function AdaptiveLayout
+ * @description Адаптивный компонент макета, который изменяет свою структуру в зависимости от конфигурации
+ * Поддерживает различные позиции заголовка и боковых панелей
+ * @param {AdaptiveLayoutProps} props - Свойства компонента
+ * @returns {JSX.Element} Адаптивный компонент макета
+ */
 export function AdaptiveLayout({
   config,
   header,
@@ -19,18 +36,28 @@ export function AdaptiveLayout({
   properties,
   children
 }: AdaptiveLayoutProps) {
-  
+
+  /**
+   * @function containerClasses
+   * @description Вычисляет CSS классы для контейнера на основе конфигурации
+   * @returns {string} Строка с CSS классами
+   */
   // Вычисляем CSS классы для контейнера на основе конфигурации
   const containerClasses = useMemo(() => {
     const classes = ['h-screen overflow-hidden bg-gray-50 dark:bg-gray-900'];
-    
+
     if (config.compactMode) {
       classes.push('text-sm');
     }
-    
+
     return classes.join(' ');
   }, [config.compactMode]);
 
+  /**
+   * @function headerSize
+   * @description Вычисляет размеры заголовка в зависимости от его позиции и режима компактности
+   * @returns {number} Размер заголовка в пикселях
+   */
   // Вычисляем размеры заголовка
   const headerSize = useMemo(() => {
     if (config.headerPosition === 'top' || config.headerPosition === 'bottom') {
@@ -39,6 +66,11 @@ export function AdaptiveLayout({
     return config.compactMode ? 240 : 320; // 15rem или 20rem
   }, [config.headerPosition, config.compactMode]);
 
+  /**
+   * @function createVerticalLayout
+   * @description Создает макет с заголовком сверху или снизу
+   * @returns {JSX.Element} Вертикальный макет
+   */
   // Функция для создания макета с заголовком сверху/снизу
   const createVerticalLayout = () => {
     const headerElement = (
@@ -65,10 +97,15 @@ export function AdaptiveLayout({
     );
   };
 
+  /**
+   * @function createHorizontalLayout
+   * @description Создает макет с заголовком слева или справа
+   * @returns {JSX.Element} Горизонтальный макет
+   */
   // Функция для создания макета с заголовком слева/справа
   const createHorizontalLayout = () => {
     const headerElement = (
-      <div 
+      <div
         className={`${config.headerPosition === 'left' ? 'order-1' : 'order-3'} flex-shrink-0`}
         style={{ width: `${headerSize}px` }}
       >
@@ -93,17 +130,22 @@ export function AdaptiveLayout({
     );
   };
 
+  /**
+   * @function createHorizontalPanels
+   * @description Создает горизонтальные панели (сайдбар | холст | свойства)
+   * @returns {JSX.Element} Горизонтальная группа панелей
+   */
   // Создает горизонтальные панели (сайдбар | холст | свойства)
   const createHorizontalPanels = () => {
     const panels = [];
-    
+
     // Определяем порядок панелей
     if (config.sidebarPosition === 'left') {
       panels.push(
-        <ResizablePanel 
+        <ResizablePanel
           key="sidebar"
-          defaultSize={config.panelSizes.sidebar} 
-          minSize={10} 
+          defaultSize={config.panelSizes.sidebar}
+          minSize={10}
           maxSize={40}
           className="flex-shrink-0"
         >
@@ -115,10 +157,10 @@ export function AdaptiveLayout({
 
     if (config.propertiesPosition === 'left' && config.sidebarPosition === 'right') {
       panels.push(
-        <ResizablePanel 
+        <ResizablePanel
           key="properties-left"
-          defaultSize={config.panelSizes.properties} 
-          minSize={15} 
+          defaultSize={config.panelSizes.properties}
+          minSize={15}
           maxSize={40}
           className="flex-shrink-0"
         >
@@ -130,9 +172,9 @@ export function AdaptiveLayout({
 
     // Центральная панель холста
     panels.push(
-      <ResizablePanel 
+      <ResizablePanel
         key="canvas"
-        defaultSize={config.panelSizes.canvas} 
+        defaultSize={config.panelSizes.canvas}
         minSize={30}
         className="flex-1"
       >
@@ -154,10 +196,10 @@ export function AdaptiveLayout({
     if (config.propertiesPosition === 'right' || (config.propertiesPosition === 'left' && config.sidebarPosition === 'left')) {
       panels.push(<ResizableHandle key="handle2" withHandle />);
       panels.push(
-        <ResizablePanel 
+        <ResizablePanel
           key="properties-right"
-          defaultSize={config.panelSizes.properties} 
-          minSize={15} 
+          defaultSize={config.panelSizes.properties}
+          minSize={15}
           maxSize={40}
           className="flex-shrink-0"
         >
@@ -169,10 +211,10 @@ export function AdaptiveLayout({
     if (config.sidebarPosition === 'right') {
       panels.push(<ResizableHandle key="handle3" withHandle />);
       panels.push(
-        <ResizablePanel 
+        <ResizablePanel
           key="sidebar-right"
-          defaultSize={config.panelSizes.sidebar} 
-          minSize={10} 
+          defaultSize={config.panelSizes.sidebar}
+          minSize={10}
           maxSize={40}
           className="flex-shrink-0"
         >
@@ -188,6 +230,11 @@ export function AdaptiveLayout({
     );
   };
 
+  /**
+   * @function createVerticalPanels
+   * @description Создает вертикальные панели (для горизонтального заголовка)
+   * @returns {JSX.Element} Вертикальная группа панелей
+   */
   // Создает вертикальные панели (для горизонтального заголовка)
   const createVerticalPanels = () => {
     return (
@@ -195,9 +242,9 @@ export function AdaptiveLayout({
         <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
           {sidebar}
         </ResizablePanel>
-        
+
         <ResizableHandle withHandle />
-        
+
         <ResizablePanel defaultSize={60} minSize={30}>
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={75} minSize={50}>
