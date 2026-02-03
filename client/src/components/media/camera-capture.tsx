@@ -3,8 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useUploadMedia } from "@/hooks/use-media";
-import { Camera, X, RotateCcw, Zap, Loader2 } from "lucide-react";
+import { Camera, RotateCcw, Zap, Loader2 } from "lucide-react";
 
+/**
+ * @interface CameraCaptureProps
+ * @description Интерфейс свойств компонента CameraCapture
+ * @property {number} projectId - ID проекта, к которому будет привязано фото
+ * @property {(file: File) => void} [onCapture] - Функция обратного вызова, вызываемая при захвате изображения
+ * @property {() => void} [onClose] - Функция обратного вызова, вызываемая при закрытии компонента
+ * @property {boolean} isOpen - Флаг открытия/закрытия модального окна камеры
+ */
 interface CameraCaptureProps {
   projectId: number;
   onCapture?: (file: File) => void;
@@ -12,6 +20,13 @@ interface CameraCaptureProps {
   isOpen: boolean;
 }
 
+/**
+ * @function CameraCapture
+ * @description Компонент захвата изображения с камеры устройства
+ * Позволяет пользователю включать камеру, делать фотографии и сохранять их
+ * @param {CameraCaptureProps} props - Свойства компонента
+ * @returns {JSX.Element} Компонент захвата изображения с камеры
+ */
 export function CameraCapture({ projectId, onCapture, onClose, isOpen }: CameraCaptureProps) {
   const { toast } = useToast();
   const uploadMutation = useUploadMedia(projectId);
@@ -23,6 +38,13 @@ export function CameraCapture({ projectId, onCapture, onClose, isOpen }: CameraC
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [facing, setFacing] = useState<'user' | 'environment'>('environment');
 
+  /**
+   * @function startCamera
+   * @description Запускает камеру устройства и начинает трансляцию видео
+   * Останавливает предыдущий поток, если он существует, и запрашивает новый доступ к камере
+   * Обрабатывает ошибки доступа к камере и показывает уведомления
+   * @returns {Promise<void>}
+   */
   const startCamera = useCallback(async () => {
     try {
       // Останавливаем предыдущий поток, если он есть
@@ -55,6 +77,12 @@ export function CameraCapture({ projectId, onCapture, onClose, isOpen }: CameraC
     }
   }, [facing, toast]);
 
+  /**
+   * @function stopCamera
+   * @description Останавливает трансляцию с камеры и освобождает ресурсы
+   * Останавливает все треки потока и сбрасывает состояние компонента
+   * @returns {void}
+   */
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -64,6 +92,12 @@ export function CameraCapture({ projectId, onCapture, onClose, isOpen }: CameraC
     setCapturedImage(null);
   }, []);
 
+  /**
+   * @function capturePhoto
+   * @description Захватывает текущий кадр с видео и сохраняет его как изображение
+   * Использует canvas для создания снимка с видеоэлемента
+   * @returns {void}
+   */
   const capturePhoto = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
@@ -74,17 +108,29 @@ export function CameraCapture({ projectId, onCapture, onClose, isOpen }: CameraC
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
+
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
         setCapturedImage(dataUrl);
       }
     }
   }, []);
 
+  /**
+   * @function retakePhoto
+   * @description Сбрасывает захваченное изображение и возвращается к режиму просмотра камеры
+   * Позволяет пользователю сделать новый снимок
+   * @returns {void}
+   */
   const retakePhoto = useCallback(() => {
     setCapturedImage(null);
   }, []);
 
+  /**
+   * @function switchCamera
+   * @description Переключает между передней и задней камерой устройства
+   * Если камера активна, перезапускает её с новым направлением
+   * @returns {void}
+   */
   const switchCamera = useCallback(() => {
     setFacing(prev => prev === 'user' ? 'environment' : 'user');
     setCapturedImage(null);
@@ -93,6 +139,13 @@ export function CameraCapture({ projectId, onCapture, onClose, isOpen }: CameraC
     }
   }, [isStreaming, startCamera]);
 
+  /**
+   * @function savePhoto
+   * @description Сохраняет захваченное изображение в виде файла и загружает его
+   * Конвертирует изображение из canvas в формат Blob, создает файл с временной меткой
+   * и вызывает соответствующую функцию для обработки файла (либо через onCapture, либо напрямую загружает)
+   * @returns {Promise<void>}
+   */
   const savePhoto = useCallback(async () => {
     if (capturedImage && canvasRef.current) {
       try {
@@ -143,6 +196,12 @@ export function CameraCapture({ projectId, onCapture, onClose, isOpen }: CameraC
     }
   }, [capturedImage, onCapture, uploadMutation, toast]);
 
+  /**
+   * @function handleClose
+   * @description Обработчик закрытия компонента
+   * Останавливает камеру и вызывает внешнюю функцию onClose, если она предоставлена
+   * @returns {void}
+   */
   const handleClose = useCallback(() => {
     stopCamera();
     if (onClose) {
@@ -150,7 +209,11 @@ export function CameraCapture({ projectId, onCapture, onClose, isOpen }: CameraC
     }
   }, [stopCamera, onClose]);
 
-  // Эффект для запуска камеры при открытии диалога
+  /**
+   * @description Эффект для запуска камеры при открытии диалога
+   * Запускает камеру, если диалог открыт и нет активной трансляции или захваченного изображения
+   * Останавливает камеру, если диалог закрыт
+   */
   React.useEffect(() => {
     if (isOpen && !isStreaming && !capturedImage) {
       startCamera();
@@ -159,7 +222,10 @@ export function CameraCapture({ projectId, onCapture, onClose, isOpen }: CameraC
     }
   }, [isOpen, isStreaming, capturedImage, startCamera, stopCamera]);
 
-  // Очистка при размонтировании
+  /**
+   * @description Эффект очистки при размонтировании компонента
+   * Останавливает камеру при размонтировании компонента для освобождения ресурсов
+   */
   React.useEffect(() => {
     return () => {
       stopCamera();
