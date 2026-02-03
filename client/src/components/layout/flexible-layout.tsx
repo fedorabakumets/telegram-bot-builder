@@ -1,10 +1,24 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { SimpleLayoutConfig } from './simple-layout-customizer';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { useIsMobile } from '@/hooks/use-mobile';
 
+/**
+ * @interface FlexibleLayoutProps
+ * @description Свойства гибкого компонента макета
+ * @property {SimpleLayoutConfig} config - Конфигурация макета
+ * @property {React.ReactNode} headerContent - Контент заголовка
+ * @property {React.ReactNode} sidebarContent - Контент боковой панели
+ * @property {React.ReactNode} canvasContent - Контент холста
+ * @property {React.ReactNode} propertiesContent - Контент панели свойств
+ * @property {React.ReactNode} [codeContent] - Контент панели кода
+ * @property {React.ReactNode} [dialogContent] - Контент диалогового окна
+ * @property {React.ReactNode} [userDetailsContent] - Контент информации о пользователе
+ * @property {(newConfig: SimpleLayoutConfig) => void} [onConfigChange] - Функция обратного вызова при изменении конфигурации
+ * @property {boolean} [hideOnMobile] - Скрывать боковые панели на маленьких устройствах
+ * @property {string} [currentTab] - Текущая активная вкладка
+ */
 interface FlexibleLayoutProps {
   config: SimpleLayoutConfig;
   headerContent: React.ReactNode;
@@ -19,6 +33,13 @@ interface FlexibleLayoutProps {
   currentTab?: string; // Текущая активная вкладка
 }
 
+/**
+ * @function FlexibleLayout
+ * @description Гибкий компонент макета интерфейса
+ * Позволяет настраивать расположение элементов интерфейса в зависимости от конфигурации
+ * @param {FlexibleLayoutProps} props - Свойства компонента
+ * @returns {JSX.Element} Гибкий компонент макета
+ */
 export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   config,
   headerContent,
@@ -29,65 +50,17 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   dialogContent,
   userDetailsContent,
   onConfigChange,
-  hideOnMobile = false,
-  currentTab
-}) => {
+  hideOnMobile = false}) => {
   // Определяем мобильное устройство (экраны меньше 1200px для тестирования)
   const isMobile = useMediaQuery('(max-width: 1200px)');
-  const isSmallMobile = useIsMobile();
-  
-  const layoutStyles = useMemo(() => {
-    const visibleElements = config.elements.filter(el => {
-      if (!el.visible) return false;
-      
-      // Скрываем боковые панели на мобильных устройствах, если включен режим hideOnMobile
-      if (hideOnMobile && isMobile && (el.type === 'sidebar' || el.type === 'properties')) {
-        return false;
-      }
-      
-      // На очень маленьких экранах скрываем боковые панели всегда
-      if (isSmallMobile && (el.type === 'sidebar' || el.type === 'properties')) {
-        return false;
-      }
-      
-      return true;
-    });
-    
-    // Определяем элементы по позициям
-    const topElements = visibleElements.filter(el => el.position === 'top');
-    const bottomElements = visibleElements.filter(el => el.position === 'bottom');
-    const leftElements = visibleElements.filter(el => el.position === 'left');
-    const rightElements = visibleElements.filter(el => el.position === 'right');
-    const centerElements = visibleElements.filter(el => el.position === 'center');
-    
-    // Вычисляем размеры
-    const topSize = topElements.reduce((sum, el) => sum + el.size, 0);
-    const bottomSize = bottomElements.reduce((sum, el) => sum + el.size, 0);
-    const leftSize = leftElements.reduce((sum, el) => sum + el.size, 0);
-    const rightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
-    
-    return {
-      container: {
-        display: 'grid',
-        height: '100vh',
-        gridTemplateRows: `${topSize > 0 ? `${topSize}rem` : ''} 1fr ${bottomSize > 0 ? `${bottomSize}rem` : ''}`.trim(),
-        gridTemplateColumns: `${leftSize > 0 ? `${leftSize}%` : ''} 1fr ${rightSize > 0 ? `${rightSize}%` : ''}`.trim(),
-        gridTemplateAreas: `
-          ${topSize > 0 ? `"${leftSize > 0 ? 'top-left' : ''} top ${rightSize > 0 ? 'top-right' : ''}"` : ''}
-          "${leftSize > 0 ? 'left' : ''} center ${rightSize > 0 ? 'right' : ''}"
-          ${bottomSize > 0 ? `"${leftSize > 0 ? 'bottom-left' : ''} bottom ${rightSize > 0 ? 'bottom-right' : ''}"` : ''}
-        `.trim()
-      },
-      elements: {
-        top: topSize > 0 ? { gridArea: 'top' } : undefined,
-        bottom: bottomSize > 0 ? { gridArea: 'bottom' } : undefined,
-        left: leftSize > 0 ? { gridArea: 'left' } : undefined,
-        right: rightSize > 0 ? { gridArea: 'right' } : undefined,
-        center: { gridArea: 'center' }
-      }
-    };
-  }, [config, hideOnMobile, isMobile]);
 
+
+  /**
+   * @function getElementContent
+   * @description Возвращает контент элемента по его типу
+   * @param {string} type - Тип элемента ('header', 'sidebar', 'canvas', 'properties', 'code', 'dialog', 'userDetails')
+   * @returns {React.ReactNode | null} Контент элемента или null
+   */
   const getElementContent = (type: string) => {
     switch (type) {
       case 'header':
@@ -109,49 +82,12 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     }
   };
 
-  const renderElement = (element: any) => {
-    const content = getElementContent(element.type);
-    if (!content) return null;
 
-    const gridArea = element.position === 'center' ? 'center' : 
-                    element.position === 'top' ? 'top' :
-                    element.position === 'bottom' ? 'bottom' :
-                    element.position === 'left' ? 'left' :
-                    element.position === 'right' ? 'right' : 'center';
-
-    return (
-      <div
-        key={element.id}
-        className={`
-          ${element.type === 'sidebar' ? 'border-r' : ''}
-          ${element.type === 'properties' ? 'border-l' : ''}
-          ${element.type === 'code' ? 'border-l' : ''}
-          ${config.compactMode ? 'text-sm' : ''}
-          border-border bg-background
-          ${config.showGrid ? 'relative' : ''}
-        `}
-        style={{
-          gridArea: gridArea,
-          minHeight: element.type === 'header' ? 'auto' : '200px',
-          overflow: 'hidden'
-        }}
-      >
-        {config.showGrid && (
-          <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
-            backgroundImage: `
-              linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
-              linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px)
-            `,
-            backgroundSize: '20px 20px'
-          }} />
-        )}
-        <div className="relative z-10 h-full">
-          {content}
-        </div>
-      </div>
-    );
-  };
-
+  /**
+   * @function createSimpleLayout
+   * @description Создает упрощенный CSS Grid layout на основе конфигурации
+   * @returns {JSX.Element} Сгенерированный макет
+   */
   // Создаем упрощенный CSS Grid layout
   const createSimpleLayout = () => {
     const visibleElements = config.elements.filter(el => {
@@ -318,7 +254,6 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     // Если есть только верхняя/нижняя панель и основной контент
     if (topEl && !leftEl && rightElements.length === 0 && (centerEl || bottomEl)) {
       // Скрываем ResizableHandle на мобильных устройствах для вкладки "Бот"
-      const hideResizeHandle = isMobile && currentTab === 'bot';
       
       return (
         <ResizablePanelGroup direction="vertical" className="h-full gap-0">
@@ -481,4 +416,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   );
 };
 
+/**
+ * @exports FlexibleLayout
+ * @description Экспортирует компонент FlexibleLayout по умолчанию
+ */
 export default FlexibleLayout;
