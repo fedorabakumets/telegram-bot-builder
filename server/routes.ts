@@ -31,7 +31,26 @@ import { downloadFileFromUrl } from "./downloadFileFromUrl";
 import { getFileType } from "./getFileType";
 import { normalizeProjectData } from "./normalizeProjectData";
 
-// Глобальное хранилище активных процессов ботов (ключ: `${projectId}_${tokenId}`)
+/**
+ * Глобальное хранилище активных процессов ботов
+ *
+ * @type {Map<string, ChildProcess>}
+ * @description
+ * Карта для хранения активных процессов ботов, где ключом является строка в формате `${projectId}_${tokenId}`,
+ * а значением - объект ChildProcess, представляющий запущенный процесс бота.
+ *
+ * @example
+ * ```typescript
+ * // Добавление процесса в хранилище
+ * botProcesses.set(`${projectId}_${tokenId}`, childProcess);
+ *
+ * // Получение процесса из хранилища
+ * const process = botProcesses.get(`${projectId}_${tokenId}`);
+ *
+ * // Удаление процесса из хранилища
+ * botProcesses.delete(`${projectId}_${tokenId}`);
+ * ```
+ */
 export const botProcesses = new Map<string, ChildProcess>();
 
 // Расширенная настройка multer для загрузки файлов
@@ -183,12 +202,58 @@ const upload = multer({
   }
 });
 
-// Глобальные флаги готовности компонентов
+/**
+ * Глобальные флаги готовности компонентов системы
+ *
+ * @typedef {Object} readinessFlags
+ * @property {boolean} isDbReady - Флаг, указывающий на готовность базы данных
+ * @property {boolean} areTemplatesReady - Флаг, указывающий на готовность шаблонов
+ * @property {boolean} isTelegramReady - Флаг, указывающий на готовность Telegram клиента
+ */
+
+/**
+ * Флаг, указывающий на готовность базы данных
+ * @type {boolean}
+ */
 let isDbReady = false;
+
+/**
+ * Флаг, указывающий на готовность системных шаблонов
+ * @type {boolean}
+ */
 let areTemplatesReady = false;
+
+/**
+ * Флаг, указывающий на готовность Telegram клиента
+ * @type {boolean}
+ */
 let isTelegramReady = false;
 
-// Асинхронная инициализация компонентов в фоне
+/**
+ * Асинхронная инициализация компонентов системы
+ *
+ * @function initializeComponents
+ * @description
+ * Функция выполняет асинхронную инициализацию критических компонентов системы:
+ * - Инициализирует базу данных
+ * - Создает проект по умолчанию
+ * - Очищает состояния ботов
+ * - Инициализирует Telegram клиентов
+ * - Загружает системные шаблоны
+ *
+ * @returns {Promise<void>} Промис, который разрешается после завершения инициализации
+ *
+ * @example
+ * ```typescript
+ * // Запуск инициализации компонентов
+ * await initializeComponents();
+ *
+ * // Проверка готовности компонентов
+ * console.log('База данных готова:', isDbReady);
+ * console.log('Шаблоны готовы:', areTemplatesReady);
+ * console.log('Telegram готов:', isTelegramReady);
+ * ```
+ */
 async function initializeComponents() {
   try {
     // Инициализация базы данных
@@ -231,6 +296,45 @@ async function initializeComponents() {
   }
 }
 
+/**
+ * Регистрирует все маршруты API для приложения
+ *
+ * @function registerRoutes
+ * @param {Express} app - Экземпляр приложения Express
+ * @returns {Promise<Server>} Промис, который разрешается с экземпляром HTTP-сервера
+ *
+ * @description
+ * Функция регистрирует все маршруты API для приложения, включая:
+ * - Маршруты аутентификации
+ * - Маршруты управления проектами ботов
+ * - Маршруты управления экземплярами ботов
+ * - Маршруты управления токенами
+ * - Маршруты управления шаблонами
+ * - Маршруты управления медиафайлами
+ * - Маршруты управления пользовательскими данными
+ * - Маршруты управления группами ботов
+ * - Маршруты управления сообщениями
+ * - Маршруты управления медиафайлами сообщений
+ *
+ * Также настраивает:
+ * - Сессии с использованием PostgreSQL
+ * - Middleware аутентификации
+ * - Проверки готовности компонентов
+ * - Загрузку файлов с использованием multer
+ *
+ * @example
+ * ```typescript
+ * import express from 'express';
+ * import { registerRoutes } from './routes';
+ *
+ * const app = express();
+ * const server = await registerRoutes(app);
+ *
+ * server.listen(3000, () => {
+ *   console.log('Сервер запущен на порту 3000');
+ * });
+ * ```
+ */
 export async function registerRoutes(app: Express): Promise<Server> {
   // Инициализируем session middleware с PostgreSQL store
   const pgPool = new (await import('pg')).Pool({
@@ -285,7 +389,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendStatus(204);
   });
 
-  // Middleware для проверки готовности БД для критически важных операций
+  /**
+ * Middleware для проверки готовности базы данных
+ *
+ * @function requireDbReady
+ * @param {any} req - Объект запроса Express
+ * @param {any} res - Объект ответа Express
+ * @param {any} next - Функция перехода к следующему middleware
+ *
+ * @description
+ * Middleware проверяет, готова ли база данных к работе (isDbReady === true).
+ * Если база данных не готова, возвращает ошибку 503 с сообщением о том,
+ * что сервер еще загружается и предлагает повторить попытку позже.
+ *
+ * @returns {void} Ничего не возвращает, передает управление дальше через next() или отправляет ответ
+ *
+ * @example
+ * ```typescript
+ * // Использование middleware в маршруте
+ * app.get('/api/projects', requireDbReady, async (req, res) => {
+ *   // Этот код выполнится только если база данных готова
+ *   const projects = await storage.getAllBotProjects();
+ *   res.json(projects);
+ * });
+ * ```
+ */
   const requireDbReady = (req: any, res: any, next: any) => {
     if (!isDbReady) {
       return res.status(503).json({ 
