@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,11 +8,32 @@ import {
 } from '@/components/ui/dialog';
 import { TelegramLoginWidget } from '@/components/telegram-login-widget';
 
+/**
+ * Свойства компонента LoginModal
+ * @interface LoginModalProps
+ * @property {boolean} open - Состояние открытия модального окна
+ * @property {Function} onOpenChange - Коллбэк для изменения состояния открытия
+ */
 interface LoginModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * Компонент модального окна для входа в систему через Telegram
+ *
+ * Предоставляет интерфейс для аутентификации пользователя через
+ * Telegram с использованием компонента TelegramLoginWidget.
+ * Автоматически закрывается при успешной авторизации.
+ *
+ * @param {LoginModalProps} props - Свойства компонента
+ * @returns {JSX.Element} Модальное окно для входа в систему
+ *
+ * @example
+ * ```tsx
+ * <LoginModal open={isOpen} onOpenChange={setIsOpen} />
+ * ```
+ */
 export function LoginModal({ open, onOpenChange }: LoginModalProps) {
   useEffect(() => {
     // Слушаем на успешную авторизацию через Telegram
