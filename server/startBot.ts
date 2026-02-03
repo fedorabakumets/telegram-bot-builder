@@ -253,7 +253,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
       console.error(`Ошибка запуска бота ${projectId} (токен ${tokenId}):`, error);
       try {
         // Проверяем, что пул соединений все еще активен перед обращением к базе данных
-        if (globalThis.__dbPoolActive !== false) {
+        if ((globalThis as any).__dbPoolActive !== false) {
           const instance = await storage.getBotInstance(projectId);
           if (instance) {
             await storage.updateBotInstance(instance.id, {
@@ -274,7 +274,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
       console.log(`Бот ${projectId} (токен ${tokenId}) завершен с кодом ${code}, сигнал: ${signal}`);
       try {
         // Проверяем, что пул соединений все еще активен перед обращением к базе данных
-        if (globalThis.__dbPoolActive !== false) {
+        if ((globalThis as any).__dbPoolActive !== false) {
           const instance = await storage.getBotInstance(projectId);
           if (instance) {
             await storage.updateBotInstance(instance.id, {
