@@ -4,16 +4,32 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Phone, Shield, CheckCircle2, Lock } from 'lucide-react';
+import { Loader2, Phone, Shield, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
+/**
+ * Свойства компонента TelegramAuth
+ * @interface TelegramAuthProps
+ * @property {boolean} open - Состояние открытия диалога
+ * @property {Function} onOpenChange - Коллбэк для изменения состояния открытия
+ * @property {Function} onSuccess - Коллбэк, вызываемый при успешной авторизации
+ */
 interface TelegramAuthProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
+/**
+ * Интерфейс статуса авторизации
+ * @interface AuthStatus
+ * @property {boolean} isAuthenticated - Статус аутентификации
+ * @property {string} [phoneNumber] - Номер телефона пользователя (опционально)
+ * @property {string} [userId] - ID пользователя (опционально)
+ * @property {boolean} [needsCode] - Требуется ли ввод кода (опционально)
+ * @property {boolean} [needsPassword] - Требуется ли ввод пароля (опционально)
+ */
 interface AuthStatus {
   isAuthenticated: boolean;
   phoneNumber?: string;
@@ -22,16 +38,34 @@ interface AuthStatus {
   needsPassword?: boolean;
 }
 
+/**
+ * Компонент авторизации через Telegram
+ *
+ * Предоставляет интерфейс для авторизации через Telegram Client API
+ * с использованием номера телефона и кода подтверждения.
+ *
+ * @param {TelegramAuthProps} props - Свойства компонента
+ * @returns {JSX.Element} Диалог авторизации через Telegram
+ *
+ * @example
+ * ```tsx
+ * <TelegramAuth
+ *   open={isOpen}
+ *   onOpenChange={setIsOpen}
+ *   onSuccess={() => console.log('Успешная авторизация')}
+ * />
+ * ```
+ */
 export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProps) {
   const [step, setStep] = useState<'credentials' | 'phone' | 'code' | 'password'>('credentials');
-  const [apiId, setApiId] = useState('');
-  const [apiHash, setApiHash] = useState('');
+  const [] = useState('');
+  const [] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneCode, setPhoneCode] = useState('');
   const [phoneCodeHash, setPhoneCodeHash] = useState('');
-  const [password, setPassword] = useState('');
+  const [] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [authStatus, setAuthStatus] = useState<AuthStatus>({ isAuthenticated: false });
+  const [, setAuthStatus] = useState<AuthStatus>({ isAuthenticated: false });
   const { toast } = useToast();
 
   // Проверяем статус авторизации при открытии
@@ -41,12 +75,18 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
     }
   }, [open]);
 
+  /**
+   * Проверяет статус авторизации пользователя
+   *
+   * Выполняет запрос к API для проверки текущего статуса авторизации
+   * и обновляет состояние компонента в зависимости от результата.
+   */
   const checkAuthStatus = async () => {
     try {
       const response = await fetch('/api/telegram-auth/status');
       const status = await response.json();
       setAuthStatus(status);
-      
+
       if (status.isAuthenticated) {
         toast({
           title: "Уже авторизован",
@@ -66,47 +106,12 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
     }
   };
 
-  const saveCredentials = async () => {
-    if (!apiId.trim() || !apiHash.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите API ID и API Hash",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await apiRequest('POST', '/api/telegram-auth/save-credentials', { 
-        apiId: apiId.trim(), 
-        apiHash: apiHash.trim() 
-      });
-
-      if (response.success) {
-        setStep('phone');
-        toast({
-          title: "Credentials сохранены",
-          description: "Теперь введите номер телефона",
-        });
-      } else {
-        toast({
-          title: "Ошибка сохранения",
-          description: response.error || "Неизвестная ошибка",
-          variant: "destructive"
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось сохранить credentials",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  /**
+   * Отправляет код подтверждения на указанный номер телефона
+   *
+   * Выполняет запрос к API для отправки кода подтверждения
+   * и обновляет состояние компонента в зависимости от результата.
+   */
   const sendCode = async () => {
     if (!phoneNumber.trim()) {
       toast({
@@ -146,6 +151,12 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
     }
   };
 
+  /**
+   * Проверяет введенный код подтверждения
+   *
+   * Выполняет запрос к API для проверки кода подтверждения
+   * и обновляет состояние компонента в зависимости от результата.
+   */
   const verifyCode = async () => {
     if (!phoneCode.trim()) {
       toast({
@@ -195,47 +206,12 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
     }
   };
 
-  const verifyPassword = async () => {
-    if (!password.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите пароль",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await apiRequest('POST', '/api/telegram-auth/verify-password', {
-        password: password.trim()
-      });
-
-      if (response.success) {
-        toast({
-          title: "Авторизация успешна",
-          description: "Двухфакторная аутентификация пройдена",
-        });
-        onSuccess();
-        onOpenChange(false);
-      } else {
-        toast({
-          title: "Ошибка авторизации",
-          description: response.error || "Неверный пароль",
-          variant: "destructive"
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось проверить пароль",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  /**
+   * Обрабатывает нажатие клавиши Enter для выполнения действия
+   *
+   * @param {React.KeyboardEvent} e - Событие нажатия клавиши
+   * @param {Function} action - Действие для выполнения
+   */
   const handleKeyPress = (e: React.KeyboardEvent, action: () => void) => {
     if (e.key === 'Enter' && !isLoading) {
       action();
@@ -276,8 +252,8 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
                 </p>
               </div>
 
-              <Button 
-                onClick={sendCode} 
+              <Button
+                onClick={sendCode}
                 disabled={isLoading || !phoneNumber.trim()}
                 className="w-full"
               >
@@ -317,16 +293,16 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
               </div>
 
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setStep('phone')}
                   disabled={isLoading}
                   className="flex-1"
                 >
                   Назад
                 </Button>
-                <Button 
-                  onClick={verifyCode} 
+                <Button
+                  onClick={verifyCode}
                   disabled={isLoading || !phoneCode.trim()}
                   className="flex-1"
                 >
