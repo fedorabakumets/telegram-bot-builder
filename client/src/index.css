@@ -151,6 +151,7 @@
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -377,7 +378,7 @@
 
 /* Плавные переходы курсора изменения размера */
 body {
-  cursor-transition: cursor 0.1s ease; /* Плавный переход курсора */
+  /* cursor-transition: cursor 0.1s ease; - недействительное свойство */
 }
 
 /* Улучшение границ панелей для темной темы */
