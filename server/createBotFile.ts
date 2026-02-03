@@ -1,8 +1,21 @@
+/**
+ * @fileoverview Модуль для создания файлов Telegram бота
+ *
+ * Этот файл предоставляет функции для создания файлов бота,
+ * включая основной Python-файл и сопутствующие файлы.
+ */
+
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-// Функция для создания Python файла бота
-
+/**
+ * Создает Python файл для бота
+ *
+ * @param botCode - Код бота на Python
+ * @param projectId - Идентификатор проекта
+ * @param tokenId - Необязательный идентификатор токена (если указан, используется в имени файла)
+ * @returns Путь к созданному файлу бота
+ */
 export function createBotFile(botCode: string, projectId: number, tokenId?: number): string {
   const botsDir = join(process.cwd(), 'bots');
   if (!existsSync(botsDir)) {
@@ -15,7 +28,16 @@ export function createBotFile(botCode: string, projectId: number, tokenId?: numb
   return filePath;
 }
 
-// Функция для создания всех файлов бота (основной файл + сопутствующие)
+/**
+ * Создает полный набор файлов для бота (основной файл + сопутствующие)
+ *
+ * @param botCode - Код бота на Python
+ * @param botName - Имя бота
+ * @param botData - Данные проекта бота
+ * @param projectId - Идентификатор проекта
+ * @param tokenId - Идентификатор токена
+ * @returns Объект с путем к основному файлу и массивом путей к сопутствующим файлам
+ */
 export async function createCompleteBotFiles(
   botCode: string,
   botName: string,
