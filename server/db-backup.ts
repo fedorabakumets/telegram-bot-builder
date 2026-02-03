@@ -1,9 +1,19 @@
-import { db, pool } from './db';
+/**
+ * @fileoverview Модуль для создания и восстановления резервных копий базы данных
+ *
+ * Этот файл предоставляет классы и функции для создания полных резервных копий
+ * базы данных, восстановления из резервных копий и управления файлами резервных копий.
+ */
+
+import { db } from './db';
 import { sql } from 'drizzle-orm';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { botProjects, botInstances, botTemplates, botTokens, mediaFiles, userBotData } from '@shared/schema';
 
+/**
+ * Интерфейс для данных резервной копии
+ */
 interface BackupData {
   metadata: {
     version: string;
@@ -21,12 +31,27 @@ interface BackupData {
   };
 }
 
+/**
+ * Класс для управления резервными копиями базы данных
+ * Предоставляет методы для создания, восстановления и управления резервными копиями
+ */
 export class DatabaseBackup {
   private static instance: DatabaseBackup;
+
+  /**
+   * Директория для хранения резервных копий
+   */
   private backupDir = './backups';
 
+  /**
+   * Приватный конструктор для реализации паттерна Singleton
+   */
   private constructor() {}
 
+  /**
+   * Получить экземпляр класса DatabaseBackup (реализация паттерна Singleton)
+   * @returns Экземпляр класса DatabaseBackup
+   */
   static getInstance(): DatabaseBackup {
     if (!DatabaseBackup.instance) {
       DatabaseBackup.instance = new DatabaseBackup();
@@ -34,7 +59,11 @@ export class DatabaseBackup {
     return DatabaseBackup.instance;
   }
 
-  // Создать полный дамп базы данных
+  /**
+   * Создает полный дамп базы данных
+   * @param description Описание резервной копии (опционально)
+   * @returns Путь к файлу резервной копии
+   */
   async createFullBackup(description?: string): Promise<string> {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -84,15 +113,20 @@ export class DatabaseBackup {
       // Сохранить в файл
       writeFileSync(filepath, JSON.stringify(backupData, null, 2), 'utf-8');
 
-      console.log(`Backup created successfully: ${filepath}`);
+      console.log(`Резервная копия создана успешно: ${filepath}`);
       return filepath;
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      throw new Error(`Backup operation failed: ${error?.message || 'Unknown error'}`);
+      console.error('Подробная ошибка:', error?.message, error?.stack);
+      throw new Error(`Операция резервного копирования не удалась: ${error?.message || 'Неизвестная ошибка'}`);
     }
   }
 
-  // Восстановить базу данных из файла
+  /**
+   * Восстанавливает базу данных из файла резервной копии
+   * @param filepath Путь к файлу резервной копии
+   * @param options Дополнительные опции восстановления
+   * @returns Promise<void>
+   */
   async restoreFromBackup(filepath: string, options?: {
     clearExisting?: boolean;
     skipTables?: string[];
@@ -100,18 +134,18 @@ export class DatabaseBackup {
   }): Promise<void> {
     try {
       if (!existsSync(filepath)) {
-        throw new Error(`Backup file not found: ${filepath}`);
+        throw new Error(`Файл резервной копии не найден: ${filepath}`);
       }
 
       const backupData: BackupData = JSON.parse(readFileSync(filepath, 'utf-8'));
-      
+
       // Валидация структуры файла
       if (!backupData.metadata || !backupData.data) {
-        throw new Error('Invalid backup file structure');
+        throw new Error('Неверная структура файла резервной копии');
       }
 
-      console.log(`Restoring backup from ${backupData.metadata.timestamp}`);
-      console.log(`Description: ${backupData.metadata.description}`);
+      console.log(`Восстановление резервной копии из ${backupData.metadata.timestamp}`);
+      console.log(`Описание: ${backupData.metadata.description}`);
 
       // Очистить существующие данные если указано
       if (options?.clearExisting) {
@@ -120,11 +154,11 @@ export class DatabaseBackup {
 
       // Определить какие таблицы восстанавливать
       const tablesToRestore = options?.onlyTables || backupData.metadata.tables;
-      
+
       // Восстановить данные в правильном порядке (чтобы избежать проблем с внешними ключами)
       const restoreOrder = [
         'botProjects',
-        'botTemplates', 
+        'botTemplates',
         'botTokens',
         'mediaFiles',
         'botInstances',
@@ -137,22 +171,27 @@ export class DatabaseBackup {
 
         const tableData = backupData.data[tableName as keyof typeof backupData.data];
         if (!tableData || !Array.isArray(tableData) || tableData.length === 0) {
-          console.log(`Skipping ${tableName} - no data`);
+          console.log(`Пропуск ${tableName} - нет данных`);
           continue;
         }
 
         await this.restoreTable(tableName, tableData);
-        console.log(`Restored ${tableData.length} records to ${tableName}`);
+        console.log(`Восстановлено ${tableData.length} записей в ${tableName}`);
       }
 
-      console.log('Database restore completed successfully');
+      console.log('Восстановление базы данных завершено успешно');
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      throw new Error(`Restore operation failed: ${error?.message || 'Unknown error'}`);
+      console.error('Подробная ошибка:', error?.message, error?.stack);
+      throw new Error(`Операция восстановления не удалась: ${error?.message || 'Неизвестная ошибка'}`);
     }
   }
 
-  // Восстановить конкретную таблицу
+  /**
+   * Восстанавливает конкретную таблицу из резервной копии
+   * @param tableName Имя таблицы для восстановления
+   * @param data Данные для вставки в таблицу
+   * @returns Promise<void>
+   */
   private async restoreTable(tableName: string, data: any[]): Promise<void> {
     try {
       switch (tableName) {
@@ -187,19 +226,23 @@ export class DatabaseBackup {
           }
           break;
         default:
-          console.warn(`Unknown table: ${tableName}`);
+          console.warn(`Неизвестная таблица: ${tableName}`);
       }
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      throw new Error(`Failed to restore table ${tableName}: ${error?.message || 'Unknown error'}`);
+      console.error('Подробная ошибка:', error?.message, error?.stack);
+      throw new Error(`Не удалось восстановить таблицу ${tableName}: ${error?.message || 'Неизвестная ошибка'}`);
     }
   }
 
-  // Очистить все таблицы
+  /**
+   * Очищает все таблицы базы данных
+   * @param skipTables Массив имен таблиц, которые нужно пропустить при очистке
+   * @returns Promise<void>
+   */
   private async clearAllTables(skipTables?: string[]): Promise<void> {
     const tablesToClear = [
       'userBotData',
-      'botInstances', 
+      'botInstances',
       'mediaFiles',
       'botTokens',
       'botTemplates',
@@ -230,14 +273,17 @@ export class DatabaseBackup {
             await db.delete(userBotData);
             break;
         }
-        console.log(`Cleared table: ${tableName}`);
+        console.log(`Очищена таблица: ${tableName}`);
       } catch (error: any) {
-        console.error('Detailed error:', error?.message, error?.stack);
+        console.error('Подробная ошибка:', error?.message, error?.stack);
       }
     }
   }
 
-  // Получить список доступных резервных копий
+  /**
+   * Получает список доступных резервных копий
+   * @returns Массив объектов с информацией о резервных копиях
+   */
   async listBackups(): Promise<Array<{
     filename: string;
     filepath: string;
@@ -256,13 +302,13 @@ export class DatabaseBackup {
         .map(file => {
           const filepath = join(this.backupDir, file);
           const stats = fs.statSync(filepath);
-          
+
           let metadata: BackupData['metadata'] | undefined;
           try {
             const backupData: BackupData = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
             metadata = backupData.metadata;
           } catch (error: any) {
-            console.warn(`Failed to read metadata from ${file}: ${error?.message}`);
+            console.warn(`Не удалось прочитать метаданные из ${file}: ${error?.message}`);
           }
 
           return {
@@ -277,29 +323,36 @@ export class DatabaseBackup {
 
       return files;
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
+      console.error('Подробная ошибка:', error?.message, error?.stack);
       return [];
     }
   }
 
-  // Удалить резервную копию
+  /**
+   * Удаляет файл резервной копии
+   * @param filename Имя файла резервной копии для удаления
+   * @returns Promise<void>
+   */
   async deleteBackup(filename: string): Promise<void> {
     try {
       const filepath = join(this.backupDir, filename);
       if (!existsSync(filepath)) {
-        throw new Error(`Backup file not found: ${filename}`);
+        throw new Error(`Файл резервной копии не найден: ${filename}`);
       }
 
       const fs = await import('fs');
       fs.unlinkSync(filepath);
-      console.log(`Deleted backup: ${filename}`);
+      console.log(`Удалена резервная копия: ${filename}`);
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      throw new Error(`Failed to delete backup: ${error?.message || 'Unknown error'}`);
+      console.error('Подробная ошибка:', error?.message, error?.stack);
+      throw new Error(`Не удалось удалить резервную копию: ${error?.message || 'Неизвестная ошибка'}`);
     }
   }
 
-  // Получить статистику базы данных
+  /**
+   * Получает статистику базы данных
+   * @returns Объект со статистикой таблиц базы данных
+   */
   async getDatabaseStats(): Promise<{
     tables: Array<{
       name: string;
@@ -367,11 +420,13 @@ export class DatabaseBackup {
         estimatedSize: 'N/A'
       };
     } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      throw new Error(`Failed to get database stats: ${error?.message || 'Unknown error'}`);
+      console.error('Подробная ошибка:', error?.message, error?.stack);
+      throw new Error(`Не удалось получить статистику базы данных: ${error?.message || 'Неизвестная ошибка'}`);
     }
   }
 }
 
-// Экспорт singleton instance
+/**
+ * Экземпляр класса DatabaseBackup (реализация паттерна Singleton)
+ */
 export const dbBackup = DatabaseBackup.getInstance();
