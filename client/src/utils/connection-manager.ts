@@ -1,35 +1,73 @@
 import { Node, Connection, Button } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
+/**
+ * Интерфейс для представления связи вместе с кнопкой и узлами
+ * Содержит информацию о соединении, связанной кнопке и узлах источника и назначения
+ */
 export interface ConnectionWithButton {
+  /** Объект соединения */
   connection: Connection;
+  /** Объект кнопки, связанной с соединением */
   button: Button;
+  /** Узел-источник соединения */
   sourceNode: Node;
+  /** Узел-назначение соединения */
   targetNode: Node;
 }
 
+/**
+ * Интерфейс для предложения соединения
+ * Содержит информацию о потенциальном соединении с метриками достоверности
+ */
 export interface ConnectionSuggestion {
+  /** Уникальный идентификатор предложения */
   id: string;
+  /** Предлагаемое соединение */
   connection: Connection;
+  /** Кнопка, предлагаемая для соединения */
   suggestedButton: Button;
+  /** Уверенность в предложении (от 0 до 1) */
   confidence: number;
+  /** Причина предложения соединения */
   reason: string;
+  /** Флаг автоматического создания соединения */
   autoCreate: boolean;
 }
 
+/**
+ * Интерфейс для состояния менеджера соединений
+ * Хранит информацию о соединениях, узлах и настройках
+ */
 export interface ConnectionManagerState {
+  /** Массив существующих соединений */
   connections: Connection[];
+  /** Массив узлов */
   nodes: Node[];
+  /** Массив предложенных соединений */
   pendingConnections: ConnectionSuggestion[];
+  /** Флаг автоматического создания кнопок */
   autoButtonCreation: boolean;
   // Добавляем поддержку листов
+  /** Массив всех листов для межлистовых соединений */
   sheets?: any[]; // Массив всех листов для межлистовых соединений
+  /** ID текущего активного листа */
   currentSheetId?: string; // ID текущего активного листа
 }
 
+/**
+ * Класс для управления соединениями между узлами
+ * Обеспечивает создание, удаление и синхронизацию соединений и кнопок
+ */
 export class ConnectionManager {
+  /** Состояние менеджера соединений */
   private state: ConnectionManagerState;
-  
+
+  /**
+   * Конструктор класса ConnectionManager
+   *
+   * @param initialState - начальное состояние менеджера соединений
+   */
   constructor(initialState: Partial<ConnectionManagerState> = {}) {
     this.state = {
       connections: [],
@@ -40,12 +78,30 @@ export class ConnectionManager {
     };
   }
 
-  // Обновление состояния
+  /**
+   * Обновление состояния менеджера соединений
+   *
+   * @param newState - новое состояние для обновления
+   */
   updateState(newState: Partial<ConnectionManagerState>) {
     this.state = { ...this.state, ...newState };
   }
 
-  // Основной метод для создания связи (поддерживает межлистовые соединения)
+  /**
+   * Основной метод для создания связи (поддерживает межлистовые соединения)
+   *
+   * Создает соединение между двумя узлами с возможностью автоматического создания кнопки.
+   * Поддерживает межлистовые соединения, позволяя соединять узлы из разных листов.
+   *
+   * @param sourceId - ID узла-источника
+   * @param targetId - ID узла-назначения
+   * @param options - опции создания соединения
+   * @param options.autoCreateButton - флаг автоматического создания кнопки
+   * @param options.buttonText - текст кнопки
+   * @param options.buttonAction - тип действия кнопки
+   * @param options.targetSheetId - ID целевого листа для межлистового соединения
+   * @returns объект, содержащий созданное соединение и обновленные узлы
+   */
   createConnection(sourceId: string, targetId: string, options: {
     autoCreateButton?: boolean;
     buttonText?: string;
@@ -97,7 +153,14 @@ export class ConnectionManager {
     return { connection, updatedNodes };
   }
 
-  // Получение всех узлов из всех листов для межлистовых соединений
+  /**
+   * Получение всех узлов из всех листов для межлистовых соединений
+   *
+   * Метод возвращает массив всех узлов из всех доступных листов с информацией о принадлежности
+   * к конкретному листу. Используется для поиска узлов при создании межлистовых соединений.
+   *
+   * @returns массив объектов, содержащих узел, ID листа и название листа
+   */
   getAllNodesFromAllSheets(): { node: Node; sheetId: string; sheetName: string }[] {
     const allNodes: { node: Node; sheetId: string; sheetName: string }[] = [];
     
@@ -118,9 +181,22 @@ export class ConnectionManager {
     return allNodes;
   }
 
-  // Создание кнопки для соединения (поддерживает межлистовые соединения)
+  /**
+   * Создание кнопки для соединения (поддерживает межлистовые соединения)
+   *
+   * Метод создает кнопку, связанную с соединением между узлами. При необходимости
+   * добавляет индикатор листа для межлистовых соединений.
+   *
+   * @param _sourceNode - узел-источник (не используется напрямую, но передается для контекста)
+   * @param targetNode - узел-назначение
+   * @param options - опции создания кнопки
+   * @param options.buttonText - текст кнопки
+   * @param options.buttonAction - тип действия кнопки
+   * @param options.targetSheetId - ID целевого листа для межлистового соединения
+   * @returns созданный объект кнопки
+   */
   private createButtonForConnection(
-    sourceNode: Node,
+    _sourceNode: Node,
     targetNode: Node,
     options: {
       buttonText?: string;
@@ -151,7 +227,14 @@ export class ConnectionManager {
     };
   }
 
-  // Определение типа действия кнопки
+  /**
+   * Определение типа действия кнопки
+   *
+   * Метод анализирует тип целевого узла и определяет подходящий тип действия для кнопки.
+   *
+   * @param targetNode - целевой узел
+   * @returns тип действия кнопки ('goto', 'command' или 'url')
+   */
   private determineButtonAction(targetNode: Node): 'goto' | 'command' | 'url' {
     switch (targetNode.type) {
       case 'command':
@@ -163,7 +246,15 @@ export class ConnectionManager {
     }
   }
 
-  // Генерация текста кнопки
+  /**
+   * Генерация текста кнопки
+   *
+   * Метод генерирует подходящий текст для кнопки на основе типа целевого узла и действия.
+   *
+   * @param targetNode - целевой узел
+   * @param action - тип действия кнопки
+   * @returns текст кнопки
+   */
   private generateButtonText(targetNode: Node, action: 'goto' | 'command' | 'url'): string {
     if (action === 'command' && targetNode.data.command) {
       return targetNode.data.command;
@@ -201,12 +292,28 @@ export class ConnectionManager {
     return textMap[targetNode.type] || '➡️ Продолжить';
   }
 
-  // Проверка, может ли узел иметь кнопки
+  /**
+   * Проверка, может ли узел иметь кнопки
+   *
+   * Метод определяет, поддерживает ли узел добавление кнопок.
+   *
+   * @param node - узел для проверки
+   * @returns true, если узел может иметь кнопки, иначе false
+   */
   private canNodeHaveButtons(node: Node): boolean {
     return ['message', 'photo', 'keyboard', 'start', 'input'].includes(node.type);
   }
 
-  // Добавление кнопки к узлу
+  /**
+   * Добавление кнопки к узлу
+   *
+   * Метод добавляет кнопку к указанному узлу и возвращает обновленный массив узлов.
+   *
+   * @param nodes - массив узлов
+   * @param nodeId - ID узла, к которому добавляется кнопка
+   * @param button - кнопка для добавления
+   * @returns обновленный массив узлов
+   */
   private addButtonToNode(nodes: Node[], nodeId: string, button: Button): Node[] {
     return nodes.map(node => {
       if (node.id === nodeId) {
@@ -223,7 +330,14 @@ export class ConnectionManager {
     });
   }
 
-  // Автоматическое создание предложений соединений
+  /**
+   * Автоматическое создание предложений соединений
+   *
+   * Метод анализирует узлы и создает предложения для потенциальных соединений
+   * на основе логических переходов и других факторов.
+   *
+   * @returns массив предложений соединений
+   */
   generateConnectionSuggestions(): ConnectionSuggestion[] {
     const suggestions: ConnectionSuggestion[] = [];
     const existingConnections = new Set(
@@ -267,7 +381,16 @@ export class ConnectionManager {
     return suggestions.sort((a, b) => b.confidence - a.confidence);
   }
 
-  // Расчет уверенности соединения
+  /**
+   * Расчет уверенности соединения
+   *
+   * Метод вычисляет вероятность того, что между двумя узлами должно быть соединение
+   * на основе различных факторов: типов узлов, количества кнопок, расстояния между узлами и т.д.
+   *
+   * @param sourceNode - узел-источник
+   * @param targetNode - узел-назначение
+   * @returns значение уверенности (от 0 до 1)
+   */
   private calculateConnectionConfidence(sourceNode: Node, targetNode: Node): number {
     let confidence = 0.3;
 
@@ -303,7 +426,15 @@ export class ConnectionManager {
     return Math.min(0.95, Math.max(0.1, confidence));
   }
 
-  // Получение причины для соединения
+  /**
+   * Получение причины для соединения
+   *
+   * Метод возвращает текстовое объяснение, почему между двумя узлами предлагается создать соединение.
+   *
+   * @param sourceNode - узел-источник
+   * @param targetNode - узел-назначение
+   * @returns текстовое объяснение причины соединения
+   */
   private getConnectionReason(sourceNode: Node, targetNode: Node): string {
     if (sourceNode.type === 'start' && targetNode.type === 'message') {
       return 'Стартовый узел обычно ведет к первому сообщению';
@@ -321,7 +452,14 @@ export class ConnectionManager {
     return `Связь между ${this.getNodeTypeName(sourceNode.type)} и ${this.getNodeTypeName(targetNode.type)}`;
   }
 
-  // Получение названия типа узла
+  /**
+   * Получение названия типа узла
+   *
+   * Метод возвращает читаемое название типа узла на русском языке.
+   *
+   * @param type - тип узла
+   * @returns название типа узла
+   */
   private getNodeTypeName(type: Node['type']): string {
     const names: Record<Node['type'], string> = {
       start: 'стартом',
@@ -354,7 +492,14 @@ export class ConnectionManager {
     return names[type] || type;
   }
 
-  // Удаление связанных кнопок при удалении соединения
+  /**
+   * Удаление связанных кнопок при удалении соединения
+   *
+   * Метод удаляет соединение и связанную с ним кнопку из узла-источника.
+   *
+   * @param connectionId - ID соединения для удаления
+   * @returns объект, содержащий удаленное соединение и обновленные узлы
+   */
   removeConnection(connectionId: string): { removedConnection: Connection | null; updatedNodes: Node[] } {
     const removedConnection = this.state.connections.find(c => c.id === connectionId);
     if (!removedConnection) {
@@ -380,7 +525,14 @@ export class ConnectionManager {
     return { removedConnection, updatedNodes };
   }
 
-  // Синхронизация кнопок с соединениями
+  /**
+   * Синхронизация кнопок с соединениями
+   *
+   * Метод обеспечивает согласованность между соединениями и кнопками,
+   * добавляя недостающие кнопки для существующих соединений.
+   *
+   * @returns массив обновленных узлов
+   */
   syncButtonsWithConnections(): Node[] {
     const updatedNodes = [...this.state.nodes];
 
@@ -412,7 +564,13 @@ export class ConnectionManager {
     return updatedNodes;
   }
 
-  // Очистка лишних кнопок
+  /**
+   * Очистка лишних кнопок
+   *
+   * Метод удаляет кнопки, для которых не существует соответствующих соединений.
+   *
+   * @returns массив обновленных узлов без лишних кнопок
+   */
   cleanupOrphanedButtons(): Node[] {
     const connectionTargets = new Set(this.state.connections.map(c => c.target));
 
@@ -430,10 +588,20 @@ export class ConnectionManager {
   }
 }
 
-// Фабрика для создания менеджера соединений
+/**
+ * Фабрика для создания менеджера соединений
+ *
+ * Функция создает экземпляр ConnectionManager с заданными узлами, соединениями и опциями.
+ *
+ * @param nodes - массив узлов
+ * @param connections - массив соединений
+ * @param options - опции создания менеджера
+ * @param options.autoButtonCreation - флаг автоматического создания кнопок
+ * @returns экземпляр ConnectionManager
+ */
 export function createConnectionManager(
-  nodes: Node[], 
-  connections: Connection[], 
+  nodes: Node[],
+  connections: Connection[],
   options: { autoButtonCreation?: boolean } = {}
 ): ConnectionManager {
   return new ConnectionManager({
