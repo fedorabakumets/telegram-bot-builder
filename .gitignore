@@ -29,7 +29,8 @@ bots/__pycache__/
 .env.production.local
 
 # Build outputs
-dist/
+dist/*
+!dist/README.md
 build/
 
 # Logs
