@@ -474,9 +474,9 @@ export function LayoutManager({ config, onConfigChange, onApply, onReset }: Layo
  * Обеспечивает состояние и методы для работы с конфигурацией макета
  * @returns {Object} Объект с состоянием и методами управления макетом
  * @returns {LayoutConfig} return.config - Текущая конфигурация макета
- * @returns {(newConfig: LayoutConfig) => void} return.updateConfig - Функция обновления конфигурации
- * @returns {() => void} return.resetConfig - Функция сброса конфигурации
- * @returns {() => void} return.applyConfig - Функция применения конфигурации
+ * @returns {Function} return.updateConfig - Функция обновления конфигурации
+ * @returns {Function} return.resetConfig - Функция сброса конфигурации
+ * @returns {Function} return.applyConfig - Функция применения конфигурации
  */
 export function useLayoutManager() {
   const [config, setConfig] = useState<LayoutConfig>(() => {
