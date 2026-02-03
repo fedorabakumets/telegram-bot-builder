@@ -1,9 +1,40 @@
+/**
+ * @file sheets-manager.ts
+ * @brief Утилита для управления листами в редакторе бота
+ *
+ * Этот файл содержит класс SheetsManager, который предоставляет методы для:
+ * - Миграции данных из старого формата в новый (с поддержкой листов)
+ * - Создания, дублирования, удаления и переименования листов
+ * - Управления узлами и соединениями на листах
+ * - Валидации структуры данных
+ *
+ * @author Telegram Bot Builder Team
+ * @version 1.0
+ * @date 2026
+ */
+
 import { nanoid } from 'nanoid';
 import { CanvasSheet, BotDataWithSheets, BotData, Node, Connection } from '@shared/schema';
 
+/**
+ * @class SheetsManager
+ * @brief Класс для управления листами в редакторе бота
+ *
+ * Класс предоставляет статические методы для работы с листами,
+ * включая создание, дублирование, удаление, переименование и валидацию.
+ */
 export class SheetsManager {
   
-  // Миграция старых данных к новому формату с листами
+  /**
+   * @brief Метод миграции старых данных к новому формату с листами
+   *
+   * Преобразует данные из старого формата (узлы и соединения) в новый формат,
+   * поддерживающий несколько листов. Если в старых данных нет узлов,
+   * создается стартовый узел по умолчанию.
+   *
+   * @param legacyData Старый формат данных бота
+   * @returns BotDataWithSheets Новый формат данных с листами
+   */
   static migrateLegacyData(legacyData: BotData): BotDataWithSheets {
     // Если нет узлов, создаем стартовый узел по умолчанию
     const hasNodes = legacyData.nodes && legacyData.nodes.length > 0;
@@ -62,12 +93,30 @@ export class SheetsManager {
     return migratedData;
   }
 
-  // Проверка, является ли данные новым форматом с листами
+  /**
+   * @brief Проверка, является ли данные новым форматом с листами
+   *
+   * Проверяет, соответствуют ли переданные данные новому формату с листами.
+   * Для этого проверяется версия (должна быть 2) и наличие массива листов.
+   *
+   * @param data Данные для проверки
+   * @returns boolean True, если данные в новом формате, иначе false
+   */
   static isNewFormat(data: any): data is BotDataWithSheets {
     return data && data.version === 2 && Array.isArray(data.sheets);
   }
 
-  // Создание нового листа
+  /**
+   * @brief Создание нового листа
+   *
+   * Создает новый лист с заданным именем, узлами и соединениями.
+   * Если узлы не переданы, создается стартовый узел по умолчанию.
+   *
+   * @param name Имя листа
+   * @param nodes Массив узлов для листа (по умолчанию пустой массив)
+   * @param connections Массив соединений для листа (по умолчанию пустой массив)
+   * @returns CanvasSheet Новый лист
+   */
   static createSheet(name: string, nodes: Node[] = [], connections: Connection[] = []): CanvasSheet {
     // Если узлы не переданы, создаем стартовый узел по умолчанию
     const defaultNodes = nodes.length === 0 ? [{
@@ -109,7 +158,16 @@ export class SheetsManager {
     };
   }
 
-  // Обновляет все ID ссылок на узлы внутри объекта данных
+  /**
+   * @brief Обновляет все ID ссылок на узлы внутри объекта данных
+   *
+   * Этот метод проходит по всем свойствам объекта данных и обновляет
+   * ссылки на узлы, используя карту соответствия старых и новых ID.
+   *
+   * @param data Объект данных для обновления
+   * @param nodeIdMap Карта соответствия старых и новых ID узлов
+   * @returns any Обновленный объект данных
+   */
   private static updateNodeReferencesInData(data: any, nodeIdMap: Map<string, string>): any {
     if (!data) return data;
 
@@ -147,12 +205,12 @@ export class SheetsManager {
     if (updatedData?.conditionalMessages && Array.isArray(updatedData.conditionalMessages)) {
       updatedData.conditionalMessages = updatedData.conditionalMessages.map((condition: any) => {
         const updatedCondition = { ...condition };
-        
+
         // Обновляем основной target
         if (updatedCondition.target && nodeIdMap.has(updatedCondition.target)) {
           updatedCondition.target = nodeIdMap.get(updatedCondition.target);
         }
-        
+
         // Обновляем кнопки в условном сообщении
         if (updatedCondition.buttons && Array.isArray(updatedCondition.buttons)) {
           updatedCondition.buttons = updatedCondition.buttons.map((button: any) => {
@@ -163,7 +221,7 @@ export class SheetsManager {
             return updatedButton;
           });
         }
-        
+
         return updatedCondition;
       });
     }
@@ -200,7 +258,15 @@ export class SheetsManager {
     return updatedData;
   }
 
-  // Дублирование листа
+  /**
+   * @brief Дублирование листа
+   *
+   * Создает копию листа с новыми ID для узлов и соединений.
+   * Все ссылки на узлы внутри данных также обновляются.
+   *
+   * @param originalSheet Оригинальный лист для дублирования
+   * @returns CanvasSheet Дубликат листа
+   */
   static duplicateSheet(originalSheet: CanvasSheet): CanvasSheet {
     const duplicatedNodes = originalSheet.nodes.map(node => ({
       ...node,
@@ -241,7 +307,16 @@ export class SheetsManager {
     };
   }
 
-  // Добавление нового листа в проект
+  /**
+   * @brief Добавление нового листа в проект
+   *
+   * Создает новый лист с заданным именем и добавляет его в проект.
+   * Новый лист становится активным.
+   *
+   * @param data Данные проекта
+   * @param name Имя нового листа
+   * @returns BotDataWithSheets Обновленные данные проекта
+   */
   static addSheet(data: BotDataWithSheets, name: string): BotDataWithSheets {
     const newSheet = this.createSheet(name);
     return {
@@ -251,7 +326,17 @@ export class SheetsManager {
     };
   }
 
-  // Удаление листа
+  /**
+   * @brief Удаление листа
+   *
+   * Удаляет лист с заданным ID из проекта. Если удаляемый лист был активным,
+   * выбирается новый активный лист (следующий или предыдущий).
+   *
+   * @param data Данные проекта
+   * @param sheetId ID листа для удаления
+   * @returns BotDataWithSheets Обновленные данные проекта
+   * @throws Error Если пытаемся удалить последний лист
+   */
   static deleteSheet(data: BotDataWithSheets, sheetId: string): BotDataWithSheets {
     if (data.sheets.length <= 1) {
       throw new Error('Нельзя удалить последний лист');
@@ -259,9 +344,9 @@ export class SheetsManager {
 
     const deleteSheetIndex = data.sheets.findIndex(sheet => sheet.id === sheetId);
     const filteredSheets = data.sheets.filter(sheet => sheet.id !== sheetId);
-    
+
     let newActiveSheetId = data.activeSheetId;
-    
+
     if (data.activeSheetId === sheetId) {
       // Если удаляемый лист активный, переходим на ближайший
       if (deleteSheetIndex < data.sheets.length - 1) {
@@ -280,12 +365,21 @@ export class SheetsManager {
     };
   }
 
-  // Переименование листа
+  /**
+   * @brief Переименование листа
+   *
+   * Изменяет имя листа с заданным ID.
+   *
+   * @param data Данные проекта
+   * @param sheetId ID листа для переименования
+   * @param newName Новое имя листа
+   * @returns BotDataWithSheets Обновленные данные проекта
+   */
   static renameSheet(data: BotDataWithSheets, sheetId: string, newName: string): BotDataWithSheets {
     return {
       ...data,
-      sheets: data.sheets.map(sheet => 
-        sheet.id === sheetId 
+      sheets: data.sheets.map(sheet =>
+        sheet.id === sheetId
           ? { ...sheet, name: newName, updatedAt: new Date() }
           : sheet
       )
