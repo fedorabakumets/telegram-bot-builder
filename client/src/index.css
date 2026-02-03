@@ -19,8 +19,12 @@
 /* Font Awesome icons via CDN */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
+/* Директивы Tailwind CSS для включения соответствующих стилей */
+/* @tailwind base - включает базовые стили для сброса и нормализации */
 @tailwind base;
+/* @tailwind components - включает стили для компонентов */
 @tailwind components;
+/* @tailwind utilities - включает утилитарные классы */
 @tailwind utilities;
 
 /**
