@@ -27,7 +27,7 @@ const optionalVars = [
   'TELEGRAM_API_HASH'
 ];
 
-console.log('\n📋 Required Variables:');
+console.log('\n📋 Обязательные переменные:');
 let allRequiredPresent = true;
 
 requiredVars.forEach(varName => {
@@ -35,58 +35,58 @@ requiredVars.forEach(varName => {
   if (value) {
     console.log(`✅ ${varName}: ${varName === 'DATABASE_URL' ? value.substring(0, 30) + '...' : value}`);
   } else {
-    console.log(`❌ ${varName}: NOT SET`);
+    console.log(`❌ ${varName}: НЕ УСТАНОВЛЕНО`);
     allRequiredPresent = false;
   }
 });
 
-console.log('\n📋 Optional Variables:');
+console.log('\n📋 Опциональные переменные:');
 optionalVars.forEach(varName => {
   const value = process.env[varName];
   if (value) {
     console.log(`✅ ${varName}: ${value.length > 30 ? value.substring(0, 30) + '...' : value}`);
   } else {
-    console.log(`⚪ ${varName}: not set (optional)`);
+    console.log(`⚪ ${varName}: не установлено (опционально)`);
   }
 });
 
-console.log('\n🔧 System Information:');
-console.log(`Node.js Version: ${process.version}`);
-console.log(`Platform: ${process.platform}`);
-console.log(`Architecture: ${process.arch}`);
-console.log(`Working Directory: ${process.cwd()}`);
+console.log('\n🔧 Информация о системе:');
+console.log(`Версия Node.js: ${process.version}`);
+console.log(`Платформа: ${process.platform}`);
+console.log(`Архитектура: ${process.arch}`);
+console.log(`Рабочая директория: ${process.cwd()}`);
 
 if (process.env.DATABASE_URL) {
-  console.log('\n🔍 Database URL Analysis:');
+  console.log('\n🔍 Анализ URL базы данных:');
   try {
     const url = new URL(process.env.DATABASE_URL);
-    console.log(`Protocol: ${url.protocol}`);
-    console.log(`Host: ${url.hostname}`);
-    console.log(`Port: ${url.port || 'default'}`);
-    console.log(`Database: ${url.pathname.substring(1)}`);
-    console.log(`Username: ${url.username}`);
-    console.log(`Password: ${url.password ? '[HIDDEN]' : 'not set'}`);
-    
-    // Check for SSL parameters
+    console.log(`Протокол: ${url.protocol}`);
+    console.log(`Хост: ${url.hostname}`);
+    console.log(`Порт: ${url.port || 'по умолчанию'}`);
+    console.log(`База данных: ${url.pathname.substring(1)}`);
+    console.log(`Имя пользователя: ${url.username}`);
+    console.log(`Пароль: ${url.password ? '[СКРЫТ]' : 'не установлен'}`);
+
+    // Проверка параметров SSL
     const searchParams = url.searchParams;
     if (searchParams.has('sslmode')) {
-      console.log(`SSL Mode: ${searchParams.get('sslmode')}`);
+      console.log(`Режим SSL: ${searchParams.get('sslmode')}`);
     }
   } catch (error) {
-    console.log(`❌ Invalid DATABASE_URL format: ${(error as Error).message || String(error)}`);
+    console.log(`❌ Неверный формат DATABASE_URL: ${(error as Error).message || String(error)}`);
     allRequiredPresent = false;
   }
 }
 
-console.log('\n📊 Summary:');
+console.log('\n📊 Сводка:');
 if (allRequiredPresent) {
-  console.log('✅ All required environment variables are set');
+  console.log('✅ Все обязательные переменные окружения установлены');
   process.exit(0);
 } else {
-  console.log('❌ Some required environment variables are missing');
-  console.log('\n💡 To fix this:');
-  console.log('1. Create a .env file in the project root');
-  console.log('2. Add the missing variables');
-  console.log('3. For Railway: use `railway variables set VARIABLE_NAME=value`');
+  console.log('❌ Некоторые обязательные переменные окружения отсутствуют');
+  console.log('\n💡 Чтобы исправить:');
+  console.log('1. Создайте файл .env в корне проекта');
+  console.log('2. Добавьте недостающие переменные');
+  console.log('3. Для Railway: используйте `railway variables set VARIABLE_NAME=value`');
   process.exit(1);
 }
