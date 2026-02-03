@@ -4,11 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Layout, 
-  ArrowUp, 
-  ArrowDown, 
-  ArrowLeft, 
+import {
+  Layout,
+  ArrowDown,
+  ArrowLeft,
   ArrowRight,
   Grid,
   Monitor,
@@ -16,6 +15,22 @@ import {
   Tablet
 } from 'lucide-react';
 
+/**
+ * @interface QuickLayoutPreset
+ * @description Описывает пресет быстрого макета
+ * @property {string} id - Уникальный идентификатор пресета
+ * @property {string} name - Название пресета
+ * @property {string} description - Описание пресета
+ * @property {React.ReactNode} icon - Иконка пресета
+ * @property {Object} config - Конфигурация макета
+ * @property {'top' | 'bottom' | 'left' | 'right'} config.headerPosition - Позиция заголовка
+ * @property {'left' | 'right'} config.sidebarPosition - Позиция боковой панели
+ * @property {'right' | 'left'} config.propertiesPosition - Позиция панели свойств
+ * @property {number} config.headerSize - Размер заголовка
+ * @property {number} config.sidebarSize - Размер боковой панели
+ * @property {number} config.propertiesSize - Размер панели свойств
+ * @property {React.ReactNode} preview - Предварительный просмотр макета
+ */
 export interface QuickLayoutPreset {
   id: string;
   name: string;
@@ -32,6 +47,11 @@ export interface QuickLayoutPreset {
   preview: React.ReactNode;
 }
 
+/**
+ * @constant LAYOUT_PRESETS
+ * @description Массив пресетов быстрого макета
+ * @type {QuickLayoutPreset[]}
+ */
 const LAYOUT_PRESETS: QuickLayoutPreset[] = [
   {
     id: 'default',
@@ -179,21 +199,40 @@ const LAYOUT_PRESETS: QuickLayoutPreset[] = [
   }
 ];
 
+/**
+ * @interface QuickLayoutSwitcherProps
+ * @description Свойства компонента быстрого переключения макета
+ * @property {any} [currentConfig] - Текущая конфигурация макета
+ * @property {(config: any) => void} onLayoutChange - Функция обратного вызова при изменении макета
+ */
 interface QuickLayoutSwitcherProps {
   currentConfig?: any;
   onLayoutChange: (config: any) => void;
 }
 
+/**
+ * @function QuickLayoutSwitcher
+ * @description Компонент быстрого переключения макета интерфейса
+ * Позволяет пользователю выбирать из готовых пресетов макета
+ * @param {QuickLayoutSwitcherProps} props - Свойства компонента
+ * @returns {JSX.Element} Компонент быстрого переключения макета
+ */
 const QuickLayoutSwitcher: React.FC<QuickLayoutSwitcherProps> = ({
-  currentConfig,
   onLayoutChange
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string>('default');
 
+  /**
+   * @function handlePresetSelect
+   * @description Обработчик выбора пресета макета
+   * Обновляет состояние выбранного пресета и вызывает функцию обратного вызова с новой конфигурацией
+   * @param {QuickLayoutPreset} preset - Выбранный пресет макета
+   * @returns {void}
+   */
   const handlePresetSelect = (preset: QuickLayoutPreset) => {
     setSelectedPreset(preset.id);
-    
+
     // Преобразуем пресет в конфигурацию макета
     const layoutConfig = {
       headerPosition: preset.config.headerPosition,
@@ -312,4 +351,8 @@ const QuickLayoutSwitcher: React.FC<QuickLayoutSwitcherProps> = ({
   );
 };
 
+/**
+ * @exports QuickLayoutSwitcher
+ * @description Экспортирует компонент QuickLayoutSwitcher по умолчанию
+ */
 export default QuickLayoutSwitcher;
