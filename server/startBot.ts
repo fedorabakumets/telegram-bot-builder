@@ -1,12 +1,78 @@
+/**
+ * Модуль для запуска дочерних процессов
+ * @external child_process
+ */
 import { spawn } from "node:child_process";
+
+/**
+ * Модуль для работы с URL
+ * @external url
+ */
 import { URL } from "node:url";
+
+/**
+ * Модуль для работы с путями к файлам
+ * @external path
+ */
 import { dirname } from "node:path";
+
+/**
+ * Глобальная коллекция активных процессов ботов
+ * @external botProcesses
+ * @see {@link ./routes}
+ */
 import { botProcesses } from "./routes";
+
+/**
+ * Функция для создания полного комплекта файлов бота
+ * @external createCompleteBotFiles
+ * @see {@link ./createBotFile}
+ */
 import { createCompleteBotFiles } from "./createBotFile";
+
+/**
+ * Модуль для взаимодействия с хранилищем данных
+ * @external storage
+ * @see {@link ./storage}
+ */
 import { storage } from "./storage";
 
-// Функция для запуска бота
-
+/**
+ * Запускает новый экземпляр Telegram-бота по идентификатору проекта и токену
+ *
+ * @param {number} projectId - Идентификатор проекта, к которому относится бот
+ * @param {string} token - Токен Telegram-бота, используемый для аутентификации
+ * @param {number} tokenId - Идентификатор токена в системе
+ *
+ * @returns {Promise<{ success: boolean; error?: string; processId?: string; }>} Объект с результатом операции:
+ *   - success: true если бот успешно запущен, false в случае ошибки
+ *   - error: строка с описанием ошибки, если она произошла
+ *   - processId: идентификатор процесса запущенного бота (если успешно запущен)
+ *
+ * @description
+ * Функция выполняет следующие действия:
+ * 1. Проверяет наличие старых процессов для данного токена и убивает их
+ * 2. Удаляет старый процесс из памяти, если он существует
+ * 3. Сбрасывает webhook в Telegram для избежания конфликтов
+ * 4. Получает данные проекта из хранилища
+ * 5. Преобразует многолистовую структуру данных в простую
+ * 6. Генерирует Python-код бота с использованием генератора
+ * 7. Создает необходимые файлы бота
+ * 8. Запускает процесс бота с нужными параметрами
+ * 9. Регистрирует процесс в системе управления процессами
+ * 10. Обновляет статус бота в базе данных
+ * 11. Устанавливает обработчики событий процесса (ошибки, завершение)
+ *
+ * @example
+ * ```typescript
+ * const result = await startBot(123, "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11", 456);
+ * if (result.success) {
+ *   console.log('Бот успешно запущен с PID:', result.processId);
+ * } else {
+ *   console.error('Ошибка при запуске бота:', result.error);
+ * }
+ * ```
+ */
 export async function startBot(projectId: number, token: string, tokenId: number): Promise<{ success: boolean; error?: string; processId?: string; }> {
   try {
     const processKey = `${projectId}_${tokenId}`;
