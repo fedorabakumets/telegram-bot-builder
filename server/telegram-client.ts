@@ -230,7 +230,7 @@ class TelegramClientManager {
 
       return {
         success: true,
-        phoneCodeHash: result.phoneCodeHash
+        phoneCodeHash: (result as any).phoneCodeHash
       };
 
     } catch (error: any) {
@@ -266,7 +266,7 @@ class TelegramClientManager {
       );
 
       // Используем результат для подтверждения успешного входа
-      if (!signInResult || !signInResult.user) {
+      if (!signInResult) {
         throw new Error('Не удалось получить данные пользователя после входа');
       }
 
