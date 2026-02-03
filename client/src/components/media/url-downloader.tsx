@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+/**
+ * @fileoverview Компонент загрузки файлов по URL
+ *
+ * Этот компонент позволяет загружать медиафайлы в проект по URL-адресам.
+ * Он предоставляет интерфейс для ввода URL, проверки доступности файлов,
+ * настройки параметров загрузки и выполнения как одиночных, так и пакетных загрузок.
+ *
+ * @module UrlDownloader
+ */
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
@@ -13,15 +22,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { MediaFile } from "@shared/schema";
-import { 
-  Download, 
-  LinkIcon, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  FileText, 
-  Image, 
-  Play, 
+import {
+  Download,
+  LinkIcon,
+  CheckCircle,
+  XCircle,
+  FileText,
+  Image,
+  Play,
   Volume2,
   Loader2,
   Info,
@@ -31,6 +39,15 @@ import {
   Plus
 } from "lucide-react";
 
+/**
+ * Свойства компонента UrlDownloader
+ *
+ * @interface UrlDownloaderProps
+ * @property {number} projectId - ID проекта, в который загружаются файлы
+ * @property {(files: MediaFile[]) => void} [onDownloadComplete] - Коллбэк, вызываемый при завершении загрузки
+ * @property {() => void} [onClose] - Коллбэк, вызываемый при закрытии компонента
+ * @property {number} [maxUrls] - Максимальное количество URL для загрузки (по умолчанию 10)
+ */
 interface UrlDownloaderProps {
   projectId: number;
   onDownloadComplete?: (files: MediaFile[]) => void;
@@ -38,6 +55,25 @@ interface UrlDownloaderProps {
   maxUrls?: number;
 }
 
+/**
+ * Интерфейс данных URL для загрузки
+ *
+ * @interface UrlData
+ * @property {string} id - Уникальный идентификатор записи
+ * @property {string} url - URL-адрес файла для загрузки
+ * @property {string} [fileName] - Имя файла (опционально)
+ * @property {string} [description] - Описание файла (опционально)
+ * @property {'pending' | 'checking' | 'valid' | 'invalid' | 'downloading' | 'success' | 'error'} status - Статус обработки URL
+ * @property {Object} [fileInfo] - Информация о файле
+ * @property {string} [fileInfo.mimeType] - MIME-тип файла
+ * @property {number} [fileInfo.size] - Размер файла в байтах
+ * @property {string} [fileInfo.fileName] - Определенное имя файла
+ * @property {string} [fileInfo.fileType] - Тип файла (photo, video, audio, document)
+ * @property {string} [fileInfo.category] - Категория файла
+ * @property {number} [fileInfo.sizeMB] - Размер файла в мегабайтах
+ * @property {string} [error] - Сообщение об ошибке (если есть)
+ * @property {number} [progress] - Прогресс загрузки (0-100)
+ */
 interface UrlData {
   id: string;
   url: string;
@@ -56,25 +92,63 @@ interface UrlData {
   progress?: number;
 }
 
-export function UrlDownloader({ 
-  projectId, 
-  onDownloadComplete, 
+/**
+ * Компонент загрузки файлов по URL
+ *
+ * @param {UrlDownloaderProps} props - Свойства компонента
+ * @returns {JSX.Element} Компонент загрузки файлов по URL
+ */
+export function UrlDownloader({
+  projectId,
+  onDownloadComplete,
   onClose,
   maxUrls = 10
 }: UrlDownloaderProps) {
+  /**
+   * Функция показа уведомлений
+   */
   const { toast } = useToast();
+
+  /**
+   * Клиент для работы с кэшем запросов
+   */
   const queryClient = useQueryClient();
-  
+
+  /**
+   * Состояние списка URL для загрузки
+   * @type {UrlData[]}
+   */
   const [urls, setUrls] = useState<UrlData[]>([{
     id: Math.random().toString(36).substr(2, 9),
     url: '',
     status: 'pending'
   }]);
+
+  /**
+   * Флаг публичности загружаемых файлов
+   * @type {boolean}
+   */
   const [isPublic, setIsPublic] = useState(false);
+
+  /**
+   * Описание по умолчанию для загружаемых файлов
+   * @type {string}
+   */
   const [defaultDescription, setDefaultDescription] = useState('');
+
+  /**
+   * Флаг процесса обработки
+   * @type {boolean}
+   */
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Мутация для проверки URL
+  /**
+   * Мутация для проверки URL
+   *
+   * @type {Object}
+   * @property {Function} mutateAsync - Асинхронная функция проверки URL
+   * @property {boolean} isPending - Состояние выполнения проверки
+   */
   const checkUrlMutation = useMutation({
     mutationFn: async (url: string) => {
       const response = await apiRequest('POST', '/api/media/check-url', { url });
@@ -82,35 +156,54 @@ export function UrlDownloader({
     }
   });
 
-  // Мутация для загрузки одного файла
+  /**
+   * Мутация для загрузки одного файла
+   *
+   * @type {Object}
+   * @property {Function} mutateAsync - Асинхронная функция загрузки файла
+   * @property {boolean} isPending - Состояние выполнения загрузки
+   */
   const downloadUrlMutation = useMutation({
-    mutationFn: async ({ url, description, customFileName }: { 
-      url: string; 
-      description?: string; 
-      customFileName?: string; 
+    mutationFn: async ({ url, description, customFileName }: {
+      url: string;
+      description?: string;
+      customFileName?: string;
     }) => {
-      const response = await apiRequest('POST', `/api/media/download-url/${projectId}`, { 
-        url, 
-        description, 
+      const response = await apiRequest('POST', `/api/media/download-url/${projectId}`, {
+        url,
+        description,
         customFileName,
-        isPublic 
+        isPublic
       });
       return response;
     }
   });
 
-  // Мутация для пакетной загрузки
+  /**
+   * Мутация для пакетной загрузки файлов
+   *
+   * @type {Object}
+   * @property {Function} mutateAsync - Асинхронная функция пакетной загрузки
+   * @property {boolean} isPending - Состояние выполнения загрузки
+   */
   const downloadUrlsMutation = useMutation({
     mutationFn: async (urlsData: { url: string; fileName?: string; description?: string }[]) => {
-      const response = await apiRequest('POST', `/api/media/download-urls/${projectId}`, { 
+      const response = await apiRequest('POST', `/api/media/download-urls/${projectId}`, {
         urls: urlsData,
         isPublic,
-        defaultDescription 
+        defaultDescription
       });
       return response;
     }
   });
 
+  /**
+   * Возвращает иконку файла в зависимости от типа
+   *
+   * @function getFileIcon
+   * @param {string} [fileType] - Тип файла (photo, video, audio, document)
+   * @returns {JSX.Element} Иконка файла
+   */
   const getFileIcon = (fileType?: string) => {
     switch (fileType) {
       case 'photo': return <Image className="w-4 h-4 text-blue-500" />;
@@ -121,6 +214,12 @@ export function UrlDownloader({
     }
   };
 
+  /**
+   * Добавляет новое поле для ввода URL
+   *
+   * @function addUrlField
+   * @returns {void}
+   */
   const addUrlField = () => {
     if (urls.length < maxUrls) {
       setUrls(prev => [...prev, {
@@ -131,28 +230,61 @@ export function UrlDownloader({
     }
   };
 
+  /**
+   * Удаляет поле ввода URL по ID
+   *
+   * @function removeUrlField
+   * @param {string} id - ID поля для удаления
+   * @returns {void}
+   */
   const removeUrlField = (id: string) => {
     if (urls.length > 1) {
       setUrls(prev => prev.filter(u => u.id !== id));
     }
   };
 
+  /**
+   * Обновляет URL в состоянии
+   *
+   * @function updateUrl
+   * @param {string} id - ID записи
+   * @param {string} url - Новый URL
+   * @returns {void}
+   */
   const updateUrl = (id: string, url: string) => {
-    setUrls(prev => prev.map(u => 
-      u.id === id 
+    setUrls(prev => prev.map(u =>
+      u.id === id
         ? { ...u, url, status: 'pending' as const, fileInfo: undefined, error: undefined }
         : u
     ));
   };
 
+  /**
+   * Обновляет поле в состоянии URL
+   *
+   * @function updateUrlField
+   * @param {string} id - ID записи
+   * @param {keyof UrlData} field - Поле для обновления
+   * @param {any} value - Новое значение
+   * @returns {void}
+   */
   const updateUrlField = (id: string, field: keyof UrlData, value: any) => {
-    setUrls(prev => prev.map(u => 
-      u.id === id 
+    setUrls(prev => prev.map(u =>
+      u.id === id
         ? { ...u, [field]: value }
         : u
     ));
   };
 
+  /**
+   * Проверяет URL на доступность
+   *
+   * @async
+   * @function checkUrl
+   * @param {string} id - ID записи
+   * @param {string} url - URL для проверки
+   * @returns {Promise<void>}
+   */
   const checkUrl = async (id: string, url: string) => {
     if (!url.trim()) return;
 
@@ -160,11 +292,11 @@ export function UrlDownloader({
 
     try {
       const result = await checkUrlMutation.mutateAsync(url);
-      
+
       if (result.accessible) {
         updateUrlField(id, 'status', 'valid');
         updateUrlField(id, 'fileInfo', result.fileInfo);
-        
+
         // Автоматически заполняем имя файла если оно не задано
         if (result.fileInfo?.fileName && !urls.find(u => u.id === id)?.fileName) {
           updateUrlField(id, 'fileName', result.fileInfo.fileName);
@@ -179,6 +311,14 @@ export function UrlDownloader({
     }
   };
 
+  /**
+   * Загружает один файл
+   *
+   * @async
+   * @function downloadSingle
+   * @param {UrlData} urlData - Данные URL для загрузки
+   * @returns {Promise<void>}
+   */
   const downloadSingle = async (urlData: UrlData) => {
     if (!urlData.url.trim() || urlData.status !== 'valid') return;
 
@@ -208,7 +348,7 @@ export function UrlDownloader({
     } catch (error) {
       updateUrlField(urlData.id, 'status', 'error');
       updateUrlField(urlData.id, 'error', error instanceof Error ? error.message : 'Ошибка загрузки');
-      
+
       toast({
         title: "Ошибка загрузки",
         description: error instanceof Error ? error.message : 'Неизвестная ошибка',
@@ -217,9 +357,16 @@ export function UrlDownloader({
     }
   };
 
+  /**
+   * Загружает все валидные URL
+   *
+   * @async
+   * @function downloadAll
+   * @returns {Promise<void>}
+   */
   const downloadAll = async () => {
     const validUrls = urls.filter(u => u.status === 'valid' && u.url.trim());
-    
+
     if (validUrls.length === 0) {
       toast({
         title: "Нет валидных URL",
@@ -247,10 +394,10 @@ export function UrlDownloader({
       const result = await downloadUrlsMutation.mutateAsync(urlsData);
 
       // Обновляем статусы на основе результата
-      validUrls.forEach((urlData, index) => {
+      validUrls.forEach((urlData, _index) => {
         const wasSuccessful = result.downloadedFiles.some((f: any) => f.sourceUrl === urlData.url);
         const error = result.errorDetails.find((e: any) => e.url === urlData.url);
-        
+
         if (wasSuccessful) {
           updateUrlField(urlData.id, 'status', 'success');
           updateUrlField(urlData.id, 'progress', 100);
@@ -295,6 +442,14 @@ export function UrlDownloader({
     }
   };
 
+  /**
+   * Вставляет URL из буфера обмена
+   *
+   * @async
+   * @function pasteFromClipboard
+   * @param {string} id - ID записи для вставки
+   * @returns {Promise<void>}
+   */
   const pasteFromClipboard = async (id: string) => {
     try {
       const text = await navigator.clipboard.readText();
@@ -381,7 +536,7 @@ export function UrlDownloader({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {urls.map((urlData, index) => (
+          {urls.map((urlData, _index) => (
             <div key={urlData.id} className="space-y-3 p-4 border rounded-lg">
               {/* URL ввод */}
               <div className="flex gap-2">
@@ -515,7 +670,7 @@ export function UrlDownloader({
                   onClick={() => downloadSingle(urlData)}
                   size="sm"
                   className="w-full"
-                  disabled={urlData.status === 'downloading' || urlData.status === 'checking'}
+                  disabled={isProcessing || urlData.status === 'downloading' || urlData.status === 'checking'}
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Загрузить этот файл
