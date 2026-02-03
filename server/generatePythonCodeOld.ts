@@ -1,4 +1,41 @@
 
+/**
+ * Асинхронная функция генерации Python-кода для Telegram-бота (устаревшая версия)
+ *
+ * @param botData - Объект с данными бота, содержащий узлы (nodes) с информацией о командах и сообщениях
+ * @returns Сгенерированный Python-код в виде строки
+ *
+ * @description
+ * Функция принимает объект с данными бота и генерирует Python-код для создания Telegram-бота с использованием библиотеки aiogram.
+ * Код включает в себя:
+ * - Импорт необходимых модулей
+ * - Настройку токена бота
+ * - Создание обработчиков для различных типов узлов (start, command, message)
+ * - Обработчики для синонимов команд
+ * - Настройку клавиатур (reply и inline)
+ * - Основной цикл запуска бота
+ *
+ * @example
+ * // Пример использования функции
+ * const botData = {
+ *   nodes: [
+ *     {
+ *       type: "start",
+ *       data: {
+ *         messageText: "Привет! Добро пожаловать!",
+ *         keyboardType: "reply",
+ *         buttons: [{ text: "Меню", action: "goto", target: "menu" }]
+ *       }
+ *     }
+ *   ]
+ * };
+ *
+ * const pythonCode = await generatePythonCodeOld(botData);
+ * console.log(pythonCode); // Выведет сгенерированный Python-код
+ *
+ * @since 1.0.0
+ * @deprecated Используйте новую версию генерации кода
+ */
 async function generatePythonCodeOld(botData: any): Promise<string> {
   const { nodes } = botData;
 
