@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
@@ -13,21 +12,53 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { BotData } from '@/types/bot';
 
+/**
+ * Интерфейс пропсов для модального окна сохранения шаблона
+ * @interface SaveTemplateModalProps
+ */
 interface SaveTemplateModalProps {
+  /** Флаг открытия модального окна */
   isOpen: boolean;
+  /** Функция закрытия модального окна */
   onClose: () => void;
+  /** Данные бота для сохранения в шаблон */
   botData: BotData;
+  /** Необязательное название проекта для автозаполнения */
   projectName?: string;
 }
 
+/**
+ * Интерфейс данных формы создания шаблона
+ * @interface TemplateFormData
+ */
 interface TemplateFormData {
+  /** Название шаблона */
   name: string;
+  /** Описание шаблона */
   description: string;
+  /** Категория шаблона */
   category: string;
+  /** Флаг публичности шаблона */
   isPublic: boolean;
+  /** Флаг анонимного сохранения */
   isAnonymous: boolean;
 }
 
+/**
+ * Компонент модального окна для сохранения бота как шаблона
+ * 
+ * Позволяет пользователю сохранить текущий бот в виде шаблона с настройками:
+ * - Название и описание шаблона
+ * - Категория (пользовательский, бизнес, утилиты, игры)
+ * - Публичность (доступен другим пользователям)
+ * - Анонимность (скрыть имя автора)
+ * 
+ * Поддерживает как обычные, так и многолистовые шаблоны ботов.
+ * Автоматически вычисляет статистику шаблона (узлы, связи, команды, кнопки).
+ * 
+ * @param {SaveTemplateModalProps} props - Пропсы компонента
+ * @returns {JSX.Element} Модальное окно сохранения шаблона
+ */
 export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: SaveTemplateModalProps) {
   const [formData, setFormData] = useState<TemplateFormData>({
     name: projectName ? `${projectName} - Шаблон` : 'Новый шаблон',
@@ -40,7 +71,18 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
   const { user } = useTelegramAuth();
   const queryClient = useQueryClient();
 
-  // Функция для вычисления статистики с поддержкой многолистовых шаблонов
+  /**
+   * Функция для вычисления статистики бота с поддержкой многолистовых шаблонов
+   * 
+   * Анализирует структуру данных бота и подсчитывает:
+   * - Общее количество узлов (nodes)
+   * - Общее количество связей (connections + interSheetConnections)
+   * - Количество команд (узлы с полем command)
+   * - Общее количество кнопок во всех узлах
+   * 
+   * @param {BotData | any} data - Данные бота для анализа
+   * @returns {Object} Объект со статистикой: nodes, connections, commands, buttons
+   */
   const getStats = (data: BotData | any) => {
     let nodes: any[] = [];
     let connections: any[] = [];
@@ -72,6 +114,18 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
 
   const stats = getStats(botData);
 
+  /**
+   * Мутация для сохранения шаблона на сервере
+   * 
+   * Отправляет POST запрос на /api/templates с данными формы и бота.
+   * При успешном сохранении:
+   * - Инвалидирует кэш шаблонов
+   * - Показывает уведомление об успехе
+   * - Закрывает модальное окно
+   * - Сбрасывает форму
+   * 
+   * При ошибке показывает уведомление об ошибке.
+   */
   const saveTemplateMutation = useMutation({
     mutationFn: async (data: TemplateFormData) => {
       return await apiRequest('POST', '/api/templates', {
@@ -109,6 +163,16 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     },
   });
 
+  /**
+   * Функция сброса формы к начальным значениям
+   * 
+   * Восстанавливает все поля формы к значениям по умолчанию:
+   * - Название: "{projectName} - Шаблон" или "Новый шаблон"
+   * - Описание: пустая строка
+   * - Категория: "custom"
+   * - Публичность: false
+   * - Анонимность: false
+   */
   const resetForm = () => {
     setFormData({
       name: projectName ? `${projectName} - Шаблон` : 'Новый шаблон',
@@ -120,6 +184,14 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
   };
 
 
+  /**
+   * Обработчик сохранения шаблона
+   * 
+   * Выполняет валидацию формы (проверяет наличие названия)
+   * и запускает мутацию сохранения шаблона.
+   * 
+   * При отсутствии названия показывает ошибку валидации.
+   */
   const handleSave = () => {
     if (!formData.name.trim()) {
       toast({
@@ -132,6 +204,15 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     saveTemplateMutation.mutate(formData);
   };
 
+  /**
+   * Список доступных категорий шаблонов
+   * 
+   * Содержит предопределенные категории для классификации шаблонов:
+   * - custom: Пользовательский
+   * - business: Бизнес
+   * - utility: Утилиты
+   * - games: Игры
+   */
   const categories = [
     { value: 'custom', label: 'Пользовательский' },
     { value: 'business', label: 'Бизнес' },
