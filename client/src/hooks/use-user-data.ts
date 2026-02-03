@@ -1,16 +1,43 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { LocalStorageService } from "@/lib/storage/local-storage";
-import type { BotProject, BotToken, BotTemplate } from "@shared/schema";
 
+/**
+ * Режим работы с пользовательскими данными
+ * @typedef {'local' | 'server'} UserDataMode
+ * - 'local' - данные хранятся в localStorage
+ * - 'server' - данные хранятся на сервере
+ */
 type UserDataMode = 'local' | 'server';
 
+/**
+ * Опции для хуков управления пользовательскими данными
+ * @interface UseUserDataOptions
+ * @property {boolean} isAuthenticated - Флаг аутентификации пользователя
+ * @property {number} [userId] - Идентификатор пользователя (опционально)
+ */
 interface UseUserDataOptions {
   isAuthenticated: boolean;
   userId?: number;
 }
 
-// Hook для управления проектами (localStorage vs сервер)
+/**
+ * Хук для управления проектами пользователя
+ * Автоматически выбирает источник данных (localStorage или сервер) в зависимости от статуса аутентификации
+ * 
+ * @param {UseUserDataOptions} options - Опции конфигурации хука
+ * @param {boolean} options.isAuthenticated - Флаг аутентификации пользователя
+ * @param {number} [options.userId] - Идентификатор пользователя
+ * @returns {UseQueryResult} Результат запроса с данными проектов
+ * 
+ * @example
+ * ```typescript
+ * const { data: projects, isLoading, error } = useProjects({
+ *   isAuthenticated: true,
+ *   userId: 123
+ * });
+ * ```
+ */
 export function useProjects(options: UseUserDataOptions) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
   
@@ -27,7 +54,25 @@ export function useProjects(options: UseUserDataOptions) {
   });
 }
 
-// Hook для управления токенами (localStorage vs сервер)
+/**
+ * Хук для управления токенами пользователя
+ * Поддерживает фильтрацию по проекту и автоматический выбор источника данных
+ * 
+ * @param {UseUserDataOptions} options - Опции конфигурации хука
+ * @param {boolean} options.isAuthenticated - Флаг аутентификации пользователя
+ * @param {number} [options.userId] - Идентификатор пользователя
+ * @param {number} [projectId] - Идентификатор проекта для фильтрации токенов
+ * @returns {UseQueryResult} Результат запроса с данными токенов
+ * 
+ * @example
+ * ```typescript
+ * // Получить все токены пользователя
+ * const { data: allTokens } = useTokens({ isAuthenticated: true, userId: 123 });
+ * 
+ * // Получить токены конкретного проекта
+ * const { data: projectTokens } = useTokens({ isAuthenticated: true, userId: 123 }, 456);
+ * ```
+ */
 export function useTokens(options: UseUserDataOptions, projectId?: number) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
   
@@ -47,7 +92,22 @@ export function useTokens(options: UseUserDataOptions, projectId?: number) {
   });
 }
 
-// Hook для управления шаблонами (localStorage vs сервер)
+/**
+ * Хук для управления шаблонами пользователя
+ * Автоматически выбирает источник данных в зависимости от статуса аутентификации
+ * 
+ * @param {UseUserDataOptions} options - Опции конфигурации хука
+ * @param {boolean} options.isAuthenticated - Флаг аутентификации пользователя
+ * @param {number} [options.userId] - Идентификатор пользователя
+ * @returns {UseQueryResult} Результат запроса с данными шаблонов
+ * 
+ * @example
+ * ```typescript
+ * const { data: templates, isLoading, error } = useTemplates({
+ *   isAuthenticated: false
+ * });
+ * ```
+ */
 export function useTemplates(options: UseUserDataOptions) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
   
@@ -64,7 +124,31 @@ export function useTemplates(options: UseUserDataOptions) {
   });
 }
 
-// Hook для создания проекта
+/**
+ * Хук для создания нового проекта
+ * Автоматически инвалидирует кэш проектов после успешного создания
+ * 
+ * @param {UseUserDataOptions} options - Опции конфигурации хука
+ * @param {boolean} options.isAuthenticated - Флаг аутентификации пользователя
+ * @param {number} [options.userId] - Идентификателя
+ * @returns {UseMutationResult} Мутация для создания проекта
+ * 
+ * @example
+ * ```typescript
+ * const createProject = useCreateProject({ isAuthenticated: true, userId: 123 });
+ * 
+ * const handleCreate = async () => {
+ *   try {
+ *     await createProject.mutateAsync({
+ *       name: 'Новый проект',
+ *       description: 'Описание проекта'
+ *     });
+ *   } catch (error) {
+ *     console.error('Ошибка создания проекта:', error);
+ *   }
+ * };
+ * ```
+ */
 export function useCreateProject(options: UseUserDataOptions) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
   
@@ -87,7 +171,31 @@ export function useCreateProject(options: UseUserDataOptions) {
   });
 }
 
-// Hook для обновления проекта
+/**
+ * Хук для обновления существующего проекта
+ * Автоматически инвалидирует кэш проектов после успешного обновления
+ * 
+ * @param {UseUserDataOptions} options - Опции конфигурации хука
+ * @param {boolean} options.isAuthenticated - Флаг аутентификации пользователя
+ * @param {number} [options.userId] - Идентификатор пользователя
+ * @returns {UseMutationResult} Мутация для обновления проекта
+ * 
+ * @example
+ * ```typescript
+ * const updateProject = useUpdateProject({ isAuthenticated: true, userId: 123 });
+ * 
+ * const handleUpdate = async (projectId: number) => {
+ *   try {
+ *     await updateProject.mutateAsync({
+ *       id: projectId,
+ *       data: { name: 'Обновленное название' }
+ *     });
+ *   } catch (error) {
+ *     console.error('Ошибка обновления проекта:', error);
+ *   }
+ * };
+ * ```
+ */
 export function useUpdateProject(options: UseUserDataOptions) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
   
@@ -113,7 +221,30 @@ export function useUpdateProject(options: UseUserDataOptions) {
   });
 }
 
-// Hook для удаления проекта
+/**
+ * Хук для удаления проекта
+ * Автоматически инвалидирует кэш проектов после успешного удаления
+ * 
+ * @param {UseUserDataOptions} options - Опции конфигурации хука
+ * @param {boolean} options.isAuthenticated - Флаг аутентификации пользователя
+ * @param {number} [options.userId] - Идентификатор пользователя
+ * @returns {UseMutationResult} Мутация для удаления проекта
+ * 
+ * @example
+ * ```typescript
+ * const deleteProject = useDeleteProject({ isAuthenticated: true, userId: 123 });
+ * 
+ * const handleDelete = async (projectId: number) => {
+ *   if (confirm('Вы уверены, что хотите удалить проект?')) {
+ *     try {
+ *       await deleteProject.mutateAsync(projectId);
+ *     } catch (error) {
+ *       console.error('Ошибка удаления проекта:', error);
+ *     }
+ *   }
+ * };
+ * ```
+ */
 export function useDeleteProject(options: UseUserDataOptions) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
   
@@ -151,7 +282,7 @@ export function useCreateToken(options: UseUserDataOptions) {
       if (!res.ok) throw new Error('Failed to create token');
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tokens'] });
     },
   });
