@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { queryClient } from '@/lib/queryClient';
 
+/**
+ * Интерфейс данных пользователя Telegram
+ * @interface TelegramUser
+ * @property {number} id - Уникальный идентификатор пользователя
+ * @property {string} firstName - Имя пользователя
+ * @property {string} [lastName] - Фамилия пользователя (опционально)
+ * @property {string} [username] - Имя пользователя (опционально)
+ * @property {string} [photoUrl] - URL фотографии пользователя (опционально)
+ */
 export interface TelegramUser {
   id: number;
   firstName: string;
@@ -9,9 +18,47 @@ export interface TelegramUser {
   photoUrl?: string;
 }
 
+/**
+ * Ключ для хранения данных пользователя в localStorage
+ */
 const STORAGE_KEY = 'telegramUser';
+
+/**
+ * Имя события для аутентификации через Telegram
+ */
 const AUTH_EVENT = 'telegram-auth-change';
 
+/**
+ * Хук для управления аутентификацией через Telegram
+ *
+ * @returns {Object} Объект с состоянием аутентификации и методами управления
+ * @returns {TelegramUser | null} Object.user - Данные авторизованного пользователя или null
+ * @returns {Function} Object.login - Функция для входа пользователя
+ * @returns {Function} Object.logout - Функция для выхода пользователя
+ * @returns {boolean} Object.isLoading - Состояние загрузки при инициализации
+ *
+ * @example
+ * ```typescript
+ * const { user, login, logout, isLoading } = useTelegramAuth();
+ *
+ * // Проверка аутентификации
+ * if (user) {
+ *   console.log(`Добро пожаловать, ${user.firstName}!`);
+ * } else if (!isLoading) {
+ *   console.log('Пользователь не авторизован');
+ * }
+ *
+ * // Вход пользователя
+ * const handleLogin = (userData: TelegramUser) => {
+ *   login(userData);
+ * };
+ *
+ * // Выход пользователя
+ * const handleLogout = () => {
+ *   logout();
+ * };
+ * ```
+ */
 export function useTelegramAuth() {
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,6 +133,11 @@ export function useTelegramAuth() {
     };
   }, []);
 
+  /**
+   * Функция для входа пользователя
+   *
+   * @param {TelegramUser} userData - Данные пользователя для входа
+   */
   const login = (userData: TelegramUser) => {
     setUser(userData);
     try {
@@ -100,6 +152,12 @@ export function useTelegramAuth() {
     }
   };
 
+  /**
+   * Функция для выхода пользователя
+   *
+   * @async
+   * @returns {Promise<void>} Промис, который разрешается после завершения выхода
+   */
   const logout = async () => {
     try {
       await fetch('/api/auth/telegram/logout', {
