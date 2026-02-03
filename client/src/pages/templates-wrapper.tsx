@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,16 +6,22 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, ArrowLeft, Star, Trash2, Filter, SortAsc, Layers, Sparkles, Flame, Bookmark, Eye, Users, Globe, Lock } from 'lucide-react';
+import { Loader2, Search, ArrowLeft, Star, Trash2, Filter, SortAsc, Layers, Sparkles, Flame, Bookmark, Eye, Users, Globe, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { queryClient } from '@/lib/queryClient';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import type { BotTemplate } from '@shared/schema';
 
-// Простая версия страницы шаблонов без сложной системы макетов
+/**
+ * Простая версия страницы шаблонов без сложной системы макетов
+ *
+ * Этот компонент представляет собой упрощенную версию страницы шаблонов,
+ * которая не использует сложную систему макетов. Он предоставляет
+ * функциональность поиска, фильтрации и использования шаблонов ботов.
+ *
+ * @returns JSX элемент страницы шаблонов
+ */
 export default function TemplatesPageWrapper() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,7 +40,12 @@ export default function TemplatesPageWrapper() {
     enabled: currentTab === 'featured',
   });
 
-  // Очищаем локальный стейт гостя при авторизации
+  /**
+   * Эффект для очистки локального состояния гостя при авторизации
+   *
+   * При авторизации пользователя удаляет локальное хранилище ID шаблонов гостя
+   * и инвалидирует соответствующие кэши для обновления данных.
+   */
   useEffect(() => {
     if (user) {
       // Если пользователь авторизован - очищаем localStorage ID шаблонов гостя
@@ -199,24 +210,41 @@ export default function TemplatesPageWrapper() {
     }
   });
 
+  /**
+   * Обработчик использования шаблона
+   *
+   * Вызывается при выборе пользователем шаблона для использования.
+   * Обновляет счетчики использования, сохраняет шаблон в localStorage
+   * и перенаправляет пользователя в редактор.
+   *
+   * @param template - выбранный шаблон
+   */
   const handleUseTemplate = (template: BotTemplate) => {
     useTemplateMutation.mutate(template.id);
     localStorage.setItem('selectedTemplate', JSON.stringify(template));
-    
+
     // Сохраняем ID шаблона в список "моих" для гостей (для оффлайна)
     const myTemplateIds = localStorage.getItem('myTemplateIds') || '';
     const ids = new Set(myTemplateIds.split(',').filter(Boolean).map(Number));
     ids.add(template.id);
     localStorage.setItem('myTemplateIds', Array.from(ids).join(','));
-    
+
     setLocation('/');
-    
+
     toast({
       title: 'Шаблон загружен!',
       description: `Шаблон "${template.name}" будет применен к вашему проекту`,
     });
   };
 
+  /**
+   * Обработчик удаления шаблона
+   *
+   * Запрашивает подтверждение у пользователя и удаляет шаблон,
+   * если пользователь подтверждает удаление.
+   *
+   * @param template - шаблон для удаления
+   */
   const handleDeleteTemplate = (template: BotTemplate) => {
     if (window.confirm(`Вы уверены, что хотите удалить шаблон "${template.name}"? Это действие нельзя отменить.`)) {
       deleteTemplateMutation.mutate(template.id);
@@ -408,7 +436,15 @@ export default function TemplatesPageWrapper() {
   );
 }
 
-// Функция преобразования категории в русское название
+/**
+ * Функция преобразования категории в русское название
+ *
+ * Преобразует внутреннее название категории шаблона в человекочитаемое
+ * русское название для отображения пользователю.
+ *
+ * @param category - внутреннее название категории
+ * @returns русское название категории или оригинальное название, если не найдено
+ */
 function getCategoryLabel(category: string): string {
   const categoryMap: Record<string, string> = {
     'business': 'Бизнес',
@@ -423,10 +459,23 @@ function getCategoryLabel(category: string): string {
   return categoryMap[category] || category;
 }
 
-// Компонент для сетки шаблонов
-function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: { 
-  templates: BotTemplate[], 
-  isLoading: boolean, 
+/**
+ * Компонент для отображения сетки шаблонов
+ *
+ * Отображает шаблоны в виде сетки карточек с возможностью использования
+ * и удаления (если разрешено).
+ *
+ * @param props - свойства компонента
+ * @param props.templates - массив шаблонов для отображения
+ * @param props.isLoading - флаг загрузки данных
+ * @param props.onUse - функция обратного вызова при использовании шаблона
+ * @param props.showDelete - флаг отображения кнопки удаления
+ * @param props.onDelete - функция обратного вызова при удалении шаблона
+ * @returns JSX элемент сетки шаблонов
+ */
+function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
+  templates: BotTemplate[],
+  isLoading: boolean,
   onUse: (template: BotTemplate) => void,
   showDelete: boolean,
   onDelete: (template: BotTemplate) => void
