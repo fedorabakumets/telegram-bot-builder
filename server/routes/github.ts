@@ -32,8 +32,7 @@ githubRouter.post('/push-to-github', async (_req, res) => {
       return res.status(400).json({ error: 'GitHub token not found' });
     }
 
-    // Получить git diff
-    const diff = execSync('git diff --cached', { encoding: 'utf-8' });
+    // Получить список измененных файлов
     const changedFiles = execSync('git diff --cached --name-only', { encoding: 'utf-8' }).split('\n').filter(f => f);
 
     if (changedFiles.length === 0) {
