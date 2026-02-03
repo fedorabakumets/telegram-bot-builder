@@ -64,7 +64,7 @@ const storage_multer = multer.diskStorage({
     }
     cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     // Генерируем уникальное имя файла с временной меткой и безопасным именем
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const extension = file.originalname.split('.').pop()?.toLowerCase() || '';
@@ -72,7 +72,7 @@ const storage_multer = multer.diskStorage({
       .split('.')[0] // Убираем расширение
       .replace(/[^a-zA-Z0-9._-]/g, '_') // Заменяем небезопасные символы
       .substring(0, 50); // Ограничиваем длину
-    
+
     cb(null, `${uniqueSuffix}-${baseName}.${extension}`);
   }
 });
