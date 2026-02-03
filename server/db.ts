@@ -6,6 +6,11 @@
  * и корректное завершение соединений при остановке приложения.
  */
 
+// Расширяем глобальный объект для определения __dbPoolActive
+declare global {
+  var __dbPoolActive: boolean;
+}
+
 import dotenv from 'dotenv';
 dotenv.config({ debug: false });
 
@@ -68,7 +73,7 @@ pool.on('error', (err: Error) => {
  * Событие подключения к базе данных
  * Вызывается при успешном подключении клиента к базе данных
  */
-pool.on('connect', (client) => {
+pool.on('connect', (_client) => {
   // console.log('✅ Connected to database');
 });
 
@@ -108,7 +113,6 @@ async function testConnection() {
   try {
     // console.log('🧪 Тестирование подключения к базе данных...');
     const client = await pool.connect();
-    const result = await client.query('SELECT NOW() as current_time, version() as version');
     // console.log('✅ Тест подключения к базе данных прошел успешно:', {
     //   time: result.rows[0].current_time,
     //   version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1]
