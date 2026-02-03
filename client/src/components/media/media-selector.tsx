@@ -1,4 +1,15 @@
-import React, { useState } from 'react';
+/**
+ * @fileoverview Компонент выбора медиафайла
+ *
+ * Этот компонент предоставляет интерфейс для выбора медиафайлов из библиотеки,
+ * загрузки новых файлов или получения их по URL-адресу.
+ * Позволяет выбирать файлы различных типов (фото, видео, аудио, документы).
+ * Поддерживает отображение информации о выбранном файле и управление им.
+ *
+ * @module MediaSelector
+ */
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,8 +18,19 @@ import { Badge } from "@/components/ui/badge";
 import { MediaManager } from "./media-manager";
 import { UrlDownloader } from "./url-downloader";
 import type { MediaFile } from "@shared/schema";
-import { Upload, X, Eye, FileText, Image, Play, Volume2, LinkIcon, Download } from "lucide-react";
+import { Upload, X, Eye, Image, LinkIcon } from "lucide-react";
 
+/**
+ * Свойства компонента MediaSelector
+ *
+ * @interface MediaSelectorProps
+ * @property {number} projectId - ID проекта, к которому относится медиафайл
+ * @property {string} [value] - Текущее значение URL медиафайла
+ * @property {Function} onChange - Обработчик изменения выбранного файла
+ * @property {'photo' | 'video' | 'audio' | 'document'} [fileType] - Тип файла для фильтрации
+ * @property {string} [placeholder] - Текст-заполнитель для поля ввода URL
+ * @property {string} [label] - Название поля
+ */
 interface MediaSelectorProps {
   projectId: number;
   value?: string;
@@ -18,6 +40,17 @@ interface MediaSelectorProps {
   label?: string;
 }
 
+/**
+ * Компонент выбора медиафайла
+ *
+ * Предоставляет интерфейс для выбора медиафайла из библиотеки, загрузки нового файла
+ * или получения его по URL-адресу. Отображает информацию о выбранном файле и
+ * позволяет управлять им (просматривать, удалять).
+ *
+ * @component
+ * @param {MediaSelectorProps} props - Свойства компонента
+ * @returns {JSX.Element} Элемент компонента MediaSelector
+ */
 export function MediaSelector({ 
   projectId, 
   value, 
@@ -26,30 +59,46 @@ export function MediaSelector({
   placeholder = "Выберите файл или введите URL",
   label = "Медиафайл"
 }: MediaSelectorProps) {
+  /**
+   * Состояние открытия диалогового окна выбора файла
+   */
   const [isOpen, setIsOpen] = useState(false);
+
+  /**
+   * Выбранный медиафайл
+   */
   const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
 
+  /**
+   * Обработчик выбора файла
+   *
+   * Обновляет состояние выбранным файлом, вызывает коллбэк onChange
+   * и закрывает диалоговое окно.
+   *
+   * @param {MediaFile} file - Выбранный медиафайл
+   */
   const handleSelectFile = (file: MediaFile) => {
     setSelectedFile(file);
     onChange(file.url, file.fileName);
     setIsOpen(false);
   };
 
+  /**
+   * Обработчик очистки выбора файла
+   *
+   * Сбрасывает состояние выбранного файла и вызывает коллбэк onChange
+   * с пустой строкой.
+   */
   const handleClearSelection = () => {
     setSelectedFile(null);
     onChange('');
   };
 
-  const getFileIcon = (fileType: string) => {
-    switch (fileType) {
-      case 'photo': return <Image className="w-4 h-4" />;
-      case 'video': return <Play className="w-4 h-4" />;
-      case 'audio': return <Volume2 className="w-4 h-4" />;
-      case 'document': return <FileText className="w-4 h-4" />;
-      default: return <FileText className="w-4 h-4" />;
-    }
-  };
 
+  /**
+   * Определяет, используется ли загруженный файл
+   * (а не введенный URL напрямую)
+   */
   const isUsingUploadedFile = selectedFile && value === selectedFile.url;
 
   return (
