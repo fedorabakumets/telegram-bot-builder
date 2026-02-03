@@ -716,14 +716,28 @@ class MemStorage implements IStorage {
     this.currentId = 2;
   }
 
+  /**
+   * Получить проект бота по ID из памяти
+   * @param id - ID проекта
+   * @returns Проект бота или undefined, если не найден
+   */
   async getBotProject(id: number): Promise<BotProject | undefined> {
     return this.projects.get(id);
   }
 
+  /**
+   * Получить все проекты ботов из памяти
+   * @returns Массив проектов ботов
+   */
   async getAllBotProjects(): Promise<BotProject[]> {
     return Array.from(this.projects.values());
   }
 
+  /**
+   * Создать новый проект бота в памяти
+   * @param insertProject - Данные для создания проекта
+   * @returns Созданный проект бота
+   */
   async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
     const id = this.currentId++;
     const project: BotProject = {
@@ -741,6 +755,12 @@ class MemStorage implements IStorage {
     return project;
   }
 
+  /**
+   * Обновить проект бота в памяти
+   * @param id - ID проекта
+   * @param updateData - Данные для обновления
+   * @returns Обновленный проект бота или undefined, если не найден
+   */
   async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
     const project = this.projects.get(id);
     if (!project) return undefined;
@@ -750,32 +770,61 @@ class MemStorage implements IStorage {
       ...updateData,
       updatedAt: new Date(),
     };
-    
+
     this.projects.set(id, updatedProject);
     return updatedProject;
   }
 
+  /**
+   * Удалить проект бота из памяти
+   * @param id - ID проекта
+   * @returns true, если проект был удален, иначе false
+   */
   async deleteBotProject(id: number): Promise<boolean> {
     return this.projects.delete(id);
   }
 
   // Bot instances methods
+  /**
+   * Получить экземпляр бота по ID проекта из памяти
+   * @param projectId - ID проекта
+   * @returns Экземпляр бота или undefined, если не найден
+   */
   async getBotInstance(projectId: number): Promise<BotInstance | undefined> {
     return Array.from(this.instances.values()).find(instance => instance.projectId === projectId);
   }
 
+  /**
+   * Получить экземпляр бота по ID токена из памяти
+   * @param tokenId - ID токена
+   * @returns Экземпляр бота или undefined, если не найден
+   */
   async getBotInstanceByToken(tokenId: number): Promise<BotInstance | undefined> {
     return Array.from(this.instances.values()).find(instance => instance.tokenId === tokenId);
   }
 
+  /**
+   * Получить все экземпляры ботов по ID проекта из памяти
+   * @param projectId - ID проекта
+   * @returns Массив экземпляров ботов
+   */
   async getBotInstancesByProject(projectId: number): Promise<BotInstance[]> {
     return Array.from(this.instances.values()).filter(instance => instance.projectId === projectId);
   }
 
+  /**
+   * Получить все экземпляры ботов из памяти
+   * @returns Массив всех экземпляров ботов
+   */
   async getAllBotInstances(): Promise<BotInstance[]> {
     return Array.from(this.instances.values());
   }
 
+  /**
+   * Создать новый экземпляр бота в памяти
+   * @param insertInstance - Данные для создания экземпляра
+   * @returns Созданный экземпляр бота
+   */
   async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
     // Теперь удаляем существующий экземпляр только для этого же токена
     const existingInstance = await this.getBotInstanceByToken(insertInstance.tokenId);
@@ -796,6 +845,12 @@ class MemStorage implements IStorage {
     return instance;
   }
 
+  /**
+   * Обновить экземпляр бота в памяти
+   * @param id - ID экземпляра
+   * @param updateData - Данные для обновления
+   * @returns Обновленный экземпляр бота или undefined, если не найден
+   */
   async updateBotInstance(id: number, updateData: Partial<InsertBotInstance>): Promise<BotInstance | undefined> {
     const instance = this.instances.get(id);
     if (!instance) return undefined;
@@ -805,44 +860,73 @@ class MemStorage implements IStorage {
       ...updateData,
       stoppedAt: updateData.status === 'stopped' ? new Date() : instance.stoppedAt,
     };
-    
+
     this.instances.set(id, updatedInstance);
     return updatedInstance;
   }
 
+  /**
+   * Удалить экземпляр бота из памяти
+   * @param id - ID экземпляра
+   * @returns true, если экземпляр был удален, иначе false
+   */
   async deleteBotInstance(id: number): Promise<boolean> {
     return this.instances.delete(id);
   }
 
+  /**
+   * Остановить экземпляр бота по ID проекта в памяти
+   * @param projectId - ID проекта
+   * @returns true, если экземпляр был остановлен, иначе false
+   */
   async stopBotInstance(projectId: number): Promise<boolean> {
     const instance = await this.getBotInstance(projectId);
     if (!instance) return false;
-    
-    const updated = await this.updateBotInstance(instance.id, { 
+
+    const updated = await this.updateBotInstance(instance.id, {
       status: 'stopped'
     });
     return !!updated;
   }
 
+  /**
+   * Остановить экземпляр бота по ID токена в памяти
+   * @param tokenId - ID токена
+   * @returns true, если экземпляр был остановлен, иначе false
+   */
   async stopBotInstanceByToken(tokenId: number): Promise<boolean> {
     const instance = await this.getBotInstanceByToken(tokenId);
     if (!instance) return false;
-    
-    const updated = await this.updateBotInstance(instance.id, { 
+
+    const updated = await this.updateBotInstance(instance.id, {
       status: 'stopped'
     });
     return !!updated;
   }
 
   // Bot templates methods
+  /**
+   * Получить шаблон бота по ID из памяти
+   * @param id - ID шаблона
+   * @returns Шаблон бота или undefined, если не найден
+   */
   async getBotTemplate(id: number): Promise<BotTemplate | undefined> {
     return this.templates.get(id);
   }
 
+  /**
+   * Получить все шаблоны ботов из памяти
+   * @returns Массив шаблонов ботов
+   */
   async getAllBotTemplates(): Promise<BotTemplate[]> {
     return Array.from(this.templates.values());
   }
 
+  /**
+   * Создать новый шаблон бота в памяти
+   * @param insertTemplate - Данные для создания шаблона
+   * @returns Созданный шаблон бота
+   */
   async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
     const id = this.currentTemplateId++;
     const template: BotTemplate = {
@@ -878,6 +962,12 @@ class MemStorage implements IStorage {
     return template;
   }
 
+  /**
+   * Обновить шаблон бота в памяти
+   * @param id - ID шаблона
+   * @param updateData - Данные для обновления
+   * @returns Обновленный шаблон бота или undefined, если не найден
+   */
   async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
     const template = this.templates.get(id);
     if (!template) return undefined;
@@ -887,15 +977,25 @@ class MemStorage implements IStorage {
       ...updateData,
       updatedAt: new Date(),
     };
-    
+
     this.templates.set(id, updatedTemplate);
     return updatedTemplate;
   }
 
+  /**
+   * Удалить шаблон бота из памяти
+   * @param id - ID шаблона
+   * @returns true, если шаблон был удален, иначе false
+   */
   async deleteBotTemplate(id: number): Promise<boolean> {
     return this.templates.delete(id);
   }
 
+  /**
+   * Увеличить счетчик использования шаблона в памяти
+   * @param id - ID шаблона
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementTemplateUseCount(id: number): Promise<boolean> {
     const template = this.templates.get(id);
     if (!template) return false;
@@ -906,11 +1006,16 @@ class MemStorage implements IStorage {
       lastUsedAt: new Date(),
       updatedAt: new Date(),
     };
-    
+
     this.templates.set(id, updatedTemplate);
     return true;
   }
 
+  /**
+   * Увеличить счетчик просмотров шаблона в памяти
+   * @param id - ID шаблона
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementTemplateViewCount(id: number): Promise<boolean> {
     const template = this.templates.get(id);
     if (!template) return false;
@@ -920,11 +1025,16 @@ class MemStorage implements IStorage {
       viewCount: (template.viewCount || 0) + 1,
       updatedAt: new Date(),
     };
-    
+
     this.templates.set(id, updatedTemplate);
     return true;
   }
 
+  /**
+   * Увеличить счетчик загрузок шаблона в памяти
+   * @param id - ID шаблона
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementTemplateDownloadCount(id: number): Promise<boolean> {
     const template = this.templates.get(id);
     if (!template) return false;
@@ -934,11 +1044,17 @@ class MemStorage implements IStorage {
       downloadCount: (template.downloadCount || 0) + 1,
       updatedAt: new Date(),
     };
-    
+
     this.templates.set(id, updatedTemplate);
     return true;
   }
 
+  /**
+   * Переключить лайк шаблона в памяти
+   * @param id - ID шаблона
+   * @param liked - true для лайка, false для анлайка
+   * @returns true, если статус лайка был изменен, иначе false
+   */
   async toggleTemplateLike(id: number, liked: boolean): Promise<boolean> {
     const template = this.templates.get(id);
     if (!template) return false;
@@ -948,11 +1064,17 @@ class MemStorage implements IStorage {
       likeCount: Math.max(0, (template.likeCount || 0) + (liked ? 1 : -1)),
       updatedAt: new Date(),
     };
-    
+
     this.templates.set(id, updatedTemplate);
     return true;
   }
 
+  /**
+   * Переключить закладку шаблона в памяти
+   * @param id - ID шаблона
+   * @param bookmarked - true для добавления в закладки, false для удаления
+   * @returns true, если статус закладки был изменен, иначе false
+   */
   async toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean> {
     const template = this.templates.get(id);
     if (!template) return false;
@@ -962,11 +1084,17 @@ class MemStorage implements IStorage {
       bookmarkCount: Math.max(0, (template.bookmarkCount || 0) + (bookmarked ? 1 : -1)),
       updatedAt: new Date(),
     };
-    
+
     this.templates.set(id, updatedTemplate);
     return true;
   }
 
+  /**
+   * Оценить шаблон в памяти
+   * @param id - ID шаблона
+   * @param rating - Оценка (обычно от 1 до 5)
+   * @returns true, если оценка была сохранена, иначе false
+   */
   async rateTemplate(id: number, rating: number): Promise<boolean> {
     const template = this.templates.get(id);
     if (!template) return false;
@@ -983,22 +1111,36 @@ class MemStorage implements IStorage {
       ratingCount: newRatingCount,
       updatedAt: new Date(),
     };
-    
+
     this.templates.set(id, updatedTemplate);
     return true;
   }
 
+  /**
+   * Получить рекомендуемые шаблоны из памяти
+   * @returns Массив рекомендованных шаблонов
+   */
   async getFeaturedTemplates(): Promise<BotTemplate[]> {
     return Array.from(this.templates.values()).filter(template => template.featured === 1);
   }
 
+  /**
+   * Получить шаблоны по категории из памяти
+   * @param category - Категория шаблонов
+   * @returns Массив шаблонов указанной категории
+   */
   async getTemplatesByCategory(category: string): Promise<BotTemplate[]> {
     return Array.from(this.templates.values()).filter(template => template.category === category);
   }
 
+  /**
+   * Поиск шаблонов по запросу в памяти
+   * @param query - Поисковый запрос
+   * @returns Массив найденных шаблонов
+   */
   async searchTemplates(query: string): Promise<BotTemplate[]> {
     const searchTerm = query.toLowerCase();
-    return Array.from(this.templates.values()).filter(template => 
+    return Array.from(this.templates.values()).filter(template =>
       template.name.toLowerCase().includes(searchTerm) ||
       (template.description && template.description.toLowerCase().includes(searchTerm)) ||
       (template.tags && template.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
@@ -1006,21 +1148,41 @@ class MemStorage implements IStorage {
   }
 
   // Bot Tokens (Memory implementation)
+  /**
+   * Получить токен бота по ID из памяти (не поддерживается)
+   * @param id - ID токена
+   * @returns undefined, так как токены не хранятся в памяти
+   */
   async getBotToken(id: number): Promise<BotToken | undefined> {
     // In memory implementation - tokens are not stored
     return undefined;
   }
 
+  /**
+   * Получить токены ботов по ID проекта из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @returns Пустой массив, так как токены не хранятся в памяти
+   */
   async getBotTokensByProject(projectId: number): Promise<BotToken[]> {
     // In memory implementation - tokens are not stored
     return [];
   }
 
+  /**
+   * Получить токен бота по умолчанию для проекта из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @returns undefined, так как токены не хранятся в памяти
+   */
   async getDefaultBotToken(projectId: number): Promise<BotToken | undefined> {
     // In memory implementation - tokens are not stored
     return undefined;
   }
 
+  /**
+   * Создать новый токен бота в памяти (временная реализация)
+   * @param insertToken - Данные для создания токена
+   * @returns Созданный токен бота
+   */
   async createBotToken(insertToken: InsertBotToken): Promise<BotToken> {
     // In memory implementation - create temporary token
     const token: BotToken = {
@@ -1049,31 +1211,63 @@ class MemStorage implements IStorage {
     return token;
   }
 
+  /**
+   * Обновить токен бота в памяти (не поддерживается)
+   * @param id - ID токена
+   * @param updateData - Данные для обновления
+   * @returns undefined, так как обновление не поддерживается
+   */
   async updateBotToken(id: number, updateData: Partial<InsertBotToken>): Promise<BotToken | undefined> {
     // In memory implementation - not supported
     return undefined;
   }
 
+  /**
+   * Удалить токен бота из памяти (не поддерживается)
+   * @param id - ID токена
+   * @returns false, так как удаление не поддерживается
+   */
   async deleteBotToken(id: number): Promise<boolean> {
     // In memory implementation - not supported
     return false;
   }
 
+  /**
+   * Установить токен бота по умолчанию для проекта в памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   * @returns false, так как операция не поддерживается
+   */
   async setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean> {
     // In memory implementation - not supported
     return false;
   }
 
+  /**
+   * Отметить токен как использованный в памяти (не поддерживается)
+   * @param id - ID токена
+   * @returns false, так как операция не поддерживается
+   */
   async markTokenAsUsed(id: number): Promise<boolean> {
     // In memory implementation - not supported
     return false;
   }
 
   // Telegram Users (Memory implementation - not fully supported)
+  /**
+   * Получить пользователя Telegram по ID из памяти (не поддерживается)
+   * @param id - ID пользователя
+   * @returns undefined, так как пользователи не хранятся в памяти
+   */
   async getTelegramUser(id: number): Promise<TelegramUserDB | undefined> {
     return undefined;
   }
 
+  /**
+   * Получить пользователя Telegram или создать нового в памяти
+   * @param user - Данные пользователя для создания
+   * @returns Пользователь Telegram
+   */
   async getTelegramUserOrCreate(user: InsertTelegramUser): Promise<TelegramUserDB> {
     const telegramUser: TelegramUserDB = {
       id: user.id,
@@ -1088,41 +1282,87 @@ class MemStorage implements IStorage {
     return telegramUser;
   }
 
+  /**
+   * Удалить пользователя Telegram из памяти (не поддерживается)
+   * @param id - ID пользователя
+   * @returns false, так как удаление не поддерживается
+   */
   async deleteTelegramUser(id: number): Promise<boolean> {
     return false;
   }
 
   // User-specific methods
+  /**
+   * Получить проекты ботов пользователя из памяти
+   * @param ownerId - ID владельца
+   * @returns Массив проектов ботов пользователя
+   */
   async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
     return Array.from(this.projects.values()).filter(p => p.ownerId === ownerId);
   }
 
+  /**
+   * Получить гостевые проекты ботов (без владельца) из памяти
+   * @returns Массив гостевых проектов ботов
+   */
   async getGuestBotProjects(): Promise<BotProject[]> {
     return Array.from(this.projects.values()).filter(p => p.ownerId === null);
   }
 
+  /**
+   * Получить токены ботов пользователя из памяти (не поддерживается)
+   * @param ownerId - ID владельца
+   * @param projectId - Опциональный ID проекта для фильтрации
+   * @returns Пустой массив, так как токены не хранятся в памяти
+   */
   async getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]> {
     // MemStorage doesn't store tokens persistently, so return empty array
     return [];
   }
 
+  /**
+   * Получить шаблоны ботов пользователя из памяти
+   * @param ownerId - ID владельца
+   * @returns Массив шаблонов ботов пользователя
+   */
   async getUserBotTemplates(ownerId: number): Promise<BotTemplate[]> {
     return Array.from(this.templates.values()).filter(t => t.ownerId === ownerId);
   }
 
   // Media Files (Memory implementation - not supported)
+  /**
+   * Получить медиафайл по ID из памяти (не поддерживается)
+   * @param id - ID файла
+   * @returns undefined, так как файлы не хранятся в памяти
+   */
   async getMediaFile(id: number): Promise<MediaFile | undefined> {
     return undefined;
   }
 
+  /**
+   * Получить медиафайлы по ID проекта из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @returns Пустой массив, так как файлы не хранятся в памяти
+   */
   async getMediaFilesByProject(projectId: number): Promise<MediaFile[]> {
     return [];
   }
 
+  /**
+   * Получить медиафайлы по ID проекта и типу файла из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @param fileType - Тип файла
+   * @returns Пустой массив, так как файлы не хранятся в памяти
+   */
   async getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]> {
     return [];
   }
 
+  /**
+   * Создать новый медиафайл в памяти
+   * @param insertFile - Данные для создания файла
+   * @returns Созданный медиафайл
+   */
   async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
     const file: MediaFile = {
       ...insertFile,
@@ -1135,39 +1375,86 @@ class MemStorage implements IStorage {
     return file;
   }
 
+  /**
+   * Обновить медиафайл в памяти (не поддерживается)
+   * @param id - ID файла
+   * @param updateData - Данные для обновления
+   * @returns undefined, так как обновление не поддерживается
+   */
   async updateMediaFile(id: number, updateData: Partial<InsertMediaFile>): Promise<MediaFile | undefined> {
     return undefined;
   }
 
+  /**
+   * Удалить медиафайл из памяти (не поддерживается)
+   * @param id - ID файла
+   * @returns false, так как удаление не поддерживается
+   */
   async deleteMediaFile(id: number): Promise<boolean> {
     return false;
   }
 
+  /**
+   * Увеличить счетчик использования медиафайла в памяти (не поддерживается)
+   * @param id - ID файла
+   * @returns false, так как операция не поддерживается
+   */
   async incrementMediaFileUsage(id: number): Promise<boolean> {
     return false;
   }
 
+  /**
+   * Поиск медиафайлов по проекту и запросу в памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @param query - Поисковый запрос
+   * @returns Пустой массив, так как файлы не хранятся в памяти
+   */
   async searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]> {
     return [];
   }
 
   // User Bot Data (Memory implementation - not supported)
+  /**
+   * Получить данные пользователя бота по ID из памяти (не поддерживается)
+   * @param id - ID данных пользователя
+   * @returns undefined, так как данные не хранятся в памяти
+   */
   async getUserBotData(id: number): Promise<UserBotData | undefined> {
     return undefined;
   }
 
+  /**
+   * Получить данные пользователя бота по ID проекта и ID пользователя из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя
+   * @returns undefined, так как данные не хранятся в памяти
+   */
   async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
     return undefined;
   }
 
+  /**
+   * Получить все данные пользователей бота по ID проекта из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @returns Пустой массив, так как данные не хранятся в памяти
+   */
   async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
     return [];
   }
 
+  /**
+   * Получить все данные пользователей ботов из памяти (не поддерживается)
+   * @returns Пустой массив, так как данные не хранятся в памяти
+   */
   async getAllUserBotData(): Promise<UserBotData[]> {
     return [];
   }
 
+  /**
+   * Создать новые данные пользователя бота в памяти
+   * @param insertUserData - Данные для создания
+   * @returns Созданные данные пользователя бота
+   */
   async createUserBotData(insertUserData: InsertUserBotData): Promise<UserBotData> {
     const userData: UserBotData = {
       ...insertUserData,
@@ -1200,30 +1487,68 @@ class MemStorage implements IStorage {
     return userData;
   }
 
+  /**
+   * Обновить данные пользователя бота в памяти (не поддерживается)
+   * @param id - ID данных
+   * @param updateData - Данные для обновления
+   * @returns undefined, так как обновление не поддерживается
+   */
   async updateUserBotData(id: number, updateData: Partial<InsertUserBotData>): Promise<UserBotData | undefined> {
     return undefined;
   }
 
+  /**
+   * Удалить данные пользователя бота из памяти (не поддерживается)
+   * @param id - ID данных
+   * @returns false, так как удаление не поддерживается
+   */
   async deleteUserBotData(id: number): Promise<boolean> {
     return false;
   }
 
+  /**
+   * Удалить все данные пользователей бота по ID проекта из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @returns false, так как удаление не поддерживается
+   */
   async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
     return false;
   }
 
+  /**
+   * Увеличить счетчик взаимодействий пользователя в памяти (не поддерживается)
+   * @param id - ID данных пользователя
+   * @returns false, так как операция не поддерживается
+   */
   async incrementUserInteraction(id: number): Promise<boolean> {
     return false;
   }
 
+  /**
+   * Обновить состояние пользователя в памяти (не поддерживается)
+   * @param id - ID данных пользователя
+   * @param state - Новое состояние
+   * @returns false, так как операция не поддерживается
+   */
   async updateUserState(id: number, state: string): Promise<boolean> {
     return false;
   }
 
+  /**
+   * Поиск данных пользователей бота по проекту и запросу в памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @param query - Поисковый запрос
+   * @returns Пустой массив, так как данные не хранятся в памяти
+   */
   async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
     return [];
   }
 
+  /**
+   * Получить статистику по данным пользователей бота из памяти (возвращает заглушки)
+   * @param projectId - ID проекта
+   * @returns Объект со статистикой пользователей (все значения равны 0)
+   */
   async getUserBotDataStats(projectId: number): Promise<{
     totalUsers: number;
     activeUsers: number;
@@ -1241,74 +1566,167 @@ class MemStorage implements IStorage {
       avgInteractionsPerUser: 0
     };
   }
-  
+
   // Bot Groups stubs
+  /**
+   * Получить группу бота по ID из памяти (не поддерживается)
+   * @param id - ID группы
+   * @returns undefined, так как группы не поддерживаются
+   */
   async getBotGroup(id: number): Promise<BotGroup | undefined> {
     return undefined;
   }
 
+  /**
+   * Получить все группы бота по ID проекта из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @returns Пустой массив, так как группы не поддерживаются
+   */
   async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
     return [];
   }
 
+  /**
+   * Получить группу бота по ID проекта и ID группы из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @param groupId - ID группы
+   * @returns undefined, так как группы не поддерживаются
+   */
   async getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined> {
     return undefined;
   }
 
+  /**
+   * Создать новую группу бота в памяти (не поддерживается)
+   * @param group - Данные для создания группы
+   * @returns Ошибка, так как группы не поддерживаются
+   */
   async createBotGroup(group: InsertBotGroup): Promise<BotGroup> {
     throw new Error("MemStorage does not support groups");
   }
 
+  /**
+   * Обновить группу бота в памяти (не поддерживается)
+   * @param id - ID группы
+   * @param group - Данные для обновления
+   * @returns undefined, так как обновление не поддерживается
+   */
   async updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
     return undefined;
   }
 
+  /**
+   * Удалить группу бота из памяти (не поддерживается)
+   * @param id - ID группы
+   * @returns false, так как удаление не поддерживается
+   */
   async deleteBotGroup(id: number): Promise<boolean> {
     return false;
   }
 
   // Group members stubs
+  /**
+   * Получить участников группы из памяти (не поддерживается)
+   * @param groupId - ID группы
+   * @returns Пустой массив, так как участники не поддерживаются
+   */
   async getGroupMembers(groupId: number): Promise<GroupMember[]> {
     return [];
   }
 
+  /**
+   * Создать нового участника группы в памяти (не поддерживается)
+   * @param member - Данные для создания участника
+   * @returns Ошибка, так как участники не поддерживаются
+   */
   async createGroupMember(member: InsertGroupMember): Promise<GroupMember> {
     throw new Error("MemStorage does not support group members");
   }
 
+  /**
+   * Обновить участника группы в памяти (не поддерживается)
+   * @param id - ID участника
+   * @param member - Данные для обновления
+   * @returns undefined, так как обновление не поддерживается
+   */
   async updateGroupMember(id: number, member: Partial<InsertGroupMember>): Promise<GroupMember | undefined> {
     return undefined;
   }
 
+  /**
+   * Удалить участника группы из памяти (не поддерживается)
+   * @param id - ID участника
+   * @returns false, так как удаление не поддерживается
+   */
   async deleteGroupMember(id: number): Promise<boolean> {
     return false;
   }
 
   // Bot messages stubs
+  /**
+   * Создать новое сообщение бота в памяти (не поддерживается)
+   * @param message - Данные для создания сообщения
+   * @returns Ошибка, так как сообщения не поддерживаются
+   */
   async createBotMessage(message: InsertBotMessage): Promise<BotMessage> {
     throw new Error("MemStorage does not support bot messages");
   }
 
+  /**
+   * Получить сообщения бота по проекту и пользователю из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя
+   * @param limit - Ограничение количества сообщений (по умолчанию 100)
+   * @returns Пустой массив, так как сообщения не поддерживаются
+   */
   async getBotMessages(projectId: number, userId: string, limit?: number): Promise<BotMessage[]> {
     return [];
   }
 
+  /**
+   * Получить сообщения бота с медиа по проекту и пользователю из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя
+   * @param limit - Ограничение количества сообщений (по умолчанию 100)
+   * @returns Пустой массив, так как сообщения не поддерживаются
+   */
   async getBotMessagesWithMedia(projectId: number, userId: string, limit?: number): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]> {
     return [];
   }
 
+  /**
+   * Удалить сообщения бота по проекту и пользователю из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя
+   * @returns false, так как удаление не поддерживается
+   */
   async deleteBotMessages(projectId: number, userId: string): Promise<boolean> {
     return false;
   }
 
+  /**
+   * Удалить все сообщения бота по проекту из памяти (не поддерживается)
+   * @param projectId - ID проекта
+   * @returns false, так как удаление не поддерживается
+   */
   async deleteAllBotMessages(projectId: number): Promise<boolean> {
     return false;
   }
 
+  /**
+   * Создать запись о медиафайле в сообщении бота в памяти (не поддерживается)
+   * @param data - Данные для создания записи
+   * @returns Ошибка, так как медиафайлы сообщений не поддерживаются
+   */
   async createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia> {
     throw new Error("MemStorage does not support bot message media");
   }
 
+  /**
+   * Получить медиафайлы сообщения из памяти (не поддерживается)
+   * @param messageId - ID сообщения
+   * @returns Пустой массив, так как медиафайлы сообщений не поддерживаются
+   */
   async getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>> {
     return [];
   }
@@ -1322,15 +1740,29 @@ export class DatabaseStorage implements IStorage {
   protected db = db;
   
   // Bot Projects
+  /**
+   * Получить проект бота по ID из базы данных
+   * @param id - ID проекта
+   * @returns Проект бота или undefined, если не найден
+   */
   async getBotProject(id: number): Promise<BotProject | undefined> {
     const [project] = await this.db.select().from(botProjects).where(eq(botProjects.id, id));
     return project || undefined;
   }
 
+  /**
+   * Получить все проекты ботов из базы данных
+   * @returns Массив проектов ботов
+   */
   async getAllBotProjects(): Promise<BotProject[]> {
     return await this.db.select().from(botProjects).orderBy(desc(botProjects.updatedAt));
   }
 
+  /**
+   * Создать новый проект бота в базе данных
+   * @param insertProject - Данные для создания проекта
+   * @returns Созданный проект бота
+   */
   async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
     const [project] = await this.db
       .insert(botProjects)
@@ -1342,6 +1774,12 @@ export class DatabaseStorage implements IStorage {
     return project;
   }
 
+  /**
+   * Обновить проект бота в базе данных
+   * @param id - ID проекта
+   * @param updateData - Данные для обновления
+   * @returns Обновленный проект бота или undefined, если не найден
+   */
   async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
     const [project] = await this.db
       .update(botProjects)
@@ -1351,30 +1789,59 @@ export class DatabaseStorage implements IStorage {
     return project || undefined;
   }
 
+  /**
+   * Удалить проект бота из базы данных
+   * @param id - ID проекта
+   * @returns true, если проект был удален, иначе false
+   */
   async deleteBotProject(id: number): Promise<boolean> {
     const result = await this.db.delete(botProjects).where(eq(botProjects.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Bot Instances
+  /**
+   * Получить экземпляр бота по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Экземпляр бота или undefined, если не найден
+   */
   async getBotInstance(projectId: number): Promise<BotInstance | undefined> {
     const [instance] = await this.db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
     return instance || undefined;
   }
 
+  /**
+   * Получить экземпляр бота по ID токена из базы данных
+   * @param tokenId - ID токена
+   * @returns Экземпляр бота или undefined, если не найден
+   */
   async getBotInstanceByToken(tokenId: number): Promise<BotInstance | undefined> {
     const [instance] = await this.db.select().from(botInstances).where(eq(botInstances.tokenId, tokenId));
     return instance || undefined;
   }
 
+  /**
+   * Получить все экземпляры ботов по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Массив экземпляров ботов
+   */
   async getBotInstancesByProject(projectId: number): Promise<BotInstance[]> {
     return await this.db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
   }
 
+  /**
+   * Получить все экземпляры ботов из базы данных
+   * @returns Массив всех экземпляров ботов
+   */
   async getAllBotInstances(): Promise<BotInstance[]> {
     return await this.db.select().from(botInstances).orderBy(desc(botInstances.startedAt));
   }
 
+  /**
+   * Создать новый экземпляр бота в базе данных
+   * @param insertInstance - Данные для создания экземпляра
+   * @returns Созданный экземпляр бота
+   */
   async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
     const [instance] = await this.db
       .insert(botInstances)
@@ -1383,6 +1850,12 @@ export class DatabaseStorage implements IStorage {
     return instance;
   }
 
+  /**
+   * Обновить экземпляр бота в базе данных
+   * @param id - ID экземпляра
+   * @param updateData - Данные для обновления
+   * @returns Обновленный экземпляр бота или undefined, если не найден
+   */
   async updateBotInstance(id: number, updateData: Partial<InsertBotInstance>): Promise<BotInstance | undefined> {
     const [instance] = await this.db
       .update(botInstances)
@@ -1392,11 +1865,21 @@ export class DatabaseStorage implements IStorage {
     return instance || undefined;
   }
 
+  /**
+   * Удалить экземпляр бота из базы данных
+   * @param id - ID экземпляра
+   * @returns true, если экземпляр был удален, иначе false
+   */
   async deleteBotInstance(id: number): Promise<boolean> {
     const result = await this.db.delete(botInstances).where(eq(botInstances.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Остановить экземпляр бота по ID проекта в базе данных
+   * @param projectId - ID проекта
+   * @returns true, если экземпляр был остановлен, иначе false
+   */
   async stopBotInstance(projectId: number): Promise<boolean> {
     const result = await this.db
       .update(botInstances)
@@ -1405,6 +1888,11 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Остановить экземпляр бота по ID токена в базе данных
+   * @param tokenId - ID токена
+   * @returns true, если экземпляр был остановлен, иначе false
+   */
   async stopBotInstanceByToken(tokenId: number): Promise<boolean> {
     const result = await this.db
       .update(botInstances)
@@ -1414,15 +1902,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Bot Templates
+  /**
+   * Получить шаблон бота по ID из базы данных
+   * @param id - ID шаблона
+   * @returns Шаблон бота или undefined, если не найден
+   */
   async getBotTemplate(id: number): Promise<BotTemplate | undefined> {
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     return template || undefined;
   }
 
+  /**
+   * Получить все шаблоны ботов из базы данных
+   * @returns Массив шаблонов ботов
+   */
   async getAllBotTemplates(): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).orderBy(desc(botTemplates.createdAt));
   }
 
+  /**
+   * Создать новый шаблон бота в базе данных
+   * @param insertTemplate - Данные для создания шаблона
+   * @returns Созданный шаблон бота
+   */
   async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
     const [template] = await this.db
       .insert(botTemplates)
@@ -1431,6 +1933,12 @@ export class DatabaseStorage implements IStorage {
     return template;
   }
 
+  /**
+   * Обновить шаблон бота в базе данных
+   * @param id - ID шаблона
+   * @param updateData - Данные для обновления
+   * @returns Обновленный шаблон бота или undefined, если не найден
+   */
   async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
     const [template] = await this.db
       .update(botTemplates)
@@ -1440,18 +1948,28 @@ export class DatabaseStorage implements IStorage {
     return template || undefined;
   }
 
+  /**
+   * Удалить шаблон бота из базы данных
+   * @param id - ID шаблона
+   * @returns true, если шаблон был удален, иначе false
+   */
   async deleteBotTemplate(id: number): Promise<boolean> {
     const result = await this.db.delete(botTemplates).where(eq(botTemplates.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Увеличить счетчик использования шаблона в базе данных
+   * @param id - ID шаблона
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementTemplateUseCount(id: number): Promise<boolean> {
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
-    
+
     const result = await this.db
       .update(botTemplates)
-      .set({ 
+      .set({
         useCount: (template.useCount || 0) + 1,
         lastUsedAt: new Date()
       })
@@ -1459,64 +1977,92 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Увеличить счетчик просмотров шаблона в базе данных
+   * @param id - ID шаблона
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementTemplateViewCount(id: number): Promise<boolean> {
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
-    
+
     const result = await this.db
       .update(botTemplates)
-      .set({ 
+      .set({
         viewCount: (template.viewCount || 0) + 1
       })
       .where(eq(botTemplates.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Увеличить счетчик загрузок шаблона в базе данных
+   * @param id - ID шаблона
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementTemplateDownloadCount(id: number): Promise<boolean> {
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
-    
+
     const result = await this.db
       .update(botTemplates)
-      .set({ 
+      .set({
         downloadCount: (template.downloadCount || 0) + 1
       })
       .where(eq(botTemplates.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Переключить лайк шаблона в базе данных
+   * @param id - ID шаблона
+   * @param liked - true для лайка, false для анлайка
+   * @returns true, если статус лайка был изменен, иначе false
+   */
   async toggleTemplateLike(id: number, liked: boolean): Promise<boolean> {
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
-    
+
     const current = template.likeCount || 0;
     const newCount = liked ? current + 1 : Math.max(0, current - 1);
-    
+
     const result = await this.db
       .update(botTemplates)
-      .set({ 
+      .set({
         likeCount: newCount
       })
       .where(eq(botTemplates.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Переключить закладку шаблона в базе данных
+   * @param id - ID шаблона
+   * @param bookmarked - true для добавления в закладки, false для удаления
+   * @returns true, если статус закладки был изменен, иначе false
+   */
   async toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean> {
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
-    
+
     const current = template.bookmarkCount || 0;
     const newCount = bookmarked ? current + 1 : Math.max(0, current - 1);
-    
+
     const result = await this.db
       .update(botTemplates)
-      .set({ 
+      .set({
         bookmarkCount: newCount
       })
       .where(eq(botTemplates.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Оценить шаблон в базе данных
+   * @param id - ID шаблона
+   * @param rating - Оценка (обычно от 1 до 5)
+   * @returns true, если оценка была сохранена, иначе false
+   */
   async rateTemplate(id: number, rating: number): Promise<boolean> {
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
@@ -1528,7 +2074,7 @@ export class DatabaseStorage implements IStorage {
 
     const result = await this.db
       .update(botTemplates)
-      .set({ 
+      .set({
         rating: newRating,
         ratingCount: newRatingCount,
         updatedAt: new Date()
@@ -1537,14 +2083,28 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Получить рекомендуемые шаблоны из базы данных
+   * @returns Массив рекомендованных шаблонов
+   */
   async getFeaturedTemplates(): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).where(eq(botTemplates.featured, 1)).orderBy(desc(botTemplates.rating));
   }
 
+  /**
+   * Получить шаблоны по категории из базы данных
+   * @param category - Категория шаблонов
+   * @returns Массив шаблонов указанной категории
+   */
   async getTemplatesByCategory(category: string): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).where(eq(botTemplates.category, category)).orderBy(desc(botTemplates.createdAt));
   }
 
+  /**
+   * Поиск шаблонов по запросу в базе данных
+   * @param query - Поисковый запрос
+   * @returns Массив найденных шаблонов
+   */
   async searchTemplates(query: string): Promise<BotTemplate[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
     return await this.db.select().from(botTemplates).where(
@@ -1556,17 +2116,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Bot Tokens
+  /**
+   * Получить токен бота по ID из базы данных
+   * @param id - ID токена
+   * @returns Токен бота или undefined, если не найден
+   */
   async getBotToken(id: number): Promise<BotToken | undefined> {
     const [token] = await this.db.select().from(botTokens).where(eq(botTokens.id, id));
     return token || undefined;
   }
 
+  /**
+   * Получить токены ботов по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Массив токенов ботов
+   */
   async getBotTokensByProject(projectId: number): Promise<BotToken[]> {
     return await this.db.select().from(botTokens)
       .where(eq(botTokens.projectId, projectId))
       .orderBy(desc(botTokens.isDefault), desc(botTokens.createdAt));
   }
 
+  /**
+   * Получить токен бота по умолчанию для проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Токен бота по умолчанию или undefined, если не найден
+   */
   async getDefaultBotToken(projectId: number): Promise<BotToken | undefined> {
     const [token] = await this.db.select().from(botTokens)
       .where(and(eq(botTokens.projectId, projectId), eq(botTokens.isDefault, 1)))
@@ -1574,6 +2149,11 @@ export class DatabaseStorage implements IStorage {
     return token || undefined;
   }
 
+  /**
+   * Создать новый токен бота в базе данных
+   * @param insertToken - Данные для создания токена
+   * @returns Созданный токен бота
+   */
   async createBotToken(insertToken: InsertBotToken): Promise<BotToken> {
     if (insertToken.isDefault === 1) {
       await this.db.update(botTokens)
@@ -1588,6 +2168,12 @@ export class DatabaseStorage implements IStorage {
     return token;
   }
 
+  /**
+   * Обновить токен бота в базе данных
+   * @param id - ID токена
+   * @param updateData - Данные для обновления
+   * @returns Обновленный токен бота или undefined, если не найден
+   */
   async updateBotToken(id: number, updateData: Partial<InsertBotToken>): Promise<BotToken | undefined> {
     if (updateData.isDefault === 1) {
       const [currentToken] = await this.db.select().from(botTokens).where(eq(botTokens.id, id));
@@ -1606,11 +2192,22 @@ export class DatabaseStorage implements IStorage {
     return token || undefined;
   }
 
+  /**
+   * Удалить токен бота из базы данных
+   * @param id - ID токена
+   * @returns true, если токен был удален, иначе false
+   */
   async deleteBotToken(id: number): Promise<boolean> {
     const result = await this.db.delete(botTokens).where(eq(botTokens.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Установить токен бота по умолчанию для проекта в базе данных
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   * @returns true, если токен был установлен по умолчанию, иначе false
+   */
   async setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean> {
     await this.db.update(botTokens)
       .set({ isDefault: 0 })
@@ -1619,44 +2216,69 @@ export class DatabaseStorage implements IStorage {
     const result = await this.db.update(botTokens)
       .set({ isDefault: 1 })
       .where(eq(botTokens.id, tokenId));
-    
+
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Отметить токен как использованный в базе данных
+   * @param id - ID токена
+   * @returns true, если токен был отмечен как использованный, иначе false
+   */
   async markTokenAsUsed(id: number): Promise<boolean> {
     const result = await this.db.update(botTokens)
       .set({ lastUsedAt: new Date() })
       .where(eq(botTokens.id, id));
-    
+
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // User-specific methods (DbStorage)
+  /**
+   * Получить проекты ботов пользователя из базы данных
+   * @param ownerId - ID владельца
+   * @returns Массив проектов ботов пользователя
+   */
   async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
     return await this.db.select().from(botProjects)
       .where(eq(botProjects.ownerId, ownerId))
       .orderBy(desc(botProjects.createdAt));
   }
 
+  /**
+   * Получить гостевые проекты ботов (без владельца) из базы данных
+   * @returns Массив гостевых проектов ботов
+   */
   async getGuestBotProjects(): Promise<BotProject[]> {
     return await this.db.select().from(botProjects)
       .where(isNull(botProjects.ownerId))
       .orderBy(desc(botProjects.createdAt));
   }
 
+  /**
+   * Получить токены ботов пользователя из базы данных
+   * @param ownerId - ID владельца
+   * @param projectId - Опциональный ID проекта для фильтрации
+   * @returns Массив токенов ботов пользователя
+   */
   async getUserBotTokens(ownerId: number, projectId?: number): Promise<BotToken[]> {
     let query = this.db.select().from(botTokens)
       .innerJoin(botProjects, eq(botTokens.projectId, botProjects.id))
       .where(eq(botProjects.ownerId, ownerId)) as any;
-    
+
     if (projectId) {
       query = query.where(eq(botTokens.projectId, projectId));
     }
-    
+
     const results = await query.orderBy(desc(botTokens.createdAt));
     return results.map((r: any) => r.bot_tokens);
   }
 
+  /**
+   * Получить шаблоны ботов пользователя из базы данных
+   * @param ownerId - ID владельца
+   * @returns Массив шаблонов ботов пользователя
+   */
   async getUserBotTemplates(ownerId: number): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates)
       .where(eq(botTemplates.ownerId, ownerId))
@@ -1664,15 +2286,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Telegram Users
+  /**
+   * Получить пользователя Telegram по ID из базы данных
+   * @param id - ID пользователя
+   * @returns Пользователь Telegram или undefined, если не найден
+   */
   async getTelegramUser(id: number): Promise<TelegramUserDB | undefined> {
     const [user] = await this.db.select().from(telegramUsers).where(eq(telegramUsers.id, id));
     return user || undefined;
   }
 
+  /**
+   * Получить пользователя Telegram или создать нового в базе данных
+   * @param userData - Данные пользователя для создания
+   * @returns Пользователь Telegram
+   */
   async getTelegramUserOrCreate(userData: InsertTelegramUser): Promise<TelegramUserDB> {
     // Попробуем найти существующего пользователя
     const existingUser = await this.getTelegramUser(userData.id);
-    
+
     if (existingUser) {
       // Обновляем информацию о пользователе
       const [updated] = await this.db.update(telegramUsers)
@@ -1688,7 +2320,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updated;
     }
-    
+
     // Создаём нового пользователя
     const [newUser] = await this.db.insert(telegramUsers)
       .values({
@@ -1703,29 +2335,55 @@ export class DatabaseStorage implements IStorage {
     return newUser;
   }
 
+  /**
+   * Удалить пользователя Telegram из базы данных
+   * @param id - ID пользователя
+   * @returns true, если пользователь был удален, иначе false
+   */
   async deleteTelegramUser(id: number): Promise<boolean> {
     const result = await this.db.delete(telegramUsers).where(eq(telegramUsers.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Media Files
+  /**
+   * Получить медиафайл по ID из базы данных
+   * @param id - ID файла
+   * @returns Медиафайл или undefined, если не найден
+   */
   async getMediaFile(id: number): Promise<MediaFile | undefined> {
     const [file] = await this.db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
     return file || undefined;
   }
 
+  /**
+   * Получить медиафайлы по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Массив медиафайлов проекта
+   */
   async getMediaFilesByProject(projectId: number): Promise<MediaFile[]> {
     return await this.db.select().from(mediaFiles)
       .where(eq(mediaFiles.projectId, projectId))
       .orderBy(desc(mediaFiles.createdAt));
   }
 
+  /**
+   * Получить медиафайлы по ID проекта и типу файла из базы данных
+   * @param projectId - ID проекта
+   * @param fileType - Тип файла
+   * @returns Массив медиафайлов указанного типа
+   */
   async getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]> {
     return await this.db.select().from(mediaFiles)
       .where(and(eq(mediaFiles.projectId, projectId), eq(mediaFiles.fileType, fileType)))
       .orderBy(desc(mediaFiles.createdAt));
   }
 
+  /**
+   * Создать новый медиафайл в базе данных
+   * @param insertFile - Данные для создания файла
+   * @returns Созданный медиафайл
+   */
   async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
     const [file] = await this.db
       .insert(mediaFiles)
@@ -1734,6 +2392,12 @@ export class DatabaseStorage implements IStorage {
     return file;
   }
 
+  /**
+   * Обновить медиафайл в базе данных
+   * @param id - ID файла
+   * @param updateData - Данные для обновления
+   * @returns Обновленный медиафайл или undefined, если не найден
+   */
   async updateMediaFile(id: number, updateData: Partial<InsertMediaFile>): Promise<MediaFile | undefined> {
     const [file] = await this.db
       .update(mediaFiles)
@@ -1743,18 +2407,28 @@ export class DatabaseStorage implements IStorage {
     return file || undefined;
   }
 
+  /**
+   * Удалить медиафайл из базы данных
+   * @param id - ID файла
+   * @returns true, если файл был удален, иначе false
+   */
   async deleteMediaFile(id: number): Promise<boolean> {
     const result = await this.db.delete(mediaFiles).where(eq(mediaFiles.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Увеличить счетчик использования медиафайла в базе данных
+   * @param id - ID файла
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementMediaFileUsage(id: number): Promise<boolean> {
     const [file] = await this.db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
     if (!file) return false;
-    
+
     const result = await this.db
       .update(mediaFiles)
-      .set({ 
+      .set({
         usageCount: (file.usageCount || 0) + 1,
         updatedAt: new Date()
       })
@@ -1762,6 +2436,12 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Поиск медиафайлов по проекту и запросу в базе данных
+   * @param projectId - ID проекта
+   * @param query - Поисковый запрос
+   * @returns Массив найденных медиафайлов
+   */
   async searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
     return await this.db.select().from(mediaFiles)
@@ -1778,27 +2458,52 @@ export class DatabaseStorage implements IStorage {
   }
 
   // User Bot Data
+  /**
+   * Получить данные пользователя бота по ID из базы данных
+   * @param id - ID данных пользователя
+   * @returns Данные пользователя бота или undefined, если не найдены
+   */
   async getUserBotData(id: number): Promise<UserBotData | undefined> {
     const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
     return userData || undefined;
   }
 
+  /**
+   * Получить данные пользователя бота по ID проекта и ID пользователя из базы данных
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя
+   * @returns Данные пользователя бота или undefined, если не найдены
+   */
   async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
     const [userData] = await this.db.select().from(userBotData)
       .where(and(eq(userBotData.projectId, projectId), eq(userBotData.userId, userId)));
     return userData || undefined;
   }
 
+  /**
+   * Получить все данные пользователей бота по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Массив данных пользователей бота
+   */
   async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
     return await this.db.select().from(userBotData)
       .where(eq(userBotData.projectId, projectId))
       .orderBy(desc(userBotData.lastInteraction));
   }
 
+  /**
+   * Получить все данные пользователей ботов из базы данных
+   * @returns Массив всех данных пользователей ботов
+   */
   async getAllUserBotData(): Promise<UserBotData[]> {
     return await this.db.select().from(userBotData).orderBy(desc(userBotData.lastInteraction));
   }
 
+  /**
+   * Создать новые данные пользователя бота в базе данных
+   * @param insertUserData - Данные для создания
+   * @returns Созданные данные пользователя бота
+   */
   async createUserBotData(insertUserData: InsertUserBotData): Promise<UserBotData> {
     const [userData] = await this.db
       .insert(userBotData)
@@ -1807,6 +2512,12 @@ export class DatabaseStorage implements IStorage {
     return userData;
   }
 
+  /**
+   * Обновить данные пользователя бота в базе данных
+   * @param id - ID данных
+   * @param updateData - Данные для обновления
+   * @returns Обновленные данные пользователя бота или undefined, если не найдены
+   */
   async updateUserBotData(id: number, updateData: Partial<InsertUserBotData>): Promise<UserBotData | undefined> {
     const [userData] = await this.db
       .update(userBotData)
@@ -1816,23 +2527,38 @@ export class DatabaseStorage implements IStorage {
     return userData || undefined;
   }
 
+  /**
+   * Удалить данные пользователя бота из базы данных
+   * @param id - ID данных
+   * @returns true, если данные были удалены, иначе false
+   */
   async deleteUserBotData(id: number): Promise<boolean> {
     const result = await this.db.delete(userBotData).where(eq(userBotData.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Удалить все данные пользователей бота по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns true, если данные были удалены, иначе false
+   */
   async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
     const result = await this.db.delete(userBotData).where(eq(userBotData.projectId, projectId));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Увеличить счетчик взаимодействий пользователя в базе данных
+   * @param id - ID данных пользователя
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementUserInteraction(id: number): Promise<boolean> {
     const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
     if (!userData) return false;
-    
+
     const result = await this.db
       .update(userBotData)
-      .set({ 
+      .set({
         interactionCount: (userData.interactionCount || 0) + 1,
         lastInteraction: new Date(),
         updatedAt: new Date()
@@ -1841,10 +2567,16 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Обновить состояние пользователя в базе данных
+   * @param id - ID данных пользователя
+   * @param state - Новое состояние
+   * @returns true, если состояние было обновлено, иначе false
+   */
   async updateUserState(id: number, state: string): Promise<boolean> {
     const result = await this.db
       .update(userBotData)
-      .set({ 
+      .set({
         currentState: state,
         updatedAt: new Date()
       })
@@ -1852,6 +2584,12 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Поиск данных пользователей бота по проекту и запросу в базе данных
+   * @param projectId - ID проекта
+   * @param query - Поисковый запрос
+   * @returns Массив найденных данных пользователей
+   */
   async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
     return await this.db.select().from(userBotData)
@@ -1869,12 +2607,17 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(userBotData.lastInteraction));
   }
 
+  /**
+   * Поиск пользователей ботов по запросу в базе данных
+   * @param query - Поисковый запрос
+   * @returns Массив найденных пользователей ботов
+   */
   async searchBotUsers(query: string): Promise<BotUser[]> {
     // Убираем @ символ если есть
     const cleanQuery = query.startsWith('@') ? query.slice(1) : query;
     const searchTerm = `%${cleanQuery.toLowerCase()}%`;
     const numericQuery = parseInt(cleanQuery);
-    
+
     return await this.db.select().from(botUsers)
       .where(
         or(
@@ -1887,6 +2630,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(botUsers.lastInteraction));
   }
 
+  /**
+   * Получить статистику по данным пользователей бота из базы данных
+   * @param projectId - ID проекта
+   * @returns Объект со статистикой пользователей
+   */
   async getUserBotDataStats(projectId: number): Promise<{
     totalUsers: number;
     activeUsers: number;
@@ -1896,7 +2644,7 @@ export class DatabaseStorage implements IStorage {
     avgInteractionsPerUser: number;
   }> {
     const users = await this.db.select().from(userBotData).where(eq(userBotData.projectId, projectId));
-    
+
     const totalUsers = users.length;
     const activeUsers = users.filter(u => u.isActive === 1).length;
     const blockedUsers = users.filter(u => u.isBlocked === 1).length;
@@ -1915,23 +2663,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Bot Groups
+  /**
+   * Получить группу бота по ID из базы данных
+   * @param id - ID группы
+   * @returns Группа бота или undefined, если не найдена
+   */
   async getBotGroup(id: number): Promise<BotGroup | undefined> {
     const [group] = await this.db.select().from(botGroups).where(eq(botGroups.id, id));
     return group || undefined;
   }
 
+  /**
+   * Получить все группы бота по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Массив групп бота
+   */
   async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
     return await this.db.select().from(botGroups)
       .where(eq(botGroups.projectId, projectId))
       .orderBy(desc(botGroups.createdAt));
   }
 
+  /**
+   * Получить группу бота по ID проекта и ID группы из базы данных
+   * @param projectId - ID проекта
+   * @param groupId - ID группы
+   * @returns Группа бота или undefined, если не найдена
+   */
   async getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined> {
     const [group] = await this.db.select().from(botGroups)
       .where(and(eq(botGroups.projectId, projectId), eq(botGroups.groupId, groupId)));
     return group || undefined;
   }
 
+  /**
+   * Создать новую группу бота в базе данных
+   * @param insertGroup - Данные для создания группы
+   * @returns Созданная группа бота
+   */
   async createBotGroup(insertGroup: InsertBotGroup): Promise<BotGroup> {
     const [group] = await this.db
       .insert(botGroups)
@@ -1940,6 +2709,12 @@ export class DatabaseStorage implements IStorage {
     return group;
   }
 
+  /**
+   * Обновить группу бота в базе данных
+   * @param id - ID группы
+   * @param updateData - Данные для обновления
+   * @returns Обновленная группа бота или undefined, если не найдена
+   */
   async updateBotGroup(id: number, updateData: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
     const [group] = await this.db
       .update(botGroups)
@@ -1949,18 +2724,33 @@ export class DatabaseStorage implements IStorage {
     return group || undefined;
   }
 
+  /**
+   * Удалить группу бота из базы данных
+   * @param id - ID группы
+   * @returns true, если группа была удалена, иначе false
+   */
   async deleteBotGroup(id: number): Promise<boolean> {
     const result = await this.db.delete(botGroups).where(eq(botGroups.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Group members
+  /**
+   * Получить участников группы из базы данных
+   * @param groupId - ID группы
+   * @returns Массив участников группы
+   */
   async getGroupMembers(groupId: number): Promise<GroupMember[]> {
     return await this.db.select().from(groupMembers)
       .where(eq(groupMembers.groupId, groupId))
       .orderBy(desc(groupMembers.joinedAt));
   }
 
+  /**
+   * Создать нового участника группы в базе данных
+   * @param insertMember - Данные для создания участника
+   * @returns Созданный участник группы
+   */
   async createGroupMember(insertMember: InsertGroupMember): Promise<GroupMember> {
     const [member] = await this.db
       .insert(groupMembers)
@@ -1969,6 +2759,12 @@ export class DatabaseStorage implements IStorage {
     return member;
   }
 
+  /**
+   * Обновить участника группы в базе данных
+   * @param id - ID участника
+   * @param updateData - Данные для обновления
+   * @returns Обновленный участник группы или undefined, если не найден
+   */
   async updateGroupMember(id: number, updateData: Partial<InsertGroupMember>): Promise<GroupMember | undefined> {
     const [member] = await this.db
       .update(groupMembers)
@@ -1978,12 +2774,22 @@ export class DatabaseStorage implements IStorage {
     return member || undefined;
   }
 
+  /**
+   * Удалить участника группы из базы данных
+   * @param id - ID участника
+   * @returns true, если участник был удален, иначе false
+   */
   async deleteGroupMember(id: number): Promise<boolean> {
     const result = await this.db.delete(groupMembers).where(eq(groupMembers.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Bot messages
+  /**
+   * Создать новое сообщение бота в базе данных
+   * @param insertMessage - Данные для создания сообщения
+   * @returns Созданное сообщение бота
+   */
   async createBotMessage(insertMessage: InsertBotMessage): Promise<BotMessage> {
     const [message] = await this.db
       .insert(botMessages)
@@ -1992,6 +2798,13 @@ export class DatabaseStorage implements IStorage {
     return message;
   }
 
+  /**
+   * Получить сообщения бота по проекту и пользователю из базы данных
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя
+   * @param limit - Ограничение количества сообщений (по умолчанию 100)
+   * @returns Массив сообщений бота
+   */
   async getBotMessages(projectId: number, userId: string, limit: number = 100): Promise<BotMessage[]> {
     return await this.db
       .select()
@@ -2004,6 +2817,12 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
+  /**
+   * Удалить сообщения бота по проекту и пользователю из базы данных
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя
+   * @returns true, если сообщения были удалены, иначе false
+   */
   async deleteBotMessages(projectId: number, userId: string): Promise<boolean> {
     const result = await this.db
       .delete(botMessages)
@@ -2014,6 +2833,11 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Удалить все сообщения бота по проекту из базы данных
+   * @param projectId - ID проекта
+   * @returns true, если сообщения были удалены, иначе false
+   */
   async deleteAllBotMessages(projectId: number): Promise<boolean> {
     const result = await this.db
       .delete(botMessages)
@@ -2022,6 +2846,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Bot message media
+  /**
+   * Создать запись о медиафайле в сообщении бота в базе данных
+   * @param data - Данные для создания записи
+   * @returns Созданная запись о медиафайле
+   */
   async createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia> {
     const [media] = await this.db
       .insert(botMessageMedia)
@@ -2030,6 +2859,11 @@ export class DatabaseStorage implements IStorage {
     return media;
   }
 
+  /**
+   * Получить медиафайлы сообщения из базы данных
+   * @param messageId - ID сообщения
+   * @returns Массив медиафайлов сообщения
+   */
   async getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>> {
     const result = await this.db
       .select({
@@ -2054,13 +2888,20 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(mediaFiles, eq(botMessageMedia.mediaFileId, mediaFiles.id))
       .where(eq(botMessageMedia.messageId, messageId))
       .orderBy(asc(botMessageMedia.orderIndex));
-    
+
     return result;
   }
 
+  /**
+   * Получить сообщения бота с медиа по проекту и пользователю из базы данных
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя
+   * @param limit - Ограничение количества сообщений (по умолчанию 100)
+   * @returns Массив сообщений бота с медиафайлами
+   */
   async getBotMessagesWithMedia(
-    projectId: number, 
-    userId: string, 
+    projectId: number,
+    userId: string,
     limit: number = 100
   ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]> {
     const messages = await this.db
@@ -2097,10 +2938,15 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   private cacheTimeout = 5 * 60 * 1000; // 5 минут
   
   // Bot Projects (с кэшированием)
+  /**
+   * Получить проект бота по ID из базы данных с кэшированием
+   * @param id - ID проекта
+   * @returns Проект бота или undefined, если не найден
+   */
   async getBotProject(id: number): Promise<BotProject | undefined> {
     const cached = this.projectCache.get(id);
     if (cached) return cached;
-    
+
     const [project] = await this.db.select().from(botProjects).where(eq(botProjects.id, id));
     if (project) {
       this.projectCache.set(id, project);
@@ -2110,10 +2956,19 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return project || undefined;
   }
 
+  /**
+   * Получить все проекты ботов из базы данных
+   * @returns Массив проектов ботов
+   */
   async getAllBotProjects(): Promise<BotProject[]> {
     return await this.db.select().from(botProjects).orderBy(desc(botProjects.updatedAt));
   }
 
+  /**
+   * Создать новый проект бота в базе данных и добавить в кэш
+   * @param insertProject - Данные для создания проекта
+   * @returns Созданный проект бота
+   */
   async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
     const [project] = await this.db
       .insert(botProjects)
@@ -2126,6 +2981,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return project;
   }
 
+  /**
+   * Обновить проект бота в базе данных и кэше
+   * @param id - ID проекта
+   * @param updateData - Данные для обновления
+   * @returns Обновленный проект бота или undefined, если не найден
+   */
   async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
     const [project] = await this.db
       .update(botProjects)
@@ -2138,6 +2999,11 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return project || undefined;
   }
 
+  /**
+   * Удалить проект бота из базы данных и кэша
+   * @param id - ID проекта
+   * @returns true, если проект был удален, иначе false
+   */
   async deleteBotProject(id: number): Promise<boolean> {
     const result = await this.db.delete(botProjects).where(eq(botProjects.id, id));
     this.projectCache.delete(id);
@@ -2145,15 +3011,29 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   }
 
   // Bot Instances (простая реализация)
+  /**
+   * Получить экземпляр бота по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Экземпляр бота или undefined, если не найден
+   */
   async getBotInstance(projectId: number): Promise<BotInstance | undefined> {
     const [instance] = await this.db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
     return instance || undefined;
   }
 
+  /**
+   * Получить все экземпляры ботов из базы данных
+   * @returns Массив всех экземпляров ботов
+   */
   async getAllBotInstances(): Promise<BotInstance[]> {
     return await this.db.select().from(botInstances).orderBy(desc(botInstances.startedAt));
   }
 
+  /**
+   * Создать новый экземпляр бота в базе данных
+   * @param insertInstance - Данные для создания экземпляра
+   * @returns Созданный экземпляр бота
+   */
   async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
     const [instance] = await this.db
       .insert(botInstances)
@@ -2162,6 +3042,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return instance;
   }
 
+  /**
+   * Обновить экземпляр бота в базе данных
+   * @param id - ID экземпляра
+   * @param updateData - Данные для обновления
+   * @returns Обновленный экземпляр бота или undefined, если не найден
+   */
   async updateBotInstance(id: number, updateData: Partial<InsertBotInstance>): Promise<BotInstance | undefined> {
     const [instance] = await this.db
       .update(botInstances)
@@ -2171,11 +3057,21 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return instance || undefined;
   }
 
+  /**
+   * Удалить экземпляр бота из базы данных
+   * @param id - ID экземпляра
+   * @returns true, если экземпляр был удален, иначе false
+   */
   async deleteBotInstance(id: number): Promise<boolean> {
     const result = await this.db.delete(botInstances).where(eq(botInstances.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Остановить экземпляр бота по ID проекта в базе данных
+   * @param projectId - ID проекта
+   * @returns true, если экземпляр был остановлен, иначе false
+   */
   async stopBotInstance(projectId: number): Promise<boolean> {
     const result = await this.db
       .update(botInstances)
@@ -2184,6 +3080,11 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Остановить экземпляр бота по ID токена в базе данных
+   * @param tokenId - ID токена
+   * @returns true, если экземпляр был остановлен, иначе false
+   */
   async stopBotInstanceByToken(tokenId: number): Promise<boolean> {
     const result = await this.db
       .update(botInstances)
@@ -2193,10 +3094,15 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   }
 
   // Bot Templates (с кэшированием)
+  /**
+   * Получить шаблон бота по ID из базы данных с кэшированием
+   * @param id - ID шаблона
+   * @returns Шаблон бота или undefined, если не найден
+   */
   async getBotTemplate(id: number): Promise<BotTemplate | undefined> {
     const cached = this.templateCache.get(id);
     if (cached) return cached;
-    
+
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (template) {
       this.templateCache.set(id, template);
@@ -2205,10 +3111,19 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return template || undefined;
   }
 
+  /**
+   * Получить все шаблоны ботов из базы данных
+   * @returns Массив шаблонов ботов
+   */
   async getAllBotTemplates(): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).orderBy(desc(botTemplates.createdAt));
   }
 
+  /**
+   * Создать новый шаблон бота в базе данных и добавить в кэш
+   * @param insertTemplate - Данные для создания шаблона
+   * @returns Созданный шаблон бота
+   */
   async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
     const [template] = await this.db
       .insert(botTemplates)
@@ -2218,6 +3133,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return template;
   }
 
+  /**
+   * Обновить шаблон бота в базе данных и кэше
+   * @param id - ID шаблона
+   * @param updateData - Данные для обновления
+   * @returns Обновленный шаблон бота или undefined, если не найден
+   */
   async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
     const [template] = await this.db
       .update(botTemplates)
@@ -2230,6 +3151,11 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return template || undefined;
   }
 
+  /**
+   * Удалить шаблон бота из базы данных и кэша
+   * @param id - ID шаблона
+   * @returns true, если шаблон был удален, иначе false
+   */
   async deleteBotTemplate(id: number): Promise<boolean> {
     const result = await this.db.delete(botTemplates).where(eq(botTemplates.id, id));
     this.templateCache.delete(id);
@@ -2237,6 +3163,11 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   }
 
   // Упрощенные методы для счетчиков
+  /**
+   * Увеличить счетчик использования шаблона в базе данных и очистить кэш
+   * @param id - ID шаблона
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementTemplateUseCount(id: number): Promise<boolean> {
     const result = await this.db
       .update(botTemplates)
@@ -2246,6 +3177,11 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Увеличить счетчик просмотров шаблона в базе данных
+   * @param id - ID шаблона
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementTemplateViewCount(id: number): Promise<boolean> {
     const result = await this.db
       .update(botTemplates)
@@ -2254,6 +3190,11 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Увеличить счетчик загрузок шаблона в базе данных
+   * @param id - ID шаблона
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementTemplateDownloadCount(id: number): Promise<boolean> {
     const result = await this.db
       .update(botTemplates)
@@ -2262,29 +3203,61 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Переключить лайк шаблона и очистить кэш
+   * @param id - ID шаблона
+   * @param liked - true для лайка, false для анлайка
+   * @returns true, если статус лайка был изменен, иначе false
+   */
   async toggleTemplateLike(id: number, liked: boolean): Promise<boolean> {
     this.templateCache.delete(id);
     return true;
   }
 
+  /**
+   * Переключить закладку шаблона и очистить кэш
+   * @param id - ID шаблона
+   * @param bookmarked - true для добавления в закладки, false для удаления
+   * @returns true, если статус закладки был изменен, иначе false
+   */
   async toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean> {
     this.templateCache.delete(id);
     return true;
   }
 
+  /**
+   * Оценить шаблон и очистить кэш
+   * @param id - ID шаблона
+   * @param rating - Оценка (обычно от 1 до 5)
+   * @returns true, если оценка была сохранена, иначе false
+   */
   async rateTemplate(id: number, rating: number): Promise<boolean> {
     this.templateCache.delete(id);
     return true;
   }
 
+  /**
+   * Получить рекомендуемые шаблоны из базы данных
+   * @returns Массив рекомендованных шаблонов
+   */
   async getFeaturedTemplates(): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).where(eq(botTemplates.featured, 1)).orderBy(desc(botTemplates.rating));
   }
 
+  /**
+   * Получить шаблоны по категории из базы данных
+   * @param category - Категория шаблонов
+   * @returns Массив шаблонов указанной категории
+   */
   async getTemplatesByCategory(category: string): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).where(eq(botTemplates.category, category)).orderBy(desc(botTemplates.createdAt));
   }
 
+  /**
+   * Поиск шаблонов по запросу в базе данных
+   * @param query - Поисковый запрос
+   * @returns Массив найденных шаблонов
+   */
   async searchTemplates(query: string): Promise<BotTemplate[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
     return await this.db.select().from(botTemplates).where(
@@ -2296,17 +3269,32 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   }
 
   // Bot Tokens
+  /**
+   * Получить токен бота по ID из базы данных
+   * @param id - ID токена
+   * @returns Токен бота или undefined, если не найден
+   */
   async getBotToken(id: number): Promise<BotToken | undefined> {
     const [token] = await this.db.select().from(botTokens).where(eq(botTokens.id, id));
     return token || undefined;
   }
 
+  /**
+   * Получить токены ботов по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Массив токенов ботов
+   */
   async getBotTokensByProject(projectId: number): Promise<BotToken[]> {
     return await this.db.select().from(botTokens)
       .where(eq(botTokens.projectId, projectId))
       .orderBy(desc(botTokens.isDefault), desc(botTokens.createdAt));
   }
 
+  /**
+   * Получить токен бота по умолчанию для проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Токен бота по умолчанию или undefined, если не найден
+   */
   async getDefaultBotToken(projectId: number): Promise<BotToken | undefined> {
     const [token] = await this.db.select().from(botTokens)
       .where(and(eq(botTokens.projectId, projectId), eq(botTokens.isDefault, 1)))
@@ -2314,6 +3302,11 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return token || undefined;
   }
 
+  /**
+   * Создать новый токен бота в базе данных
+   * @param insertToken - Данные для создания токена
+   * @returns Созданный токен бота
+   */
   async createBotToken(insertToken: InsertBotToken): Promise<BotToken> {
     // Если создаем токен по умолчанию, убираем флаг с других токенов
     if (insertToken.isDefault === 1) {
@@ -2329,6 +3322,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return token;
   }
 
+  /**
+   * Обновить токен бота в базе данных
+   * @param id - ID токена
+   * @param updateData - Данные для обновления
+   * @returns Обновленный токен бота или undefined, если не найден
+   */
   async updateBotToken(id: number, updateData: Partial<InsertBotToken>): Promise<BotToken | undefined> {
     // Если делаем токен по умолчанию, убираем флаг с других токенов
     if (updateData.isDefault === 1) {
@@ -2348,11 +3347,22 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return token || undefined;
   }
 
+  /**
+   * Удалить токен бота из базы данных
+   * @param id - ID токена
+   * @returns true, если токен был удален, иначе false
+   */
   async deleteBotToken(id: number): Promise<boolean> {
     const result = await this.db.delete(botTokens).where(eq(botTokens.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Установить токен бота по умолчанию для проекта в базе данных
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   * @returns true, если токен был установлен по умолчанию, иначе false
+   */
   async setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean> {
     // Убираем флаг по умолчанию со всех токенов проекта
     await this.db.update(botTokens)
@@ -2363,36 +3373,62 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     const result = await this.db.update(botTokens)
       .set({ isDefault: 1 })
       .where(eq(botTokens.id, tokenId));
-    
+
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Отметить токен как использованный в базе данных
+   * @param id - ID токена
+   * @returns true, если токен был отмечен как использованный, иначе false
+   */
   async markTokenAsUsed(id: number): Promise<boolean> {
     const result = await this.db.update(botTokens)
       .set({ lastUsedAt: new Date() })
       .where(eq(botTokens.id, id));
-    
+
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Media Files (simplified implementation)
+  /**
+   * Получить медиафайл по ID из базы данных
+   * @param id - ID файла
+   * @returns Медиафайл или undefined, если не найден
+   */
   async getMediaFile(id: number): Promise<MediaFile | undefined> {
     const [file] = await this.db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
     return file || undefined;
   }
 
+  /**
+   * Получить медиафайлы по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Массив медиафайлов проекта
+   */
   async getMediaFilesByProject(projectId: number): Promise<MediaFile[]> {
     return await this.db.select().from(mediaFiles)
       .where(eq(mediaFiles.projectId, projectId))
       .orderBy(desc(mediaFiles.createdAt));
   }
 
+  /**
+   * Получить медиафайлы по ID проекта и типу файла из базы данных
+   * @param projectId - ID проекта
+   * @param fileType - Тип файла
+   * @returns Массив медиафайлов указанного типа
+   */
   async getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]> {
     return await this.db.select().from(mediaFiles)
       .where(and(eq(mediaFiles.projectId, projectId), eq(mediaFiles.fileType, fileType)))
       .orderBy(desc(mediaFiles.createdAt));
   }
 
+  /**
+   * Создать новый медиафайл в базе данных
+   * @param insertFile - Данные для создания файла
+   * @returns Созданный медиафайл
+   */
   async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
     const [file] = await this.db
       .insert(mediaFiles)
@@ -2401,6 +3437,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return file;
   }
 
+  /**
+   * Обновить медиафайл в базе данных
+   * @param id - ID файла
+   * @param updateData - Данные для обновления
+   * @returns Обновленный медиафайл или undefined, если не найден
+   */
   async updateMediaFile(id: number, updateData: Partial<InsertMediaFile>): Promise<MediaFile | undefined> {
     const [file] = await this.db
       .update(mediaFiles)
@@ -2410,15 +3452,25 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return file || undefined;
   }
 
+  /**
+   * Удалить медиафайл из базы данных
+   * @param id - ID файла
+   * @returns true, если файл был удален, иначе false
+   */
   async deleteMediaFile(id: number): Promise<boolean> {
     const result = await this.db.delete(mediaFiles).where(eq(mediaFiles.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Увеличить счетчик использования медиафайла в базе данных
+   * @param id - ID файла
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementMediaFileUsage(id: number): Promise<boolean> {
     const [file] = await this.db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
     if (!file) return false;
-    
+
     const result = await this.db
       .update(mediaFiles)
       .set({ usageCount: (file.usageCount || 0) + 1 })
@@ -2426,6 +3478,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Поиск медиафайлов по проекту и запросу в базе данных
+   * @param projectId - ID проекта
+   * @param query - Поисковый запрос
+   * @returns Массив найденных медиафайлов
+   */
   async searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
     return await this.db.select().from(mediaFiles)
@@ -2442,28 +3500,53 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   }
 
   // User Bot Data
+  /**
+   * Получить данные пользователя бота по ID из базы данных
+   * @param id - ID данных пользователя
+   * @returns Данные пользователя бота или undefined, если не найдены
+   */
   async getUserBotData(id: number): Promise<UserBotData | undefined> {
     const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
     return userData || undefined;
   }
 
+  /**
+   * Получить данные пользователя бота по ID проекта и ID пользователя из базы данных
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя
+   * @returns Данные пользователя бота или undefined, если не найдены
+   */
   async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
     const [userData] = await this.db.select().from(userBotData)
       .where(and(eq(userBotData.projectId, projectId), eq(userBotData.userId, userId)));
     return userData || undefined;
   }
 
+  /**
+   * Получить все данные пользователей бота по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Массив данных пользователей бота
+   */
   async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
     return await this.db.select().from(userBotData)
       .where(eq(userBotData.projectId, projectId))
       .orderBy(desc(userBotData.lastInteraction));
   }
 
+  /**
+   * Получить все данные пользователей ботов из базы данных
+   * @returns Массив всех данных пользователей ботов
+   */
   async getAllUserBotData(): Promise<UserBotData[]> {
     return await this.db.select().from(userBotData)
       .orderBy(desc(userBotData.lastInteraction));
   }
 
+  /**
+   * Создать новые данные пользователя бота в базе данных
+   * @param insertUserData - Данные для создания
+   * @returns Созданные данные пользователя бота
+   */
   async createUserBotData(insertUserData: InsertUserBotData): Promise<UserBotData> {
     const [userData] = await this.db
       .insert(userBotData)
@@ -2472,6 +3555,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return userData;
   }
 
+  /**
+   * Обновить данные пользователя бота в базе данных
+   * @param id - ID данных
+   * @param updateData - Данные для обновления
+   * @returns Обновленные данные пользователя бота или undefined, если не найдены
+   */
   async updateUserBotData(id: number, updateData: Partial<InsertUserBotData>): Promise<UserBotData | undefined> {
     const [userData] = await this.db
       .update(userBotData)
@@ -2481,23 +3570,38 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return userData || undefined;
   }
 
+  /**
+   * Удалить данные пользователя бота из базы данных
+   * @param id - ID данных
+   * @returns true, если данные были удалены, иначе false
+   */
   async deleteUserBotData(id: number): Promise<boolean> {
     const result = await this.db.delete(userBotData).where(eq(userBotData.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Удалить все данные пользователей бота по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns true, если данные были удалены, иначе false
+   */
   async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
     const result = await this.db.delete(userBotData).where(eq(userBotData.projectId, projectId));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Увеличить счетчик взаимодействий пользователя в базе данных
+   * @param id - ID данных пользователя
+   * @returns true, если счетчик был увеличен, иначе false
+   */
   async incrementUserInteraction(id: number): Promise<boolean> {
     const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
     if (!userData) return false;
-    
+
     const result = await this.db
       .update(userBotData)
-      .set({ 
+      .set({
         interactionCount: (userData.interactionCount || 0) + 1,
         lastInteraction: new Date()
       })
@@ -2505,6 +3609,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Обновить состояние пользователя в базе данных
+   * @param id - ID данных пользователя
+   * @param state - Новое состояние
+   * @returns true, если состояние было обновлено, иначе false
+   */
   async updateUserState(id: number, state: string): Promise<boolean> {
     const result = await this.db
       .update(userBotData)
@@ -2513,6 +3623,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Поиск данных пользователей бота по проекту и запросу в базе данных
+   * @param projectId - ID проекта
+   * @param query - Поисковый запрос
+   * @returns Массив найденных данных пользователей
+   */
   async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
     return await this.db.select().from(userBotData)
@@ -2530,6 +3646,11 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
       .orderBy(desc(userBotData.lastInteraction));
   }
 
+  /**
+   * Получить статистику по данным пользователей бота из базы данных
+   * @param projectId - ID проекта
+   * @returns Объект со статистикой пользователей
+   */
   async getUserBotDataStats(projectId: number): Promise<{
     totalUsers: number;
     activeUsers: number;
@@ -2540,7 +3661,7 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   }> {
     const users = await this.db.select().from(userBotData)
       .where(eq(userBotData.projectId, projectId));
-    
+
     const totalUsers = users.length;
     const activeUsers = users.filter(u => u.isActive === 1).length;
     const blockedUsers = users.filter(u => u.isBlocked === 1).length;
@@ -2557,25 +3678,46 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
       avgInteractionsPerUser
     };
   }
-  
+
   // Bot Groups
+  /**
+   * Получить группу бота по ID из базы данных
+   * @param id - ID группы
+   * @returns Группа бота или undefined, если не найдена
+   */
   async getBotGroup(id: number): Promise<BotGroup | undefined> {
     const [group] = await this.db.select().from(botGroups).where(eq(botGroups.id, id));
     return group || undefined;
   }
 
+  /**
+   * Получить все группы бота по ID проекта из базы данных
+   * @param projectId - ID проекта
+   * @returns Массив групп бота
+   */
   async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
     return await this.db.select().from(botGroups)
       .where(eq(botGroups.projectId, projectId))
       .orderBy(desc(botGroups.createdAt));
   }
 
+  /**
+   * Получить группу бота по ID проекта и ID группы из базы данных
+   * @param projectId - ID проекта
+   * @param groupId - ID группы
+   * @returns Группа бота или undefined, если не найдена
+   */
   async getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined> {
     const [group] = await this.db.select().from(botGroups)
       .where(and(eq(botGroups.projectId, projectId), eq(botGroups.groupId, groupId)));
     return group || undefined;
   }
 
+  /**
+   * Создать новую группу бота в базе данных
+   * @param insertGroup - Данные для создания группы
+   * @returns Созданная группа бота
+   */
   async createBotGroup(insertGroup: InsertBotGroup): Promise<BotGroup> {
     const [group] = await this.db
       .insert(botGroups)
@@ -2584,6 +3726,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return group;
   }
 
+  /**
+   * Обновить группу бота в базе данных
+   * @param id - ID группы
+   * @param updateData - Данные для обновления
+   * @returns Обновленная группа бота или undefined, если не найдена
+   */
   async updateBotGroup(id: number, updateData: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
     const [group] = await this.db
       .update(botGroups)
@@ -2593,6 +3741,11 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     return group || undefined;
   }
 
+  /**
+   * Удалить группу бота из базы данных
+   * @param id - ID группы
+   * @returns true, если группа была удалена, иначе false
+   */
   async deleteBotGroup(id: number): Promise<boolean> {
     const result = await this.db.delete(botGroups).where(eq(botGroups.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
