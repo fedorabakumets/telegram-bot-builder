@@ -27,7 +27,7 @@ async function executeWithRetry(db: any, query: any, description: string, maxRet
       if (attempt === maxRetries) {
         throw error;
       }
-      // Wait before retry (reduced wait time)
+      // Ожидание перед повторной попыткой (уменьшенное время ожидания)
       await new Promise(resolve => setTimeout(resolve, 500 * attempt));
     }
   }
@@ -71,11 +71,11 @@ async function executeWithRetry(db: any, query: any, description: string, maxRet
  * }
  */
 export async function initializeDatabaseTables() {
-  console.log('🔧 Initializing database tables...');
+  console.log('🔧 Инициализация таблиц базы данных...');
 
   try {
-    // Test the connection with extended timeout and retry logic
-    console.log('🧪 Testing database connection...');
+    // Проверяем соединение с расширенным таймаутом и логикой повторных попыток
+    console.log('🧪 Проверка соединения с базой данных...');
 
     let connectionAttempts = 0;
     const maxConnectionAttempts = 5;
@@ -84,43 +84,43 @@ export async function initializeDatabaseTables() {
     while (!connected && connectionAttempts < maxConnectionAttempts) {
       connectionAttempts++;
       try {
-        console.log(`📡 Connection attempt ${connectionAttempts}/${maxConnectionAttempts}...`);
+        console.log(`📡 Попытка подключения ${connectionAttempts}/${maxConnectionAttempts}...`);
 
         const healthCheckPromise = db.execute(sql`SELECT 1 as health`);
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Database connection timeout after 30 seconds')), 30000)
+          setTimeout(() => reject(new Error('Таймаут подключения к базе данных после 30 секунд')), 30000)
         );
 
         await Promise.race([healthCheckPromise, timeoutPromise]);
         connected = true;
-        console.log('✅ Database connection successful!');
+        console.log('✅ Соединение с базой данных успешно установлено!');
 
       } catch (error: any) {
-        console.error(`❌ Connection attempt ${connectionAttempts} failed:`, error.message);
+        console.error(`❌ Попытка подключения ${connectionAttempts} не удалась:`, error.message);
 
         if (connectionAttempts >= maxConnectionAttempts) {
-          console.error('💥 All connection attempts failed. Database may be unavailable.');
-          console.error('🔍 Error details:', {
+          console.error('💥 Все попытки подключения не удались. База данных может быть недоступна.');
+          console.error('🔍 Детали ошибки:', {
             code: error.code,
             errno: error.errno,
             syscall: error.syscall,
             message: error.message
           });
 
-          // Return false instead of throwing to allow app to start without DB
-          console.log('⚠️ Starting application without database initialization...');
+          // Возвращаем false вместо выбрасывания исключения, чтобы позволить приложению запуститься без БД
+          console.log('⚠️ Запуск приложения без инициализации базы данных...');
           return false;
         }
 
-        // Wait before retry with exponential backoff
+        // Ожидание перед повторной попыткой с экспоненциальным затуханием
         const waitTime = Math.min(1000 * Math.pow(2, connectionAttempts - 1), 10000);
-        console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+        console.log(`⏳ Ожидание ${waitTime}мс перед повторной попыткой...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
 
     if (!connected) {
-      console.error('💥 Could not establish database connection after all attempts');
+      console.error('💥 Не удалось установить соединение с базой данных после всех попыток');
       return false;
     }
 
@@ -507,10 +507,10 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при проверке/добавлении колонки total_execution_seconds в bot_tokens:', error);
     }
 
-    console.log('✅ Database tables initialized successfully!');
+    console.log('✅ Таблицы базы данных успешно инициализированы!');
     return true;
   } catch (error) {
-    console.error('❌ Database initialization failed:', error);
+    console.error('❌ Инициализация базы данных не удалась:', error);
     return false;
   }
 }
