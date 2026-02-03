@@ -72,7 +72,7 @@ export function AutoConnectionPanel({
         {
           autoCreateButton: autoButtonCreation,
           buttonText: suggestion.suggestedButton.text,
-          buttonAction: (suggestion.suggestedButton.action && ['goto', 'command', 'url', 'contact', 'location', 'selection', 'default'].includes(suggestion.suggestedButton.action)) 
+          buttonAction: (suggestion.suggestedButton.action && ['goto', 'command', 'url', 'contact', 'location', 'selection', 'default'].includes(suggestion.suggestedButton.action))
             ? suggestion.suggestedButton.action as 'goto' | 'command' | 'url' | 'contact' | 'location' | 'selection' | 'default'
             : 'goto'
         }

@@ -105,7 +105,7 @@ export class ConnectionManager {
   createConnection(sourceId: string, targetId: string, options: {
     autoCreateButton?: boolean;
     buttonText?: string;
-    buttonAction?: 'goto' | 'command' | 'url';
+    buttonAction?: 'goto' | 'command' | 'url' | 'contact' | 'location' | 'selection' | 'default';
     targetSheetId?: string; // ID целевого листа для межлистового соединения
   } = {}): { connection: Connection; updatedNodes: Node[] } {
     const sourceNode = this.state.nodes.find(n => n.id === sourceId);
@@ -200,7 +200,7 @@ export class ConnectionManager {
     targetNode: Node,
     options: {
       buttonText?: string;
-      buttonAction?: 'goto' | 'command' | 'url';
+      buttonAction?: 'goto' | 'command' | 'url' | 'contact' | 'location' | 'selection' | 'default';
       targetSheetId?: string;
     } = {}
   ): Button {
@@ -235,12 +235,16 @@ export class ConnectionManager {
    * @param targetNode - целевой узел
    * @returns тип действия кнопки ('goto', 'command' или 'url')
    */
-  private determineButtonAction(targetNode: Node): 'goto' | 'command' | 'url' {
+  private determineButtonAction(targetNode: Node): 'goto' | 'command' | 'url' | 'contact' | 'location' | 'selection' | 'default' {
     switch (targetNode.type) {
       case 'command':
         return 'command';
       case 'photo':
         return targetNode.data.imageUrl ? 'url' : 'goto';
+      case 'location':
+        return 'location';
+      case 'contact':
+        return 'contact';
       default:
         return 'goto';
     }
