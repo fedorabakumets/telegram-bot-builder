@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
+import { parsePythonCodeToJson } from '@/lib/format';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,8 @@ import { Home, Plus, Trash2, Calendar, GripVertical, FileText, Copy, Share2, Che
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 /**
@@ -546,6 +549,14 @@ export function ComponentsSidebar({
   // Состояние для сворачивания/раскрытия категорий
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   
+  // Импорт проекта
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importJsonText, setImportJsonText] = useState('');
+  const [importPythonText, setImportPythonText] = useState('');
+  const [importError, setImportError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pythonFileInputRef = useRef<HTMLInputElement>(null);
+  
   // Touch события для мобильных устройств
   const [touchedComponent, setTouchedComponent] = useState<ComponentDefinition | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -601,6 +612,7 @@ export function ComponentsSidebar({
     setIsDragging(true);
     setTouchStartElement(element);
     
+    const rect = element.getBoundingClientRect();
     onComponentDrag(component);
     
     // Добавляем визуальную обратную связь
@@ -1910,7 +1922,7 @@ export function ComponentsSidebar({
                                                 return (
                                                   <DropdownMenuItem
                                                     key={otherProject.id}
-                                                    onClick={async (e) => {
+                                                    onClick={async (e: React.MouseEvent) => {
                                                       e.stopPropagation();
                                                       const sourceData = projectData;
                                                       const targetData = otherProject.data as any;
