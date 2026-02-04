@@ -2752,7 +2752,7 @@ export function PropertiesPanel({
                             <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
                               <i className="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
                               <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
-                                Прикрепление медиафайлов сейчас не работает. Используйте прямые ссылки на файлы.
+                                Функция работы с медиафайлами полностью недоступна. Раздел находится в разработке.
                               </p>
                             </div>
 
