@@ -58,29 +58,139 @@ interface UserDatabasePanelProps {
   onOpenUserDetailsPanel?: (user: UserBotData) => void;
 }
 
+/**
+ * Возможные поля для сортировки пользователей
+ */
 type SortField = 'lastInteraction' | 'interactionCount' | 'createdAt' | 'firstName' | 'userName';
+
+/**
+ * Направления сортировки
+ */
 type SortDirection = 'asc' | 'desc';
 
+/**
+ * @function UserDatabasePanel
+ * @description Компонент панели базы данных пользователей, позволяющий просматривать, фильтровать и управлять пользователями бота
+ * @param {UserDatabasePanelProps} props - Свойства компонента
+ * @param {number} props.projectId - Идентификатор проекта
+ * @param {string} props.projectName - Название проекта
+ * @param {Function} props.onOpenDialogPanel - Функция для открытия панели диалога с пользователем
+ * @param {Function} props.onOpenUserDetailsPanel - Функция для открытия панели с деталями пользователя
+ * @returns {JSX.Element} Компонент панели базы данных пользователей
+ */
 export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, onOpenUserDetailsPanel }: UserDatabasePanelProps) {
+  /**
+   * @type {string}
+   * @description Поисковый запрос для фильтрации пользователей
+   */
   const [searchQuery, setSearchQuery] = useState('');
+
+  /**
+   * @type {UserBotData | null}
+   * @description Выбранный пользователь для просмотра деталей
+   */
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
+
+  /**
+   * @type {boolean}
+   * @description Флаг отображения панели с деталями пользователя
+   */
   const [showUserDetails, setShowUserDetails] = useState(false);
+
+  /**
+   * @type {boolean}
+   * @description Флаг загрузки данных
+   */
   const [] = useState(false);
+
+  /**
+   * @type {SortField}
+   * @description Поле, по которому производится сортировка пользователей
+   */
   const [sortField, setSortField] = useState<SortField>('lastInteraction');
+
+  /**
+   * @type {SortDirection}
+   * @description Направление сортировки (по возрастанию или убыванию)
+   */
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  /**
+   * @type {boolean | null}
+   * @description Фильтр по статусу активности пользователя (true - активен, false - неактивен, null - все)
+   */
   const [filterActive, setFilterActive] = useState<boolean | null>(null);
+
+  /**
+   * @type {boolean | null}
+   * @description Фильтр по статусу премиум пользователя (true - премиум, false - обычный, null - все)
+   */
   const [filterPremium, setFilterPremium] = useState<boolean | null>(null);
+
+  /**
+   * @type {boolean | null}
+   * @description Фильтр по статусу блокировки пользователя
+   */
   const [filterBlocked] = useState<boolean | null>(null);
+
+  /**
+   * @type {'all' | 'today' | 'week' | 'month'}
+   * @description Фильтр по периоду активности пользователя
+   */
   const [] = useState<'all' | 'today' | 'week' | 'month'>('all');
+
+  /**
+   * @type {number[]}
+   * @description Массив идентификаторов выбранных пользователей
+   */
   const [] = useState<number[]>([]);
+
+  /**
+   * @type {boolean}
+   * @description Флаг отображения модального окна
+   */
   const [] = useState(false);
+
+  /**
+   * @type {boolean}
+   * @description Флаг отображения диалогового окна отправки сообщения
+   */
   const [showDialog, setShowDialog] = useState(false);
+
+  /**
+   * @type {UserBotData | null}
+   * @description Пользователь, которому будет отправлено сообщение
+   */
   const [selectedUserForDialog, setSelectedUserForDialog] = useState<UserBotData | null>(null);
+
+  /**
+   * @type {string}
+   * @description Текст сообщения для отправки пользователю
+   */
   const [messageText, setMessageText] = useState('');
+
+  /**
+   * @type {React.RefObject<HTMLDivElement>}
+   * @description Ссылка на элемент прокрутки сообщений в диалоге
+   */
   const messagesScrollRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * @type {Object}
+   * @description Хук для отображения уведомлений
+   */
   const { toast } = useToast();
+
+  /**
+   * @type {Object}
+   * @description Клиент для управления кэшем запросов
+   */
   const qClient = useQueryClient();
+
+  /**
+   * @type {boolean}
+   * @description Флаг мобильного режима
+   */
   const isMobile = useIsMobile();
 
   // Fetch project data to get userDatabaseEnabled setting and flowData
@@ -88,7 +198,11 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     queryKey: [`/api/projects/${projectId}`],
   });
 
-  // Build a mapping from variable names to question texts from project data
+  /**
+   * @constant {Record<string, string>} variableToQuestionMap
+   * @description Карта соответствия переменных ввода пользователя вопросам из проекта
+   * @description Создает соответствие между переменными ввода из узлов проекта и текстами вопросов для отображения контекста ответов пользователя
+   */
   const variableToQuestionMap = useMemo(() => {
     const mapping: Record<string, string> = {};
     if (!project?.data) return mapping;
@@ -162,6 +276,11 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
   });
 
   // Search users
+  /**
+   * @constant {UserBotData[]} searchResults
+   * @description Результаты поиска пользователей по поисковому запросу
+   * @description Выполняет поиск пользователей через API при наличии поискового запроса
+   */
   const { data: searchResults = [] } = useQuery<UserBotData[]>({
     queryKey: [`/api/projects/${projectId}/users/search`, searchQuery],
     enabled: searchQuery.length > 0,
@@ -177,7 +296,11 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     refetchOnWindowFocus: true,
   });
 
-  // Function to scroll to bottom of messages
+  /**
+   * @function scrollToBottom
+   * @description Прокручивает область сообщений в самый низ
+   * @description Используется для автоматической прокрутки к последнему сообщению в диалоге
+   */
   const scrollToBottom = () => {
     if (messagesScrollRef.current) {
       setTimeout(() => {
@@ -282,6 +405,11 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
   });
 
   // Update user mutation
+  /**
+   * @constant {Object} updateUserMutation
+   * @description Мутация для обновления данных пользователя
+   * @description Обновляет данные пользователя через API, нормализуя булевы значения в 0/1 для базы данных
+   */
   const updateUserMutation = useMutation({
     mutationFn: ({ userId, data }: { userId: number; data: Partial<UserBotData> }) => {
       // Convert boolean values to 0/1 for database
@@ -374,7 +502,11 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     }
   });
 
-  // Send message mutation
+  /**
+   * @constant {Object} sendMessageMutation
+   * @description Мутация для отправки сообщения пользователю
+   * @description Отправляет сообщение выбранному пользователю через API и обновляет кэш сообщений
+   */
   const sendMessageMutation = useMutation({
     mutationFn: (data: { messageText: string }) => {
       console.log('selectedUserForDialog:', selectedUserForDialog);
@@ -412,7 +544,11 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     }
   }, [showDialog, selectedUserForDialog?.userId, refetchMessages]);
 
-  // Filter and sort users
+  /**
+   * @constant {UserBotData[]} filteredAndSortedUsers
+   * @description Отфильтрованный и отсортированный список пользователей
+   * @description Применяет фильтры и сортировку к списку пользователей в зависимости от поискового запроса, фильтров и параметров сортировки
+   */
   const filteredAndSortedUsers = useMemo(() => {
     let result = searchQuery.length > 0 ? searchResults : users;
 
@@ -475,6 +611,12 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     refetchStats();
   };
 
+  /**
+   * @function handleUserStatusToggle
+   * @description Переключает статус пользователя (активен/заблокирован/премиум)
+   * @param {UserBotData} user - Данные пользователя
+   * @param {'isActive' | 'isBlocked' | 'isPremium'} field - Поле статуса для переключения
+   */
   const handleUserStatusToggle = (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => {
     const currentValue = user[field];
     const newValue = currentValue === 1 ? 0 : 1;
@@ -523,6 +665,12 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     }
   };
 
+  /**
+   * @function formatUserName
+   * @description Форматирует имя пользователя для отображения
+   * @param {UserBotData} user - Данные пользователя
+   * @returns {string} Отформатированное имя пользователя (имя + фамилия, или username, или ID)
+   */
   const formatUserName = (user: UserBotData) => {
     const firstName = user.firstName;
     const lastName = user.lastName;
@@ -808,7 +956,9 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                     </Select>
 
                     {/* Sort Filter */}
+                    {/* Селектор сортировки пользователей по различным полям и направлениям */}
                     <Select value={`${sortField}-${sortDirection}`} onValueChange={(value) => {
+                      // Разделяем значение на поле сортировки и направление
                       const [field, direction] = value.split('-') as [SortField, SortDirection];
                       setSortField(field);
                       setSortDirection(direction);
@@ -916,9 +1066,11 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                                     size="sm"
                                     data-testid={`button-show-dialog-${index}`}
                                     onClick={() => {
+                                      // Если предоставлена внешняя функция открытия диалога, используем её
                                       if (onOpenDialogPanel) {
                                         onOpenDialogPanel(user);
                                       } else {
+                                        // Иначе открываем встроенный диалог
                                         setSelectedUserForDialog(user);
                                         setShowDialog(true);
                                         setTimeout(() => scrollToBottom(), 200);
@@ -1047,6 +1199,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
                                   key={user.id || index}
                                   className="border-b border-border/30 hover:bg-muted/30 transition-colors h-14 cursor-pointer"
                                   onClick={() => {
+                                    // Если доступны обе функции открытия панелей, открываем обе
                                     if (onOpenUserDetailsPanel && onOpenDialogPanel) {
                                       onOpenUserDetailsPanel(user);
                                       onOpenDialogPanel(user);

@@ -66,8 +66,8 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
               key={tab.key}
               onClick={() => onTabChange(tab.key as any)}
               className={`px-3 py-1.5 text-sm max-sm:text-xs max-sm:px-2 max-sm:py-1 font-medium rounded-md transition-colors whitespace-nowrap ${currentTab === tab.key
-                  ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground hover:bg-muted'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:bg-muted'
                 }`}
             >
               {tab.label}

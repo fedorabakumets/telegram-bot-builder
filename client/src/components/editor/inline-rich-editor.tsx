@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  Strikethrough, 
-  Code, 
+import {
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Code,
   Quote,
   Heading3,
   RotateCcw,
@@ -18,7 +18,7 @@ import {
   Music,
   FileText
 } from 'lucide-react';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -128,9 +128,9 @@ export function InlineRichEditor({
    */
   const valueToHtml = useCallback((text: string) => {
     if (!text) return '';
-    
+
     let html = text;
-    
+
     if (enableMarkdown) {
       // Convert markdown to HTML for contenteditable
       html = html
@@ -149,7 +149,7 @@ export function InlineRichEditor({
       // For HTML mode, just convert newlines to br tags
       html = html.replace(/\n/g, '<br>');
     }
-    
+
     return html;
   }, [enableMarkdown]);
 
@@ -160,9 +160,9 @@ export function InlineRichEditor({
    */
   const htmlToValue = useCallback((html: string) => {
     if (!html) return '';
-    
+
     let text = html;
-    
+
     if (enableMarkdown) {
       // Convert HTML back to markdown
       text = text
@@ -186,7 +186,7 @@ export function InlineRichEditor({
         .replace(/<div[^>]*>/g, '\n')
         .replace(/<\/div>/g, '');
     }
-    
+
     return text;
   }, [enableMarkdown]);
 
@@ -201,7 +201,7 @@ export function InlineRichEditor({
         const selection = window.getSelection();
         let range = null;
         let offset = 0;
-        
+
         if (selection && selection.rangeCount > 0) {
           try {
             range = selection.getRangeAt(0);
@@ -210,9 +210,9 @@ export function InlineRichEditor({
             // Ignore selection errors
           }
         }
-        
+
         editorRef.current.innerHTML = html;
-        
+
         // Restore selection
         if (range && selection) {
           try {
@@ -222,21 +222,21 @@ export function InlineRichEditor({
               NodeFilter.SHOW_TEXT,
               null
             );
-            
+
             let currentOffset = 0;
             let targetNode = null;
-            
+
             while (walker.nextNode()) {
               const node = walker.currentNode;
               const nodeLength = node.textContent?.length || 0;
-              
+
               if (currentOffset + nodeLength >= offset) {
                 targetNode = node;
                 break;
               }
               currentOffset += nodeLength;
             }
-            
+
             if (targetNode) {
               newRange.setStart(targetNode, Math.min(offset - currentOffset, targetNode.textContent?.length || 0));
               newRange.collapse(true);
@@ -268,58 +268,58 @@ export function InlineRichEditor({
    * Конфигурация опций форматирования с иконками и горячими клавишами
    */
   const formatOptions = [
-    { 
-      command: 'bold', 
-      icon: Bold, 
-      name: 'Жирный', 
+    {
+      command: 'bold',
+      icon: Bold,
+      name: 'Жирный',
       shortcut: 'Ctrl+B',
       markdown: '**текст**',
       html: '<strong>текст</strong>'
     },
-    { 
-      command: 'italic', 
-      icon: Italic, 
-      name: 'Курсив', 
+    {
+      command: 'italic',
+      icon: Italic,
+      name: 'Курсив',
       shortcut: 'Ctrl+I',
       markdown: '*текст*',
       html: '<em>текст</em>'
     },
-    { 
-      command: 'underline', 
-      icon: Underline, 
-      name: 'Подчеркнутый', 
+    {
+      command: 'underline',
+      icon: Underline,
+      name: 'Подчеркнутый',
       shortcut: 'Ctrl+U',
       markdown: '__текст__',
       html: '<u>текст</u>'
     },
-    { 
-      command: 'strikethrough', 
-      icon: Strikethrough, 
-      name: 'Зачеркнутый', 
+    {
+      command: 'strikethrough',
+      icon: Strikethrough,
+      name: 'Зачеркнутый',
       shortcut: 'Ctrl+Shift+X',
       markdown: '~~текст~~',
       html: '<s>текст</s>'
     },
-    { 
-      command: 'code', 
-      icon: Code, 
-      name: 'Код', 
+    {
+      command: 'code',
+      icon: Code,
+      name: 'Код',
       shortcut: 'Ctrl+E',
       markdown: '`код`',
       html: '<code>код</code>'
     },
-    { 
-      command: 'quote', 
-      icon: Quote, 
-      name: 'Цитата', 
+    {
+      command: 'quote',
+      icon: Quote,
+      name: 'Цитата',
       shortcut: 'Ctrl+Q',
       markdown: '> цитата',
       html: '<blockquote>цитата</blockquote>'
     },
-    { 
-      command: 'heading', 
-      icon: Heading3, 
-      name: 'Заголовок', 
+    {
+      command: 'heading',
+      icon: Heading3,
+      name: 'Заголовок',
       shortcut: 'Ctrl+H',
       markdown: '# заголовок',
       html: '<h3>заголовок</h3>'
@@ -332,15 +332,15 @@ export function InlineRichEditor({
    */
   const applyFormatting = useCallback((format: typeof formatOptions[0]) => {
     if (!editorRef.current) return;
-    
+
     saveToUndoStack();
     setIsFormatting(true);
-    
+
     // Автоматически переключаемся в HTML режим при использовании кнопок форматирования
     if (onFormatModeChange) {
       onFormatModeChange('html');
     }
-    
+
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
       toast({
@@ -351,11 +351,11 @@ export function InlineRichEditor({
       setIsFormatting(false);
       return;
     }
-    
+
     try {
       const range = selection.getRangeAt(0);
       const selectedText = range.toString();
-      
+
       if (format.command === 'bold' || format.command === 'italic' || format.command === 'underline' || format.command === 'strikethrough') {
         // Use document.execCommand for basic formatting
         document.execCommand(format.command, false, undefined);
@@ -393,7 +393,7 @@ export function InlineRichEditor({
           selection.addRange(range);
         }
       }
-      
+
       // Update the value
       setTimeout(() => {
         handleInput();
@@ -410,7 +410,7 @@ export function InlineRichEditor({
         variant: "destructive"
       });
     }
-    
+
     setTimeout(() => setIsFormatting(false), 100);
   }, [saveToUndoStack, handleInput, toast, onFormatModeChange]);
 
@@ -421,7 +421,7 @@ export function InlineRichEditor({
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey) {
       const key = e.key.toLowerCase();
-      
+
       switch (key) {
         case 'b':
           e.preventDefault();
@@ -524,7 +524,7 @@ export function InlineRichEditor({
     // Проверяем, является ли это медиапеременной
     const variable = availableVariables.find(v => v.name === variableName);
     const isMediaVariable = variable?.mediaType !== undefined;
-    
+
     if (isMediaVariable && onMediaVariableSelect && variable) {
       // Для медиапеременных вызываем специальный callback
       onMediaVariableSelect(variableName, variable.mediaType!);
@@ -535,13 +535,13 @@ export function InlineRichEditor({
       });
       return;
     }
-    
+
     // Для обычных переменных - вставляем в текст
     if (!editorRef.current) return;
-    
+
     saveToUndoStack();
     setIsFormatting(true);
-    
+
     const selection = window.getSelection();
     if (!selection) {
       setIsFormatting(false);
@@ -550,7 +550,7 @@ export function InlineRichEditor({
 
     try {
       let range: Range;
-      
+
       if (selection.rangeCount > 0) {
         range = selection.getRangeAt(0);
       } else {
@@ -563,17 +563,17 @@ export function InlineRichEditor({
       // Create the variable placeholder text
       const variableText = `{${variableName}}`;
       const textNode = document.createTextNode(variableText);
-      
+
       // Insert the variable
       range.deleteContents();
       range.insertNode(textNode);
-      
+
       // Position cursor after the inserted variable
       range.setStartAfter(textNode);
       range.setEndAfter(textNode);
       selection.removeAllRanges();
       selection.addRange(range);
-      
+
       // Update the value
       setTimeout(() => {
         handleInput();
@@ -583,7 +583,7 @@ export function InlineRichEditor({
           variant: "default"
         });
       }, 0);
-      
+
     } catch (e) {
       toast({
         title: "Ошибка",
@@ -591,7 +591,7 @@ export function InlineRichEditor({
         variant: "destructive"
       });
     }
-    
+
     setTimeout(() => setIsFormatting(false), 100);
   }, [availableVariables, onMediaVariableSelect, saveToUndoStack, handleInput, toast]);
 
@@ -615,7 +615,7 @@ export function InlineRichEditor({
               </Button>
             ))}
           </div>
-          
+
           {/* History Tools */}
           <div className="flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-slate-900/50 rounded-lg p-1.5 sm:p-2 border border-slate-200/50 dark:border-slate-800/50">
             <Button
@@ -628,7 +628,7 @@ export function InlineRichEditor({
             >
               <RotateCcw className="h-4 sm:h-4 w-4 sm:w-4 text-slate-700 dark:text-slate-300" />
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -639,7 +639,7 @@ export function InlineRichEditor({
             >
               <RotateCw className="h-4 sm:h-4 w-4 sm:w-4 text-slate-700 dark:text-slate-300" />
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -650,7 +650,7 @@ export function InlineRichEditor({
               <Copy className="h-4 sm:h-4 w-4 sm:w-4 text-slate-700 dark:text-slate-300" />
             </Button>
           </div>
-          
+
           {/* Variables Insert Button */}
           {availableVariables.length > 0 && (
             <DropdownMenu>
@@ -700,7 +700,7 @@ export function InlineRichEditor({
                   };
 
                   const mediaIcon = getMediaIcon();
-                  
+
                   return (
                     <DropdownMenuItem
                       key={`${variable.nodeId}-${variable.name}-${index}`}
@@ -755,14 +755,14 @@ export function InlineRichEditor({
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           className="min-h-[120px] sm:min-h-[140px] p-3 sm:p-4 w-full text-sm sm:text-base bg-transparent text-slate-900 dark:text-slate-100 focus:outline-none whitespace-pre-wrap selection:bg-blue-200 dark:selection:bg-blue-900"
-          style={{ 
+          style={{
             lineHeight: '1.6',
             overflowWrap: 'break-word',
             wordBreak: 'break-word'
           }}
           data-placeholder={placeholder}
         />
-        
+
         {/* Stats Bar */}
         <div className="flex items-center justify-end gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-200/50 dark:border-slate-800/50">
           <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">

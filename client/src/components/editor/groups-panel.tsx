@@ -1,31 +1,42 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal, Hash, Link2, Sparkles, Check, Lock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Plus, UserPlus, X, Settings, Upload, Shield, MessageSquare, Globe, Clock, Tag, Search, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal, Hash, Link2, Sparkles, Check, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { TelegramAuth } from '@/components/telegram-auth';
 import type { BotGroup, InsertBotGroup } from '@shared/schema';
 
+/**
+ * Свойства компонента панели групп
+ * @interface GroupsPanelProps
+ */
 interface GroupsPanelProps {
+  /** Идентификатор проекта */
   projectId: number;
+  /** Название проекта */
   projectName: string;
 }
 
 // Using BotGroup type from schema instead of local interface
 
-// Компонент аватарки группы с fallback
+/**
+ * Компонент аватарки группы с fallback на инициалы или иконку
+ * @param avatarUrl - URL аватарки группы (может быть null или содержать токен)
+ * @param groupName - Название группы для генерации инициалов
+ * @param size - Размер аватарки в пикселях (по умолчанию 40)
+ * @param className - Дополнительные CSS классы
+ * @returns JSX элемент с аватаркой или fallback
+ */
 function GroupAvatar({
   avatarUrl,
   groupName,
@@ -47,6 +58,9 @@ function GroupAvatar({
     .toUpperCase()
     .slice(0, 2);
 
+  /**
+   * Обработчик ошибки загрузки изображения
+   */
   const handleImageError = () => {
     setImageError(true);
   };
@@ -93,10 +107,20 @@ function GroupAvatar({
   );
 }
 
+/**
+ * Основной компонент панели управления группами Telegram бота
+ * Предоставляет функциональность для добавления, настройки и управления группами
+ * @param projectId - Идентификатор проекта
+ * @param projectName - Название проекта
+ * @returns JSX элемент панели групп
+ */
 export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
+  // Состояние для управления диалогами и формами
   const [showAddGroup, setShowAddGroup] = useState(false);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<BotGroup | null>(null);
+  
+  // Состояние для формы добавления группы
   const [groupUrl, setGroupUrl] = useState('');
   const [groupName, setGroupName] = useState('');
   const [groupId, setGroupId] = useState('');
@@ -107,6 +131,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [groupTimezone, setGroupTimezone] = useState('');
   const [groupTags, setGroupTags] = useState<string[]>([]);
   const [groupNotes, setGroupNotes] = useState('');
+  
+  // Состояние для настроек администрирования
   const [makeAdmin, setMakeAdmin] = useState(false);
   const [isPublicGroup, setIsPublicGroup] = useState(false);
   const [publicUsername, setPublicUsername] = useState('');
@@ -122,13 +148,15 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     can_be_anonymous: false,
     can_manage_stories: false
   });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'admin' | 'member'>('all');
+  
+  // Состояние для отправки сообщений
+  const [] = useState('');
+  const [] = useState<'all' | 'admin' | 'member'>('all');
   const [showSendMessage, setShowSendMessage] = useState(false);
   const [messageToSend, setMessageToSend] = useState('');
   const [selectedGroupForMessage, setSelectedGroupForMessage] = useState<BotGroup | null>(null);
 
-  // Состояние для поиска пользователя
+  // Состояние для поиска пользователей
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [selectedGroupForPromotion, setSelectedGroupForPromotion] = useState<BotGroup | null>(null);
@@ -138,16 +166,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Load groups from database
-  const { data: groups = [], isLoading, error, refetch } = useQuery({
+  /**
+   * Загрузка списка групп из базы данных
+   * Использует React Query для кэширования и автоматического обновления
+   */
+  const { data: groups = [], isLoading, refetch } = useQuery({
     queryKey: ['/api/projects', projectId, 'groups'],
     queryFn: () => fetch(`/api/projects/${projectId}/groups`).then(res => res.json()) as Promise<BotGroup[]>
   });
 
-  // Ensure groups is always an array
+  // Обеспечиваем что groups всегда является массивом
   const safeGroups = Array.isArray(groups) ? groups : [];
 
-  // Auto-update existing groups with missing info
+  /**
+   * Автоматическое обновление информации о группах при загрузке
+   * Обновляет группы где название равно ID (значит информация не была получена)
+   */
   useEffect(() => {
     if (safeGroups.length > 0) {
       safeGroups.forEach(group => {
@@ -163,7 +197,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   }, [safeGroups.length]); // Запускаем при изменении количества групп
 
-  // Create group mutation
+  /**
+   * Мутация для создания новой группы в базе данных
+   * Отправляет POST запрос с данными группы
+   */
   const createGroupMutation = useMutation({
     mutationFn: async (groupData: Omit<InsertBotGroup, 'projectId'>) => {
       return apiRequest('POST', `/api/projects/${projectId}/groups`, groupData);
@@ -177,7 +214,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Delete group mutation
+  /**
+   * Мутация для удаления группы из базы данных
+   * Отправляет DELETE запрос для указанной группы
+   */
   const deleteGroupMutation = useMutation({
     mutationFn: async (groupId: number) => {
       return apiRequest('DELETE', `/api/projects/${projectId}/groups/${groupId}`);
@@ -191,9 +231,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Update group mutation
+  /**
+   * Мутация для обновления настроек группы
+   * Отправляет PUT запрос с обновленными данными
+   */
   const updateGroupMutation = useMutation({
-    mutationFn: async ({ groupId, data, showSuccessMessage = true }: { groupId: number, data: Partial<InsertBotGroup>, showSuccessMessage?: boolean }) => {
+    mutationFn: async ({ groupId, data }: { groupId: number, data: Partial<InsertBotGroup>, showSuccessMessage?: boolean }) => {
       return apiRequest('PUT', `/api/projects/${projectId}/groups/${groupId}`, data);
     },
     onSuccess: (_, variables) => {
@@ -209,7 +252,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Send message to group mutation
+  /**
+   * Мутация для отправки сообщения в группу через Telegram Bot API
+   * Использует бота для отправки сообщений в указанную группу
+   */
   const sendMessageMutation = useMutation({
     mutationFn: async ({ groupId, message }: { groupId: string | null; message: string }) => {
       return apiRequest('POST', `/api/projects/${projectId}/bot/send-group-message`, {
@@ -232,7 +278,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Get group info mutation
+  /**
+   * Мутация для получения информации о группе и количества участников
+   * Делает параллельные запросы для получения полной информации
+   */
   const getGroupInfoMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
       // Get both group info and member count
@@ -269,7 +318,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Auto-parse group info mutation
+  /**
+   * Мутация для автоматического парсинга информации о группе
+   * Получает данные из Telegram API и автоматически заполняет форму
+   */
   const parseGroupInfoMutation = useMutation({
     mutationFn: async (groupIdentifier: string) => {
       setIsParsingGroup(true);
@@ -386,13 +438,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
         description: infoLines.join(' • ')
       });
     },
-    onError: (error: any) => {
+    onError: () => {
       setIsParsingGroup(false);
       // Не показываем ошибку, так как это автоматический парсинг
     }
   });
 
-  // Auto-parse when groupId changes
+  /**
+   * Автоматический парсинг информации о группе при изменении groupId
+   * Запускается с задержкой после ввода ID или ссылки группы
+   */
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       const identifier = groupId.trim();
@@ -414,7 +469,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     return () => clearTimeout(timeoutId);
   }, [groupId, projectId]);
 
-  // Get group members count mutation
+  /**
+   * Мутация для получения количества участников группы
+   * Обновляет счетчик участников в базе данных
+   */
   const getMembersCountMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
       return apiRequest('GET', `/api/projects/${projectId}/bot/group-members-count/${groupId}`);
@@ -439,7 +497,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Get admin status mutation
+  /**
+   * Мутация для проверки статуса администратора бота в группе
+   * Показывает является ли бот администратором и какие у него права
+   */
   const getAdminStatusMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
       return apiRequest('GET', `/api/projects/${projectId}/bot/admin-status/${groupId}`);
@@ -459,13 +520,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Get group administrators mutation
+  /**
+   * Состояние для управления администраторами и участниками группы
+   */
   const [administrators, setAdministrators] = React.useState<any[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [clientApiMembers, setClientApiMembers] = React.useState<any[]>([]);
   const [showTelegramAuth, setShowTelegramAuth] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
+  
+  /**
+   * Состояние разрешений участника группы
+   * Включает как основные права участника, так и административные
+   */
   const [memberPermissions, setMemberPermissions] = useState({
     // Основные разрешения участника
     can_send_messages: true,
@@ -485,6 +553,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     can_promote_members: false
   });
 
+  /**
+   * Мутация для получения списка администраторов группы
+   * Загружает информацию о всех администраторах через Bot API
+   */
   const getAdminsMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
       return apiRequest('GET', `/api/projects/${projectId}/bot/group-admins/${groupId}`);
@@ -502,30 +574,15 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Get all group members mutation
-  const getAllMembersMutation = useMutation({
-    mutationFn: async (groupId: string | null) => {
-      return apiRequest('GET', `/api/projects/${projectId}/bot/group-members/${groupId}`);
-    },
-    onSuccess: (data) => {
-      setClientApiMembers(data.members || []);
-      toast({
-        title: data.isPartialList ? `Показаны администраторы: ${data.totalCount || 0}` : `Все участники: ${data.totalCount || 0}`,
-        description: data.message || data.explanation || (data.isPartialList ? "Telegram API не предоставляет полный список" : "Полный список участников")
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Ошибка при получении участников',
-        description: error.error || 'Список участников доступен только для небольших групп',
-        variant: 'destructive'
-      });
-    }
-  });
-
-  // Get saved members from database
+  /**
+   * Состояние для работы с сохраненными участниками из базы данных
+   */
   const [savedMembers, setSavedMembers] = React.useState<any[]>([]);
 
+  /**
+   * Мутация для получения сохраненных участников группы из базы данных
+   * Загружает ранее сохраненную информацию об участниках
+   */
   const getSavedMembersMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
       return apiRequest('GET', `/api/projects/${projectId}/groups/${groupId}/saved-members`);
@@ -540,14 +597,19 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Автоматически загружаем сохраненных участников когда выбрана группа
+  /**
+   * Автоматическая загрузка сохраненных участников при выборе группы
+   */
   useEffect(() => {
     if (selectedGroup?.groupId) {
       getSavedMembersMutation.mutate(selectedGroup.groupId);
     }
   }, [selectedGroup?.groupId]);
 
-  // Mute member mutation
+  /**
+   * Мутация для заглушения (мута) участника группы
+   * Пробует сначала Bot API, затем Client API при неудаче
+   */
   const muteMemberMutation = useMutation({
     mutationFn: async ({ groupId, userId, untilDate }: { groupId: string | null; userId: string; untilDate?: number }) => {
       try {
@@ -593,7 +655,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Kick member mutation - пробуем сначала Bot API, потом Client API
+  /**
+   * Мутация для исключения участника из группы
+   * Пробует сначала Bot API, затем Client API при неудаче
+   */
   const kickMemberMutation = useMutation({
     mutationFn: async ({ groupId, userId }: { groupId: string | null; userId: string }) => {
       try {
@@ -629,7 +694,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Load member permissions when dialog opens
+  /**
+   * Мутация для загрузки разрешений конкретного участника
+   * Получает текущие права участника из Telegram API
+   */
   const loadMemberPermissionsMutation = useMutation({
     mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
       console.log('🔍 Loading member permissions for:', { groupId, userId });
@@ -680,7 +748,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Update member permissions mutation
+  /**
+   * Мутация для обновления разрешений участника группы
+   * Автоматически выбирает между повышением, понижением или ограничением прав
+   */
   const updatePermissionsMutation = useMutation({
     mutationFn: async ({ groupId, userId, permissions }: { groupId: string | null; userId: string; permissions: any }) => {
       // Проверяем, есть ли административные права
@@ -812,8 +883,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   }, [selectedGroup, showGroupSettings]);
 
   // Ban member mutation
-  const [userIdToBan, setUserIdToBan] = React.useState('');
-  const [userIdToUnban, setUserIdToUnban] = React.useState('');
+  const [, setUserIdToBan] = React.useState('');
+  const [, setUserIdToUnban] = React.useState('');
   const banMemberMutation = useMutation({
     mutationFn: async ({ groupId, userId, untilDate }: { groupId: string | null; userId: string; untilDate?: number }) => {
       try {
@@ -874,8 +945,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   });
 
   // Group settings mutations
-  const [newGroupTitle, setNewGroupTitle] = React.useState('');
-  const [newGroupDescription, setNewGroupDescription] = React.useState('');
+  const [, setNewGroupTitle] = React.useState('');
+  const [, setNewGroupDescription] = React.useState('');
   const [messageIdToPin, setMessageIdToPin] = React.useState('');
   const [messageIdToUnpin, setMessageIdToUnpin] = React.useState('');
   const [messageIdToDelete, setMessageIdToDelete] = React.useState('');
@@ -1074,46 +1145,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   });
 
   // Restrict member mutation (mute)
-  const [userIdToMute, setUserIdToMute] = React.useState('');
-  const [muteMinutes, setMuteMinutes] = React.useState('');
+  const [] = React.useState('');
+  const [] = React.useState('');
 
-  const restrictMemberMutation = useMutation({
-    mutationFn: async ({ groupId, userId, untilDate }: { groupId: string | null; userId: string; untilDate?: number }) => {
-      return apiRequest('POST', `/api/projects/${projectId}/bot/restrict-member`, {
-        groupId,
-        userId,
-        permissions: {
-          can_send_messages: false,
-          can_send_audios: false,
-          can_send_documents: false,
-          can_send_photos: false,
-          can_send_videos: false,
-          can_send_video_notes: false,
-          can_send_voice_notes: false,
-          can_send_polls: false,
-          can_send_other_messages: false,
-          can_add_web_page_previews: false,
-          can_change_info: false,
-          can_invite_users: false,
-          can_pin_messages: false,
-          can_manage_topics: false
-        },
-        untilDate
-      });
-    },
-    onSuccess: () => {
-      toast({ title: 'Пользователь заглушен' });
-      setUserIdToMute('');
-      setMuteMinutes('');
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Ошибка при заглушении пользователя',
-        description: error.error || 'Проверьте права бота в группе',
-        variant: 'destructive'
-      });
-    }
-  });
 
   // Promote member mutation - используем только Bot API
   const promoteMemberMutation = useMutation({
