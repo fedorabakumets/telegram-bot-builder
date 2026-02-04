@@ -5179,10 +5179,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           }
 
           // Находим целевой узел (может быть null если нет target)
-          const targetNode = button.target ? nodes.find(n => n.id === button.target) : null;
+          // ИСПРАВЛЕНИЕ: Ищем узел сначала по id, затем по команде
+          let targetNode = button.target ? nodes.find(n => n.id === button.target) : null;
+          
+          // Если узел не найден по id, пробуем найти по команде
+          if (!targetNode && button.target) {
+            targetNode = nodes.find(n => n.data.command === `/${button.target}` || n.data.command === button.target);
+            if (targetNode && isLoggingEnabled()) {
+              console.log(`🔧 ГЕНЕРАТОР: Узел найден по команде ${button.target} -> ${targetNode.id}`);
+            }
+          }
 
           // Создаем ��бработчик для каждой кнопки используя target как callback_data
           const actualCallbackData = button.target || callbackData;
+          const actualNodeId = targetNode ? targetNode.id : button.target;
 
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем target узел перед созданием обработчика
           if (button.target && processedCallbacks.has(button.target)) {
@@ -5603,7 +5613,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   // Резервный вариант яясли не удалось сгенерировать код медиа
                   code += '    # Отправляем сообщение (обычное)\n';
                   const autoFlag1 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
-                  code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag1}${parseMode})\n`;
+                  code += `    await safe_edit_or_send(callback_query, text, node_id="${actualNodeId}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag1}${parseMode})\n`;
 
                   // АВТОПЕРЕХОД для fallback случая
                   if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
@@ -5628,7 +5638,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    \n';
                 code += '    # Отправляем сообщение\n';
                 const autoFlag2 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
-                code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag2}${parseMode})\n`;
+                code += `    await safe_edit_or_send(callback_query, text, node_id="${actualNodeId}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag2}${parseMode})\n`;
 
                 // АВяОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
                 // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
@@ -6387,7 +6397,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    # Проверяем, есть ли условная клавиатура для этого узла\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # Создаем reply клавиатуру (+ сбор ввода включен)\n';
-                  const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+                  const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', actualNodeId, targetNode.data);
                   code += keyboardCode;
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';
@@ -6403,15 +6413,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else {
                 // Обычное отображение сообщения без сбора ввода
                 // Обрабатываем клавиатуру для целевого узла
-                code += `    # DEBUG: Узел ${targetNode.id} - hasRegularButtons=${toPythonBoolean(targetNode.data.buttons && targetNode.data.buttons.length > 0)}, hasInputCollection=False\n`;
-                code += `    logging.info(f"DEBUG: Узел ${targetNode.id} обработка кнопок - keyboardType=${targetNode.data.keyboardType}, buttons=${targetNode.data.buttons ? targetNode.data.buttons.length : 0}")\n`;
+                code += `    # DEBUG: Узел ${actualNodeId} - hasRegularButtons=${toPythonBoolean(targetNode.data.buttons && targetNode.data.buttons.length > 0)}, hasInputCollection=False\n`;
+                code += `    logging.info(f"DEBUG: Узел ${actualNodeId} обработка кнопок - keyboardType=${targetNode.data.keyboardType}, buttons=${targetNode.data.buttons ? targetNode.data.buttons.length : 0}")\n`;
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-                  code += `    logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${targetNode.id} с ${targetNode.data.buttons.length} кнопками")\n`;
+                  code += `    logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${actualNodeId} с ${targetNode.data.buttons.length} кнопками")\n`;
                   code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # ИСПРАВЛЕНИЕ: Используем универсальную функцию создания клавиатуры\n';
                   // ИСПРАВЛЕНИЕ: Используем универсальную функцию generateInlineKeyboardCode
-                  const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
+                  const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', actualNodeId, targetNode.data, allNodeIds);
                   code += keyboardCode;
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';
@@ -6425,7 +6435,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # Создаем reply клавиатуру\n';
-                  const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+                  const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', actualNodeId, targetNode.data);
                   code += keyboardCode;
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';

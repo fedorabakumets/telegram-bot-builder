@@ -40,16 +40,26 @@
           }
         },
         {
-          "_y": 624.140625,
+          "_y": 1022.015625,
           "id": "AoHjXk0_Tz4gVuau5zj-m",
           "data": {
-            "buttons": [],
+            "buttons": [
+              {
+                "id": "_b2KKobAoN9NR6spfDMpE",
+                "text": " кнопка 2",
+                "action": "goto",
+                "target": "help",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
             "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
             "markdown": false,
             "adminOnly": false,
             "showInMenu": true,
             "messageText": "Новое сообщение",
-            "keyboardType": "none",
+            "keyboardType": "inline",
             "requiresAuth": false,
             "isPrivateOnly": false,
             "resizeKeyboard": true,
@@ -61,10 +71,35 @@
             "x": 100,
             "y": 624.140625
           }
+        },
+        {
+          "_y": 624.140625,
+          "id": "eWKsWq0y8Xlm39S9JEf1g",
+          "data": {
+            "buttons": [],
+            "command": "/help",
+            "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "description": "Показать справку",
+            "messageText": "Привет! Добро пожаловать!",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "start",
+          "position": {
+            "x": 100,
+            "y": 1097.515625
+          }
         }
       ],
       "createdAt": "2026-02-04T07:44:11.699Z",
-      "updatedAt": "2026-02-04T08:18:33.211Z",
+      "updatedAt": "2026-02-04T08:21:27.885Z",
       "viewState": {
         "pan": {
           "x": 0,
