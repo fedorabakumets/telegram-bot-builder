@@ -18,28 +18,57 @@ import { UserBotData, BotMessage } from '@shared/schema';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
+/**
+ * Расширенный тип сообщения бота с медиафайлами
+ * Добавляет поддержку изображений и других медиафайлов к базовому типу BotMessage
+ */
 type BotMessageWithMedia = BotMessage & {
   media?: Array<{
+    /** Идентификатор медиафайла */
     id: number;
+    /** URL медиафайла */
     url: string;
+    /** Тип медиафайла (image, video, document и т.д.) */
     type: string;
+    /** Ширина изображения (опционально) */
     width?: number;
+    /** Высота изображения (опционально) */
     height?: number;
   }>;
 };
 
+/**
+ * Свойства компонента панели диалога
+ * @interface DialogPanelProps
+ */
 interface DialogPanelProps {
+  /** Идентификатор проекта */
   projectId: number;
+  /** Данные пользователя для диалога */
   user: UserBotData | null;
+  /** Колбэк для закрытия панели */
   onClose: () => void;
 }
 
+/**
+ * Компонент панели диалога с пользователем бота
+ * Отображает историю сообщений и позволяет отправлять новые сообщения пользователю
+ * @param projectId - Идентификатор проекта
+ * @param user - Данные пользователя для диалога
+ * @param onClose - Функция закрытия панели
+ * @returns JSX элемент панели диалога
+ */
 export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
+  // Состояние текста нового сообщения
   const [messageText, setMessageText] = useState('');
+  // Ссылка на контейнер сообщений для автопрокрутки
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Fetch messages for dialog
+  /**
+   * Загрузка сообщений диалога с пользователем
+   * Автоматически обновляется при изменении пользователя
+   */
   const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
     queryKey: [`/api/projects/${projectId}/users/${user?.userId}/messages`],
     enabled: !!user?.userId,
@@ -48,7 +77,10 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
     refetchOnWindowFocus: true,
   });
 
-  // Auto-scroll to bottom when messages load or user changes
+  /**
+   * Автоматическая прокрутка к последнему сообщению
+   * Срабатывает при загрузке сообщений или смене пользователя
+   */
   useEffect(() => {
     if (!messagesLoading && messages.length > 0 && messagesScrollRef.current) {
       setTimeout(() => {
@@ -60,7 +92,12 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
     }
   }, [messagesLoading, messages.length, user?.userId]);
 
-  // Format date for display
+  /**
+   * Форматирование даты для отображения
+   * Использует русскую локализацию для date-fns
+   * @param date - Дата для форматирования
+   * @returns Отформатированная строка даты или пустая строка при ошибке
+   */
   const formatDate = (date: Date | string | null | undefined): string => {
     if (!date) return '';
     try {
@@ -71,7 +108,12 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
     }
   };
 
-  // Format user name
+  /**
+   * Форматирование имени пользователя для отображения
+   * Объединяет имя, фамилию и username в читаемый формат
+   * @param userData - Данные пользователя
+   * @returns Отформатированное имя или ID пользователя
+   */
   const formatUserName = (userData: UserBotData | null): string => {
     if (!userData) return '';
     const parts = [];
@@ -81,7 +123,10 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
     return parts.length > 0 ? parts.join(' ') : `ID: ${userData.userId}`;
   };
 
-  // Send message mutation
+  /**
+   * Мутация для отправки сообщения пользователю
+   * Отправляет сообщение через API и обновляет список сообщений
+   */
   const sendMessageMutation = useMutation({
     mutationFn: async ({ messageText }: { messageText: string }) => {
       if (!user) throw new Error('No user selected');
