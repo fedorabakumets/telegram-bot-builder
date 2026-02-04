@@ -132,8 +132,8 @@ const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: с
                     }}
                     placeholder={placeholder}
                     className={`h-9 sm:h-10 text-xs sm:text-sm px-3 sm:px-3.5 border transition-all ${isDuplicate
-                        ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-200/50 dark:focus:ring-red-900/50 bg-red-50/30 dark:bg-red-950/20'
-                        : 'border-slate-300 dark:border-slate-600 focus:border-purple-500 focus:ring-purple-200/50 dark:focus:ring-purple-900/50'
+                      ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-200/50 dark:focus:ring-red-900/50 bg-red-50/30 dark:bg-red-950/20'
+                      : 'border-slate-300 dark:border-slate-600 focus:border-purple-500 focus:ring-purple-200/50 dark:focus:ring-purple-900/50'
                       }`}
                   />
                 </div>
@@ -2748,6 +2748,14 @@ export function PropertiesPanel({
 
                         {isMediaSectionOpen && (
                           <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-rose-50/40 to-pink-50/20 dark:from-rose-950/30 dark:to-pink-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-rose-200/40 dark:border-rose-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                            {/* Информационное сообщение */}
+                            <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
+                              <i className="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
+                              <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
+                                Загрузка медиафайлов временно не работает. Используйте прямые ссылки на файлы.
+                              </p>
+                            </div>
+
                             {/* Media Selector */}
                             <MediaSelector
                               projectId={projectId}
@@ -3828,10 +3836,10 @@ export function PropertiesPanel({
 
                               return (
                                 <div key={condition.id} className={`border rounded-lg sm:rounded-xl transition-all duration-300 overflow-hidden ${hasErrors
-                                    ? 'border-red-400/60 dark:border-red-600/60 bg-red-50/30 dark:bg-red-950/20 shadow-sm shadow-red-200/40 dark:shadow-red-900/20'
-                                    : hasWarnings
-                                      ? 'border-yellow-400/50 dark:border-yellow-600/50 bg-yellow-50/30 dark:bg-yellow-950/20 shadow-sm shadow-yellow-200/40 dark:shadow-yellow-900/20'
-                                      : 'border-purple-300/40 dark:border-purple-700/40 bg-purple-50/20 dark:bg-purple-950/10 hover:border-purple-400/60 dark:hover:border-purple-700/60 shadow-sm hover:shadow-md shadow-transparent dark:shadow-transparent hover:shadow-purple-200/30 dark:hover:shadow-purple-900/20 transition-all hover:scale-[1.01]'
+                                  ? 'border-red-400/60 dark:border-red-600/60 bg-red-50/30 dark:bg-red-950/20 shadow-sm shadow-red-200/40 dark:shadow-red-900/20'
+                                  : hasWarnings
+                                    ? 'border-yellow-400/50 dark:border-yellow-600/50 bg-yellow-50/30 dark:bg-yellow-950/20 shadow-sm shadow-yellow-200/40 dark:shadow-yellow-900/20'
+                                    : 'border-purple-300/40 dark:border-purple-700/40 bg-purple-50/20 dark:bg-purple-950/10 hover:border-purple-400/60 dark:hover:border-purple-700/60 shadow-sm hover:shadow-md shadow-transparent dark:shadow-transparent hover:shadow-purple-200/30 dark:hover:shadow-purple-900/20 transition-all hover:scale-[1.01]'
                                   }`}>
                                   {/* Compact Header - Responsive */}
                                   <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/50 dark:border-slate-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
@@ -3886,8 +3894,8 @@ export function PropertiesPanel({
                                             </div>
                                             <div className="flex-1 min-w-0">
                                               <span className={`text-xs sm:text-sm leading-relaxed block ${conflict.severity === 'error'
-                                                  ? 'text-red-700 dark:text-red-300'
-                                                  : 'text-amber-700 dark:text-amber-300'
+                                                ? 'text-red-700 dark:text-red-300'
+                                                : 'text-amber-700 dark:text-amber-300'
                                                 }`}>
                                                 {conflict.description}
                                               </span>
