@@ -12,35 +12,68 @@ import Editor from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 
-// Динамический импорт для генерации команд BotFather
+/**
+ * Динамический импорт для генерации команд BotFather
+ * Загружает модуль команд асинхронно для оптимизации производительности
+ */
 const loadCommands = () => import('@/lib/commands');
 
+/**
+ * Свойства компонента панели экспорта
+ * @interface ExportPanelProps
+ */
 interface ExportPanelProps {
+  /** Данные бота для экспорта */
   botData: BotData;
+  /** Название проекта */
   projectName: string;
+  /** Идентификатор проекта */
   projectId: number;
+  /** Включена ли база данных пользователей */
   userDatabaseEnabled?: boolean;
 }
 
+/**
+ * Компонент панели экспорта кода бота
+ * Предоставляет функциональность для просмотра, валидации и экспорта готового кода бота
+ * @param botData - Данные бота для экспорта
+ * @param projectName - Название проекта
+ * @param projectId - Идентификатор проекта
+ * @param userDatabaseEnabled - Включена ли база данных пользователей
+ * @returns JSX элемент панели экспорта
+ */
 export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabled = false }: ExportPanelProps) {
+  // Состояние для управления форматом экспорта и отображением
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [showFullCode, setShowFullCode] = useState(false);
   const [areAllCollapsed, setAreAllCollapsed] = useState(true);
+  
+  // Состояние для команд BotFather и валидации
   const [botFatherCommands, setBotFatherCommands] = useState('');
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
+  
+  // Ссылка на редактор Monaco для управления сворачиванием кода
   const editorRef = useRef<any>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
+  /**
+   * Загрузка списка групп для включения в экспорт
+   */
   const { data: groups = [] } = useQuery<BotGroup[]>({
     queryKey: ['/api/groups'],
   });
 
-  // Используем общий генератор кода
+  /**
+   * Использование общего генератора кода для всех форматов
+   */
   const { codeContent, isLoading, loadContent, generateContent } = useCodeGenerator(botData, projectName, groups, userDatabaseEnabled, projectId);
 
-  // Определяем тему из DOM
+  /**
+   * Определение текущей темы из DOM и отслеживание её изменений
+   * Автоматически переключает тему редактора при изменении темы приложения
+   */
   useEffect(() => {
     const checkTheme = () => {
       const isDark = document.documentElement.classList.contains('dark');
@@ -58,12 +91,17 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     return () => observer.disconnect();
   }, []);
 
-  // Загружаем контент для выбранного формата
+  /**
+   * Загрузка контента для выбранного формата при изменении формата
+   */
   useEffect(() => {
     loadContent(selectedFormat);
   }, [selectedFormat, loadContent]);
 
-  // Функция для сворачивания/разворачивания всех функций
+  /**
+   * Функция для сворачивания/разворачивания всех функций в редакторе
+   * Переключает состояние всех блоков кода между свернутым и развернутым
+   */
   const toggleAllFunctions = () => {
     if (editorRef.current) {
       const editor = editorRef.current;
@@ -77,7 +115,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     }
   };
 
-  // Загрузка и валидация для Python
+  /**
+   * Загрузка и валидация структуры бота для Python формата
+   * Проверяет корректность структуры бота перед экспортом
+   */
   useEffect(() => {
     async function loadValidation() {
       if (selectedFormat === 'python') {
@@ -93,7 +134,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     loadValidation();
   }, [selectedFormat, botData]);
 
-  // Загрузка команд BotFather
+  /**
+   * Загрузка и генерация команд для BotFather
+   * Создает список команд в формате, подходящем для настройки бота через @BotFather
+   */
   useEffect(() => {
     async function loadBotFatherCommands() {
       try {
@@ -126,7 +170,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     loadBotFatherCommands();
   }, [botData]);
 
-  // Статистика бота
+  /**
+   * Вычисление статистики бота на основе его структуры
+   * Подсчитывает количество различных типов узлов и элементов
+   */
   const botStats = useMemo(() => {
     const allNodes = Array.isArray((botData as any).sheets)
       ? (botData as any).sheets.reduce((acc: any[], sheet: any) => 
@@ -149,6 +196,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     };
   }, [botData]);
 
+  /**
+   * Получение текущего содержимого кода для выбранного формата
+   * @returns Строка с кодом или пустая строка если контент не загружен
+   */
   const getCurrentContent = () => codeContent[selectedFormat] || '';
   
   const content = getCurrentContent();
@@ -156,6 +207,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
   const lineCount = lines.length;
   const MAX_VISIBLE_LINES = 1000;
   
+  /**
+   * Отображаемый контент с учетом ограничения по количеству строк
+   * Обрезает код если он слишком длинный для улучшения производительности
+   */
   const displayContent = useMemo(() => {
     if (!showFullCode && lines.length > MAX_VISIBLE_LINES) {
       return lines.slice(0, MAX_VISIBLE_LINES).join('\n');
@@ -163,6 +218,9 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     return content;
   }, [content, showFullCode]);
 
+  /**
+   * Статистика кода для отображения информации о размере и структуре
+   */
   const codeStats = useMemo(() => {
     return {
       totalLines: lineCount,
@@ -170,6 +228,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     };
   }, [content, showFullCode]);
 
+  /**
+   * Копирование содержимого кода в буфер обмена
+   * Использует Clipboard API для копирования текста
+   */
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(getCurrentContent());
@@ -186,6 +248,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     }
   };
 
+  /**
+   * Скачивание файла с кодом для выбранного формата
+   * Создает и автоматически скачивает файл с соответствующим расширением
+   */
   const downloadFile = async () => {
     const fileExtensions: Record<CodeFormat, string> = {
       python: '.py',
@@ -221,6 +287,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     });
   };
 
+  /**
+   * Скачивание всех файлов проекта одновременно
+   * Генерирует и скачивает все форматы файлов с небольшими задержками
+   */
   const downloadAllFiles = () => {
     const formats: CodeFormat[] = ['python', 'json', 'requirements', 'readme', 'dockerfile', 'config'];
     formats.forEach((format, index) => {
@@ -262,6 +332,11 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     });
   };
 
+  /**
+   * Получение иконки для формата файла
+   * @param format - Формат кода
+   * @returns CSS классы для иконки
+   */
   const getFormatIcon = (format: CodeFormat) => {
     const icons = {
       python: 'fab fa-python text-blue-500',
@@ -274,6 +349,11 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     return icons[format];
   };
 
+  /**
+   * Получение человекочитаемого названия для формата файла
+   * @param format - Формат кода
+   * @returns Локализованное название формата
+   */
   const getFormatLabel = (format: CodeFormat) => {
     const labels = {
       python: 'Python код',
