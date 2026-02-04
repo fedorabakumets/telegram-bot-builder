@@ -6,8 +6,6 @@ import { Switch } from '@/components/ui/switch';
 import { Button as UIButton } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { MediaSelector } from '@/components/media/media-selector';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
@@ -16,8 +14,7 @@ import { extractCoordinatesFromUrl, formatCoordinates, getLocationInfo } from '@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 
 import { InlineRichEditor } from './inline-rich-editor';
-import { EmojiPicker } from './emoji-picker';
-import { Image, Video, Music, FileText, X, Plus, Upload } from 'lucide-react';
+import { Image, Video, Music, FileText, X, Plus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,19 +24,57 @@ import {
   DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 
-// Переиспользуемый компонент для редактирования синонимов
+/**
+ * Интерфейс пропсов для компонента редактирования синонимов
+ * @interface SynonymEditorProps
+ */
 interface SynonymEditorProps {
+  /** Массив синонимов для редактирования */
   synonyms: string[];
+  /** Функция обновления списка синонимов */
   onUpdate: (synonyms: string[]) => void;
+  /** Текст-заполнитель для поля ввода */
   placeholder?: string;
+  /** Заголовок секции синонимов */
   title?: string;
+  /** Описание назначения синонимов */
   description?: string;
+  /** Все узлы из всех листов для проверки дубликатов */
   allNodesFromAllSheets?: Array<{ node: Node, sheetName: string }>;
+  /** ID текущего узла для исключения из проверки дубликатов */
   currentNodeId?: string;
 }
 
+/**
+ * Компонент для редактирования синонимов команд и узлов
+ * 
+ * Позволяет добавлять, редактировать и удалять синонимы.
+ * Автоматически проверяет дубликаты синонимов как в текущем узле,
+ * так и во всех других узлах проекта (включая все листы).
+ * 
+ * Особенности:
+ * - Валидация дубликатов в реальном времени
+ * - Поддержка многолистовых проектов
+ * - Адаптивный интерфейс для мобильных устройств
+ * - Визуальная индикация ошибок
+ * 
+ * @param {SynonymEditorProps} props - Пропсы компонента
+ * @returns {JSX.Element} Компонент редактора синонимов
+ */
 const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: старт, привет, начать", title = "Синонимы", description, allNodesFromAllSheets = [], currentNodeId }: SynonymEditorProps) => {
-  // Функция для проверки дубликатов включая все узлы из всех листов
+  /**
+   * Функция для проверки дубликатов синонимов
+   * 
+   * Проверяет, существует ли уже такой синоним:
+   * 1. В текущем списке синонимов (исключая текущий индекс)
+   * 2. В других узлах всех листов проекта
+   * 
+   * Сравнение производится без учета регистра и пробелов.
+   * 
+   * @param {string} value - Значение синонима для проверки
+   * @param {number} currentIndex - Текущий индекс в списке (для исключения из проверки)
+   * @returns {boolean} true, если дубликат найден
+   */
   const checkDuplicate = (value: string, currentIndex: number): boolean => {
     if (!value.trim()) return false;
     const normalizedValue = value.trim().toLowerCase();
@@ -143,8 +178,30 @@ const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: с
   );
 };
 
-// Единая функция для форматирования отображения узла (ВНЕ компонента)
+/**
+ * Глобальная функция для форматирования отображения узла в списках выбора
+ * 
+ * Создает читаемое представление узла в формате:
+ * "ID | Содержимое | Тип | Лист"
+ * 
+ * Извлекает содержимое в зависимости от типа узла:
+ * - start: текст сообщения или команда
+ * - command: команда
+ * - message: текст сообщения
+ * - photo: подпись к фото
+ * - keyboard: текст клавиатуры
+ * - остальные: label или пустая строка
+ * 
+ * @param {Node} node - Узел для форматирования
+ * @param {string} sheetName - Название листа, к которому принадлежит узел
+ * @returns {string} Отформатированная строка для отображения
+ */
 const formatNodeDisplayGlobal = (node: Node, sheetName: string) => {
+  /**
+   * Получает локализованное название типа узла
+   * @param {Node['type']} type - Тип узла
+   * @returns {string} Локализованное название типа
+   */
   const getNodeTypeLabel = (type: Node['type']) => {
     const types: Record<Node['type'], string> = {
       start: 'Старт', command: 'Команда', message: 'Сообщение', photo: 'Фото', video: 'Видео',
@@ -158,6 +215,10 @@ const formatNodeDisplayGlobal = (node: Node, sheetName: string) => {
     return types[type] || type;
   };
 
+  /**
+   * Извлекает содержимое узла в зависимости от его типа
+   * @returns {string} Содержимое узла (обрезанное до 50 символов)
+   */
   const getContent = () => {
     if (node.type === 'start') return ((node.data as any).messageText || node.data.command || '').slice(0, 50);
     if (node.type === 'command') return (node.data.command || '').slice(0, 50);
@@ -172,65 +233,59 @@ const formatNodeDisplayGlobal = (node: Node, sheetName: string) => {
   return `${node.id} | ${content} | ${typeLabel} | ${sheetName}`;
 };
 
-// Переиспользуемый компонент для выбора целевого узла
-const NodeSelector = ({
-  value,
-  onChange,
-  selectedNodeId,
-  getAllNodesFromAllSheets,
-  includeNoTransition = false,
-  manualInputProps = {}
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  selectedNodeId: string;
-  getAllNodesFromAllSheets: Array<{ node: Node, sheetName: string }>;
-  includeNoTransition?: boolean;
-  manualInputProps?: { placeholder?: string; className?: string; onChange?: (e: any) => void; value?: string };
-}) => (
-  <div className="space-y-2">
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-400/30 dark:focus:ring-sky-600/30 transition-all duration-200 rounded-lg text-sky-900 dark:text-sky-50">
-        <SelectValue placeholder="⊘ Не выбрано" />
-      </SelectTrigger>
-      <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
-        {includeNoTransition && <SelectItem value="no-transition">Не переходить</SelectItem>}
-        {getAllNodesFromAllSheets
-          .filter(n => n.node.id !== selectedNodeId)
-          .map(({ node, sheetName }) => (
-            <SelectItem key={node.id} value={node.id}>
-              <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
-                {formatNodeDisplayGlobal(node, sheetName)}
-              </span>
-            </SelectItem>
-          ))}
-      </SelectContent>
-    </Select>
-    {manualInputProps.onChange && (
-      <Input
-        placeholder={manualInputProps.placeholder || "Или введите ID вручную"}
-        {...manualInputProps}
-      />
-    )}
-  </div>
-);
-
+/**
+ * Интерфейс пропсов для панели свойств узлов
+ * @interface PropertiesPanelProps
+ */
 interface PropertiesPanelProps {
+  /** ID проекта */
   projectId: number;
+  /** Выбранный узел для редактирования */
   selectedNode: Node | null;
+  /** Все узлы текущего листа */
   allNodes?: Node[];
+  /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  /** Функция изменения типа узла */
   onNodeTypeChange?: (nodeId: string, newType: Node['type'], newData: Partial<Node['data']>) => void;
+  /** Функция изменения ID узла */
   onNodeIdChange?: (oldId: string, newId: string) => void;
+  /** Функция добавления кнопки к узлу */
   onButtonAdd: (nodeId: string, button: Button) => void;
+  /** Функция обновления кнопки узла */
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
+  /** Функция удаления кнопки узла */
   onButtonDelete: (nodeId: string, buttonId: string) => void;
-  // Поддержка межлистовых соединений
+  /** Все листы проекта для поддержки межлистовых соединений */
   allSheets?: any[];
+  /** ID текущего листа */
   currentSheetId?: string;
+  /** Функция закрытия панели */
   onClose?: () => void;
 }
 
+/**
+ * Компонент панели свойств для редактирования узлов бота
+ * 
+ * Основной компонент для настройки всех параметров узлов:
+ * - Базовые настройки (тип, ID, команды)
+ * - Текст сообщений с поддержкой переменных
+ * - Медиафайлы (фото, видео, аудио, документы)
+ * - Клавиатуры (inline и reply)
+ * - Условные сообщения
+ * - Автопереходы и таймеры
+ * - Сбор пользовательских данных
+ * 
+ * Поддерживает:
+ * - Многолистовые проекты
+ * - Межлистовые соединения
+ * - Валидацию данных
+ * - Предпросмотр переменных
+ * - Адаптивный интерфейс
+ * 
+ * @param {PropertiesPanelProps} props - Пропсы компонента
+ * @returns {JSX.Element} Панель свойств узла
+ */
 export function PropertiesPanel({
   projectId,
   selectedNode,
@@ -248,7 +303,7 @@ export function PropertiesPanel({
   const { toast } = useToast();
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
-  const [urlValidation, setUrlValidation] = useState<{ [key: string]: { isValid: boolean; message?: string } }>({});
+  const [] = useState<{ [key: string]: { isValid: boolean; message?: string } }>({});
   const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
@@ -265,7 +320,21 @@ export function PropertiesPanel({
 
   // Используем глобальную функцию форматирования узла
 
-  // Функция для получения данных по умолчанию для каждого типа узла
+  /**
+   * Функция для получения данных по умолчанию для каждого типа узла
+   * 
+   * Возвращает объект с настройками по умолчанию в зависимости от типа узла.
+   * Включает предустановленные значения для всех поддерживаемых типов:
+   * - Медиа узлы (photo, video, audio, document, sticker, voice, animation)
+   * - Контактные данные (location, contact)
+   * - Команды и управление (start, command, admin_rights)
+   * - Модерация (ban_user, mute_user, kick_user, promote_user, demote_user)
+   * - Сообщения (pin_message, unpin_message, delete_message)
+   * - Интерактивные элементы (keyboard, input, condition)
+   * 
+   * @param {Node['type']} type - Тип узла
+   * @returns {any} Объект с данными по умолчанию для указанного типа
+   */
   const getDefaultDataForType = (type: Node['type']) => {
     const defaults: Record<Node['type'], any> = {
       message: {},
@@ -462,7 +531,19 @@ export function PropertiesPanel({
     return defaults[type] || {};
   };
 
-  // Функция для получения всех узлов из всех листов для межлистовых соединений
+  /**
+   * Мемоизированная функция для получения всех узлов из всех листов проекта
+   * 
+   * Собирает все узлы из всех листов в единый массив для:
+   * - Межлистовых соединений
+   * - Проверки дубликатов синонимов
+   * - Выбора целевых узлов из других листов
+   * 
+   * Если листы не переданы, использует только узлы текущего листа.
+   * Каждый элемент содержит узел, ID листа и название листа.
+   * 
+   * @returns {Array<{node: Node, sheetId: string, sheetName: string}>} Массив всех узлов с метаданными листов
+   */
   const getAllNodesFromAllSheets = useMemo(() => {
     const allNodesFromSheets: { node: Node; sheetId: string; sheetName: string }[] = [];
 
@@ -491,38 +572,24 @@ export function PropertiesPanel({
 
     return allNodesFromSheets;
   }, [allSheets, allNodes, currentSheetId]);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [] = useState(false);
   const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(true);
   const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(true);
 
   // URL validation function
-  const validateUrl = (url: string, type: string): { isValid: boolean; message?: string } => {
-    if (!url) return { isValid: true };
 
-    try {
-      new URL(url);
-
-      const validImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-      const validVideoTypes = ['.mp4', '.avi', '.mov', '.mkv', '.webm'];
-      const validAudioTypes = ['.mp3', '.wav', '.ogg', '.m4a', '.aac'];
-
-      if (type === 'image' && !validImageTypes.some(ext => url.toLowerCase().includes(ext))) {
-        return { isValid: false, message: 'URL должен содержать изображение (JPG, PNG, GIF, WebP)' };
-      }
-      if (type === 'video' && !validVideoTypes.some(ext => url.toLowerCase().includes(ext))) {
-        return { isValid: false, message: 'URL должен содержать видео (MP4, AVI, MOV, MKV, WebM)' };
-      }
-      if (type === 'audio' && !validAudioTypes.some(ext => url.toLowerCase().includes(ext))) {
-        return { isValid: false, message: 'URL должен содержать аудио (MP3, WAV, OGG, M4A, AAC)' };
-      }
-
-      return { isValid: true };
-    } catch {
-      return { isValid: false, message: 'Неверный формат URL' };
-    }
-  };
-
-  // Extract all available questions from keyboard and user-input nodes (including media variables)
+  /**
+   * Мемоизированный список всех доступных вопросов из узлов с пользовательским вводом
+   * 
+   * Извлекает переменные из узлов, которые собирают пользовательские данные:
+   * - Текстовый ввод (inputVariable)
+   * - Медиа ввод (photo, video, audio, document)
+   * 
+   * Удаляет дубликаты по имени переменной.
+   * Используется для отображения доступных переменных в интерфейсе.
+   * 
+   * @returns {Array<{name: string, nodeId: string, nodeType: string, mediaType?: string}>} Массив доступных вопросов
+   */
   const availableQuestions = useMemo(() => {
     const questions: Array<{ name: string, nodeId: string, nodeType: string, mediaType?: string }> = [];
 
@@ -586,7 +653,18 @@ export function PropertiesPanel({
     return uniqueQuestions;
   }, [allNodes]);
 
-  // Extract all available variables and split into text and media
+  /**
+   * Мемоизированное извлечение и разделение переменных на текстовые и медиа
+   * 
+   * Собирает все доступные переменные из узлов проекта и разделяет их на:
+   * - textVariables: текстовые переменные (пользовательский ввод, системные переменные)
+   * - mediaVariables: медиа переменные (File ID фото, видео, аудио, документов)
+   * 
+   * Использует Map для правильной дедупликации по имени переменной.
+   * Добавляет системные переменные (user_name, user_id, chat_id, bot_name).
+   * 
+   * @returns {{textVariables: Array, mediaVariables: Array}} Объект с разделенными переменными
+   */
   const { textVariables, mediaVariables } = useMemo(() => {
     // Use Map for proper deduplication by variable name
     const variablesMap = new Map<string, { name: string, nodeId: string, nodeType: string, description?: string, mediaType?: string }>();
@@ -694,7 +772,15 @@ export function PropertiesPanel({
     return { textVariables: text, mediaVariables: media };
   }, [allNodes]);
 
-  // Получаем список прикрепленных медиапеременных из node.data.attachedMedia
+  /**
+   * Мемоизированный список прикрепленных медиапеременных к текущему узлу
+   * 
+   * Фильтрует медиапеременные, которые уже прикреплены к выбранному узлу
+   * через поле attachedMedia. Используется для отображения уже добавленных
+   * медиафайлов в интерфейсе.
+   * 
+   * @returns {Array} Массив прикрепленных медиапеременных с метаданными
+   */
   const attachedMediaVariables = useMemo(() => {
     if (!selectedNode?.data.attachedMedia || mediaVariables.length === 0) {
       return [];
@@ -704,8 +790,15 @@ export function PropertiesPanel({
     return mediaVariables.filter(v => attachedMediaNames.includes(v.name));
   }, [selectedNode?.data.attachedMedia, mediaVariables]);
 
-  // Обработчик добавления медиапеременной
-  const handleMediaVariableSelect = useCallback((variableName: string, mediaType: string) => {
+  /**
+   * Обработчик добавления медиапеременной к узлу
+   * 
+   * Добавляет новую медиапеременную в список attachedMedia узла.
+   * Проверяет, что переменная еще не добавлена, чтобы избежать дубликатов.
+   * 
+   * @param {string} variableName - Имя медиапеременной для добавления
+   */
+  const handleMediaVariableSelect = useCallback((variableName: string) => {
     if (!selectedNode) return;
 
     const currentAttachedMedia = (selectedNode.data.attachedMedia as string[]) || [];
@@ -720,7 +813,14 @@ export function PropertiesPanel({
     onNodeUpdate(selectedNode.id, { attachedMedia: updatedAttachedMedia });
   }, [selectedNode, onNodeUpdate]);
 
-  // Обработчик удаления медиапеременной
+  /**
+   * Обработчик удаления медиапеременной из узла
+   * 
+   * Удаляет медиапеременную из списка attachedMedia узла.
+   * Фильтрует массив, исключая указанную переменную.
+   * 
+   * @param {string} variableName - Имя медиапеременной для удаления
+   */
   const handleMediaVariableRemove = useCallback((variableName: string) => {
     if (!selectedNode) return;
 
@@ -729,7 +829,19 @@ export function PropertiesPanel({
     onNodeUpdate(selectedNode.id, { attachedMedia: updatedAttachedMedia });
   }, [selectedNode, onNodeUpdate]);
 
-  // Function to detect conflicts between conditional message rules
+  /**
+   * Мемоизированная функция для обнаружения конфликтов между правилами условных сообщений
+   * 
+   * Анализирует правила условных сообщений узла и выявляет потенциальные проблемы:
+   * - Дублирующиеся правила (одинаковые условия и переменные)
+   * - Противоречивые правила (exists vs not_exists для одних переменных)
+   * - Недостижимые правила (из-за приоритета других правил)
+   * - Отсутствующие переменные или значения
+   * 
+   * Возвращает массив конфликтов с описанием проблемы и предложениями по исправлению.
+   * 
+   * @returns {Array<{ruleIndex: number, conflictType: string, description: string, severity: 'warning'|'error', suggestion: string}>} Массив обнаруженных конфликтов
+   */
   const detectRuleConflicts = useMemo(() => {
     if (!selectedNode?.data.conditionalMessages) return [];
 
@@ -787,7 +899,6 @@ export function PropertiesPanel({
       );
 
       for (const higherRule of higherPriorityRules) {
-        const higherVariables = higherRule.variableNames || (higherRule.variableName ? [higherRule.variableName] : []);
         if (higherRule.condition === 'first_time' || higherRule.condition === 'returning_user') {
           // These conditions might make subsequent rules unreachable
           conflicts.push({
@@ -835,7 +946,7 @@ export function PropertiesPanel({
     const rules = [...selectedNode.data.conditionalMessages];
 
     // Assign priorities based on logical order
-    rules.forEach((rule, index) => {
+    rules.forEach((rule) => {
       // Higher priority for more specific conditions
       let priority = 0;
 

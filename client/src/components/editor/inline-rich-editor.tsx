@@ -1,24 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { 
   Bold, 
   Italic, 
   Underline, 
   Strikethrough, 
   Code, 
-  Type,
   Quote,
   Heading3,
-  Link,
-  List,
-  ListOrdered,
   RotateCcw,
   RotateCw,
   Copy,
-  Sparkles,
   Plus,
   Image,
   Video,
@@ -35,50 +28,92 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 
+/**
+ * Интерфейс для описания переменной, доступной в редакторе
+ */
 interface Variable {
+  /** Имя переменной */
   name: string;
+  /** Идентификатор узла, к которому относится переменная */
   nodeId: string;
+  /** Тип узла (user-input, start, command, system, conditional и т.д.) */
   nodeType: string;
+  /** Описание переменной (опционально) */
   description?: string;
+  /** Тип медиа для медиапеременных (photo, video, audio, document) */
   mediaType?: string;
 }
 
+/**
+ * Свойства компонента InlineRichEditor
+ */
 interface InlineRichEditorProps {
+  /** Текущее значение редактора */
   value: string;
+  /** Функция обратного вызова при изменении значения */
   onChange: (value: string) => void;
+  /** Текст-заполнитель для пустого редактора */
   placeholder?: string;
+  /** Включить поддержку Markdown */
   enableMarkdown?: boolean;
-  onMarkdownToggle?: (enabled: boolean) => void;
+  /** Функция обратного вызова при изменении режима форматирования */
   onFormatModeChange?: (formatMode: 'html' | 'markdown' | 'none') => void;
+  /** Массив доступных переменных для вставки */
   availableVariables?: Variable[];
+  /** Функция обратного вызова при выборе медиапеременной */
   onMediaVariableSelect?: (variableName: string, mediaType: string) => void;
 }
 
+/**
+ * Компонент встроенного редактора с поддержкой форматирования текста
+ * 
+ * Предоставляет возможности:
+ * - Форматирование текста (жирный, курсив, подчеркивание, зачеркивание)
+ * - Вставка кода, цитат и заголовков
+ * - Поддержка Markdown и HTML режимов
+ * - Отмена/повтор действий
+ * - Вставка переменных и медиапеременных
+ * - Подсчет слов и символов
+ * - Горячие клавиши для быстрого форматирования
+ * 
+ * @param props - Свойства компонента
+ * @returns JSX элемент редактора
+ */
 export function InlineRichEditor({
   value,
   onChange,
   placeholder = "Введите текст сообщения...",
   enableMarkdown = false,
-  onMarkdownToggle,
   onFormatModeChange,
   availableVariables = [],
   onMediaVariableSelect
 }: InlineRichEditorProps) {
+  /** Количество слов в тексте */
   const [wordCount, setWordCount] = useState(0);
+  /** Количество символов в тексте */
   const [charCount, setCharCount] = useState(0);
+  /** Стек для отмены действий */
   const [undoStack, setUndoStack] = useState<string[]>([]);
+  /** Стек для повтора действий */
   const [redoStack, setRedoStack] = useState<string[]>([]);
+  /** Флаг активного форматирования */
   const [isFormatting, setIsFormatting] = useState(false);
+  /** Ссылка на DOM элемент редактора */
   const editorRef = useRef<HTMLDivElement>(null);
+  /** Хук для показа уведомлений */
   const { toast } = useToast();
 
-  // Save state to undo stack
+  /**
+   * Сохраняет текущее состояние в стек отмены
+   */
   const saveToUndoStack = useCallback(() => {
     setUndoStack(prev => [...prev.slice(-19), value]);
     setRedoStack([]);
   }, [value]);
 
-  // Update word and character counts
+  /**
+   * Обновляет счетчики слов и символов при изменении текста
+   */
   useEffect(() => {
     const plainText = value.replace(/<[^>]*>/g, '').replace(/\*\*|__|~~|`/g, '');
     const words = plainText.trim().split(/\s+/).filter(word => word.length > 0);
@@ -86,7 +121,11 @@ export function InlineRichEditor({
     setCharCount(plainText.length);
   }, [value]);
 
-  // Convert value to display HTML
+  /**
+   * Преобразует текст в HTML для отображения в contenteditable
+   * @param text - Исходный текст
+   * @returns HTML строка для отображения
+   */
   const valueToHtml = useCallback((text: string) => {
     if (!text) return '';
     
@@ -114,7 +153,11 @@ export function InlineRichEditor({
     return html;
   }, [enableMarkdown]);
 
-  // Convert display HTML back to value
+  /**
+   * Преобразует HTML обратно в текстовое значение
+   * @param html - HTML строка
+   * @returns Текстовое значение
+   */
   const htmlToValue = useCallback((html: string) => {
     if (!html) return '';
     
@@ -147,7 +190,9 @@ export function InlineRichEditor({
     return text;
   }, [enableMarkdown]);
 
-  // Update editor content when value changes
+  /**
+   * Обновляет содержимое редактора при изменении значения
+   */
   useEffect(() => {
     if (editorRef.current && !isFormatting) {
       const html = valueToHtml(value);
@@ -206,7 +251,9 @@ export function InlineRichEditor({
     }
   }, [value, valueToHtml, isFormatting]);
 
-  // Handle input in contenteditable
+  /**
+   * Обрабатывает ввод в contenteditable элементе
+   */
   const handleInput = useCallback(() => {
     if (editorRef.current) {
       setIsFormatting(true);
@@ -217,7 +264,9 @@ export function InlineRichEditor({
     }
   }, [onChange, htmlToValue]);
 
-  // Format options
+  /**
+   * Конфигурация опций форматирования с иконками и горячими клавишами
+   */
   const formatOptions = [
     { 
       command: 'bold', 
@@ -277,7 +326,10 @@ export function InlineRichEditor({
     }
   ];
 
-  // Apply formatting
+  /**
+   * Применяет форматирование к выделенному тексту
+   * @param format - Опция форматирования для применения
+   */
   const applyFormatting = useCallback((format: typeof formatOptions[0]) => {
     if (!editorRef.current) return;
     
@@ -362,7 +414,10 @@ export function InlineRichEditor({
     setTimeout(() => setIsFormatting(false), 100);
   }, [saveToUndoStack, handleInput, toast, onFormatModeChange]);
 
-  // Handle keyboard shortcuts
+  /**
+   * Обрабатывает горячие клавиши для форматирования
+   * @param e - Событие клавиатуры
+   */
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey) {
       const key = e.key.toLowerCase();
@@ -411,7 +466,9 @@ export function InlineRichEditor({
     }
   }, [applyFormatting, formatOptions]);
 
-  // Undo functionality
+  /**
+   * Отменяет последнее действие
+   */
   const undo = useCallback(() => {
     if (undoStack.length > 0) {
       const previousValue = undoStack[undoStack.length - 1];
@@ -426,7 +483,9 @@ export function InlineRichEditor({
     }
   }, [undoStack, value, onChange, toast]);
 
-  // Redo functionality
+  /**
+   * Повторяет отмененное действие
+   */
   const redo = useCallback(() => {
     if (redoStack.length > 0) {
       const nextValue = redoStack[redoStack.length - 1];
@@ -441,7 +500,9 @@ export function InlineRichEditor({
     }
   }, [redoStack, value, onChange, toast]);
 
-  // Copy formatted text
+  /**
+   * Копирует форматированный текст в буфер обмена
+   */
   const copyFormatted = useCallback(() => {
     if (editorRef.current) {
       const html = editorRef.current.innerHTML;
@@ -455,7 +516,10 @@ export function InlineRichEditor({
     }
   }, [toast]);
 
-  // Insert variable at cursor position
+  /**
+   * Вставляет переменную в позицию курсора
+   * @param variableName - Имя переменной для вставки
+   */
   const insertVariable = useCallback((variableName: string) => {
     // Проверяем, является ли это медиапеременной
     const variable = availableVariables.find(v => v.name === variableName);
