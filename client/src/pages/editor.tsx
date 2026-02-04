@@ -152,16 +152,16 @@ export default function Editor() {
   const [showLayoutManager, setShowLayoutManager] = useState(false);
 
   /**
-   * Флаг отображения настройщика макета
-   * @type {boolean}
-   */
-  const [showLayoutCustomizer, setShowLayoutCustomizer] = useState(false);
-
-  /**
    * Флаг использования гибкого макета
    * @type {boolean}
    */
   const [useFlexibleLayout] = useState(true);
+
+  /**
+   * Флаг отображения настройщика макета
+   * @type {boolean}
+   */
+  const [showLayoutCustomizer] = useState(false);
 
   // Новая система листов
   /**
@@ -1321,8 +1321,6 @@ export default function Editor() {
     <CodePanel
       botData={(botDataWithSheets || getBotData()) as any}
       projectName={activeProject.name}
-      projectId={activeProject.id}
-      selectedNodeId={selectedNodeId}
       onClose={handleToggleCode}
     />
   ) : null;
@@ -1451,8 +1449,6 @@ export default function Editor() {
       <ComponentsSidebar 
         onComponentDrag={handleComponentDrag}
         onComponentAdd={handleComponentAdd}
-        onLoadTemplate={handleLoadTemplate}
-        onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
         onLayoutChange={updateLayoutConfig}
         onGoToProjects={handleGoToProjects}
         onProjectSelect={handleProjectSelect}
@@ -1563,8 +1559,6 @@ export default function Editor() {
             <ComponentsSidebar 
               onComponentDrag={handleComponentDrag}
               onComponentAdd={handleComponentAdd}
-              onLoadTemplate={handleLoadTemplate}
-              onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
@@ -1716,8 +1710,6 @@ export default function Editor() {
             <ComponentsSidebar 
               onComponentDrag={handleComponentDrag}
               onComponentAdd={handleComponentAdd}
-              onLoadTemplate={handleLoadTemplate}
-              onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
               activeSheetId={botDataWithSheets?.activeSheetId}
               headerContent={
@@ -1894,8 +1886,6 @@ export default function Editor() {
             <ComponentsSidebar 
               onComponentDrag={handleComponentDrag}
               onComponentAdd={handleComponentAdd}
-              onLoadTemplate={handleLoadTemplate}
-              onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}

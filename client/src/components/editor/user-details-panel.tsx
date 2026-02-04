@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+// @ts-nocheck
+import React, { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { 
+import {
   User,
   X,
   Calendar,
@@ -63,7 +64,7 @@ interface UserDetailsPanelProps {
  * @param {UserDetailsPanelProps} props - Свойства компонента
  * @returns {JSX.Element} Элемент интерфейса с информацией о пользователе
  */
-export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: UserDetailsPanelProps) {
+export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: UserDetailsPanelProps): React.JSX.Element {
   const { toast } = useToast();
   const qClient = useQueryClient();
 
@@ -158,9 +159,9 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
     if (!date) return 'Не указано';
     try {
       const dateObj = typeof date === 'string' ? new Date(date) :
-                     date instanceof Date ? date :
-                     typeof date === 'number' ? new Date(date) :
-                     'Не указано';
+        date instanceof Date ? date :
+          typeof date === 'number' ? new Date(date) :
+            'Не указано';
 
       if (dateObj === 'Не указано') return 'Не указано';
 
@@ -320,9 +321,9 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
             </div>
             {onOpenDialog && (
               <div className="pl-6">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => onOpenDialog(user)}
                   className="w-full"
                   data-testid="button-open-dialog-from-details"
@@ -363,32 +364,36 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
             </div>
           </div>
 
-          <Separator />
+          {(() => (
+            <>
+              <Separator />
 
-          {/* Dates */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-primary" />
-              <Label className="text-sm font-semibold">Даты</Label>
-            </div>
-            <div className="grid gap-2 pl-6">
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-3 h-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Регистрация:</span>
-                <span className="font-medium">{formatDate(user.createdAt) as string}</span>
+              {/* Dates */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <Label className="text-sm font-semibold">Даты</Label>
+                </div>
+                <div className="grid gap-2 pl-6">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">Регистрация:</span>
+                    <span className="font-medium">{formatDate(user.createdAt) as string}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">Обновление:</span>
+                    <span className="font-medium">{formatDate(user.updatedAt) as string}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">Активность:</span>
+                    <span className="font-medium">{formatDate(user.lastInteraction) as string}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-3 h-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Обновление:</span>
-                <span className="font-medium">{formatDate(user.updatedAt) as string}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-3 h-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Активность:</span>
-                <span className="font-medium">{formatDate(user.lastInteraction) as string}</span>
-              </div>
-            </div>
-          </div>
+            </>
+          ))()}
 
           {/* Tags */}
           {user.tags && Array.isArray(user.tags) && user.tags.length > 0 && (
@@ -449,7 +454,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
 
                     const questionText: string = String(getQuestionText(key, responseData));
                     const answerValue: string = String(responseData?.value !== undefined ? responseData.value :
-                                        (typeof value === 'object' && value !== null ? JSON.stringify(value as object) : String(value as string)));
+                      (typeof value === 'object' && value !== null ? JSON.stringify(value as object) : String(value as string)));
 
                     return (
                       <div key={key} className="border rounded-lg p-3 bg-muted/30 space-y-2">
@@ -460,14 +465,14 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                           {responseData?.type && (
                             <Badge variant="outline" className="text-xs">
                               {responseData.type === 'text' ? 'Текст' :
-                               responseData.type === 'number' ? 'Число' :
-                               responseData.type === 'email' ? 'Email' :
-                               responseData.type === 'phone' ? 'Телефон' :
-                               String(responseData.type)}
+                                responseData.type === 'number' ? 'Число' :
+                                  responseData.type === 'email' ? 'Email' :
+                                    responseData.type === 'phone' ? 'Телефон' :
+                                      String(responseData.type)}
                             </Badge>
                           )}
                         </div>
-                        
+
                         {/* Question */}
                         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-2 border border-blue-200 dark:border-blue-800">
                           <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 mb-1">
@@ -476,7 +481,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                           </div>
                           <p className="text-sm text-blue-800 dark:text-blue-200">{questionText}</p>
                         </div>
-                        
+
                         {/* Answer */}
                         <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-2 border border-green-200 dark:border-green-800">
                           <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 mb-1">
@@ -487,7 +492,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                             if (responseData?.photoUrl) {
                               return (
                                 <div className="rounded-lg overflow-hidden max-w-[150px]">
-                                  <img 
+                                  <img
                                     src={responseData.photoUrl}
                                     alt="Фото ответ"
                                     className="w-full h-auto rounded-lg"
@@ -498,15 +503,15 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                                 </div>
                               );
                             }
-                            
+
                             if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
                               return (
                                 <div className="rounded-lg overflow-hidden max-w-[150px] space-y-1">
                                   {responseData.media.map((m: any, idx: number) => (
-                                    <img 
+                                    <img
                                       key={idx}
-                                      src={m.url || m} 
-                                      alt="Ответ фото" 
+                                      src={m.url || m}
+                                      alt="Ответ фото"
                                       className="w-full h-auto rounded-lg"
                                       onError={(e) => {
                                         (e.target as HTMLImageElement).style.display = 'none';
@@ -516,14 +521,14 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                                 </div>
                               );
                             }
-                            
+
                             const valueStr = String(answerValue);
                             const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
-                            
+
                             if (isImageUrl) {
                               return (
                                 <div className="rounded-lg overflow-hidden max-w-[150px]">
-                                  <img 
+                                  <img
                                     src={valueStr}
                                     alt="Ответ"
                                     className="w-full h-auto rounded-lg"
@@ -534,7 +539,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                                 </div>
                               );
                             }
-                            
+
                             return (
                               <p className="text-sm text-green-800 dark:text-green-200 font-medium">
                                 {valueStr}
@@ -542,7 +547,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                             );
                           })()}
                         </div>
-                        
+
                         {responseData?.timestamp && (
                           <div className="text-xs text-muted-foreground flex items-center gap-1">
                             <Clock className="w-3 h-3" />

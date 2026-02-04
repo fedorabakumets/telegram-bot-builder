@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -13,7 +12,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotToken } from '@shared/schema';
-import { Play, Square, Clock, Trash2, Edit2, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Database, Terminal } from 'lucide-react';
+import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal, Database, Terminal } from 'lucide-react';
 
 /**
  * Свойства компонента управления ботом
@@ -448,176 +447,6 @@ function BotProfileEditor({
   );
 }
 
-/**
- * Компонент профиля бота
- * @param projectId - Идентификатор проекта
- * @param botInfo - Информация о боте
- * @param onRefresh - Колбэк для обновления данных
- * @param isRefreshing - Флаг процесса обновления
- * @param fallbackName - Имя по умолчанию
- * @param isDatabaseEnabled - Включена ли база данных
- * @param onToggleDatabase - Колбэк переключения базы данных
- * @param isTogglingDatabase - Флаг процесса переключения БД
- */
-// function BotProfile({ 
-function BotProfile({ 
-  projectId,
-  botInfo, 
-  onRefresh, 
-  isRefreshing,
-  fallbackName = 'Бот',
-  isDatabaseEnabled = false,
-  onToggleDatabase,
-  isTogglingDatabase = false
-}: { 
-  projectId: number;
-  botInfo?: BotInfo | null; 
-  onRefresh: () => void; 
-  isRefreshing: boolean; 
-  fallbackName?: string;
-  isDatabaseEnabled?: boolean;
-  onToggleDatabase?: (enabled: boolean) => void;
-  isTogglingDatabase?: boolean;
-}) {
-  if (!botInfo) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <BotAvatar 
-                botName={fallbackName} 
-                size={48}
-              />
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Информация о боте недоступна
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Запустите бота для получения данных
-                </p>
-              </div>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Обновить
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <BotAvatar 
-              photoUrl={botInfo.photoUrl} 
-              botName={botInfo.first_name} 
-              size={56}
-            />
-            <div className="flex-1">
-              <h3 className="font-semibold text-lg leading-tight mb-1">{botInfo.first_name}</h3>
-              <div className="flex items-center gap-2">
-                <Badge variant="default" className="text-xs">
-                  @{botInfo.username}
-                </Badge>
-                {botInfo.is_bot && (
-                  <Badge variant="outline" className="text-xs">
-                    Бот
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <BotProfileEditor 
-              projectId={projectId} 
-              botInfo={botInfo} 
-              onProfileUpdated={onRefresh} 
-            />
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              title="Обновить информацию о боте"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          {/* Описание бота */}
-          {(botInfo.description || botInfo.short_description) && (
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {botInfo.description || botInfo.short_description}
-              </p>
-            </div>
-          )}
-          
-          {/* Возможности бота */}
-          <div className="flex flex-wrap gap-2">
-            {botInfo.can_join_groups && (
-              <Badge variant="secondary" className="text-xs">
-                Может присоединяться к группам
-              </Badge>
-            )}
-            {botInfo.can_read_all_group_messages && (
-              <Badge variant="secondary" className="text-xs">
-                Читает все сообщения
-              </Badge>
-            )}
-            {botInfo.supports_inline_queries && (
-              <Badge variant="secondary" className="text-xs">
-                Поддерживает inline запросы
-              </Badge>
-            )}
-          </div>
-        </div>
-        
-        {/* Database Toggle */}
-        {onToggleDatabase && (
-          <>
-            <Separator className="my-3" />
-            <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
-              isDatabaseEnabled 
-                ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
-                : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
-            }`} data-testid="database-toggle-container">
-              <Database className={`w-5 h-5 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
-              <Label htmlFor="db-toggle-bot" className={`text-sm font-bold cursor-pointer flex-1 ${
-                isDatabaseEnabled 
-                  ? 'text-green-700 dark:text-green-300' 
-                  : 'text-red-700 dark:text-red-300'
-              }`}>
-                {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
-              </Label>
-              <Switch
-                id="db-toggle-bot"
-                data-testid="switch-database-toggle-bot"
-                checked={isDatabaseEnabled}
-                onCheckedChange={onToggleDatabase}
-                disabled={isTogglingDatabase}
-                className="scale-110"
-              />
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 /**
  * Основной компонент управления ботом

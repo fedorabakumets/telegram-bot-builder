@@ -42,6 +42,20 @@ interface ComponentsSidebarProps {
   onToggleProperties?: () => void;
   /** Колбэк для показа полного макета */
   onShowFullLayout?: () => void;
+  /** Колбэк для изменения конфигурации макета */
+  onLayoutChange?: (newConfig: any) => void;
+  /** Колбэк для перехода к проектам */
+  onGoToProjects?: () => void;
+  /** Колбэк для добавления листа */
+  onSheetAdd?: (name: string) => void;
+  /** Содержимое заголовка */
+  headerContent?: React.ReactNode;
+  /** Содержимое боковой панели */
+  sidebarContent?: React.ReactNode;
+  /** Содержимое холста */
+  canvasContent?: React.ReactNode;
+  /** Содержимое панели свойств */
+  propertiesContent?: React.ReactNode;
   /** Видимость холста */
   canvasVisible?: boolean;
   /** Видимость заголовка */
