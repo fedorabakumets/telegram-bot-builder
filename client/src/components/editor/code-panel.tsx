@@ -11,31 +11,56 @@ import Editor from '@monaco-editor/react';
 import { Loader2, X } from 'lucide-react';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 
+/**
+ * Свойства компонента панели кода
+ * @interface CodePanelProps
+ */
 interface CodePanelProps {
+  /** Данные бота для генерации кода */
   botData: BotData;
+  /** Название проекта */
   projectName: string;
-  projectId: number;
-  selectedNodeId?: string | null;
+  /** Колбэк для закрытия панели */
   onClose?: () => void;
 }
 
-export function CodePanel({ botData, projectName, projectId, selectedNodeId, onClose }: CodePanelProps) {
+/**
+ * Компонент панели просмотра и экспорта кода бота
+ * Предоставляет интерфейс для просмотра сгенерированного кода в различных форматах,
+ * копирования в буфер обмена и скачивания файлов
+ * @param botData - Данные бота для генерации кода
+ * @param projectName - Название проекта
+ * @param onClose - Функция закрытия панели
+ * @returns JSX элемент панели кода
+ */
+export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
+  // Состояние для управления форматом и отображением кода
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [areAllCollapsed, setAreAllCollapsed] = useState(true);
   const [showFullCode, setShowFullCode] = useState(false);
+  
+  // Ссылка на редактор Monaco для управления сворачиванием
   const editorRef = useRef<any>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
+  /**
+   * Загрузка списка групп для включения в генерацию кода
+   */
   const { data: groups = [] } = useQuery<BotGroup[]>({
     queryKey: ['/api/groups'],
   });
 
-  // Используем общий генератор кода
+  /**
+   * Использование хука генератора кода для всех форматов
+   */
   const { codeContent, isLoading, loadContent } = useCodeGenerator(botData, projectName, groups);
 
-  // Определяем тему из DOM
+  /**
+   * Определение и отслеживание темы приложения
+   * Автоматически переключает тему редактора при изменении темы приложения
+   */
   useEffect(() => {
     const checkTheme = () => {
       const isDark = document.documentElement.classList.contains('dark');
@@ -53,12 +78,17 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId, onC
     return () => observer.disconnect();
   }, []);
 
-  // Загружаем контент для выбранного формата
+  /**
+   * Загрузка контента при изменении выбранного формата
+   */
   useEffect(() => {
     loadContent(selectedFormat);
   }, [selectedFormat, loadContent]);
 
-  // Функция для сворачивания/разворачивания всех функций
+  /**
+   * Функция для сворачивания/разворачивания всех блоков кода в редакторе
+   * Переключает состояние всех функций и классов между свернутым и развернутым
+   */
   const toggleAllFunctions = () => {
     if (editorRef.current) {
       const editor = editorRef.current;
@@ -72,6 +102,10 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId, onC
     }
   };
 
+  /**
+   * Копирование кода в буфер обмена
+   * Использует Clipboard API для копирования текущего содержимого
+   */
   const copyToClipboard = () => {
     navigator.clipboard.writeText(getCurrentContent());
     toast({
@@ -80,6 +114,10 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId, onC
     });
   };
 
+  /**
+   * Скачивание файла с кодом
+   * Создает и автоматически скачивает файл с соответствующим расширением
+   */
   const downloadFile = async () => {
     const fileExtensions: Record<CodeFormat, string> = {
       python: '.py',
@@ -115,12 +153,21 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId, onC
     });
   };
 
+  /**
+   * Получение текущего содержимого кода для выбранного формата
+   * @returns Строка с кодом или пустая строка если контент не загружен
+   */
   const getCurrentContent = () => codeContent[selectedFormat] || '';
 
   const content = getCurrentContent();
   const lines = content.split('\n');
   const lineCount = lines.length;
   const MAX_VISIBLE_LINES = 1000;
+  
+  /**
+   * Отображаемый контент с учетом ограничения по количеству строк
+   * Обрезает код если он слишком длинный для улучшения производительности
+   */
   const displayContent = useMemo(() => {
     if (!showFullCode && lines.length > MAX_VISIBLE_LINES) {
       return lines.slice(0, MAX_VISIBLE_LINES).join('\n');
@@ -128,6 +175,10 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId, onC
     return content;
   }, [content, showFullCode]);
 
+  /**
+   * Статистика кода для отображения информации о структуре
+   * Подсчитывает функции, классы, комментарии и другие метрики
+   */
   const codeStats = useMemo(() => {
     return {
       totalLines: lineCount,
@@ -138,6 +189,11 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId, onC
     };
   }, [content, showFullCode]);
 
+  /**
+   * Получение CSS классов иконки для формата файла
+   * @param format - Формат кода
+   * @returns CSS классы для иконки
+   */
   const getFormatIcon = (format: CodeFormat): string => {
     const icons: Record<CodeFormat, string> = {
       python: 'fab fa-python text-blue-500',
@@ -150,6 +206,11 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId, onC
     return icons[format];
   };
 
+  /**
+   * Получение человекочитаемого названия для формата файла
+   * @param format - Формат кода
+   * @returns Локализованное название формата
+   */
   const getFormatLabel = (format: CodeFormat): string => {
     const labels: Record<CodeFormat, string> = {
       python: 'Python код',
