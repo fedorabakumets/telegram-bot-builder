@@ -1434,6 +1434,19 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           </div>
         </div>
 
+        {/* Предупреждение о тестовом режиме */}
+        <div className="flex items-start gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40 mb-6">
+          <i className="fas fa-flask text-amber-600 dark:text-amber-400 text-sm sm:text-base mt-0.5 flex-shrink-0"></i>
+          <div>
+            <p className="text-sm sm:text-base text-amber-700 dark:text-amber-300 leading-relaxed font-medium">
+              Вкладка находится в тестовом режиме
+            </p>
+            <p className="text-xs sm:text-sm text-amber-600 dark:text-amber-400 mt-1 leading-relaxed">
+              Некоторые функции могут работать нестабильно или быть недоступными
+            </p>
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 sm:py-20">
             <div className="animate-spin w-10 h-10 border-3 border-primary border-t-transparent rounded-full mb-4"></div>
