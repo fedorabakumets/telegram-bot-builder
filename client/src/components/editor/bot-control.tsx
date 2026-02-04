@@ -3,58 +3,104 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotToken } from '@shared/schema';
-import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Database, Zap, Terminal } from 'lucide-react';
+import { Play, Square, Clock, Trash2, Edit2, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Database, Terminal } from 'lucide-react';
 
+/**
+ * Свойства компонента управления ботом
+ * @interface BotControlProps
+ */
 interface BotControlProps {
+  /** Идентификатор проекта */
   projectId: number;
+  /** Название проекта */
   projectName: string;
 }
 
+/**
+ * Интерфейс экземпляра бота
+ * @interface BotInstance
+ */
 interface BotInstance {
+  /** Уникальный идентификатор экземпляра */
   id: number;
+  /** Идентификатор проекта */
   projectId: number;
+  /** Идентификатор токена */
   tokenId: number;
+  /** Статус бота */
   status: 'running' | 'stopped' | 'error';
+  /** Токен бота */
   token: string;
+  /** Идентификатор процесса */
   processId?: string;
+  /** Время запуска */
   startedAt: Date;
+  /** Время остановки */
   stoppedAt?: Date;
+  /** Сообщение об ошибке */
   errorMessage?: string;
 }
 
+/**
+ * Ответ API со статусом бота
+ * @interface BotStatusResponse
+ */
 interface BotStatusResponse {
+  /** Статус бота */
   status: 'running' | 'stopped' | 'error';
+  /** Экземпляр бота или null */
   instance: BotInstance | null;
 }
 
 // Используем тип BotToken из shared/schema.ts
 
+/**
+ * Ответ API с информацией о токене по умолчанию
+ * @interface DefaultTokenResponse
+ */
 interface DefaultTokenResponse {
+  /** Есть ли токен по умолчанию */
   hasDefault: boolean;
+  /** Токен по умолчанию или null */
   token: BotToken | null;
 }
 
+/**
+ * Информация о боте из Telegram API
+ * @interface BotInfo
+ */
 interface BotInfo {
+  /** Идентификатор бота */
   id: number;
+  /** Является ли ботом */
   is_bot: boolean;
+  /** Имя бота */
   first_name: string;
+  /** Имя пользователя бота */
   username: string;
+  /** Может ли присоединяться к группам */
   can_join_groups: boolean;
+  /** Может ли читать все сообщения в группах */
   can_read_all_group_messages: boolean;
+  /** Поддерживает ли inline запросы */
   supports_inline_queries: boolean;
+  /** Описание бота */
   description?: string;
+  /** Краткое описание бота */
   short_description?: string;
+  /** URL фотографии профиля */
   photoUrl?: string;
+  /** Информация о фотографии профиля */
   photo?: {
     small_file_id: string;
     small_file_unique_id: string;
@@ -63,7 +109,11 @@ interface BotInfo {
   };
 }
 
-// Функция для форматирования времени выполнения
+/**
+ * Функция для форматирования времени выполнения
+ * @param seconds - Количество секунд
+ * @returns Отформатированная строка времени
+ */
 function formatExecutionTime(seconds: number): string {
   if (seconds === 0) return 'Нет данных';
   
@@ -79,7 +129,13 @@ function formatExecutionTime(seconds: number): string {
   return parts.length > 0 ? parts.join(' ') : '0с';
 }
 
-// Компонент аватарки бота с fallback
+/**
+ * Компонент аватарки бота с fallback
+ * @param photoUrl - URL фотографии бота
+ * @param botName - Имя бота для генерации инициалов
+ * @param size - Размер аватарки в пикселях
+ * @param className - Дополнительные CSS классы
+ */
 function BotAvatar({ 
   photoUrl, 
   botName, 
@@ -147,7 +203,12 @@ function BotAvatar({
   );
 }
 
-// Компонент для редактирования профиля бота
+/**
+ * Компонент для редактирования профиля бота
+ * @param projectId - Идентификатор проекта
+ * @param botInfo - Информация о боте
+ * @param onProfileUpdated - Колбэк при обновлении профиля
+ */
 function BotProfileEditor({ 
   projectId, 
   botInfo, 
@@ -387,7 +448,18 @@ function BotProfileEditor({
   );
 }
 
-// Компонент профиля бота
+/**
+ * Компонент профиля бота
+ * @param projectId - Идентификатор проекта
+ * @param botInfo - Информация о боте
+ * @param onRefresh - Колбэк для обновления данных
+ * @param isRefreshing - Флаг процесса обновления
+ * @param fallbackName - Имя по умолчанию
+ * @param isDatabaseEnabled - Включена ли база данных
+ * @param onToggleDatabase - Колбэк переключения базы данных
+ * @param isTogglingDatabase - Флаг процесса переключения БД
+ */
+// function BotProfile({ 
 function BotProfile({ 
   projectId,
   botInfo, 
@@ -547,22 +619,40 @@ function BotProfile({
   );
 }
 
+/**
+ * Основной компонент управления ботом
+ * Предоставляет интерфейс для управления токенами, запуска/остановки бота,
+ * редактирования профиля и настройки базы данных
+ * @param projectId - Идентификатор проекта
+ * @param projectName - Название проекта
+ */
 export function BotControl({ projectId, projectName }: BotControlProps) {
+  // Состояние компонента
+  /** Показывать ли форму добавления бота */
   const [showAddBot, setShowAddBot] = useState(false);
+  /** Токен нового бота */
   const [newBotToken, setNewBotToken] = useState('');
+  /** Флаг процесса парсинга информации о боте */
   const [isParsingBot, setIsParsingBot] = useState(false);
+  /** Редактируемый токен */
   const [editingToken, setEditingToken] = useState<BotToken | null>(null);
+  /** Редактируемое имя */
   const [editName, setEditName] = useState('');
+  /** Редактируемое описание */
   const [editDescription, setEditDescription] = useState('');
   
-  // Inline editing states
+  // Состояние inline редактирования
+  /** Редактируемое поле */
   const [editingField, setEditingField] = useState<{tokenId: number, field: string} | null>(null);
+  /** Значение редактируемого поля */
   const [editValue, setEditValue] = useState('');
   
-  // Timer states for running bot
+  // Состояние таймера для работающего бота
+  /** Текущее время работы бота в секундах */
   const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState(0);
   
-  // Logger state - read from localStorage
+  // Состояние логгера - читается из localStorage
+  /** Включены ли логи генератора */
   const [generatorLogsEnabled, setGeneratorLogsEnabled] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('botcraft-generator-logs') === 'true';
@@ -570,6 +660,10 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     return false;
   });
 
+  /**
+   * Обработчик переключения логов генератора
+   * @param enabled - Включить или выключить логи
+   */
   const handleToggleGeneratorLogs = (enabled: boolean) => {
     setGeneratorLogsEnabled(enabled);
     localStorage.setItem('botcraft-generator-logs', String(enabled));
@@ -582,7 +676,8 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Mutation for updating bot information via Telegram API
+  // Мутация для обновления информации о боте через Telegram API
+  /** Мутация для обновления информации о боте */
   const updateBotInfoMutation = useMutation({
     mutationFn: async ({ tokenId, field, value }: { tokenId: number, field: string, value: string }) => {
       const response = await apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}/bot-info`, { field, value });
@@ -599,12 +694,20 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     }
   });
 
-  // Handle inline editing
+  /**
+   * Начать inline редактирование поля
+   * @param tokenId - ID токена
+   * @param field - Название поля
+   * @param currentValue - Текущее значение
+   */
   const handleStartEdit = (tokenId: number, field: string, currentValue: string) => {
     setEditingField({ tokenId, field });
     setEditValue(currentValue || '');
   };
 
+  /**
+   * Сохранить изменения inline редактирования
+   */
   const handleSaveEdit = () => {
     if (!editingField) return;
     
@@ -620,13 +723,16 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     }
   };
 
+  /**
+   * Отменить inline редактирование
+   */
   const handleCancelEdit = () => {
     setEditingField(null);
     setEditValue('');
   };
 
   // Получаем статус бота
-  const { data: botStatus, isLoading: isLoadingStatus, refetch: refetchBotStatus } = useQuery<BotStatusResponse>({
+  const { data: botStatus, refetch: refetchBotStatus } = useQuery<BotStatusResponse>({
     queryKey: [`/api/projects/${projectId}/bot`],
     refetchInterval: 10000, // Уменьшили с 1 секунды до 10 секунд
     refetchIntervalInBackground: false, // Не опрашиваем в фоне
@@ -681,7 +787,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const toggleDatabaseMutation = useMutation({
     mutationFn: (enabled: boolean) => 
       apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
-    onSuccess: (data, enabled) => {
+    onSuccess: (_, enabled) => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
       toast({
         title: enabled ? "База данных включена" : "База данных выключена",
@@ -700,8 +806,6 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   });
 
   const isRunning = botStatus?.status === 'running';
-  const isError = botStatus?.status === 'error';
-  const isStopped = botStatus?.status === 'stopped' || !botStatus?.instance;
 
   // Парсинг информации о боте по токену
   const parseBotInfoMutation = useMutation({

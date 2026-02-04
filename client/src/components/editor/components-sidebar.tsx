@@ -32,7 +32,7 @@ interface ComponentsSidebarProps {
   currentProjectId?: number;
   /** Идентификатор активного листа */
   activeSheetId?: string;
-  
+
   // Новые пропсы для управления макетом
   /** Колбэк для переключения видимости холста */
   onToggleCanvas?: () => void;
@@ -50,7 +50,7 @@ interface ComponentsSidebarProps {
   propertiesVisible?: boolean;
   /** Показывать ли кнопки макета */
   showLayoutButtons?: boolean;
-  
+
   // Пропсы для управления листами
   /** Колбэк для удаления листа */
   onSheetDelete?: (sheetId: string) => void;
@@ -60,7 +60,7 @@ interface ComponentsSidebarProps {
   onSheetDuplicate?: (sheetId: string) => void;
   /** Колбэк для выбора листа */
   onSheetSelect?: (sheetId: string) => void;
-  
+
   // Мобильный режим
   /** Флаг мобильного режима */
   isMobile?: boolean;
@@ -512,8 +512,8 @@ const componentCategories = [
  * @param props - Свойства компонента ComponentsSidebarProps
  * @returns JSX элемент боковой панели
  */
-export function ComponentsSidebar({ 
-  onComponentDrag, 
+export function ComponentsSidebar({
+  onComponentDrag,
   onComponentAdd,
   onProjectSelect,
   currentProjectId,
@@ -535,20 +535,20 @@ export function ComponentsSidebar({
 }: ComponentsSidebarProps) {
   // Состояние для управления вкладками и интерфейсом
   const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
-  
+
   // Состояние для drag-and-drop проектов и листов
   const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
   const [dragOverProject, setDragOverProject] = useState<number | null>(null);
   const [draggedSheet, setDraggedSheet] = useState<{ sheetId: string; projectId: number } | null>(null);
   const [dragOverSheet, setDragOverSheet] = useState<string | null>(null);
-  
+
   // Состояние для inline редактирования листов
   const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
   const [editingSheetName, setEditingSheetName] = useState('');
-  
+
   // Состояние для сворачивания/раскрытия категорий
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
-  
+
   // Импорт проекта
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importJsonText, setImportJsonText] = useState('');
@@ -556,16 +556,16 @@ export function ComponentsSidebar({
   const [importError, setImportError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pythonFileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Touch события для мобильных устройств
   const [touchedComponent, setTouchedComponent] = useState<ComponentDefinition | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [touchStartElement, setTouchStartElement] = useState<HTMLElement | null>(null);
-  
+
   const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   /**
    * Функция для переключения видимости категории компонентов
    * Управляет сворачиванием и разворачиванием категорий в списке
@@ -582,7 +582,7 @@ export function ComponentsSidebar({
       return newSet;
     });
   };
-  
+
   /**
    * Обработчик начала перетаскивания компонента
    * Инициализирует drag-and-drop операцию для десктопных устройств
@@ -604,22 +604,22 @@ export function ComponentsSidebar({
     console.log('Touch start on component:', component.name);
     e.preventDefault();
     e.stopPropagation();
-    
+
     const touch = e.touches[0];
     const element = e.currentTarget as HTMLElement;
-    
+
     setTouchedComponent(component);
     setIsDragging(true);
     setTouchStartElement(element);
-    
+
     const rect = element.getBoundingClientRect();
     onComponentDrag(component);
-    
+
     // Добавляем визуальную обратную связь
     element.style.opacity = '0.7';
     element.style.transform = 'scale(0.95)';
     element.style.transition = 'all 0.2s ease';
-    
+
     console.log('Touch drag started for:', component.name, {
       touchPos: { x: touch.clientX, y: touch.clientY },
       elementRect: rect
@@ -648,37 +648,37 @@ export function ComponentsSidebar({
       console.log('Touch end ignored - not dragging or no component');
       return;
     }
-    
+
     console.log('Touch end for component:', touchedComponent.name);
     const touch = e.changedTouches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    
+
     console.log('Touch end position:', { x: touch.clientX, y: touch.clientY });
     console.log('Element at touch point:', element);
-    
+
     // Возвращаем стили элемента
     const currentTarget = e.currentTarget as HTMLElement;
     currentTarget.style.opacity = '';
     currentTarget.style.transform = '';
-    
+
     // Проверяем, попали ли мы на холст или в область холста
     const canvas = document.querySelector('[data-canvas-drop-zone]');
     console.log('Canvas element found:', canvas);
-    
+
     if (canvas && element) {
       // Проверяем если элемент находится внутри canvas или является самим canvas
-      const isInCanvas = canvas.contains(element) || element === canvas || 
-                        element.closest('[data-canvas-drop-zone]') === canvas;
-      
+      const isInCanvas = canvas.contains(element) || element === canvas ||
+        element.closest('[data-canvas-drop-zone]') === canvas;
+
       console.log('Is in canvas:', isInCanvas);
-      
+
       if (isInCanvas) {
         const canvasRect = canvas.getBoundingClientRect();
         const dropPosition = {
           x: touch.clientX - canvasRect.left,
           y: touch.clientY - canvasRect.top
         };
-        
+
         // Создаем синтетическое событие drop
         const dropEvent = new CustomEvent('canvas-drop', {
           detail: {
@@ -689,7 +689,7 @@ export function ComponentsSidebar({
         canvas.dispatchEvent(dropEvent);
       }
     }
-    
+
     setTouchedComponent(null);
     setIsDragging(false);
     setTouchStartElement(null);
@@ -718,31 +718,31 @@ export function ComponentsSidebar({
      */
     const handleGlobalTouchEnd = (e: TouchEvent) => {
       if (!isDragging || !touchedComponent) return;
-      
+
       const touch = e.changedTouches[0];
       const element = document.elementFromPoint(touch.clientX, touch.clientY);
-      
+
       // Восстанавливаем стили элемента
       if (touchStartElement) {
         touchStartElement.style.opacity = '';
         touchStartElement.style.transform = '';
         touchStartElement.style.transition = '';
       }
-      
+
       // Проверяем, попали ли мы на холст
       const canvas = document.querySelector('[data-canvas-drop-zone]');
-      
+
       if (canvas && element) {
-        const isInCanvas = canvas.contains(element) || element === canvas || 
-                          element.closest('[data-canvas-drop-zone]') === canvas;
-        
+        const isInCanvas = canvas.contains(element) || element === canvas ||
+          element.closest('[data-canvas-drop-zone]') === canvas;
+
         if (isInCanvas) {
           const canvasRect = canvas.getBoundingClientRect();
           const dropPosition = {
             x: touch.clientX - canvasRect.left,
             y: touch.clientY - canvasRect.top
           };
-          
+
           const dropEvent = new CustomEvent('canvas-drop', {
             detail: {
               component: touchedComponent,
@@ -752,7 +752,7 @@ export function ComponentsSidebar({
           canvas.dispatchEvent(dropEvent);
         }
       }
-      
+
       setTouchedComponent(null);
       setIsDragging(false);
       setTouchStartElement(null);
@@ -814,12 +814,12 @@ export function ComponentsSidebar({
       // Немедленно обновляем кэш запросов с новым проектом
       const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
       queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
-      
+
       // Также обновляем кэш списка
       const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
       const { data, ...projectWithoutData } = newProject;
       queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
-      
+
       toast({
         title: "Проект создан",
         description: `Проект "${newProject.name}" успешно создан`,
@@ -849,25 +849,25 @@ export function ComponentsSidebar({
       await queryClient.cancelQueries({ queryKey: ['/api/projects'] });
       await queryClient.cancelQueries({ queryKey: ['/api/projects/list'] });
       await queryClient.cancelQueries({ queryKey: [`/api/projects/${projectId}`] });
-      
+
       // Сохраняем предыдущие значения для отката
       const previousProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']);
       const previousList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']);
-      
+
       // Оптимистично удаляем проект из кеша
       if (previousProjects) {
         const updatedProjects = previousProjects.filter(p => p.id !== projectId);
         queryClient.setQueryData<BotProject[]>(['/api/projects'], updatedProjects);
       }
-      
+
       if (previousList) {
         const updatedList = previousList.filter(p => p.id !== projectId);
         queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], updatedList);
       }
-      
+
       // Удаляем из кеша конкретный проект
       queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}`] });
-      
+
       // Возвращаем контекст для отката
       return { previousProjects, previousList };
     },
@@ -885,7 +885,7 @@ export function ComponentsSidebar({
       if (context?.previousList) {
         queryClient.setQueryData(['/api/projects/list'], context.previousList);
       }
-      
+
       toast({
         title: "Ошибка удаления",
         description: "Не удалось удалить проект",
@@ -1010,7 +1010,7 @@ export function ComponentsSidebar({
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
@@ -1039,7 +1039,7 @@ export function ComponentsSidebar({
       });
     };
     reader.readAsText(file);
-    
+
     // Очищаем input, чтобы можно было загрузить файл с тем же именем снова
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -1049,7 +1049,7 @@ export function ComponentsSidebar({
   const handlePythonFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
@@ -1078,7 +1078,7 @@ export function ComponentsSidebar({
       });
     };
     reader.readAsText(file);
-    
+
     if (pythonFileInputRef.current) {
       pythonFileInputRef.current.value = '';
     }
@@ -1087,7 +1087,7 @@ export function ComponentsSidebar({
   const parsePythonBotToJson = (pythonCode: string) => {
     // Используем функцию парсинга из bot-generator.ts (обратная операция к generatePythonCode)
     const { nodes, connections } = parsePythonCodeToJson(pythonCode);
-    
+
     // Создаём структуру проекта с листом (sheets), точно как extractNodesAndConnections
     const projectData = {
       sheets: [
@@ -1101,7 +1101,7 @@ export function ComponentsSidebar({
       version: 2,
       activeSheetId: 'main'
     };
-    
+
     return {
       data: projectData,
       nodeCount: nodes.length
@@ -1111,7 +1111,7 @@ export function ComponentsSidebar({
   const handleImportProject = () => {
     try {
       setImportError('');
-      
+
       // Если импортируем Python код бота
       if (importPythonText.trim()) {
         try {
@@ -1143,12 +1143,12 @@ export function ComponentsSidebar({
                   queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
                 }, 300);
               }).catch((apiError: any) => {
-                  setImportError(apiError.message || 'Ошибка при создании проекта');
-                  toast({
-                    title: "❌ Ошибка создания проекта",
-                    description: apiError.message || 'Не удалось создать проект',
-                    variant: "destructive",
-                  });
+                setImportError(apiError.message || 'Ошибка при создании проекта');
+                toast({
+                  title: "❌ Ошибка создания проекта",
+                  description: apiError.message || 'Не удалось создать проект',
+                  variant: "destructive",
+                });
               });
             } catch (error: any) {
               setImportError(error.message || 'Ошибка при импорте проекта');
@@ -1162,11 +1162,11 @@ export function ComponentsSidebar({
           } else {
             // Может быть JSON в файле - пробуем парсить
             const jsonData = JSON.parse(importPythonText);
-            
+
             let projectData: any;
             let projectName: string;
             let projectDescription: string;
-            
+
             if (jsonData.name && jsonData.data) {
               projectName = jsonData.name;
               projectDescription = jsonData.description || '';
@@ -1175,7 +1175,7 @@ export function ComponentsSidebar({
               projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
               projectDescription = '';
               projectData = jsonData;
-              
+
               if (!projectData.version) {
                 projectData.version = 2;
               }
@@ -1186,7 +1186,7 @@ export function ComponentsSidebar({
             } else {
               throw new Error('Неподдерживаемый формат');
             }
-            
+
             apiRequest('POST', '/api/projects', {
               name: projectName,
               description: projectDescription,
@@ -1221,14 +1221,14 @@ export function ComponentsSidebar({
           return;
         }
       }
-      
+
       // Импорт JSON
       const parsedData = JSON.parse(importJsonText);
-      
+
       let projectData: any;
       let projectName: string;
       let projectDescription: string;
-      
+
       // Проверяем формат JSON
       // Формат 1: полный проект {name, description, data}
       if (parsedData.name && parsedData.data) {
@@ -1241,7 +1241,7 @@ export function ComponentsSidebar({
         projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
         projectDescription = '';
         projectData = parsedData;
-        
+
         // Убедимся, что все листы имеют версию
         if (!projectData.version) {
           projectData.version = 2;
@@ -1256,7 +1256,7 @@ export function ComponentsSidebar({
       else {
         throw new Error('Неподдерживаемый формат JSON. Должен содержать поле "sheets", "nodes" или "data"');
       }
-      
+
       // Создаём проект с импортированными данными
       apiRequest('POST', '/api/projects', {
         name: projectName,
@@ -1266,22 +1266,22 @@ export function ComponentsSidebar({
         // Сначала закрываем диалог
         setIsImportDialogOpen(false);
         setImportJsonText('');
-        
+
         // Небольшая задержка перед обновлением проекта, чтобы диалог успел закрыться
         setTimeout(() => {
           // Обновляем кеш
           const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
           queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
-          
+
           const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
           const { data, ...projectWithoutData } = newProject;
           queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
-          
+
           toast({
             title: "Проект импортирован",
             description: `Проект "${newProject.name}" успешно импортирован. Проект готов к редактированию!`,
           });
-          
+
           // Переключаемся на новый проект
           if (onProjectSelect) {
             onProjectSelect(newProject.id);
@@ -1356,9 +1356,9 @@ export function ComponentsSidebar({
     e.preventDefault();
     e.stopPropagation();
     setDragOverProject(null);
-    
+
     console.log('🎯 Попытка перемещения:', draggedProject?.name, '→', targetProject.name);
-    
+
     if (!draggedProject || draggedProject.id === targetProject.id) {
       console.log('❌ Отмена: проект не выбран или это тот же проект');
       setDraggedProject(null);
@@ -1368,13 +1368,13 @@ export function ComponentsSidebar({
     // Получаем текущий список проектов из кеша
     const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
     console.log('📋 Текущие проекты:', currentProjects.map(p => p.name));
-    
+
     // Находим индексы перемещаемого и целевого проекта
     const draggedIndex = currentProjects.findIndex(p => p.id === draggedProject.id);
     const targetIndex = currentProjects.findIndex(p => p.id === targetProject.id);
-    
+
     console.log(`📍 Индексы: перемещаемый=${draggedIndex}, целевой=${targetIndex}`);
-    
+
     if (draggedIndex === -1 || targetIndex === -1) {
       console.log('❌ Отмена: проект не найден');
       setDraggedProject(null);
@@ -1385,21 +1385,21 @@ export function ComponentsSidebar({
     const newProjects = [...currentProjects];
     const [movedProject] = newProjects.splice(draggedIndex, 1);
     newProjects.splice(targetIndex, 0, movedProject);
-    
+
     console.log('✅ Новый порядок:', newProjects.map(p => p.name));
-    
+
     // Обновляем кеш
     queryClient.setQueryData(['/api/projects'], newProjects);
-    
+
     // Обновляем список без данных
     const newList = newProjects.map(({ data, ...rest }) => rest);
     queryClient.setQueryData(['/api/projects/list'], newList);
-    
+
     toast({
       title: "✅ Проекты переупорядочены",
       description: `Проект "${draggedProject.name}" перемещен`,
     });
-    
+
     setDraggedProject(null);
   };
 
@@ -1422,7 +1422,7 @@ export function ComponentsSidebar({
 
   const getNodeCount = (project: BotProject) => {
     if (!project.data || typeof project.data !== 'object') return 0;
-    
+
     try {
       // Проверяем, новый формат с листами или старый
       if (SheetsManager.isNewFormat(project.data)) {
@@ -1444,7 +1444,7 @@ export function ComponentsSidebar({
         return fallbackData.nodes.length;
       }
       if (fallbackData.sheets && Array.isArray(fallbackData.sheets)) {
-        return fallbackData.sheets.reduce((total: number, sheet: any) => 
+        return fallbackData.sheets.reduce((total: number, sheet: any) =>
           total + (sheet.nodes ? sheet.nodes.length : 0), 0);
       }
       return 0;
@@ -1453,7 +1453,7 @@ export function ComponentsSidebar({
 
   const getSheetsInfo = (project: BotProject) => {
     if (!project.data || typeof project.data !== 'object') return { count: 0, names: [] };
-    
+
     try {
       // Проверяем, новый формат с листами или старый
       if (SheetsManager.isNewFormat(project.data)) {
@@ -1503,10 +1503,10 @@ export function ComponentsSidebar({
               />
             )}
             {onClose && (
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="h-8 w-8 flex-shrink-0" 
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 flex-shrink-0"
                 onClick={onClose}
                 title="Закрыть панель компонентов"
                 data-testid="button-close-components-sidebar"
@@ -1517,29 +1517,27 @@ export function ComponentsSidebar({
           </div>
         </div>
         <div className="flex space-x-1 bg-gradient-to-r from-slate-200/40 to-slate-100/20 dark:from-slate-800/40 dark:to-slate-700/20 rounded-lg p-1 backdrop-blur-sm border border-slate-300/20 dark:border-slate-600/20">
-          <button 
+          <button
             onClick={() => setCurrentTab('elements')}
-            className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${
-              currentTab === 'elements' 
-                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30' 
+            className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${currentTab === 'elements'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30'
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
-            }`}
+              }`}
           >
             Элементы
           </button>
-          <button 
+          <button
             onClick={() => setCurrentTab('projects')}
-            className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${
-              currentTab === 'projects' 
-                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30' 
+            className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${currentTab === 'projects'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30'
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
-            }`}
+              }`}
           >
             Проекты
           </button>
         </div>
       </div>
-      
+
       {/* Components List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {currentTab === 'projects' && (
@@ -1551,9 +1549,9 @@ export function ComponentsSidebar({
                   Проекты ({projects.length})
                 </h3>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Button 
-                    size="default" 
-                    variant="outline" 
+                  <Button
+                    size="default"
+                    variant="outline"
                     className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-green-500/10 to-green-400/5 hover:from-green-600/20 hover:to-green-500/15 border-green-400/30 dark:border-green-500/30 hover:border-green-500/50 dark:hover:border-green-400/50 text-green-700 dark:text-green-300 rounded-lg transition-all hover:shadow-md hover:shadow-green-500/20"
                     onClick={handleCreateProject}
                     disabled={createProjectMutation.isPending}
@@ -1563,9 +1561,9 @@ export function ComponentsSidebar({
                     <Plus className="h-4 w-4" />
                     <span>Новый</span>
                   </Button>
-                  <Button 
-                    size="default" 
-                    variant="outline" 
+                  <Button
+                    size="default"
+                    variant="outline"
                     className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-blue-500/10 to-blue-400/5 hover:from-blue-600/20 hover:to-blue-500/15 border-blue-400/30 dark:border-blue-500/30 hover:border-blue-500/50 dark:hover:border-blue-400/50 text-blue-700 dark:text-blue-300 rounded-lg transition-all hover:shadow-md hover:shadow-blue-500/20"
                     onClick={() => {
                       setIsImportDialogOpen(true);
@@ -1580,7 +1578,7 @@ export function ComponentsSidebar({
                   </Button>
                 </div>
               </div>
-              
+
             </div>
 
             {/* Диалог импорта проекта */}
@@ -1599,7 +1597,7 @@ export function ComponentsSidebar({
                         <i className="fas fa-paste text-blue-500" />
                         Вставьте JSON проекта
                       </label>
-                      <Textarea 
+                      <Textarea
                         value={importJsonText}
                         onChange={(e) => {
                           setImportJsonText(e.target.value);
@@ -1611,7 +1609,7 @@ export function ComponentsSidebar({
                         data-testid="textarea-import-json"
                       />
                     </div>
-                    
+
                     {/* Загрузка JSON файла */}
                     <div>
                       <label className="text-sm font-medium mb-2 flex items-center gap-2">
@@ -1668,16 +1666,16 @@ export function ComponentsSidebar({
                       </Button>
                     </div>
                   </div>
-                  
+
                   {importError && (
                     <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
                       <p className="text-sm text-destructive">{importError}</p>
                     </div>
                   )}
-                  
+
                   <div className="flex gap-3 justify-end pt-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => {
                         setIsImportDialogOpen(false);
                         setImportJsonText('');
@@ -1688,7 +1686,7 @@ export function ComponentsSidebar({
                     >
                       Отмена
                     </Button>
-                    <Button 
+                    <Button
                       onClick={handleImportProject}
                       disabled={!importJsonText.trim() && !importPythonText.trim()}
                       data-testid="button-confirm-import"
@@ -1750,15 +1748,12 @@ export function ComponentsSidebar({
                       }
                     }}
                     onDragEnd={handleProjectDragEnd}
-                    className={`group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm overflow-hidden ${
-                      currentProjectId === project.id 
-                        ? 'bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-cyan-600/15 dark:from-blue-600/30 dark:via-blue-500/20 dark:to-cyan-600/25 border-blue-500/50 dark:border-blue-400/50 shadow-lg shadow-blue-500/25' 
+                    className={`group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm overflow-hidden ${currentProjectId === project.id
+                        ? 'bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-cyan-600/15 dark:from-blue-600/30 dark:via-blue-500/20 dark:to-cyan-600/25 border-blue-500/50 dark:border-blue-400/50 shadow-lg shadow-blue-500/25'
                         : 'bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-900/50 dark:to-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:border-slate-300/60 dark:hover:border-slate-600/60 hover:bg-gradient-to-br hover:from-slate-100/80 hover:to-slate-100/50 dark:hover:from-slate-800/70 dark:hover:to-slate-700/50 hover:shadow-md hover:shadow-slate-500/20'
-                    } ${
-                      dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 shadow-xl shadow-blue-500/50 bg-gradient-to-br from-blue-600/25 to-cyan-600/20 dark:from-blue-600/40 dark:to-cyan-600/30' : ''
-                    } ${
-                      draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
-                    }`}
+                      } ${dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 shadow-xl shadow-blue-500/50 bg-gradient-to-br from-blue-600/25 to-cyan-600/20 dark:from-blue-600/40 dark:to-cyan-600/30' : ''
+                      } ${draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
+                      }`}
                     onClick={() => onProjectSelect && onProjectSelect(project.id)}
                   >
                     {/* Header Section */}
@@ -1777,15 +1772,14 @@ export function ComponentsSidebar({
                         )}
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <span className={`text-xs px-1.5 xs:px-2 py-0.5 rounded-full whitespace-nowrap font-semibold flex-shrink-0 transition-all ${
-                          project.ownerId === null 
-                            ? 'bg-blue-500/25 text-blue-700 dark:text-blue-300' 
+                        <span className={`text-xs px-1.5 xs:px-2 py-0.5 rounded-full whitespace-nowrap font-semibold flex-shrink-0 transition-all ${project.ownerId === null
+                            ? 'bg-blue-500/25 text-blue-700 dark:text-blue-300'
                             : 'bg-green-500/25 text-green-700 dark:text-green-300'
-                        }`}>
+                          }`}>
                           {project.ownerId === null ? '👥' : '👤'}
                         </span>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1797,7 +1791,7 @@ export function ComponentsSidebar({
                         </Button>
                       </div>
                     </div>
-                    
+
                     {/* Metadata Section */}
                     <div className="flex flex-col xs:flex-row gap-1.5 xs:gap-2 text-xs mb-2.5 xs:mb-3 sm:mb-4 flex-wrap">
                       <span className="flex items-center gap-1 bg-blue-500/15 dark:bg-blue-600/20 px-2 xs:px-2.5 py-1 rounded-md border border-blue-400/30 dark:border-blue-500/30 font-semibold text-blue-700 dark:text-blue-300 whitespace-nowrap">
@@ -1813,20 +1807,20 @@ export function ComponentsSidebar({
                         <span className="text-xs">{formatDate(project.updatedAt).split(',')[0]}</span>
                       </span>
                     </div>
-                    
+
                     {/* Sheets Section */}
                     {(() => {
                       const sheetsInfo = getSheetsInfo(project);
                       return (
                         <div className="space-y-1 xs:space-y-1.5">
-                            {sheetsInfo.names.length > 0 && (
-                              <div className="space-y-0.5 sm:space-y-1">
-                                {sheetsInfo.names.map((name: string, index: number) => {
+                          {sheetsInfo.names.length > 0 && (
+                            <div className="space-y-0.5 sm:space-y-1">
+                              {sheetsInfo.names.map((name: string, index: number) => {
                                 const projectData = project.data as any;
                                 const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
                                 const isActive = currentProjectId === project.id && sheetId === activeSheetId;
                                 const isEditing = editingSheetId !== null && sheetId !== null && editingSheetId === sheetId;
-                                
+
                                 return (
                                   <div key={index} className="flex items-center gap-1 sm:gap-1.5 group/sheet px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md hover:bg-muted/50 transition-colors">
                                     {isEditing ? (
@@ -1853,11 +1847,9 @@ export function ComponentsSidebar({
                                         onDragEnd={() => {
                                           setDraggedSheet(null);
                                         }}
-                                        className={`text-xs px-1.5 sm:px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center line-clamp-1 ${
-                                          isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-foreground hover:bg-muted'
-                                        } ${
-                                          draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
-                                        }`}
+                                        className={`text-xs px-1.5 sm:px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center line-clamp-1 ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-foreground hover:bg-muted'
+                                          } ${draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
+                                          }`}
                                         onClick={() => {
                                           if (currentProjectId === project.id && onSheetSelect && SheetsManager.isNewFormat(projectData)) {
                                             const sheetId = projectData.sheets[index]?.id;
@@ -1879,7 +1871,7 @@ export function ComponentsSidebar({
                                         <span className="truncate">{name || 'Без названия'}</span>
                                       </div>
                                     )}
-                                    
+
                                     {/* Кнопки управления листом */}
                                     {currentProjectId === project.id && !isEditing && (
                                       <div className="flex gap-0.5 sm:gap-1 opacity-0 group-hover/sheet:opacity-100 transition-opacity flex-shrink-0">
@@ -1926,30 +1918,30 @@ export function ComponentsSidebar({
                                                       e.stopPropagation();
                                                       const sourceData = projectData;
                                                       const targetData = otherProject.data as any;
-                                                      
+
                                                       if (!sourceData?.sheets || !targetData?.sheets) return;
-                                                      
+
                                                       const sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === sheetId);
                                                       if (sourceSheetIndex === -1) return;
-                                                      
+
                                                       const sheetToMove = sourceData.sheets[sourceSheetIndex];
                                                       const newSheet = JSON.parse(JSON.stringify(sheetToMove));
                                                       targetData.sheets.push(newSheet);
                                                       sourceData.sheets.splice(sourceSheetIndex, 1);
-                                                      
+
                                                       try {
                                                         await Promise.all([
                                                           apiRequest('PUT', `/api/projects/${project.id}`, { data: sourceData }),
                                                           apiRequest('PUT', `/api/projects/${otherProject.id}`, { data: targetData })
                                                         ]);
-                                                        
+
                                                         const updatedProjects = projects.map(p => {
                                                           if (p.id === project.id) return { ...p, data: sourceData };
                                                           if (p.id === otherProject.id) return { ...p, data: targetData };
                                                           return p;
                                                         });
                                                         queryClient.setQueryData(['/api/projects'], updatedProjects);
-                                                        
+
                                                         toast({
                                                           title: "✅ Лист перемещен",
                                                           description: `"${sheetToMove.name}" → "${otherProject.name}"`,
@@ -2010,8 +2002,8 @@ export function ComponentsSidebar({
                                   </div>
                                 );
                               })}
-                              </div>
-                            )}
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
@@ -2021,10 +2013,10 @@ export function ComponentsSidebar({
             )}
           </div>
         )}
-        
+
         {currentTab === 'elements' && componentCategories.map((category) => {
           const isCollapsed = collapsedCategories.has(category.title);
-          
+
           return (
             <div key={category.title} className="space-y-2 sm:space-y-3">
               <button
@@ -2045,7 +2037,7 @@ export function ComponentsSidebar({
                   )}
                 </div>
               </button>
-              
+
               {!isCollapsed && (
                 <div className="space-y-1.5 sm:space-y-2 transition-all duration-200 ease-in-out">
                   {category.components.map((component) => (
@@ -2056,9 +2048,8 @@ export function ComponentsSidebar({
                       onTouchStart={(e) => handleTouchStart(e, component)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
-                      className={`component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30 hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40 rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select border border-border/30 hover:border-primary/30 ${
-                        touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
-                      }`}
+                      className={`component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30 hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40 rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select border border-border/30 hover:border-primary/30 ${touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
+                        }`}
                       data-testid={`component-${component.id}`}
                     >
                       <div className={cn("w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover/item:scale-110", component.color)}>

@@ -119,7 +119,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [showAddGroup, setShowAddGroup] = useState(false);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<BotGroup | null>(null);
-  
+
   // Состояние для формы добавления группы
   const [groupUrl, setGroupUrl] = useState('');
   const [groupName, setGroupName] = useState('');
@@ -131,7 +131,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [groupTimezone, setGroupTimezone] = useState('');
   const [groupTags, setGroupTags] = useState<string[]>([]);
   const [groupNotes, setGroupNotes] = useState('');
-  
+
   // Состояние для настроек администрирования
   const [makeAdmin, setMakeAdmin] = useState(false);
   const [isPublicGroup, setIsPublicGroup] = useState(false);
@@ -148,7 +148,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     can_be_anonymous: false,
     can_manage_stories: false
   });
-  
+
   // Состояние для отправки сообщений
   const [] = useState('');
   const [] = useState<'all' | 'admin' | 'member'>('all');
@@ -529,7 +529,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [showTelegramAuth, setShowTelegramAuth] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
-  
+
   /**
    * Состояние разрешений участника группы
    * Включает как основные права участника, так и административные

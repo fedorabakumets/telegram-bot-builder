@@ -48,11 +48,11 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [showFullCode, setShowFullCode] = useState(false);
   const [areAllCollapsed, setAreAllCollapsed] = useState(true);
-  
+
   // Состояние для команд BotFather и валидации
   const [botFatherCommands, setBotFatherCommands] = useState('');
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
-  
+
   // Ссылка на редактор Monaco для управления сворачиванием кода
   const editorRef = useRef<any>(null);
   const { toast } = useToast();
@@ -79,15 +79,15 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
       const isDark = document.documentElement.classList.contains('dark');
       setTheme(isDark ? 'dark' : 'light');
     };
-    
+
     checkTheme();
-    
+
     const observer = new MutationObserver(checkTheme);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class']
     });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -142,7 +142,7 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
     async function loadBotFatherCommands() {
       try {
         const commands = await loadCommands();
-        
+
         let nodes: any[] = [];
         if ((botData as any).sheets && Array.isArray((botData as any).sheets)) {
           (botData as any).sheets.forEach((sheet: any) => {
@@ -154,19 +154,19 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
           nodes = botData.nodes || [];
         }
 
-        const commandNodes = nodes.filter((node: any) => 
-          (node.type === 'start' || node.type === 'command') && 
+        const commandNodes = nodes.filter((node: any) =>
+          (node.type === 'start' || node.type === 'command') &&
           node.data?.command &&
           (node.data?.showInMenu !== false)
         );
-        
+
         const botFatherCmds = commands.generateBotFatherCommands(commandNodes);
         setBotFatherCommands(botFatherCmds);
       } catch (error) {
         console.error('Error loading BotFather commands:', error);
       }
     }
-    
+
     loadBotFatherCommands();
   }, [botData]);
 
@@ -176,10 +176,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
    */
   const botStats = useMemo(() => {
     const allNodes = Array.isArray((botData as any).sheets)
-      ? (botData as any).sheets.reduce((acc: any[], sheet: any) => 
-          acc.concat(sheet.nodes || []), [])
+      ? (botData as any).sheets.reduce((acc: any[], sheet: any) =>
+        acc.concat(sheet.nodes || []), [])
       : botData.nodes || [];
-    
+
     return {
       totalNodes: allNodes.length,
       commandNodes: allNodes.filter((node: any) => node.type === 'start' || node.type === 'command').length,
@@ -187,10 +187,10 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
       photoNodes: allNodes.filter((node: any) => node.type === 'photo').length,
       keyboardNodes: allNodes.filter((node: any) => node.data?.keyboardType !== 'none').length,
       totalButtons: allNodes.reduce((sum: number, node: any) => sum + (node.data?.buttons?.length || 0), 0),
-      commandsInMenu: allNodes.filter((node: any) => 
+      commandsInMenu: allNodes.filter((node: any) =>
         (node.type === 'start' || node.type === 'command') && node.data?.showInMenu
       ).length,
-      adminOnlyCommands: allNodes.filter((node: any) => 
+      adminOnlyCommands: allNodes.filter((node: any) =>
         (node.type === 'start' || node.type === 'command') && node.data?.adminOnly
       ).length,
     };
@@ -201,12 +201,12 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
    * @returns Строка с кодом или пустая строка если контент не загружен
    */
   const getCurrentContent = () => codeContent[selectedFormat] || '';
-  
+
   const content = getCurrentContent();
   const lines = content.split('\n');
   const lineCount = lines.length;
   const MAX_VISIBLE_LINES = 1000;
-  
+
   /**
    * Отображаемый контент с учетом ограничения по количеству строк
    * Обрезает код если он слишком длинный для улучшения производительности
@@ -325,7 +325,7 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
         URL.revokeObjectURL(url);
       }, index * 100);
     });
-    
+
     toast({
       title: "Все файлы загружены!",
       description: "Полный проект бота загружен",
@@ -559,8 +559,8 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         {(selectedFormat === 'python' || selectedFormat === 'json') && (
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="ghost"
                             onClick={toggleAllFunctions}
                             className="h-6 px-2 text-xs"
@@ -571,8 +571,8 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
                         )}
                       </div>
                       {codeStats.truncated && (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => setShowFullCode(true)}
                         >
@@ -595,11 +595,11 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
                         value={displayContent}
                         language={
                           selectedFormat === 'python' ? 'python' :
-                          selectedFormat === 'json' ? 'json' :
-                          selectedFormat === 'readme' ? 'markdown' :
-                          selectedFormat === 'dockerfile' ? 'dockerfile' :
-                          selectedFormat === 'config' ? 'yaml' :
-                          'plaintext'
+                            selectedFormat === 'json' ? 'json' :
+                              selectedFormat === 'readme' ? 'markdown' :
+                                selectedFormat === 'dockerfile' ? 'dockerfile' :
+                                  selectedFormat === 'config' ? 'yaml' :
+                                    'plaintext'
                         }
                         theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
                         onMount={(editor) => {
@@ -652,28 +652,28 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <Button 
-                      size="lg" 
-                      onClick={async () => { setSelectedFormat('python'); await downloadFile(); }} 
-                      variant="outline" 
+                    <Button
+                      size="lg"
+                      onClick={async () => { setSelectedFormat('python'); await downloadFile(); }}
+                      variant="outline"
                       className="h-auto p-4 flex-col space-y-2"
                     >
                       <i className="fas fa-code text-2xl text-blue-500"></i>
                       <span className="font-medium">Python код</span>
                     </Button>
-                    
-                    <Button 
-                      size="lg" 
-                      onClick={async () => { setSelectedFormat('json'); await downloadFile(); }} 
-                      variant="outline" 
+
+                    <Button
+                      size="lg"
+                      onClick={async () => { setSelectedFormat('json'); await downloadFile(); }}
+                      variant="outline"
                       className="h-auto p-4 flex-col space-y-2"
                     >
                       <i className="fas fa-database text-2xl text-green-500"></i>
                       <span className="font-medium">JSON данные</span>
                     </Button>
 
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       onClick={downloadAllFiles}
                       className="h-auto p-4 flex-col space-y-2 md:col-span-2"
                     >

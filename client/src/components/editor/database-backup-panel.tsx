@@ -87,7 +87,7 @@ export function DatabaseBackupPanel() {
   const [isUploading, setIsUploading] = useState(false);
   const [showBackupDialog, setShowBackupDialog] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

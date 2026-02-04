@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Smile, 
-  Heart, 
-  Star, 
-  Zap, 
+import {
+  Smile,
+  Heart,
+  Star,
+  Zap,
   Search,
   Copy,
   Sparkles
@@ -255,7 +255,7 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
    */
   const filteredEmojis = emojiCategories.map(category => ({
     ...category,
-    emojis: category.emojis.filter(emoji => 
+    emojis: category.emojis.filter(emoji =>
       !searchTerm || emoji.includes(searchTerm)
     )
   }));
@@ -266,8 +266,8 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
    */
   const filteredSymbols = symbolCategories.map(category => ({
     ...category,
-    symbols: category.symbols.filter(item => 
-      !searchTerm || 
+    symbols: category.symbols.filter(item =>
+      !searchTerm ||
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.symbol.includes(searchTerm)
@@ -293,7 +293,7 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
           <TabsList className="grid w-full grid-cols-3">
