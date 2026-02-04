@@ -2751,9 +2751,16 @@ export function PropertiesPanel({
                             {/* Информационное сообщение */}
                             <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
                               <i className="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
-                              <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
-                                Функция работы с медиафайлами полностью недоступна. Раздел находится в разработке.
-                              </p>
+                              <div className="space-y-2">
+                                <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
+                                  <span className="font-semibold">⚠️ Раздел в разработке</span>
+                                </p>
+                                <ul className="text-xs sm:text-sm text-amber-600 dark:text-amber-400 space-y-1 pl-4 list-disc">
+                                  <li>✅ Прикрепление изображений по URL</li>
+                                  <li>✅ Inline-кнопки</li>
+                                  <li>❌ Остальные типы связей (для узлов с изображениями) (в разработке)</li>
+                                </ul>
+                              </div>
                             </div>
 
                             {/* Media Selector */}
