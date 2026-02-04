@@ -15,12 +15,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
 
     replyNodes.forEach(node => {
       (node.data.buttons || []).forEach((button: any) => {
-        if (button.action === 'goto' && button.target) {
-          const buttonText = button.text;
+        const buttonText = button.text;
 
-          // Избегаем дублирования обработяиков
-          if (processedReplyButtons.has(buttonText)) return;
-          processedReplyButtons.add(buttonText);
+        // Избегаем дублирования обработчиков
+        if (processedReplyButtons.has(buttonText)) return;
+        processedReplyButtons.add(buttonText);
+
+        // Обрабатываем все типы кнопок, не только goto
+        if (button.action === 'goto' && button.target) {
 
           // Находим целевой узел
           const targetNode = (nodes || []).find(n => n.id === button.target);
@@ -221,6 +223,30 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               }
             }
           }
+        } else {
+          // Обработка кнопок без action='goto' или без target
+          code += `\n@dp.message(lambda message: message.text == "${buttonText}")\n`;
+          // Создаем безопасное имя функции на основе button ID или текста
+          const safeFunctionName = (button.id || buttonText).replace(/[^a-zA-Z0-9_]/g, '_');
+          code += `async def handle_reply_${safeFunctionName}(message: types.Message):\n`;
+          
+          // Генерируем простой ответ
+          code += `    text = "Вы нажали на кнопку: ${buttonText}"\n`;
+          code += '    user_id = message.from_user.id\n';
+          code += '    \n';
+          
+          // Инициализация переменных пользователя
+          code += '    # Инициализируем базовые переменные пользователя если их нет\n';
+          code += '    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):\n';
+          code += '        user_obj = message.from_user\n';
+          code += '        if user_obj:\n';
+          code += '            init_user_variables(user_id, user_obj)\n';
+          code += '    \n';
+          
+          code += generateUniversalVariableReplacement('    ');
+          
+          // Отправляем ответ и убираем клавиатуру
+          code += '    await message.answer(text, reply_markup=ReplyKeyboardRemove())\n';
         }
       });
     });

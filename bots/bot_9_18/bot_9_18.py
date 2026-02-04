@@ -41,97 +41,6 @@ import json
 import aiohttp
 from aiohttp import TCPConnector
 
-# Safe helper for editing messages with fallback to new message
-async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, **kwargs):
-    """
-    Безопасное редактирование сообщения с fallback на новое сообщение
-    При автопереходе сразу отправляет новое сообщение без попытки редактирования
-    """
-    result = None
-    user_id = None
-    
-    # Получаем user_id для сохранения
-    if hasattr(cbq, "from_user") and cbq.from_user:
-        user_id = str(cbq.from_user.id)
-    elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):
-        user_id = str(cbq.message.chat.id)
-    
-    try:
-        # При автопереходе сразу отправляем новое сообщение без редактирования
-        if is_auto_transition:
-            logging.info(f"⚡ Автопереход: отправляем новое сообщение вместо редактирования")
-            if hasattr(cbq, "message") and cbq.message:
-                result = await cbq.message.answer(text, **kwargs)
-            else:
-                raise Exception("Cannot send message in auto-transition")
-        else:
-            # Пробуем редактировать сообщение
-            if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):
-                result = await cbq.edit_text(text, **kwargs)
-            elif (hasattr(cbq, "message") and cbq.message):
-                result = await cbq.message.edit_text(text, **kwargs)
-            else:
-                raise Exception("No valid edit method found")
-    except Exception as e:
-        # При любой ошибке отправляем новое сообщение
-        if is_auto_transition:
-            logging.info(f"⚡ Автопереход: {e}, отправляем новое сообщение")
-        else:
-            logging.warning(f"Не удалось отредактировать сообщение: {e}, отправляем новое")
-        if hasattr(cbq, "message") and cbq.message:
-            result = await cbq.message.answer(text, **kwargs)
-        else:
-            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")
-            raise
-    
-    # Сохраняем сообщение в базу данных
-    if result and user_id:
-        message_data_obj = {"message_id": result.message_id if hasattr(result, "message_id") else None}
-        
-        # Извлекаем кнопки из reply_markup
-        if "reply_markup" in kwargs:
-            try:
-                reply_markup = kwargs["reply_markup"]
-                buttons_data = []
-                # Обработка inline клавиатуры
-                if hasattr(reply_markup, "inline_keyboard"):
-                    for row in reply_markup.inline_keyboard:
-                        for btn in row:
-                            button_info = {"text": btn.text}
-                            if hasattr(btn, "url") and btn.url:
-                                button_info["url"] = btn.url
-                            if hasattr(btn, "callback_data") and btn.callback_data:
-                                button_info["callback_data"] = btn.callback_data
-                            buttons_data.append(button_info)
-                    if buttons_data:
-                        message_data_obj["buttons"] = buttons_data
-                        message_data_obj["keyboard_type"] = "inline"
-                # Обработка reply клавиатуры
-                elif hasattr(reply_markup, "keyboard"):
-                    for row in reply_markup.keyboard:
-                        for btn in row:
-                            button_info = {"text": btn.text}
-                            if hasattr(btn, "request_contact") and btn.request_contact:
-                                button_info["request_contact"] = True
-                            if hasattr(btn, "request_location") and btn.request_location:
-                                button_info["request_location"] = True
-                            buttons_data.append(button_info)
-                    if buttons_data:
-                        message_data_obj["buttons"] = buttons_data
-                        message_data_obj["keyboard_type"] = "reply"
-            except Exception as btn_error:
-                logging.warning(f"Не удалось извлечь кнопки в safe_edit_or_send: {btn_error}")
-        
-        await save_message_to_api(
-            user_id=user_id,
-            message_type="bot",
-            message_text=text,
-            node_id=node_id,
-            message_data=message_data_obj
-        )
-    
-    return result
-
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = "7713154819:AAEpLG7wuSPtzAto90fcxz5z0UN1evvXafE"
 
@@ -345,44 +254,6 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
     
     # Продолжаем обработку сообщения
-    return await handler(event, data)
-
-# Middleware для сохранения нажатий на кнопки
-async def callback_query_logging_middleware(handler, event: types.CallbackQuery, data: dict):
-    """Middleware для автоматического сохранения нажатий на кнопки"""
-    try:
-        user_id = str(event.from_user.id)
-        callback_data = event.data or ""
-        
-        # Пытаемся найти текст кнопки из сообщения
-        button_text = None
-        if event.message and hasattr(event.message, "reply_markup"):
-            reply_markup = event.message.reply_markup
-            if hasattr(reply_markup, "inline_keyboard"):
-                for row in reply_markup.inline_keyboard:
-                    for btn in row:
-                        if hasattr(btn, "callback_data") and btn.callback_data == callback_data:
-                            button_text = btn.text
-                            break
-                    if button_text:
-                        break
-        
-        # Сохраняем информацию о нажатии кнопки
-        message_text_to_save = f"[Нажата кнопка: {button_text}]" if button_text else "[Нажата кнопка]"
-        await save_message_to_api(
-            user_id=user_id,
-            message_type="user",
-            message_text=message_text_to_save,
-            message_data={
-                "button_clicked": True,
-                "button_text": button_text,
-                "callback_data": callback_data
-            }
-        )
-    except Exception as e:
-        logging.error(f"Ошибка в middleware сохранения нажатий кнопок: {e}")
-    
-    # Продолжаем обработку callback query
     return await handler(event, data)
 
 # Обертка для сохранения исходящих сообщений
@@ -975,11 +846,9 @@ async def start_handler(message: types.Message):
     has_regular_buttons = True
     has_input_collection = False
     # DEBUG: Узел start - hasRegularButtons=True, hasInputCollection=False
-    # Создаем inline клавиатуру с кнопками
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="AoHjXk0_Tz4gVuau5zj-m"))
-    builder.adjust(1)
-    keyboard = builder.as_markup()
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="Новая кнопка"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
     await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="start")
 # @@NODE_END:start@@
 
@@ -1077,9 +946,9 @@ async def start_handler(message: types.Message):
     await bot.send_photo(message.chat.id, image_url, caption=text, node_id="eWKsWq0y8Xlm39S9JEf1g")
 # @@NODE_END:eWKsWq0y8Xlm39S9JEf1g@@
 
-# Обработчики inline кнопок
+# Обработчики автопереходов
 
-@dp.callback_query(lambda c: c.data == "AoHjXk0_Tz4gVuau5zj-m" or c.data.startswith("AoHjXk0_Tz4gVuau5zj-m_btn_"))
+@dp.callback_query(lambda c: c.data == "AoHjXk0_Tz4gVuau5zj-m" or c.data.startswith("AoHjXk0_Tz4gVuau5zj-m_btn_") or c.data == "done_gVuau5zj-m")
 async def handle_callback_AoHjXk0_Tz4gVuau5zj_m(callback_query: types.CallbackQuery):
     # Безопасное получение данных из callback_query
     try:
@@ -1091,7 +960,7 @@ async def handle_callback_AoHjXk0_Tz4gVuau5zj_m(callback_query: types.CallbackQu
         return
     
     # Проверяем флаг hideAfterClick для кнопок
-    # Обработка hideAfterClick не применяется в этом обработчике, так как он используется для специальных кнопок
+    
     
     # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
     try:
@@ -1102,15 +971,13 @@ async def handle_callback_AoHjXk0_Tz4gVuau5zj_m(callback_query: types.CallbackQu
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    button_text = "Новая кнопка"
+    # Устанавливаем флаг collectUserInput для узла AoHjXk0_Tz4gVuau5zj-m
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_AoHjXk0_Tz4gVuau5zj-m"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла AoHjXk0_Tz4gVuau5zj-m: false")
     
-    # Сохраняем кнопку в базу данных
-    timestamp = get_moscow_time()
-    response_data = button_text  # Простое значение
-    await update_user_data_in_db(user_id, button_text, response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
-    
-    # Отправляем сообщение для узла AoHjXk0_Tz4gVuau5zj-m
+    # Обрабатываем узел AoHjXk0_Tz4gVuau5zj-m: AoHjXk0_Tz4gVuau5zj-m
     text = "Новое сообщение"
     
     # Инициализируем базовые переменные пользователя если их нет
@@ -1135,26 +1002,41 @@ async def handle_callback_AoHjXk0_Tz4gVuau5zj_m(callback_query: types.CallbackQu
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Create reply keyboard
+    # Удаляем старое сообщение и отправляем новое с reply клавиатурой
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text=" кнопка 2"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    # Для reply клавиатуры нужно отправить новое сообщение
+    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
     
-    # Без условных сообщений - используем обычную клавиатуру
-    keyboard = None
-    # Проверяем, есть ли условная клавиатура
-    if keyboard is None:
-        # Создаем inline клавиатуру
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text=" кнопка 2", callback_data="help"))
-        builder.adjust(1)
-        keyboard = builder.as_markup()
-    # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового
-    if user_id in user_data and "_delete_reply_message_id" in user_data[user_id]:
-        try:
-            await bot.delete_message(user_id, user_data[user_id]["_delete_reply_message_id"])
-            logging.info(f"🗑️ Reply сообщение удалено перед отправкой новогя")
-            del user_data[user_id]["_delete_reply_message_id"]
-        except Exception as e:
-            logging.debug(f"Не удалось удалить reply сообщение: {e}")
+    # Узел AoHjXk0_Tz4gVuau5zj-m имеет collectUserInput=false - НЕ устанавливаем waiting_for_input
+    logging.info(f"ℹ️ Узел AoHjXk0_Tz4gVuau5zj-m не собирает ответы (collectUserInput=false)")
+    return  # Возвращаемся чтобы не отправить сообщение дважды
     
-    # Отправляем сообщение (с пяяоверкой прякрепленного медиа)
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Устанавливаем переменную изображения для узла
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["image_url_AoHjXk0_Tz4gVuau5zj-m"] = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
+    await update_user_data_in_db(user_id, "image_url_AoHjXk0_Tz4gVuau5zj-m", "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg")
+    logging.info(f"✅ Переменная image_url_AoHjXk0_Tz4gVuau5zj-m установлена: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg")
+    
+    # Отправляем сообщение (с проверкой прикрепленного медиа)
     # Узел содержит статическое изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
     static_image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     
@@ -1167,40 +1049,84 @@ async def handle_callback_AoHjXk0_Tz4gVuau5zj_m(callback_query: types.CallbackQu
         logging.error(f"Ошибка отправки статического изображения: {e}")
         # Fallback на обычное сообщение при ошибке
         await safe_edit_or_send(callback_query, text, node_id="AoHjXk0_Tz4gVuau5zj-m", reply_markup=keyboard if keyboard is not None else None)
-
-@dp.callback_query(lambda c: c.data == "help" or c.data.startswith("help_btn_"))
-async def handle_callback_help(callback_query: types.CallbackQuery):
-    # Безопасное получение данных из callback_query
-    try:
-        user_id = callback_query.from_user.id
-        callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_help для пользователя {user_id}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_help: {e}")
-        return
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "button",
+        "modes": ["button"],
+        "variable": "response_AoHjXk0_Tz4gVuau5zj-m",
+        "save_to_database": True,
+        "node_id": "AoHjXk0_Tz4gVuau5zj-m",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['button'] для переменной response_AoHjXk0_Tz4gVuau5zj-m (узел AoHjXk0_Tz4gVuau5zj-m)")
+    user_id = callback_query.from_user.id
     
-    # Проверяем флаг hideAfterClick для кнопок
-    # Обработка hideAfterClick не применяется в этом обработчике, так как он используется для специальных кнопок
+    # Сохраняем нажатие кнопки в базу данных
+    # Ищем текят кнопки по callback_data
+    button_display_text = "Новая кнопка"
     
-    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
-    
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, callback_query.from_user)
-    
-    button_text = " кнопка 2"
-    
-    # Сохраняем кнопку в базу данных
+    # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
-    response_data = button_text  # Простое значение
-    await update_user_data_in_db(user_id, button_text, response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
-    # Обрабатываем узел start: eWKsWq0y8Xlm39S9JEf1g
-    text = "Привет! Добро пожаловать!"
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура
+    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
+    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if not has_conditional_keyboard_for_save:
+        # Сохраняем в базу данных с правильным именем переяенной
+        await update_user_data_in_db(user_id, "button_click", button_display_text)
+        logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    else:
+        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
+    
+    
+    return
+
+# Обработчики reply кнопок
+
+@dp.message(lambda message: message.text == "Новая кнопка")
+async def handle_reply_P6YtnczTNVKGKLudn1aPh(message: types.Message):
+    text = "Новое сообщение"
+    user_id = message.from_user.id
+    skip_collection = False
+    
+    if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
+        waiting_config = user_data[user_id]["waiting_for_input"]
+        modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
+        waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
+        if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
+            variable_name = waiting_config.get("variable", "button_response")
+            button_text = "Новая кнопка"
+            logging.info(f"💾 Сохраняем ответ кнопки в переменную: {variable_name} = {button_text} (modes: {modes}, waiting_node: {waiting_node_id})")
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id][variable_name] = button_text
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, variable_name, button_text)
+            if saved_to_db:
+                logging.info(f"✅ Ответ кнопки сохранён в БД: {variable_name} = {button_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            # Очищаем состояние ожидания после сохранения
+            logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
+            del user_data[user_id]["waiting_for_input"]
+        elif isinstance(waiting_config, dict):
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
+    elif skip_collection:
+        logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -1224,20 +1150,13 @@ async def handle_callback_help(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text=" кнопка 2"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
     
-    # Без условных сообщений - используем обычную клавиатуру
-    keyboard = None
-    # Отправляем сообщение start узла
-    try:
-        if keyboard is not None:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, is_auto_transition=True)
-        else:
-            await safe_edit_or_send(callback_query, text, is_auto_transition=True)
-    except Exception:
-        if keyboard is not None:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
+    # Узел AoHjXk0_Tz4gVuau5zj-m имеет collectUserInput=false - НЕ устанавливаем waiting_for_input
+    logging.info(f"ℹ️ Узел AoHjXk0_Tz4gVuau5zj-m не собирает ответы (collectUserInput=false)")
+    await message.answer(text, reply_markup=keyboard)
 
 
 # Обработчики для работы с группами
@@ -1439,7 +1358,6 @@ async def main():
         
         # Регистрация middleware для сохранения сообщений
         dp.message.middleware(message_logging_middleware)
-        dp.callback_query.middleware(callback_query_logging_middleware)
         
         print("🤖 Бот запущен и готов к работе!")
         await dp.start_polling(bot)
