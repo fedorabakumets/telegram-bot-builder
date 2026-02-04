@@ -2706,7 +2706,6 @@ export function PropertiesPanel({
                           onChange={(value) => onNodeUpdate(selectedNode.id, { messageText: value })}
                           placeholder="Введите текст сообщения..."
                           enableMarkdown={selectedNode.data.markdown}
-                          onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
                           onFormatModeChange={(formatMode) => onNodeUpdate(selectedNode.id, { formatMode })}
                           availableVariables={[...textVariables, ...mediaVariables]}
                           onMediaVariableSelect={handleMediaVariableSelect}
@@ -4199,13 +4198,6 @@ export function PropertiesPanel({
                                             }}
                                             placeholder="Добро пожаловать обратно! Рады вас снова видеть."
                                             enableMarkdown={condition.formatMode === 'markdown'}
-                                            onMarkdownToggle={(enabled) => {
-                                              const currentConditions = selectedNode.data.conditionalMessages || [];
-                                              const updatedConditions = currentConditions.map(c =>
-                                                c.id === condition.id ? { ...c, formatMode: (enabled ? 'markdown' : 'text') as 'text' | 'markdown' | 'html' } : c
-                                              );
-                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                            }}
                                             availableVariables={textVariables}
                                           />
 
