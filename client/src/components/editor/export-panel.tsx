@@ -651,6 +651,36 @@ export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabl
                   <CardDescription>Скачайте готовые файлы проекта</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Информация о статусе форматов */}
+                  <div className="space-y-3 p-4 rounded-lg bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/40">
+                    <div className="flex items-start gap-2">
+                      <i className="fas fa-info-circle text-blue-600 dark:text-blue-400 text-sm mt-0.5 flex-shrink-0"></i>
+                      <div className="space-y-2 text-sm">
+                        <p className="text-blue-700 dark:text-blue-300 font-medium">Статус генераторов файлов:</p>
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex items-center gap-2">
+                            <i className="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                            <span className="text-blue-700 dark:text-blue-300">
+                              <strong>JSON формат</strong> - работает на 100%, можно использовать для обмена проектами
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <i className="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400"></i>
+                            <span className="text-blue-700 dark:text-blue-300">
+                              <strong>Python скрипт</strong> - может содержать проблемы
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <i className="fas fa-flask text-amber-600 dark:text-amber-400"></i>
+                            <span className="text-blue-700 dark:text-blue-300">
+                              <strong>Остальные файлы</strong> - генераторы находятся в тестовом режиме
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <Button
                       size="lg"
