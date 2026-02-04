@@ -1199,8 +1199,45 @@ async def handle_callback_help(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
-    # Кнопка пока никуда не ведет
-    await callback_query.answer("⚠️ Эта кнопка яока не настроена", show_alert=True)
+    # Обрабатываем узел start: eWKsWq0y8Xlm39S9JEf1g
+    text = "Привет! Добро пожаловать!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Отправляем сообщение start узла
+    try:
+        if keyboard is not None:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, is_auto_transition=True)
+        else:
+            await safe_edit_or_send(callback_query, text, is_auto_transition=True)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
 
 
 # Обработчики для работы с группами

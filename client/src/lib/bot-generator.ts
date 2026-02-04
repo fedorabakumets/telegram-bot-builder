@@ -6237,16 +6237,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
               // Отправляем сообщение start узла
               code += '    # Отправляем сообщение start узла\n';
-              code += '    try:\n';
-              code += '        if keyboard is not None:\n';
-              code += `            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, is_auto_transition=True${parseMode})\n`;
-              code += '        else:\n';
-              code += `            await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseMode})\n`;
-              code += '    except Exception:\n';
-              code += '        if keyboard is not None:\n';
-              code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
-              code += '        else:\n';
-              code += `            await callback_query.message.answer(text${parseMode})\n`;
+              
+              // ИСПРАВЛЕНИЕ: Проверяем наличие изображения в узле
+              if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+                code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
+                code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                code += '    try:\n';
+                code += '        if keyboard is not None:\n';
+                code += `            await bot.send_photo(callback_query.from_user.id, image_url, caption=text, reply_markup=keyboard, node_id="${actualNodeId}"${parseMode})\n`;
+                code += '        else:\n';
+                code += `            await bot.send_photo(callback_query.from_user.id, image_url, caption=text, node_id="${actualNodeId}"${parseMode})\n`;
+                code += '    except Exception:\n';
+                code += '        # Fallback на обычное сообщение при ошибке\n';
+                code += '        if keyboard is not None:\n';
+                code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
+                code += '        else:\n';
+                code += `            await callback_query.message.answer(text${parseMode})\n`;
+              } else {
+                // Обычное текстовое сообщение
+                code += '    try:\n';
+                code += '        if keyboard is not None:\n';
+                code += `            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, is_auto_transition=True${parseMode})\n`;
+                code += '        else:\n';
+                code += `            await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseMode})\n`;
+                code += '    except Exception:\n';
+                code += '        if keyboard is not None:\n';
+                code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
+                code += '        else:\n';
+                code += `            await callback_query.message.answer(text${parseMode})\n`;
+              }
 
             /**
              * БЛОК 10: Обработка command узлов
@@ -6290,17 +6309,40 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
                 code += `    builder.adjust(${columns})\n`;
                 code += '    keyboard = builder.as_markup()\n';
-                code += '    # Отправляем сообщение command узла с клавиатурой\n';
-                code += '    try:\n';
-                code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard, is_auto_transition=True${parseMode})\n`;
-                code += '    except Exception:\n';
-                code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
+                
+                // ИСПРАВЛЕНИЕ: Проверяем наличие изображения в command узле
+                if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+                  code += `    # Узел command содержит изображение: ${targetNode.data.imageUrl}\n`;
+                  code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                  code += '    # Отправляем сообщение command узла с изображением и клавиатурой\n';
+                  code += '    try:\n';
+                  code += `        await bot.send_photo(callback_query.from_user.id, image_url, caption=text, reply_markup=keyboard, node_id="${actualNodeId}"${parseMode})\n`;
+                  code += '    except Exception:\n';
+                  code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
+                } else {
+                  code += '    # Отправляем сообщение command узла с клавиатурой\n';
+                  code += '    try:\n';
+                  code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard, is_auto_transition=True${parseMode})\n`;
+                  code += '    except Exception:\n';
+                  code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
+                }
               } else {
-                code += '    # Отправляем сообщение command узла без клавиатуры\n';
-                code += '    try:\n';
-                code += `        await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseMode})\n`;
-                code += '    except Exception:\n';
-                code += `        await callback_query.message.answer(text${parseMode})\n`;
+                // ИСПРАВЛЕНИЕ: Проверяем наличие изображения в command узле без клавиатуры
+                if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+                  code += `    # Узел command содержит изображение: ${targetNode.data.imageUrl}\n`;
+                  code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                  code += '    # Отправляем сообщение command узла с изображением\n';
+                  code += '    try:\n';
+                  code += `        await bot.send_photo(callback_query.from_user.id, image_url, caption=text, node_id="${actualNodeId}"${parseMode})\n`;
+                  code += '    except Exception:\n';
+                  code += `        await callback_query.message.answer(text${parseMode})\n`;
+                } else {
+                  code += '    # Отправляем сообщение command узла без клавиатуры\n';
+                  code += '    try:\n';
+                  code += `        await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseMode})\n`;
+                  code += '    except Exception:\n';
+                  code += `        await callback_query.message.answer(text${parseMode})\n`;
+                }
               }
 
             /**
