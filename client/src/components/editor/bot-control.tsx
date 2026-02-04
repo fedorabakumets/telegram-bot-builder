@@ -1107,6 +1107,14 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                       />
                     </div>
 
+                    {/* Предупреждение о переключателе логов */}
+                    <div className="sm:col-span-2 flex items-start gap-2 p-2.5 sm:p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
+                      <i className="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
+                      <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
+                        Переключатель логов может не работать при тестировке
+                      </p>
+                    </div>
+
                     {/* Execution Timer */}
                     {isThisTokenRunning && (
                       <div className={`sm:col-span-2 flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border bg-gradient-to-r from-amber-500/8 to-orange-500/8 border-amber-500/30 dark:from-amber-500/10 dark:to-orange-500/10 dark:border-amber-500/40`} data-testid="timer-display-bot-card">
