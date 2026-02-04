@@ -253,8 +253,8 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
                       )}
 
                       <div className={`rounded-lg px-3 py-2 ${isBot
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100'
-                          : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
+                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100'
+                        : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
                         }`}>
                         <p className="text-sm whitespace-pre-wrap break-words">
                           {message?.messageText ? String(message.messageText) : ''}
