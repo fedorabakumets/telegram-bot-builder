@@ -2925,7 +2925,7 @@ export function PropertiesPanel({
                                 </p>
                               </div>
                             )}
-                            
+
                             <div className="flex items-start gap-2.5 sm:gap-3">
                               <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-teal-200/50 dark:bg-teal-900/40 group-hover:bg-teal-300/50 dark:group-hover:bg-teal-800/50 transition-all">
                                 <i className="fas fa-tag text-xs sm:text-sm text-teal-600 dark:text-teal-400"></i>
@@ -5801,6 +5801,10 @@ export function PropertiesPanel({
                       <span className="truncate inline xs:hidden">Приватные чаты</span>
                     </Label>
                     <div className="text-xs text-warning-600 dark:text-warning-400 mt-0.5">Работает только в личных сообщениях</div>
+                    <div className="flex items-center gap-1 mt-1">
+                      <i className="fas fa-exclamation-triangle text-amber-500 text-xs"></i>
+                      <span className="text-xs text-amber-600 dark:text-amber-400">Временно не работает</span>
+                    </div>
                   </div>
                   <div className="flex-shrink-0">
                     <Switch
@@ -5818,6 +5822,10 @@ export function PropertiesPanel({
                       Только администраторы
                     </Label>
                     <div className="text-xs text-destructive-600 dark:text-destructive-400 mt-0.5">Доступна только админам и владельцу</div>
+                    <div className="flex items-center gap-1 mt-1">
+                      <i className="fas fa-exclamation-triangle text-amber-500 text-xs"></i>
+                      <span className="text-xs text-amber-600 dark:text-amber-400">Временно не работает</span>
+                    </div>
                   </div>
                   <div className="flex-shrink-0">
                     <Switch
