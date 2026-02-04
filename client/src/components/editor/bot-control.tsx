@@ -115,16 +115,16 @@ interface BotInfo {
  */
 function formatExecutionTime(seconds: number): string {
   if (seconds === 0) return 'Нет данных';
-  
+
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  
+
   const parts = [];
   if (hours > 0) parts.push(`${hours}ч`);
   if (minutes > 0) parts.push(`${minutes}м`);
   if (secs > 0 && hours === 0) parts.push(`${secs}с`);
-  
+
   return parts.length > 0 ? parts.join(' ') : '0с';
 }
 
@@ -135,19 +135,19 @@ function formatExecutionTime(seconds: number): string {
  * @param size - Размер аватарки в пикселях
  * @param className - Дополнительные CSS классы
  */
-function BotAvatar({ 
-  photoUrl, 
-  botName, 
-  size = 40, 
-  className = "" 
-}: { 
-  photoUrl?: string | null; 
-  botName: string; 
-  size?: number; 
-  className?: string; 
+function BotAvatar({
+  photoUrl,
+  botName,
+  size = 40,
+  className = ""
+}: {
+  photoUrl?: string | null;
+  botName: string;
+  size?: number;
+  className?: string;
 }) {
   const [imageError, setImageError] = useState(false);
-  
+
   // Получаем первые буквы названия бота для fallback
   const initials = botName
     .split(' ')
@@ -155,21 +155,21 @@ function BotAvatar({
     .join('')
     .toUpperCase()
     .slice(0, 2);
-  
+
   const handleImageError = () => {
     setImageError(true);
   };
-  
+
   // Если есть аватарка, показываем её
   const showImage = photoUrl && !imageError;
-  
+
   if (showImage) {
     return (
-      <div 
+      <div
         className={`relative rounded-lg overflow-hidden flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
       >
-        <img 
+        <img
           src={photoUrl}
           alt={`${botName} avatar`}
           className="w-full h-full object-cover"
@@ -178,24 +178,24 @@ function BotAvatar({
       </div>
     );
   }
-  
+
   // Fallback: показываем инициалы или иконку бота
   return (
-    <div 
+    <div
       className={`bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
       style={{ width: size, height: size }}
     >
       {initials ? (
-        <span 
+        <span
           className="text-white font-semibold"
           style={{ fontSize: size * 0.4 }}
         >
           {initials}
         </span>
       ) : (
-        <Bot 
-          className="text-white" 
-          size={size * 0.5} 
+        <Bot
+          className="text-white"
+          size={size * 0.5}
         />
       )}
     </div>
@@ -208,14 +208,14 @@ function BotAvatar({
  * @param botInfo - Информация о боте
  * @param onProfileUpdated - Колбэк при обновлении профиля
  */
-function BotProfileEditor({ 
-  projectId, 
-  botInfo, 
-  onProfileUpdated 
-}: { 
-  projectId: number; 
-  botInfo?: BotInfo | null; 
-  onProfileUpdated: () => void; 
+function BotProfileEditor({
+  projectId,
+  botInfo,
+  onProfileUpdated
+}: {
+  projectId: number;
+  botInfo?: BotInfo | null;
+  onProfileUpdated: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
@@ -230,7 +230,7 @@ function BotProfileEditor({
       setShortDescription(botInfo.short_description || '');
     }
   }, [botInfo]);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -245,11 +245,11 @@ function BotProfileEditor({
         title: "Успешно",
         description: "Имя бота обновлено. Перезапускаем бота для применения изменений...",
       });
-      
+
       try {
         // Перезапускаем бота для применения нового имени
         await apiRequest('POST', `/api/projects/${projectId}/bot/restart`);
-        
+
         toast({
           title: "Готово!",
           description: "Бот перезапущен с новым именем",
@@ -258,7 +258,7 @@ function BotProfileEditor({
         // Если перезапуск не удался, просто обновляем данные
         console.warn('Не удалось перезапустить бота:', error);
       }
-      
+
       // Инвалидируем кэш и сразу перезагружаем данные
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       onProfileUpdated();
@@ -341,7 +341,7 @@ function BotProfileEditor({
       if (shortDescription !== (botInfo.short_description || '')) {
         await updateShortDescriptionMutation.mutateAsync(shortDescription);
       }
-      
+
       setIsOpen(false);
       // Принудительно обновляем данные после сохранения всех изменений
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
@@ -364,10 +364,10 @@ function BotProfileEditor({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-8 w-8 p-0" 
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
           data-testid="button-edit-bot-profile"
           disabled={!botInfo}
           title={!botInfo ? "Загрузка информации о боте..." : "Редактировать профиль бота"}
@@ -379,7 +379,7 @@ function BotProfileEditor({
         <DialogHeader>
           <DialogTitle>Редактировать профиль бота</DialogTitle>
         </DialogHeader>
-        
+
         {/* Предупреждение о тестовом режиме */}
         <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
           <i className="fas fa-flask text-amber-600 dark:text-amber-400 text-sm mt-0.5 flex-shrink-0"></i>
@@ -392,9 +392,9 @@ function BotProfileEditor({
             </p>
           </div>
         </div>
-        
+
         <div className="space-y-4">
-          
+
           <div className="space-y-2">
             <Label htmlFor="bot-name">Имя бота</Label>
             <Input
@@ -439,15 +439,15 @@ function BotProfileEditor({
           </div>
 
           <div className="flex gap-2 justify-end">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleCancel}
               disabled={isLoading}
             >
               <X className="h-4 w-4 mr-2" />
               Отмена
             </Button>
-            <Button 
+            <Button
               onClick={handleSave}
               disabled={isLoading}
             >
@@ -483,17 +483,17 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const [editName, setEditName] = useState('');
   /** Редактируемое описание */
   const [editDescription, setEditDescription] = useState('');
-  
+
   // Состояние inline редактирования
   /** Редактируемое поле */
-  const [editingField, setEditingField] = useState<{tokenId: number, field: string} | null>(null);
+  const [editingField, setEditingField] = useState<{ tokenId: number, field: string } | null>(null);
   /** Значение редактируемого поля */
   const [editValue, setEditValue] = useState('');
-  
+
   // Состояние таймера для работающего бота
   /** Текущее время работы бота в секундах */
   const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState(0);
-  
+
   // Состояние логгера - читается из localStorage
   /** Включены ли логи генератора */
   const [generatorLogsEnabled, setGeneratorLogsEnabled] = useState(() => {
@@ -515,7 +515,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       description: enabled ? 'Теперь вы видите логи генерации кода в консоли' : 'Логи генерации скрыты',
     });
   };
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -553,7 +553,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
    */
   const handleSaveEdit = () => {
     if (!editingField) return;
-    
+
     const trimmedValue = editValue.trim();
     if (trimmedValue) {
       updateBotInfoMutation.mutate({
@@ -628,14 +628,14 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
 
   // Toggle user database enabled mutation
   const toggleDatabaseMutation = useMutation({
-    mutationFn: (enabled: boolean) => 
+    mutationFn: (enabled: boolean) =>
       apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
     onSuccess: (_, enabled) => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
       toast({
         title: enabled ? "База данных включена" : "База данных выключена",
-        description: enabled 
-          ? "Функции работы с базой данных пользователей будут генерироваться в коде бота." 
+        description: enabled
+          ? "Функции работы с базой данных пользователей будут генерироваться в коде бота."
           : "Функции работы с базой данных НЕ будут генерироваться в коде бота.",
       });
     },
@@ -674,21 +674,21 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     },
     onError: (error: any) => {
       setIsParsingBot(false);
-      toast({ 
-        title: 'Ошибка получения информации о боте', 
+      toast({
+        title: 'Ошибка получения информации о боте',
         description: error.message || 'Проверьте правильность токена',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   });
 
   // Создание бота/токена
   const createBotMutation = useMutation({
-    mutationFn: async (botData: { 
-      name: string; 
-      token: string; 
+    mutationFn: async (botData: {
+      name: string;
+      token: string;
       description?: string;
-      isDefault: number; 
+      isDefault: number;
       isActive: number;
       botFirstName?: string;
       botUsername?: string;
@@ -700,16 +700,16 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       botSupportsInlineQueries?: number;
       botHasMainWebApp?: number;
     }) => {
-      return apiRequest('POST', `/api/projects/${projectId}/tokens`, { 
-        ...botData, 
-        projectId 
+      return apiRequest('POST', `/api/projects/${projectId}/tokens`, {
+        ...botData,
+        projectId
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
       // Инвалидируем bot/info cache чтобы загрузить свежие данные нового токена
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      toast({ 
+      toast({
         title: 'Бот успешно добавлен',
         description: 'Информация о боте автоматически получена из Telegram'
       });
@@ -804,10 +804,10 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
 
   const getStatusBadge = (token: BotToken) => {
     // Проверяем, что именно этот токен запущен
-    const isActiveBot = botStatus?.instance && 
-                       isRunning && 
-                       botStatus.instance.tokenId === token.id;
-    
+    const isActiveBot = botStatus?.instance &&
+      isRunning &&
+      botStatus.instance.tokenId === token.id;
+
     if (isActiveBot) {
       return (
         <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
@@ -818,7 +818,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         </Badge>
       );
     }
-    
+
     if (token.isDefault) {
       return (
         <Badge variant="secondary">
@@ -826,7 +826,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         </Badge>
       );
     }
-    
+
     return (
       <Badge variant="outline">
         Готов
@@ -851,8 +851,8 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
             Управление ботами проекта <span className="font-semibold text-foreground">{projectName}</span>
           </p>
         </div>
-        <Button 
-          onClick={() => setShowAddBot(true)} 
+        <Button
+          onClick={() => setShowAddBot(true)}
           className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 h-10 sm:h-auto px-3 sm:px-4 py-2 sm:py-2 text-sm sm:text-base"
           data-testid="button-connect-bot"
         >
@@ -886,8 +886,8 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
             <p className="text-sm sm:text-base text-muted-foreground text-center mb-6 max-w-md">
               Подключите первого бота, чтобы начать создание и управление Telegram-ботами прямо из визуального редактора
             </p>
-            <Button 
-              onClick={() => setShowAddBot(true)} 
+            <Button
+              onClick={() => setShowAddBot(true)}
               className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200"
               size="lg"
               data-testid="button-connect-first-bot"
@@ -900,23 +900,23 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       ) : (
         <div className="grid gap-4">
           {tokens.map((token) => {
-            const isThisTokenRunning = botStatus?.instance && 
-                                      isRunning && 
-                                      botStatus.instance.tokenId === token.id;
-            
+            const isThisTokenRunning = botStatus?.instance &&
+              isRunning &&
+              botStatus.instance.tokenId === token.id;
+
             return (
               <Card key={token.id} className="group/card overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 hover:border-border/50">
                 <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover/card:opacity-100 transition-opacity" />
                 <CardContent className="p-4 sm:p-5 space-y-4">
                   {/* Header Section */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                    <BotAvatar 
-                      botName={token.botFirstName || token.name} 
+                    <BotAvatar
+                      botName={token.botFirstName || token.name}
                       photoUrl={token.botPhotoUrl}
                       size={48}
                       className="flex-shrink-0"
                     />
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         {editingField?.tokenId === token.id && editingField?.field === 'name' ? (
@@ -933,7 +933,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                             data-testid="input-bot-name-edit"
                           />
                         ) : (
-                          <h3 
+                          <h3
                             className="font-bold text-base sm:text-lg cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors truncate"
                             onDoubleClick={() => handleStartEdit(token.id, 'name', token.botFirstName || token.name)}
                             title="Double-click to edit"
@@ -946,11 +946,11 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                           <span className="text-xs sm:text-sm text-muted-foreground truncate">@{token.botUsername}</span>
                         )}
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         {getStatusBadge(token)}
                       </div>
-                      
+
                       {(token.botDescription || token.description) && (
                         editingField?.tokenId === token.id && editingField?.field === 'description' ? (
                           <Textarea
@@ -969,7 +969,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                             data-testid="textarea-bot-description-edit"
                           />
                         ) : (
-                          <p 
+                          <p
                             className="text-xs sm:text-sm text-muted-foreground line-clamp-2 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
                             onDoubleClick={() => handleStartEdit(token.id, 'description', token.botDescription || token.description || '')}
                             title="Double-click to edit"
@@ -979,7 +979,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                           </p>
                         )
                       )}
-                      
+
                       {token.botShortDescription && token.botShortDescription !== token.botDescription && (
                         editingField?.tokenId === token.id && editingField?.field === 'shortDescription' ? (
                           <Input
@@ -995,7 +995,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                             data-testid="input-bot-short-description-edit"
                           />
                         ) : (
-                          <p 
+                          <p
                             className="text-xs text-muted-foreground line-clamp-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
                             onDoubleClick={() => handleStartEdit(token.id, 'shortDescription', token.botShortDescription || '')}
                             title="Double-click to edit"
@@ -1005,7 +1005,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                           </p>
                         )
                       )}
-                      
+
                       <p className="text-xs text-muted-foreground mt-1">
                         Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
                         {token.lastUsedAt && (
@@ -1016,15 +1016,15 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                         )}
                       </p>
                     </div>
-                    
+
                     {/* Actions - Responsive */}
                     <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                      <BotProfileEditor 
-                        projectId={projectId} 
-                        botInfo={botInfo} 
-                        onProfileUpdated={refetchBotInfo} 
+                      <BotProfileEditor
+                        projectId={projectId}
+                        botInfo={botInfo}
+                        onProfileUpdated={refetchBotInfo}
                       />
-                      
+
                       {(() => {
                         const isThisTokenRunning = botStatus?.instance && isRunning && botStatus.instance.tokenId === token.id;
                         if (!isThisTokenRunning) {
@@ -1056,7 +1056,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                           );
                         }
                       })()}
-                      
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm" className="h-9 w-9 p-0" data-testid="button-bot-menu">
@@ -1064,7 +1064,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => deleteBotMutation.mutate(token.id)}
                             className="text-red-600 dark:text-red-400"
                           >
@@ -1075,21 +1075,19 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                       </DropdownMenu>
                     </div>
                   </div>
-                  
+
                   {/* Settings Section - Responsive Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Database Toggle */}
-                    <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${
-                      isDatabaseEnabled 
-                        ? 'bg-green-500/8 border-green-500/30 dark:bg-green-500/10 dark:border-green-500/40' 
+                    <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${isDatabaseEnabled
+                        ? 'bg-green-500/8 border-green-500/30 dark:bg-green-500/10 dark:border-green-500/40'
                         : 'bg-red-500/8 border-red-500/30 dark:bg-red-500/10 dark:border-red-500/40'
-                    }`} data-testid="database-toggle-container-bot-card">
+                      }`} data-testid="database-toggle-container-bot-card">
                       <Database className={`w-4 h-4 flex-shrink-0 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
-                      <Label htmlFor={`db-toggle-bot-${token.id}`} className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${
-                        isDatabaseEnabled 
-                          ? 'text-green-700 dark:text-green-300' 
+                      <Label htmlFor={`db-toggle-bot-${token.id}`} className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${isDatabaseEnabled
+                          ? 'text-green-700 dark:text-green-300'
                           : 'text-red-700 dark:text-red-300'
-                      }`}>
+                        }`}>
                         {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
                       </Label>
                       <Switch
@@ -1102,17 +1100,15 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                     </div>
 
                     {/* Generator Logs Toggle */}
-                    <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${
-                      generatorLogsEnabled
-                        ? 'bg-purple-500/8 border-purple-500/30 dark:bg-purple-500/10 dark:border-purple-500/40' 
+                    <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${generatorLogsEnabled
+                        ? 'bg-purple-500/8 border-purple-500/30 dark:bg-purple-500/10 dark:border-purple-500/40'
                         : 'bg-gray-500/8 border-gray-500/30 dark:bg-gray-500/10 dark:border-gray-500/40'
-                    }`} data-testid="generator-logs-toggle-container-bot-card">
+                      }`} data-testid="generator-logs-toggle-container-bot-card">
                       <Terminal className={`w-4 h-4 flex-shrink-0 ${generatorLogsEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'}`} />
-                      <Label htmlFor="generator-logs-toggle" className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${
-                        generatorLogsEnabled
-                          ? 'text-purple-700 dark:text-purple-300' 
+                      <Label htmlFor="generator-logs-toggle" className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${generatorLogsEnabled
+                          ? 'text-purple-700 dark:text-purple-300'
                           : 'text-gray-700 dark:text-gray-300'
-                      }`}>Логи генератора</Label>
+                        }`}>Логи генератора</Label>
                       <Switch
                         id="generator-logs-toggle"
                         data-testid="switch-generator-logs-toggle"
@@ -1166,7 +1162,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
               Добавьте нового бота, используя токен от <span className="font-semibold text-foreground">@BotFather</span>
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 sm:space-y-5 py-2">
             {/* Help box */}
             <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 space-y-2">
@@ -1212,10 +1208,10 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
               )}
             </div>
           </div>
-          
+
           <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end pt-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowAddBot(false)}
               disabled={isParsingBot || createBotMutation.isPending}
               className="text-sm sm:text-base"
@@ -1223,7 +1219,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
             >
               Отмена
             </Button>
-            <Button 
+            <Button
               onClick={handleAddBot}
               disabled={isParsingBot || createBotMutation.isPending || !newBotToken.trim()}
               className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 text-sm sm:text-base"
@@ -1250,7 +1246,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
               Обновите параметры токена бота для лучшей организации
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 sm:space-y-5 py-2">
             <div className="space-y-2">
               <Label htmlFor="edit-bot-name" className="text-sm sm:text-base font-semibold">
@@ -1269,7 +1265,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                 Это имя будет использоваться для идентификации токена в приложении
               </p>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="edit-bot-description" className="text-sm sm:text-base font-semibold">
                 Описание
@@ -1289,10 +1285,10 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
               </p>
             </div>
           </div>
-          
+
           <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end pt-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setEditingToken(null)}
               disabled={updateTokenMutation.isPending}
               className="text-sm sm:text-base"
@@ -1300,7 +1296,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
             >
               Отмена
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 if (editingToken) {
                   updateTokenMutation.mutate({
