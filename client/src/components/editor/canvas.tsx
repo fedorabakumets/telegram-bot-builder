@@ -7,90 +7,140 @@ import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
 import { CanvasSheets } from '@/components/ui/canvas-sheets';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Navigation, Sidebar, Sliders, Monitor, Menu } from 'lucide-react';
+import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Node, ComponentDefinition, Connection } from '@/types/bot';
-import { BotDataWithSheets, CanvasSheet } from '@shared/schema';
+import { BotDataWithSheets } from '@shared/schema';
 import { generateAutoConnections } from '@/utils/auto-connection';
 import { ConnectionManager } from '@/utils/connection-manager';
 import { SheetsManager } from '@/utils/sheets-manager';
-import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 import { nanoid } from 'nanoid';
 
+/**
+ * Интерфейс действия в истории операций
+ * @interface Action
+ */
 interface Action {
+  /** Уникальный идентификатор действия */
   id: string;
+  /** Тип выполненного действия */
   type: 'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate';
+  /** Описание действия для пользователя */
   description: string;
+  /** Временная метка выполнения действия */
   timestamp: number;
 }
 
+/**
+ * Свойства компонента холста для редактирования бота
+ * @interface CanvasProps
+ */
 interface CanvasProps {
   // Новая система листов (опциональные для совместимости)
+  /** Данные бота с поддержкой листов */
   botData?: BotDataWithSheets;
+  /** Колбэк для обновления данных бота */
   onBotDataUpdate?: (data: BotDataWithSheets) => void;
 
   // Существующие пропсы для совместимости
+  /** Массив узлов на холсте */
   nodes: Node[];
+  /** Массив соединений между узлами */
   connections: Connection[];
+  /** Идентификатор выбранного узла */
   selectedNodeId: string | null;
+  /** Идентификатор выбранного соединения */
   selectedConnectionId?: string;
+  /** Колбэк при выборе узла */
   onNodeSelect: (nodeId: string) => void;
+  /** Колбэк при добавлении узла */
   onNodeAdd: (node: Node) => void;
+  /** Колбэк при удалении узла */
   onNodeDelete: (nodeId: string) => void;
+  /** Колбэк при дублировании узла */
   onNodeDuplicate?: (nodeId: string) => void;
+  /** Колбэк при перемещении узла */
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
+  /** Колбэк при выборе соединения */
   onConnectionSelect?: (connectionId: string) => void;
+  /** Колбэк при удалении соединения */
   onConnectionDelete?: (connectionId: string) => void;
+  /** Колбэк при добавлении соединения */
   onConnectionAdd?: (connection: Connection) => void;
+  /** Колбэк при обновлении узлов */
   onNodesUpdate?: (nodes: Node[]) => void;
+  /** Колбэк для отмены действия */
   onUndo?: () => void;
+  /** Колбэк для повтора действия */
   onRedo?: () => void;
+  /** Доступность отмены */
   canUndo?: boolean;
+  /** Доступность повтора */
   canRedo?: boolean;
+  /** Колбэк для сохранения */
   onSave?: () => void;
+  /** Флаг процесса сохранения */
   isSaving?: boolean;
+  /** Колбэк для копирования в буфер обмена */
   onCopyToClipboard?: (nodeIds: string[]) => void;
+  /** Колбэк для вставки из буфера обмена */
   onPasteFromClipboard?: () => void;
+  /** Наличие данных в буфере обмена */
   hasClipboardData?: boolean;
 
   // Глобальное состояние перетаскивания узлов
+  /** Флаг перетаскивания узла */
   isNodeBeingDragged?: boolean;
+  /** Установка флага перетаскивания */
   setIsNodeBeingDragged?: (isDragging: boolean) => void;
 
   // Кнопки управления интерфейсом
+  /** Переключение видимости заголовка */
   onToggleHeader?: () => void;
+  /** Переключение видимости боковой панели */
   onToggleSidebar?: () => void;
+  /** Переключение видимости панели свойств */
   onToggleProperties?: () => void;
+  /** Переключение видимости холста */
   onToggleCanvas?: () => void;
+  /** Видимость заголовка */
   headerVisible?: boolean;
+  /** Видимость боковой панели */
   sidebarVisible?: boolean;
+  /** Видимость панели свойств */
   propertiesVisible?: boolean;
+  /** Видимость холста */
   canvasVisible?: boolean;
 
   // Мобильные функции
+  /** Открытие мобильной боковой панели */
   onOpenMobileSidebar?: () => void;
+  /** Открытие мобильной панели свойств */
   onOpenMobileProperties?: () => void;
 
   // Передача размеров узлов для иерархического макета
+  /** Колбэк для передачи размеров узлов */
   onNodeSizesChange?: (nodeSizes: Map<string, { width: number; height: number }>) => void;
 
   // Логирование действий в историю
+  /** Колбэк для логирования действий */
   onActionLog?: (type: Action['type'], description: string) => void;
-  
+
   // История действий (передаётся из родителя)
+  /** Массив истории действий */
   actionHistory?: Action[];
 }
 
-export function Canvas({ 
+export function Canvas({
   botData,
   onBotDataUpdate,
-  nodes, 
+  nodes,
   connections,
   selectedNodeId,
   selectedConnectionId,
-  onNodeSelect, 
-  onNodeAdd, 
+  onNodeSelect,
+  onNodeAdd,
   onNodeDelete,
   onNodeDuplicate,
   onNodeMove,
@@ -117,8 +167,6 @@ export function Canvas({
   sidebarVisible,
   propertiesVisible,
   canvasVisible,
-  onOpenMobileSidebar,
-  onOpenMobileProperties,
   onNodeSizesChange,
   onActionLog,
   actionHistory: externalActionHistory
@@ -205,7 +253,7 @@ export function Canvas({
 
   // Выбор диапазона действий
   const selectRange = useCallback((startIndex: number, endIndex: number) => {
-    setSelectedActionsForUndo(prev => {
+    setSelectedActionsForUndo(() => {
       const [min, max] = startIndex <= endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
       const newSet = new Set<string>();
       for (let i = min; i <= max; i++) {
@@ -265,7 +313,7 @@ export function Canvas({
   // Автоиерархия должна работать только при загрузке шаблонов, а не постоянно
 
   // Получение активного листа (с fallback'ом для совместимости)
-  const activeSheet = botData ? SheetsManager.getActiveSheet(botData) : null;
+  // const activeSheet = botData ? SheetsManager.getActiveSheet(botData) : null;
 
   // Получение всех узлов со всех листов для отображения связей между листами
   const getAllNodesFromAllSheets = useCallback(() => {
@@ -287,9 +335,9 @@ export function Canvas({
     let dataWithCurrentSheetSaved = botData;
     if (botData.activeSheetId) {
       dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
-        botData, 
-        botData.activeSheetId, 
-        nodes, 
+        botData,
+        botData.activeSheetId,
+        nodes,
         connections
       );
     }
@@ -306,9 +354,9 @@ export function Canvas({
     let dataWithCurrentSheetSaved = botData;
     if (botData.activeSheetId) {
       dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
-        botData, 
-        botData.activeSheetId, 
-        nodes, 
+        botData,
+        botData.activeSheetId,
+        nodes,
         connections
       );
     }
@@ -340,9 +388,9 @@ export function Canvas({
       let dataWithCurrentSheetSaved = botData;
       if (botData.activeSheetId) {
         dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
-          botData, 
-          botData.activeSheetId, 
-          nodes, 
+          botData,
+          botData.activeSheetId,
+          nodes,
           connections
         );
       }
@@ -372,11 +420,11 @@ export function Canvas({
     setPan(prevPan => {
       const prevZoomPercent = zoom / 100;
       const newZoomPercent = newZoom / 100;
-      
+
       // Вычисляем координаты центра в canvas координатах
       const centerCanvasX = (centerX - prevPan.x) / prevZoomPercent;
       const centerCanvasY = (centerY - prevPan.y) / prevZoomPercent;
-      
+
       // Вычисляем новый pan, чтобы центр остался на месте
       return {
         x: centerX - centerCanvasX * newZoomPercent,
@@ -419,7 +467,7 @@ export function Canvas({
       const centerX = (containerWidth / 2 - pan.x) / (zoom / 100);
       const centerY = (containerHeight / 2 - pan.y) / (zoom / 100);
 
-      const position = { 
+      const position = {
         x: Math.max(50, centerX - 160), // -160 чтобы центрировать узел (половина ширины узла)
         y: Math.max(50, centerY - 50)   // -50 чтобы центрировать узел (половина высоты узла)
       };
@@ -432,25 +480,25 @@ export function Canvas({
   }, [pan, zoom]);
 
   // Функция автоматической раскладки узлов
-  const autoArrange = useCallback(() => {
-    if (nodes.length === 0) return;
-    
-    console.log('🎯 Применяем автоматическую раскладку для', nodes.length, 'узлов');
-    
-    // Применяем иерархическую раскладку с центрированием узлов
-    const arrangedNodes = applyTemplateLayout(
-      nodes,
-      connections,
-      undefined, // templateName не используется для общей раскладки
-      nodeSizes
-    );
-    
-    // Обновляем позиции узлов
-    if (onNodesUpdate) {
-      onNodesUpdate(arrangedNodes);
-      console.log('✅ Автоматическая раскладка применена');
-    }
-  }, [nodes, connections, nodeSizes, onNodesUpdate]);
+  // const autoArrange = useCallback(() => {
+  //   if (nodes.length === 0) return;
+
+  //   console.log('🎯 Применяем автоматическую раскладку для', nodes.length, 'узлов');
+
+  //   // Применяем иерархическую раскладку с центрированием узлов
+  //   const arrangedNodes = applyTemplateLayout(
+  //     nodes,
+  //     connections,
+  //     undefined, // templateName не используется для общей раскладки
+  //     nodeSizes
+  //   );
+
+  //   // Обновляем позиции узлов
+  //   if (onNodesUpdate) {
+  //     onNodesUpdate(arrangedNodes);
+  //     console.log('✅ Автоматическая раскладка применена');
+  //   }
+  // }, [nodes, connections, nodeSizes, onNodesUpdate]);
 
   const fitToContent = useCallback(() => {
     if (nodes.length === 0) return;
@@ -471,8 +519,8 @@ export function Canvas({
     }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
 
     // Проверяем валидность границ
-    if (!isFinite(nodeBounds.left) || !isFinite(nodeBounds.right) || 
-        !isFinite(nodeBounds.top) || !isFinite(nodeBounds.bottom)) {
+    if (!isFinite(nodeBounds.left) || !isFinite(nodeBounds.right) ||
+      !isFinite(nodeBounds.top) || !isFinite(nodeBounds.bottom)) {
       return;
     }
 
@@ -565,11 +613,11 @@ export function Canvas({
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     // Check if click is on empty canvas (not on a node)
     const target = e.target as HTMLElement;
-    const isEmptyCanvas = target.classList.contains('canvas-grid-modern') || 
-                          target.closest('.canvas-grid-modern') === target;
+    const isEmptyCanvas = target.classList.contains('canvas-grid-modern') ||
+      target.closest('.canvas-grid-modern') === target;
 
-    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) || 
-        (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) ||
+      (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
       e.preventDefault();
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
@@ -1071,7 +1119,7 @@ export function Canvas({
       <div className="absolute inset-0 overflow-auto">
 
         {/* Enhanced Canvas Grid */}
-        <div 
+        <div
           ref={canvasRef}
           className="min-h-full relative canvas-grid-modern"
           style={{
@@ -1100,7 +1148,7 @@ export function Canvas({
           onTouchEnd={handleTouchEnd}
         >
           {/* Transformable Canvas Content */}
-          <div 
+          <div
             className="relative origin-top-left transition-transform duration-200 ease-out"
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
@@ -1244,13 +1292,12 @@ export function Canvas({
         right: 0
       }}>
         <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
-          <div className={`flex items-center canvas-controls overflow-x-auto w-full gap-2 ${
-            isMobile ? 'text-sm' : 'text-sm'
-          }`}>
+          <div className={`flex items-center canvas-controls overflow-x-auto w-full gap-2 ${isMobile ? 'text-sm' : 'text-sm'
+            }`}>
 
             <div className={`flex items-center flex-shrink-0 gap-2`}>
               {/* Кнопки масштаба */}
-              <button 
+              <button
                 onClick={zoomOut}
                 disabled={zoom <= 1}
                 className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed`}
@@ -1294,9 +1341,8 @@ export function Canvas({
                         <button
                           key={level}
                           onClick={() => setZoomLevel(level)}
-                          className={`w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                            Math.abs(zoom - level) < 1 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
-                          }`}
+                          className={`w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${Math.abs(zoom - level) < 1 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
+                            }`}
                         >
                           <div className="flex items-center justify-between">
                             <span>{level}%</span>
@@ -1332,7 +1378,7 @@ export function Canvas({
                 </PopoverContent>
               </Popover>
 
-              <button 
+              <button
                 onClick={zoomIn}
                 disabled={zoom >= 200}
                 className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
@@ -1340,7 +1386,7 @@ export function Canvas({
               >
                 <i className="fas fa-search-plus text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
-              <button 
+              <button
                 onClick={fitToContent}
                 disabled={nodes.length === 0}
                 className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
@@ -1349,7 +1395,7 @@ export function Canvas({
                 <i className="fas fa-expand-arrows-alt text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
-              <button 
+              <button
                 onClick={() => { if (actionHistory.length > 0) onUndo?.(); }}
                 disabled={actionHistory.length === 0}
                 className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-200/60 disabled:dark:hover:bg-slate-700/50 flex items-center justify-center`}
@@ -1358,7 +1404,7 @@ export function Canvas({
                 <i className={`fas fa-undo text-sm transition-colors ${actionHistory.length > 0 ? 'text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}></i>
               </button>
 
-              <button 
+              <button
                 onClick={() => { if (canRedo) onRedo?.(); }}
                 disabled={!canRedo}
                 className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-200/60 disabled:dark:hover:bg-slate-700/50 flex items-center justify-center`}
@@ -1392,32 +1438,30 @@ export function Canvas({
                           {actionHistory.map((action, index) => {
                             const isSelected = selectedActionsForUndo.has(action.id);
                             return (
-                              <div 
+                              <div
                                 key={action.id}
                                 onMouseDown={() => handleMouseDownAction(index)}
                                 onMouseOver={() => handleMouseOverAction(index)}
                                 onClick={() => toggleActionSelection(action.id)}
-                                className={`flex items-start gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                  isSelected 
-                                    ? 'bg-blue-500/30 dark:bg-blue-900/40 border border-blue-400/50 dark:border-blue-600/50' 
-                                    : 'bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
-                                }`}
+                                className={`flex items-start gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
+                                  ? 'bg-blue-500/30 dark:bg-blue-900/40 border border-blue-400/50 dark:border-blue-600/50'
+                                  : 'bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                                  }`}
                               >
-                                <input 
-                                  type="checkbox" 
+                                <input
+                                  type="checkbox"
                                   checked={isSelected}
-                                  onChange={() => {}}
+                                  onChange={() => { }}
                                   className="mt-0.5 cursor-pointer"
                                 />
-                                <i className={`fas fa-${
-                                  action.type === 'add' ? 'plus text-green-600 dark:text-green-400' :
+                                <i className={`fas fa-${action.type === 'add' ? 'plus text-green-600 dark:text-green-400' :
                                   action.type === 'delete' ? 'trash text-red-600 dark:text-red-400' :
-                                  action.type === 'move' ? 'arrows text-blue-600 dark:text-blue-400' :
-                                  action.type === 'update' ? 'edit text-purple-600 dark:text-purple-400' :
-                                  action.type === 'connect' ? 'link text-cyan-600 dark:text-cyan-400' :
-                                  action.type === 'disconnect' ? 'unlink text-orange-600 dark:text-orange-400' :
-                                  'copy text-yellow-600 dark:text-yellow-400'
-                                }`}></i>
+                                    action.type === 'move' ? 'arrows text-blue-600 dark:text-blue-400' :
+                                      action.type === 'update' ? 'edit text-purple-600 dark:text-purple-400' :
+                                        action.type === 'connect' ? 'link text-cyan-600 dark:text-cyan-400' :
+                                          action.type === 'disconnect' ? 'unlink text-orange-600 dark:text-orange-400' :
+                                            'copy text-yellow-600 dark:text-yellow-400'
+                                  }`}></i>
                                 <div className="flex-1">
                                   <p className="text-slate-600 dark:text-slate-300">{action.description}</p>
                                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
@@ -1448,7 +1492,7 @@ export function Canvas({
               </Popover>
 
               {onSave && (
-                <button 
+                <button
                   onClick={onSave}
                   disabled={isSaving}
                   className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
@@ -1464,7 +1508,7 @@ export function Canvas({
 
               {/* Межпроектное копирование/вставка */}
               {onCopyToClipboard && selectedNodeId && (
-                <button 
+                <button
                   onClick={() => onCopyToClipboard([selectedNodeId])}
                   className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}
                   title="Копировать в буфер (Shift + Ctrl + C)"
@@ -1474,7 +1518,7 @@ export function Canvas({
               )}
 
               {onPasteFromClipboard && hasClipboardData && (
-                <button 
+                <button
                   onClick={onPasteFromClipboard}
                   className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group flex items-center justify-center`}
                   title="Вставить из буфера (Shift + Ctrl + V)"
@@ -1492,11 +1536,10 @@ export function Canvas({
                   {onToggleHeader && (
                     <button
                       onClick={onToggleHeader}
-                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${
-                        headerVisible 
-                          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' 
-                          : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
-                      }`}
+                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${headerVisible
+                        ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                        : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
+                        }`}
                       title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
                     >
                       <Navigation className="w-4 h-4" />
@@ -1506,11 +1549,10 @@ export function Canvas({
                   {onToggleSidebar && (
                     <button
                       onClick={onToggleSidebar}
-                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${
-                        sidebarVisible 
-                          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' 
-                          : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
-                      }`}
+                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${sidebarVisible
+                        ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                        : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
+                        }`}
                       title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
                     >
                       <Sidebar className="w-4 h-4" />
@@ -1520,11 +1562,10 @@ export function Canvas({
                   {onToggleCanvas && (
                     <button
                       onClick={onToggleCanvas}
-                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${
-                        canvasVisible 
-                          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' 
-                          : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
-                      }`}
+                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${canvasVisible
+                        ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                        : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
+                        }`}
                       title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
                     >
                       <Monitor className="w-4 h-4" />
@@ -1534,11 +1575,10 @@ export function Canvas({
                   {onToggleProperties && (
                     <button
                       onClick={onToggleProperties}
-                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${
-                        propertiesVisible 
-                          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' 
-                          : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
-                      }`}
+                      className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl transition-colors duration-200 flex items-center justify-center border ${propertiesVisible
+                        ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                        : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 text-slate-600 dark:text-slate-400 border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50'
+                        }`}
                       title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
                     >
                       <Sliders className="w-4 h-4" />
