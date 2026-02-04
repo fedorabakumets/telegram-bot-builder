@@ -20,52 +20,53 @@ export function generateAttachedMediaSendCode(
   // Проверяем, есть ли статическое изображение в узле
   const hasStaticImage = nodeData && nodeData.imageUrl && nodeData.imageUrl.trim() !== '';
   
-  if (!attachedMedia || attachedMedia.length === 0) {
-    // Если нет прикрепленных медиа, но есть статическое изображение
-    if (hasStaticImage) {
-      let code = '';
-      code += `${indentLevel}# Узел содержит статическое изображение: ${nodeData.imageUrl}\n`;
-      code += `${indentLevel}static_image_url = "${nodeData.imageUrl}"\n`;
-      code += `${indentLevel}\n`;
-      
-      // Устанавливаем состояние ожидания ввода если нужно
-      if (collectUserInput && nodeData) {
-        code += `${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}\n`;
-        code += generateWaitingStateCode(nodeData, indentLevel);
-        code += `${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки изображения")\n`;
-      }
-      
-      code += `${indentLevel}# Отправляем статическое изображение\n`;
-      code += `${indentLevel}try:\n`;
-      code += `${indentLevel}    # Заменяем переменные в тексте перед отправкой\n`;
-      code += `${indentLevel}    processed_caption = replace_variables_in_text(text, user_vars)\n`;
-      
-      const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
-      const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
-      
-      code += `${indentLevel}    await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
-      
-      // Автопереход если нужен
-      if (autoTransitionTo) {
-        code += `${indentLevel}    \n`;
-        code += `${indentLevel}    # Проверяем, нужно ли выполнять автопереход\n`;
-        code += `${indentLevel}    if ${collectUserInput.toString()}:\n`;
-        const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
-        code += `${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
-        code += `${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)\n`;
-        code += `${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
-        code += `${indentLevel}        return\n`;
-      }
-      
-      code += `${indentLevel}except Exception as e:\n`;
-      code += `${indentLevel}    logging.error(f"Ошибка отправки статического изображения: {e}")\n`;
-      code += `${indentLevel}    # Fallback на обычное сообщение при ошибке\n`;
-      const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
-      code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
-      
-      return code;
+  // ИСПРАВЛЕНИЕ: Если есть статическое изображение, используем его напрямую
+  if (hasStaticImage) {
+    let code = '';
+    code += `${indentLevel}# Узел содержит статическое изображение: ${nodeData.imageUrl}\n`;
+    code += `${indentLevel}static_image_url = "${nodeData.imageUrl}"\n`;
+    code += `${indentLevel}\n`;
+    
+    // Устанавливаем состояние ожидания ввода если нужно
+    if (collectUserInput && nodeData) {
+      code += `${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}\n`;
+      code += generateWaitingStateCode(nodeData, indentLevel);
+      code += `${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки изображения")\n`;
     }
+    
+    code += `${indentLevel}# Отправляем статическое изображение\n`;
+    code += `${indentLevel}try:\n`;
+    code += `${indentLevel}    # Заменяем переменные в тексте перед отправкой\n`;
+    code += `${indentLevel}    processed_caption = replace_variables_in_text(text, user_vars)\n`;
+    
+    const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
+    const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
+    
+    code += `${indentLevel}    await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
+    
+    // Автопереход если нужен
+    if (autoTransitionTo) {
+      code += `${indentLevel}    \n`;
+      code += `${indentLevel}    # Проверяем, нужно ли выполнять автопереход\n`;
+      code += `${indentLevel}    if ${collectUserInput.toString()}:\n`;
+      const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
+      code += `${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
+      code += `${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+      code += `${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
+      code += `${indentLevel}        return\n`;
+    }
+    
+    code += `${indentLevel}except Exception as e:\n`;
+    code += `${indentLevel}    logging.error(f"Ошибка отправки статического изображения: {e}")\n`;
+    code += `${indentLevel}    # Fallback на обычное сообщение при ошибке\n`;
+    const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
+    code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
+    
+    return code;
+  }
+  
+  if (!attachedMedia || attachedMedia.length === 0) {
     return '';
   }
 
@@ -133,16 +134,16 @@ export function generateAttachedMediaSendCode(
 
   switch (mediaType) {
     case 'photo':
-      code += `${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
+      code += `${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
       break;
     case 'video':
-      code += `${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
+      code += `${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
       break;
     case 'audio':
-      code += `${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
+      code += `${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
       break;
     case 'document':
-      code += `${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam})\n`;
+      code += `${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
       break;
     default:
       code += `${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение\n`;

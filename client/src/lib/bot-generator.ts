@@ -1098,6 +1098,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // ============================================================================
             // ОБРАБОТКА МЕДИА-КОНТЕНТА
             // ============================================================================
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем переменную изображения для узла
+            if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+              code += '    # Устанавливаем переменную изображения для узла\n';
+              code += '    user_id = callback_query.from_user.id\n';
+              code += '    if user_id not in user_data:\n';
+              code += '        user_data[user_id] = {}\n';
+              code += `    user_data[user_id]["image_url_${nodeId}"] = "${targetNode.data.imageUrl}"\n`;
+              if (userDatabaseEnabled) {
+                code += `    await update_user_data_in_db(user_id, "image_url_${nodeId}", "${targetNode.data.imageUrl}")\n`;
+              }
+              code += `    logging.info(f"✅ Переменная image_url_${nodeId} установлена: ${targetNode.data.imageUrl}")\n`;
+              code += '    \n';
+            }
+
             // ИСПРАВЛЕНИЕ: Проверяем наличие прикрепленных медиа ИЛИ статического изображения перед отправкой
             const attachedMedia = targetNode.data.attachedMedia || [];
             const hasStaticImage = targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '';

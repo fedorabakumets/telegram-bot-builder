@@ -1055,42 +1055,18 @@ async def handle_callback_AoHjXk0_Tz4gVuau5zj_m(callback_query: types.CallbackQu
             logging.debug(f"Не удалось удалить reply сообщение: {e}")
     
     # Отправляем сообщение (с пяяоверкой прякрепленного медиа)
-    # Проверяем наличие прикрепленного медиа из переменной image_url_AoHjXk0_Tz4gVuau5zj-m
-    attached_media = None
-    if user_vars and "image_url_AoHjXk0_Tz4gVuau5zj-m" in user_vars:
-        media_data = user_vars["image_url_AoHjXk0_Tz4gVuau5zj-m"]
-        if isinstance(media_data, dict) and "value" in media_data:
-            attached_media = media_data["value"]
-        elif isinstance(media_data, str):
-            attached_media = media_data
-    else:
-        # Проверяем, есть ли медиа в переменных пользователя
-        user_id = callback_query.from_user.id
-        user_node_vars = user_data.get(user_id, {})
-        if "image_url_AoHjXk0_Tz4gVuau5zj-m" in user_node_vars:
-            attached_media = user_node_vars["image_url_AoHjXk0_Tz4gVuau5zj-m"]
+    # Узел содержит статическое изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
+    static_image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     
-    # Если медиа найдено, отправляем с медиа, иначе обычное сообщение
-    if attached_media and str(attached_media).strip():
-        logging.info(f"📎 Отправка photo медиа из переменной image_url_AoHjXk0_Tz4gVuau5zj-m: {attached_media}")
-        try:
-            # Заменяем переменные в тексте перед отправкой медиа
-            processed_caption = replace_variables_in_text(text, user_vars)
-            await bot.send_photo(callback_query.from_user.id, attached_media, caption=processed_caption, reply_markup=keyboard)
-        except Exception as e:
-            logging.error(f"Ошибка отправки photo: {e}")
-            # Fallback на обычное сообщение при ошибке
-            await safe_edit_or_send(callback_query, text, node_id="AoHjXk0_Tz4gVuau5zj-m", reply_markup=keyboard if keyboard is not None else None)
-    else:
-        # Медиа не найдено, отправляем обычное текстовое сообщение
-        logging.info(f"📝 Медиа image_url_AoHjXk0_Tz4gVuau5zj-m не найдено, отправка текстового сообщения")
+    # Отправляем статическое изображение
+    try:
         # Заменяем переменные в тексте перед отправкой
-        processed_text = replace_variables_in_text(text, user_vars)
-        if False:
-            # Узел ожидает ввод, не отправляем сообщение
-            logging.info(f"ℹ️ Узел AoHjXk0_Tz4gVuau5zj-m ожидает ввод, пропускаем отправку сообщения")
-        else:
-            await safe_edit_or_send(callback_query, processed_text, node_id="AoHjXk0_Tz4gVuau5zj-m", reply_markup=keyboard if keyboard is not None else None)
+        processed_caption = replace_variables_in_text(text, user_vars)
+        await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption, reply_markup=keyboard, node_id="AoHjXk0_Tz4gVuau5zj-m")
+    except Exception as e:
+        logging.error(f"Ошибка отправки статического изображения: {e}")
+        # Fallback на обычное сообщение при ошибке
+        await safe_edit_or_send(callback_query, text, node_id="AoHjXk0_Tz4gVuau5zj-m", reply_markup=keyboard if keyboard is not None else None)
 
 
 # Обработчики для работы с группами
