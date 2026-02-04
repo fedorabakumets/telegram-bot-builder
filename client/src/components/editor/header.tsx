@@ -1,20 +1,44 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { TelegramLoginWidget } from '@/components/telegram-login-widget';
-import { FolderOpen, Bookmark, Save, Download, User, Send, Github } from 'lucide-react';
-import { useState } from 'react';
+import { FolderOpen, Bookmark, Save, Github } from 'lucide-react';
 
+/**
+ * Свойства компонента Header
+ */
 interface HeaderProps {
+  /** Название текущего проекта */
   projectName: string;
+  /** Текущая активная вкладка */
   currentTab: 'editor' | 'preview' | 'export' | 'bot';
+  /** Функция обратного вызова при смене вкладки */
   onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot') => void;
+  /** Функция обратного вызова при сохранении проекта */
   onSave: () => void;
+  /** Функция обратного вызова при экспорте проекта */
   onExport: () => void;
+  /** Функция обратного вызова при сохранении как шаблон (опционально) */
   onSaveAsTemplate?: () => void;
+  /** Функция обратного вызова при загрузке шаблона (опционально) */
   onLoadTemplate?: () => void;
+  /** Флаг процесса сохранения */
   isSaving?: boolean;
 }
 
+/**
+ * Компонент заголовка приложения BotCraft Studio
+ * 
+ * Предоставляет:
+ * - Навигацию между вкладками (Редактор, Превью, Экспорт, Бот)
+ * - Кнопки управления проектом (сохранение, экспорт, работа с шаблонами)
+ * - Интеграцию с Telegram через виджет авторизации
+ * - Переключатель темы
+ * - Ссылку на GitHub проекта
+ * - Адаптивный дизайн для мобильных устройств
+ * 
+ * @param props - Свойства компонента
+ * @returns JSX элемент заголовка
+ */
 export function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSaveAsTemplate, onLoadTemplate, isSaving }: HeaderProps) {
   return (
     <header className="bg-background border-b border-border h-16 flex items-center justify-between px-6 relative z-50">
