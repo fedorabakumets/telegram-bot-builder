@@ -5,15 +5,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { parsePythonCodeToJson } from '@/lib/format';
 
-import QuickLayoutSwitcher from '@/components/layout/quick-layout-switcher';
-import DragLayoutManager from '@/components/layout/drag-layout-manager';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText, Copy, Share2, MoreHorizontal, ChevronDown, ChevronRight, Menu, X, Zap } from 'lucide-react';
+import { Home, Plus, Trash2, Calendar, GripVertical, FileText, Copy, Share2, ChevronDown, ChevronRight, X, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
@@ -31,28 +27,12 @@ interface ComponentsSidebarProps {
   onComponentDrag: (component: ComponentDefinition) => void;
   /** Колбэк при добавлении компонента */
   onComponentAdd?: (component: ComponentDefinition) => void;
-  /** Колбэк для загрузки шаблона */
-  onLoadTemplate?: () => void;
-  /** Колбэк для открытия настройщика макета */
-  onOpenLayoutCustomizer?: () => void;
-  /** Колбэк при изменении макета */
-  onLayoutChange?: (config: any) => void;
-  /** Колбэк для перехода к списку проектов */
-  onGoToProjects?: () => void;
   /** Колбэк при выборе проекта */
   onProjectSelect?: (projectId: number) => void;
   /** Идентификатор текущего проекта */
   currentProjectId?: number;
   /** Идентификатор активного листа */
   activeSheetId?: string;
-  /** Содержимое заголовка */
-  headerContent?: React.ReactNode;
-  /** Содержимое боковой панели */
-  sidebarContent?: React.ReactNode;
-  /** Содержимое холста */
-  canvasContent?: React.ReactNode;
-  /** Содержимое панели свойств */
-  propertiesContent?: React.ReactNode;
   
   // Новые пропсы для управления макетом
   /** Колбэк для переключения видимости холста */
@@ -73,8 +53,6 @@ interface ComponentsSidebarProps {
   showLayoutButtons?: boolean;
   
   // Пропсы для управления листами
-  /** Колбэк для добавления листа */
-  onSheetAdd?: (name: string) => void;
   /** Колбэк для удаления листа */
   onSheetDelete?: (sheetId: string) => void;
   /** Колбэк для переименования листа */
@@ -538,17 +516,9 @@ const componentCategories = [
 export function ComponentsSidebar({ 
   onComponentDrag, 
   onComponentAdd,
-  onLoadTemplate, 
-  onOpenLayoutCustomizer, 
-  onLayoutChange,
-  onGoToProjects,
   onProjectSelect,
   currentProjectId,
   activeSheetId,
-  headerContent,
-  sidebarContent,
-  canvasContent,
-  propertiesContent,
   onToggleCanvas,
   onToggleHeader,
   onToggleProperties,
@@ -557,7 +527,6 @@ export function ComponentsSidebar({
   headerVisible = false,
   propertiesVisible = false,
   showLayoutButtons = false,
-  onSheetAdd,
   onSheetDelete,
   onSheetRename,
   onSheetDuplicate,
@@ -573,7 +542,6 @@ export function ComponentsSidebar({
   const [dragOverProject, setDragOverProject] = useState<number | null>(null);
   const [draggedSheet, setDraggedSheet] = useState<{ sheetId: string; projectId: number } | null>(null);
   const [dragOverSheet, setDragOverSheet] = useState<string | null>(null);
-  const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null);
   
   // Состояние для inline редактирования листов
   const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
@@ -581,9 +549,6 @@ export function ComponentsSidebar({
   
   // Состояние для сворачивания/раскрытия категорий
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
-  
-  // Мобильное меню
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Импорт проекта
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -628,7 +593,6 @@ export function ComponentsSidebar({
   // Touch события для мобильных устройств
   const [touchedComponent, setTouchedComponent] = useState<ComponentDefinition | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [touchStartElement, setTouchStartElement] = useState<HTMLElement | null>(null);
 
   /**
@@ -650,10 +614,10 @@ export function ComponentsSidebar({
     setTouchStartElement(element);
     
     const rect = element.getBoundingClientRect();
-    setDragOffset({
+    const dragOffset = {
       x: touch.clientX - rect.left,
       y: touch.clientY - rect.top
-    });
+    };
     onComponentDrag(component);
     
     // Добавляем визуальную обратную связь
@@ -733,7 +697,6 @@ export function ComponentsSidebar({
     
     setTouchedComponent(null);
     setIsDragging(false);
-    setDragOffset({ x: 0, y: 0 });
     setTouchStartElement(null);
   };
 
@@ -797,7 +760,6 @@ export function ComponentsSidebar({
       
       setTouchedComponent(null);
       setIsDragging(false);
-      setDragOffset({ x: 0, y: 0 });
       setTouchStartElement(null);
     };
 
@@ -920,7 +882,7 @@ export function ComponentsSidebar({
         description: "Проект успешно удален",
       });
     },
-    onError: (error, projectId, context) => {
+    onError: (_, __, context) => {
       // Откатываем изменения при ошибке
       if (context?.previousProjects) {
         queryClient.setQueryData(['/api/projects'], context.previousProjects);
@@ -957,29 +919,6 @@ export function ComponentsSidebar({
     setDraggedSheet({ sheetId, projectId });
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', sheetId);
-  };
-
-  /**
-   * Обработчик перетаскивания над листом
-   * Показывает визуальную обратную связь при наведении
-   * @param e - Событие перетаскивания
-   * @param sheetId - Идентификатор листа
-   */
-  const handleSheetDragOver = (e: React.DragEvent, sheetId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverSheet(sheetId);
-  };
-
-  /**
-   * Обработчик покидания области перетаскивания
-   * Убирает визуальную обратную связь
-   * @param e - Событие перетаскивания
-   */
-  const handleSheetDragLeave = (e: React.DragEvent) => {
-    e.stopPropagation();
-    setDragOverSheet(null);
   };
 
   /**
@@ -1916,7 +1855,7 @@ export function ComponentsSidebar({
                                         onDragStart={(e) => {
                                           if (sheetId) handleSheetDragStart(e, sheetId, project.id);
                                         }}
-                                        onDragEnd={(e) => {
+                                        onDragEnd={() => {
                                           setDraggedSheet(null);
                                         }}
                                         className={`text-xs px-1.5 sm:px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center line-clamp-1 ${
