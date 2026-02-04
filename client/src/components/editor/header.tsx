@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { TelegramLoginWidget } from '@/components/telegram-login-widget';
-import { FolderOpen, Bookmark, Save, Github } from 'lucide-react';
+import { FolderOpen, Bookmark, Save, ExternalLink } from 'lucide-react';
 
 /**
  * Свойства компонента Header
@@ -52,9 +52,9 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             <p className="text-xs text-muted-foreground">{projectName}</p>
           </div>
         </div>
-        
+
         <div className="h-6 w-px bg-border"></div>
-        
+
         <nav className="flex flex-wrap items-center gap-1 max-sm:grid max-sm:grid-cols-2 max-sm:gap-x-2 max-sm:gap-y-1">
           {[
             { key: 'editor', label: 'Редактор' },
@@ -62,25 +62,24 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             { key: 'export', label: 'Экспорт' },
             { key: 'bot', label: 'Бот' }
           ].map((tab) => (
-            <button 
+            <button
               key={tab.key}
               onClick={() => onTabChange(tab.key as any)}
-              className={`px-3 py-1.5 text-sm max-sm:text-xs max-sm:px-2 max-sm:py-1 font-medium rounded-md transition-colors whitespace-nowrap ${
-                currentTab === tab.key 
-                  ? 'text-primary bg-primary/10' 
+              className={`px-3 py-1.5 text-sm max-sm:text-xs max-sm:px-2 max-sm:py-1 font-medium rounded-md transition-colors whitespace-nowrap ${currentTab === tab.key
+                  ? 'text-primary bg-primary/10'
                   : 'text-muted-foreground hover:bg-muted'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
           ))}
         </nav>
       </div>
-      
+
       <div className="flex flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-3 max-sm:gap-x-1 max-sm:gap-y-1 max-sm:text-xs">
         {onLoadTemplate && (
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => {
               console.log('Templates button clicked in header');
@@ -92,10 +91,10 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             <span className="max-sm:hidden ml-1">Шаблон</span>
           </Button>
         )}
-        
+
         {onSaveAsTemplate && (
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={onSaveAsTemplate}
             className="flex items-center justify-center px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full"
@@ -104,9 +103,9 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             <span className="max-sm:hidden ml-1">Создать</span>
           </Button>
         )}
-        
-        <Button 
-          variant="outline" 
+
+        <Button
+          variant="outline"
           size="sm"
           onClick={onSave}
           disabled={isSaving}
@@ -115,8 +114,8 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
           <Save className={`h-2.5 w-2.5 max-sm:mx-auto text-muted-foreground ${isSaving ? 'animate-spin' : ''}`} />
           <span className="max-sm:hidden ml-1">{isSaving ? 'Сохр...' : 'Сохр'}</span>
         </Button>
-        
-        <Button 
+
+        <Button
           size="sm"
           onClick={onExport}
           className="flex items-center justify-center px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2"
@@ -124,11 +123,11 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
           <i className="fas fa-download text-2xs max-sm:mx-auto"></i>
           <span className="max-sm:hidden ml-1">Экспорт</span>
         </Button>
-        
+
         <div className="h-6 w-px bg-border max-sm:hidden"></div>
-        
-        <Button 
-          variant="outline" 
+
+        <Button
+          variant="outline"
           size="sm"
           asChild
           className="flex items-center justify-center px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0"
@@ -139,15 +138,15 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Github className="h-4 w-4 text-muted-foreground" />
+            <ExternalLink className="h-4 w-4 text-muted-foreground" />
             <span className="max-sm:hidden ml-1">GitHub</span>
           </a>
         </Button>
-        
+
         <div className="h-6 w-px bg-border max-sm:hidden"></div>
-        
+
         <TelegramLoginWidget />
-        
+
         <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
           <ThemeToggle />
         </div>
