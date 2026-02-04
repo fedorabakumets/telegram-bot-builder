@@ -17,31 +17,66 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+/**
+ * Свойства компонента выбора эмодзи и символов
+ * @interface EmojiPickerProps
+ */
 interface EmojiPickerProps {
+  /** Колбэк для выбора эмодзи */
   onEmojiSelect: (emoji: string) => void;
+  /** Колбэк для выбора символа */
   onSymbolSelect: (symbol: string) => void;
 }
 
+/**
+ * Интерфейс категории эмодзи
+ * @interface EmojiCategory
+ */
 interface EmojiCategory {
+  /** Название категории */
   name: string;
+  /** Иконка категории */
   icon: React.ComponentType<{ className?: string }>;
+  /** Массив эмодзи в категории */
   emojis: string[];
 }
 
+/**
+ * Интерфейс категории символов
+ * @interface SymbolCategory
+ */
 interface SymbolCategory {
+  /** Название категории */
   name: string;
+  /** Массив символов с описанием */
   symbols: Array<{
+    /** Сам символ */
     symbol: string;
+    /** Название символа */
     name: string;
+    /** Описание символа */
     description: string;
   }>;
 }
 
+/**
+ * Компонент выбора эмодзи, символов и текстовых шаблонов
+ * Предоставляет интерфейс для вставки эмодзи, специальных символов и готовых шаблонов текста
+ * @param onEmojiSelect - Функция обратного вызова при выборе эмодзи
+ * @param onSymbolSelect - Функция обратного вызова при выборе символа
+ * @returns JSX элемент компонента выбора эмодзи
+ */
 export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps) {
+  // Состояние для поиска по эмодзи и символам
   const [searchTerm, setSearchTerm] = useState('');
+  // Активная вкладка (эмодзи, символы или шаблоны)
   const [activeTab, setActiveTab] = useState<'emojis' | 'symbols' | 'templates'>('emojis');
   const { toast } = useToast();
 
+  /**
+   * Конфигурация категорий эмодзи с группировкой по темам
+   * Каждая категория содержит название, иконку и массив эмодзи
+   */
   const emojiCategories: EmojiCategory[] = [
     {
       name: 'Эмоции',
@@ -65,6 +100,10 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
     }
   ];
 
+  /**
+   * Конфигурация категорий специальных символов
+   * Включает стрелки, математические символы, пунктуацию и специальные знаки
+   */
   const symbolCategories: SymbolCategory[] = [
     {
       name: 'Стрелки',
@@ -136,6 +175,10 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
     }
   ];
 
+  /**
+   * Готовые текстовые шаблоны с эмодзи для быстрой вставки
+   * Содержат популярные форматы сообщений для различных целей
+   */
   const textTemplates = [
     {
       name: 'Приветствие',
@@ -163,6 +206,11 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
     }
   ];
 
+  /**
+   * Обработчик клика по эмодзи
+   * Вызывает колбэк и показывает уведомление об успешном добавлении
+   * @param emoji - Выбранный эмодзи
+   */
   const handleEmojiClick = (emoji: string) => {
     onEmojiSelect(emoji);
     toast({
@@ -171,6 +219,11 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
     });
   };
 
+  /**
+   * Обработчик клика по символу
+   * Вызывает колбэк и показывает уведомление об успешном добавлении
+   * @param symbol - Выбранный символ
+   */
   const handleSymbolClick = (symbol: string) => {
     onSymbolSelect(symbol);
     toast({
@@ -179,6 +232,11 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
     });
   };
 
+  /**
+   * Копирование шаблона в буфер обмена
+   * Использует Clipboard API для копирования текста
+   * @param template - Текст шаблона для копирования
+   */
   const copyTemplate = async (template: string) => {
     try {
       await navigator.clipboard.writeText(template);
@@ -191,6 +249,10 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
     }
   };
 
+  /**
+   * Фильтрация эмодзи по поисковому запросу
+   * Возвращает категории с отфильтрованными эмодзи
+   */
   const filteredEmojis = emojiCategories.map(category => ({
     ...category,
     emojis: category.emojis.filter(emoji => 
@@ -198,6 +260,10 @@ export function EmojiPicker({ onEmojiSelect, onSymbolSelect }: EmojiPickerProps)
     )
   }));
 
+  /**
+   * Фильтрация символов по поисковому запросу
+   * Поиск происходит по названию, описанию и самому символу
+   */
   const filteredSymbols = symbolCategories.map(category => ({
     ...category,
     symbols: category.symbols.filter(item => 
