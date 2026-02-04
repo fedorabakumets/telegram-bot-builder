@@ -22,43 +22,79 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-
-
+/**
+ * Свойства компонента боковой панели с компонентами
+ * @interface ComponentsSidebarProps
+ */
 interface ComponentsSidebarProps {
+  /** Колбэк при начале перетаскивания компонента */
   onComponentDrag: (component: ComponentDefinition) => void;
+  /** Колбэк при добавлении компонента */
   onComponentAdd?: (component: ComponentDefinition) => void;
+  /** Колбэк для загрузки шаблона */
   onLoadTemplate?: () => void;
+  /** Колбэк для открытия настройщика макета */
   onOpenLayoutCustomizer?: () => void;
+  /** Колбэк при изменении макета */
   onLayoutChange?: (config: any) => void;
+  /** Колбэк для перехода к списку проектов */
   onGoToProjects?: () => void;
+  /** Колбэк при выборе проекта */
   onProjectSelect?: (projectId: number) => void;
+  /** Идентификатор текущего проекта */
   currentProjectId?: number;
+  /** Идентификатор активного листа */
   activeSheetId?: string;
+  /** Содержимое заголовка */
   headerContent?: React.ReactNode;
+  /** Содержимое боковой панели */
   sidebarContent?: React.ReactNode;
+  /** Содержимое холста */
   canvasContent?: React.ReactNode;
+  /** Содержимое панели свойств */
   propertiesContent?: React.ReactNode;
+  
   // Новые пропсы для управления макетом
+  /** Колбэк для переключения видимости холста */
   onToggleCanvas?: () => void;
+  /** Колбэк для переключения видимости заголовка */
   onToggleHeader?: () => void;
+  /** Колбэк для переключения видимости панели свойств */
   onToggleProperties?: () => void;
+  /** Колбэк для показа полного макета */
   onShowFullLayout?: () => void;
+  /** Видимость холста */
   canvasVisible?: boolean;
+  /** Видимость заголовка */
   headerVisible?: boolean;
+  /** Видимость панели свойств */
   propertiesVisible?: boolean;
+  /** Показывать ли кнопки макета */
   showLayoutButtons?: boolean;
+  
   // Пропсы для управления листами
+  /** Колбэк для добавления листа */
   onSheetAdd?: (name: string) => void;
+  /** Колбэк для удаления листа */
   onSheetDelete?: (sheetId: string) => void;
+  /** Колбэк для переименования листа */
   onSheetRename?: (sheetId: string, name: string) => void;
+  /** Колбэк для дублирования листа */
   onSheetDuplicate?: (sheetId: string) => void;
+  /** Колбэк для выбора листа */
   onSheetSelect?: (sheetId: string) => void;
+  
   // Мобильный режим
+  /** Флаг мобильного режима */
   isMobile?: boolean;
-  // Закрытие панели
+  /** Колбэк для закрытия панели */
   onClose?: () => void;
 }
 
+/**
+ * Массив определений компонентов для конструктора бота
+ * Содержит все доступные типы узлов с их настройками по умолчанию
+ */
 const components: ComponentDefinition[] = [
   {
     id: 'text-message',
@@ -469,6 +505,10 @@ const components: ComponentDefinition[] = [
   }
 ];
 
+/**
+ * Группировка компонентов по категориям для удобной навигации
+ * Разделяет компоненты на логические группы в интерфейсе
+ */
 const componentCategories = [
   {
     title: 'Сообщения',
@@ -488,6 +528,13 @@ const componentCategories = [
   }
 ];
 
+/**
+ * Компонент боковой панели с компонентами и управлением проектами
+ * Предоставляет drag-and-drop интерфейс для добавления компонентов на холст,
+ * управление проектами и листами, а также настройки макета
+ * @param props - Свойства компонента ComponentsSidebarProps
+ * @returns JSX элемент боковой панели
+ */
 export function ComponentsSidebar({ 
   onComponentDrag, 
   onComponentAdd,
@@ -518,19 +565,26 @@ export function ComponentsSidebar({
   isMobile = false,
   onClose
 }: ComponentsSidebarProps) {
+  // Состояние для управления вкладками и интерфейсом
   const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
+  
+  // Состояние для drag-and-drop проектов и листов
   const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
   const [dragOverProject, setDragOverProject] = useState<number | null>(null);
   const [draggedSheet, setDraggedSheet] = useState<{ sheetId: string; projectId: number } | null>(null);
   const [dragOverSheet, setDragOverSheet] = useState<string | null>(null);
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null);
+  
   // Состояние для inline редактирования листов
   const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
   const [editingSheetName, setEditingSheetName] = useState('');
+  
   // Состояние для сворачивания/раскрытия категорий
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  
   // Мобильное меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   // Импорт проекта
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importJsonText, setImportJsonText] = useState('');
@@ -538,11 +592,16 @@ export function ComponentsSidebar({
   const [importError, setImportError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pythonFileInputRef = useRef<HTMLInputElement>(null);
+  
   const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Функция для переключения видимости категории
+  /**
+   * Функция для переключения видимости категории компонентов
+   * Управляет сворачиванием и разворачиванием категорий в списке
+   * @param categoryTitle - Название категории для переключения
+   */
   const toggleCategory = (categoryTitle: string) => {
     setCollapsedCategories(prev => {
       const newSet = new Set(prev);
@@ -555,6 +614,12 @@ export function ComponentsSidebar({
     });
   };
   
+  /**
+   * Обработчик начала перетаскивания компонента
+   * Инициализирует drag-and-drop операцию для десктопных устройств
+   * @param e - Событие перетаскивания
+   * @param component - Компонент для перетаскивания
+   */
   const handleDragStart = (e: React.DragEvent, component: ComponentDefinition) => {
     e.dataTransfer.setData('application/json', JSON.stringify(component));
     onComponentDrag(component);
@@ -566,6 +631,12 @@ export function ComponentsSidebar({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [touchStartElement, setTouchStartElement] = useState<HTMLElement | null>(null);
 
+  /**
+   * Обработчик начала касания для мобильных устройств
+   * Инициализирует touch-based drag-and-drop
+   * @param e - Событие касания
+   * @param component - Компонент для перетаскивания
+   */
   const handleTouchStart = (e: React.TouchEvent, component: ComponentDefinition) => {
     console.log('Touch start on component:', component.name);
     e.preventDefault();
@@ -596,6 +667,11 @@ export function ComponentsSidebar({
     });
   };
 
+  /**
+   * Обработчик движения касания
+   * Отслеживает перемещение пальца по экрану
+   * @param e - Событие движения касания
+   */
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !touchedComponent) return;
     e.preventDefault();
@@ -603,6 +679,11 @@ export function ComponentsSidebar({
     console.log('Touch move:', { x: e.touches[0].clientX, y: e.touches[0].clientY });
   };
 
+  /**
+   * Обработчик окончания касания
+   * Завершает touch-based drag-and-drop и проверяет попадание на холст
+   * @param e - Событие окончания касания
+   */
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isDragging || !touchedComponent) {
       console.log('Touch end ignored - not dragging or no component');
@@ -639,8 +720,6 @@ export function ComponentsSidebar({
           y: touch.clientY - canvasRect.top
         };
         
-        // Dispatching canvas-drop event
-        
         // Создаем синтетическое событие drop
         const dropEvent = new CustomEvent('canvas-drop', {
           detail: {
@@ -649,11 +728,7 @@ export function ComponentsSidebar({
           }
         });
         canvas.dispatchEvent(dropEvent);
-      } else {
-        // Touch ended outside canvas
       }
-    } else {
-      // Canvas not found
     }
     
     setTouchedComponent(null);
@@ -662,23 +737,32 @@ export function ComponentsSidebar({
     setTouchStartElement(null);
   };
 
-  // Глобальные touch обработчики для лучшей поддержки мобильных устройств
+  /**
+   * Глобальные touch обработчики для лучшей поддержки мобильных устройств
+   * Обеспечивают корректную работу drag-and-drop на всем экране
+   */
   useEffect(() => {
+    /**
+     * Обработчик глобального движения касания
+     * Предотвращает скролл страницы во время перетаскивания
+     * @param e - Событие касания
+     */
     const handleGlobalTouchMove = (e: TouchEvent) => {
       if (isDragging && touchedComponent) {
         e.preventDefault();
-        // Global touch move
       }
     };
 
+    /**
+     * Обработчик глобального окончания касания
+     * Завершает перетаскивание независимо от того, где закончилось касание
+     * @param e - Событие касания
+     */
     const handleGlobalTouchEnd = (e: TouchEvent) => {
       if (!isDragging || !touchedComponent) return;
       
-      // Global touch end
       const touch = e.changedTouches[0];
       const element = document.elementFromPoint(touch.clientX, touch.clientY);
-      
-      // Global touch end position
       
       // Восстанавливаем стили элемента
       if (touchStartElement) {
@@ -689,13 +773,10 @@ export function ComponentsSidebar({
       
       // Проверяем, попали ли мы на холст
       const canvas = document.querySelector('[data-canvas-drop-zone]');
-      // Canvas element check
       
       if (canvas && element) {
         const isInCanvas = canvas.contains(element) || element === canvas || 
                           element.closest('[data-canvas-drop-zone]') === canvas;
-        
-        // Is in canvas check
         
         if (isInCanvas) {
           const canvasRect = canvas.getBoundingClientRect();
@@ -703,8 +784,6 @@ export function ComponentsSidebar({
             x: touch.clientX - canvasRect.left,
             y: touch.clientY - canvasRect.top
           };
-          
-          // Dispatching global canvas-drop event
           
           const dropEvent = new CustomEvent('canvas-drop', {
             detail: {
@@ -733,14 +812,20 @@ export function ComponentsSidebar({
     };
   }, [isDragging, touchedComponent, touchStartElement]);
 
-  // Загрузка списка проектов
+  /**
+   * Загрузка списка проектов с сервера
+   * Данные всегда считаются устаревшими для немедленного обновления
+   */
   const { data: projects = [], isLoading } = useQuery<BotProject[]>({
     queryKey: ['/api/projects'],
     queryFn: () => apiRequest('GET', '/api/projects'),
     staleTime: 0, // Данные всегда считаются устаревшими для немедленного обновления при рефетче
   });
 
-  // Создание нового проекта
+  /**
+   * Мутация для создания нового проекта
+   * Создает проект с базовым /start узлом и обновляет кэш
+   */
   const createProjectMutation = useMutation({
     mutationFn: () => {
       const projectCount = projects.length;
@@ -769,11 +854,11 @@ export function ComponentsSidebar({
       });
     },
     onSuccess: async (newProject: BotProject) => {
-      // Immediately update the query cache with the new project
+      // Немедленно обновляем кэш запросов с новым проектом
       const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
       queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
       
-      // Also update the list cache
+      // Также обновляем кэш списка
       const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
       const { data, ...projectWithoutData } = newProject;
       queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
@@ -796,7 +881,10 @@ export function ComponentsSidebar({
     }
   });
 
-  // Удаление проекта
+  /**
+   * Мутация для удаления проекта с оптимистичными обновлениями
+   * Использует optimistic updates для мгновенного отклика UI
+   */
   const deleteProjectMutation = useMutation({
     mutationFn: (projectId: number) => apiRequest('DELETE', `/api/projects/${projectId}`),
     onMutate: async (projectId: number) => {
@@ -849,13 +937,21 @@ export function ComponentsSidebar({
     }
   });
 
-
-
+  /**
+   * Обработчик создания нового проекта
+   * Запускает мутацию создания проекта
+   */
   const handleCreateProject = () => {
     createProjectMutation.mutate();
   };
 
-  // Обработчики перемещения листов между проектами
+  /**
+   * Обработчик начала перетаскивания листа
+   * Инициализирует drag-and-drop для перемещения листов между проектами
+   * @param e - Событие перетаскивания
+   * @param sheetId - Идентификатор листа
+   * @param projectId - Идентификатор проекта
+   */
   const handleSheetDragStart = (e: React.DragEvent, sheetId: string, projectId: number) => {
     e.stopPropagation();
     setDraggedSheet({ sheetId, projectId });
@@ -863,6 +959,12 @@ export function ComponentsSidebar({
     e.dataTransfer.setData('text/plain', sheetId);
   };
 
+  /**
+   * Обработчик перетаскивания над листом
+   * Показывает визуальную обратную связь при наведении
+   * @param e - Событие перетаскивания
+   * @param sheetId - Идентификатор листа
+   */
   const handleSheetDragOver = (e: React.DragEvent, sheetId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -870,11 +972,22 @@ export function ComponentsSidebar({
     setDragOverSheet(sheetId);
   };
 
+  /**
+   * Обработчик покидания области перетаскивания
+   * Убирает визуальную обратную связь
+   * @param e - Событие перетаскивания
+   */
   const handleSheetDragLeave = (e: React.DragEvent) => {
     e.stopPropagation();
     setDragOverSheet(null);
   };
 
+  /**
+   * Обработчик сброса листа на проект
+   * Перемещает лист из одного проекта в другой
+   * @param e - Событие сброса
+   * @param targetProjectId - Идентификатор целевого проекта
+   */
   const handleSheetDropOnProject = async (e: React.DragEvent, targetProjectId: number) => {
     e.preventDefault();
     e.stopPropagation();
