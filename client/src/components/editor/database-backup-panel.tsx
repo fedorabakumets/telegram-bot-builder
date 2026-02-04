@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,16 +11,14 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { 
-  Download, 
-  Upload, 
-  Database, 
-  Shield, 
-  Trash2, 
-  RefreshCw, 
-  FileText, 
-  Calendar, 
-  HardDrive, 
+import {
+  Download,
+  Upload,
+  Trash2,
+  RefreshCw,
+  FileText,
+  Calendar,
+  HardDrive,
   BarChart3,
   AlertTriangle,
   CheckCircle,
@@ -29,30 +27,59 @@ import {
   Plus
 } from 'lucide-react';
 
+/**
+ * Интерфейс файла резервной копии
+ * @interface BackupFile
+ */
 interface BackupFile {
+  /** Имя файла резервной копии */
   filename: string;
+  /** Путь к файлу на сервере */
   filepath: string;
+  /** Размер файла в байтах */
   size: number;
+  /** Дата создания резервной копии */
   created: Date;
+  /** Метаданные резервной копии */
   metadata?: {
+    /** Версия формата резервной копии */
     version: string;
+    /** Временная метка создания */
     timestamp: string;
+    /** Описание резервной копии */
     description?: string;
+    /** Список таблиц в резервной копии */
     tables: string[];
   };
 }
 
+/**
+ * Интерфейс статистики базы данных
+ * @interface DatabaseStats
+ */
 interface DatabaseStats {
+  /** Информация о таблицах в базе данных */
   tables: Array<{
+    /** Название таблицы */
     name: string;
+    /** Количество записей в таблице */
     count: number;
+    /** Размер таблицы в читаемом формате */
     size: string;
   }>;
+  /** Общее количество записей во всех таблицах */
   totalRecords: number;
+  /** Приблизительный размер базы данных */
   estimatedSize: string;
 }
 
+/**
+ * Компонент панели управления резервными копиями базы данных
+ * Предоставляет функциональность для создания, загрузки, восстановления и управления резервными копиями
+ * @returns JSX элемент панели резервных копий
+ */
 export function DatabaseBackupPanel() {
+  // Состояние для управления формами и диалогами
   const [newBackupDescription, setNewBackupDescription] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [restoreImmediately, setRestoreImmediately] = useState(false);
@@ -60,27 +87,36 @@ export function DatabaseBackupPanel() {
   const [isUploading, setIsUploading] = useState(false);
   const [showBackupDialog, setShowBackupDialog] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
-  // Получить список резервных копий
+  /**
+   * Загрузка списка резервных копий с сервера
+   * Обновляется каждые 30 секунд для актуальности данных
+   */
   const { data: backupsData, isLoading: backupsLoading } = useQuery({
     queryKey: ['database/backups'],
     queryFn: () => apiRequest('GET', '/api/database/backups'),
     staleTime: 30000
   });
 
-  // Получить статистику базы данных
+  /**
+   * Загрузка детальной статистики базы данных
+   * Включает информацию о таблицах, количестве записей и размере
+   */
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['database/stats'],
     queryFn: () => apiRequest('GET', '/api/database/stats/detailed'),
     staleTime: 60000
   });
 
-  // Мутация для создания резервной копии
+  /**
+   * Мутация для создания новой резервной копии
+   * Создает полную копию текущего состояния базы данных
+   */
   const createBackupMutation = useMutation({
-    mutationFn: (description: string) => 
+    mutationFn: (description: string) =>
       apiRequest('POST', '/api/database/backup', { description }),
     onSuccess: () => {
       toast({
@@ -100,9 +136,12 @@ export function DatabaseBackupPanel() {
     }
   });
 
-  // Мутация для восстановления из резервной копии
+  /**
+   * Мутация для восстановления базы данных из резервной копии
+   * Может очищать существующие данные или объединять с ними
+   */
   const restoreBackupMutation = useMutation({
-    mutationFn: ({ filename, options }: { filename: string; options: any }) => 
+    mutationFn: ({ filename, options }: { filename: string; options: any }) =>
       apiRequest('POST', '/api/database/restore', { filename, options }),
     onSuccess: () => {
       toast({
@@ -120,9 +159,12 @@ export function DatabaseBackupPanel() {
     }
   });
 
-  // Мутация для удаления резервной копии
+  /**
+   * Мутация для удаления резервной копии
+   * Безвозвратно удаляет файл резервной копии с сервера
+   */
   const deleteBackupMutation = useMutation({
-    mutationFn: (filename: string) => 
+    mutationFn: (filename: string) =>
       apiRequest('DELETE', `/api/database/backup/${filename}`),
     onSuccess: () => {
       toast({
@@ -140,7 +182,10 @@ export function DatabaseBackupPanel() {
     }
   });
 
-  // Обработчик загрузки файла
+  /**
+   * Обработчик загрузки файла резервной копии
+   * Загружает файл на сервер и опционально восстанавливает данные
+   */
   const handleFileUpload = async () => {
     if (!uploadFile) return;
 
@@ -157,7 +202,7 @@ export function DatabaseBackupPanel() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         toast({
           title: "Файл загружен",
@@ -183,7 +228,11 @@ export function DatabaseBackupPanel() {
     }
   };
 
-  // Обработчик скачивания резервной копии
+  /**
+   * Обработчик скачивания резервной копии
+   * Создает ссылку для скачивания файла и автоматически запускает загрузку
+   * @param filename - Имя файла для скачивания
+   */
   const handleDownloadBackup = (filename: string) => {
     const downloadUrl = `/api/database/backup/${filename}`;
     const link = document.createElement('a');
@@ -194,7 +243,12 @@ export function DatabaseBackupPanel() {
     document.body.removeChild(link);
   };
 
-  // Форматирование размера файла
+  /**
+   * Форматирование размера файла в читаемый вид
+   * Преобразует байты в KB, MB, GB с соответствующими суффиксами
+   * @param bytes - Размер в байтах
+   * @returns Отформатированная строка размера
+   */
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -203,6 +257,7 @@ export function DatabaseBackupPanel() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Извлечение данных из запросов с fallback значениями
   const backups: BackupFile[] = backupsData?.backups || [];
   const stats: DatabaseStats = statsData?.stats || { tables: [], totalRecords: 0, estimatedSize: 'N/A' };
 
@@ -245,7 +300,7 @@ export function DatabaseBackupPanel() {
                     rows={3}
                   />
                 </div>
-                <Button 
+                <Button
                   onClick={() => createBackupMutation.mutate(newBackupDescription)}
                   disabled={createBackupMutation.isPending}
                   className="w-full"
@@ -285,7 +340,7 @@ export function DatabaseBackupPanel() {
                     onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
                   />
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -295,7 +350,7 @@ export function DatabaseBackupPanel() {
                     />
                     <Label htmlFor="restore-immediately">Восстановить немедленно</Label>
                   </div>
-                  
+
                   {restoreImmediately && (
                     <div className="flex items-center space-x-2 ml-6">
                       <Switch
@@ -308,7 +363,7 @@ export function DatabaseBackupPanel() {
                   )}
                 </div>
 
-                <Button 
+                <Button
                   onClick={handleFileUpload}
                   disabled={!uploadFile || isUploading}
                   className="w-full"
@@ -392,9 +447,9 @@ export function DatabaseBackupPanel() {
                   <div className="text-xs text-muted-foreground mt-0.5">Размер</div>
                 </div>
               </div>
-              
+
               <Separator className="my-2 xs:my-3" />
-              
+
               <div className="space-y-1.5 xs:space-y-2">
                 <div className="text-xs xs:text-sm font-semibold text-foreground">Таблицы:</div>
                 <div className="space-y-0.5 xs:space-y-1">
@@ -502,9 +557,9 @@ export function DatabaseBackupPanel() {
                               </span>
                             </div>
                             <Button
-                              onClick={() => restoreBackupMutation.mutate({ 
-                                filename: backup.filename, 
-                                options: { clearExisting } 
+                              onClick={() => restoreBackupMutation.mutate({
+                                filename: backup.filename,
+                                options: { clearExisting }
                               })}
                               disabled={restoreBackupMutation.isPending}
                               className="w-full"
