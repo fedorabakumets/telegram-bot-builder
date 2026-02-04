@@ -379,6 +379,20 @@ function BotProfileEditor({
         <DialogHeader>
           <DialogTitle>Редактировать профиль бота</DialogTitle>
         </DialogHeader>
+        
+        {/* Предупреждение о тестовом режиме */}
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
+          <i className="fas fa-flask text-amber-600 dark:text-amber-400 text-sm mt-0.5 flex-shrink-0"></i>
+          <div>
+            <p className="text-sm text-amber-700 dark:text-amber-300 leading-relaxed font-medium">
+              Функция находится в тестовом режиме
+            </p>
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 leading-relaxed">
+              Редактирование профиля может временно не работать
+            </p>
+          </div>
+        </div>
+        
         <div className="space-y-4">
           
           <div className="space-y-2">
