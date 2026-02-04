@@ -1098,16 +1098,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // ============================================================================
             // ОБРАБОТКА МЕДИА-КОНТЕНТА
             // ============================================================================
-            // ИСПРАВЛЕНИЕ: Проверяем наличие прикрепленных медиа перед отправкой
+            // ИСПРАВЛЕНИЕ: Проверяем наличие прикрепленных медиа ИЛИ статического изображения перед отправкой
             const attachedMedia = targetNode.data.attachedMedia || [];
+            const hasStaticImage = targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '';
 
-            if (attachedMedia.length > 0) {
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} имеет attachedMedia:`, attachedMedia);
+            if (attachedMedia.length > 0 || hasStaticImage) {
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} имеет attachedMedia:`, attachedMedia, 'или статическое изображение:', hasStaticImage);
               // Генерируем код отправки с медиа
               const parseModeStr = targetNode.data.formatMode || '';
               const keyboardStr = 'keyboard if keyboard is not None else None';
               // Определяем, собирает ли узел ввод (учитываем все типы ввода)
-              const collectUserInputFlag = targetNode.data.collectUserInput !== false ||
+              const collectUserInputFlag = targetNode.data.collectUserInput === true ||
                 targetNode.data.enableTextInput === true ||
                 targetNode.data.enablePhotoInput === true ||
                 targetNode.data.enableVideoInput === true ||
@@ -1122,7 +1123,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 nodeId,
                 '    ',
                 undefined, // автопереход обрабатывается отдельно ниже
-                collectUserInputFlag
+                collectUserInputFlag,
+                targetNode.data // передаем данные узла для проверки статических изображений
               );
 
               if (mediaCode) {
@@ -5552,7 +5554,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 const parseModeStr = targetNode.data.formatMode || '';
                 const keyboardStr = 'keyboard if keyboard is not None else None';
                 // Определяем, собирает ли узел ввод (учитываем все типы ввода)
-                const collectUserInputFlag = targetNode.data.collectUserInput !== false ||
+                const collectUserInputFlag = targetNode.data.collectUserInput === true ||
                   targetNode.data.enableTextInput === true ||
                   targetNode.data.enablePhotoInput === true ||
                   targetNode.data.enableVideoInput === true ||
@@ -5567,7 +5569,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   targetNode.id,
                   '    ',
                   targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo ? targetNode.data.autoTransitionTo : undefined,
-                  collectUserInputFlag
+                  collectUserInputFlag,
+                  targetNode.data // передаем данные узла для проверки статических изображений
                 );
 
                 if (mediaCode) {

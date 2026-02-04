@@ -22,6 +22,14 @@ export function generateKeyboard(node: Node): string {
   code += '    text = replace_variables_in_text(text, user_vars)\n';
   code += '    \n';
 
+  // Проверяем наличие изображения в узле
+  const hasImage = node.data.imageUrl && node.data.imageUrl.trim() !== '';
+  if (hasImage) {
+    code += `    # Узел содержит изображение: ${node.data.imageUrl}\n`;
+    code += `    image_url = "${node.data.imageUrl}"\n`;
+    code += '    \n';
+  }
+
   // Добавляем поддержку условных сообщений для клавиатуры
   if (hasConditionalMessages) {
     code += '    # Проверка условных сообщений для клавиатуры\n';
@@ -121,7 +129,13 @@ export function generateKeyboard(node: Node): string {
       const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
       const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
       code += `${indent4}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-      code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      
+      // Проверяем наличие изображения
+      if (hasImage) {
+        code += `${indent4}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+      } else {
+        code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+      }
 
     } else if (node.data.keyboardType === "inline") {
       code += `${indent4}# Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n`;
@@ -140,7 +154,13 @@ export function generateKeyboard(node: Node): string {
 
       code += `${indent4}builder.adjust(2)  # Используем 2 колонки для консистентности\n`;
       code += `${indent4}keyboard = builder.as_markup()\n`;
-      code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      
+      // Проверяем наличие изображения
+      if (hasImage) {
+        code += `${indent4}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+      } else {
+        code += `${indent4}await message.answer(text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+      }
     }
 
     // Закрываем блок else если были условные сообщения
@@ -174,7 +194,13 @@ export function generateKeyboard(node: Node): string {
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        // Проверяем наличие изображения
+        if (hasImage) {
+          code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        } else {
+          code += `    await message.answer(text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        }
 
       } else {
         // inline кнопки для сбора ответов
@@ -190,7 +216,13 @@ export function generateKeyboard(node: Node): string {
         const columns = calculateOptimalColumns(node.data.responseOptions, node.data);
         code += `    builder.adjust(${columns})\n`;
         code += '    keyboard = builder.as_markup()\n';
-        code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        // Проверяем наличие изображения
+        if (hasImage) {
+          code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        } else {
+          code += `    await message.answer(text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        }
       }
 
     } else {
@@ -201,10 +233,22 @@ export function generateKeyboard(node: Node): string {
         code += '    if use_conditional_keyboard:\n';
         code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
         code += '    else:\n';
-        code += `        await message.answer(text${parseMode})\n`;
+        
+        // Проверяем наличие изображения для условной клавиатуры
+        if (hasImage) {
+          code += '        await bot.send_photo(message.chat.id, image_url, caption=text, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+        } else {
+          code += `        await message.answer(text${parseMode})\n`;
+        }
       } else {
         code += '    \n';
-        code += `    await message.answer(text${parseMode})\n`;
+        
+        // Проверяем наличие изображения
+        if (hasImage) {
+          code += `    await bot.send_photo(message.chat.id, image_url, caption=text${parseMode}, node_id="${node.id}")\n`;
+        } else {
+          code += `    await message.answer(text${parseMode}, node_id="${node.id}")\n`;
+        }
       }
     }
 
@@ -267,7 +311,13 @@ export function generateKeyboard(node: Node): string {
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        // Проверяем наличие изображения
+        if (hasImage) {
+          code += `${indent3}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        } else {
+          code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        }
 
         // Инициализируем состояние множественного выбора
         if (selectionButtons.length > 0) {
@@ -294,7 +344,13 @@ export function generateKeyboard(node: Node): string {
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        // Проверяем наличие изображения
+        if (hasImage) {
+          code += `${indent3}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        } else {
+          code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        }
       }
     } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       // Проверяем, есть ли множественный выбор
@@ -389,7 +445,13 @@ export function generateKeyboard(node: Node): string {
         const columns = calculateOptimalColumns(allButtons, node.data);
         code += `${indent3}builder.adjust(${columns})\n`;
         code += `${indent3}keyboard = builder.as_markup()\n`;
-        code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        // Проверяем наличие изображения
+        if (hasImage) {
+          code += `${indent3}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        } else {
+          code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        }
 
         // Состояние множественного выбора уже инициализировано выше с сохраненными значениями
       } else {
@@ -415,11 +477,22 @@ export function generateKeyboard(node: Node): string {
         const columns = calculateOptimalColumns(node.data.buttons, node.data);
         code += `${indent3}builder.adjust(${columns})\n`;
         code += `${indent3}keyboard = builder.as_markup()\n`;
-        code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        // Проверяем наличие изображения
+        if (hasImage) {
+          code += `${indent3}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        } else {
+          code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
+        }
       }
     } else {
       // Без клавиатуры
-      code += `${indent3}await message.answer(text${parseMode})\n`;
+      // Проверяем наличие изображения
+      if (hasImage) {
+        code += `${indent3}await bot.send_photo(message.chat.id, image_url, caption=text${parseMode}, node_id="${node.id}")\n`;
+      } else {
+        code += `${indent3}await message.answer(text${parseMode}, node_id="${node.id}")\n`;
+      }
     }
   }
 
