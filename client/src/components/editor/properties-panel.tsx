@@ -3852,7 +3852,7 @@ export function PropertiesPanel({
                                         <div className="flex items-center gap-2 mb-2.5">
                                           <i className="fas fa-shield-exclamation text-red-600 dark:text-red-400 text-sm"></i>
                                           <span className="text-xs sm:text-sm font-semibold text-red-700 dark:text-red-300">
-                                            {ruleConflicts.length} {ruleConflicts.length === 1 ? 'оши������ка' : 'ошибок'} в условиях
+                                            {ruleConflicts.length} {ruleConflicts.length === 1 ? 'оши��������ка' : 'ошибок'} в условиях
                                           </span>
                                         </div>
 
@@ -5598,7 +5598,6 @@ export function PropertiesPanel({
           selectedNode.type !== 'unmute_user' &&
           selectedNode.type !== 'kick_user' &&
           selectedNode.type !== 'promote_user' &&
-          (!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
           (selectedNode.data.keyboardType === 'none') &&
           (selectedNode.data.collectUserInput !== true) && (
             <div className="space-y-3 sm:space-y-4">
