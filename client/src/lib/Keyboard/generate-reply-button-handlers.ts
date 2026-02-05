@@ -75,73 +75,148 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
 
             // Обрабатываем клавиатуру для целевого узла
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-              code += '    builder = ReplyKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn: Button) => {
-                code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-              });
-              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-              code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              // Проверяем, есть ли статическое изображение в целевом узле
+              if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+                code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
+                code += `    image_url = "${targetNode.data.imageUrl}"\n`;
 
-              const targetCollectInput = targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true;
+                code += '    builder = ReplyKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach((btn: Button) => {
+                  code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                });
+                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+                code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
 
-              if (targetCollectInput) {
-                const targetVarName = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                code += '    \n';
-                const skipButtons = (targetNode.data.buttons || [])
-                  .filter((btn: any) => btn.skipDataCollection === true && btn.target)
-                  .map((btn: any) => ({ text: btn.text, target: btn.target }));
-                const skipButtonsJson = JSON.stringify(skipButtons);
+                const targetCollectInput = targetNode.data.collectUserInput === true ||
+                  targetNode.data.enableTextInput === true ||
+                  targetNode.data.enablePhotoInput === true ||
+                  targetNode.data.enableVideoInput === true ||
+                  targetNode.data.enableAudioInput === true ||
+                  targetNode.data.enableDocumentInput === true;
 
-                const modes: string[] = [];
-                if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons?.length > 0) {
-                  modes.push('button');
+                if (targetCollectInput) {
+                  const targetVarName = targetNode.data.inputVariable || `response_${targetNode.id}`;
+                  code += '    \n';
+                  const skipButtons = (targetNode.data.buttons || [])
+                    .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+                    .map((btn: any) => ({ text: btn.text, target: btn.target }));
+                  const skipButtonsJson = JSON.stringify(skipButtons);
+
+                  const modes: string[] = [];
+                  if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons?.length > 0) {
+                    modes.push('button');
+                  }
+                  if (targetNode.data.enableTextInput !== false) {
+                    modes.push('text');
+                  }
+                  if (targetNode.data.enablePhotoInput) modes.push('photo');
+                  if (targetNode.data.enableVideoInput) modes.push('video');
+                  if (targetNode.data.enableAudioInput) modes.push('audio');
+                  if (targetNode.data.enableDocumentInput) modes.push('document');
+
+                  let primaryInputType = 'button';
+                  if (targetNode.data.enablePhotoInput) primaryInputType = 'photo';
+                  else if (targetNode.data.enableVideoInput) primaryInputType = 'video';
+                  else if (targetNode.data.enableAudioInput) primaryInputType = 'audio';
+                  else if (targetNode.data.enableDocumentInput) primaryInputType = 'document';
+                  else if (targetNode.data.enableTextInput !== false) primaryInputType = 'text';
+
+                  const modesStr = modes.length > 0 ? modes.map(m => `'${m}'`).join(', ') : "'button', 'text'";
+
+                  code += '    # Устанавливаем waiting_for_input для целевого узла (collectUserInput=true)\n';
+                  code += `    user_data[user_id]["waiting_for_input"] = {\n`;
+                  code += `        "type": "${primaryInputType}",\n`;
+                  code += `        "modes": [${modesStr}],\n`;
+                  code += `        "variable": "${targetVarName}",\n`;
+                  code += `        "save_to_database": True,\n`;
+                  code += `        "node_id": "${targetNode.id}",\n`;
+                  code += `        "skip_buttons": ${skipButtonsJson}\n`;
+                  code += `    }\n`;
+                  code += `    logging.info(f"✅ Состояние ожидания настроено: type='{primaryInputType}', modes=[${modesStr}] для переменной ${targetVarName} (узел ${targetNode.id})")\n`;
+                } else {
+                  code += '    \n';
+                  code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
+                  code += `    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
                 }
-                if (targetNode.data.enableTextInput !== false) {
-                  modes.push('text');
+
+                let parseModeTarget = '';
+                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                } else if (targetNode.data.formatMode === 'html') {
+                  parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
-                if (targetNode.data.enablePhotoInput) modes.push('photo');
-                if (targetNode.data.enableVideoInput) modes.push('video');
-                if (targetNode.data.enableAudioInput) modes.push('audio');
-                if (targetNode.data.enableDocumentInput) modes.push('document');
-
-                let primaryInputType = 'button'; 
-                if (targetNode.data.enablePhotoInput) primaryInputType = 'photo';
-                else if (targetNode.data.enableVideoInput) primaryInputType = 'video';
-                else if (targetNode.data.enableAudioInput) primaryInputType = 'audio';
-                else if (targetNode.data.enableDocumentInput) primaryInputType = 'document';
-                else if (targetNode.data.enableTextInput !== false) primaryInputType = 'text';
-
-                const modesStr = modes.length > 0 ? modes.map(m => `'${m}'`).join(', ') : "'button', 'text'";
-
-                code += '    # Устанавливаем waiting_for_input для целевого узла (collectUserInput=true)\n';
-                code += `    user_data[user_id]["waiting_for_input"] = {\n`;
-                code += `        "type": "${primaryInputType}",\n`;
-                code += `        "modes": [${modesStr}],\n`;
-                code += `        "variable": "${targetVarName}",\n`;
-                code += `        "save_to_database": True,\n`;
-                code += `        "node_id": "${targetNode.id}",\n`;
-                code += `        "skip_buttons": ${skipButtonsJson}\n`;
-                code += `    }\n`;
-                code += `    logging.info(f"✅ Состояние ожидания настроено: type='${primaryInputType}', modes=[${modesStr}] для переменной ${targetVarName} (узел ${targetNode.id})")\n`;
+                code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
               } else {
-                code += '    \n';
-                code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
-                code += `    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
-              }
+                // Старая логика без изображения
+                code += '    builder = ReplyKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach((btn: Button) => {
+                  code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                });
+                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+                code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
 
-              let parseModeTarget = '';
-              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-              } else if (targetNode.data.formatMode === 'html') {
-                parseModeTarget = ', parse_mode=ParseMode.HTML';
+                const targetCollectInput = targetNode.data.collectUserInput === true ||
+                  targetNode.data.enableTextInput === true ||
+                  targetNode.data.enablePhotoInput === true ||
+                  targetNode.data.enableVideoInput === true ||
+                  targetNode.data.enableAudioInput === true ||
+                  targetNode.data.enableDocumentInput === true;
+
+                if (targetCollectInput) {
+                  const targetVarName = targetNode.data.inputVariable || `response_${targetNode.id}`;
+                  code += '    \n';
+                  const skipButtons = (targetNode.data.buttons || [])
+                    .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+                    .map((btn: any) => ({ text: btn.text, target: btn.target }));
+                  const skipButtonsJson = JSON.stringify(skipButtons);
+
+                  const modes: string[] = [];
+                  if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons?.length > 0) {
+                    modes.push('button');
+                  }
+                  if (targetNode.data.enableTextInput !== false) {
+                    modes.push('text');
+                  }
+                  if (targetNode.data.enablePhotoInput) modes.push('photo');
+                  if (targetNode.data.enableVideoInput) modes.push('video');
+                  if (targetNode.data.enableAudioInput) modes.push('audio');
+                  if (targetNode.data.enableDocumentInput) modes.push('document');
+
+                  let primaryInputType = 'button';
+                  if (targetNode.data.enablePhotoInput) primaryInputType = 'photo';
+                  else if (targetNode.data.enableVideoInput) primaryInputType = 'video';
+                  else if (targetNode.data.enableAudioInput) primaryInputType = 'audio';
+                  else if (targetNode.data.enableDocumentInput) primaryInputType = 'document';
+                  else if (targetNode.data.enableTextInput !== false) primaryInputType = 'text';
+
+                  const modesStr = modes.length > 0 ? modes.map(m => `'${m}'`).join(', ') : "'button', 'text'";
+
+                  code += '    # Устанавливаем waiting_for_input для целевого узла (collectUserInput=true)\n';
+                  code += `    user_data[user_id]["waiting_for_input"] = {\n`;
+                  code += `        "type": "${primaryInputType}",\n`;
+                  code += `        "modes": [${modesStr}],\n`;
+                  code += `        "variable": "${targetVarName}",\n`;
+                  code += `        "save_to_database": True,\n`;
+                  code += `        "node_id": "${targetNode.id}",\n`;
+                  code += `        "skip_buttons": ${skipButtonsJson}\n`;
+                  code += `    }\n`;
+                  code += `    logging.info(f"✅ Состояние ожидания настроено: type='{primaryInputType}', modes=[${modesStr}] для переменной ${targetVarName} (узел ${targetNode.id})")\n`;
+                } else {
+                  code += '    \n';
+                  code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
+                  code += `    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
+                }
+
+                let parseModeTarget = '';
+                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                } else if (targetNode.data.formatMode === 'html') {
+                  parseModeTarget = ', parse_mode=ParseMode.HTML';
+                }
+                code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
               }
-              code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
 
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
