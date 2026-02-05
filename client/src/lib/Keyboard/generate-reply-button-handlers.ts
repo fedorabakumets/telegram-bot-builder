@@ -187,30 +187,61 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
 
             } else {
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '    # Проверка условных сообщений для целевого узла\n';
-                code += '    conditional_parse_mode = None\n';
-                code += '    conditional_keyboard = None\n';
-                code += '    user_record = await get_user_from_db(user_id)\n';
-                code += '    if not user_record:\n';
-                code += '        user_record = user_data.get(user_id, {})\n';
-                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-                code += '    \n';
-              }
-              code += '    if "conditional_keyboard" not in locals():\n';
-              code += '        conditional_keyboard = None\n';
-              code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+              // Проверяем, есть ли статическое изображение в целевом узле
+              if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+                code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
+                code += `    image_url = "${targetNode.data.imageUrl}"\n`;
 
-              let parseModeTarget = '';
-              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-              } else if (targetNode.data.formatMode === 'html') {
-                parseModeTarget = ', parse_mode=ParseMode.HTML';
+                if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                  code += '    # Проверка условных сообщений для целевого узла\n';
+                  code += '    conditional_parse_mode = None\n';
+                  code += '    conditional_keyboard = None\n';
+                  code += '    user_record = await get_user_from_db(user_id)\n';
+                  code += '    if not user_record:\n';
+                  code += '        user_record = user_data.get(user_id, {})\n';
+                  code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                  code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                  code += '    \n';
+                }
+                code += '    if "conditional_keyboard" not in locals():\n';
+                code += '        conditional_keyboard = None\n';
+                code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+
+                let parseModeTarget = '';
+                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                } else if (targetNode.data.formatMode === 'html') {
+                  parseModeTarget = ', parse_mode=ParseMode.HTML';
+                }
+                code += `        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                code += '    else:\n';
+                code += `        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="${targetNode.id}"${parseModeTarget})\n`;
+              } else {
+                if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                  code += '    # Проверка условных сообщений для целевого узла\n';
+                  code += '    conditional_parse_mode = None\n';
+                  code += '    conditional_keyboard = None\n';
+                  code += '    user_record = await get_user_from_db(user_id)\n';
+                  code += '    if not user_record:\n';
+                  code += '        user_record = user_data.get(user_id, {})\n';
+                  code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                  code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                  code += '    \n';
+                }
+                code += '    if "conditional_keyboard" not in locals():\n';
+                code += '        conditional_keyboard = None\n';
+                code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+
+                let parseModeTarget = '';
+                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                } else if (targetNode.data.formatMode === 'html') {
+                  parseModeTarget = ', parse_mode=ParseMode.HTML';
+                }
+                code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += '    else:\n';
+                code += `        await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
               }
-              code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
-              code += '    else:\n';
-              code += `        await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
 
               if (targetNode.data.collectUserInput === true ||
                 targetNode.data.enableTextInput === true ||
