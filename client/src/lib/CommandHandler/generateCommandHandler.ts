@@ -3,125 +3,180 @@ import { formatTextForPython } from '../format/formatTextForPython';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { Node } from '@shared/schema';
 
+/**
+ * Генерирует Python код обработчика команды для Telegram бота на основе конфигурации узла.
+ * 
+ * Эта функция создает асинхронный обработчик команды, который включает:
+ * - Логирование вызова команды
+ * - Проверки безопасности (приватные чаты, права администратора, авторизация)
+ * - Сохранение информации о пользователе в БД и локальном хранилище
+ * - Обработку условных сообщений на основе данных пользователя
+ * - Генерацию клавиатуры для интерактивного ответа
+ * - Универсальную замену переменных в тексте сообщения
+ * 
+ * @param node - Узел конфигурации команды, содержащий настройки и данные команды
+ * @param userDatabaseEnabled - Флаг, указывающий на использование базы данных для хранения пользователей
+ * @returns Строку с Python кодом обработчика команды
+ * 
+ * @example
+ * const node = {
+ *   data: {
+ *     command: "/help",
+ *     messageText: "🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка",
+ *     isPrivateOnly: true,
+ *     adminOnly: false,
+ *     requiresAuth: false,
+ *     enableConditionalMessages: true,
+ *     conditionalMessages: [...]
+ *   }
+ * };
+ * const code = generateCommandHandler(node, true);
+ */
 export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): string {
+  // Извлекаем команду из узла или используем значение по умолчанию
   const command = node.data.command || "/help";
+  
+  // Генерируем имя функции на основе команды, заменяя недопустимые символы
   const functionName = command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
 
-  let code = `\n@dp.message(Command("${command.replace('/', '')}"))\n`;
-  code += `async def ${functionName}_handler(message: types.Message):\n`;
+  // Собираем весь код в массив строк для автоматической обработки
+  const codeLines: string[] = [];
 
-  // Добавляем логирование для отладки
-  code += `    logging.info(f"Команда ${command} вызвана пользователем {message.from_user.id}")\n`;
+  // Декоратор и сигнатура функции
+  codeLines.push(`@dp.message(Command("${command.replace('/', '')}"))`);
+  codeLines.push(`async def ${functionName}_handler(message: types.Message):`);
 
-  // Добавляем проверки безопасности
+  // Логирование вызова команды
+  codeLines.push(`    logging.info(f"Команда ${command} вызвана пользователем {message.from_user.id}")`);
+
+  // Проверки безопасности
   if (node.data.isPrivateOnly) {
-    code += '    if not await is_private_chat(message):\n';
-    code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-    code += '        return\n';
+    codeLines.push(`    if not await is_private_chat(message):`);
+    codeLines.push(`        await message.answer("❌ Эта команда доступна только в приватных чатах")`);
+    codeLines.push(`        return`);
   }
 
   if (node.data.adminOnly) {
-    code += '    if not await is_admin(message.from_user.id):\n';
-    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
-    code += '        return\n';
+    codeLines.push(`    if not await is_admin(message.from_user.id):`);
+    codeLines.push(`        await message.answer("❌ У вас нет прав для выполнения этой команды")`);
+    codeLines.push(`        return`);
   }
 
   if (node.data.requiresAuth) {
-    code += '    if not await check_auth(message.from_user.id):\n';
-    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
-    code += '        return\n';
+    codeLines.push(`    if not await check_auth(message.from_user.id):`);
+    codeLines.push(`        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")`);
+    codeLines.push(`        return`);
   }
 
-  // Сохраняем информацию о команде в пользовательских данных
-  code += '    # Сохраняем пользователя и статистику использования команд\n';
-  code += '    user_id = message.from_user.id\n';
-  code += '    username = message.from_user.username\n';
-  code += '    first_name = message.from_user.first_name\n';
-  code += '    last_name = message.from_user.last_name\n';
-  code += '    \n';
+  // Сохранение информации о пользователе
+  codeLines.push(`    # Сохраняем пользователя и статистику использования команд`);
+  codeLines.push(`    user_id = message.from_user.id`);
+  codeLines.push(`    username = message.from_user.username`);
+  codeLines.push(`    first_name = message.from_user.first_name`);
+  codeLines.push(`    last_name = message.from_user.last_name`);
+  codeLines.push(``);
 
   if (userDatabaseEnabled) {
-    code += '    # Сохраняем пользователя в базу данных\n';
-    code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
-    code += '    \n';
-    code += '    # Инициализируем базовые переменные пользователя\n';
-    code += '    user_name = init_user_variables(user_id, message.from_user)\n';
-    code += '    await update_user_data_in_db(user_id, "user_name", user_name)\n';
-    code += '    await update_user_data_in_db(user_id, "first_name", first_name)\n';
-    code += '    await update_user_data_in_db(user_id, "last_name", last_name)\n';
-    code += '    await update_user_data_in_db(user_id, "username", username)\n';
-    code += '    \n';
-    code += '    # Обновляем статистику команд в БД\n';
-    code += `    if saved_to_db:\n`;
-    code += `        await update_user_data_in_db(user_id, "command_${command.replace('/', '')}", datetime.now().isoformat())\n`;
-    code += '    \n';
+    codeLines.push(`    # Сохраняем пользователя в базу данных`);
+    codeLines.push(`    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)`);
+    codeLines.push(``);
+    codeLines.push(`    # Инициализируем базовые переменные пользователя`);
+    codeLines.push(`    user_name = init_user_variables(user_id, message.from_user)`);
+    codeLines.push(`    await update_user_data_in_db(user_id, "user_name", user_name)`);
+    codeLines.push(`    await update_user_data_in_db(user_id, "first_name", first_name)`);
+    codeLines.push(`    await update_user_data_in_db(user_id, "last_name", last_name)`);
+    codeLines.push(`    await update_user_data_in_db(user_id, "username", username)`);
+    codeLines.push(``);
+    codeLines.push(`    # Обновляем статистику команд в БД`);
+    codeLines.push(`    if saved_to_db:`);
+    codeLines.push(`        await update_user_data_in_db(user_id, "command_${command.replace('/', '')}", datetime.now().isoformat())`);
+    codeLines.push(``);
   }
 
-  code += '    # Сохранение в локальное хранилище\n';
-  code += '    # Инициализируем базовые переменные пользователя в локальном хранилище\n';
-  code += '    user_name = init_user_variables(user_id, message.from_user)\n';
-  code += '    \n';
-  code += '    if "commands_used" not in user_data[user_id]:\n';
-  code += '        user_data[user_id]["commands_used"] = {}\n';
-  code += `    user_data[user_id]["commands_used"]["${command}"] = user_data[user_id]["commands_used"].get("${command}", 0) + 1\n`;
+  codeLines.push(`    # Сохранение в локальное хранилище`);
+  codeLines.push(`    # Инициализируем базовые переменные пользователя в локальном хранилище`);
+  codeLines.push(`    user_name = init_user_variables(user_id, message.from_user)`);
+  codeLines.push(``);
+  codeLines.push(`    if "commands_used" not in user_data[user_id]:`);
+  codeLines.push(`        user_data[user_id]["commands_used"] = {}`);
+  codeLines.push(`    user_data[user_id]["commands_used"]["${command}"] = user_data[user_id]["commands_used"].get("${command}", 0) + 1`);
 
-  // Добавляем обработку условных сообщений
+  // Обработка сообщений
   const messageText = node.data.messageText || "🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка\n/settings - Настройки";
-  const cleanedMessageText = stripHtmlTags(messageText); // Удаляем HTML теги
+  const cleanedMessageText = stripHtmlTags(messageText);
   const formattedText = formatTextForPython(cleanedMessageText);
 
   if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
-    code += '\n    # Проверяем условные сообщения\n';
-    code += '    text = None\n';
-    code += '    \n';
-    code += '    # Получаем данные пользователя для проверки условий\n';
+    codeLines.push(``);
+    codeLines.push(`    # Проверяем условные сообщения`);
+    codeLines.push(`    text = None`);
+    codeLines.push(``);
+    codeLines.push(`    # Получаем данные пользователя для проверки условий`);
     if (userDatabaseEnabled) {
-      code += '    user_record = await get_user_from_db(user_id)\n';
-      code += '    if not user_record:\n';
-      code += '        user_record = user_data.get(user_id, {})\n';
+      codeLines.push(`    user_record = await get_user_from_db(user_id)`);
+      codeLines.push(`    if not user_record:`);
+      codeLines.push(`        user_record = user_data.get(user_id, {})`);
     } else {
-      code += '    user_record = user_data.get(user_id, {})\n';
+      codeLines.push(`    user_record = user_data.get(user_id, {})`);
     }
-    code += '    \n';
-    code += '    # Безопасно извлекаем user_data\n';
-    code += '    if isinstance(user_record, dict):\n';
-    code += '        if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
-    code += '            user_data_dict = user_record["user_data"]\n';
-    code += '        else:\n';
-    code += '            user_data_dict = user_record\n';
-    code += '    else:\n';
-    code += '        user_data_dict = {}\n';
-    code += '    \n';
+    codeLines.push(``);
+    codeLines.push(`    # Безопасно извлекаем user_data`);
+    codeLines.push(`    if isinstance(user_record, dict):`);
+    codeLines.push(`        if "user_data" in user_record and isinstance(user_record["user_data"], dict):`);
+    codeLines.push(`            user_data_dict = user_record["user_data"]`);
+    codeLines.push(`        else:`);
+    codeLines.push(`            user_data_dict = user_record`);
+    codeLines.push(`    else:`);
+    codeLines.push(`        user_data_dict = {}`);
+    codeLines.push(``);
 
-    // Generate conditional logic using helper function
-    code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
+    // Генерируем условную логику
+    const conditionalCode = generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
+    const conditionalLines = conditionalCode.split('\n').filter(line => line.trim());
+    codeLines.push(...conditionalLines);
 
-    // Add fallback
-    code += '    else:\n';
-
+    // Fallback
+    codeLines.push(`    else:`);
     if (node.data.fallbackMessage) {
       const cleanedFallbackText = stripHtmlTags(node.data.fallbackMessage);
       const fallbackText = formatTextForPython(cleanedFallbackText);
-      code += `        text = ${fallbackText}\n`;
-      code += '        logging.info("Используется запасное сообщение")\n';
+      codeLines.push(`        text = ${fallbackText}`);
+      codeLines.push(`        logging.info("Используется запасное сообщение")`);
     } else {
-      code += `        text = ${formattedText}\n`;
-      code += '        logging.info("Используется основное сообщение узла")\n';
+      codeLines.push(`        text = ${formattedText}`);
+      codeLines.push(`        logging.info("Используется основное сообщение узла")`);
     }
 
-    code += '    \n';
+    codeLines.push(``);
+    codeLines.push(`    # Универсальная замена переменных`);
 
     // Добавляем универсальную замену переменных
-    code += generateUniversalVariableReplacement('    ');
+    const variableReplacementCode = generateUniversalVariableReplacement('    ');
+    const variableLines = variableReplacementCode.split('\n').filter(line => line.trim());
+    codeLines.push(...variableLines);
+
   } else {
-    code += `\n    text = ${formattedText}\n`;
+    codeLines.push(``);
+    codeLines.push(`    text = ${formattedText}`);
+    codeLines.push(``);
+    codeLines.push(`    # Универсальная замена переменных`);
 
     // Добавляем универсальную замену переменных
-    code += '    \n';
-    code += generateUniversalVariableReplacement('    ');
+    const variableReplacementCode = generateUniversalVariableReplacement('    ');
+    const variableLines = variableReplacementCode.split('\n').filter(line => line.trim());
+    codeLines.push(...variableLines);
   }
 
-  return code + generateKeyboard(node);
+  // Добавляем клавиатуру
+  const keyboardCode = generateKeyboard(node);
+  const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+  codeLines.push(...keyboardLines);
+
+  // Применяем автоматическое добавление комментариев ко всему коду
+  const processedCode = processCodeWithAutoComments(codeLines, 'generateCommandHandler.ts');
+  
+  return processedCode.join('\n');
 }
