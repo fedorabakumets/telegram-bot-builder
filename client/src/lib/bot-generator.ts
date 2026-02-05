@@ -187,9 +187,10 @@ const logFlowAnalysis = (nodes: any[], connections: any[]) => {
  * @param {boolean} userDatabaseEnabled - Флаг включения пользовательской базы данных (по умолчанию false)
  * @param {number | null} projectId - ID проекта (по умолчанию null)
  * @param {boolean} enableLogging - Флаг включения логирования (по умолчанию false)
+ * @param {boolean} enableGroupHandlers - Флаг включения обработчиков для работы с группами (по умолчанию false)
  * @returns {string} Сгенерированный Python-код для бота
  */
-export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false): string {
+export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false, enableGroupHandlers: boolean = false): string {
   // Устанавливаем флаг глобального логирования для этого запуска генерации
   globalLoggingEnabled = enableLogging;
 
@@ -325,7 +326,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   addCommandCallbackHandlers();
 
   // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком тттекста
-  generateGroupBasedEventHandlers();
+  if (enableGroupHandlers) {
+    generateGroupBasedEventHandlers();
+  }
 
   // Добавляем универсальный fallback-обработчик для всех текстовых сообщений
   // Этот обработчик ОБЯЗАТЕЛЬНО нужен, чтобы middleware сохранял ВСЕ сообщения
@@ -987,11 +990,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * **Интеграция с существующими обработчиками:**
    * - Совместимость с start_handler
    * - Совместимость с command handlers
-   * - Поддержка FakeMessageEdit для редактирования сообщений
+   * - Поддержка FakeMessageEdit для редактирования сообщ����ий
    * - Сохранение контекста callback_query
    * 
    * @remarks
-   * Функция обеспечивает полную функциональность выполнения команд
+   * Функция обеспечивает полную функцион��льность выполнения команд
    * через callback кнопки, что расширяет возможности интерактивности бота
    * 
    * @example

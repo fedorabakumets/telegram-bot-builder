@@ -1,4 +1,7 @@
 {
+  "settings": {
+    "enableGroupHandlers": false
+  },
   "sheets": [
     {
       "id": "NeZoUXa2JDVhuwCQqWS2a",
@@ -64,7 +67,7 @@
         }
       ],
       "createdAt": "2026-02-05T18:32:56.989Z",
-      "updatedAt": "2026-02-05T18:33:54.922Z",
+      "updatedAt": "2026-02-05T19:40:55.470Z",
       "viewState": {
         "pan": {
           "x": 0,

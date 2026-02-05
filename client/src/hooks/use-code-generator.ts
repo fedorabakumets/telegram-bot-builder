@@ -98,7 +98,9 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
 
       switch (format) {
         case 'python':
-          return botGenerator.generatePythonCode(botData, projectName, groups, userDatabaseEnabled, projectId, isLoggingEnabled());
+          // Получаем настройки проекта для определения, включать ли обработчики групп
+          const enableGroupHandlers = botData?.settings?.enableGroupHandlers ?? false;
+          return botGenerator.generatePythonCode(botData, projectName, groups, userDatabaseEnabled, projectId, isLoggingEnabled(), enableGroupHandlers);
         case 'json':
           return JSON.stringify(botData, null, 2);
         case 'requirements':

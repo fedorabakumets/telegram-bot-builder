@@ -12,6 +12,8 @@ export function generatePythonCodeWithMap(
   projectId: number | null = null,
   enableLogging: boolean = false
 ): CodeWithMap {
-  const code = generatePythonCode(botData, botName, groups, userDatabaseEnabled, projectId, enableLogging);
+  // Получаем настройки проекта для определения, включать ли обработчики групп
+  const enableGroupHandlers = botData?.settings?.enableGroupHandlers ?? false;
+  const code = generatePythonCode(botData, botName, groups, userDatabaseEnabled, projectId, enableLogging, enableGroupHandlers);
   return parseCodeMap(code);
 }
