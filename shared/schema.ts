@@ -2,184 +2,342 @@ import { pgTable, text, serial, integer, jsonb, timestamp, bigint } from "drizzl
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Telegram authenticated users table
+/**
+ * Таблица аутентифицированных пользователей Telegram
+ */
 export const telegramUsers = pgTable("telegram_users", {
-  id: bigint("id", { mode: "number" }).primaryKey(), // Telegram user ID
+  /** Уникальный идентификатор пользователя в Telegram */
+  id: bigint("id", { mode: "number" }).primaryKey(),
+  /** Имя пользователя */
   firstName: text("first_name").notNull(),
+  /** Фамилия пользователя */
   lastName: text("last_name"),
+  /** Имя пользователя в Telegram (username) */
   username: text("username"),
+  /** URL фотографии пользователя */
   photoUrl: text("photo_url"),
+  /** Дата аутентификации */
   authDate: bigint("auth_date", { mode: "number" }),
+  /** Дата создания записи */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Дата последнего обновления записи */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/**
+ * Таблица проектов ботов
+ */
 export const botProjects = pgTable("bot_projects", {
+  /** Уникальный идентификатор проекта */
   id: serial("id").primaryKey(),
-  ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }), // Владелец проекта (null для неавторизованных)
+  /** Идентификатор владельца проекта (ссылка на telegram_users.id) */
+  ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }),
+  /** Название проекта */
   name: text("name").notNull(),
+  /** Описание проекта */
   description: text("description"),
+  /** JSON-данные проекта (структура узлов, соединений и т.д.) */
   data: jsonb("data").notNull(),
-  botToken: text("bot_token"), // Сохраненный токен бота
-  userDatabaseEnabled: integer("user_database_enabled").default(1), // 0 = выключена, 1 = включена
+  /** Токен бота (сохраняется в зашифрованном виде) */
+  botToken: text("bot_token"),
+  /** Флаг включения пользовательской базы данных (0 = выключена, 1 = включена) */
+  userDatabaseEnabled: integer("user_database_enabled").default(1),
+  /** Дата создания проекта */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Дата последнего обновления проекта */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// MIGRATION REQUIRED: После изменения этой схемы необходимо применить миграцию к базе данных!
-// Выполните вручную: ALTER TABLE bot_instances DROP CONSTRAINT bot_instances_project_id_bot_projects_id_fk; 
-// ALTER TABLE bot_instances ADD CONSTRAINT bot_instances_project_id_bot_projects_id_fk FOREIGN KEY (project_id) REFERENCES bot_projects(id) ON DELETE CASCADE;
-// ИЛИ пересоздайте базу данных (с потерей данных).
+/**
+ * Таблица запущенных экземпляров ботов
+ *
+ * ВАЖНО: После изменения этой схемы необходимо применить миграцию к базе данных!
+ * Выполните вручную: ALTER TABLE bot_instances DROP CONSTRAINT bot_instances_project_id_bot_projects_id_fk;
+ * ALTER TABLE bot_instances ADD CONSTRAINT bot_instances_project_id_bot_projects_id_fk FOREIGN KEY (project_id) REFERENCES bot_projects(id) ON DELETE CASCADE;
+ * ИЛИ пересоздайте базу данных (с потерей данных).
+ */
 export const botInstances = pgTable("bot_instances", {
+  /** Уникальный идентификатор экземпляра */
   id: serial("id").primaryKey(),
+  /** Идентификатор проекта (ссылка на bot_projects.id) */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  /** Идентификатор токена (ссылка на bot_tokens.id) */
   tokenId: integer("token_id").references(() => botTokens.id, { onDelete: "cascade" }).notNull(),
-  status: text("status").notNull(), // "running", "stopped", "error"
+  /** Статус экземпляра ("running", "stopped", "error") */
+  status: text("status").notNull(),
+  /** Токен бота */
   token: text("token").notNull(),
+  /** Идентификатор процесса (если бот запущен) */
   processId: text("process_id"),
+  /** Время запуска экземпляра */
   startedAt: timestamp("started_at").defaultNow(),
+  /** Время остановки экземпляра */
   stoppedAt: timestamp("stopped_at"),
+  /** Сообщение об ошибке (если есть) */
   errorMessage: text("error_message"),
 });
 
+/**
+ * Таблица шаблонов ботов
+ */
 export const botTemplates = pgTable("bot_templates", {
+  /** Уникальный идентификатор шаблона */
   id: serial("id").primaryKey(),
-  ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }), // Владелец шаблона (null для официальных)
+  /** Идентификатор владельца шаблона (null для официальных шаблонов) */
+  ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }),
+  /** Название шаблона */
   name: text("name").notNull(),
+  /** Описание шаблона */
   description: text("description"),
+  /** JSON-данные шаблона (структура узлов, соединений и т.д.) */
   data: jsonb("data").notNull(),
-  category: text("category").default("custom"), // "official", "community", "custom", "business", "entertainment", "education", "utility", "games"
+  /** Категория шаблона ("official", "community", "custom", "business", "entertainment", "education", "utility", "games") */
+  category: text("category").default("custom"),
+  /** Теги шаблона */
   tags: text("tags").array(),
-  isPublic: integer("is_public").default(0), // 0 = private, 1 = public
-  difficulty: text("difficulty").default("easy"), // "easy", "medium", "hard"
-  authorId: text("author_id"), // ID автора шаблона (deprecated, использовать ownerId)
-  authorName: text("author_name"), // Имя автора
-  useCount: integer("use_count").notNull().default(0), // Количество использований
-  rating: integer("rating").notNull().default(0), // Рейтинг от 1 до 5
-  ratingCount: integer("rating_count").notNull().default(0), // Количество оценок
-  featured: integer("featured").notNull().default(0), // 0 = не рекомендуемый, 1 = рекомендуемый
-  version: text("version").default("1.0.0"), // Версия шаблона
-  previewImage: text("preview_image"), // URL изображения для предварительного просмотра
-  lastUsedAt: timestamp("last_used_at"), // Время последнего использования
-  downloadCount: integer("download_count").notNull().default(0), // Количество скачиваний
-  likeCount: integer("like_count").notNull().default(0), // Количество лайков
-  bookmarkCount: integer("bookmark_count").notNull().default(0), // Количество закладок
-  viewCount: integer("view_count").notNull().default(0), // Количество просмотров
-  language: text("language").default("ru"), // Язык шаблона
-  requiresToken: integer("requires_token").notNull().default(0), // Требует ли бот токен
-  complexity: integer("complexity").notNull().default(1), // Сложность от 1 до 10
-  estimatedTime: integer("estimated_time").notNull().default(5), // Примерное время настройки в минутах
+  /** Флаг публичности (0 = приватный, 1 = публичный) */
+  isPublic: integer("is_public").default(0),
+  /** Уровень сложности ("easy", "medium", "hard") */
+  difficulty: text("difficulty").default("easy"),
+  /** Идентификатор автора шаблона (устаревшее, использовать ownerId) */
+  authorId: text("author_id"),
+  /** Имя автора шаблона */
+  authorName: text("author_name"),
+  /** Количество использований шаблона */
+  useCount: integer("use_count").notNull().default(0),
+  /** Рейтинг шаблона (от 1 до 5) */
+  rating: integer("rating").notNull().default(0),
+  /** Количество оценок шаблона */
+  ratingCount: integer("rating_count").notNull().default(0),
+  /** Флаг рекомендуемости (0 = не рекомендуемый, 1 = рекомендуемый) */
+  featured: integer("featured").notNull().default(0),
+  /** Версия шаблона */
+  version: text("version").default("1.0.0"),
+  /** URL изображения для предварительного просмотра */
+  previewImage: text("preview_image"),
+  /** Время последнего использования шаблона */
+  lastUsedAt: timestamp("last_used_at"),
+  /** Количество скачиваний шаблона */
+  downloadCount: integer("download_count").notNull().default(0),
+  /** Количество лайков шаблона */
+  likeCount: integer("like_count").notNull().default(0),
+  /** Количество закладок шаблона */
+  bookmarkCount: integer("bookmark_count").notNull().default(0),
+  /** Количество просмотров шаблона */
+  viewCount: integer("view_count").notNull().default(0),
+  /** Язык шаблона */
+  language: text("language").default("ru"),
+  /** Флаг требования токена (0 = не требуется, 1 = требуется) */
+  requiresToken: integer("requires_token").notNull().default(0),
+  /** Сложность шаблона (от 1 до 10) */
+  complexity: integer("complexity").notNull().default(1),
+  /** Примерное время настройки в минутах */
+  estimatedTime: integer("estimated_time").notNull().default(5),
+  /** Дата создания шаблона */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Дата последнего обновления шаблона */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/**
+ * Таблица токенов ботов
+ */
 export const botTokens = pgTable("bot_tokens", {
+  /** Уникальный идентификатор токена */
   id: serial("id").primaryKey(),
+  /** Идентификатор проекта (ссылка на bot_projects.id) */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
-  ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }), // Владелец токена (наследуется от проекта)
-  name: text("name").notNull(), // Пользовательское имя для токена
-  token: text("token").notNull(), // Сам токен
-  isDefault: integer("is_default").default(0), // 0 = нет, 1 = да (токен по умолчанию)
-  isActive: integer("is_active").default(1), // 0 = неактивен, 1 = активен
-  description: text("description"), // Описание токена
-  // Информация о боте из Telegram API
-  botFirstName: text("bot_first_name"), // Имя бота
-  botUsername: text("bot_username"), // @username бота
-  botDescription: text("bot_description"), // Полное описание бота
-  botShortDescription: text("bot_short_description"), // Короткое описание бота
-  botPhotoUrl: text("bot_photo_url"), // URL аватарки бота
-  botCanJoinGroups: integer("bot_can_join_groups"), // Может ли бот присоединяться к группам
-  botCanReadAllGroupMessages: integer("bot_can_read_all_group_messages"), // Может ли читать все сообщения в группах
-  botSupportsInlineQueries: integer("bot_supports_inline_queries"), // Поддерживает ли инлайн запросы
-  botHasMainWebApp: integer("bot_has_main_web_app"), // Есть ли главное веб-приложение
-  lastUsedAt: timestamp("last_used_at"), // Время последнего использования
-  // Отслеживание времени выполнения
-  trackExecutionTime: integer("track_execution_time").default(0), // 0 = выключено, 1 = включено
-  totalExecutionSeconds: integer("total_execution_seconds").default(0), // Общее время выполнения в секундах
+  /** Идентификатор владельца токена (наследуется от проекта) */
+  ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }),
+  /** Пользовательское имя для токена */
+  name: text("name").notNull(),
+  /** Токен бота (хранится в зашифрованном виде) */
+  token: text("token").notNull(),
+  /** Флаг токена по умолчанию (0 = нет, 1 = да) */
+  isDefault: integer("is_default").default(0),
+  /** Флаг активности токена (0 = неактивен, 1 = активен) */
+  isActive: integer("is_active").default(1),
+  /** Описание токена */
+  description: text("description"),
+  /** Имя бота из Telegram API */
+  botFirstName: text("bot_first_name"),
+  /** Имя пользователя бота (@username) из Telegram API */
+  botUsername: text("bot_username"),
+  /** Полное описание бота из Telegram API */
+  botDescription: text("bot_description"),
+  /** Короткое описание бота из Telegram API */
+  botShortDescription: text("bot_short_description"),
+  /** URL аватарки бота из Telegram API */
+  botPhotoUrl: text("bot_photo_url"),
+  /** Флаг возможности бота присоединяться к группам */
+  botCanJoinGroups: integer("bot_can_join_groups"),
+  /** Флаг возможности бота читать все сообщения в группах */
+  botCanReadAllGroupMessages: integer("bot_can_read_all_group_messages"),
+  /** Флаг поддержки инлайн-запросов ботом */
+  botSupportsInlineQueries: integer("bot_supports_inline_queries"),
+  /** Флаг наличия главного веб-приложения у бота */
+  botHasMainWebApp: integer("bot_has_main_web_app"),
+  /** Время последнего использования токена */
+  lastUsedAt: timestamp("last_used_at"),
+  /** Флаг отслеживания времени выполнения (0 = выключено, 1 = включено) */
+  trackExecutionTime: integer("track_execution_time").default(0),
+  /** Общее время выполнения в секундах */
+  totalExecutionSeconds: integer("total_execution_seconds").default(0),
+  /** Дата создания токена */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Дата последнего обновления токена */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/**
+ * Таблица медиафайлов
+ */
 export const mediaFiles = pgTable("media_files", {
+  /** Уникальный идентификатор файла */
   id: serial("id").primaryKey(),
+  /** Идентификатор проекта (ссылка на bot_projects.id) */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
-  fileName: text("file_name").notNull(), // Оригинальное имя файла
-  fileType: text("file_type").notNull(), // photo, video, audio, document
-  filePath: text("file_path").notNull(), // Путь к файлу на сервере
-  fileSize: integer("file_size").notNull(), // Размер файла в байтах
-  mimeType: text("mime_type").notNull(), // MIME тип файла
-  url: text("url").notNull(), // URL для доступа к файлу
-  description: text("description"), // Описание файла
-  tags: text("tags").array().default([]), // Теги для поиска
-  isPublic: integer("is_public").default(0), // 0 = приватный, 1 = публичный
-  usageCount: integer("usage_count").default(0), // Количество использований
+  /** Оригинальное имя файла */
+  fileName: text("file_name").notNull(),
+  /** Тип файла ("photo", "video", "audio", "document") */
+  fileType: text("file_type").notNull(),
+  /** Путь к файлу на сервере */
+  filePath: text("file_path").notNull(),
+  /** Размер файла в байтах */
+  fileSize: integer("file_size").notNull(),
+  /** MIME тип файла */
+  mimeType: text("mime_type").notNull(),
+  /** URL для доступа к файлу */
+  url: text("url").notNull(),
+  /** Описание файла */
+  description: text("description"),
+  /** Теги для поиска */
+  tags: text("tags").array().default([]),
+  /** Флаг публичности (0 = приватный, 1 = публичный) */
+  isPublic: integer("is_public").default(0),
+  /** Количество использований файла */
+  usageCount: integer("usage_count").default(0),
+  /** Дата создания файла */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Дата последнего обновления файла */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/**
+ * Таблица пользовательских данных бота
+ */
 export const userBotData = pgTable("user_bot_data", {
+  /** Уникальный идентификатор записи */
   id: serial("id").primaryKey(),
+  /** Идентификатор проекта (ссылка на bot_projects.id) */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
-  userId: text("user_id").notNull(), // Telegram user ID
-  userName: text("user_name"), // Имя пользователя в Telegram
-  firstName: text("first_name"), // Имя пользователя
-  lastName: text("last_name"), // Фамилия пользователя
-  languageCode: text("language_code"), // Код языка пользователя
-  isBot: integer("is_bot").default(0), // 0 = человек, 1 = бот
-  isPremium: integer("is_premium").default(0), // 0 = обычный, 1 = премиум
-  // Данные взаимодействий
+  /** Идентификатор пользователя в Telegram */
+  userId: text("user_id").notNull(),
+  /** Имя пользователя в Telegram */
+  userName: text("user_name"),
+  /** Имя пользователя */
+  firstName: text("first_name"),
+  /** Фамилия пользователя */
+  lastName: text("last_name"),
+  /** Код языка пользователя */
+  languageCode: text("language_code"),
+  /** Флаг бота (0 = человек, 1 = бот) */
+  isBot: integer("is_bot").default(0),
+  /** Флаг премиум-статуса (0 = обычный, 1 = премиум) */
+  isPremium: integer("is_premium").default(0),
+  /** Время последнего взаимодействия */
   lastInteraction: timestamp("last_interaction").defaultNow(),
+  /** Количество взаимодействий */
   interactionCount: integer("interaction_count").default(0),
-  // Сохраненные данные из узлов сбора ввода
-  userData: jsonb("user_data").default({}), // Пользовательские данные (ответы на вопросы, формы и т.д.)
-  // Настройки и состояние
-  currentState: text("current_state"), // Текущее состояние в диалоге с ботом
-  preferences: jsonb("preferences").default({}), // Пользовательские настройки
-  // Статистика
-  commandsUsed: jsonb("commands_used").default({}), // Статистика использования команд
-  sessionsCount: integer("sessions_count").default(1), // Количество сессий
-  totalMessagesSent: integer("total_messages_sent").default(0), // Общее количество отправленных сообщений
-  totalMessagesReceived: integer("total_messages_received").default(0), // Общее количество полученных сообщений
-  // Метаданные
-  deviceInfo: text("device_info"), // Информация об устройстве
-  locationData: jsonb("location_data"), // Данные геолокации (если предоставлены)
-  contactData: jsonb("contact_data"), // Контактные данные (если предоставлены)
-  isBlocked: integer("is_blocked").default(0), // 0 = не заблокирован, 1 = заблокирован
-  isActive: integer("is_active").default(1), // 0 = неактивен, 1 = активен
-  tags: text("tags").array().default([]), // Теги для категоризации пользователей
-  notes: text("notes"), // Заметки администратора
+  /** Пользовательские данные (ответы на вопросы, формы и т.д.) */
+  userData: jsonb("user_data").default({}),
+  /** Текущее состояние в диалоге с ботом */
+  currentState: text("current_state"),
+  /** Пользовательские настройки */
+  preferences: jsonb("preferences").default({}),
+  /** Статистика использования команд */
+  commandsUsed: jsonb("commands_used").default({}),
+  /** Количество сессий */
+  sessionsCount: integer("sessions_count").default(1),
+  /** Общее количество отправленных сообщений */
+  totalMessagesSent: integer("total_messages_sent").default(0),
+  /** Общее количество полученных сообщений */
+  totalMessagesReceived: integer("total_messages_received").default(0),
+  /** Информация об устройстве */
+  deviceInfo: text("device_info"),
+  /** Данные геолокации (если предоставлены) */
+  locationData: jsonb("location_data"),
+  /** Контактные данные (если предоставлены) */
+  contactData: jsonb("contact_data"),
+  /** Флаг блокировки (0 = не заблокирован, 1 = заблокирован) */
+  isBlocked: integer("is_blocked").default(0),
+  /** Флаг активности (0 = неактивен, 1 = активен) */
+  isActive: integer("is_active").default(1),
+  /** Теги для категоризации пользователей */
+  tags: text("tags").array().default([]),
+  /** Заметки администратора */
+  notes: text("notes"),
+  /** Дата создания записи */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Дата последнего обновления записи */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/**
+ * Таблица пользователей бота
+ */
 export const botUsers = pgTable("bot_users", {
+  /** Идентификатор пользователя в Telegram */
   userId: bigint("user_id", { mode: "number" }).primaryKey(),
+  /** Имя пользователя в Telegram */
   username: text("username"),
+  /** Имя пользователя */
   firstName: text("first_name"),
+  /** Фамилия пользователя */
   lastName: text("last_name"),
+  /** Дата регистрации пользователя */
   registeredAt: timestamp("registered_at").defaultNow(),
+  /** Дата последнего взаимодействия */
   lastInteraction: timestamp("last_interaction").defaultNow(),
+  /** Количество взаимодействий */
   interactionCount: integer("interaction_count").default(0),
+  /** Пользовательские данные */
   userData: jsonb("user_data").default({}),
+  /** Флаг активности (0 = неактивен, 1 = активен) */
   isActive: integer("is_active").default(1),
 });
 
+/**
+ * Таблица групп бота
+ */
 export const botGroups = pgTable("bot_groups", {
+  /** Уникальный идентификатор группы */
   id: serial("id").primaryKey(),
+  /** Идентификатор проекта (ссылка на bot_projects.id) */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
-  groupId: text("group_id"), // Telegram group ID
-  name: text("name").notNull(), // Отображаемое название группы
-  url: text("url").notNull(), // Ссылка на группу
-  isAdmin: integer("is_admin").default(0), // 0 = участник, 1 = администратор
-  memberCount: integer("member_count"), // Количество участников
-  isActive: integer("is_active").default(1), // 0 = неактивная, 1 = активная
-  description: text("description"), // Описание группы
-  settings: jsonb("settings").default({}), // Настройки группы
-  // Расширенные поля для управления группами
-  avatarUrl: text("avatar_url"), // URL аватарки группы
-  chatType: text("chat_type").default("group"), // "group", "supergroup", "channel"
-  inviteLink: text("invite_link"), // Пригласительная ссылка
-  // Права администратора бота в группе
+  /** Идентификатор группы в Telegram */
+  groupId: text("group_id"),
+  /** Отображаемое название группы */
+  name: text("name").notNull(),
+  /** Ссылка на группу */
+  url: text("url").notNull(),
+  /** Флаг администратора (0 = участник, 1 = администратор) */
+  isAdmin: integer("is_admin").default(0),
+  /** Количество участников */
+  memberCount: integer("member_count"),
+  /** Флаг активности (0 = неактивная, 1 = активная) */
+  isActive: integer("is_active").default(1),
+  /** Описание группы */
+  description: text("description"),
+  /** Настройки группы */
+  settings: jsonb("settings").default({}),
+  /** URL аватарки группы */
+  avatarUrl: text("avatar_url"),
+  /** Тип чата ("group", "supergroup", "channel") */
+  chatType: text("chat_type").default("group"),
+  /** Пригласительная ссылка */
+  inviteLink: text("invite_link"),
+  /** Права администратора бота в группе */
   adminRights: jsonb("admin_rights").default({
     can_manage_chat: false,
     can_change_info: false,
@@ -190,90 +348,157 @@ export const botGroups = pgTable("bot_groups", {
     can_promote_members: false,
     can_manage_video_chats: false
   }),
-  // Статистика группы
+  /** Количество сообщений в группе */
   messagesCount: integer("messages_count").default(0),
+  /** Количество активных пользователей */
   activeUsers: integer("active_users").default(0),
+  /** Дата последней активности */
   lastActivity: timestamp("last_activity"),
-  // Дополнительные настройки
-  isPublic: integer("is_public").default(0), // 0 = частная, 1 = публичная
-  language: text("language").default("ru"), // Основной язык группы
-  timezone: text("timezone"), // Часовой пояс группы
-  tags: text("tags").array().default([]), // Теги для категоризации
-  notes: text("notes"), // Заметки администратора
+  /** Флаг публичности (0 = частная, 1 = публичная) */
+  isPublic: integer("is_public").default(0),
+  /** Основной язык группы */
+  language: text("language").default("ru"),
+  /** Часовой пояс группы */
+  timezone: text("timezone"),
+  /** Теги для категоризации */
+  tags: text("tags").array().default([]),
+  /** Заметки администратора */
+  notes: text("notes"),
+  /** Дата создания группы */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Дата последнего обновления группы */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Таблица участников групп
+/**
+ * Таблица участников групп
+ */
 export const groupMembers = pgTable("group_members", {
+  /** Уникальный идентификатор участника */
   id: serial("id").primaryKey(),
+  /** Идентификатор группы (ссылка на bot_groups.id) */
   groupId: integer("group_id").references(() => botGroups.id, { onDelete: "cascade" }).notNull(),
-  userId: bigint("user_id", { mode: "number" }).notNull(), // Telegram user ID
+  /** Идентификатор пользователя в Telegram */
+  userId: bigint("user_id", { mode: "number" }).notNull(),
+  /** Имя пользователя в Telegram */
   username: text("username"),
+  /** Имя пользователя */
   firstName: text("first_name"),
+  /** Фамилия пользователя */
   lastName: text("last_name"),
-  status: text("status").default("member"), // "creator", "administrator", "member", "restricted", "left", "kicked"
+  /** Статус участника ("creator", "administrator", "member", "restricted", "left", "kicked") */
+  status: text("status").default("member"),
+  /** Флаг бота (0 = человек, 1 = бот) */
   isBot: integer("is_bot").default(0),
-  // Права администратора (если пользователь админ)
+  /** Права администратора (если пользователь админ) */
   adminRights: jsonb("admin_rights").default({}),
-  customTitle: text("custom_title"), // Кастомный титул администратора
-  // Ограничения (если пользователь ограничен)
+  /** Кастомный титул администратора */
+  customTitle: text("custom_title"),
+  /** Ограничения (если пользователь ограничен) */
   restrictions: jsonb("restrictions").default({}),
+  /** Дата окончания ограничения */
   restrictedUntil: timestamp("restricted_until"),
-  // Метаданные
+  /** Дата вступления в группу */
   joinedAt: timestamp("joined_at").defaultNow(),
+  /** Дата последнего появления */
   lastSeen: timestamp("last_seen"),
+  /** Количество сообщений участника */
   messageCount: integer("message_count").default(0),
+  /** Флаг активности (0 = неактивен, 1 = активен) */
   isActive: integer("is_active").default(1),
+  /** Дата создания записи */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Дата последнего обновления записи */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Таблица пользовательских настроек для Telegram Client API
+/**
+ * Таблица пользовательских настроек для Telegram Client API
+ */
 export const userTelegramSettings = pgTable("user_telegram_settings", {
+  /** Уникальный идентификатор настроек */
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull().unique(), // Уникальный ID пользователя (например, email или внутренний ID)
-  apiId: text("api_id"), // Telegram API ID
-  apiHash: text("api_hash"), // Telegram API Hash
-  phoneNumber: text("phone_number"), // Номер телефона для авторизации
-  sessionString: text("session_string"), // Сохраненная сессия
-  isActive: integer("is_active").default(1), // 0 = неактивен, 1 = активен
+  /** Уникальный ID пользователя (например, email или внутренний ID) */
+  userId: text("user_id").notNull().unique(),
+  /** Telegram API ID */
+  apiId: text("api_id"),
+  /** Telegram API Hash */
+  apiHash: text("api_hash"),
+  /** Номер телефона для авторизации */
+  phoneNumber: text("phone_number"),
+  /** Сохраненная сессия */
+  sessionString: text("session_string"),
+  /** Флаг активности (0 = неактивен, 1 = активен) */
+  isActive: integer("is_active").default(1),
+  /** Дата создания настроек */
   createdAt: timestamp("created_at").defaultNow(),
+  /** Дата последнего обновления настроек */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Таблица истории сообщений между ботом и пользователями
+/**
+ * Таблица истории сообщений между ботом и пользователями
+ */
 export const botMessages = pgTable("bot_messages", {
+  /** Уникальный идентификатор сообщения */
   id: serial("id").primaryKey(),
+  /** Идентификатор проекта (ссылка на bot_projects.id) */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
-  userId: text("user_id").notNull(), // Telegram user ID
-  messageType: text("message_type").notNull(), // "user" или "bot"
-  messageText: text("message_text"), // Текст сообщения
-  messageData: jsonb("message_data"), // Дополнительные данные (медиа, кнопки и т.д.)
-  nodeId: text("node_id"), // ID узла бота, который отправил сообщение
-  primaryMediaId: integer("primary_media_id").references(() => mediaFiles.id, { onDelete: "set null" }), // Основное медиа (фото/видео) для быстрого доступа
+  /** Идентификатор пользователя в Telegram */
+  userId: text("user_id").notNull(),
+  /** Тип сообщения ("user" или "bot") */
+  messageType: text("message_type").notNull(),
+  /** Текст сообщения */
+  messageText: text("message_text"),
+  /** Дополнительные данные (медиа, кнопки и т.д.) */
+  messageData: jsonb("message_data"),
+  /** ID узла бота, который отправил сообщение */
+  nodeId: text("node_id"),
+  /** ID основного медиа (фото/видео) для быстрого доступа */
+  primaryMediaId: integer("primary_media_id").references(() => mediaFiles.id, { onDelete: "set null" }),
+  /** Дата создания сообщения */
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Таблица связи сообщений с медиафайлами (для множественных медиа)
+/**
+ * Таблица связи сообщений с медиафайлами (для множественных медиа)
+ */
 export const botMessageMedia = pgTable("bot_message_media", {
+  /** Уникальный идентификатор связи */
   id: serial("id").primaryKey(),
+  /** ID сообщения (ссылка на bot_messages.id) */
   messageId: integer("message_id").references(() => botMessages.id, { onDelete: "cascade" }).notNull(),
+  /** ID медиафайла (ссылка на media_files.id) */
   mediaFileId: integer("media_file_id").references(() => mediaFiles.id, { onDelete: "cascade" }).notNull(),
-  mediaKind: text("media_kind").notNull(), // "photo", "video", "audio", "document"
-  orderIndex: integer("order_index").default(0), // Порядок для множественных медиа
+  /** Тип медиа ("photo", "video", "audio", "document") */
+  mediaKind: text("media_kind").notNull(),
+  /** Порядковый индекс для множественных медиа */
+  orderIndex: integer("order_index").default(0),
+  /** Дата создания связи */
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+/**
+ * Схема для вставки данных проекта бота
+ */
 export const insertBotProjectSchema = z.object({
+  /** Идентификатор владельца проекта */
   ownerId: z.number().nullable().optional(),
+  /** Название проекта (обязательное поле) */
   name: z.string().min(1),
+  /** Описание проекта */
   description: z.string().optional(),
-  data: z.any().default({}), // JSON data - обязательное поле с дефолтным значением
+  /** JSON-данные проекта (обязательное поле с дефолтным значением) */
+  data: z.any().default({}),
+  /** Токен бота */
   botToken: z.string().nullish(),
+  /** Флаг включения пользовательской базы данных (0 = выключена, 1 = включена) */
   userDatabaseEnabled: z.number().min(0).max(1).default(1),
 });
 
+/**
+ * Схема для вставки данных экземпляра бота
+ */
 export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
   projectId: true,
   tokenId: true,
@@ -285,6 +510,9 @@ export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
   stoppedAt: true,
 });
 
+/**
+ * Схема для вставки данных шаблона бота
+ */
 export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   ownerId: true,
   name: true,
@@ -304,15 +532,25 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   complexity: true,
   estimatedTime: true,
 }).extend({
+  /** Идентификатор владельца шаблона */
   ownerId: z.number().nullable().optional(),
+  /** Категория шаблона */
   category: z.enum(["custom", "business", "entertainment", "education", "utility", "games", "official", "community"]).default("custom"),
+  /** Уровень сложности */
   difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
+  /** Язык шаблона */
   language: z.enum(["ru", "en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko"]).default("ru"),
+  /** Сложность шаблона (от 1 до 10) */
   complexity: z.number().min(1).max(10).default(1),
+  /** Примерное время настройки в минутах */
   estimatedTime: z.number().min(1).max(120).default(5),
+  /** Рейтинг шаблона (от 1 до 5) */
   rating: z.number().min(1).max(5).optional(),
 });
 
+/**
+ * Схема для вставки данных токена бота
+ */
 export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   projectId: true,
   ownerId: true,
@@ -333,19 +571,33 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   trackExecutionTime: true,
   totalExecutionSeconds: true,
 }).extend({
+  /** Идентификатор владельца токена */
   ownerId: z.number().nullable().optional(),
+  /** Название токена (обязательное поле) */
   name: z.string().min(1, "Имя токена обязательно"),
+  /** Токен бота (обязательное поле) */
   token: z.string().min(1, "Токен обязателен"),
+  /** Флаг токена по умолчанию (0 = нет, 1 = да) */
   isDefault: z.number().min(0).max(1).default(0),
+  /** Флаг активности токена (0 = неактивен, 1 = активен) */
   isActive: z.number().min(0).max(1).default(1),
+  /** Флаг возможности бота присоединяться к группам */
   botCanJoinGroups: z.number().min(0).max(1).optional(),
+  /** Флаг возможности бота читать все сообщения в группах */
   botCanReadAllGroupMessages: z.number().min(0).max(1).optional(),
+  /** Флаг поддержки инлайн-запросов ботом */
   botSupportsInlineQueries: z.number().min(0).max(1).optional(),
+  /** Флаг наличия главного веб-приложения у бота */
   botHasMainWebApp: z.number().min(0).max(1).optional(),
+  /** Флаг отслеживания времени выполнения (0 = выключено, 1 = включено) */
   trackExecutionTime: z.number().min(0).max(1).default(0),
+  /** Общее время выполнения в секундах */
   totalExecutionSeconds: z.number().min(0).default(0),
 });
 
+/**
+ * Схема для вставки данных медиафайла
+ */
 export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({
   projectId: true,
   fileName: true,
@@ -358,16 +610,27 @@ export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({
   tags: true,
   isPublic: true,
 }).extend({
+  /** Имя файла (обязательное поле) */
   fileName: z.string().min(1, "Имя файла обязательно"),
+  /** Тип файла ("photo", "video", "audio", "document") */
   fileType: z.enum(["photo", "video", "audio", "document"]),
+  /** Путь к файлу (обязательное поле) */
   filePath: z.string().min(1, "Путь к файлу обязателен"),
+  /** Размер файла (обязательное поле, должен быть больше 0) */
   fileSize: z.number().min(1, "Размер файла должен быть больше 0"),
+  /** MIME тип файла (обязательное поле) */
   mimeType: z.string().min(1, "MIME тип обязателен"),
+  /** URL файла (обязательное поле, должен быть корректным URL) */
   url: z.string().url("Некорректный URL"),
+  /** Теги файла */
   tags: z.array(z.string()).default([]),
+  /** Флаг публичности (0 = приватный, 1 = публичный) */
   isPublic: z.number().min(0).max(1).default(0),
 });
 
+/**
+ * Схема для вставки данных пользовательских данных бота
+ */
 export const insertUserBotDataSchema = createInsertSchema(userBotData).pick({
   projectId: true,
   userId: true,
@@ -393,20 +656,35 @@ export const insertUserBotDataSchema = createInsertSchema(userBotData).pick({
   tags: true,
   notes: true,
 }).extend({
+  /** Идентификатор пользователя (обязательное поле) */
   userId: z.string().min(1, "ID пользователя обязателен"),
+  /** Пользовательские данные */
   userData: z.record(z.any()).default({}),
+  /** Пользовательские настройки */
   preferences: z.record(z.any()).default({}),
+  /** Статистика использования команд */
   commandsUsed: z.record(z.any()).default({}),
+  /** Теги пользователя */
   tags: z.array(z.string()).default([]),
+  /** Флаг бота (0 = человек, 1 = бот) */
   isBot: z.number().min(0).max(1).default(0),
+  /** Флаг премиум-статуса (0 = обычный, 1 = премиум) */
   isPremium: z.number().min(0).max(1).default(0),
+  /** Флаг блокировки (0 = не заблокирован, 1 = заблокирован) */
   isBlocked: z.number().min(0).max(1).default(0),
+  /** Флаг активности (0 = неактивен, 1 = активен) */
   isActive: z.number().min(0).max(1).default(1),
+  /** Количество сессий */
   sessionsCount: z.number().min(1).default(1),
+  /** Общее количество отправленных сообщений */
   totalMessagesSent: z.number().min(0).default(0),
+  /** Общее количество полученных сообщений */
   totalMessagesReceived: z.number().min(0).default(0),
 });
 
+/**
+ * Схема для вставки данных пользователя бота
+ */
 export const insertBotUserSchema = createInsertSchema(botUsers).pick({
   userId: true,
   username: true,
@@ -416,12 +694,19 @@ export const insertBotUserSchema = createInsertSchema(botUsers).pick({
   userData: true,
   isActive: true,
 }).extend({
+  /** Идентификатор пользователя (должен быть положительным числом) */
   userId: z.number().positive("ID пользователя должен быть положительным числом"),
+  /** Пользовательские данные */
   userData: z.record(z.any()).default({}),
+  /** Флаг активности (0 = неактивен, 1 = активен) */
   isActive: z.number().min(0).max(1).default(1),
+  /** Количество взаимодействий */
   interactionCount: z.number().min(0).default(0),
 });
 
+/**
+ * Схема для вставки данных группы бота
+ */
 export const insertBotGroupSchema = createInsertSchema(botGroups).pick({
   projectId: true,
   groupId: true,
@@ -445,12 +730,19 @@ export const insertBotGroupSchema = createInsertSchema(botGroups).pick({
   tags: true,
   notes: true,
 }).extend({
+  /** Название группы (обязательное поле) */
   name: z.string().min(1, "Название группы обязательно"),
-  url: z.string().optional().default(""), // Ссылка может быть пустой для числовых ID групп
+  /** Ссылка на группу (может быть пустой для числовых ID групп) */
+  url: z.string().optional().default(""),
+  /** Флаг администратора (0 = участник, 1 = администратор) */
   isAdmin: z.number().min(0).max(1).default(0),
+  /** Флаг активности (0 = неактивная, 1 = активная) */
   isActive: z.number().min(0).max(1).default(1),
+  /** Флаг публичности (0 = частная, 1 = публичная) */
   isPublic: z.number().min(0).max(1).default(0),
+  /** Настройки группы */
   settings: z.record(z.any()).default({}),
+  /** Права администратора */
   adminRights: z.record(z.any()).default({
     can_manage_chat: false,
     can_change_info: false,
@@ -461,14 +753,21 @@ export const insertBotGroupSchema = createInsertSchema(botGroups).pick({
     can_promote_members: false,
     can_manage_video_chats: false
   }),
+  /** Язык группы */
   language: z.enum(["ru", "en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko"]).default("ru"),
+  /** Тип чата ("group", "supergroup", "channel") */
   chatType: z.enum(["group", "supergroup", "channel"]).default("group"),
+  /** Теги группы */
   tags: z.array(z.string()).default([]),
+  /** Количество сообщений в группе */
   messagesCount: z.number().min(0).default(0),
+  /** Количество активных пользователей */
   activeUsers: z.number().min(0).default(0),
 });
 
-// Схема для участников групп
+/**
+ * Схема для вставки данных участника группы
+ */
 export const insertGroupMemberSchema = createInsertSchema(groupMembers).pick({
   groupId: true,
   userId: true,
@@ -486,16 +785,25 @@ export const insertGroupMemberSchema = createInsertSchema(groupMembers).pick({
   messageCount: true,
   isActive: true,
 }).extend({
+  /** Идентификатор пользователя (должен быть положительным числом) */
   userId: z.number().positive("ID пользователя должен быть положительным числом"),
+  /** Статус участника ("creator", "administrator", "member", "restricted", "left", "kicked") */
   status: z.enum(["creator", "administrator", "member", "restricted", "left", "kicked"]).default("member"),
+  /** Флаг бота (0 = человек, 1 = бот) */
   isBot: z.number().min(0).max(1).default(0),
+  /** Флаг активности (0 = неактивен, 1 = активен) */
   isActive: z.number().min(0).max(1).default(1),
+  /** Права администратора */
   adminRights: z.record(z.any()).default({}),
+  /** Ограничения участника */
   restrictions: z.record(z.any()).default({}),
+  /** Количество сообщений участника */
   messageCount: z.number().min(0).default(0),
 });
 
-// Схема для пользовательских настроек Telegram API
+/**
+ * Схема для вставки данных пользовательских настроек Telegram API
+ */
 export const insertUserTelegramSettingsSchema = createInsertSchema(userTelegramSettings).pick({
   userId: true,
   apiId: true,
@@ -504,25 +812,41 @@ export const insertUserTelegramSettingsSchema = createInsertSchema(userTelegramS
   sessionString: true,
   isActive: true,
 }).extend({
+  /** Идентификатор пользователя (обязательное поле) */
   userId: z.string().min(1, "ID пользователя обязателен"),
+  /** Telegram API ID (обязательное поле) */
   apiId: z.string().min(1, "API ID обязателен"),
+  /** Telegram API Hash (обязательное поле) */
   apiHash: z.string().min(1, "API Hash обязателен"),
+  /** Номер телефона для авторизации */
   phoneNumber: z.string().optional(),
+  /** Флаг активности (0 = неактивен, 1 = активен) */
   isActive: z.number().min(0).max(1).default(1),
 });
 
-// Схема для сообщений бота
+/**
+ * Схема для вставки данных сообщения бота
+ */
 export const insertBotMessageSchema = z.object({
+  /** Идентификатор проекта */
   projectId: z.number(),
+  /** Идентификатор пользователя в Telegram */
   userId: z.string(),
+  /** Тип сообщения ("user" или "bot") */
   messageType: z.string(),
+  /** Текст сообщения */
   messageText: z.string().nullable().optional(),
+  /** Дополнительные данные (медиа, кнопки и т.д.) */
   messageData: z.any().nullable().optional(),
+  /** ID узла бота, который отправил сообщение */
   nodeId: z.string().nullable().optional(),
+  /** ID основного медиа (фото/видео) для быстрого доступа */
   primaryMediaId: z.number().nullable().optional(),
 });
 
-// Схема для связи сообщений с медиафайлами
+/**
+ * Схема для вставки данных связи сообщений с медиафайлами
+ */
 export const insertBotMessageMediaSchema = createInsertSchema(botMessageMedia).pick({
   messageId: true,
   mediaFileId: true,
@@ -530,9 +854,13 @@ export const insertBotMessageMediaSchema = createInsertSchema(botMessageMedia).p
   orderIndex: true,
 });
 
-// Схема для оценки шаблона
+/**
+ * Схема для оценки шаблона
+ */
 export const rateTemplateSchema = z.object({
+  /** Идентификатор шаблона */
   templateId: z.number(),
+  /** Рейтинг (от 1 до 5) */
   rating: z.number().min(1).max(5),
 });
 
