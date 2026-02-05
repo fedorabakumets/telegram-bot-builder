@@ -893,8 +893,10 @@ async def set_bot_commands():
 
 
 # @@NODE_START:start@@
+# Код сгенерирован в generateStartHandler.ts
 
 @dp.message(CommandStart())
+# Код сгенерирован в generateStartHandler.ts
 async def start_handler(message: types.Message):
 
     # Регистрируем пользователя в системе
@@ -902,18 +904,19 @@ async def start_handler(message: types.Message):
     username = message.from_user.username
     first_name = message.from_user.first_name
     last_name = message.from_user.last_name
-    
+
     # Сохраняем пользователя в базу данных
     saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
-    
+
     # Сохраняем переменные пользователя в базу данных
     user_name = init_user_variables(user_id, message.from_user)
     await update_user_data_in_db(user_id, "user_name", user_name)
     await update_user_data_in_db(user_id, "first_name", first_name)
     await update_user_data_in_db(user_id, "last_name", last_name)
     await update_user_data_in_db(user_id, "username", username)
-    
+
     # Резервное сохранение в локальное хранилище
+# Код сгенерирован в generateStartHandler.ts
     if not saved_to_db:
         user_data[user_id] = {
             "username": username,
@@ -927,52 +930,55 @@ async def start_handler(message: types.Message):
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
     # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generateStartHandler.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generateStartHandler.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
-
+# Код сгенерирован в generateStartHandler.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
-    
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generateStartHandler.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
-    
     # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generateStartHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = "Привет! Я ваш новый бот. Нажмите /help для получения помощи."
     # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generateStartHandler.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generateStartHandler.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
-
+# Код сгенерирован в generateStartHandler.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
-    
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generateStartHandler.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
-    
     # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generateStartHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
-    
     has_regular_buttons = True
     has_input_collection = False
     # DEBUG: Узел start - hasRegularButtons=True, hasInputCollection=False
@@ -981,8 +987,7 @@ async def start_handler(message: types.Message):
     builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="a4OMlgbIxsMYYlXDjNw2F"))
     builder.adjust(1)
     keyboard = builder.as_markup()
-    await message.answer(text, reply_markup=keyboard, node_id="start")
-# @@NODE_END:start@@
+    await message.answer(text, reply_markup=keyboard, node_id="start")# @@NODE_END:start@@
 
 # @@NODE_START:a4OMlgbIxsMYYlXDjNw2F@@
 # Код сгенерирован в generateCommandHandler.ts
