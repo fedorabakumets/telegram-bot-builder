@@ -13,6 +13,7 @@ Utils Module играет ключевую роль в обеспечении с
 - `generateReplaceVariablesFunction.ts` - Генерация функции замены переменных
 - `generateInitUserVariablesFunction.ts` - Генерация функции инициализации пользовательских переменных
 - `generateUniversalVariableReplacement.ts` - Генерация универсальной функции замены переменных
+- `checkAutoTransition.ts` - Функция проверки автопереходов между узлами
 
 ## Использование
 

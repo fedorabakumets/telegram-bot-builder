@@ -2,6 +2,7 @@ import { Node, Button } from '@shared/schema';
 import { formatTextForPython, toPythonBoolean, generateButtonText, calculateOptimalColumns, generateWaitingStateCode } from "../format";
 import { generateUniversalVariableReplacement } from "../utils/generateUniversalVariableReplacement";
 import { generateConditionalMessageLogic } from "../Conditional";
+import { checkAutoTransition } from "../utils/checkAutoTransition";
 
 export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
   let code = '';
@@ -326,6 +327,39 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 targetNode.data.enableDocumentInput === true) {
                 code += '    \n';
                 code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
+              }
+
+              // Проверяем, нужно ли выполнить автопереход из целевого узла
+              const autoTransitionResult = checkAutoTransition(targetNode, nodes || []);
+              if (autoTransitionResult.shouldTransition && autoTransitionResult.targetNode) {
+                const autoTargetNode = autoTransitionResult.targetNode;
+                code += '    \n';
+                code += '    # Проверяем, нужно ли выполнить автопереход из текущего узла\n';
+                code += `    if user_id in user_data and user_data[user_id].get("collectUserInput_${targetNode.id}", True) == True:\n`;
+                code += `        logging.info(f"ℹ️ Узел ${targetNode.id} ожидает ввод (collectUserInput=true), автопереход пропущен")\n`;
+                code += '    else:\n';
+                code += `        # ⚡ Автопереход к узлу ${autoTargetNode.id} (автопереход из узла ${targetNode.id})\n`;
+                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetNode.id}")\n`;
+
+                // Определяем тип целевого узла и генерируем соответствующий код вызова
+                if (autoTargetNode.type === 'command') {
+                  code += `        await handle_command_${autoTargetNode.data.command?.replace('/', '')?.replace(/[^a-zA-Z0-9_]/g, '_')}(message)\n`;
+                } else {
+                  // Для обычных узлов создаем фиктивный callback и вызываем соответствующий обработчик
+                  code += '        import types as aiogram_types\n';
+                  code += '        fake_callback = aiogram_types.SimpleNamespace(\n';
+                  code += '            id="auto_transition",\n';
+                  code += '            from_user=message.from_user,\n';
+                  code += '            chat_instance="",\n';
+                  code += `            data="${autoTargetNode.id}",\n`;
+                  code += '            message=message,\n';
+                  code += '            answer=lambda text="", show_alert=False: None\n';
+                  code += '        )\n';
+
+                  // Генерируем вызов обработчика для целевого узла
+                  code += `        await handle_callback_${autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(fake_callback)\n`;
+                }
+                code += `        logging.info(f"✅ Автопереход выполнен: ${targetNode.id} -> ${autoTargetNode.id}")\n`;
               }
             }
           }

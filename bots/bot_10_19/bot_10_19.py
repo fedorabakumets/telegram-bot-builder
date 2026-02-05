@@ -41,6 +41,97 @@ import json
 import aiohttp
 from aiohttp import TCPConnector
 
+# Safe helper for editing messages with fallback to new message
+async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, **kwargs):
+    """
+    Безопасное редактирование сообщения с fallback на новое сообщение
+    При автопереходе сразу отправляет новое сообщение без попытки редактирования
+    """
+    result = None
+    user_id = None
+    
+    # Получаем user_id для сохранения
+    if hasattr(cbq, "from_user") and cbq.from_user:
+        user_id = str(cbq.from_user.id)
+    elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):
+        user_id = str(cbq.message.chat.id)
+    
+    try:
+        # При автопереходе сразу отправляем новое сообщение без редактирования
+        if is_auto_transition:
+            logging.info(f"⚡ Автопереход: отправляем новое сообщение вместо редактирования")
+            if hasattr(cbq, "message") and cbq.message:
+                result = await cbq.message.answer(text, **kwargs)
+            else:
+                raise Exception("Cannot send message in auto-transition")
+        else:
+            # Пробуем редактировать сообщение
+            if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):
+                result = await cbq.edit_text(text, **kwargs)
+            elif (hasattr(cbq, "message") and cbq.message):
+                result = await cbq.message.edit_text(text, **kwargs)
+            else:
+                raise Exception("No valid edit method found")
+    except Exception as e:
+        # При любой ошибке отправляем новое сообщение
+        if is_auto_transition:
+            logging.info(f"⚡ Автопереход: {e}, отправляем новое сообщение")
+        else:
+            logging.warning(f"Не удалось отредактировать сообщение: {e}, отправляем новое")
+        if hasattr(cbq, "message") and cbq.message:
+            result = await cbq.message.answer(text, **kwargs)
+        else:
+            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")
+            raise
+    
+    # Сохраняем сообщение в базу данных
+    if result and user_id:
+        message_data_obj = {"message_id": result.message_id if hasattr(result, "message_id") else None}
+        
+        # Извлекаем кнопки из reply_markup
+        if "reply_markup" in kwargs:
+            try:
+                reply_markup = kwargs["reply_markup"]
+                buttons_data = []
+                # Обработка inline клавиатуры
+                if hasattr(reply_markup, "inline_keyboard"):
+                    for row in reply_markup.inline_keyboard:
+                        for btn in row:
+                            button_info = {"text": btn.text}
+                            if hasattr(btn, "url") and btn.url:
+                                button_info["url"] = btn.url
+                            if hasattr(btn, "callback_data") and btn.callback_data:
+                                button_info["callback_data"] = btn.callback_data
+                            buttons_data.append(button_info)
+                    if buttons_data:
+                        message_data_obj["buttons"] = buttons_data
+                        message_data_obj["keyboard_type"] = "inline"
+                # Обработка reply клавиатуры
+                elif hasattr(reply_markup, "keyboard"):
+                    for row in reply_markup.keyboard:
+                        for btn in row:
+                            button_info = {"text": btn.text}
+                            if hasattr(btn, "request_contact") and btn.request_contact:
+                                button_info["request_contact"] = True
+                            if hasattr(btn, "request_location") and btn.request_location:
+                                button_info["request_location"] = True
+                            buttons_data.append(button_info)
+                    if buttons_data:
+                        message_data_obj["buttons"] = buttons_data
+                        message_data_obj["keyboard_type"] = "reply"
+            except Exception as btn_error:
+                logging.warning(f"Не удалось извлечь кнопки в safe_edit_or_send: {btn_error}")
+        
+        await save_message_to_api(
+            user_id=user_id,
+            message_type="bot",
+            message_text=text,
+            node_id=node_id,
+            message_data=message_data_obj
+        )
+    
+    return result
+
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = "7713154819:AAEpLG7wuSPtzAto90fcxz5z0UN1evvXafE"
 
@@ -850,15 +941,17 @@ async def start_handler(message: types.Message):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
-    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
-    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     has_regular_buttons = True
     has_input_collection = False
     # DEBUG: Узел start - hasRegularButtons=True, hasInputCollection=False
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="Новая кнопка"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="start")# @@NODE_END:start@@
+    await message.answer(text, reply_markup=keyboard, node_id="start")# @@NODE_END:start@@
+
+# @@NODE_START:KXHxgAuYHpBd48H807wEJ@@
+    # Обработчик для узла KXHxgAuYHpBd48H807wEJ типа message будет сгенерирован отдельно
+# @@NODE_END:KXHxgAuYHpBd48H807wEJ@@
 
 # @@NODE_START:a4OMlgbIxsMYYlXDjNw2F@@
 # Код сгенерирован в generateCommandHandler.ts
@@ -954,27 +1047,133 @@ async def help_handler(message: types.Message):
     text = replace_variables_in_text(text, user_vars)
     # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
     image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
-    has_regular_buttons = True
+    has_regular_buttons = False
     has_input_collection = False
-    # DEBUG: Узел a4OMlgbIxsMYYlXDjNw2F - hasRegularButtons=True, hasInputCollection=False
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="кнопка 2"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN, node_id="a4OMlgbIxsMYYlXDjNw2F")# @@NODE_END:a4OMlgbIxsMYYlXDjNw2F@@
+    # DEBUG: Узел a4OMlgbIxsMYYlXDjNw2F - hasRegularButtons=False, hasInputCollection=False
+    await bot.send_photo(message.chat.id, image_url, caption=text, parse_mode=ParseMode.MARKDOWN, node_id="a4OMlgbIxsMYYlXDjNw2F")# @@NODE_END:a4OMlgbIxsMYYlXDjNw2F@@
 
-# @@NODE_START:KXHxgAuYHpBd48H807wEJ@@
-    # Обработчик для узла KXHxgAuYHpBd48H807wEJ типа message будет сгенерирован отдельно
-# @@NODE_END:KXHxgAuYHpBd48H807wEJ@@
+# Обработчики автопереходов
 
-# Обработчики reply кнопок
-
-@dp.message(lambda message: message.text == "Новая кнопка")
-async def handle_reply_PVB19NXVlEi9c5LntzWQo(message: types.Message):
+@dp.callback_query(lambda c: c.data == "a4OMlgbIxsMYYlXDjNw2F" or c.data.startswith("a4OMlgbIxsMYYlXDjNw2F_btn_") or c.data == "done_YYlXDjNw2F")
+async def handle_callback_a4OMlgbIxsMYYlXDjNw2F(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_a4OMlgbIxsMYYlXDjNw2F для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_a4OMlgbIxsMYYlXDjNw2F: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла a4OMlgbIxsMYYlXDjNw2F
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_a4OMlgbIxsMYYlXDjNw2F"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла a4OMlgbIxsMYYlXDjNw2F: false")
+    
+    # Обрабатываем узел a4OMlgbIxsMYYlXDjNw2F: a4OMlgbIxsMYYlXDjNw2F
     text = """🤖 Доступные команды:
 
 /start - Начать работу
 /help - Эта справка
 /settings - Настройки"""
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Устанавливаем переменную изображения для узла
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["image_url_a4OMlgbIxsMYYlXDjNw2F"] = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
+    await update_user_data_in_db(user_id, "image_url_a4OMlgbIxsMYYlXDjNw2F", "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg")
+    logging.info(f"✅ Переменная image_url_a4OMlgbIxsMYYlXDjNw2F установлена: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg")
+    
+    # Отправляем сообщение (с проверкой прикрепленного медиа)
+    # Узел содержит статическое изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
+    static_image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
+    
+    # Отправляем статическое изображение
+    try:
+        # Заменяем переменные в тексте перед отправкой
+        processed_caption = replace_variables_in_text(text, user_vars)
+        await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption, reply_markup=keyboard, node_id="a4OMlgbIxsMYYlXDjNw2F")
+    except Exception as e:
+        logging.error(f"Ошибка отправки статического изображения: {e}")
+        # Fallback на обычное сообщение при ошибке
+        await safe_edit_or_send(callback_query, text, node_id="a4OMlgbIxsMYYlXDjNw2F", reply_markup=keyboard if keyboard is not None else None)
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_a4OMlgbIxsMYYlXDjNw2F",
+        "save_to_database": True,
+        "node_id": "a4OMlgbIxsMYYlXDjNw2F",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_a4OMlgbIxsMYYlXDjNw2F (узел a4OMlgbIxsMYYlXDjNw2F)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+# Обработчики reply кнопок
+
+@dp.message(lambda message: message.text == "Новая кнопка")
+async def handle_reply_PVB19NXVlEi9c5LntzWQo(message: types.Message):
+    text = "Новое сообщение"
     user_id = message.from_user.id
     skip_collection = False
     
@@ -1027,77 +1226,12 @@ async def handle_reply_PVB19NXVlEi9c5LntzWQo(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="кнопка 2"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    
-    # Узел a4OMlgbIxsMYYlXDjNw2F имеет collectUserInput=false - НЕ устанавливаем waiting_for_input
-    logging.info(f"ℹ️ Узел a4OMlgbIxsMYYlXDjNw2F не собирает ответы (collectUserInput=false)")
-    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
-
-@dp.message(lambda message: message.text == "кнопка 2")
-async def handle_reply_7QBEg3Mx8DNG17uOGtJ2F(message: types.Message):
-    text = "Новое сообщение"
-    user_id = message.from_user.id
-    skip_collection = False
-    
-    if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
-        waiting_config = user_data[user_id]["waiting_for_input"]
-        modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
-        waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
-        if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
-            variable_name = waiting_config.get("variable", "button_response")
-            button_text = "кнопка 2"
-            logging.info(f"💾 Сохраняем ответ кнопки в переменную: {variable_name} = {button_text} (modes: {modes}, waiting_node: {waiting_node_id})")
-            
-            # Сохраняем в пользовательские данные
-            user_data[user_id][variable_name] = button_text
-            
-            # Сохраняем в базу данных
-            saved_to_db = await update_user_data_in_db(user_id, variable_name, button_text)
-            if saved_to_db:
-                logging.info(f"✅ Ответ кнопки сохранён в БД: {variable_name} = {button_text} (пользователь {user_id})")
-            else:
-                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-            
-            # Очищаем состояние ожидания после сохранения
-            logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
-            del user_data[user_id]["waiting_for_input"]
-        elif isinstance(waiting_config, dict):
-            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
-    elif skip_collection:
-        logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
-    
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
-
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_vars = await get_user_from_db(user_id)
-    if not user_vars:
-        user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
-    if not isinstance(user_vars, dict):
-        user_vars = user_data.get(user_id, {})
-    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
-    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard, node_id="KXHxgAuYHpBd48H807wEJ")
+        await message.answer(text, reply_markup=conditional_keyboard)
     else:
-        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="KXHxgAuYHpBd48H807wEJ")
+        await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 # Универсальный fallback-обработчик для всех необработанных текстовых сообщений
 @dp.message(F.text)
@@ -1161,7 +1295,5 @@ async def main():
         
         # Закрываем сессию бота
         await bot.session.close()
-        return
-    
 if __name__ == "__main__":
     asyncio.run(main())
