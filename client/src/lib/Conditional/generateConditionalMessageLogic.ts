@@ -4,8 +4,63 @@ import { formatTextForPython } from '../format/formatTextForPython';
 import { generateConditionalKeyboard } from "./generateConditionalKeyboard";
 import { toPythonBoolean } from "../format/toPythonBoolean";
 
-// Функция для генерации логики условных сообщений
+/**
+ * Генерирует Python код логики условных сообщений для Telegram бота.
+ * 
+ * Эта функция создает комплексную Python логику для обработки условных сообщений,
+ * которая включает в себя:
+ * 
+ * Основные возможности:
+ * - Создание функции проверки переменных пользователя (check_user_variable)
+ * - Функцию замены переменных в тексте (replace_variables_in_text)
+ * - Инициализацию пользовательских переменных и данных
+ * - Поддержку различных типов условий:
+ *   * user_data_exists - проверка существования переменных
+ *   * user_data_not_exists - проверка отсутствия переменных  
+ *   * user_data_equals - проверка равенства значения переменной
+ *   * user_data_contains - проверка содержания подстроки в переменной
+ * - Поддержку множественных переменных с логическими операторами (AND/OR)
+ * - Генерацию условных клавиатур для каждого условия
+ * - Настройку ожидания текстового ввода для условных сообщений
+ * - Поддержку кнопок с пропуском сбора данных (skipDataCollection)
+ * - Логирование выполнения условий для отладки
+ * - Обработку приоритетов условий (сортировка по убыванию приоритета)
+ * 
+ * Функция создает if/elif структуру для последовательной проверки условий
+ * и возвращает Python код, который интегрируется в обработчики команд.
+ * 
+ * @param conditionalMessages - Массив условных сообщений для обработки
+ * @param indentLevel - Уровень отступа для генерируемого Python кода (по умолчанию '    ')
+ * @param nodeData - Дополнительные данные узла для контекста (опционально)
+ * @returns Строку с Python кодом логики условных сообщений
+ * 
+ * @example
+ * const conditionalMessages = [
+ *   {
+ *     condition: "user_data_exists",
+ *     variableNames: ["user_age"],
+ *     messageText: "Добро пожаловать, {user_name}! Возраст: {user_age}",
+ *     keyboardType: "inline",
+ *     buttons: [
+ *       { text: "Изменить возраст", action: "goto", target: "edit_age" }
+ *     ],
+ *     priority: 1
+ *   },
+ *   {
+ *     condition: "user_data_not_exists", 
+ *     variableNames: ["user_age"],
+ *     messageText: "Пожалуйста, укажите ваш возраст",
+ *     waitForTextInput: true,
+ *     textInputVariable: "user_age",
+ *     priority: 2
+ *   }
+ * ];
+ * 
+ * const logicCode = generateConditionalMessageLogic(conditionalMessages, '    ', nodeData);
+ * // Генерирует Python код с проверками условий и соответствующими действиями
+ */
 
+// Функция для генерации логики условных сообщений
 export function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel: string = '    ', nodeData?: any): string {
   if (!conditionalMessages || conditionalMessages.length === 0) {
     return '';
@@ -291,7 +346,6 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}        if user_id not in user_data:\n`;
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-          // code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
 
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
@@ -373,7 +427,6 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}        if user_id not in user_data:\n`;
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-          // code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
 
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
@@ -455,7 +508,6 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}        if user_id not in user_data:\n`;
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-          // code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
         }
 
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
