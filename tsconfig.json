@@ -28,6 +28,6 @@
     "server",
     "types",
     "client/types"
-, "scripts/check-env.ts"  ],
+, "scripts/check-env.ts", "archive/auto-transition-connections.ts", "archive/auto-connection.ts"  ],
   "exclude": ["node_modules", "dist"]
 }

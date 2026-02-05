@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Connection, Button, BotData } from '@shared/schema';
 import { applyTemplateLayout } from '@/utils/hierarchical-layout';
-import { generateAutoTransitionConnections } from '@/utils/auto-transition-connections';
+// import { generateAutoTransitionConnections } from 'archive/auto-transition-connections'; // Закомментировано из-за отсутствия модуля
 
 /**
  * Интерфейс для состояния истории изменений
