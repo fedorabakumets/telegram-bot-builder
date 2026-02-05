@@ -335,7 +335,9 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 const autoTargetNode = autoTransitionResult.targetNode;
                 code += '    \n';
                 code += '    # Проверяем, нужно ли выполнить автопереход из текущего узла\n';
-                code += `    if user_id in user_data and user_data[user_id].get("collectUserInput_${targetNode.id}", True) == True:\n`;
+                // ИСПРАВЛЕНИЕ: Используем фактическое значение collectUserInput из узла, а не значение по умолчанию
+                const collectUserInputValue = targetNode.data.collectUserInput === true;
+                code += `    if user_id in user_data and user_data[user_id].get("collectUserInput_${targetNode.id}", ${toPythonBoolean(collectUserInputValue)}) == True:\n`;
                 code += `        logging.info(f"ℹ️ Узел ${targetNode.id} ожидает ввод (collectUserInput=true), автопереход пропущен")\n`;
                 code += '    else:\n';
                 code += `        # ⚡ Автопереход к узлу ${autoTargetNode.id} (автопереход из узла ${targetNode.id})\n`;

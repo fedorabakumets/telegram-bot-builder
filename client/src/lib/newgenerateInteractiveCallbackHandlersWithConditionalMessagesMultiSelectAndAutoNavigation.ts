@@ -835,7 +835,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             code += '    elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
             code += `        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${nodeId}")\n`;
             code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)\n';
-            code += `    elif user_id in user_data and user_data[user_id].get("collectUserInput_${nodeId}", True) == True:\n`;
+            // ИСПРАВЛЕНИЕ: Используем фактическое значение collectUserInput из узла, а не значение по умолчанию
+            const collectUserInputValue = targetNode.data.collectUserInput === true;
+            code += `    elif user_id in user_data and user_data[user_id].get("collectUserInput_${nodeId}", ${toPythonBoolean(collectUserInputValue)}) == True:\n`;
             code += `        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")\n`;
             // Добавляем статическую проверку collectUserInput как резервную
             const staticCollectUserInput = targetNode.data.collectUserInput === true ||
@@ -1153,7 +1155,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += '            if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
                         code += `                logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${navTargetNode.id}")\n`;
                         code += '            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)\n';
-                        code += `            elif user_id in user_data and user_data[user_id].get("collectUserInput_${navTargetNode.id}", True) == True:\n`;
+                        // ИСПРАВЛЕНИЕ: Используем фактическое значение collectUserInput из узла, а не значение по умолчанию
+                        const navCollectUserInputValue = navTargetNode.data.collectUserInput === true;
+                        code += `            elif user_id in user_data and user_data[user_id].get("collectUserInput_${navTargetNode.id}", ${toPythonBoolean(navCollectUserInputValue)}) == True:\n`;
                         code += `                logging.info(f"ℹ️ Узел ${navTargetNode.id} ожидает ввод (collectUserInput=true), автопереход пропущен")\n`;
                         code += '            else:\n';
                         code += `                # ⚡ Автопереход к узлу ${autoTargetId}\n`;
