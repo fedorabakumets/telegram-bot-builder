@@ -1142,7 +1142,7 @@ async def handle_callback_AoHjXk0_Tz4gVuau5zj_m(callback_query: types.CallbackQu
     if keyboard is None:
         # Создаем inline клавиатуру
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text=" кнопка 2", callback_data="help"))
+        builder.add(InlineKeyboardButton(text=" кнопка 2", callback_data="eWKsWq0y8Xlm39S9JEf1g"))
         builder.adjust(1)
         keyboard = builder.as_markup()
     # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового
@@ -1168,15 +1168,15 @@ async def handle_callback_AoHjXk0_Tz4gVuau5zj_m(callback_query: types.CallbackQu
         # Fallback на обычное сообщение при ошибке
         await safe_edit_or_send(callback_query, text, node_id="AoHjXk0_Tz4gVuau5zj-m", reply_markup=keyboard if keyboard is not None else None)
 
-@dp.callback_query(lambda c: c.data == "help" or c.data.startswith("help_btn_"))
-async def handle_callback_help(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "eWKsWq0y8Xlm39S9JEf1g" or c.data.startswith("eWKsWq0y8Xlm39S9JEf1g_btn_"))
+async def handle_callback_eWKsWq0y8Xlm39S9JEf1g(callback_query: types.CallbackQuery):
     # Безопасное получение данных из callback_query
     try:
         user_id = callback_query.from_user.id
         callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_help для пользователя {user_id}")
+        logging.info(f"🔵 Вызван callback handler: handle_callback_eWKsWq0y8Xlm39S9JEf1g для пользователя {user_id}")
     except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_help: {e}")
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_eWKsWq0y8Xlm39S9JEf1g: {e}")
         return
     
     # Проверяем флаг hideAfterClick для кнопок
