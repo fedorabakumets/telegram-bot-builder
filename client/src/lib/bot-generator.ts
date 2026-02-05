@@ -33,6 +33,7 @@ import { generateMultiSelectReplyHandler } from './Keyboard/generateMultiSelectR
 import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';
 import { generateMultiSelectDoneHandler } from './Keyboard/generateMultiSelectDoneHandler';
 import { generateMultiSelectCallbackLogic } from './Keyboard/generateMultiSelectCallbackLogic';
+import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
@@ -346,7 +347,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
   generateMultiSelectCallbackDispatcherHandle();
 
-  return generateCompleteBotScriptFromNodeGraph();
+  return generateCompleteBotScriptFromNodeGraphWithDependencies(
+    code,
+    multiSelectNodes,
+    allNodeIds,
+    isLoggingEnabled,
+    nodes,
+    generateMultiSelectCallbackLogic,
+    generateMultiSelectDoneHandler,
+    generateMultiSelectReplyHandler
+  );
 
   /**
    * Генерирует обработчики callback'ов для inline кнопок с поддержкой условных сообщений,
@@ -984,11 +994,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * **Механизм работы:**
    * 1. Проверка наличия командных кнопок
    * 2. Генерация обработчика для каждой команды
-   * 3. Создание fake message для симуляции
+   * 3. Создание fake message для с��муляции
    * 4. Поиск соответствующего узла команды
    * 5. Вызов подходящего обработчика
    * 
-   * **Интеграция с существующи����и обработчиками:**
+   * **Интеграция с существующ��������и обработчиками:**
    * - Совместимость с start_handler
    * - Совместимость с command handlers
    * - ����оддержка FakeMessageEdit для редактирования сообщ��������ий
@@ -1535,32 +1545,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     });
   }
 
-  /**
-   * Генерирует полный скрипт бота из графа узлов
-   * @returns {string} Сгенерированный код бота
-   */
-  function generateCompleteBotScriptFromNodeGraph() {
-    code += '        return\n';
-    code += '    \n';
-
-    // Добавляем логику обработки мультиселекта
-    code += generateMultiSelectCallbackLogic(multiSelectNodes, allNodeIds, isLoggingEnabled);
-
-    // Добавляем обработчик завершения мультиселекта
-    code += generateMultiSelectDoneHandler(nodes || [], multiSelectNodes, allNodeIds, isLoggingEnabled);
-
-    // Закрываем if (multiSelectNodes.length > 0)
-    // Добавляем обработчик ответов на мультиселект
-    code += generateMultiSelectReplyHandler(nodes || [], allNodeIds, isLoggingEnabled);
-
-    // Добавляем точку входа для запуска приложения
-    code += 'if __name__ == "__main__":\n';
-    code += '    asyncio.run(main())\n';
-
-    return code;
-  }
-
- 
 }
 
 
