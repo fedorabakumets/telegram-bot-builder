@@ -204,13 +204,12 @@ const formatNodeDisplayGlobal = (node: Node, sheetName: string) => {
    */
   const getNodeTypeLabel = (type: Node['type']) => {
     const types: Record<Node['type'], string> = {
-      start: 'Старт', command: 'Команда', message: 'Сообщение', photo: 'Фото', video: 'Видео',
-      audio: 'Аудио', document: 'Документ', keyboard: 'Клавиатура', location: 'Геолокация',
+      start: 'Старт', command: 'Команда', message: 'Сообщение', location: 'Геолокация',
       contact: 'Контакт', sticker: 'Стикер', voice: 'Голос', animation: 'Анимация',
       pin_message: 'Закрепить', unpin_message: 'Открепить', delete_message: 'Удалить',
       ban_user: 'Заблокировать', unban_user: 'Разблокировать', mute_user: 'Заглушить',
       unmute_user: 'Включить звук', kick_user: 'Исключить', promote_user: 'Повысить',
-      demote_user: 'Понизить', admin_rights: 'Права админа', input: 'Ввод', condition: 'Условие'
+      demote_user: 'Понизить', admin_rights: 'Права админа'
     };
     return types[type] || type;
   };
@@ -223,8 +222,6 @@ const formatNodeDisplayGlobal = (node: Node, sheetName: string) => {
     if (node.type === 'start') return ((node.data as any).messageText || node.data.command || '').slice(0, 50);
     if (node.type === 'command') return (node.data.command || '').slice(0, 50);
     if (node.type === 'message') return ((node.data as any).messageText || '').slice(0, 50);
-    if (node.type === 'photo') return ((node.data as any).photoCaption || '').slice(0, 50);
-    if (node.type === 'keyboard') return ((node.data as any).keyboardText || '').slice(0, 50);
     return ((node.data as any).label || '').slice(0, 50);
   };
 
@@ -338,16 +335,11 @@ export function PropertiesPanel({
   const getDefaultDataForType = (type: Node['type']) => {
     const defaults: Record<Node['type'], any> = {
       message: {},
-      photo: { imageUrl: '', mediaCaption: '' },
-      video: { videoUrl: '', mediaCaption: '', duration: 0 },
-      audio: { audioUrl: '', mediaCaption: '', duration: 0 },
-      document: { documentUrl: '', documentName: 'document.pdf', mediaCaption: '' },
       sticker: { stickerUrl: '', stickerFileId: '' },
       voice: { voiceUrl: '', duration: 0 },
       animation: { animationUrl: '', duration: 0, width: 0, height: 0, mediaCaption: '' },
       location: { latitude: 55.7558, longitude: 37.6176, title: 'Москва', address: 'Москва, Россия', foursquareId: '', foursquareType: '' },
       contact: { phoneNumber: '+7 (999) 123-45-67', firstName: 'Имя', lastName: 'Фамилия', userId: 0, vcard: '' },
-      keyboard: { keyboardType: 'reply' },
       start: { command: '/start', description: 'Запустить бота', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false, synonyms: [] },
       command: { command: '/custom', description: 'Новая команда', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false, synonyms: [] },
       pin_message: {
@@ -512,19 +504,6 @@ export function PropertiesPanel({
         can_pin_messages: true,
         can_manage_topics: false,
         is_anonymous: false
-      },
-      input: {
-        messageText: 'Введите данные:',
-        keyboardType: 'none',
-        buttons: [],
-        waitForInput: true
-      },
-      condition: {
-        messageText: 'Проверка условия',
-        keyboardType: 'none',
-        buttons: [],
-        conditionType: 'text',
-        conditionValue: ''
       }
     };
 
@@ -1085,16 +1064,11 @@ export function PropertiesPanel({
     start: '/start команда',
     command: 'Пользовательская команда',
     message: 'Текстовое сообщение',
-    photo: 'Фото с текстом',
-    video: 'Видео с текстом',
-    audio: 'Аудио сообщение',
-    document: 'Документ',
     sticker: 'Стикер',
     voice: 'Голосовое сообщение',
     animation: 'GIF анимация',
     location: 'Местоположение',
     contact: 'Контакт',
-    keyboard: 'Клавиатура',
     pin_message: 'Закрепить сообщение',
     unpin_message: 'Открепить сообщение',
     delete_message: 'Удалить сообщение',
@@ -1105,25 +1079,18 @@ export function PropertiesPanel({
     kick_user: 'Исключить пользователя',
     promote_user: 'Назначить администратором',
     demote_user: 'Снять с администратора',
-    admin_rights: 'Права администратора',
-    input: 'Ввод данных',
-    condition: 'Условие'
+    admin_rights: 'Права администратора'
   };
 
   const nodeIcons = {
     start: 'fas fa-play',
     command: 'fas fa-terminal',
     message: 'fas fa-comment',
-    photo: 'fas fa-image',
-    video: 'fas fa-video',
-    audio: 'fas fa-music',
-    document: 'fas fa-file-alt',
     sticker: 'fas fa-smile',
     voice: 'fas fa-microphone',
     animation: 'fas fa-film',
     location: 'fas fa-map-marker-alt',
     contact: 'fas fa-address-book',
-    keyboard: 'fas fa-keyboard',
     pin_message: 'fas fa-thumbtack',
     unpin_message: 'fas fa-times',
     delete_message: 'fas fa-trash',
@@ -1134,25 +1101,18 @@ export function PropertiesPanel({
     kick_user: 'fas fa-door-open',
     promote_user: 'fas fa-user-shield',
     demote_user: 'fas fa-user-minus',
-    admin_rights: 'fas fa-crown',
-    input: 'fas fa-edit',
-    condition: 'fas fa-code-branch'
+    admin_rights: 'fas fa-crown'
   };
 
   const nodeColors = {
     start: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
     command: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
     message: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-    photo: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-    video: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
-    audio: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
-    document: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
     sticker: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
     voice: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
     animation: 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
     location: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
     contact: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
-    keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
     pin_message: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
     unpin_message: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
     delete_message: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
@@ -1163,9 +1123,7 @@ export function PropertiesPanel({
     kick_user: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
     promote_user: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
     demote_user: 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400',
-    admin_rights: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-    input: 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400',
-    condition: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+    admin_rights: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
   };
 
   const handleAddButton = () => {
@@ -2328,9 +2286,9 @@ export function PropertiesPanel({
                     title="Альтернативные команды"
                     description={
                       selectedNode.type === 'pin_message' ? "Команды для закрепления сообщения" :
-                        selectedNode.type === 'unpin_message' ? "Команды для открепления сообщения" :
+                        selectedNode.type === 'unpin_message' ? "Команды для откреплен��я сообщения" :
                           selectedNode.type === 'delete_message' ? "Команды для удаления сообщения" :
-                            "Альтернативные команды для этого действия"
+                            "Альтернатив��ые команды для этого действия"
                     }
                     placeholder={
                       selectedNode.type === 'pin_message' ? "закрепить, прикрепить, зафиксировать" :
@@ -4573,9 +4531,7 @@ export function PropertiesPanel({
                                                       const nodeContent =
                                                         node.type === 'command' ? node.data.command :
                                                           node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
-                                                            node.type === 'photo' ? ((node.data as any).photoCaption || '').slice(0, 50) :
-                                                              node.type === 'keyboard' ? ((node.data as any).keyboardText || '').slice(0, 50) :
-                                                                ((node.data as any).label || '').slice(0, 50);
+                                                            ((node.data as any).label || '').slice(0, 50);
                                                       return (
                                                         <SelectItem key={node.id} value={node.id}>
                                                           <div className="flex items-center gap-2">
@@ -5480,31 +5436,21 @@ export function PropertiesPanel({
                                             .map(({ node, sheetName }) => {
                                               const nodeName =
                                                 node.type === 'message' ? 'Сообщение' :
-                                                  node.type === 'photo' ? 'Фото' :
-                                                    node.type === 'video' ? 'Видео' :
-                                                      node.type === 'audio' ? 'Аудио' :
-                                                        node.type === 'document' ? 'Документ' :
-                                                          node.type === 'keyboard' ? 'Клавиатура' :
-                                                            node.data?.collectUserInput ? 'Сбор данных' :
-                                                              node.type === 'location' ? 'Геолокация' :
-                                                                node.type === 'contact' ? 'Контакт' :
-                                                                  node.type === 'sticker' ? 'Стикер' :
-                                                                    node.type === 'voice' ? 'Голосовое' :
-                                                                      node.type === 'animation' ? 'Анимация' : 'Узел';
+                                                  node.data?.collectUserInput ? 'Сбор данных' :
+                                                    node.type === 'location' ? 'Геолокация' :
+                                                      node.type === 'contact' ? 'Контакт' :
+                                                        node.type === 'sticker' ? 'Стикер' :
+                                                          node.type === 'voice' ? 'Голосовое' :
+                                                            node.type === 'animation' ? 'Анимация' : 'Узел';
 
                                               const iconClass =
                                                 node.type === 'message' ? 'fas fa-comment text-blue-500' :
-                                                  node.type === 'photo' ? 'fas fa-image text-green-500' :
-                                                    node.type === 'video' ? 'fas fa-video text-red-500' :
-                                                      node.type === 'audio' ? 'fas fa-music text-orange-500' :
-                                                        node.type === 'document' ? 'fas fa-file text-gray-500' :
-                                                          node.type === 'keyboard' ? 'fas fa-keyboard text-yellow-500' :
-                                                            node.data?.collectUserInput ? 'fas fa-user-edit text-indigo-500' :
-                                                              node.type === 'location' ? 'fas fa-map-marker-alt text-pink-500' :
-                                                                node.type === 'contact' ? 'fas fa-address-book text-teal-500' :
-                                                                  node.type === 'sticker' ? 'fas fa-smile text-yellow-400' :
-                                                                    node.type === 'voice' ? 'fas fa-microphone text-blue-400' :
-                                                                      node.type === 'animation' ? 'fas fa-play-circle text-green-400' : 'fas fa-cube text-gray-400';
+                                                  node.data?.collectUserInput ? 'fas fa-user-edit text-indigo-500' :
+                                                    node.type === 'location' ? 'fas fa-map-marker-alt text-pink-500' :
+                                                      node.type === 'contact' ? 'fas fa-address-book text-teal-500' :
+                                                        node.type === 'sticker' ? 'fas fa-smile text-yellow-400' :
+                                                          node.type === 'voice' ? 'fas fa-microphone text-blue-400' :
+                                                            node.type === 'animation' ? 'fas fa-play-circle text-green-400' : 'fas fa-cube text-gray-400';
 
                                               return (
                                                 <SelectItem key={node.id} value={node.id}>
