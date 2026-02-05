@@ -3,146 +3,198 @@ import { formatTextForPython } from '../format/formatTextForPython';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { Node } from '@shared/schema';
 
 // ============================================================================
 // ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ КОМАНД И СООБЩЕНИЙ
 // ============================================================================
+
+/**
+ * Генерирует Python код обработчика команды /start для Telegram бота на основе конфигурации узла.
+ * 
+ * Эта функция создает асинхронный обработчик команды /start, который включает:
+ * - Декоратор для регистрации команды в диспетчере бота
+ * - Логирование вызова команды
+ * - Проверки безопасности (приватные чаты, права администратора, авторизация)
+ * - Регистрацию и сохранение информации о пользователе в БД и локальном хранилище
+ * - Инициализацию пользовательских переменных и переменных окружения
+ * - Поддержку множественного выбора с восстановлением состояния
+ * - Обработку условных сообщений на основе данных пользователя
+ * - Генерацию клавиатуры для интерактивного ответа
+ * - Автоматические переходы между узлами (если настроены)
+ * - Универсальную замену переменных в тексте сообщения
+ * 
+ * @param node - Узел конфигурации команды, содержащий настройки и данные команды
+ * @param userDatabaseEnabled - Флаг, указывающий на использование базы данных для хранения пользователей
+ * @returns Строку с Python кодом обработчика команды /start
+ * 
+ * @example
+ * const node = {
+ *   data: {
+ *     messageText: "🤖 Добро пожаловать в наш бот!\n\nВыберите ваши интересы:",
+ *     isPrivateOnly: true,
+ *     adminOnly: false,
+ *     requiresAuth: false,
+ *     enableConditionalMessages: true,
+ *     conditionalMessages: [...],
+ *     allowMultipleSelection: true,
+ *     buttons: [
+ *       { text: "Спорт", action: "selection", target: "sport" },
+ *       { text: "Музыка", action: "selection", target: "music" },
+ *       { text: "Путешествия", action: "selection", target: "travel" }
+ *     ],
+ *     enableAutoTransition: true,
+ *     autoTransitionTo: "main_menu",
+ *     collectUserInput: true
+ *   }
+ * };
+ * const code = generateStartHandler(node, true);
+ */
 export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string {
-  let code = '\n@dp.message(CommandStart())\n';
-  code += 'async def start_handler(message: types.Message):\n';
+  // Собираем весь код в массив строк для автоматической обработки
+  const codeLines: string[] = [];
+
+  // Декоратор и сигнатура функции
+  codeLines.push('\n@dp.message(CommandStart())');
+  codeLines.push('async def start_handler(message: types.Message):');
 
   // Добавляем проверки безопасности
   if (node.data.isPrivateOnly) {
-    code += '    if not await is_private_chat(message):\n';
-    code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-    code += '        return\n';
+    codeLines.push('    if not await is_private_chat(message):');
+    codeLines.push('        await message.answer("❌ Эта команда доступна только в приватных чатах")');
+    codeLines.push('        return');
   }
 
   if (node.data.adminOnly) {
-    code += '    if not await is_admin(message.from_user.id):\n';
-    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
-    code += '        return\n';
+    codeLines.push('    if not await is_admin(message.from_user.id):');
+    codeLines.push('        await message.answer("❌ У вас нет прав для выполнения этой команды")');
+    codeLines.push('        return');
   }
 
   if (node.data.requiresAuth) {
-    code += '    if not await check_auth(message.from_user.id):\n';
-    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
-    code += '        return\n';
+    codeLines.push('    if not await check_auth(message.from_user.id):');
+    codeLines.push('        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")');
+    codeLines.push('        return');
   }
 
   // Регистрируем пользователя и сохраняем его данные
-  code += '\n    # Регистрируем пользователя в системе\n';
-  code += '    user_id = message.from_user.id\n';
-  code += '    username = message.from_user.username\n';
-  code += '    first_name = message.from_user.first_name\n';
-  code += '    last_name = message.from_user.last_name\n';
-  code += '    \n';
+  codeLines.push('');
+  codeLines.push('    # Регистрируем пользователя в системе');
+  codeLines.push('    user_id = message.from_user.id');
+  codeLines.push('    username = message.from_user.username');
+  codeLines.push('    first_name = message.from_user.first_name');
+  codeLines.push('    last_name = message.from_user.last_name');
+  codeLines.push('');
 
   if (userDatabaseEnabled) {
-    code += '    # Сохраняем пользователя в базу данных\n';
-    code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
-    code += '    \n';
-    code += '    # Сохраняем переменные пользователя в базу данных\n';
-    code += '    user_name = init_user_variables(user_id, message.from_user)\n';
-    code += '    await update_user_data_in_db(user_id, "user_name", user_name)\n';
-    code += '    await update_user_data_in_db(user_id, "first_name", first_name)\n';
-    code += '    await update_user_data_in_db(user_id, "last_name", last_name)\n';
-    code += '    await update_user_data_in_db(user_id, "username", username)\n';
-    code += '    \n';
-    code += '    # Резервное сохранение в локальное хранилище\n';
-    code += '    if not saved_to_db:\n';
-    code += '        user_data[user_id] = {\n';
-    code += '            "username": username,\n';
-    code += '            "first_name": first_name,\n';
-    code += '            "last_name": last_name,\n';
-    code += '            "user_name": user_name,\n';
-    code += '            "registered_at": message.date\n';
-    code += '        }\n';
-    code += '        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")\n';
-    code += '    else:\n';
-    code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
+    codeLines.push('    # Сохраняем пользователя в базу данных');
+    codeLines.push('    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)');
+    codeLines.push('');
+    codeLines.push('    # Сохраняем переменные пользователя в базу данных');
+    codeLines.push('    user_name = init_user_variables(user_id, message.from_user)');
+    codeLines.push('    await update_user_data_in_db(user_id, "user_name", user_name)');
+    codeLines.push('    await update_user_data_in_db(user_id, "first_name", first_name)');
+    codeLines.push('    await update_user_data_in_db(user_id, "last_name", last_name)');
+    codeLines.push('    await update_user_data_in_db(user_id, "username", username)');
+    codeLines.push('');
+    codeLines.push('    # Резервное сохранение в локальное хранилище');
+    codeLines.push('    if not saved_to_db:');
+    codeLines.push('        user_data[user_id] = {');
+    codeLines.push('            "username": username,');
+    codeLines.push('            "first_name": first_name,');
+    codeLines.push('            "last_name": last_name,');
+    codeLines.push('            "user_name": user_name,');
+    codeLines.push('            "registered_at": message.date');
+    codeLines.push('        }');
+    codeLines.push('        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")');
+    codeLines.push('    else:');
+    codeLines.push('        logging.info(f"Пользователь {user_id} сохранен в базу данных")');
+    codeLines.push('');
   } else {
-    code += '    # Инициализируем базовые переменные пользователя\n';
-    code += '    user_name = init_user_variables(user_id, message.from_user)\n';
-    code += '    \n';
+    codeLines.push('    # Инициализируем базовые переменные пользователя');
+    codeLines.push('    user_name = init_user_variables(user_id, message.from_user)');
+    codeLines.push('');
   }
 
   // Используем универсальную замену переменных для инициализации
-  code += generateUniversalVariableReplacement('    ');
+  const variableReplacementCode = generateUniversalVariableReplacement('    ');
+  const variableLines = variableReplacementCode.split('\n').filter(line => line.trim());
+  codeLines.push(...variableLines);
 
   // Восстанавливаем состояние множественного выбора ТОЛЬКО если он включен
   if (node.data.allowMultipleSelection) {
-    code += '    saved_interests = []\n';
-    code += '    \n';
+    codeLines.push('');
+    codeLines.push('    saved_interests = []');
+    codeLines.push('');
 
     if (userDatabaseEnabled) {
-      code += '    # Восстанавливаем состояние множественного выбора из БД\n';
-      code += '    user_record = await get_user_from_db(user_id)\n';
-      code += '    \n';
-      code += '    if user_record and isinstance(user_record, dict):\n';
-      code += '        user_data_field = user_record.get("user_data", {})\n';
-      code += '        if isinstance(user_data_field, str):\n';
-      code += '            import json\n';
-      code += '            try:\n';
-      code += '                user_vars = json.loads(user_data_field)\n';
-      code += '            except:\n';
-      code += '                user_vars = {}\n';
-      code += '        elif isinstance(user_data_field, dict):\n';
-      code += '            user_vars = user_data_field\n';
-      code += '        else:\n';
-      code += '            user_vars = {}\n';
-      code += '        \n';
-      code += '        # Ищем сохраненные интересы\n';
-      code += '        for var_name, var_data in user_vars.items():\n';
-      code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
-      code += '                if isinstance(var_data, str) and var_data:\n';
-      code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
-      code += '                    logging.info(f"Восстановлены интересы из переменной {var_name}: {saved_interests}")\n';
-      code += '                    break\n';
+      codeLines.push('    # Восстанавливаем состояние множественного выбора из БД');
+      codeLines.push('    user_record = await get_user_from_db(user_id)');
+      codeLines.push('');
+      codeLines.push('    if user_record and isinstance(user_record, dict):');
+      codeLines.push('        user_data_field = user_record.get("user_data", {})');
+      codeLines.push('        if isinstance(user_data_field, str):');
+      codeLines.push('            import json');
+      codeLines.push('            try:');
+      codeLines.push('                user_vars = json.loads(user_data_field)');
+      codeLines.push('            except:');
+      codeLines.push('                user_vars = {}');
+      codeLines.push('        elif isinstance(user_data_field, dict):');
+      codeLines.push('            user_vars = user_data_field');
+      codeLines.push('        else:');
+      codeLines.push('            user_vars = {}');
+      codeLines.push('        ');
+      codeLines.push('        # Ищем сохраненные интересы');
+      codeLines.push('        for var_name, var_data in user_vars.items():');
+      codeLines.push('            if "интерес" in var_name.lower() or var_name == "user_interests":');
+      codeLines.push('                if isinstance(var_data, str) and var_data:');
+      codeLines.push('                    saved_interests = [interest.strip() for interest in var_data.split(",")]');
+      codeLines.push('                    logging.info(f"Восстановлены интересы из переменной {var_name}: {saved_interests}")');
+      codeLines.push('                    break');
     } else {
-      code += '    # Восстанавливаем состояние из локального хранилища\n';
-      code += '    if user_id in user_data:\n';
-      code += '        for var_name, var_data in user_data[user_id].items():\n';
-      code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
-      code += '                if isinstance(var_data, str) and var_data:\n';
-      code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
-      code += '                    logging.info(f"Восстановлены интересы: {saved_interests}")\n';
-      code += '                    break\n';
-      code += '                elif isinstance(var_data, list):\n';
-      code += '                    saved_interests = var_data\n';
-      code += '                    logging.info(f"Восстановлены интересы: {saved_interests}")\n';
-      code += '                    break\n';
+      codeLines.push('    # Восстанавливаем состояние из локального хранилища');
+      codeLines.push('    if user_id in user_data:');
+      codeLines.push('        for var_name, var_data in user_data[user_id].items():');
+      codeLines.push('            if "интерес" in var_name.lower() or var_name == "user_interests":');
+      codeLines.push('                if isinstance(var_data, str) and var_data:');
+      codeLines.push('                    saved_interests = [interest.strip() for interest in var_data.split(",")]');
+      codeLines.push('                    logging.info(f"Восстановлены интересы: {saved_interests}")');
+      codeLines.push('                    break');
+      codeLines.push('                elif isinstance(var_data, list):');
+      codeLines.push('                    saved_interests = var_data');
+      codeLines.push('                    logging.info(f"Восстановлены интересы: {saved_interests}")');
+      codeLines.push('                    break');
     }
 
-    code += '    \n';
-    code += '    # Инициализируем состояние множественного выбора\n';
-    code += '    if user_id not in user_data:\n';
-    code += '        user_data[user_id] = {}\n';
-    code += `    user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy() if saved_interests else []\n`;
-    code += `    user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
-    code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n';
-    code += '    \n';
+    codeLines.push('');
+    codeLines.push('    # Инициализируем состояние множественного выбора');
+    codeLines.push('    if user_id not in user_data:');
+    codeLines.push('        user_data[user_id] = {}');
+    codeLines.push(`    user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy() if saved_interests else []`);
+    codeLines.push(`    user_data[user_id]["multi_select_node"] = "${node.id}"`);
+    codeLines.push('    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")');
+    codeLines.push('');
   }
 
   // Создаем клавиатуру с восстановленными галочками для множественного выбора
   if (node.data.allowMultipleSelection) {
-    code += '    # Создаем клавиатуру с восстановленными галочками\n';
-    code += '    builder = InlineKeyboardBuilder()\n';
-    code += '    \n';
-    code += '    # Функция для проверки совпадения интересов\n';
-    code += '    def check_interest_match(button_text, saved_list):\n';
-    code += '        """Проверяет, есть ли интерес в сохраненном списке"""\n';
-    code += '        if not saved_list:\n';
-    code += '            return False\n';
-    code += '        # Убираем эмодзи и галочки для сравнения\n';
-    code += '        clean_button = button_text.replace("✅ ", "").replace("⬜ ", "").strip()\n';
-    code += '        for saved_interest in saved_list:\n';
-    code += '            clean_saved = saved_interest.replace("✅ ", "").replace("⬜ ", "").strip()\n';
-    code += '            if clean_button == clean_saved or clean_button in clean_saved or clean_saved in clean_button:\n';
-    code += '                return True\n';
-    code += '        return False\n';
-    code += '    \n';
+    codeLines.push('    # Создаем клавиатуру с восстановленными галочками');
+    codeLines.push('    builder = InlineKeyboardBuilder()');
+    codeLines.push('');
+    codeLines.push('    # Функция для проверки совпадения интересов');
+    codeLines.push('    def check_interest_match(button_text, saved_list):');
+    codeLines.push('        """Проверяет, есть ли интерес в сохраненном списке"""');
+    codeLines.push('        if not saved_list:');
+    codeLines.push('            return False');
+    codeLines.push('        # Убираем эмодзи и галочки для сравнения');
+    codeLines.push('        clean_button = button_text.replace("✅ ", "").replace("⬜ ", "").strip()');
+    codeLines.push('        for saved_interest in saved_list:');
+    codeLines.push('            clean_saved = saved_interest.replace("✅ ", "").replace("⬜ ", "").strip()');
+    codeLines.push('            if clean_button == clean_saved or clean_button in clean_saved or clean_saved in clean_button:');
+    codeLines.push('                return True');
+    codeLines.push('        return False');
+    codeLines.push('');
 
     // Добавляем кнопки интересов с галочками
     const buttons = node.data.buttons || [];
@@ -151,10 +203,10 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     interestButtons.forEach(button => {
       const buttonText = button.text || 'Неизвестно';
       const buttonTarget = button.target || button.id;
-      code += `    ${buttonTarget}_selected = check_interest_match("${buttonText}", saved_interests)\n`;
-      code += `    ${buttonTarget}_text = "✅ ${buttonText}" if ${buttonTarget}_selected else "${buttonText}"\n`;
-      code += `    builder.add(InlineKeyboardButton(text=${buttonTarget}_text, callback_data="multi_select_${node.id}_${buttonTarget}"))\n`;
-      code += '    \n';
+      codeLines.push(`    ${buttonTarget}_selected = check_interest_match("${buttonText}", saved_interests)`);
+      codeLines.push(`    ${buttonTarget}_text = "✅ ${buttonText}" if ${buttonTarget}_selected else "${buttonText}"`);
+      codeLines.push(`    builder.add(InlineKeyboardButton(text=${buttonTarget}_text, callback_data="multi_select_${node.id}_${buttonTarget}"))`);
+      codeLines.push('');
     });
 
     // Добавляем кнопки команд и другие кнопки ПЕРЕД кнопкой "Готово"
@@ -164,21 +216,21 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
     nonSelectionButtons.forEach(button => {
       if (button.action === 'command') {
         const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-        code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+        codeLines.push(`    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))`);
       } else if (button.action === 'goto') {
         const callbackData = button.target || button.id || 'no_action';
-        code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+        codeLines.push(`    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))`);
       } else if (button.action === 'url') {
-        code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+        codeLines.push(`    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))`);
       }
     });
 
     // Добавляем кнопку "Готово"
     const continueText = node.data.continueButtonText || 'Готово';
-    code += `    builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
-    code += '    builder.adjust(2)  # Используем 2 колонки для консистентности\n';
-    code += '    keyboard = builder.as_markup()\n';
-    code += '    \n';
+    codeLines.push(`    builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))`);
+    codeLines.push('    builder.adjust(2)  # Используем 2 колонки для консистентности');
+    codeLines.push('    keyboard = builder.as_markup()');
+    codeLines.push('');
   }
 
   // Добавляем обработку условных сообщений
@@ -187,43 +239,50 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
 
   if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
     // Инициализируем text основным сообщением ПЕРЕД проверкой условий
-    code += '    # Проверяем условные сообщения\n';
-    code += `    text = ${formattedText}  # Основной текст узла как fallback\n`;
-    code += '    conditional_parse_mode = None\n';
-    code += '    conditional_keyboard = None\n';
-    code += '    \n';
-    code += '    # Получаем данные пользователя для проверки условий\n';
-    code += '    user_record = await get_user_from_db(user_id)\n';
-    code += '    if not user_record:\n';
-    code += '        user_record = user_data.get(user_id, {})\n';
-    code += '    \n';
-    code += '    # Безопасно извлекаем user_data\n';
-    code += '    if isinstance(user_record, dict):\n';
-    code += '        if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
-    code += '            user_data_dict = user_record["user_data"]\n';
-    code += '        else:\n';
-    code += '            user_data_dict = user_record\n';
-    code += '    else:\n';
-    code += '        user_data_dict = {}\n';
-    code += '    \n';
+    codeLines.push('    # Проверяем условные сообщения');
+    codeLines.push(`    text = ${formattedText}  # Основной текст узла как fallback`);
+    codeLines.push('    conditional_parse_mode = None');
+    codeLines.push('    conditional_keyboard = None');
+    codeLines.push('');
+    codeLines.push('    # Получаем данные пользователя для проверки условий');
+    codeLines.push('    user_record = await get_user_from_db(user_id)');
+    codeLines.push('    if not user_record:');
+    codeLines.push('        user_record = user_data.get(user_id, {})');
+    codeLines.push('');
+    codeLines.push('    # Безопасно извлекаем user_data');
+    codeLines.push('    if isinstance(user_record, dict):');
+    codeLines.push('        if "user_data" in user_record and isinstance(user_record["user_data"], dict):');
+    codeLines.push('            user_data_dict = user_record["user_data"]');
+    codeLines.push('        else:');
+    codeLines.push('            user_data_dict = user_record');
+    codeLines.push('    else:');
+    codeLines.push('        user_data_dict = {}');
+    codeLines.push('');
 
     // Generate conditional logic using helper function - условия теперь переопределят text если нужно
-    code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ', node.data);
+    const conditionalCode = generateConditionalMessageLogic(node.data.conditionalMessages, '    ', node.data);
+    const conditionalLines = conditionalCode.split('\n').filter(line => line.trim());
+    codeLines.push(...conditionalLines);
 
     // Не нужен else блок - text уже инициализирован основным сообщением
-    code += '    \n';
+    codeLines.push('');
   } else {
-    code += `    text = ${formattedText}\n`;
+    codeLines.push(`    text = ${formattedText}`);
   }
 
   // Для множественного выбора используем уже созданную клавиатуру
   if (node.data.allowMultipleSelection) {
-    code += '    await message.answer(text, reply_markup=keyboard)\n';
-    return code;
+    codeLines.push('    await message.answer(text, reply_markup=keyboard)');
+    
+    // Применяем автоматическое добавление комментариев ко всему коду
+    const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
+    return processedCode.join('\n');
   }
 
   // Генерируем клавиатуру
   const keyboardCode = generateKeyboard(node);
+  const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+  codeLines.push(...keyboardLines);
 
   // ИСПРАВЛЕНИЕ: Добавляем автопереход для узлов start, если он настроен
   if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
@@ -232,27 +291,32 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
       const autoTransitionTarget = node.data.autoTransitionTo;
       const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
 
-      code += keyboardCode;
-      code += '\n    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически (только если collectUserInput=true)\n';
-      code += `    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTransitionTarget}")\n`;
-      code += '    # Создаем временный callback_query объект для вызова обработчика\n';
-      code += '    from aiogram.types import CallbackQuery\n';
-      code += '    temp_callback = CallbackQuery(\n';
-      code += '        id="auto_transition",\n';
-      code += '        from_user=message.from_user,\n';
-      code += `        data="${autoTransitionTarget}",\n`;
-      code += '        chat_instance=str(message.chat.id),\n';
-      code += '        message=message\n';
-      code += '    )\n';
-      code += `    await handle_callback_${safeFunctionName}(temp_callback)\n`;
-      code += `    logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")\n`;
-      return code; // Возвращаем без добавления keyboardCode повторно
+      codeLines.push('');
+      codeLines.push('    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически (только если collectUserInput=true)');
+      codeLines.push(`    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTransitionTarget}")`);
+      codeLines.push('    # Создаем временный callback_query объект для вызова обработчика');
+      codeLines.push('    from aiogram.types import CallbackQuery');
+      codeLines.push('    temp_callback = CallbackQuery(');
+      codeLines.push('        id="auto_transition",');
+      codeLines.push('        from_user=message.from_user,');
+      codeLines.push(`        data="${autoTransitionTarget}",`);
+      codeLines.push('        chat_instance=str(message.chat.id),');
+      codeLines.push('        message=message');
+      codeLines.push('    )');
+      codeLines.push(`    await handle_callback_${safeFunctionName}(temp_callback)`);
+      codeLines.push(`    logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")`);
+      
+      // Применяем автоматическое добавление комментариев ко всему коду
+      const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
+      return processedCode.join('\n');
     } else {
-      code += '\n    # Автопереход пропущен: collectUserInput=false\n';
-      code += `    logging.info(f"ℹ️ Узел ${node.id} не собирает ответы (collectUserInput=false)")\n`;
+      codeLines.push('');
+      codeLines.push('    # Автопереход пропущен: collectUserInput=false');
+      codeLines.push(`    logging.info(f"ℹ️ Узел ${node.id} не собирает ответы (collectUserInput=false)")`);
     }
   }
 
-  // Если не было автоперехода, добавляем клавиатуру
-  return code + keyboardCode;
+  // Применяем автоматическое добавление комментариев ко всему коду
+  const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
+  return processedCode.join('\n');
 }
