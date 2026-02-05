@@ -35,9 +35,9 @@ import { generateMultiSelectDoneHandler } from './Keyboard/generateMultiSelectDo
 import { generateMultiSelectCallbackLogic } from './Keyboard/generateMultiSelectCallbackLogic';
 import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation';
-import { newprocessNodeButtonsAndGenerateHandlers } from './newprocessNodeButtonsAndGenerateHandlers';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
 import { newgenerateStateTransitionAndRenderLogic } from './newgenerateStateTransitionAndRenderLogic';
+import { createProcessNodeButtonsFunction } from './process-node-buttons';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -378,6 +378,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Интегрируется с системой логирования для отладки
    */
   function generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(): void {
+    const processNodeButtonsAndGenerateHandlers = createProcessNodeButtonsFunction(inlineNodes, nodes, code, allNodeIds, connections, mediaVariablesMap);
     code = newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes, allReferencedNodeIds, allConditionalButtons, code, processNodeButtonsAndGenerateHandlers, nodes, allNodeIds, connections, userDatabaseEnabled, mediaVariablesMap);
   }
 
@@ -987,10 +988,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 4. Поиск соответствующего узла команды
    * 5. Вызов подходящего обработчика
    * 
-   * **Интеграция с существующими обработчиками:**
+   * **Интеграция с существующи����и обработчиками:**
    * - Совместимость с start_handler
    * - Совместимость с command handlers
-   * - Поддержка FakeMessageEdit для редактирования сообщ����ий
+   * - ����оддержка FakeMessageEdit для редактирования сообщ��������ий
    * - Сохранение контекста callback_query
    * 
    * @remarks
@@ -1559,40 +1560,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     return code;
   }
 
-  /**
-   * Обрабатывает кнопки узлов и генерирует обработчики callback-запросов для Telegram бота.
-   * 
-   * Эта функция является ключевым компонентом генератора ботов, который:
-   * - Перебирает все inline узлы и их кнопки
-   * - Создает уникальные обработчики для callback-запросов кнопок
-   * - Избегает дублирования обработчиков для одинаковых callback_data
-   * - Генерирует Python код для обработки различных типов кнопок и узлов
-   * - Поддерживает множественные типы узлов (message, sticker, voice, animation, location, contact, user-input, start, command)
-   * - Реализует логику множественного выбора с кнопкой "Готово"
-   * - Обрабатывает условные сообщения и клавиатуры
-   * - Управляет состоянием ожидания пользовательского ввода
-   * 
-   * @param processedCallbacks - Set для отслеживания уже обработанных callback_data,
-   *                             предотвращает создание дублирующих обработчиков
-   * 
-   * Основные блоки логики:
-   * 1. Обработка кнопок с действием 'goto' - создание обработчиков для навигации между узлами
-   * 2. Обработка множественного выбора - логика кнопки "Готово" при выборе нескольких опций
-   * 3. Генерация обработчиков для различных типов целевых узлов (message, sticker, voice, etc.)
-   * 4. Поддержка условных сообщений на основе данных пользователя
-   * 5. Обра��отка прикрепленных медиа и разл��чных типов контента
-   * 6. Управление состоянием ожидания пользовательского ввода
-   * 7. Обработка специальных медиа-узлов (стикеры, голос, анимации, локация, контакты)
-   * 8. Обработка узлов пол��зовательског�� в��ода �� ��алидацией
-   * 9. Обработка start узлов - начальны�� сообщения
-   * 10. Обработ����������а command узлов - выполнение ком��нд
-   * 11. Универсальный обработчик для остальных типов узлов
-   * 12. Fallback обработка кнопок без настроенной цели
-   * 13. Обработка кнопок с действием 'command' - создание обработчиков для выполнения команд
-   */
-  function processNodeButtonsAndGenerateHandlers(processedCallbacks: Set<string>) {
-    code = newprocessNodeButtonsAndGenerateHandlers(inlineNodes, processedCallbacks, nodes, code, allNodeIds, connections, mediaVariablesMap);
-  }
+ 
 }
 
 
