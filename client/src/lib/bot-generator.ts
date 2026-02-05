@@ -35,6 +35,7 @@ import { generateMultiSelectDoneHandler } from './Keyboard/generateMultiSelectDo
 import { generateMultiSelectCallbackLogic } from './Keyboard/generateMultiSelectCallbackLogic';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateTransitionLogicForMultiSelectCompletion } from './generate-transition-logic-multi-select';
+import { identifyNodesRequiringMultiSelectLogic } from './identifyNodesRequiringMultiSelectLogic';
 import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
@@ -343,7 +344,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   generateMainPollingLoopWithGracefulShutdown();
 
   // Найдем узла с множественным выбором для использования в обработчиках
-  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic();
+  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes, isLoggingEnabled);
 
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
   generateMultiSelectCallbackDispatcherHandle();
@@ -992,7 +993,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Обычные команды (/command) - стандартная обработка
    * - Команды без узлов - базовое уведомление
    * 
-   * **Механизм работы:**
+   * **Меха����изм работы:**
    * 1. Проверка наличия командных кнопок
    * 2. Генераци������������ обработчика для каждой команды
    * 3. Создание fake message для с��муляции
@@ -1316,12 +1317,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * Находит все узлы в графе с включенной опцией множественного выбора и возвращает их список
    * @returns {Array<Node>} Массив узлов с множественным выбором
    */
-  function identifyNodesRequiringMultiSelectLogic() {
-    const multiSelectNodes = (nodes || []).filter((node: Node) => node.data.allowMultipleSelection
-    );
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
-    return multiSelectNodes;
-  }
 
   /**
    * Генерирует обработчик callback-запросов для множественного выбора
