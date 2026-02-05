@@ -1144,26 +1144,11 @@ async def handle_callback_a4OMlgbIxsMYYlXDjNw2F(callback_query: types.CallbackQu
     try:
         # Заменяем переменные в тексте перед отправкой
         processed_caption = replace_variables_in_text(text, user_vars)
-        await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption, reply_markup=keyboard, node_id="a4OMlgbIxsMYYlXDjNw2F")
+        await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption, parse_mode=ParseMode.NONE, reply_markup=keyboard, node_id="a4OMlgbIxsMYYlXDjNw2F")
     except Exception as e:
         logging.error(f"Ошибка отправки статического изображения: {e}")
         # Fallback на обычное сообщение при ошибке
-        await safe_edit_or_send(callback_query, text, node_id="a4OMlgbIxsMYYlXDjNw2F", reply_markup=keyboard if keyboard is not None else None)
-    # Устанавливаем waiting_for_input, так как автопереход не выполнен
-    user_data[user_id] = user_data.get(user_id, {})
-    user_data[user_id]["waiting_for_input"] = {
-        "type": "text",
-        "modes": ["text"],
-        "variable": "response_a4OMlgbIxsMYYlXDjNw2F",
-        "save_to_database": True,
-        "node_id": "a4OMlgbIxsMYYlXDjNw2F",
-        "next_node_id": "",
-        "min_length": 0,
-        "max_length": 0,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": ""
-    }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_a4OMlgbIxsMYYlXDjNw2F (узел a4OMlgbIxsMYYlXDjNw2F)")
+        await safe_edit_or_send(callback_query, text, node_id="a4OMlgbIxsMYYlXDjNw2F", reply_markup=keyboard if keyboard is not None else Nonenone)
     user_id = callback_query.from_user.id
     
     
@@ -1232,6 +1217,15 @@ async def handle_reply_PVB19NXVlEi9c5LntzWQo(message: types.Message):
         await message.answer(text, reply_markup=conditional_keyboard)
     else:
         await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    
+    # Проверяем, нужно ли выполнить автопереход из текущего узла
+    if user_id in user_data and user_data[user_id].get("collectUserInput_KXHxgAuYHpBd48H807wEJ", True) == True:
+        logging.info(f"ℹ️ Узел KXHxgAuYHpBd48H807wEJ ожидает ввод (collectUserInput=true), автопереход пропущен")
+    else:
+        # ⚡ Автопереход к узлу a4OMlgbIxsMYYlXDjNw2F (автопереход из узла KXHxgAuYHpBd48H807wEJ)
+        logging.info(f"⚡ Автопереход от узла KXHxgAuYHpBd48H807wEJ к узлу a4OMlgbIxsMYYlXDjNw2F")
+        await handle_command_help(message)
+        logging.info(f"✅ Автопереход выполнен: KXHxgAuYHpBd48H807wEJ -> a4OMlgbIxsMYYlXDjNw2F")
 
 # Универсальный fallback-обработчик для всех необработанных текстовых сообщений
 @dp.message(F.text)
