@@ -41,97 +41,6 @@ import json
 import aiohttp
 from aiohttp import TCPConnector
 
-# Safe helper for editing messages with fallback to new message
-async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, **kwargs):
-    """
-    Безопасное редактирование сообщения с fallback на новое сообщение
-    При автопереходе сразу отправляет новое сообщение без попытки редактирования
-    """
-    result = None
-    user_id = None
-    
-    # Получаем user_id для сохранения
-    if hasattr(cbq, "from_user") and cbq.from_user:
-        user_id = str(cbq.from_user.id)
-    elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):
-        user_id = str(cbq.message.chat.id)
-    
-    try:
-        # При автопереходе сразу отправляем новое сообщение без редактирования
-        if is_auto_transition:
-            logging.info(f"⚡ Автопереход: отправляем новое сообщение вместо редактирования")
-            if hasattr(cbq, "message") and cbq.message:
-                result = await cbq.message.answer(text, **kwargs)
-            else:
-                raise Exception("Cannot send message in auto-transition")
-        else:
-            # Пробуем редактировать сообщение
-            if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):
-                result = await cbq.edit_text(text, **kwargs)
-            elif (hasattr(cbq, "message") and cbq.message):
-                result = await cbq.message.edit_text(text, **kwargs)
-            else:
-                raise Exception("No valid edit method found")
-    except Exception as e:
-        # При любой ошибке отправляем новое сообщение
-        if is_auto_transition:
-            logging.info(f"⚡ Автопереход: {e}, отправляем новое сообщение")
-        else:
-            logging.warning(f"Не удалось отредактировать сообщение: {e}, отправляем новое")
-        if hasattr(cbq, "message") and cbq.message:
-            result = await cbq.message.answer(text, **kwargs)
-        else:
-            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")
-            raise
-    
-    # Сохраняем сообщение в базу данных
-    if result and user_id:
-        message_data_obj = {"message_id": result.message_id if hasattr(result, "message_id") else None}
-        
-        # Извлекаем кнопки из reply_markup
-        if "reply_markup" in kwargs:
-            try:
-                reply_markup = kwargs["reply_markup"]
-                buttons_data = []
-                # Обработка inline клавиатуры
-                if hasattr(reply_markup, "inline_keyboard"):
-                    for row in reply_markup.inline_keyboard:
-                        for btn in row:
-                            button_info = {"text": btn.text}
-                            if hasattr(btn, "url") and btn.url:
-                                button_info["url"] = btn.url
-                            if hasattr(btn, "callback_data") and btn.callback_data:
-                                button_info["callback_data"] = btn.callback_data
-                            buttons_data.append(button_info)
-                    if buttons_data:
-                        message_data_obj["buttons"] = buttons_data
-                        message_data_obj["keyboard_type"] = "inline"
-                # Обработка reply клавиатуры
-                elif hasattr(reply_markup, "keyboard"):
-                    for row in reply_markup.keyboard:
-                        for btn in row:
-                            button_info = {"text": btn.text}
-                            if hasattr(btn, "request_contact") and btn.request_contact:
-                                button_info["request_contact"] = True
-                            if hasattr(btn, "request_location") and btn.request_location:
-                                button_info["request_location"] = True
-                            buttons_data.append(button_info)
-                    if buttons_data:
-                        message_data_obj["buttons"] = buttons_data
-                        message_data_obj["keyboard_type"] = "reply"
-            except Exception as btn_error:
-                logging.warning(f"Не удалось извлечь кнопки в safe_edit_or_send: {btn_error}")
-        
-        await save_message_to_api(
-            user_id=user_id,
-            message_type="bot",
-            message_text=text,
-            node_id=node_id,
-            message_data=message_data_obj
-        )
-    
-    return result
-
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = "7713154819:AAEpLG7wuSPtzAto90fcxz5z0UN1evvXafE"
 
@@ -345,44 +254,6 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
     
     # Продолжаем обработку сообщения
-    return await handler(event, data)
-
-# Middleware для сохранения нажатий на кнопки
-async def callback_query_logging_middleware(handler, event: types.CallbackQuery, data: dict):
-    """Middleware для автоматического сохранения нажатий на кнопки"""
-    try:
-        user_id = str(event.from_user.id)
-        callback_data = event.data or ""
-        
-        # Пытаемся найти текст кнопки из сообщения
-        button_text = None
-        if event.message and hasattr(event.message, "reply_markup"):
-            reply_markup = event.message.reply_markup
-            if hasattr(reply_markup, "inline_keyboard"):
-                for row in reply_markup.inline_keyboard:
-                    for btn in row:
-                        if hasattr(btn, "callback_data") and btn.callback_data == callback_data:
-                            button_text = btn.text
-                            break
-                    if button_text:
-                        break
-        
-        # Сохраняем информацию о нажатии кнопки
-        message_text_to_save = f"[Нажата кнопка: {button_text}]" if button_text else "[Нажата кнопка]"
-        await save_message_to_api(
-            user_id=user_id,
-            message_type="user",
-            message_text=message_text_to_save,
-            message_data={
-                "button_clicked": True,
-                "button_text": button_text,
-                "callback_data": callback_data
-            }
-        )
-    except Exception as e:
-        logging.error(f"Ошибка в middleware сохранения нажатий кнопок: {e}")
-    
-    # Продолжаем обработку callback query
     return await handler(event, data)
 
 # Обертка для сохранения исходящих сообщений
@@ -979,15 +850,15 @@ async def start_handler(message: types.Message):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
+    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
+    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     has_regular_buttons = True
     has_input_collection = False
     # DEBUG: Узел start - hasRegularButtons=True, hasInputCollection=False
-    # Создаем inline клавиатуру с кнопками
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="a4OMlgbIxsMYYlXDjNw2F"))
-    builder.adjust(1)
-    keyboard = builder.as_markup()
-    await message.answer(text, reply_markup=keyboard, node_id="start")# @@NODE_END:start@@
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="Новая кнопка"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="start")# @@NODE_END:start@@
 
 # @@NODE_START:a4OMlgbIxsMYYlXDjNw2F@@
 # Код сгенерирован в generateCommandHandler.ts
@@ -1081,166 +952,152 @@ async def help_handler(message: types.Message):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
-    has_regular_buttons = False
+    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
+    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
+    has_regular_buttons = True
     has_input_collection = False
-    # DEBUG: Узел a4OMlgbIxsMYYlXDjNw2F - hasRegularButtons=False, hasInputCollection=False
-    await message.answer(text, parse_mode=ParseMode.MARKDOWN, node_id="a4OMlgbIxsMYYlXDjNw2F")# @@NODE_END:a4OMlgbIxsMYYlXDjNw2F@@
+    # DEBUG: Узел a4OMlgbIxsMYYlXDjNw2F - hasRegularButtons=True, hasInputCollection=False
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="кнопка 2"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN, node_id="a4OMlgbIxsMYYlXDjNw2F")# @@NODE_END:a4OMlgbIxsMYYlXDjNw2F@@
 
-# Обработчики inline кнопок
+# @@NODE_START:KXHxgAuYHpBd48H807wEJ@@
+    # Обработчик для узла KXHxgAuYHpBd48H807wEJ типа message будет сгенерирован отдельно
+# @@NODE_END:KXHxgAuYHpBd48H807wEJ@@
 
+# Обработчики reply кнопок
 
-# Обработчики для работы с группами
-from datetime import datetime, timezone
-import json
+@dp.message(lambda message: message.text == "Новая кнопка")
+async def handle_reply_PVB19NXVlEi9c5LntzWQo(message: types.Message):
+    text = """🤖 Доступные команды:
 
-# Конфигурация групп из параметров генерации
-CONNECTED_GROUPS = {}
-
-@dp.message(F.chat.type.in_(["group", "supergroup"]))
-async def handle_group_message(message: types.Message):
-    """
-    Обработчик сообщений в группах
-    """
-    chat_id = message.chat.id
+/start - Начать работу
+/help - Эта справка
+/settings - Настройки"""
     user_id = message.from_user.id
-    username = message.from_user.username or "Неизвестный"
+    skip_collection = False
     
-    # Проверяем, является ли группа подключенной
-    group_name = None
-    for name, config in CONNECTED_GROUPS.items():
-        if config.get("id") and str(config["id"]) == str(chat_id):
-            group_name = name
-            break
-    
-    if group_name:
-        logging.info(f"📢 Сообщение в подключенной группе {group_name}: {message.text[:50]}... от @{username}")
-        
-        # Здесь можно добавить логику обработки групповых сообщений
-        # Например, модерация, автоответы, статистика и т.д.
-        
-        # Сохраняем статистику сообщений
-        try:
-            await save_group_message_stats(chat_id, user_id, message.text, group_name)
-        except Exception as e:
-            logging.error(f"Ошибка сохранения статистики группы: {e}")
-    
-# Функция для сохранения статистики групповых сообщений
-async def save_group_message_stats(chat_id: int, user_id: int, message_text: str, group_name: str):
-    """
-    Сохраняет статистику сообщений в группе
-    """
-    try:
-        # Проверяем существование функции сохранения статистики
-        if 'save_user_message_stats' in globals():
-            # Если функция существует, используем её для общей статистики
-            await save_user_message_stats(user_id, message_text)
-        
-        # Логируем статистику для мониторинга
-        logging.info(f"📊 Статистика группы {group_name}: пользователь {user_id}, длина сообщения: {len(message_text or '')}")
-        
-        # Здесь можно добавить специфичную для групп логику сохранения
-        # например, в отдельную таблицу group_activity если она существует
-        try:
-            # Проверяем существование таблицы group_activity
-            # Этот код выполнится только если таблица существует
-            if 'db_pool' in globals() and db_pool:
-                async with db_pool.acquire() as conn:
-                    await conn.execute("""
-                        INSERT INTO group_activity (chat_id, user_id, message_length, group_name, created_at) 
-                        VALUES ($1, $2, $3, $4, $5)
-                        ON CONFLICT DO NOTHING
-                    """, chat_id, user_id, len(message_text or ""), group_name, datetime.now(timezone.utc))
-        except Exception as table_error:
-            # Если таблица не существует, просто логируем и продолжаем
-            logging.debug(f"Таблица group_activity не найдена: {table_error}")
+    if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
+        waiting_config = user_data[user_id]["waiting_for_input"]
+        modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
+        waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
+        if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
+            variable_name = waiting_config.get("variable", "button_response")
+            button_text = "Новая кнопка"
+            logging.info(f"💾 Сохраняем ответ кнопки в переменную: {variable_name} = {button_text} (modes: {modes}, waiting_node: {waiting_node_id})")
             
-    except Exception as e:
-        logging.error(f"Ошибка при сохранении статистики группы: {e}")
-    
-# Добавляем обработчик новых участников в группе
-@dp.message(F.new_chat_members)
-async def handle_new_member(message: types.Message):
-    """
-    Обработчик новых участников в группе
-    """
-    chat_id = message.chat.id
-    
-    # Проверяем, является ли группа подключенной
-    group_name = None
-    for name, config in CONNECTED_GROUPS.items():
-        if config.get("id") and str(config["id"]) == str(chat_id):
-            group_name = name
-            break
-    
-    if group_name:
-        for new_member in message.new_chat_members:
-            username = new_member.username or new_member.first_name or "Новый участник"
-            logging.info(f"👋 Новый участник в группе {group_name}: @{username}")
+            # Сохраняем в пользовательские данные
+            user_data[user_id][variable_name] = button_text
             
-            # Приветственное сообщение (опционально)
-            # await message.answer(f"Добро пожаловать в группу, @{username}!")
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, variable_name, button_text)
+            if saved_to_db:
+                logging.info(f"✅ Ответ кнопки сохранён в БД: {variable_name} = {button_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
             
-            # Здесь можно добавить логику обработки новых участников
-            # Например, отправка приветственного сообщения, добавление в базу и т.д.
-
-# Обработчик ухода участников из группы
-@dp.message(F.left_chat_member)
-async def handle_left_member(message: types.Message):
-    """
-    Обработчик ухода участников из группы
-    """
-    chat_id = message.chat.id
+            # Очищаем состояние ожидания после сохранения
+            logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
+            del user_data[user_id]["waiting_for_input"]
+        elif isinstance(waiting_config, dict):
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
+    elif skip_collection:
+        logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
     
-    # Проверяем, является ли группа подключенной
-    group_name = None
-    for name, config in CONNECTED_GROUPS.items():
-        if config.get("id") and str(config["id"]) == str(chat_id):
-            group_name = name
-            break
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
     
-    if group_name:
-        left_member = message.left_chat_member
-        username = left_member.username or left_member.first_name or "Участник"
-        logging.info(f"👋 Участник покинул группу {group_name}: @{username}")
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="кнопка 2"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    
+    # Узел a4OMlgbIxsMYYlXDjNw2F имеет collectUserInput=false - НЕ устанавливаем waiting_for_input
+    logging.info(f"ℹ️ Узел a4OMlgbIxsMYYlXDjNw2F не собирает ответы (collectUserInput=false)")
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
 
-# Функция для проверки прав администратора бота в группе
-async def check_bot_admin_rights(chat_id: int, group_name: str) -> bool:
-    """
-    Проверяет, является ли бот администратором группы
-    """
-    try:
-        chat_member = await bot.get_chat_member(chat_id, bot.id)
-        return chat_member.status in ['administrator', 'creator']
-    except Exception as e:
-        logging.error(f"Ошибка при проверке прав бота в группе {group_name}: {e}")
-        return False
+@dp.message(lambda message: message.text == "кнопка 2")
+async def handle_reply_7QBEg3Mx8DNG17uOGtJ2F(message: types.Message):
+    text = "Новое сообщение"
+    user_id = message.from_user.id
+    skip_collection = False
+    
+    if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:
+        waiting_config = user_data[user_id]["waiting_for_input"]
+        modes = waiting_config.get("modes", [waiting_config.get("type", "text")]) if isinstance(waiting_config, dict) else []
+        waiting_node_id = waiting_config.get("node_id", "") if isinstance(waiting_config, dict) else ""
+        if isinstance(waiting_config, dict) and waiting_config.get("save_to_database") and ("button" in modes or waiting_config.get("type") == "button"):
+            variable_name = waiting_config.get("variable", "button_response")
+            button_text = "кнопка 2"
+            logging.info(f"💾 Сохраняем ответ кнопки в переменную: {variable_name} = {button_text} (modes: {modes}, waiting_node: {waiting_node_id})")
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id][variable_name] = button_text
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, variable_name, button_text)
+            if saved_to_db:
+                logging.info(f"✅ Ответ кнопки сохранён в БД: {variable_name} = {button_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            # Очищаем состояние ожидания после сохранения
+            logging.info(f"🧹 Очищаем waiting_for_input после сохранения ответа кнопки")
+            del user_data[user_id]["waiting_for_input"]
+        elif isinstance(waiting_config, dict):
+            logging.info(f"ℹ️ waiting_for_input активен, но button не в modes: {modes}, пропускаем сохранение")
+    elif skip_collection:
+        logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
 
-# Функция для отправки сообщения в группу от имени бота
-async def send_group_message(chat_id: int, text: str, group_name: str = None) -> bool:
-    """
-    Отправляет сообщение в группу
-    """
-    try:
-        if not group_name:
-            # Определяем название группы если не передано
-            for name, config in CONNECTED_GROUPS.items():
-                if config.get("id") and str(config["id"]) == str(chat_id):
-                    group_name = name
-                    break
-        
-        # Проверяем права бота
-        if not await check_bot_admin_rights(chat_id, group_name):
-            logging.warning(f"Бот не имеет прав администратора в группе {group_name}")
-            return False
-        
-        await bot.send_message(chat_id, text)
-        logging.info(f"✅ Сообщение отправлено в группу {group_name}")
-        return True
-        
-    except Exception as e:
-        logging.error(f"Ошибка при отправке сообщения в группу {group_name}: {e}")
-        return False
-
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
+    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard, node_id="KXHxgAuYHpBd48H807wEJ")
+    else:
+        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="KXHxgAuYHpBd48H807wEJ")
 
 # Универсальный fallback-обработчик для всех необработанных текстовых сообщений
 @dp.message(F.text)
@@ -1288,7 +1145,6 @@ async def main():
         
         # Регистрация middleware для сохранения сообщений
         dp.message.middleware(message_logging_middleware)
-        dp.callback_query.middleware(callback_query_logging_middleware)
         
         print("🤖 Бот запущен и готов к работе!")
         await dp.start_polling(bot)

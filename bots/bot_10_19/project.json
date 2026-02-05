@@ -1,7 +1,4 @@
 {
-  "settings": {
-    "enableGroupHandlers": false
-  },
   "sheets": [
     {
       "id": "NeZoUXa2JDVhuwCQqWS2a",
@@ -23,12 +20,13 @@
               }
             ],
             "command": "/start",
+            "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
             "markdown": false,
             "adminOnly": false,
             "showInMenu": true,
             "description": "Запустить бота",
             "messageText": "Привет! Я ваш новый бот. Нажмите /help для получения помощи.",
-            "keyboardType": "inline",
+            "keyboardType": "reply",
             "requiresAuth": false,
             "isPrivateOnly": false,
             "resizeKeyboard": true,
@@ -42,17 +40,28 @@
           }
         },
         {
-          "_y": 456.078125,
+          "_y": 639.140625,
           "id": "a4OMlgbIxsMYYlXDjNw2F",
           "data": {
-            "buttons": [],
+            "buttons": [
+              {
+                "id": "7QBEg3Mx8DNG17uOGtJ2F",
+                "text": "кнопка 2",
+                "action": "goto",
+                "target": "KXHxgAuYHpBd48H807wEJ",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
             "command": "/help",
+            "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
             "markdown": true,
             "adminOnly": false,
             "showInMenu": true,
             "description": "Справка по боту",
             "messageText": "🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка\n/settings - Настройки",
-            "keyboardType": "none",
+            "keyboardType": "reply",
             "requiresAuth": false,
             "isPrivateOnly": false,
             "resizeKeyboard": true,
@@ -62,12 +71,35 @@
           "type": "command",
           "position": {
             "x": 100,
-            "y": 456.078125
+            "y": 639.140625
+          }
+        },
+        {
+          "_y": 1178.28125,
+          "id": "KXHxgAuYHpBd48H807wEJ",
+          "data": {
+            "buttons": [],
+            "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Новое сообщение",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 1178.28125
           }
         }
       ],
       "createdAt": "2026-02-05T18:32:56.989Z",
-      "updatedAt": "2026-02-05T19:40:55.470Z",
+      "updatedAt": "2026-02-05T20:16:19.158Z",
       "viewState": {
         "pan": {
           "x": 0,
