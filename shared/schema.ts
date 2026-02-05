@@ -1195,6 +1195,9 @@ export const botDataWithSheetsSchema = z.object({
 export const botDataSchema = z.object({
   nodes: z.array(nodeSchema),
   connections: z.array(connectionSchema),
+  settings: z.object({
+    enableGroupHandlers: z.boolean().optional().default(false),
+  }).optional(), // Make the entire settings object optional
 });
 
 export type Button = z.infer<typeof buttonSchema>;

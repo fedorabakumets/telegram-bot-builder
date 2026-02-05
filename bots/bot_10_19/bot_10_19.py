@@ -941,13 +941,15 @@ async def start_handler(message: types.Message):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
+    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
+    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     has_regular_buttons = True
     has_input_collection = False
     # DEBUG: Узел start - hasRegularButtons=True, hasInputCollection=False
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="Новая кнопка"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=keyboard, node_id="start")# @@NODE_END:start@@
+    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="start")# @@NODE_END:start@@
 
 # @@NODE_START:KXHxgAuYHpBd48H807wEJ@@
     # Обработчик для узла KXHxgAuYHpBd48H807wEJ типа message будет сгенерирован отдельно
@@ -1211,15 +1213,17 @@ async def handle_reply_PVB19NXVlEi9c5LntzWQo(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
+    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        await message.answer(text, reply_markup=conditional_keyboard)
+        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard, node_id="KXHxgAuYHpBd48H807wEJ")
     else:
-        await message.answer(text, reply_markup=ReplyKeyboardRemove())
+        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="KXHxgAuYHpBd48H807wEJ")
     
     # Проверяем, нужно ли выполнить автопереход из текущего узла
-    if user_id in user_data and user_data[user_id].get("collectUserInput_KXHxgAuYHpBd48H807wEJ", True) == True:
+    if user_id in user_data and user_data[user_id].get("collectUserInput_KXHxgAuYHpBd48H807wEJ", False) == True:
         logging.info(f"ℹ️ Узел KXHxgAuYHpBd48H807wEJ ожидает ввод (collectUserInput=true), автопереход пропущен")
     else:
         # ⚡ Автопереход к узлу a4OMlgbIxsMYYlXDjNw2F (автопереход из узла KXHxgAuYHpBd48H807wEJ)

@@ -149,18 +149,17 @@ export function processCodeWithAutoComments(
 ): string[] {
   const result: string[] = [];
   let currentBlock: string[] = [];
-  let blockStartIndex = 0;
-  
+
   const flushBlock = () => {
     if (currentBlock.length > 0) {
       // Проверяем, содержит ли блок реальный код (не только комментарии и пустые строки)
-      const hasRealCode = currentBlock.some(line => 
-        line.trim() && 
-        !line.trim().startsWith('#') && 
+      const hasRealCode = currentBlock.some(line =>
+        line.trim() &&
+        !line.trim().startsWith('#') &&
         !line.trim().startsWith('"""') &&
         !line.trim().startsWith("'''")
       );
-      
+
       if (hasRealCode) {
         // Проверяем, есть ли уже комментарий о генерации в начале блока
         const firstNonEmptyLine = currentBlock.find(line => line.trim());
@@ -168,10 +167,9 @@ export function processCodeWithAutoComments(
           result.push(`# Код сгенерирован в ${generatorFile}`);
         }
       }
-      
+
       result.push(...currentBlock);
       currentBlock = [];
-      blockStartIndex = result.length;
     }
   };
   

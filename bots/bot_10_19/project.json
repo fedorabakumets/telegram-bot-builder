@@ -20,6 +20,7 @@
               }
             ],
             "command": "/start",
+            "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
             "markdown": false,
             "adminOnly": false,
             "allowSkip": false,
@@ -50,10 +51,11 @@
           }
         },
         {
-          "_y": 471.078125,
+          "_y": 639.140625,
           "id": "KXHxgAuYHpBd48H807wEJ",
           "data": {
             "buttons": [],
+            "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
             "markdown": false,
             "adminOnly": false,
             "allowSkip": false,
@@ -80,11 +82,11 @@
           "type": "message",
           "position": {
             "x": 100,
-            "y": 471.078125
+            "y": 639.140625
           }
         },
         {
-          "_y": 793.375,
+          "_y": 1129.515625,
           "id": "a4OMlgbIxsMYYlXDjNw2F",
           "data": {
             "buttons": [],
@@ -116,12 +118,12 @@
           "type": "command",
           "position": {
             "x": 100,
-            "y": 793.375
+            "y": 1129.515625
           }
         }
       ],
       "createdAt": "2026-02-05T18:32:56.989Z",
-      "updatedAt": "2026-02-05T22:54:07.462Z",
+      "updatedAt": "2026-02-05T23:04:35.726Z",
       "viewState": {
         "pan": {
           "x": 0,
