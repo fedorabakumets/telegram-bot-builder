@@ -24,15 +24,16 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
 
 
         /**
-         * БЛОК 1: Обработка кнопок с действием 'goto'
+         * БЛОК 1: Обработка кнопов с действием 'goto'
          * Создает обработчики для навигации между узлами бота
          * Проверяет дублирование callback_data для оптимизации
          */
         // Избегаем дублирования обработчиков для идентификаторов кнопок (не целевых идентификаторов)
-        if (processedCallbacks.has(callbackData)) return;
+        if (processedCallbacks.has(`cb_${callbackData}`)) return;
 
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Избегаем дублированных обработчиков для target узлов
-        if (button.target && processedCallbacks.has(button.target)) {
+        // Но только для callback обработчиков, не для команд
+        if (button.target && processedCallbacks.has(`cb_${button.target}`)) {
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
           return;
         }
@@ -53,18 +54,19 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
         const actualCallbackData = button.target || callbackData;
         const actualNodeId = targetNode ? targetNode.id : button.target;
 
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем target узел перед созданием обработчика
-        if (button.target && processedCallbacks.has(button.target)) {
-          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
-          return;
-        }
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Больше не пропускаем обработчики для кнопок с goto
+        // Даже если узел уже был обработан как команда, нам нужен обработчик для перехода по кнопке
+        // if (button.target && processedCallbacks.has(button.target)) {
+        //   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
+        //   return;
+        // }
 
         // Отмечаем этот идентификатор кнопки как обработанный
-        processedCallbacks.add(callbackData);
+        processedCallbacks.add(`cb_${callbackData}`);
 
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем target в processedCallbacks СРАЗУ, чтобы избежать дублирования
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем target в processedCallbacks с префиксом для избежания дублирования callback обработчиков
         if (button.target) {
-          processedCallbacks.add(button.target);
+          processedCallbacks.add(`cb_${button.target}`);
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${button.target} добавлен в processedCallbacks ДО создания обработчика`);
         }
 

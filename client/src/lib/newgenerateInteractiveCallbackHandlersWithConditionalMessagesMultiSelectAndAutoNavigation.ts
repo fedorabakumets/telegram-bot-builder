@@ -30,7 +30,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРяТОР: processedCallbacks перед check:', Array.from(processedCallbacks));
 
     // Проверяем, был ли interests_result уже обработан в основном цикле
-    const wasInterestsResultProcessed = processedCallbacks.has('interests_result');
+    const wasInterestsResultProcessed = processedCallbacks.has('cb_interests_result');
     if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле?', wasInterestsResultProcessed);
 
     // ИСПРАВЛЕНИЕ: НЕ создаем дублирующий обработчик если он уже есть
@@ -39,10 +39,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
       if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле, избегаем конфликта клавиатур');
     } else {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Создаем обработчик для interests_result (не найден в основном цикле)');
-      processedCallbacks.add('interests_result');
       const interestsResultNode = nodes.find(n => n.id === 'interests_result');
       if (interestsResultNode) {
-        processedCallbacks.add('interests_result');
         code += `\n@dp.callback_query(lambda c: c.data == "interests_result" or c.data.startswith("interests_result_btn_"))\n`;
         code += `async def handle_callback_interests_result(callback_query: types.CallbackQuery):\n`;
         code += '    await callback_query.answer()\n';
@@ -233,7 +231,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             return; // Избегаем дублирования обработчика metro_selection
           }
 
-          processedCallbacks.add(nodeId);
+          processedCallbacks.add(`cb_${nodeId}`);
 
           // Создаем обработчик обратного вызова для этого узла, который может обрабатывать несколько кнопок И кнопку "готово" с мультивыбором
           const safeFunctionName = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
