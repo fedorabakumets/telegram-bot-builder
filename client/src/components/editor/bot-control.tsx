@@ -956,7 +956,7 @@ export function BotControl({}: BotControlProps) {
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground pl-10 sm:pl-12 -mt-1">
-            Управление ботами проекта <span className="font-semibold text-foreground">{projectName}</span>
+            Управление ботами из всех проектов
           </p>
         </div>
         <Button
