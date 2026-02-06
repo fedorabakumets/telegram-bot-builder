@@ -4,6 +4,7 @@ import { generateUniversalVariableReplacement } from '../utils/generateUniversal
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { generateAttachedMediaSendCode } from '../MediaHandler/generateAttachedMediaSendCode';
 import { Node } from '@shared/schema';
 
 /**
@@ -35,7 +36,7 @@ import { Node } from '@shared/schema';
  * };
  * const code = generateCommandHandler(node, true);
  */
-export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): string {
+export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean, mediaVariablesMap?: Map<string, { type: string; variable: string; }>): string {
   // Извлекаем команду из узла или используем значение по умолчанию
   const command = node.data.command || "/help";
   
@@ -170,13 +171,73 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean)
     codeLines.push(...variableLines);
   }
 
-  // Добавляем клавиатуру
-  const keyboardCode = generateKeyboard(node);
-  const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
-  codeLines.push(...keyboardLines);
+  // Проверяем, есть ли прикрепленные медиафайлы
+  const attachedMedia = node.data.attachedMedia || [];
+
+  if (attachedMedia.length > 0) {
+    // Используем переданный mediaVariablesMap
+    if (mediaVariablesMap) {
+      // Фильтруем mediaVariablesMap, чтобы получить только те переменные, которые связаны с этим узлом
+      const filteredMediaVariablesMap = new Map<string, { type: string; variable: string; }>();
+
+      attachedMedia.forEach((mediaVar: string) => {
+        if (mediaVariablesMap.has(mediaVar)) {
+          filteredMediaVariablesMap.set(mediaVar, mediaVariablesMap.get(mediaVar)!);
+        }
+      });
+
+      // Генерируем код для отправки прикрепленных медиа
+      const mediaCode = generateAttachedMediaSendCode(
+        attachedMedia,
+        filteredMediaVariablesMap,
+        formattedText, // текст сообщения
+        node.data.formatMode || 'HTML', // режим парсинга
+        'keyboard', // клавиатура
+        node.id, // ID узла
+        '    ', // отступ
+        node.data.autoTransitionTo, // автопереход
+        node.data.collectUserInput !== false, // собирать пользовательский ввод
+        undefined, // nodeData
+        'message' // контекст обработчика
+      );
+
+      if (mediaCode.trim()) {
+        // Добавляем код медиа
+        const mediaLines = mediaCode.split('\n');
+        codeLines.push(...mediaLines);
+      } else {
+        // Если код медиа не сгенерирован, используем обычную логику
+        // Добавляем клавиатуру
+        const keyboardCode = generateKeyboard(node);
+        const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+        codeLines.push(...keyboardLines);
+
+        const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
+        codeLines.push(`    await message.answer(text${keyboardParam})`);
+      }
+    } else {
+      // Если mediaVariablesMap не передан, используем обычную логику
+      // Добавляем клавиатуру
+      const keyboardCode = generateKeyboard(node);
+      const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+      codeLines.push(...keyboardLines);
+
+      const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
+      codeLines.push(`    await message.answer(text${keyboardParam})`);
+    }
+  } else {
+    // Обычная логика без медиа
+    // Добавляем клавиатуру
+    const keyboardCode = generateKeyboard(node);
+    const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+    codeLines.push(...keyboardLines);
+
+    const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
+    codeLines.push(`    await message.answer(text${keyboardParam})`);
+  }
 
   // Применяем автоматическое добавление комментариев ко всему коду
   const processedCode = processCodeWithAutoComments(codeLines, 'generateCommandHandler.ts');
-  
+
   return processedCode.join('\n');
 }

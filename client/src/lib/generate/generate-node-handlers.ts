@@ -13,6 +13,7 @@ import {
 } from '../UserHandler';
 import { generateUnpinMessageHandler, generateDeleteMessageHandler, generatePinMessageHandler } from '../MessageHandler';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { collectMediaVariables } from '../utils/collectMediaVariables';
 
 /**
  * Генерирует обработчики для каждого узла
@@ -32,13 +33,16 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean): string {
   // Собираем код в массив строк для автоматической обработки
   const codeLines: string[] = [];
-  
+
   // Добавляем комментарий о генерации
   codeLines.push('# Код сгенерирован в generate-node-handlers.ts');
-  
+
+  // Создаем mediaVariablesMap для всех узлов
+  const mediaVariablesMap = collectMediaVariables(nodes);
+
   const nodeHandlers: Record<string, (node: Node) => string> = {
-    start: (node) => generateStartHandler(node, userDatabaseEnabled),
-    command: (node) => generateCommandHandler(node, userDatabaseEnabled),
+    start: (node) => generateStartHandler(node, userDatabaseEnabled, mediaVariablesMap),
+    command: (node) => generateCommandHandler(node, userDatabaseEnabled, mediaVariablesMap),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
     animation: generateAnimationHandler,

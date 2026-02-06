@@ -4,6 +4,7 @@ import { generateConditionalMessageLogic } from '../Conditional/generateConditio
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { generateAttachedMediaSendCode } from '../MediaHandler/generateAttachedMediaSendCode';
 import { Node } from '@shared/schema';
 
 // ============================================================================
@@ -51,7 +52,7 @@ import { Node } from '@shared/schema';
  * };
  * const code = generateStartHandler(node, true);
  */
-export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string {
+export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, mediaVariablesMap?: Map<string, { type: string; variable: string; }>): string {
   // Собираем весь код в массив строк для автоматической обработки
   const codeLines: string[] = [];
 
@@ -311,6 +312,68 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
   const keyboardCode = generateKeyboard(node);
   const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
   codeLines.push(...keyboardLines);
+
+  // Проверяем, есть ли прикрепленные медиафайлы
+  const attachedMedia = node.data.attachedMedia || [];
+
+  if (attachedMedia.length > 0) {
+    // Используем переданный mediaVariablesMap
+    if (mediaVariablesMap) {
+      // Фильтруем mediaVariablesMap, чтобы получить только те переменные, которые связаны с этим узлом
+      const filteredMediaVariablesMap = new Map<string, { type: string; variable: string; }>();
+
+      attachedMedia.forEach((mediaVar: string) => {
+        if (mediaVariablesMap.has(mediaVar)) {
+          filteredMediaVariablesMap.set(mediaVar, mediaVariablesMap.get(mediaVar)!);
+        }
+      });
+
+      // Генерируем код для отправки прикрепленных медиа
+      const mediaCode = generateAttachedMediaSendCode(
+        attachedMedia,
+        filteredMediaVariablesMap,
+        formattedText, // текст сообщения
+        node.data.formatMode || 'HTML', // режим парсинга
+        'keyboard', // клавиатура
+        node.id, // ID узла
+        '    ', // отступ
+        node.data.autoTransitionTo, // автопереход
+        node.data.collectUserInput !== false, // собирать пользовательский ввод
+        undefined, // nodeData
+        'message' // контекст обработчика
+      );
+
+      if (mediaCode.trim()) {
+        // Заменяем обычную отправку сообщения на отправку с медиа
+        const mediaLines = mediaCode.split('\n');
+        codeLines.push(...mediaLines);
+      } else {
+        // Если код медиа не сгенерирован, используем обычную логику
+        if (node.data.allowMultipleSelection) {
+          codeLines.push('    await message.answer(text, reply_markup=keyboard)');
+        } else {
+          const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
+          codeLines.push(`    await message.answer(text${keyboardParam})`);
+        }
+      }
+    } else {
+      // Если mediaVariablesMap не передан, используем обычную логику
+      if (node.data.allowMultipleSelection) {
+        codeLines.push('    await message.answer(text, reply_markup=keyboard)');
+      } else {
+        const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
+        codeLines.push(`    await message.answer(text${keyboardParam})`);
+      }
+    }
+  } else {
+    // Обычная логика без медиа
+    if (node.data.allowMultipleSelection) {
+      codeLines.push('    await message.answer(text, reply_markup=keyboard)');
+    } else {
+      const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
+      codeLines.push(`    await message.answer(text${keyboardParam})`);
+    }
+  }
 
   // ИСПРАВЛЕНИЕ: Добавляем автопереход для узлов start, если он настроен
   if (node.data.enableAutoTransition && node.data.autoTransitionTo) {

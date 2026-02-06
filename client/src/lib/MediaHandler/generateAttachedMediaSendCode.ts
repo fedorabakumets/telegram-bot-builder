@@ -85,7 +85,8 @@ export function generateAttachedMediaSendCode(
   indentLevel: string,
   autoTransitionTo?: string,
   collectUserInput: boolean = true,
-  nodeData?: any): string {
+  nodeData?: any,
+  handlerContext: 'message' | 'callback' = 'callback'): string {
   
   // Собираем весь код в массив строк для автоматической обработки комментариев
   const codeLines: string[] = [];
@@ -109,7 +110,8 @@ export function generateAttachedMediaSendCode(
     // Устанавливаем состояние ожидания ввода если нужно
     if (collectUserInput && nodeData) {
       codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
-      const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel);
+      const userIdSourceForWaiting = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
+      const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSourceForWaiting);
       const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
       codeLines.push(...waitingStateLines);
       codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки изображения")`);
@@ -119,12 +121,15 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}try:`);
     codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
     codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, user_vars)`);
-    
+
     const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
     const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
-    
-    codeLines.push(`${indentLevel}    await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
-    
+
+    const userIdSource = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
+    const messageSource = handlerContext === 'message' ? 'message' : 'callback_query';
+
+    codeLines.push(`${indentLevel}    await bot.send_photo(${userIdSource}, static_image_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+
     // Автопереход если нужен
     if (autoTransitionTo) {
       codeLines.push(`${indentLevel}    `);
@@ -133,16 +138,16 @@ export function generateAttachedMediaSendCode(
       const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
       codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
       codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-      codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)`);
+      codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(${messageSource})`);
       codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
       codeLines.push(`${indentLevel}        return`);
     }
-    
+
     codeLines.push(`${indentLevel}except Exception as e:`);
     codeLines.push(`${indentLevel}    logging.error(f"Ошибка отправки статического изображения: {e}")`);
     codeLines.push(`${indentLevel}    # Fallback на обычное сообщение при ошибке`);
     const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
-    codeLines.push(`${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
+    codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
     
     // Применяем автоматическое добавление комментариев ко всему коду
     const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');
@@ -180,7 +185,8 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}        attached_media = media_data`);
     codeLines.push(`${indentLevel}else:`);
     codeLines.push(`${indentLevel}    # Проверяем, есть ли медиа в переменных пользователя`);
-    codeLines.push(`${indentLevel}    user_id = callback_query.from_user.id`);
+    const userIdSource = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
+    codeLines.push(`${indentLevel}    user_id = ${userIdSource}`);
     codeLines.push(`${indentLevel}    user_node_vars = user_data.get(user_id, {})`);
     codeLines.push(`${indentLevel}    if "${mediaVariable}" in user_node_vars:`);
     codeLines.push(`${indentLevel}        attached_media = user_node_vars["${mediaVariable}"]`);
@@ -199,7 +205,8 @@ export function generateAttachedMediaSendCode(
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
   if (collectUserInput && nodeData) {
     codeLines.push(`${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
-    const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel);
+    const userIdSourceForWaiting = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
+    const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSourceForWaiting);
     const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
     codeLines.push(...waitingStateLines);
     codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки медиа")`);
@@ -226,21 +233,23 @@ export function generateAttachedMediaSendCode(
 
   switch (mediaType) {
     case 'photo':
-      codeLines.push(`${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+      const userIdSource = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
+  const messageSource = handlerContext === 'message' ? 'message' : 'callback_query';
+  codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'video':
-      codeLines.push(`${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+      codeLines.push(`${indentLevel}        await bot.send_video(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'audio':
-      codeLines.push(`${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+      codeLines.push(`${indentLevel}        await bot.send_audio(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'document':
-      codeLines.push(`${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+      codeLines.push(`${indentLevel}        await bot.send_document(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     default:
       codeLines.push(`${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение`);
       const autoTransitionFlagDefault = autoTransitionTo ? ', is_auto_transition=True' : '';
-      codeLines.push(`${indentLevel}        await safe_edit_or_send(callback_query, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseMode})`);
+      codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseMode})`);
   }
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
@@ -251,7 +260,7 @@ export function generateAttachedMediaSendCode(
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
     codeLines.push(`${indentLevel}            # ⚡ Автопереход к узлу ${autoTransitionTo}`);
     codeLines.push(`${indentLevel}            logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-    codeLines.push(`${indentLevel}            await handle_callback_${safeAutoTargetId}(callback_query)`);
+    codeLines.push(`${indentLevel}            await handle_callback_${safeAutoTargetId}(${messageSource})`);
     codeLines.push(`${indentLevel}            logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
     codeLines.push(`${indentLevel}            return`);
     codeLines.push(`${indentLevel}        else:`);
@@ -263,7 +272,7 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")`);
   codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);
   const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
-  codeLines.push(`${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
+  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
   codeLines.push(`${indentLevel}else:`);
   codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
   codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
@@ -275,7 +284,7 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}        # Узел ожидает ввод, не отправляем сообщение`);
   codeLines.push(`${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод, пропускаем отправку сообщения")`);
   codeLines.push(`${indentLevel}    else:`);
-  codeLines.push(`${indentLevel}        await safe_edit_or_send(callback_query, processed_text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
+  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход и для случая без медиа
   if (autoTransitionTo) {
@@ -285,7 +294,7 @@ export function generateAttachedMediaSendCode(
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
     codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
     codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-    codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)`);
+    codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(${messageSource})`);
     codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
     codeLines.push(`${indentLevel}        return`);
     codeLines.push(`${indentLevel}    else:`);
