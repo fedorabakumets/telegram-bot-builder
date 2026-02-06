@@ -131,7 +131,13 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '                # Проверяем, является ли это командой\n';
     code += '                if next_node_id == "profile_command":\n';
     code += '                    logging.info("Переход к команде /profile")\n';
-    code += '                    await profile_handler(message)\n';
+    code += '                    # Проверяем существование profile_handler перед вызовом\n';
+    code += '                    profile_func = globals().get("profile_handler")\n';
+    code += '                    if profile_func:\n';
+    code += '                        await profile_func(message)\n';
+    code += '                    else:\n';
+    code += '                        logging.warning("profile_handler не найден, пропускаем вызов")\n';
+    code += '                        await message.answer("Команда /profile не найдена")\n';
     code += '                else:\n';
     code += '                    # Создаем фиктивный callback для навигации к обычному узлу\n';
     code += '                    import types as aiogram_types\n';
@@ -829,7 +835,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
 
     /**
      * Обработка различных форматов конфигурации
-     * Поддерживает новый формат (словарь) и старый формат (строка) для обратной совместимости
+     * Поддерживает новый формат (словарь) и старый формат (строка) для об��атной совместимости
      */
     code += '        # Проверяем формат конфигурации - новый (словарь) или старый (строка)\n';
     code += '        if isinstance(waiting_config, dict):\n';

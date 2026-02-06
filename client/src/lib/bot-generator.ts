@@ -299,6 +299,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем все цели подключения, чтобы обеспечить наличие обработчика у каждого подключенного узла
   processConnectionTargets(connections, allReferencedNodeIds);
 
+  // Добавляем все узлы в allReferencedNodeIds, чтобы для каждого узла создавался обработчик
+  // Это необходимо, потому что в разных местах кода генерируются вызовы handle_callback_... для всех узлов
+  (nodes || []).forEach(node => {
+    allReferencedNodeIds.add(node.id);
+  });
+
   // Генерируем обработчики только если есть inline кнопки или условные кнопки
   generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation();
 

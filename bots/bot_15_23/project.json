@@ -1,0 +1,149 @@
+{
+  "sheets": [
+    {
+      "id": "iH8j-no06ePy_NylKmcf-",
+      "name": "🎉 Приветствие (копия)",
+      "nodes": [
+        {
+          "_y": 100,
+          "id": "XR_oCZ5omC8H71KgDCP5g",
+          "data": {
+            "buttons": [],
+            "command": "/start",
+            "markdown": false,
+            "synonyms": [
+              "старт",
+              "начать",
+              "привет",
+              "начало",
+              "начинаем"
+            ],
+            "adminOnly": false,
+            "showInMenu": true,
+            "description": "Приветствие и источник",
+            "messageText": "🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!\n\nЭтот бот поможет тебе найти интересных людей в Санкт-Петербурге!\n\nОткуда ты узнал о нашем чате? 😎",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "inputVariable": "user_source",
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "enableTextInput": true,
+            "oneTimeKeyboard": false,
+            "collectUserInput": true,
+            "enableStatistics": true,
+            "inputTargetNodeId": "PBSJzhYiE1ffqGxA1JMVV",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "start",
+          "position": {
+            "x": 100,
+            "y": 100
+          }
+        },
+        {
+          "_y": 641.6875,
+          "id": "PBSJzhYiE1ffqGxA1JMVV",
+          "data": {
+            "buttons": [
+              {
+                "id": "btn-no",
+                "text": "Нет 🙅",
+                "value": "no",
+                "action": "goto",
+                "target": "Jc-PmusaPm7bBzDNxpWwW",
+                "buttonType": "option"
+              }
+            ],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Хочешь присоединиться к нашему чату? 🚀",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "inputVariable": "join_request_response",
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": true,
+            "collectUserInput": true,
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 641.6875
+          }
+        },
+        {
+          "_y": 969.734375,
+          "id": "Jc-PmusaPm7bBzDNxpWwW",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Понятно! Если передумаешь, напиши /start! 😊",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "removeKeyboard": true,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 969.734375
+          }
+        }
+      ],
+      "createdAt": "2026-02-06T19:39:37.728Z",
+      "updatedAt": "2026-02-06T19:54:17.069Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "connections": []
+    }
+  ],
+  "version": 2,
+  "activeSheetId": "iH8j-no06ePy_NylKmcf-"
+}

@@ -94,10 +94,15 @@ export function generateConditionalButtonHandlerCode(): string {
   codeLines.push('        fake_message = FakeMessage(callback_query)');
   codeLines.push('        ');
   
-  // Вызов обработчика профиля
-  codeLines.push('        # Вызываем обработчик профиля');
+  // Вызов обработчика профиля (только если он существует)
+  codeLines.push('        # Вызываем обработчик профиля если он существует');
   codeLines.push('        try:');
-  codeLines.push('            await profile_handler(fake_message)');
+  codeLines.push('            func = globals().get("profile_handler")');
+  codeLines.push('            if func:');
+  codeLines.push('                await func(fake_message)');
+  codeLines.push('            else:');
+  codeLines.push('                # Если profile_handler не существует, просто показываем сообщение');
+  codeLines.push('                await callback_query.message.answer(f"✅ Значение {variable_name} обновлено на: {variable_value}")');
   codeLines.push('        except Exception as e:');
   codeLines.push('            logging.error(f"Ошибка вызова profile_handler: {e}")');
   codeLines.push('            await callback_query.message.answer(f"✅ Значение {variable_name} обновлено на: {variable_value}")');
