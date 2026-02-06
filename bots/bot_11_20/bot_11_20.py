@@ -20692,6 +20692,344 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
         return
     
     if not node_id:
+        # Резервный поиск: ищем узел, который содержит кнопку с target, совпадающим с button_id
+        logging.info(f"🔍 Резервный поиск узла по button_id: {button_id}")
+
+        if not node_id and button_id == "devyatkino":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "grazhdansky":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "akademicheskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "politehnicheskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pl_muzhestva":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "lesnaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "vyborgskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pl_lenina":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "chernyshevskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pl_vosstaniya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "vladimirskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pushkinskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "tehinstitut1":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "baltiyskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "narvskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "kirovsky":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "avtovo":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "leninsky":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "veteranov":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "parnas":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "prosp_prosvesh":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "ozerki":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "udelnaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pionerskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "chernaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "petrogradskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "gorkovskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "nevsky":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "sennaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "tehinstitut2":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "frunzenskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "mosk_vorota":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "elektrosila":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "park_pobedy":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "moskovskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "zvezdnaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "kupchino":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "primorskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "vasileostr":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "gostiny":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "mayakovskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pl_nevsk":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "elizarovskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "lomonosovskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "proletarskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "obuhovo":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "rybackoe":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "novokrestovsk":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "begovaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "komendantsky":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "staraya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "krestovsky":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "chkalovskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "sportivnaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "admiralteyskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "sadovaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "zvenigorodskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "obvodniy":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "volkovskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "buharestskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "mezhdunar":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pop":
+            node_id = "music_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "rock":
+            node_id = "music_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "electronic":
+            node_id = "music_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "jazz":
+            node_id = "music_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "classical":
+            node_id = "music_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "hiphop":
+            node_id = "music_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "indie":
+            node_id = "music_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "rnb":
+            node_id = "music_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "reading":
+            node_id = "hobby_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "gaming":
+            node_id = "hobby_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "cooking":
+            node_id = "hobby_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "gardening":
+            node_id = "hobby_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "collecting":
+            node_id = "hobby_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "diy":
+            node_id = "hobby_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pets":
+            node_id = "hobby_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "tech":
+            node_id = "hobby_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "parties":
+            node_id = "social_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "networking":
+            node_id = "social_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "dating":
+            node_id = "social_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "volunteering":
+            node_id = "social_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "events":
+            node_id = "social_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "community":
+            node_id = "social_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "art":
+            node_id = "creativity_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "music":
+            node_id = "creativity_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "photography":
+            node_id = "creativity_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "writing":
+            node_id = "creativity_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "design":
+            node_id = "creativity_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "handmade":
+            node_id = "creativity_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "theater":
+            node_id = "creativity_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "running":
+            node_id = "active_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "gym":
+            node_id = "active_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "cycling":
+            node_id = "active_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "hiking":
+            node_id = "active_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "yoga":
+            node_id = "active_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "swimming":
+            node_id = "active_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "dancing":
+            node_id = "active_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "cooking":
+            node_id = "food_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "restaurants":
+            node_id = "food_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "wine":
+            node_id = "food_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "coffee":
+            node_id = "food_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "baking":
+            node_id = "food_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "street_food":
+            node_id = "food_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "healthy_food":
+            node_id = "food_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "football":
+            node_id = "sport_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "basketball":
+            node_id = "sport_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "tennis":
+            node_id = "sport_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "hockey":
+            node_id = "sport_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "volleyball":
+            node_id = "sport_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "mma":
+            node_id = "sport_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "esports":
+            node_id = "sport_interests"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+
+    if not node_id:
         logging.warning(f"⚠️ Не удалось найти node_id для callback_data: {callback_data}")
         return
     

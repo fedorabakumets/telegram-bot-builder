@@ -352,6 +352,8 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
               code += '    # Используем условное сообщение если есть подходящее условие\n';
               code += '    if "text" not in locals():\n';
               code += `        text = ${formattedText}\n`;
+              code += '        # Заменяем переменные в основном тексте, если условие не сработало\n';
+              code += '        text = replace_variables_in_text(text, user_vars)\n';
               code += '    \n';
               code += '    # Используем условную клавиатуру если есть\n';
               code += '    # Инициализируем переменную conditional_keyboard, если она не была определена\n';
@@ -1076,6 +1078,8 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
               code += '    # Используем условное сообщение если есть подходящее условие\n';
               code += '    if "text" not in locals():\n';
               code += `        text = ${formattedText}\n`;
+              code += '        # Заменяем переменные в основном тексте, если условие не сработало\n';
+              code += '        text = replace_variables_in_text(text, user_vars)\n';
               code += '    \n';
               code += '    # Используем условную клавиатуру если есть\n';
               code += '    # Инициализируем переменную conditional_keyboard, если она не была определена\n';
@@ -1262,6 +1266,8 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 code += '    # Используем условное сообщение если есть подходящее условие\n';
                 code += '    if "text" not in locals():\n';
                 code += `        text = ${formattedTargetText}\n`;
+                code += '        # Заменяем переменные в основном тексте, если условие не сработало\n';
+                code += '        text = replace_variables_in_text(text, user_vars)\n';
                 code += '    \n';
                 code += '    # Используем условную клавиатуру если есть\n';
                 code += '    if conditional_keyboard is not None:\n';
