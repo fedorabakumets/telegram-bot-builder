@@ -821,7 +821,7 @@ export function BotControl({}: BotControlProps) {
 
   // Обновление информации о токене
   const updateTokenMutation = useMutation({
-    mutationFn: async ({ tokenId, data }: { tokenId: number; data: { name?: string; description?: string; trackExecutionTime?: number } }) => {
+    mutationFn: async ({ tokenId, data }: { tokenId: number; data: { name?: string; description?: string | null; trackExecutionTime?: number } }) => {
       // Нужно получить projectId для токена
       // Используем напрямую API для получения информации о токене, чтобы избежать проблем с кэшем
       const allTokensFlat = allTokens.flat();
@@ -1478,7 +1478,7 @@ export function BotControl({}: BotControlProps) {
                     tokenId: editingToken.id,
                     data: {
                       name: editName.trim() || editingToken.name,
-                      description: editDescription.trim() || undefined
+                      description: editDescription.trim() || null
                     }
                   });
                 }
