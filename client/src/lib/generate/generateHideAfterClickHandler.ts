@@ -1,13 +1,15 @@
 import { Node, Button } from '@shared/schema';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует код для обработки флага hideAfterClick (скрытие сообщения после нажатия кнопки)
- * 
+ *
  * @param node - узел, содержащий кнопки
  * @returns строка с Python-кодом для обработки флага hideAfterClick
  */
 export function generateHideAfterClickHandler(node: Node): string {
-  let code = '';
+  // Собираем весь код в массив строк для автоматической обработки
+  const codeLines: string[] = [];
   
   // Проверяем, есть ли у узла кнопки с флагом hideAfterClick
   if (node.data.buttons && Array.isArray(node.data.buttons)) {
@@ -16,26 +18,30 @@ export function generateHideAfterClickHandler(node: Node): string {
     if (hideAfterClickButtons.length > 0) {
       // Добавляем обработку для каждой кнопки с флагом hideAfterClick
       hideAfterClickButtons.forEach((button: Button) => {
-        code += `    # Обработка флага hideAfterClick для кнопки "${button.text}"\n`;
-        code += `    if callback_query and callback_query.message and callback_data == "${button.id || button.target || 'unknown'}":\n`;
-        code += `        try:\n`;
-        code += `            # Удаляем сообщение, в котором была нажата кнопка\n`;
-        code += `            await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)\n`;
-        code += `            logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {button.text}")\n`;
-        code += `        except Exception as e:\n`;
-        code += `            logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")\n`;
-        code += `            # Если не удалось удалить сообщение, просто отвечаем на callback\n`;
-        code += `            try:\n`;
-        code += `                await callback_query.answer()\n`;
-        code += `            except:\n`;
-        code += `                pass\n`;
-        code += `        return  # Прерываем дальнейшую обработку, так как сообщение уже удалено\n`;
-        code += '\n';
+        codeLines.push(`    # Обработка флага hideAfterClick для кнопки "${button.text}"`);
+        codeLines.push(`    if callback_query and callback_query.message and callback_data == "${button.id || button.target || 'unknown'}":`);
+        codeLines.push(`        try:`);
+        codeLines.push(`            # Удаляем сообщение, в котором была нажата кнопка`);
+        codeLines.push(`            await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)`);
+        codeLines.push(`            logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {button.text}")`);
+        codeLines.push(`        except Exception as e:`);
+        codeLines.push(`            logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")`);
+        codeLines.push(`            # Если не удалось удалить сообщение, просто отвечаем на callback`);
+        codeLines.push(`            try:`);
+        codeLines.push(`                await callback_query.answer()`);
+        codeLines.push(`            except:`);
+        codeLines.push(`                pass`);
+        codeLines.push(`        return  # Прерываем дальнейшую обработку, так как сообщение уже удалено`);
+        codeLines.push('');
       });
     }
   }
   
-  return code;
+  // Применяем автоматическое добавление комментариев ко всему коду
+  // Функция автоматически определяет имя файла
+  const processedCode = processCodeWithAutoComments(codeLines, 'generateHideAfterClickHandler.ts');
+  
+  return processedCode.join('\n');
 }
 
 /**
@@ -45,14 +51,15 @@ export function generateHideAfterClickHandler(node: Node): string {
  * @returns строка с Python-кодом для проверки и обработки флага hideAfterClick
  */
 export function generateHideAfterClickMiddleware(node: Node): string {
-  let code = '';
+  // Собираем весь код в массив строк для автоматической обработки
+  const codeLines: string[] = [];
 
   // Проверяем, есть ли у узла кнопки с флагом hideAfterClick
   if (node.data.buttons && Array.isArray(node.data.buttons)) {
     const hideAfterClickButtons = node.data.buttons.filter((button: Button) => button.hideAfterClick === true);
 
     if (hideAfterClickButtons.length > 0) {
-      code += '    # Проверяем, содержит ли callback_data кнопку с флагом hideAfterClick\n';
+      codeLines.push('    # Проверяем, содержит ли callback_data кнопку с флагом hideAfterClick');
 
       // Создаем список возможных callback_data для кнопок с флагом hideAfterClick
       const hideAfterClickCallbackData: string[] = [];
@@ -70,58 +77,62 @@ export function generateHideAfterClickMiddleware(node: Node): string {
       });
 
       if (hideAfterClickCallbackData.length > 0) {
-        code += '    hide_after_click_buttons = [' + hideAfterClickCallbackData.map(id => `"${id}"`).join(', ') + ']\n';
-        code += '    \n';
-        code += '    # Проверяем, совпадает ли callback_data с одной из кнопок с флагом hideAfterClick\n';
-        code += '    if callback_data in hide_after_click_buttons:\n';
-        code += '        try:\n';
-        code += '            # Удаляем сообщение, в котором была нажата кнопка\n';
-        code += '            await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)\n';
-        code += '            logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {callback_data}")\n';
-        code += '        except Exception as e:\n';
-        code += '            logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")\n';
-        code += '            # Если не удалось удалить сообщение, просто отвечаем на callback\n';
-        code += '            try:\n';
-        code += '                await callback_query.answer()\n';
-        code += '            except:\n';
-        code += '                pass\n';
-        code += '        return  # Прерываем дальнейшую обработку, так как сообщение уже удалено\n';
-        code += '    \n';
+        codeLines.push('    hide_after_click_buttons = [' + hideAfterClickCallbackData.map(id => `"${id}"`).join(', ') + ']');
+        codeLines.push('');
+        codeLines.push('    # Проверяем, совпадает ли callback_data с одной из кнопок с флагом hideAfterClick');
+        codeLines.push('    if callback_data in hide_after_click_buttons:');
+        codeLines.push('        try:');
+        codeLines.push('            # Удаляем сообщение, в котором была нажата кнопка');
+        codeLines.push('            await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)');
+        codeLines.push('            logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {callback_data}")');
+        codeLines.push('        except Exception as e:');
+        codeLines.push('            logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")');
+        codeLines.push('            # Если не удалось удалить сообщение, просто отвечаем на callback');
+        codeLines.push('            try:');
+        codeLines.push('                await callback_query.answer()');
+        codeLines.push('            except:');
+        codeLines.push('                pass');
+        codeLines.push('        return  # Прерываем дальнейшую обработку, так как сообщение уже удалено');
+        codeLines.push('');
 
         // Также проверяем формат callback_data вида nodeId_btn_index для кнопок с флагом hideAfterClick
         const hideAfterClickButtonIds = hideAfterClickButtons.map((button: Button) => button.id).filter(Boolean);
         if (hideAfterClickButtonIds.length > 0) {
-          code += '    # Проверяем формат callback_data вида nodeId_btn_index для кнопок с флагом hideAfterClick\n';
-          code += '    # Извлекаем индекс кнопки из callback_data и проверяем, соответствует ли она hideAfterClick кнопке\n';
-          code += '    if "_" in callback_data:\n';
-          code += '        parts = callback_data.split("_btn_")\n';
-          code += '        if len(parts) == 2:\n';
-          code += '            node_part, index_part = parts\n';
-          code += '            # Проверяем, является ли node_part одним из ID кнопок с флагом hideAfterClick\n';
+          codeLines.push('    # Проверяем формат callback_data вида nodeId_btn_index для кнопок с флагом hideAfterClick');
+          codeLines.push('    # Извлекаем индекс кнопки из callback_data и проверяем, соответствует ли она hideAfterClick кнопке');
+          codeLines.push('    if "_" in callback_data:');
+          codeLines.push('        parts = callback_data.split("_btn_")');
+          codeLines.push('        if len(parts) == 2:');
+          codeLines.push('            node_part, index_part = parts');
+          codeLines.push('            # Проверяем, является ли node_part одним из ID кнопок с флагом hideAfterClick');
 
           hideAfterClickButtonIds.forEach((buttonId: string, index: number) => {
             if (index === 0) {
-              code += `            if node_part == "${buttonId}":\n`;
+              codeLines.push(`            if node_part == "${buttonId}":`);
             } else {
-              code += `            elif node_part == "${buttonId}":\n`;
+              codeLines.push(`            elif node_part == "${buttonId}":`);
             }
-            code += '                try:\n';
-            code += '                    # Удаляем сообщение, в котором была нажата кнопка\n';
-            code += '                    await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)\n';
-            code += '                    logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {callback_data}")\n';
-            code += '                except Exception as e:\n';
-            code += '                    logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")\n';
-            code += '                    try:\n';
-            code += '                        await callback_query.answer()\n';
-            code += '                    except:\n';
-            code += '                        pass\n';
-            code += '                return  # Прерываем дальнейшую обработку\n';
+            codeLines.push('                try:');
+            codeLines.push('                    # Удаляем сообщение, в котором была нажата кнопка');
+            codeLines.push('                    await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)');
+            codeLines.push('                    logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {callback_data}")');
+            codeLines.push('                except Exception as e:');
+            codeLines.push('                    logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")');
+            codeLines.push('                    try:');
+            codeLines.push('                        await callback_query.answer()');
+            codeLines.push('                    except:');
+            codeLines.push('                        pass');
+            codeLines.push('                return  # Прерываем дальнейшую обработку');
           });
-          code += '    \n';
+          codeLines.push('');
         }
       }
     }
   }
 
-  return code;
+  // Применяем автоматическое добавление комментариев ко всему коду
+  // Функция автоматически определяет имя файла
+  const processedCode = processCodeWithAutoComments(codeLines, 'generateHideAfterClickHandler.ts');
+  
+  return processedCode.join('\n');
 }
