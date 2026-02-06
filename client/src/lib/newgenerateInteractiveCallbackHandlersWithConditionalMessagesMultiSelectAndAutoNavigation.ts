@@ -243,16 +243,10 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`Создаем обработчик для узла типа 'start' с ID: ${nodeId}`);
           }
 
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также проверяем interests_result и metro_selection
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также проверяем interests_result
           if (nodeId === 'interests_result') {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для interests_result - уже создан в основном цикле`);
             return; // Избегаем дублирования обработчика interests_result
-          }
-
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Пропускаем дублирующий обработчик для metro_selection
-          if (nodeId === 'metro_selection') {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для metro_selection - уже создан в основном цикле`);
-            return; // Избегаем дублирования обработчика metro_selection
           }
 
           processedCallbacks.add(`cb_${nodeId}`);
@@ -341,10 +335,17 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             // Переход к следующему узлу
             if (targetNode.data.continueButtonTarget) {
               const nextNodeId = targetNode.data.continueButtonTarget;
+              // Проверяем, существует ли целевой узел перед вызовом обработчика
+              const targetExists = nodes.some(n => n.id === nextNodeId);
               code += '        # Переход к следующему узлу\n';
               code += `        next_node_id = "${nextNodeId}"\n`;
               code += '        try:\n';
-              code += `            await handle_callback_${nextNodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
+              if (targetExists) {
+                code += `            await handle_callback_${nextNodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
+              } else {
+                code += `            logging.warning(f"⚠️ Целевой узел не найден: {next_node_id}, завершаем переход")\n`;
+                code += `            await callback_query.message.edit_text("Переход завершен")\n`;
+              }
               code += '        except Exception as e:\n';
               code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
               code += `            await callback_query.message.edit_text("Переход завершен")\n`;
@@ -629,11 +630,18 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               }
 
               if (replyAutoTransitionTarget) {
+                // Проверяем, существует ли целевой узел перед вызовом обработчика
+                const targetExists = nodes.some(n => n.id === replyAutoTransitionTarget);
                 const safeFunctionName = replyAutoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
                 code += '    \n';
                 code += '    # АВТОПЕРЕХОД после reply клавиатуры\n';
                 code += `    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${replyAutoTransitionTarget}")\n`;
-                code += `    await handle_callback_${safeFunctionName}(callback_query)\n`;
+                if (targetExists) {
+                  code += `    await handle_callback_${safeFunctionName}(callback_query)\n`;
+                } else {
+                  code += `    logging.warning(f"⚠️ Узел автоперехода не найден: {replyAutoTransitionTarget}, завершаем переход")\n`;
+                  code += `    await callback_query.message.edit_text("Переход завершен")\n`;
+                }
                 code += `    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${replyAutoTransitionTarget}")\n`;
               }
 
@@ -778,7 +786,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               keyboardStr,
               nodeId,
               '    ',
-              undefined, // автопереход обрабатывается отдельно ниже
+              undefined, // автоп��реход обрабатывается отдельно ниже
               collectUserInputFlag,
               targetNode.data // передаем данные узла для проверки статических изобра��ений
             );
@@ -1489,7 +1497,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                       if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                         code += generateInlineKeyboardCode(navTargetNode.data.buttons, '            ', navTargetNode.id, navTargetNode.data, allNodeIds);
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                        code += `            # Заменяем все переменные в тексте\n`;
+                        code += `            # Заменяем все переменны�� в тексте\n`;
                         code += `            text = replace_variables_in_text(text, user_vars)\n`;
                         code += `            await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n`;
                       } else {

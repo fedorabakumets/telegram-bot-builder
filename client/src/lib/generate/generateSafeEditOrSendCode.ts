@@ -1,11 +1,11 @@
 /**
  * Функция для генерации кода безопасного редактирования/отправки сообщений
- * @param hasInlineButtons - Есть ли inline кнопки
+ * @param hasInlineButtonsOrSpecialNodes - Есть ли inline кнопки или специальные узлы, требующие этой функции
  * @param hasAutoTransitions - Есть ли автопереходы
  * @returns Строка с кодом функции safe_edit_or_send, если нужны, иначе пустая строка
  */
-export function generateSafeEditOrSendCode(hasInlineButtons: boolean, hasAutoTransitions: boolean): string {
-  if (!hasInlineButtons && !hasAutoTransitions) {
+export function generateSafeEditOrSendCode(hasInlineButtonsOrSpecialNodes: boolean, hasAutoTransitions: boolean): string {
+  if (!hasInlineButtonsOrSpecialNodes && !hasAutoTransitions) {
     return '';
   }
 

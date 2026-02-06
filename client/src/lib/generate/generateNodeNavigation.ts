@@ -71,6 +71,10 @@ export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNod
           if (autoTargetNode) {
             const safeFuncName = autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
             code += `${baseIndent}    await handle_callback_${safeFuncName}(fake_callback)\n`;
+          } else {
+            // Добавляем безопасный код, если целевой узел автоперехода не найден
+            code += `${baseIndent}    logging.warning(f"⚠️ Узел автоперехода не найден: {targetNode.data.autoTransitionTo}")\n`;
+            code += `${baseIndent}    await fake_callback.message.edit_text("Переход завершен")\n`;
           }
           code += `${baseIndent}    logging.info(f"✅ Автопереход выполнен: {${nextNodeIdVar}} -> {auto_next_node_id}")\n`;
         } else {

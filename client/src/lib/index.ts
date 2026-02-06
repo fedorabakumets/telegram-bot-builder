@@ -27,6 +27,7 @@ export { hasMultiSelectNodes } from './utils/hasMultiSelectNodes';
 export { hasCommandButtons } from './utils/hasCommandButtons';
 export { hasConditionalButtons } from './utils/hasConditionalButtons';
 export { hasLocationFeatures } from './utils/hasLocationFeatures';
+export { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
 
 // Keyboard generators
 export * from './Keyboard';

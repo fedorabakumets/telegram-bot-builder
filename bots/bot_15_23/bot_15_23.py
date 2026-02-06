@@ -40,97 +40,6 @@ import json
 import aiohttp
 from aiohttp import TCPConnector
 
-# Safe helper for editing messages with fallback to new message
-async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, **kwargs):
-    """
-    Безопасное редактирование сообщения с fallback на новое сообщение
-    При автопереходе сразу отправляет новое сообщение без попытки редактирования
-    """
-    result = None
-    user_id = None
-    
-    # Получаем user_id для сохранения
-    if hasattr(cbq, "from_user") and cbq.from_user:
-        user_id = str(cbq.from_user.id)
-    elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):
-        user_id = str(cbq.message.chat.id)
-    
-    try:
-        # При автопереходе сразу отправляем новое сообщение без редактирования
-        if is_auto_transition:
-            logging.info(f"⚡ Автопереход: отправляем новое сообщение вместо редактирования")
-            if hasattr(cbq, "message") and cbq.message:
-                result = await cbq.message.answer(text, **kwargs)
-            else:
-                raise Exception("Cannot send message in auto-transition")
-        else:
-            # Пробуем редактировать сообщение
-            if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):
-                result = await cbq.edit_text(text, **kwargs)
-            elif (hasattr(cbq, "message") and cbq.message):
-                result = await cbq.message.edit_text(text, **kwargs)
-            else:
-                raise Exception("No valid edit method found")
-    except Exception as e:
-        # При любой ошибке отправляем новое сообщение
-        if is_auto_transition:
-            logging.info(f"⚡ Автопереход: {e}, отправляем новое сообщение")
-        else:
-            logging.warning(f"Не удалось отредактировать сообщение: {e}, отправляем новое")
-        if hasattr(cbq, "message") and cbq.message:
-            result = await cbq.message.answer(text, **kwargs)
-        else:
-            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")
-            raise
-    
-    # Сохраняем сообщение в базу данных
-    if result and user_id:
-        message_data_obj = {"message_id": result.message_id if hasattr(result, "message_id") else None}
-        
-        # Извлекаем кнопки из reply_markup
-        if "reply_markup" in kwargs:
-            try:
-                reply_markup = kwargs["reply_markup"]
-                buttons_data = []
-                # Обработка inline клавиатуры
-                if hasattr(reply_markup, "inline_keyboard"):
-                    for row in reply_markup.inline_keyboard:
-                        for btn in row:
-                            button_info = {"text": btn.text}
-                            if hasattr(btn, "url") and btn.url:
-                                button_info["url"] = btn.url
-                            if hasattr(btn, "callback_data") and btn.callback_data:
-                                button_info["callback_data"] = btn.callback_data
-                            buttons_data.append(button_info)
-                    if buttons_data:
-                        message_data_obj["buttons"] = buttons_data
-                        message_data_obj["keyboard_type"] = "inline"
-                # Обработка reply клавиатуры
-                elif hasattr(reply_markup, "keyboard"):
-                    for row in reply_markup.keyboard:
-                        for btn in row:
-                            button_info = {"text": btn.text}
-                            if hasattr(btn, "request_contact") and btn.request_contact:
-                                button_info["request_contact"] = True
-                            if hasattr(btn, "request_location") and btn.request_location:
-                                button_info["request_location"] = True
-                            buttons_data.append(button_info)
-                    if buttons_data:
-                        message_data_obj["buttons"] = buttons_data
-                        message_data_obj["keyboard_type"] = "reply"
-            except Exception as btn_error:
-                logging.warning(f"Не удалось извлечь кнопки в safe_edit_or_send: {btn_error}")
-        
-        await save_message_to_api(
-            user_id=user_id,
-            message_type="bot",
-            message_text=text,
-            node_id=node_id,
-            message_data=message_data_obj
-        )
-    
-    return result
-
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = "7713154819:AAEpLG7wuSPtzAto90fcxz5z0UN1evvXafE"
 
@@ -344,44 +253,6 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
     
     # Продолжаем обработку сообщения
-    return await handler(event, data)
-
-# Middleware для сохранения нажатий на кнопки
-async def callback_query_logging_middleware(handler, event: types.CallbackQuery, data: dict):
-    """Middleware для автоматического сохранения нажатий на кнопки"""
-    try:
-        user_id = str(event.from_user.id)
-        callback_data = event.data or ""
-        
-        # Пытаемся найти текст кнопки из сообщения
-        button_text = None
-        if event.message and hasattr(event.message, "reply_markup"):
-            reply_markup = event.message.reply_markup
-            if hasattr(reply_markup, "inline_keyboard"):
-                for row in reply_markup.inline_keyboard:
-                    for btn in row:
-                        if hasattr(btn, "callback_data") and btn.callback_data == callback_data:
-                            button_text = btn.text
-                            break
-                    if button_text:
-                        break
-        
-        # Сохраняем информацию о нажатии кнопки
-        message_text_to_save = f"[Нажата кнопка: {button_text}]" if button_text else "[Нажата кнопка]"
-        await save_message_to_api(
-            user_id=user_id,
-            message_type="user",
-            message_text=message_text_to_save,
-            message_data={
-                "button_clicked": True,
-                "button_text": button_text,
-                "callback_data": callback_data
-            }
-        )
-    except Exception as e:
-        logging.error(f"Ошибка в middleware сохранения нажатий кнопок: {e}")
-    
-    # Продолжаем обработку callback query
     return await handler(event, data)
 
 # Обертка для сохранения исходящих сообщений
@@ -886,7 +757,7 @@ async def set_bot_commands():
 
 # Код сгенерирован в generate-node-handlers.ts
 
-# @@NODE_START:XR_oCZ5omC8H71KgDCP5g@@
+# @@NODE_START:start@@
 
 # Код сгенерирован в generateStartHandler.ts
 
@@ -1009,7 +880,7 @@ async def start_handler(message: types.Message):
     text = replace_variables_in_text(text, user_vars)
     has_regular_buttons = False
     has_input_collection = True
-    await message.answer(text, node_id="XR_oCZ5omC8H71KgDCP5g")
+    await message.answer(text, node_id="start")
     # Устанавливаем состояние ожидания ввода с полной структурой
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["waiting_for_input"] = {
@@ -1017,73 +888,5031 @@ async def start_handler(message: types.Message):
         "modes": ["text"],
         "variable": "user_source",
         "save_to_database": True,
-        "node_id": "XR_oCZ5omC8H71KgDCP5g",
-        "next_node_id": "PBSJzhYiE1ffqGxA1JMVV",
+        "node_id": "start",
+        "next_node_id": "join_request",
         "min_length": 0,
         "max_length": 0,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": ""
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_source (узел XR_oCZ5omC8H71KgDCP5g)")
-# @@NODE_END:XR_oCZ5omC8H71KgDCP5g@@
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_source (узел start)")
+# @@NODE_END:start@@
 
-# @@NODE_START:PBSJzhYiE1ffqGxA1JMVV@@
+# @@NODE_START:join_request@@
 
-    # Обработчик для узла PBSJzhYiE1ffqGxA1JMVV типа message будет сгенерирован отдельно
-# @@NODE_END:PBSJzhYiE1ffqGxA1JMVV@@
+    # Обработчик для узла join_request типа message будет сгенерирован отдельно
+# @@NODE_END:join_request@@
 
-# @@NODE_START:Jc-PmusaPm7bBzDNxpWwW@@
+# @@NODE_START:decline_response@@
 
-    # Обработчик для узла Jc-PmusaPm7bBzDNxpWwW типа message будет сгенерирован отдельно
-# @@NODE_END:Jc-PmusaPm7bBzDNxpWwW@@
+    # Обработчик для узла decline_response типа message будет сгенерирован отдельно
+# @@NODE_END:decline_response@@
+
+# @@NODE_START:pin_message_node@@
+
+
+# Pin Message Handler
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("pin_message_pin_message_node_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
+    """
+    Обработчик callback запросов команды закрепления
+    Работает в группах где бот имеет права администратора
+    """
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id  # Определяем ID группы из контекста сообщения
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if callback_query.message.chat.type not in ['group', 'supergroup']:
+        await callback_query.message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевое сообщение из callback_data
+    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_message_id:
+        await callback_query.message.answer("❌ Не удалось определить ID сообщения для закрепления")
+        return
+    
+    try:
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=target_message_id,
+            disable_notification=False
+        )
+        await callback_query.message.answer("✅ Сообщение закреплено")
+        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to pin not found" in str(e) or "message not found" in str(e):
+            await callback_query.message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await callback_query.message.answer("❌ Недостаточно прав для закрепления сообщения")
+        else:
+            await callback_query.message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка закрепления сообщения: {e}")
+    except Exception as e:
+        await callback_query.message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при закреплении: {e}")
+    
+    try:
+        await callback_query.answer()
+    except:
+        pass
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("pin_message"))
+# Код сгенерирован в generate-node-handlers.ts
+async def pin_message_pin_message_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /pin_message
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение или указание ID сообщения
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_message_id = message.reply_to_message.message_id
+    else:
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+        else:
+            await message.answer("❌ Ответьте на сообщение или напишите /pin_message ID_сообщения")
+            return
+    
+    try:
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=target_message_id,
+            disable_notification=False
+        )
+        await message.answer("✅ Сообщение закреплено")
+        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to pin not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для закрепления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка закрепления сообщения: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при закреплении: {e}")
+
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and message.text.lower().startswith("закрепить") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def pin_message_pin_message_node_закрепить_handler(message: types.Message):
+    """
+    Обработчик для закрепления сообщения по команде 'закрепить'
+    Работает в любых группах где бот имеет права администратора
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} в группе {chat_id}")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")
+        else:
+            logging.info(f"DEBUG: Получен текст закрепить без ID сообщения в группе {chat_id}")
+            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'закрепить ID_сообщения'")
+            return
+    
+    try:
+        # Закрепляем сообщение в текущей группе
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=target_message_id,
+            disable_notification=False
+        )
+        await message.answer("✅ Сообщение закреплено")
+        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to pin not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для закрепления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка закрепления сообщения: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при закреплении: {e}")
+
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and message.text.lower().startswith("прикрепить") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def pin_message_pin_message_node_прикрепить_handler(message: types.Message):
+    """
+    Обработчик для закрепления сообщения по команде 'прикрепить'
+    Работает в любых группах где бот имеет права администратора
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} в группе {chat_id}")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")
+        else:
+            logging.info(f"DEBUG: Получен текст прикрепить без ID сообщения в группе {chat_id}")
+            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'прикрепить ID_сообщения'")
+            return
+    
+    try:
+        # Закрепляем сообщение в текущей группе
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=target_message_id,
+            disable_notification=False
+        )
+        await message.answer("✅ Сообщение закреплено")
+        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to pin not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для закрепления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка закрепления сообщения: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при закреплении: {e}")
+
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and message.text.lower().startswith("зафиксировать") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def pin_message_pin_message_node_зафиксировать_handler(message: types.Message):
+    """
+    Обработчик для закрепления сообщения по команде 'зафиксировать'
+    Работает в любых группах где бот имеет права администратора
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} в группе {chat_id}")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")
+        else:
+            logging.info(f"DEBUG: Получен текст зафиксировать без ID сообщения в группе {chat_id}")
+            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'зафиксировать ID_сообщения'")
+            return
+    
+    try:
+        # Закрепляем сообщение в текущей группе
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=target_message_id,
+            disable_notification=False
+        )
+        await message.answer("✅ Сообщение закреплено")
+        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to pin not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для закрепления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка закрепления сообщения: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при закреплении: {e}")
+
+
+# @@NODE_END:pin_message_node@@
+
+# @@NODE_START:unpin_message_node@@
+
+
+# Unpin Message Handler
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("unpin_message_unpin_message_node_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery):
+    """
+    Обработчик callback запросов команды открепления
+    Работает в группах где бот имеет права администратора
+    """
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if callback_query.message.chat.type not in ['group', 'supergroup']:
+        await callback_query.message.answer("❌ Команда работает только в группах")
+        return
+    
+    try:
+        await bot.unpin_all_chat_messages(chat_id=chat_id)
+        await callback_query.message.answer("✅ Все сообщения откреплены")
+        logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to unpin not found" in str(e) or "not found" in str(e):
+            await callback_query.message.answer("❌ Нечего откреплять")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await callback_query.message.answer("❌ Недостаточно прав для открепления")
+        else:
+            await callback_query.message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка открепления: {e}")
+    except Exception as e:
+        await callback_query.message.answer("❌ Произошла ошибка")
+        logging.error(f"Неожиданная ошибка при откреплении: {e}")
+    
+    try:
+        await callback_query.answer()
+    except:
+        pass
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("unpin_message"))
+# Код сгенерирован в generate-node-handlers.ts
+async def unpin_message_unpin_message_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /unpin_message
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение или указание ID сообщения
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_message_id = message.reply_to_message.message_id
+    else:
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+        else:
+            # Если нет конкретного сообщения, открепляем все
+            target_message_id = None
+    
+    try:
+# Код сгенерирован в generate-node-handlers.ts
+        if target_message_id:
+            await bot.unpin_chat_message(
+                chat_id=chat_id,
+                message_id=target_message_id
+            )
+            await message.answer("✅ Сообщение откреплено")
+            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")
+        else:
+            await bot.unpin_all_chat_messages(chat_id=chat_id)
+            await message.answer("✅ Все сообщения откреплены")
+            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to unpin not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для открепления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка открепления сообщения: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при откреплении: {e}")
+
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and message.text.lower().startswith("открепить") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def unpin_message_unpin_message_node_открепить_handler(message: types.Message):
+    """
+    Обработчик для открепления сообщения по команде 'открепить'
+    Работает в любых группах где бот имеет права администратора
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для открепления в группе {chat_id}")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления в группе {chat_id}")
+        else:
+            logging.info(f"DEBUG: Получен текст открепить без ID сообщения - открепим все в группе {chat_id}")
+            # Если нет конкретного сообщения, открепляем все
+            target_message_id = None
+    
+    try:
+        # Открепляем сообщение в текущей группе
+# Код сгенерирован в generate-node-handlers.ts
+        if target_message_id:
+            await bot.unpin_chat_message(
+                chat_id=chat_id,
+                message_id=target_message_id
+            )
+            await message.answer("✅ Сообщение откреплено")
+            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")
+        else:
+            await bot.unpin_all_chat_messages(chat_id=chat_id)
+            await message.answer("✅ Все сообщения откреплены")
+            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to unpin not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для открепления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка открепления сообщения: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при откреплении: {e}")
+
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and message.text.lower().startswith("отцепить") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def unpin_message_unpin_message_node_отцепить_handler(message: types.Message):
+    """
+    Обработчик для открепления сообщения по команде 'отцепить'
+    Работает в любых группах где бот имеет права администратора
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для открепления в группе {chat_id}")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления в группе {chat_id}")
+        else:
+            logging.info(f"DEBUG: Получен текст отцепить без ID сообщения - открепим все в группе {chat_id}")
+            # Если нет конкретного сообщения, открепляем все
+            target_message_id = None
+    
+    try:
+        # Открепляем сообщение в текущей группе
+# Код сгенерирован в generate-node-handlers.ts
+        if target_message_id:
+            await bot.unpin_chat_message(
+                chat_id=chat_id,
+                message_id=target_message_id
+            )
+            await message.answer("✅ Сообщение откреплено")
+            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")
+        else:
+            await bot.unpin_all_chat_messages(chat_id=chat_id)
+            await message.answer("✅ Все сообщения откреплены")
+            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to unpin not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для открепления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка открепления сообщения: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при откреплении: {e}")
+
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and message.text.lower().startswith("убрать закрепление") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def unpin_message_unpin_message_node_убрать_закрепление_handler(message: types.Message):
+    """
+    Обработчик для открепления сообщения по команде 'убрать закрепление'
+    Работает в любых группах где бот имеет права администратора
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для открепления в группе {chat_id}")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления в группе {chat_id}")
+        else:
+            logging.info(f"DEBUG: Получен текст убрать закрепление без ID сообщения - открепим все в группе {chat_id}")
+            # Если нет конкретного сообщения, открепляем все
+            target_message_id = None
+    
+    try:
+        # Открепляем сообщение в текущей группе
+# Код сгенерирован в generate-node-handlers.ts
+        if target_message_id:
+            await bot.unpin_chat_message(
+                chat_id=chat_id,
+                message_id=target_message_id
+            )
+            await message.answer("✅ Сообщение откреплено")
+            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")
+        else:
+            await bot.unpin_all_chat_messages(chat_id=chat_id)
+            await message.answer("✅ Все сообщения откреплены")
+            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to unpin not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для открепления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка открепления сообщения: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при откреплении: {e}")
+
+
+# @@NODE_END:unpin_message_node@@
+
+# @@NODE_START:delete_message_node@@
+
+
+# Delete Message Handler
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("delete_message_delete_message_node_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def handle_callback_delete_message_node(callback_query: types.CallbackQuery):
+    """
+    Обработчик callback запросов команды удаления
+    Работает в группах где бот имеет права администратора
+    """
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if callback_query.message.chat.type not in ['group', 'supergroup']:
+        await callback_query.message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевое сообщение из callback_data
+    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_message_id:
+        await callback_query.message.answer("❌ Не удалось определить ID сообщения для удаления")
+        return
+    
+    try:
+        await bot.delete_message(
+            chat_id=chat_id,
+            message_id=target_message_id
+        )
+        await callback_query.message.answer("🗑️ Сообщение успешно удалено!")
+        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to delete not found" in str(e) or "message not found" in str(e):
+            await callback_query.message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await callback_query.message.answer("❌ Недостаточно прав для удаления")
+        else:
+            await callback_query.message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка удаления сообщения: {e}")
+    except Exception as e:
+        await callback_query.message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при удалении: {e}")
+    
+    try:
+        await callback_query.answer()
+    except:
+        pass
+
+# Обработчик для удаления сообщения используя синонимы: удалить, стереть, убрать сообщение
+# Поддерживает ответ на сообщение для автоматического определения target message ID
+# Работает в любых группах где бот имеет права администратора
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("delete_message"))
+# Код сгенерирован в generate-node-handlers.ts
+async def delete_message_delete_message_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /delete_message
+    Работает в любых группах где бот имеет права администратора
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления")
+        else:
+            logging.info(f"DEBUG: Получена команда удаления без ID сообщения")
+            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите '/delete_message ID_сообщения'")
+            return
+    
+    try:
+        # Удаляем сообщение
+        await bot.delete_message(
+            chat_id=chat_id,
+            message_id=target_message_id
+        )
+        await message.answer("🗑️ Сообщение успешно удалено!")
+        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to delete not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для удаления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка удаления сообщения: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при удалении: {e}")
+
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and (message.text.lower() == "удалить" or message.text.lower().startswith("удалить ")) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def delete_message_delete_message_node_удалить_handler(message: types.Message):
+    """
+    Обработчик синонима 'удалить' для удаления сообщения
+    Работает в группах с ответом на сообщение или с указанием ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления через синоним 'удалить'")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним 'удалить'")
+        else:
+            logging.info(f"DEBUG: Получен синоним 'удалить' без ID сообщения")
+            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'удалить ID_сообщения'")
+            return
+    
+    try:
+        # Удаляем сообщение
+        await bot.delete_message(
+            chat_id=chat_id,
+            message_id=target_message_id
+        )
+        await message.answer("🗑️ Сообщение успешно удалено!")
+        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним 'удалить'")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to delete not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для удаления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка удаления сообщения через синоним 'удалить': {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при удалении через синоним 'удалить': {e}")
+
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and (message.text.lower() == "стереть" or message.text.lower().startswith("стереть ")) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def delete_message_delete_message_node_стереть_handler(message: types.Message):
+    """
+    Обработчик синонима 'стереть' для удаления сообщения
+    Работает в группах с ответом на сообщение или с указанием ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления через синоним 'стереть'")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним 'стереть'")
+        else:
+            logging.info(f"DEBUG: Получен синоним 'стереть' без ID сообщения")
+            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'стереть ID_сообщения'")
+            return
+    
+    try:
+        # Удаляем сообщение
+        await bot.delete_message(
+            chat_id=chat_id,
+            message_id=target_message_id
+        )
+        await message.answer("🗑️ Сообщение успешно удалено!")
+        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним 'стереть'")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to delete not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для удаления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка удаления сообщения через синоним 'стереть': {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при удалении через синоним 'стереть': {e}")
+
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and (message.text.lower() == "убрать сообщение" or message.text.lower().startswith("убрать сообщение ")) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def delete_message_delete_message_node_убрать_сообщение_handler(message: types.Message):
+    """
+    Обработчик синонима 'убрать сообщение' для удаления сообщения
+    Работает в группах с ответом на сообщение или с указанием ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевое сообщение
+    target_message_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_message_id = message.reply_to_message.message_id
+        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления через синоним 'убрать сообщение'")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID сообщения
+        text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним 'убрать сообщение'")
+        else:
+            logging.info(f"DEBUG: Получен синоним 'убрать сообщение' без ID сообщения")
+            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'убрать сообщение ID_сообщения'")
+            return
+    
+    try:
+        # Удаляем сообщение
+        await bot.delete_message(
+            chat_id=chat_id,
+            message_id=target_message_id
+        )
+        await message.answer("🗑️ Сообщение успешно удалено!")
+        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним 'убрать сообщение'")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "message to delete not found" in str(e) or "message not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для удаления сообщения")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка удаления сообщения через синоним 'убрать сообщение': {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при удалении через синоним 'убрать сообщение': {e}")
+
+
+# @@NODE_END:delete_message_node@@
+
+# @@NODE_START:ban_user_node@@
+
+
+# Ban User Handler
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("ban_user"))
+# Код сгенерирован в generate-node-handlers.ts
+async def ban_user_ban_user_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /ban_user
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+        target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name
+    else:
+        text_parts = message.text.split()
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для блокировки")
+        return
+    
+    try:
+        # Баним пользователя
+        await bot.ban_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для блокировки пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка блокировки пользователя: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при блокировке: {e}")
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["забанить", "заблокировать", "бан"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def ban_user_ban_user_node_handler(message: types.Message):
+    """
+    Обработчик для блокировки пользователя
+    Синонимы: забанить, заблокировать, бан
+    Работает в любых группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+        target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name
+    else:
+        text_parts = message.text.split()
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для блокировки")
+        return
+    
+    try:
+        # Баним пользователя
+        await bot.ban_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для блокировки пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка блокировки пользователя: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при блокировке: {e}")
+
+
+# @@NODE_END:ban_user_node@@
+
+# @@NODE_START:unban_user_node@@
+
+
+# Unban User Handler
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("unban_user"))
+# Код сгенерирован в generate-node-handlers.ts
+async def unban_user_unban_user_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /unban_user
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    # Проверяем, есть ли ответ на сообщение
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Определен пользователь для разбана из reply: {target_user_id}")
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для разблокировки")
+            return
+    
+    try:
+        # Разбаниваем пользователя
+        await bot.unban_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            only_if_banned=True
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
+        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для разблокировки пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка разблокировки пользователя: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при разблокировке: {e}")
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["разбанить", "разблокировать", "unbан"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def unban_user_unban_user_node_handler(message: types.Message):
+    """
+    Обработчик для разблокировки пользователя
+    Синонимы: разбанить,разблокировать,unbан
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    # Проверяем, есть ли ответ на сообщение
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Определен пользователь для разбана из reply: {target_user_id}")
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для разблокировки")
+            return
+    
+    try:
+        # Разбаниваем пользователя
+        await bot.unban_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            only_if_banned=True
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
+        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для разблокировки пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка разблокировки пользователя: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при разблокировке: {e}")
+
+
+# @@NODE_END:unban_user_node@@
+
+# @@NODE_START:mute_user_node@@
+
+
+# Mute User Handler
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("mute_user"))
+# Код сгенерирован в generate-node-handlers.ts
+async def mute_user_mute_user_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /mute_user
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для ограничения")
+        return
+    
+    try:
+        # Вычисляем время окончания мута
+        from datetime import datetime, timedelta
+        until_date = datetime.now() + timedelta(seconds=3600)
+        
+        # Ограничиваем пользователя
+        await bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=False,
+                can_send_media_messages=False,
+                can_send_polls=False,
+                can_send_other_messages=False,
+                can_add_web_page_previews=False,
+                can_change_info=False,
+                can_invite_users=False,
+                can_pin_messages=False
+            ),
+            until_date=until_date
+        )
+        
+        hours = 3600 // 3600
+        minutes = (3600 % 3600) // 60
+        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
+        
+        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id} в группе {chat_id} на 3600 секунд")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для ограничения пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка ограничения пользователя: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при ограничении: {e}")
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["замутить", "заглушить", "мут"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def mute_user_mute_user_node_handler(message: types.Message):
+    """
+    Обработчик для ограничения пользователя
+    Синонимы: замутить,заглушить,мут
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для ограничения")
+        return
+    
+    try:
+        # Вычисляем время окончания мута
+        from datetime import datetime, timedelta
+        until_date = datetime.now() + timedelta(seconds=3600)
+        
+        # Ограничиваем пользователя
+        await bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=False,
+                can_send_media_messages=False,
+                can_send_polls=False,
+                can_send_other_messages=False,
+                can_add_web_page_previews=False,
+                can_change_info=False,
+                can_invite_users=False,
+                can_pin_messages=False
+            ),
+            until_date=until_date
+        )
+        
+        hours = 3600 // 3600
+        minutes = (3600 % 3600) // 60
+        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
+        
+        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id} в группе {chat_id} на 3600 секунд")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для ограничения пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка ограничения пользователя: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при ограничении: {e}")
+
+
+# @@NODE_END:mute_user_node@@
+
+# @@NODE_START:unmute_user_node@@
+
+
+# Unmute User Handler
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("unmute_user"))
+# Код сгенерирован в generate-node-handlers.ts
+async def unmute_user_unmute_user_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /unmute_user
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для снятия ограничений")
+        return
+    
+    try:
+        # Снимаем ограничения с пользователя
+        await bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=True,
+                can_send_media_messages=True,
+                can_send_polls=True,
+                can_send_other_messages=True,
+                can_add_web_page_previews=True,
+                can_change_info=False,
+                can_invite_users=False,
+                can_pin_messages=False
+            )
+        )
+        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
+        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для снятия ограничений")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка снятия ограничений: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при снятии ограничений: {e}")
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["размутить", "разглушить", "анмут"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def unmute_user_unmute_user_node_handler(message: types.Message):
+    """
+    Обработчик для снятия ограничений с пользователя
+    Синонимы: размутить,разглушить,анмут
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для снятия ограничений")
+        return
+    
+    try:
+        # Снимаем ограничения с пользователя
+        await bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=True,
+                can_send_media_messages=True,
+                can_send_polls=True,
+                can_send_other_messages=True,
+                can_add_web_page_previews=True,
+                can_change_info=False,
+                can_invite_users=False,
+                can_pin_messages=False
+            )
+        )
+        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
+        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для снятия ограничений")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка снятия ограничений: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при снятии ограничений: {e}")
+
+
+# @@NODE_END:unmute_user_node@@
+
+# @@NODE_START:kick_user_node@@
+
+
+# Kick User Handler
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("kick_user"))
+# Код сгенерирован в generate-node-handlers.ts
+async def kick_user_kick_user_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /kick_user
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для исключения")
+        return
+    
+    try:
+        # Исключаем пользователя (ban + unban)
+        await bot.ban_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id
+        )
+        
+        # Немедленно разбаниваем, чтобы пользователь мог вернуться
+        await bot.unban_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            only_if_banned=True
+        )
+        
+        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для исключения пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка исключения пользователя: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при исключении: {e}")
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["кикнуть", "исключить", "выгнать"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def kick_user_kick_user_node_handler(message: types.Message):
+    """
+    Обработчик для исключения пользователя из группы
+    Синонимы: кикнуть,исключить,выгнать
+    Работает в любых группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для исключения")
+        return
+    
+    try:
+        # Исключаем пользователя из группы (кик)
+        await bot.ban_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            revoke_messages=False  # Не удаляем сообщения пользователя
+        )
+        
+        # Добавляем небольшую задержку для корректной обработки
+        import asyncio
+        await asyncio.sleep(0.5)
+        
+        # Сразу же разбаниваем, чтобы пользователь мог зайти обратно
+        await bot.unban_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            only_if_banned=True
+        )
+        
+        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для исключения пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка исключения пользователя: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при исключении: {e}")
+
+
+# @@NODE_END:kick_user_node@@
+
+# @@NODE_START:promote_user_node@@
+
+
+# Promote User Handler
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("promote_user"))
+# Код сгенерирован в generate-node-handlers.ts
+async def promote_user_promote_user_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /promote_user
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для повышения")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для повышения")
+        return
+    
+    try:
+        # Повышаем пользователя до админа
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=False,
+            can_delete_messages=True,
+            can_invite_users=True,
+            can_restrict_members=False,
+            can_pin_messages=True,
+            can_promote_members=False,
+            can_manage_video_chats=False,
+            is_anonymous=False
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором!")
+        logging.info(f"Пользователь {target_user_id} назначен администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e) or "RIGHT_FORBIDDEN" in str(e):
+            await message.answer("❌ Недостаточно прав для назначения администраторов. Бот должен быть администратором с правом назначать других администраторов.")
+        elif "USER_NOT_PARTICIPANT" in str(e):
+            await message.answer("❌ Пользователь не является участником группы")
+        elif "USER_ALREADY_PARTICIPANT" in str(e):
+            await message.answer("❌ Пользователь уже является администратором")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка назначения админа: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при назначении админа: {e}")
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["повысить", "назначить админом", "промоут"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def promote_user_promote_user_node_handler(message: types.Message):
+    """
+    Обработчик для назначения пользователя администратором
+    Синонимы: повысить,назначить админом,промоут
+    Работает в любых группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для назначения администратором")
+        return
+    
+    try:
+        # Назначаем пользователя администратором
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=False,
+            can_delete_messages=True,
+            can_invite_users=True,
+            can_restrict_members=False,
+            can_pin_messages=True,
+            can_promote_members=False,
+            can_manage_video_chats=False,
+            is_anonymous=False
+        )
+        
+        # Создаем список предоставленных прав
+        rights = []
+        rights.append("удаление сообщений")
+        rights.append("приглашение пользователей")
+        rights.append("закрепление сообщений")
+        rights_text = ", ".join(rights) if rights else "базовые права администратора"
+        
+        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором\nПрава: {rights_text}")
+        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e) or "RIGHT_FORBIDDEN" in str(e):
+            await message.answer("❌ Недостаточно прав для назначения администратора. Бот должен быть администратором с правом назначать других администраторов.")
+        elif "USER_NOT_PARTICIPANT" in str(e):
+            await message.answer("❌ Пользователь не является участником группы")
+        elif "USER_ALREADY_PARTICIPANT" in str(e):
+            await message.answer("❌ Пользователь уже является администратором")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка назначения администратора: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при назначении администратора: {e}")
+
+
+# @@NODE_END:promote_user_node@@
+
+# @@NODE_START:demote_user_node@@
+
+
+# Demote User Handler
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("demote_user"))
+# Код сгенерирован в generate-node-handlers.ts
+async def demote_user_demote_user_node_command_handler(message: types.Message):
+    """
+    Обработчик команды /demote_user
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для понижения")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для понижения")
+        return
+    
+    try:
+        # Понижаем пользователя - убираем все права админа
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=False,
+            can_delete_messages=False,
+            can_invite_users=False,
+            can_restrict_members=False,
+            can_pin_messages=False,
+            can_promote_members=False,
+            can_manage_video_chats=False,
+            can_manage_topics=False,
+            is_anonymous=False
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} снят с должности администратора!")
+        logging.info(f"Пользователь {target_user_id} понижен администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для понижения администраторов")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка понижения админа: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при понижении админа: {e}")
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["понизить", "снять с админа", "демоут"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
+async def demote_user_demote_user_node_handler(message: types.Message):
+    """
+    Обработчик для снятия прав администратора с пользователя
+    Синонимы: понизить,снять с админа,демоут
+    Работает в любых группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или указание ID
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
+        if message.entities:
+            for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+# Код сгенерирован в generate-node-handlers.ts
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя для снятия прав администратора")
+        return
+    
+    try:
+        # Снимаем права администратора
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=False,
+            can_delete_messages=False,
+            can_invite_users=False,
+            can_restrict_members=False,
+            can_pin_messages=False,
+            can_promote_members=False,
+            can_manage_video_chats=False,
+            can_manage_topics=False,
+            is_anonymous=False
+        )
+        
+        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
+        logging.info(f"Права администратора сняты с пользователя {target_user_id} пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для снятия прав администратора")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка снятия прав администратора: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка при снятии прав администратора: {e}")
+
+
+# @@NODE_END:demote_user_node@@
+
+# @@NODE_START:admin_rights_node@@
+
+
+# Interactive Admin Rights Handler for admin_rights_node
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("admin_rights"))
+# Код сгенерирован в generate-node-handlers.ts
+async def admin_rights_node_command_handler(message: types.Message, bot):
+    """
+    Основной обработчик команды /admin_rights
+    Автоматически определяет целевого пользователя из контекста
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    target_user_id = None
+    
+    logging.info(f"Команда admin_rights вызвана пользователем {user_id} в чате {chat_id}")
+    
+    # Проверяем права вызывающего пользователя
+    try:
+        current_user_member = await bot.get_chat_member(chat_id, user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if current_user_member.status not in ['administrator', 'creator']:
+            await message.answer("❌ У вас нет прав администратора для использования этой команды")
+            return
+        
+# Код сгенерирован в generate-node-handlers.ts
+        if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):
+            await message.answer("❌ У вас нет права на управление правами других администраторов")
+            return
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при проверке ваших прав: {e}")
+        return
+    
+    # Автоматическое определение целевого пользователя
+    
+    # 1. Проверяем, есть ли ответ на сообщение
+# Код сгенерирован в generate-node-handlers.ts
+    if message.reply_to_message and message.reply_to_message.from_user:
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Целевой пользователь определен из ответа на сообщение: {target_user_id}")
+    
+    # 2. Проверяем, есть ли упоминание в тексте (@username или прямое упоминание)
+    elif message.entities:
+        for entity in message.entities:
+            # Приоритет - прямое упоминание с объектом пользователя
+# Код сгенерирован в generate-node-handlers.ts
+            if entity.type == "text_mention" and hasattr(entity, 'user'):
+                target_user_id = entity.user.id
+                logging.info(f"Целевой пользователь определен из прямого упоминания: {target_user_id}")
+                break
+            elif entity.type == "mention":
+                # Извлекаем username из упоминания
+                username = message.text[entity.offset+1:entity.offset+entity.length]  # +1 чтобы убрать @
+                try:
+                    # Пытаемся найти пользователя по username через участников чата
+                    chat_admins = await bot.get_chat_administrators(chat_id)
+                    for member in chat_admins:
+# Код сгенерирован в generate-node-handlers.ts
+                        if member.user.username and member.user.username.lower() == username.lower():
+                            target_user_id = member.user.id
+                            logging.info(f"Целевой пользователь определен из упоминания @{username}: {target_user_id}")
+                            break
+                except Exception as e:
+                    logging.warning(f"Не удалось найти пользователя @{username}: {e}")
+                break
+    
+    # 3. Проверяем, есть ли ID в тексте команды
+# Код сгенерирован в generate-node-handlers.ts
+    if target_user_id is None:
+        # Ищем числовой ID в аргументах команды
+        import re
+        # Извлекаем все числа из текста команды (исключая сам command)
+        command_text = message.text or ""
+        numbers = re.findall(r'\b\d{6,}\b', command_text)  # ID обычно 6+ цифр
+        
+        for number_str in numbers:
+            try:
+                potential_user_id = int(number_str)
+                # Проверяем, что это валидный пользователь в чате
+                try:
+                    member_check = await bot.get_chat_member(chat_id, potential_user_id)
+                    target_user_id = potential_user_id
+                    logging.info(f"Целевой пользователь определен из ID в команде: {target_user_id}")
+                    break
+                except Exception:
+                    logging.debug(f"ID {potential_user_id} не найден в чате, попробуем следующий")
+                    continue
+            except ValueError:
+                continue
+    
+    # Если целевой пользователь не определен, показываем инструкцию
+# Код сгенерирован в generate-node-handlers.ts
+    if target_user_id is None:
+        await message.answer(
+            "❓ Укажите пользователя для управления правами:\n"
+            "• Ответьте на сообщение пользователя\n"
+            "• Упомяните пользователя: /admin_rights @username\n"
+            "• Укажите ID: /admin_rights 123456789"
+        )
+        return
+    
+    # Проверяем, что целевой пользователь является администратором
+    try:
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await message.answer("❌ Указанный пользователь не является администратором")
+            return
+    except Exception as e:
+        await message.answer(f"❌ Не удалось проверить пользователя: {e}")
+        return
+    
+    # Создаем и отправляем интерактивную клавиатуру
+    keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+    text = """⚙️ Права администратора настроены для пользователя!
+
+💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
+    # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generate-node-handlers.ts
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generate-node-handlers.ts
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+# Код сгенерирован в generate-node-handlers.ts
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generate-node-handlers.ts
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generate-node-handlers.ts
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    
+    await message.answer(text, reply_markup=keyboard)
+
+# Код сгенерирован в generate-node-handlers.ts
+async def get_admin_rights_admin_rights_node(bot, chat_id, target_user_id):
+    """
+    Получает текущие права администратора пользователя в чате
+    """
+    try:
+        member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if hasattr(member, 'status') and member.status in ['administrator', 'creator']:
+            # Возвращаем основные права администратора включая управление историями
+            return {
+                'can_change_info': getattr(member, 'can_change_info', False),
+                'can_delete_messages': getattr(member, 'can_delete_messages', False),
+                'can_restrict_members': getattr(member, 'can_restrict_members', False),
+                'can_invite_users': getattr(member, 'can_invite_users', False),
+                'can_pin_messages': getattr(member, 'can_pin_messages', False),
+                'can_manage_video_chats': getattr(member, 'can_manage_video_chats', False),
+                'can_post_stories': getattr(member, 'can_post_stories', False),
+                'can_edit_stories': getattr(member, 'can_edit_stories', False),
+                'can_delete_stories': getattr(member, 'can_delete_stories', False),
+                'is_anonymous': getattr(member, 'is_anonymous', False),
+                'can_promote_members': getattr(member, 'can_promote_members', False)
+            }
+        else:
+            # Пользователь не является администратором
+            return None
+    except Exception as e:
+        logging.error(f"Ошибка при получении прав администратора: {e}")
+        return None
+
+# Код сгенерирован в generate-node-handlers.ts
+async def create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id, node_id="admin_rights_node"):
+    """
+    Создает интерактивную клавиатуру с кнопками-переключателями прав
+    """
+    # Получаем текущие права
+    current_rights = await get_admin_rights_admin_rights_node(bot, chat_id, target_user_id)
+    
+    builder = InlineKeyboardBuilder()
+    
+# Код сгенерирован в generate-node-handlers.ts
+    if current_rights is None:
+        # Пользователь не администратор
+        builder.add(InlineKeyboardButton(text="❌ Пользователь не является администратором", callback_data="no_admin"))
+        return builder.as_markup()
+    
+    # Список основных прав администратора включая управление историями
+    admin_rights_list = [
+        ('can_change_info', '🏷️ Изменение профиля'),
+        ('can_delete_messages', '🗑️ Удаление сообщений'),
+        ('can_restrict_members', '🚫 Блокировка участников'),
+        ('can_invite_users', '📨 Приглашение участников'),
+        ('can_pin_messages', '📌 Закрепление сообщений'),
+        ('can_manage_video_chats', '🎥 Управление видеочатами'),
+        ('can_post_stories', '📰 Публикация историй'),
+        ('can_edit_stories', '✏️ Редактирование историй'),
+        ('can_delete_stories', '🗑️ Удаление историй'),
+        ('is_anonymous', '🔒 Анонимность'),
+        ('can_promote_members', '👑 Назначение администраторов')
+    ]
+    
+    # Создаем кнопки с индикаторами состояния
+    for right_key, right_name in admin_rights_list:
+        is_enabled = current_rights.get(right_key, False)
+        indicator = "✅" if is_enabled else "❌"
+        button_text = f"{indicator} {right_name}"
+        # Укорачиваем callback_data для соблюдения лимита Telegram (64 байта)
+        short_node_id = str(hash(node_id))[-6:]  # Берем последние 6 символов хэша
+        callback_data = f"tr_{right_key[:12]}_{target_user_id}_{short_node_id}"
+        builder.add(InlineKeyboardButton(text=button_text, callback_data=callback_data))
+    
+    # Кнопка для обновления состояния (с коротким callback_data)
+    short_node_id = str(hash(node_id))[-6:]  # Берем последние 6 символов хэша
+    builder.add(InlineKeyboardButton(text="🔄 Обновить", callback_data=f"ref_{target_user_id}_{short_node_id}"))
+    
+    builder.adjust(1)  # Располагаем кнопки в одну колонку для лучшей читаемости
+    return builder.as_markup()
+
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data == "admin_rights_node")
+# Код сгенерирован в generate-node-handlers.ts
+async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Обработчик callback для узла admin_rights: admin_rights_node
+    Отображает интерактивную клавиатуру для управления правами администратора
+    """
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    logging.info(f"Обработка callback admin_rights от пользователя {user_id} в чате {chat_id}")
+    
+    # Проверяем права БОТА (не пользователя) на управление правами администраторов
+    try:
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+        
+        # Проверяем, может ли бот управлять правами других администраторов
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+    except Exception as e:
+        logging.error(f"Ошибка при проверке прав администратора: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось проверить права администратора. Попробуйте позже.")
+        return
+    
+    # Получаем target_user_id (пользователя, чьи права будем менять)
+    # В данном случае, мы будем управлять правами пользователя, который вызвал команду
+    # Но это можно изменить для работы с replied сообщениями
+    target_user_id = user_id  # По умолчанию управляем своими правами
+    
+    # Если это ответ на сообщение, берем пользователя из ответа
+# Код сгенерирован в generate-node-handlers.ts
+    if hasattr(callback_query.message, 'reply_to_message') and callback_query.message.reply_to_message:
+        target_user_id = callback_query.message.reply_to_message.from_user.id
+        logging.info(f"Управляем правами пользователя {target_user_id} из ответа на сообщение")
+    
+    # Текст сообщения
+    text = """⚙️ Права администратора настроены для пользователя!
+
+💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
+    # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generate-node-handlers.ts
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generate-node-handlers.ts
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+# Код сгенерирован в generate-node-handlers.ts
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generate-node-handlers.ts
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generate-node-handlers.ts
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    
+    # Создаем интерактивную клавиатуру
+    keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+    
+    # Отправляем/обновляем сообщение с клавиатурой
+    try:
+        # Пробуем отредактировать сообщение (работает для inline callbacks)
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+    except Exception as e:
+        # Если не удалось отредактировать (например, для text commands), отправляем новое сообщение
+        logging.info(f"Отправляем новое сообщение admin_rights: {e}")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+
+
+# Обработчик переключения права: can_change_info
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_change_i_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_change_info_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_change_info для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_change_info для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_change_info', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_change_info'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_change_info' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_change_info: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: can_delete_messages
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_delete_m_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_delete_messages_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_delete_messages для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_delete_messages для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_delete_messages', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_delete_messages'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_delete_messages' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_delete_messages: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: can_restrict_members
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_restrict_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_restrict_members_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_restrict_members для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_restrict_members для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_restrict_members', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_restrict_members'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_restrict_members' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_restrict_members: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: can_invite_users
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_invite_u_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_invite_users_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_invite_users для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_invite_users для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_invite_users', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_invite_users'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_invite_users' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_invite_users: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: can_pin_messages
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_pin_mess_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_pin_messages_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_pin_messages для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_pin_messages для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_pin_messages', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_pin_messages'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_pin_messages' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_pin_messages: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: can_manage_video_chats
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_manage_v_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_manage_video_chats_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_manage_video_chats для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_manage_video_chats для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_manage_video_chats', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_manage_video_chats'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_manage_video_chats' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_manage_video_chats: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: can_post_stories
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_post_sto_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_post_stories_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_post_stories для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_post_stories для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_post_stories', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_post_stories'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_post_stories' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_post_stories: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: can_edit_stories
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_edit_sto_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_edit_stories_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_edit_stories для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_edit_stories для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_edit_stories', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_edit_stories'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_edit_stories' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_edit_stories: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: can_delete_stories
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_delete_s_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_delete_stories_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_delete_stories для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_delete_stories для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_delete_stories', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_delete_stories'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_delete_stories' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_delete_stories: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: is_anonymous
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_is_anonymous_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_is_anonymous_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право is_anonymous для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право is_anonymous для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'is_anonymous', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['is_anonymous'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'is_anonymous' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права is_anonymous: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик переключения права: can_promote_members
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("tr_can_promote__"))
+# Код сгенерирован в generate-node-handlers.ts
+async def toggle_can_promote_members_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Переключает право can_promote_members для пользователя
+    """
+    await callback_query.answer()
+    
+    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
+    try:
+        data_parts = callback_query.data.split('_')
+        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+        node_hash = data_parts[-1]
+        logging.info(f"Переключаем право can_promote_members для пользователя {target_user_id}")
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("❌ Ошибка в данных кнопки")
+        return
+    
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Проверяем права БОТА на управление правами администраторов
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
+            return
+            
+# Код сгенерирован в generate-node-handlers.ts
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
+            return
+        
+        # Получаем текущие права целевого пользователя
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
+            return
+        
+        # Получаем текущее состояние права
+        current_value = getattr(target_member, 'can_promote_members', False)
+        new_value = not current_value
+        
+        # Подготавливаем права для обновления
+        permissions = {
+            'can_change_info': getattr(target_member, 'can_change_info', False),
+            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
+            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
+            'can_invite_users': getattr(target_member, 'can_invite_users', False),
+            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
+            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
+            'can_post_stories': getattr(target_member, 'can_post_stories', False),
+            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
+            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
+            'is_anonymous': getattr(target_member, 'is_anonymous', False),
+            'can_promote_members': getattr(target_member, 'can_promote_members', False),
+        }
+        permissions['can_promote_members'] = new_value
+        
+        # Применяем изменения
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=permissions['can_change_info'],
+            can_delete_messages=permissions['can_delete_messages'],
+            can_restrict_members=permissions['can_restrict_members'],
+            can_invite_users=permissions['can_invite_users'],
+            can_pin_messages=permissions['can_pin_messages'],
+            can_manage_video_chats=permissions['can_manage_video_chats'],
+            can_post_stories=permissions['can_post_stories'],
+            can_edit_stories=permissions['can_edit_stories'],
+            can_delete_stories=permissions['can_delete_stories'],
+            is_anonymous=permissions['is_anonymous'],
+            can_promote_members=permissions['can_promote_members'],
+        )
+        
+        # Обновляем клавиатуру с новым состоянием
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_promote_members' для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права can_promote_members: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+
+# Обработчик кнопки обновления прав
+# Код сгенерирован в generate-node-handlers.ts
+@dp.callback_query(lambda c: c.data.startswith("ref_"))
+# Код сгенерирован в generate-node-handlers.ts
+async def refresh_admin_rights_admin_rights_node(callback_query: types.CallbackQuery, bot):
+    """
+    Обновляет отображение прав администратора
+    """
+    await callback_query.answer("🔄 Обновляем...")
+    
+    # Парсим данные: ref_<user_id>_<node_hash>
+    data_parts = callback_query.data.split('_')
+    target_user_id = int(data_parts[-2])
+    
+    chat_id = callback_query.message.chat.id
+    
+    try:
+        # Создаем обновленную клавиатуру
+        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
+        
+        # Обновляем сообщение
+        text = "⚙️ Управление правами администратора"
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        
+        logging.info(f"Обновлены права для пользователя {target_user_id}")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при обновлении прав: {e}")
+        await safe_edit_or_send(callback_query, "❌ Не удалось обновить права. Попробуйте позже.")
+
+
+# @@NODE_END:admin_rights_node@@
 # Обработчики синонимов
-# @@NODE_START:XR_oCZ5omC8H71KgDCP5g@@
+# @@NODE_START:start@@
 
 @dp.message(lambda message: message.text and message.text.lower() == "старт")
 async def start_synonym_старт_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
-# @@NODE_END:XR_oCZ5omC8H71KgDCP5g@@
-# @@NODE_START:XR_oCZ5omC8H71KgDCP5g@@
+# @@NODE_END:start@@
+# @@NODE_START:start@@
 
 @dp.message(lambda message: message.text and message.text.lower() == "начать")
 async def start_synonym_начать_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
-# @@NODE_END:XR_oCZ5omC8H71KgDCP5g@@
-# @@NODE_START:XR_oCZ5omC8H71KgDCP5g@@
+# @@NODE_END:start@@
+# @@NODE_START:start@@
 
 @dp.message(lambda message: message.text and message.text.lower() == "привет")
 async def start_synonym_привет_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
-# @@NODE_END:XR_oCZ5omC8H71KgDCP5g@@
-# @@NODE_START:XR_oCZ5omC8H71KgDCP5g@@
+# @@NODE_END:start@@
+# @@NODE_START:start@@
 
 @dp.message(lambda message: message.text and message.text.lower() == "начало")
 async def start_synonym_начало_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
-# @@NODE_END:XR_oCZ5omC8H71KgDCP5g@@
-# @@NODE_START:XR_oCZ5omC8H71KgDCP5g@@
+# @@NODE_END:start@@
+# @@NODE_START:start@@
 
 @dp.message(lambda message: message.text and message.text.lower() == "начинаем")
 async def start_synonym_начинаем_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
-# @@NODE_END:XR_oCZ5omC8H71KgDCP5g@@
+# @@NODE_END:start@@
+# @@NODE_START:pin_message_node@@
 
-# Обработчики inline кнопок
+@dp.message(lambda message: message.text and message.text.lower() == "закрепить")
+async def message_pin_message_node_synonym_закрепить_handler(message: types.Message):
+    # Синоним для сообщения pin_message_node
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним 'закрепить' для узла pin_message_node")
+    
+    # Обрабатываем синоним как переход к узлу pin_message_node
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+    
+    mock_callback = MockCallback("pin_message_node", message.from_user, message)
+    await handle_callback_pin_message_node(mock_callback)
+# @@NODE_END:pin_message_node@@
+# @@NODE_START:pin_message_node@@
 
-@dp.callback_query(lambda c: c.data == "Jc-PmusaPm7bBzDNxpWwW" or c.data.startswith("Jc-PmusaPm7bBzDNxpWwW_btn_") or c.data == "done_bBzDNxpWwW")
-async def handle_callback_Jc_PmusaPm7bBzDNxpWwW(callback_query: types.CallbackQuery):
+@dp.message(lambda message: message.text and message.text.lower() == "прикрепить")
+async def message_pin_message_node_synonym_прикрепить_handler(message: types.Message):
+    # Синоним для сообщения pin_message_node
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним 'прикрепить' для узла pin_message_node")
+    
+    # Обрабатываем синоним как переход к узлу pin_message_node
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+    
+    mock_callback = MockCallback("pin_message_node", message.from_user, message)
+    await handle_callback_pin_message_node(mock_callback)
+# @@NODE_END:pin_message_node@@
+# @@NODE_START:pin_message_node@@
+
+@dp.message(lambda message: message.text and message.text.lower() == "зафиксировать")
+async def message_pin_message_node_synonym_зафиксировать_handler(message: types.Message):
+    # Синоним для сообщения pin_message_node
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним 'зафиксировать' для узла pin_message_node")
+    
+    # Обрабатываем синоним как переход к узлу pin_message_node
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+    
+    mock_callback = MockCallback("pin_message_node", message.from_user, message)
+    await handle_callback_pin_message_node(mock_callback)
+# @@NODE_END:pin_message_node@@
+# @@NODE_START:unpin_message_node@@
+
+@dp.message(lambda message: message.text and message.text.lower() == "открепить")
+async def message_unpin_message_node_synonym_открепить_handler(message: types.Message):
+    # Синоним для сообщения unpin_message_node
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним 'открепить' для узла unpin_message_node")
+    
+    # Обрабатываем синоним как переход к узлу unpin_message_node
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+    
+    mock_callback = MockCallback("unpin_message_node", message.from_user, message)
+    await handle_callback_unpin_message_node(mock_callback)
+# @@NODE_END:unpin_message_node@@
+# @@NODE_START:unpin_message_node@@
+
+@dp.message(lambda message: message.text and message.text.lower() == "отцепить")
+async def message_unpin_message_node_synonym_отцепить_handler(message: types.Message):
+    # Синоним для сообщения unpin_message_node
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним 'отцепить' для узла unpin_message_node")
+    
+    # Обрабатываем синоним как переход к узлу unpin_message_node
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+    
+    mock_callback = MockCallback("unpin_message_node", message.from_user, message)
+    await handle_callback_unpin_message_node(mock_callback)
+# @@NODE_END:unpin_message_node@@
+# @@NODE_START:unpin_message_node@@
+
+@dp.message(lambda message: message.text and message.text.lower() == "убрать закрепление")
+async def message_unpin_message_node_synonym_убрать_закрепление_handler(message: types.Message):
+    # Синоним для сообщения unpin_message_node
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним 'убрать закрепление' для узла unpin_message_node")
+    
+    # Обрабатываем синоним как переход к узлу unpin_message_node
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+    
+    mock_callback = MockCallback("unpin_message_node", message.from_user, message)
+    await handle_callback_unpin_message_node(mock_callback)
+# @@NODE_END:unpin_message_node@@
+# @@NODE_START:delete_message_node@@
+
+@dp.message(lambda message: message.text and message.text.lower() == "удалить")
+async def message_delete_message_node_synonym_удалить_handler(message: types.Message):
+    # Синоним для сообщения delete_message_node
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним 'удалить' для узла delete_message_node")
+    
+    # Обрабатываем синоним как переход к узлу delete_message_node
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+    
+    mock_callback = MockCallback("delete_message_node", message.from_user, message)
+    await handle_callback_delete_message_node(mock_callback)
+# @@NODE_END:delete_message_node@@
+# @@NODE_START:delete_message_node@@
+
+@dp.message(lambda message: message.text and message.text.lower() == "стереть")
+async def message_delete_message_node_synonym_стереть_handler(message: types.Message):
+    # Синоним для сообщения delete_message_node
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним 'стереть' для узла delete_message_node")
+    
+    # Обрабатываем синоним как переход к узлу delete_message_node
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+    
+    mock_callback = MockCallback("delete_message_node", message.from_user, message)
+    await handle_callback_delete_message_node(mock_callback)
+# @@NODE_END:delete_message_node@@
+# @@NODE_START:delete_message_node@@
+
+@dp.message(lambda message: message.text and message.text.lower() == "убрать сообщение")
+async def message_delete_message_node_synonym_убрать_сообщение_handler(message: types.Message):
+    # Синоним для сообщения delete_message_node
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним 'убрать сообщение' для узла delete_message_node")
+    
+    # Обрабатываем синоним как переход к узлу delete_message_node
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+    
+    mock_callback = MockCallback("delete_message_node", message.from_user, message)
+    await handle_callback_delete_message_node(mock_callback)
+# @@NODE_END:delete_message_node@@
+# @@NODE_START:ban_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "забанить" or message.text.lower().startswith("забанить ")) and message.chat.type in ['group', 'supergroup'])
+async def ban_user_ban_user_node_synonym_забанить_handler(message: types.Message):
+    """
+    Обработчик синонима 'забанить' для ban_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'забанить' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'забанить' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'забанить ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "ban_user"
+    try:
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:ban_user_node@@
+# @@NODE_START:ban_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "заблокировать" or message.text.lower().startswith("заблокировать ")) and message.chat.type in ['group', 'supergroup'])
+async def ban_user_ban_user_node_synonym_заблокировать_handler(message: types.Message):
+    """
+    Обработчик синонима 'заблокировать' для ban_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'заблокировать' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'заблокировать' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'заблокировать ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "ban_user"
+    try:
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:ban_user_node@@
+# @@NODE_START:ban_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "бан" or message.text.lower().startswith("бан ")) and message.chat.type in ['group', 'supergroup'])
+async def ban_user_ban_user_node_synonym_бан_handler(message: types.Message):
+    """
+    Обработчик синонима 'бан' для ban_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'бан' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'бан' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'бан ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "ban_user"
+    try:
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:ban_user_node@@
+# @@NODE_START:unban_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "разбанить" or message.text.lower().startswith("разбанить ")) and message.chat.type in ['group', 'supergroup'])
+async def unban_user_unban_user_node_synonym_разбанить_handler(message: types.Message):
+    """
+    Обработчик синонима 'разбанить' для unban_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'разбанить' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'разбанить' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'разбанить ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "unban_user"
+    try:
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
+        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
+        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:unban_user_node@@
+# @@NODE_START:unban_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "разблокировать" or message.text.lower().startswith("разблокировать ")) and message.chat.type in ['group', 'supergroup'])
+async def unban_user_unban_user_node_synonym_разблокировать_handler(message: types.Message):
+    """
+    Обработчик синонима 'разблокировать' для unban_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'разблокировать' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'разблокировать' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'разблокировать ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "unban_user"
+    try:
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
+        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
+        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:unban_user_node@@
+# @@NODE_START:unban_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "unbан" or message.text.lower().startswith("unbан ")) and message.chat.type in ['group', 'supergroup'])
+async def unban_user_unban_user_node_synonym_unbан_handler(message: types.Message):
+    """
+    Обработчик синонима 'unbан' для unban_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'unbан' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'unbан' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'unbан ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "unban_user"
+    try:
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
+        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
+        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:unban_user_node@@
+# @@NODE_START:mute_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "замутить" or message.text.lower().startswith("замутить ")) and message.chat.type in ['group', 'supergroup'])
+async def mute_user_mute_user_node_synonym_замутить_handler(message: types.Message):
+    """
+    Обработчик синонима 'замутить' для mute_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'замутить' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'замутить' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'замутить ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "mute_user"
+    try:
+        from datetime import datetime, timedelta
+        until_date = datetime.now() + timedelta(seconds=3600)
+        await bot.restrict_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=False,
+                can_send_media_messages=False
+            ), until_date=until_date
+        )
+        hours = 3600 // 3600
+        minutes = (3600 % 3600) // 60
+        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
+        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:mute_user_node@@
+# @@NODE_START:mute_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "заглушить" or message.text.lower().startswith("заглушить ")) and message.chat.type in ['group', 'supergroup'])
+async def mute_user_mute_user_node_synonym_заглушить_handler(message: types.Message):
+    """
+    Обработчик синонима 'заглушить' для mute_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'заглушить' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'заглушить' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'заглушить ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "mute_user"
+    try:
+        from datetime import datetime, timedelta
+        until_date = datetime.now() + timedelta(seconds=3600)
+        await bot.restrict_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=False,
+                can_send_media_messages=False
+            ), until_date=until_date
+        )
+        hours = 3600 // 3600
+        minutes = (3600 % 3600) // 60
+        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
+        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:mute_user_node@@
+# @@NODE_START:mute_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "мут" or message.text.lower().startswith("мут ")) and message.chat.type in ['group', 'supergroup'])
+async def mute_user_mute_user_node_synonym_мут_handler(message: types.Message):
+    """
+    Обработчик синонима 'мут' для mute_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'мут' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'мут' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'мут ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "mute_user"
+    try:
+        from datetime import datetime, timedelta
+        until_date = datetime.now() + timedelta(seconds=3600)
+        await bot.restrict_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=False,
+                can_send_media_messages=False
+            ), until_date=until_date
+        )
+        hours = 3600 // 3600
+        minutes = (3600 % 3600) // 60
+        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
+        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:mute_user_node@@
+# @@NODE_START:unmute_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "размутить" or message.text.lower().startswith("размутить ")) and message.chat.type in ['group', 'supergroup'])
+async def unmute_user_unmute_user_node_synonym_размутить_handler(message: types.Message):
+    """
+    Обработчик синонима 'размутить' для unmute_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'размутить' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'размутить' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'размутить ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "unmute_user"
+    try:
+        await bot.restrict_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=True, can_send_media_messages=True,
+                can_send_polls=True, can_send_other_messages=True,
+                can_add_web_page_previews=True
+            )
+        )
+        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
+        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:unmute_user_node@@
+# @@NODE_START:unmute_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "разглушить" or message.text.lower().startswith("разглушить ")) and message.chat.type in ['group', 'supergroup'])
+async def unmute_user_unmute_user_node_synonym_разглушить_handler(message: types.Message):
+    """
+    Обработчик синонима 'разглушить' для unmute_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'разглушить' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'разглушить' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'разглушить ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "unmute_user"
+    try:
+        await bot.restrict_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=True, can_send_media_messages=True,
+                can_send_polls=True, can_send_other_messages=True,
+                can_add_web_page_previews=True
+            )
+        )
+        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
+        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:unmute_user_node@@
+# @@NODE_START:unmute_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "анмут" or message.text.lower().startswith("анмут ")) and message.chat.type in ['group', 'supergroup'])
+async def unmute_user_unmute_user_node_synonym_анмут_handler(message: types.Message):
+    """
+    Обработчик синонима 'анмут' для unmute_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'анмут' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'анмут' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'анмут ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "unmute_user"
+    try:
+        await bot.restrict_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=True, can_send_media_messages=True,
+                can_send_polls=True, can_send_other_messages=True,
+                can_add_web_page_previews=True
+            )
+        )
+        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
+        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:unmute_user_node@@
+# @@NODE_START:kick_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "кикнуть" or message.text.lower().startswith("кикнуть ")) and message.chat.type in ['group', 'supergroup'])
+async def kick_user_kick_user_node_synonym_кикнуть_handler(message: types.Message):
+    """
+    Обработчик синонима 'кикнуть' для kick_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'кикнуть' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'кикнуть' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'кикнуть ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "kick_user"
+    try:
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:kick_user_node@@
+# @@NODE_START:kick_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "исключить" or message.text.lower().startswith("исключить ")) and message.chat.type in ['group', 'supergroup'])
+async def kick_user_kick_user_node_synonym_исключить_handler(message: types.Message):
+    """
+    Обработчик синонима 'исключить' для kick_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'исключить' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'исключить' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'исключить ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "kick_user"
+    try:
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:kick_user_node@@
+# @@NODE_START:kick_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "выгнать" or message.text.lower().startswith("выгнать ")) and message.chat.type in ['group', 'supergroup'])
+async def kick_user_kick_user_node_synonym_выгнать_handler(message: types.Message):
+    """
+    Обработчик синонима 'выгнать' для kick_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'выгнать' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'выгнать' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'выгнать ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "kick_user"
+    try:
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
+        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:kick_user_node@@
+# @@NODE_START:promote_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "повысить" or message.text.lower().startswith("повысить ")) and message.chat.type in ['group', 'supergroup'])
+async def promote_user_promote_user_node_synonym_повысить_handler(message: types.Message):
+    """
+    Обработчик синонима 'повысить' для promote_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'повысить' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'повысить' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'повысить ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "promote_user"
+    try:
+        await bot.promote_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            can_delete_messages=True,
+            can_invite_users=True,
+            can_pin_messages=True
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором")
+        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:promote_user_node@@
+# @@NODE_START:promote_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "назначить админом" or message.text.lower().startswith("назначить админом ")) and message.chat.type in ['group', 'supergroup'])
+async def promote_user_promote_user_node_synonym_назначить_админом_handler(message: types.Message):
+    """
+    Обработчик синонима 'назначить админом' для promote_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'назначить админом' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'назначить админом' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'назначить админом ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "promote_user"
+    try:
+        await bot.promote_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            can_delete_messages=True,
+            can_invite_users=True,
+            can_pin_messages=True
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором")
+        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:promote_user_node@@
+# @@NODE_START:promote_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "промоут" or message.text.lower().startswith("промоут ")) and message.chat.type in ['group', 'supergroup'])
+async def promote_user_promote_user_node_synonym_промоут_handler(message: types.Message):
+    """
+    Обработчик синонима 'промоут' для promote_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'промоут' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'промоут' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'промоут ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "promote_user"
+    try:
+        await bot.promote_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            can_delete_messages=True,
+            can_invite_users=True,
+            can_pin_messages=True
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором")
+        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:promote_user_node@@
+# @@NODE_START:demote_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "понизить" or message.text.lower().startswith("понизить ")) and message.chat.type in ['group', 'supergroup'])
+async def demote_user_demote_user_node_synonym_понизить_handler(message: types.Message):
+    """
+    Обработчик синонима 'понизить' для demote_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'понизить' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'понизить' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'понизить ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "demote_user"
+    try:
+        await bot.promote_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            can_change_info=False, can_delete_messages=False,
+            can_invite_users=False, can_restrict_members=False,
+            can_pin_messages=False, can_promote_members=False
+        )
+        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
+        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:demote_user_node@@
+# @@NODE_START:demote_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "снять с админа" or message.text.lower().startswith("снять с админа ")) and message.chat.type in ['group', 'supergroup'])
+async def demote_user_demote_user_node_synonym_снять_с_админа_handler(message: types.Message):
+    """
+    Обработчик синонима 'снять с админа' для demote_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'снять с админа' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'снять с админа' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'снять с админа ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "demote_user"
+    try:
+        await bot.promote_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            can_change_info=False, can_delete_messages=False,
+            can_invite_users=False, can_restrict_members=False,
+            can_pin_messages=False, can_promote_members=False
+        )
+        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
+        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:demote_user_node@@
+# @@NODE_START:demote_user_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "демоут" or message.text.lower().startswith("демоут ")) and message.chat.type in ['group', 'supergroup'])
+async def demote_user_demote_user_node_synonym_демоут_handler(message: types.Message):
+    """
+    Обработчик синонима 'демоут' для demote_user
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'демоут' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'демоут' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'демоут ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "demote_user"
+    try:
+        await bot.promote_chat_member(
+            chat_id=chat_id, user_id=target_user_id,
+            can_change_info=False, can_delete_messages=False,
+            can_invite_users=False, can_restrict_members=False,
+            can_pin_messages=False, can_promote_members=False
+        )
+        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
+        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:demote_user_node@@
+# @@NODE_START:admin_rights_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "права админа" or message.text.lower().startswith("права админа ")))
+async def admin_rights_admin_rights_node_synonym_права_админа_handler(message: types.Message):
+    """
+    Обработчик синонима 'права админа' для admin_rights
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'права админа' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'права админа' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'права админа ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "admin_rights"
+    try:
+        # Создаем Mock callback для эмуляции inline кнопки admin_rights
+        class MockCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+            async def answer(self):
+                pass  # Mock метод, ничего не делаем
+            async def edit_text(self, text, **kwargs):
+                try:
+                    return await self.message.edit_text(text, **kwargs)
+                except Exception as e:
+                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                    return await self.message.answer(text, **kwargs)
+        
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        # bot уже определен глобально
+        await handle_callback_admin_rights_node(mock_callback, bot)
+        return  # Завершаем обработку, так как все сделано в callback
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:admin_rights_node@@
+# @@NODE_START:admin_rights_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "настроить права" or message.text.lower().startswith("настроить права ")))
+async def admin_rights_admin_rights_node_synonym_настроить_права_handler(message: types.Message):
+    """
+    Обработчик синонима 'настроить права' для admin_rights
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'настроить права' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'настроить права' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'настроить права ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "admin_rights"
+    try:
+        # Создаем Mock callback для эмуляции inline кнопки admin_rights
+        class MockCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+            async def answer(self):
+                pass  # Mock метод, ничего не делаем
+            async def edit_text(self, text, **kwargs):
+                try:
+                    return await self.message.edit_text(text, **kwargs)
+                except Exception as e:
+                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                    return await self.message.answer(text, **kwargs)
+        
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        # bot уже определен глобально
+        await handle_callback_admin_rights_node(mock_callback, bot)
+        return  # Завершаем обработку, так как все сделано в callback
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:admin_rights_node@@
+# @@NODE_START:admin_rights_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "тг права" or message.text.lower().startswith("тг права ")))
+async def admin_rights_admin_rights_node_synonym_тг_права_handler(message: types.Message):
+    """
+    Обработчик синонима 'тг права' для admin_rights
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'тг права' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'тг права' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'тг права ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "admin_rights"
+    try:
+        # Создаем Mock callback для эмуляции inline кнопки admin_rights
+        class MockCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+            async def answer(self):
+                pass  # Mock метод, ничего не делаем
+            async def edit_text(self, text, **kwargs):
+                try:
+                    return await self.message.edit_text(text, **kwargs)
+                except Exception as e:
+                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                    return await self.message.answer(text, **kwargs)
+        
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        # bot уже определен глобально
+        await handle_callback_admin_rights_node(mock_callback, bot)
+        return  # Завершаем обработку, так как все сделано в callback
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:admin_rights_node@@
+# @@NODE_START:admin_rights_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "права администратора" or message.text.lower().startswith("права администратора ")))
+async def admin_rights_admin_rights_node_synonym_права_администратора_handler(message: types.Message):
+    """
+    Обработчик синонима 'права администратора' для admin_rights
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'права администратора' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'права администратора' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'права администратора ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "admin_rights"
+    try:
+        # Создаем Mock callback для эмуляции inline кнопки admin_rights
+        class MockCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+            async def answer(self):
+                pass  # Mock метод, ничего не делаем
+            async def edit_text(self, text, **kwargs):
+                try:
+                    return await self.message.edit_text(text, **kwargs)
+                except Exception as e:
+                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                    return await self.message.answer(text, **kwargs)
+        
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        # bot уже определен глобально
+        await handle_callback_admin_rights_node(mock_callback, bot)
+        return  # Завершаем обработку, так как все сделано в callback
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:admin_rights_node@@
+# @@NODE_START:admin_rights_node@@
+
+@dp.message(lambda message: message.text and (message.text.lower() == "admin rights" or message.text.lower().startswith("admin rights ")))
+async def admin_rights_admin_rights_node_synonym_admin_rights_handler(message: types.Message):
+    """
+    Обработчик синонима 'admin rights' для admin_rights
+    Работает в группах с ответом на сообщение или с указанием ID пользователя
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Определяем целевого пользователя
+    target_user_id = None
+    
+    if message.reply_to_message:
+        # Если есть ответ на сообщение - используем его
+        target_user_id = message.reply_to_message.from_user.id
+        logging.info(f"Пользователь {user_id} использовал команду 'admin rights' для пользователя {target_user_id} (через ответ)")
+    else:
+        # Если нет ответа, проверяем текст на наличие ID пользователя
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_user_id = int(text_parts[1])
+            logging.info(f"Пользователь {user_id} использовал команду 'admin rights' для пользователя {target_user_id} (через ID)")
+        else:
+            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'admin rights ID_пользователя'")
+            return
+    
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+    
+    # Тип текущего узла для логирования
+    current_node_type = "admin_rights"
+    try:
+        # Создаем Mock callback для эмуляции inline кнопки admin_rights
+        class MockCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+            async def answer(self):
+                pass  # Mock метод, ничего не делаем
+            async def edit_text(self, text, **kwargs):
+                try:
+                    return await self.message.edit_text(text, **kwargs)
+                except Exception as e:
+                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                    return await self.message.answer(text, **kwargs)
+        
+        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
+        # bot уже определен глобально
+        await handle_callback_admin_rights_node(mock_callback, bot)
+        return  # Завершаем обработку, так как все сделано в callback
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для выполнения операции")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {current_node_type}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+
+# @@NODE_END:admin_rights_node@@
+
+# Обработчики автопереходов
+
+@dp.callback_query(lambda c: c.data == "join_request" or c.data.startswith("join_request_btn_") or c.data == "done_in_request")
+async def handle_callback_join_request(callback_query: types.CallbackQuery):
     # Безопасное получение данных из callback_query
     try:
         user_id = callback_query.from_user.id
         callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_Jc_PmusaPm7bBzDNxpWwW для пользователя {user_id}")
+        logging.info(f"🔵 Вызван callback handler: handle_callback_join_request для пользователя {user_id}")
     except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_Jc_PmusaPm7bBzDNxpWwW: {e}")
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_join_request: {e}")
         return
     
     # Проверяем флаг hideAfterClick для кнопок
@@ -1098,13 +5927,142 @@ async def handle_callback_Jc_PmusaPm7bBzDNxpWwW(callback_query: types.CallbackQu
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Устанавливаем флаг collectUserInput для узла Jc-PmusaPm7bBzDNxpWwW
+    # Устанавливаем флаг collectUserInput для узла join_request
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_Jc-PmusaPm7bBzDNxpWwW"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла Jc-PmusaPm7bBzDNxpWwW: false")
+    user_data[user_id]["collectUserInput_join_request"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла join_request: true")
     
-    # Обрабатываем узел Jc-PmusaPm7bBzDNxpWwW: Jc-PmusaPm7bBzDNxpWwW
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "join_request_response", callback_query.data)
+        logging.info(f"Переменная join_request_response сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная join_request_response не сохраняется (пользователь {user_id})")
+    
+    # Обрабатываем узел join_request: join_request
+    text = "Хочешь присоединиться к нашему чату? 🚀"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "join_request_response",
+        "save_to_database": True,
+        "node_id": "join_request",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел join_request)")
+    user_id = callback_query.from_user.id
+    
+    
+    # Удаляем старое сообщение
+    
+    text = "Хочешь присоединиться к нашему чату? 🚀"
+    # ИСПРАВЛЕНИЕ: Не отправляем сообщение второй раз, если оно уже было отправлено ранее в обработчике
+    # Вместо этого, просто настраиваем ожидание ввода
+    # Настраиваем ожидание ввода (collectUserInput=true)
+    user_data[callback_query.from_user.id]["waiting_for_input"] = {
+        "type": "text",
+        "variable": "join_request_response",
+        "save_to_database": False,
+        "node_id": "join_request",
+        "next_node_id": ""
+    }
+    return
+
+@dp.callback_query(lambda c: c.data == "decline_response" or c.data.startswith("decline_response_btn_") or c.data == "done_e_response")
+async def handle_callback_decline_response(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_decline_response для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_decline_response: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла decline_response
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_decline_response"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла decline_response: false")
+    
+    # Обрабатываем узел decline_response: decline_response
     text = "Понятно! Если передумаешь, напиши /start! 😊"
     
     # Инициализируем базовые переменные пользователя если их нет
@@ -1165,16 +6123,16 @@ async def handle_callback_Jc_PmusaPm7bBzDNxpWwW(callback_query: types.CallbackQu
     user_data[user_id]["waiting_for_input"] = {
         "type": "text",
         "modes": ["text"],
-        "variable": "response_Jc-PmusaPm7bBzDNxpWwW",
+        "variable": "response_decline_response",
         "save_to_database": True,
-        "node_id": "Jc-PmusaPm7bBzDNxpWwW",
+        "node_id": "decline_response",
         "next_node_id": "",
         "min_length": 0,
         "max_length": 0,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": ""
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_Jc-PmusaPm7bBzDNxpWwW (узел Jc-PmusaPm7bBzDNxpWwW)")
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_decline_response (узел decline_response)")
     user_id = callback_query.from_user.id
     
     # Сохраняем нажатие кнопки в базу данных
@@ -1204,15 +6162,15 @@ async def handle_callback_Jc_PmusaPm7bBzDNxpWwW(callback_query: types.CallbackQu
     
     return
 
-@dp.callback_query(lambda c: c.data == "PBSJzhYiE1ffqGxA1JMVV" or c.data.startswith("PBSJzhYiE1ffqGxA1JMVV_btn_") or c.data == "done_fqGxA1JMVV")
-async def handle_callback_PBSJzhYiE1ffqGxA1JMVV(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "pin_message_node" or c.data.startswith("pin_message_node_btn_") or c.data == "done_ssage_node")
+async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
     # Безопасное получение данных из callback_query
     try:
         user_id = callback_query.from_user.id
         callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_PBSJzhYiE1ffqGxA1JMVV для пользователя {user_id}")
+        logging.info(f"🔵 Вызван callback handler: handle_callback_pin_message_node для пользователя {user_id}")
     except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_PBSJzhYiE1ffqGxA1JMVV: {e}")
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_pin_message_node: {e}")
         return
     
     # Проверяем флаг hideAfterClick для кнопок
@@ -1227,161 +6185,14 @@ async def handle_callback_PBSJzhYiE1ffqGxA1JMVV(callback_query: types.CallbackQu
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Устанавливаем флаг collectUserInput для узла PBSJzhYiE1ffqGxA1JMVV
+    # Устанавливаем флаг collectUserInput для узла pin_message_node
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_PBSJzhYiE1ffqGxA1JMVV"] = True
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла PBSJzhYiE1ffqGxA1JMVV: true")
+    user_data[user_id]["collectUserInput_pin_message_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла pin_message_node: false")
     
-    # Проверяем, был ли переход через кнопку с skipDataCollection
-    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
-    if not skip_transition_flag:
-        await update_user_data_in_db(user_id, "join_request_response", callback_query.data)
-        logging.info(f"Переменная join_request_response сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
-    else:
-        # Сбрасываем флаг
-        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
-            del user_data[user_id]["skipDataCollectionTransition"]
-        logging.info(f"Переход через skipDataCollection, переменная join_request_response не сохраняется (пользователь {user_id})")
-    
-    # Обрабатываем узел PBSJzhYiE1ffqGxA1JMVV: PBSJzhYiE1ffqGxA1JMVV
-    text = "Хочешь присоединиться к нашему чату? 🚀"
-    
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
-
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_vars = await get_user_from_db(user_id)
-    if not user_vars:
-        user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
-    if not isinstance(user_vars, dict):
-        user_vars = user_data.get(user_id, {})
-    
-    # Create inline keyboard
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="Jc-PmusaPm7bBzDNxpWwW_btn_0"))
-    keyboard = builder.as_markup()
-    
-    # Проверяем, есть ли условная клавиатура для использования
-    # Инициализируем переменную conditional_keyboard, если она не была определена
-    if "conditional_keyboard" not in locals():
-        conditional_keyboard = None
-    user_id = callback_query.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-        user_data[user_id]["_has_conditional_keyboard"] = True
-        logging.info("✅ Используем условную клавиатуру для навигации")
-    else:
-        user_data[user_id]["_has_conditional_keyboard"] = False
-    
-    # Отправляем сообщение
-    try:
-        if keyboard:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        else:
-            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
-            await callback_query.message.answer(text)
-    except Exception as e:
-        logging.debug(f"Ошибка отправки сообщения: {e}")
-        if keyboard:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
-    
-    # Устанавливаем waiting_for_input, так как автопереход не выполнен
-    user_data[user_id] = user_data.get(user_id, {})
-    user_data[user_id]["waiting_for_input"] = {
-        "type": "text",
-        "modes": ["text"],
-        "variable": "join_request_response",
-        "save_to_database": True,
-        "node_id": "PBSJzhYiE1ffqGxA1JMVV",
-        "next_node_id": "",
-        "min_length": 0,
-        "max_length": 0,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": ""
-    }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел PBSJzhYiE1ffqGxA1JMVV)")
-    user_id = callback_query.from_user.id
-    
-    
-    # Удаляем старое сообщение
-    
-    text = "Хочешь присоединиться к нашему чату? 🚀"
-    # ИСПРАВЛЕНИЕ: Не отправляем сообщение второй раз, если оно уже было отправлено ранее в обработчике
-    # Вместо этого, просто настраиваем ожидание ввода
-    # Настраиваем ожидание ввода (collectUserInput=true)
-    user_data[callback_query.from_user.id]["waiting_for_input"] = {
-        "type": "text",
-        "variable": "join_request_response",
-        "save_to_database": False,
-        "node_id": "PBSJzhYiE1ffqGxA1JMVV",
-        "next_node_id": ""
-    }
-    return
-
-@dp.callback_query(lambda c: c.data == "XR_oCZ5omC8H71KgDCP5g" or c.data.startswith("XR_oCZ5omC8H71KgDCP5g_btn_") or c.data == "done_H71KgDCP5g")
-async def handle_callback_XR_oCZ5omC8H71KgDCP5g(callback_query: types.CallbackQuery):
-    # Безопасное получение данных из callback_query
-    try:
-        user_id = callback_query.from_user.id
-        callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_XR_oCZ5omC8H71KgDCP5g для пользователя {user_id}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_XR_oCZ5omC8H71KgDCP5g: {e}")
-        return
-    
-    # Проверяем флаг hideAfterClick для кнопок
-    
-    
-    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
-    
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, callback_query.from_user)
-    
-    # Устанавливаем флаг collectUserInput для узла XR_oCZ5omC8H71KgDCP5g
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_XR_oCZ5omC8H71KgDCP5g"] = True
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла XR_oCZ5omC8H71KgDCP5g: true")
-    
-    # Проверяем, был ли переход через кнопку с skipDataCollection
-    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
-    if not skip_transition_flag:
-        await update_user_data_in_db(user_id, "user_source", callback_query.data)
-        logging.info(f"Переменная user_source сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
-    else:
-        # Сбрасываем флаг
-        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
-            del user_data[user_id]["skipDataCollectionTransition"]
-        logging.info(f"Переход через skipDataCollection, переменная user_source не сохраняется (пользователь {user_id})")
-    
-    # Обрабатываем узел XR_oCZ5omC8H71KgDCP5g: XR_oCZ5omC8H71KgDCP5g
-    text = """🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!
-
-Этот бот поможет тебе найти интересных людей в Санкт-Петербурге!
-
-Откуда ты узнал о нашем чате? 😎"""
+    # Обрабатываем узел pin_message_node: pin_message_node
+    text = "📌 Сообщение успешно закреплено!"
     
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -1441,16 +6252,1068 @@ async def handle_callback_XR_oCZ5omC8H71KgDCP5g(callback_query: types.CallbackQu
     user_data[user_id]["waiting_for_input"] = {
         "type": "text",
         "modes": ["text"],
-        "variable": "user_source",
+        "variable": "response_pin_message_node",
         "save_to_database": True,
-        "node_id": "XR_oCZ5omC8H71KgDCP5g",
-        "next_node_id": "PBSJzhYiE1ffqGxA1JMVV",
+        "node_id": "pin_message_node",
+        "next_node_id": "",
         "min_length": 0,
         "max_length": 0,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": ""
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_source (узел XR_oCZ5omC8H71KgDCP5g)")
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_pin_message_node (узел pin_message_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "unpin_message_node" or c.data.startswith("unpin_message_node_btn_") or c.data == "done_ssage_node")
+async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_unpin_message_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_unpin_message_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла unpin_message_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_unpin_message_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла unpin_message_node: false")
+    
+    # Обрабатываем узел unpin_message_node: unpin_message_node
+    text = "📌❌ Сообщение успешно откреплено!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_unpin_message_node",
+        "save_to_database": True,
+        "node_id": "unpin_message_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_unpin_message_node (узел unpin_message_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "delete_message_node" or c.data.startswith("delete_message_node_btn_") or c.data == "done_ssage_node")
+async def handle_callback_delete_message_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_delete_message_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_delete_message_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла delete_message_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_delete_message_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла delete_message_node: false")
+    
+    # Обрабатываем узел delete_message_node: delete_message_node
+    text = "🗑️ Сообщение успешно удалено!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_delete_message_node",
+        "save_to_database": True,
+        "node_id": "delete_message_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_delete_message_node (узел delete_message_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "ban_user_node" or c.data.startswith("ban_user_node_btn_") or c.data == "done_user_node")
+async def handle_callback_ban_user_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_ban_user_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_ban_user_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла ban_user_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_ban_user_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла ban_user_node: false")
+    
+    # Обрабатываем узел ban_user_node: ban_user_node
+    text = "🚫 Пользователь заблокирован в группе!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_ban_user_node",
+        "save_to_database": True,
+        "node_id": "ban_user_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_ban_user_node (узел ban_user_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "unban_user_node" or c.data.startswith("unban_user_node_btn_") or c.data == "done_user_node")
+async def handle_callback_unban_user_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_unban_user_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_unban_user_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла unban_user_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_unban_user_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла unban_user_node: false")
+    
+    # Обрабатываем узел unban_user_node: unban_user_node
+    text = "✅ Пользователь разблокирован!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_unban_user_node",
+        "save_to_database": True,
+        "node_id": "unban_user_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_unban_user_node (узел unban_user_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "mute_user_node" or c.data.startswith("mute_user_node_btn_") or c.data == "done_user_node")
+async def handle_callback_mute_user_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_mute_user_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_mute_user_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла mute_user_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_mute_user_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла mute_user_node: false")
+    
+    # Обрабатываем узел mute_user_node: mute_user_node
+    text = "🔇 Пользователь ограничен в правах!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_mute_user_node",
+        "save_to_database": True,
+        "node_id": "mute_user_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_mute_user_node (узел mute_user_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "unmute_user_node" or c.data.startswith("unmute_user_node_btn_") or c.data == "done_user_node")
+async def handle_callback_unmute_user_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_unmute_user_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_unmute_user_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла unmute_user_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_unmute_user_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла unmute_user_node: false")
+    
+    # Обрабатываем узел unmute_user_node: unmute_user_node
+    text = "🔊 Ограничения с пользователя сняты!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_unmute_user_node",
+        "save_to_database": True,
+        "node_id": "unmute_user_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_unmute_user_node (узел unmute_user_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "kick_user_node" or c.data.startswith("kick_user_node_btn_") or c.data == "done_user_node")
+async def handle_callback_kick_user_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_kick_user_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_kick_user_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла kick_user_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_kick_user_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла kick_user_node: false")
+    
+    # Обрабатываем узел kick_user_node: kick_user_node
+    text = "👢 Пользователь исключен из группы!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_kick_user_node",
+        "save_to_database": True,
+        "node_id": "kick_user_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_kick_user_node (узел kick_user_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "promote_user_node" or c.data.startswith("promote_user_node_btn_") or c.data == "done_user_node")
+async def handle_callback_promote_user_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_promote_user_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_promote_user_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла promote_user_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_promote_user_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла promote_user_node: false")
+    
+    # Обрабатываем узел promote_user_node: promote_user_node
+    text = "👑 Пользователь назначен администратором!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_promote_user_node",
+        "save_to_database": True,
+        "node_id": "promote_user_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_promote_user_node (узел promote_user_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "demote_user_node" or c.data.startswith("demote_user_node_btn_") or c.data == "done_user_node")
+async def handle_callback_demote_user_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_demote_user_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_demote_user_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла demote_user_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_demote_user_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла demote_user_node: false")
+    
+    # Обрабатываем узел demote_user_node: demote_user_node
+    text = "👤 Пользователь снят с должности администратора!"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_demote_user_node",
+        "save_to_database": True,
+        "node_id": "demote_user_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_demote_user_node (узел demote_user_node)")
+    user_id = callback_query.from_user.id
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "admin_rights_node" or c.data.startswith("admin_rights_node_btn_") or c.data == "done_ights_node")
+async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_admin_rights_node для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_admin_rights_node: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла admin_rights_node
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_admin_rights_node"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла admin_rights_node: false")
+    
+    # Обрабатываем узел admin_rights_node: admin_rights_node
+    text = """⚙️ Права администратора настроены для пользователя!
+
+💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_admin_rights_node",
+        "save_to_database": True,
+        "node_id": "admin_rights_node",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_admin_rights_node (узел admin_rights_node)")
     user_id = callback_query.from_user.id
     
     
@@ -1523,12 +7386,34 @@ async def handle_user_input(message: types.Message):
                     message=message,
                     answer=lambda text="", show_alert=False: asyncio.sleep(0)
                 )
-                if skip_button_target == "XR_oCZ5omC8H71KgDCP5g":
-                    await handle_callback_XR_oCZ5omC8H71KgDCP5g(fake_callback)
-                elif skip_button_target == "PBSJzhYiE1ffqGxA1JMVV":
-                    await handle_callback_PBSJzhYiE1ffqGxA1JMVV(fake_callback)
-                elif skip_button_target == "Jc-PmusaPm7bBzDNxpWwW":
-                    await handle_callback_Jc_PmusaPm7bBzDNxpWwW(fake_callback)
+                if skip_button_target == "start":
+                    await handle_callback_start(fake_callback)
+                elif skip_button_target == "join_request":
+                    await handle_callback_join_request(fake_callback)
+                elif skip_button_target == "decline_response":
+                    await handle_callback_decline_response(fake_callback)
+                elif skip_button_target == "pin_message_node":
+                    await handle_callback_pin_message_node(fake_callback)
+                elif skip_button_target == "unpin_message_node":
+                    await handle_callback_unpin_message_node(fake_callback)
+                elif skip_button_target == "delete_message_node":
+                    await handle_callback_delete_message_node(fake_callback)
+                elif skip_button_target == "ban_user_node":
+                    await handle_callback_ban_user_node(fake_callback)
+                elif skip_button_target == "unban_user_node":
+                    await handle_callback_unban_user_node(fake_callback)
+                elif skip_button_target == "mute_user_node":
+                    await handle_callback_mute_user_node(fake_callback)
+                elif skip_button_target == "unmute_user_node":
+                    await handle_callback_unmute_user_node(fake_callback)
+                elif skip_button_target == "kick_user_node":
+                    await handle_callback_kick_user_node(fake_callback)
+                elif skip_button_target == "promote_user_node":
+                    await handle_callback_promote_user_node(fake_callback)
+                elif skip_button_target == "demote_user_node":
+                    await handle_callback_demote_user_node(fake_callback)
+                elif skip_button_target == "admin_rights_node":
+                    await handle_callback_admin_rights_node(fake_callback)
                 else:
                     logging.warning(f"Неизвестный целевой узел кнопки skipDataCollection: {skip_button_target}")
             except Exception as e:
@@ -1590,9 +7475,9 @@ async def handle_user_input(message: types.Message):
                         answer=lambda text="", show_alert=False: asyncio.sleep(0)
                     )
                     
-                    if next_node_id == "XR_oCZ5omC8H71KgDCP5g":
+                    if next_node_id == "start":
                         # Узел собирает пользовательский ввод
-                        logging.info(f"🔧 Условная навигация к узлу с вводом: XR_oCZ5omC8H71KgDCP5g")
+                        logging.info(f"🔧 Условная навигация к узлу с вводом: start")
                         text = """🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!
 
 Этот бот поможет тебе найти интересных людей в Санкт-Петербурге!
@@ -1605,13 +7490,13 @@ async def handle_user_input(message: types.Message):
                             "modes": ["text"],
                             "variable": "user_source",
                             "save_to_database": True,
-                            "node_id": "XR_oCZ5omC8H71KgDCP5g",
-                            "next_node_id": "PBSJzhYiE1ffqGxA1JMVV"
+                            "node_id": "start",
+                            "next_node_id": "join_request"
                         }
-                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_source (узел XR_oCZ5omC8H71KgDCP5g)")
-                    elif next_node_id == "PBSJzhYiE1ffqGxA1JMVV":
+                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_source (узел start)")
+                    elif next_node_id == "join_request":
                         # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа
-                        logging.info(f"✅ Показаны кнопки для узла PBSJzhYiE1ffqGxA1JMVV с collectUserInput=true")
+                        logging.info(f"✅ Показаны кнопки для узла join_request с collectUserInput=true")
                         text = "Хочешь присоединиться к нашему чату? 🚀"
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
@@ -1638,7 +7523,8 @@ async def handle_user_input(message: types.Message):
                             user_vars = user_data.get(user_id, {})
                         
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="Jc-PmusaPm7bBzDNxpWwW"))
+                        builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
+                        builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
                         builder.adjust(1)
                         keyboard = builder.as_markup()
                         await message.answer(text, reply_markup=keyboard)
@@ -1648,12 +7534,12 @@ async def handle_user_input(message: types.Message):
                             "modes": ['button'],
                             "variable": "join_request_response",
                             "save_to_database": True,
-                            "node_id": "PBSJzhYiE1ffqGxA1JMVV",
+                            "node_id": "join_request",
                             "next_node_id": "",
                             "skip_buttons": []
                         }
-                        logging.info(f"✅ Сояяяятояние ожид����ия настроено: modes=['button'] для пер��менной join_request_response (узел PBSJzhYiE1ffqGxA1JMVV)")
-                    elif next_node_id == "Jc-PmusaPm7bBzDNxpWwW":
+                        logging.info(f"✅ Сояяяятояние ожид����ия настроено: modes=['button'] для пер��менной join_request_response (узел join_request)")
+                    elif next_node_id == "decline_response":
                         # Обычный узел - отправляем сообщение
                         text = "Понятно! Если передумаешь, напиши /start! 😊"
                         user_data[user_id] = user_data.get(user_id, {})
@@ -1680,7 +7566,328 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: Jc-PmusaPm7bBzDNxpWwW")
+                        logging.info(f"Условная навигация к обычному узлу: decline_response")
+                        await message.answer(text)
+                    elif next_node_id == "pin_message_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "📌 Сообщение успешно закреплено!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: pin_message_node")
+                        await message.answer(text)
+                    elif next_node_id == "unpin_message_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "📌❌ Сообщение успешно откреплено!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: unpin_message_node")
+                        await message.answer(text)
+                    elif next_node_id == "delete_message_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "🗑️ Сообщение успешно удалено!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: delete_message_node")
+                        await message.answer(text)
+                    elif next_node_id == "ban_user_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "🚫 Пользователь заблокирован в группе!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: ban_user_node")
+                        await message.answer(text)
+                    elif next_node_id == "unban_user_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "✅ Пользователь разблокирован!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: unban_user_node")
+                        await message.answer(text)
+                    elif next_node_id == "mute_user_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "🔇 Пользователь ограничен в правах!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: mute_user_node")
+                        await message.answer(text)
+                    elif next_node_id == "unmute_user_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "🔊 Ограничения с пользователя сняты!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: unmute_user_node")
+                        await message.answer(text)
+                    elif next_node_id == "kick_user_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "👢 Пользователь исключен из группы!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: kick_user_node")
+                        await message.answer(text)
+                    elif next_node_id == "promote_user_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "👑 Пользователь назначен администратором!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: promote_user_node")
+                        await message.answer(text)
+                    elif next_node_id == "demote_user_node":
+                        # Обычный узел - отправляем сообщение
+                        text = "👤 Пользователь снят с должности администратора!"
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: demote_user_node")
+                        await message.answer(text)
+                    elif next_node_id == "admin_rights_node":
+                        # Обычный узел - отправляем сообщение
+                        text = """⚙️ Права администратора настроены для пользователя!
+
+💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        logging.info(f"Условная навигация к обычному узлу: admin_rights_node")
                         await message.answer(text)
                     else:
                         logging.warning(f"Неизвестныя следующий узел: {next_node_id}")
@@ -1776,12 +7983,34 @@ async def handle_user_input(message: types.Message):
                 target_node_id = option_target
                 try:
                     # Вызываем обработчик для целевого узла
-                    if target_node_id == "XR_oCZ5omC8H71KgDCP5g":
-                        await handle_callback_XR_oCZ5omC8H71KgDCP5g(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "PBSJzhYiE1ffqGxA1JMVV":
-                        await handle_callback_PBSJzhYiE1ffqGxA1JMVV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "Jc-PmusaPm7bBzDNxpWwW":
-                        await handle_callback_Jc_PmusaPm7bBzDNxpWwW(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    if target_node_id == "start":
+                        await handle_callback_start(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "join_request":
+                        await handle_callback_join_request(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "decline_response":
+                        await handle_callback_decline_response(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "pin_message_node":
+                        await handle_callback_pin_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "unpin_message_node":
+                        await handle_callback_unpin_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "delete_message_node":
+                        await handle_callback_delete_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "ban_user_node":
+                        await handle_callback_ban_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "unban_user_node":
+                        await handle_callback_unban_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "mute_user_node":
+                        await handle_callback_mute_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "unmute_user_node":
+                        await handle_callback_unmute_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "kick_user_node":
+                        await handle_callback_kick_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "promote_user_node":
+                        await handle_callback_promote_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "demote_user_node":
+                        await handle_callback_demote_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "admin_rights_node":
+                        await handle_callback_admin_rights_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -1792,12 +8021,34 @@ async def handle_user_input(message: types.Message):
                 if next_node_id:
                     try:
                         # Вызываем обработчик для следующего узла
-                        if next_node_id == "XR_oCZ5omC8H71KgDCP5g":
-                            await handle_callback_XR_oCZ5omC8H71KgDCP5g(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "PBSJzhYiE1ffqGxA1JMVV":
-                            await handle_callback_PBSJzhYiE1ffqGxA1JMVV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "Jc-PmusaPm7bBzDNxpWwW":
-                            await handle_callback_Jc_PmusaPm7bBzDNxpWwW(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        if next_node_id == "start":
+                            await handle_callback_start(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "join_request":
+                            await handle_callback_join_request(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "decline_response":
+                            await handle_callback_decline_response(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "pin_message_node":
+                            await handle_callback_pin_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "unpin_message_node":
+                            await handle_callback_unpin_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "delete_message_node":
+                            await handle_callback_delete_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "ban_user_node":
+                            await handle_callback_ban_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "unban_user_node":
+                            await handle_callback_unban_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "mute_user_node":
+                            await handle_callback_mute_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "unmute_user_node":
+                            await handle_callback_unmute_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "kick_user_node":
+                            await handle_callback_kick_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "promote_user_node":
+                            await handle_callback_promote_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "demote_user_node":
+                            await handle_callback_demote_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "admin_rights_node":
+                            await handle_callback_admin_rights_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -1840,12 +8091,34 @@ async def handle_user_input(message: types.Message):
                             message=message,
                             answer=lambda text="", show_alert=False: asyncio.sleep(0)
                         )
-                        if skip_target == "XR_oCZ5omC8H71KgDCP5g":
-                            await handle_callback_XR_oCZ5omC8H71KgDCP5g(fake_callback)
-                        elif skip_target == "PBSJzhYiE1ffqGxA1JMVV":
-                            await handle_callback_PBSJzhYiE1ffqGxA1JMVV(fake_callback)
-                        elif skip_target == "Jc-PmusaPm7bBzDNxpWwW":
-                            await handle_callback_Jc_PmusaPm7bBzDNxpWwW(fake_callback)
+                        if skip_target == "start":
+                            await handle_callback_start(fake_callback)
+                        elif skip_target == "join_request":
+                            await handle_callback_join_request(fake_callback)
+                        elif skip_target == "decline_response":
+                            await handle_callback_decline_response(fake_callback)
+                        elif skip_target == "pin_message_node":
+                            await handle_callback_pin_message_node(fake_callback)
+                        elif skip_target == "unpin_message_node":
+                            await handle_callback_unpin_message_node(fake_callback)
+                        elif skip_target == "delete_message_node":
+                            await handle_callback_delete_message_node(fake_callback)
+                        elif skip_target == "ban_user_node":
+                            await handle_callback_ban_user_node(fake_callback)
+                        elif skip_target == "unban_user_node":
+                            await handle_callback_unban_user_node(fake_callback)
+                        elif skip_target == "mute_user_node":
+                            await handle_callback_mute_user_node(fake_callback)
+                        elif skip_target == "unmute_user_node":
+                            await handle_callback_unmute_user_node(fake_callback)
+                        elif skip_target == "kick_user_node":
+                            await handle_callback_kick_user_node(fake_callback)
+                        elif skip_target == "promote_user_node":
+                            await handle_callback_promote_user_node(fake_callback)
+                        elif skip_target == "demote_user_node":
+                            await handle_callback_demote_user_node(fake_callback)
+                        elif skip_target == "admin_rights_node":
+                            await handle_callback_admin_rights_node(fake_callback)
                         else:
                             logging.warning(f"Неизвестный целевой узел skipDataCollection медиа: {skip_target}")
                     except Exception as e:
@@ -1914,12 +8187,34 @@ async def handle_user_input(message: types.Message):
                                 message=message,
                                 answer=lambda text="", show_alert=False: asyncio.sleep(0)
                             )
-                            if skip_target == "XR_oCZ5omC8H71KgDCP5g":
-                                await handle_callback_XR_oCZ5omC8H71KgDCP5g(fake_callback)
-                            elif skip_target == "PBSJzhYiE1ffqGxA1JMVV":
-                                await handle_callback_PBSJzhYiE1ffqGxA1JMVV(fake_callback)
-                            elif skip_target == "Jc-PmusaPm7bBzDNxpWwW":
-                                await handle_callback_Jc_PmusaPm7bBzDNxpWwW(fake_callback)
+                            if skip_target == "start":
+                                await handle_callback_start(fake_callback)
+                            elif skip_target == "join_request":
+                                await handle_callback_join_request(fake_callback)
+                            elif skip_target == "decline_response":
+                                await handle_callback_decline_response(fake_callback)
+                            elif skip_target == "pin_message_node":
+                                await handle_callback_pin_message_node(fake_callback)
+                            elif skip_target == "unpin_message_node":
+                                await handle_callback_unpin_message_node(fake_callback)
+                            elif skip_target == "delete_message_node":
+                                await handle_callback_delete_message_node(fake_callback)
+                            elif skip_target == "ban_user_node":
+                                await handle_callback_ban_user_node(fake_callback)
+                            elif skip_target == "unban_user_node":
+                                await handle_callback_unban_user_node(fake_callback)
+                            elif skip_target == "mute_user_node":
+                                await handle_callback_mute_user_node(fake_callback)
+                            elif skip_target == "unmute_user_node":
+                                await handle_callback_unmute_user_node(fake_callback)
+                            elif skip_target == "kick_user_node":
+                                await handle_callback_kick_user_node(fake_callback)
+                            elif skip_target == "promote_user_node":
+                                await handle_callback_promote_user_node(fake_callback)
+                            elif skip_target == "demote_user_node":
+                                await handle_callback_demote_user_node(fake_callback)
+                            elif skip_target == "admin_rights_node":
+                                await handle_callback_admin_rights_node(fake_callback)
                             else:
                                 logging.warning(f"Неизвестный целевой узел skipDataCollection: {skip_target}")
                         except Exception as e:
@@ -2000,10 +8295,10 @@ async def handle_user_input(message: types.Message):
                         current_node_id = next_node_id
                         next_node_id = None  # Сбрасываем, будет установлен при автопереходе
                         # Проверяем навигацию к узлам
-                        if current_node_id == "XR_oCZ5omC8H71KgDCP5g":
-                            logging.info(f"Переход к узлу XR_oCZ5omC8H71KgDCP5g типа start")
+                        if current_node_id == "start":
+                            logging.info(f"Переход к узлу start типа start")
                             break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "PBSJzhYiE1ffqGxA1JMVV":
+                        elif current_node_id == "join_request":
                             text = "Хочешь присоединиться к нашему чату? 🚀"
                             # Замена переменных в тексте
                             # Инициализируем базовые переменные пользователя если их нет
@@ -2031,30 +8326,41 @@ async def handle_user_input(message: types.Message):
                             
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
-                            # Устанавливаем состояние ожидания ввода для узла PBSJzhYiE1ffqGxA1JMVV
+                            # Устанавливаем состояние ожидания ввода для узла join_request
                             user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
                             user_data[message.from_user.id]["waiting_for_input"] = {
                                 "type": "text",
                                 "modes": ["text"],
                                 "variable": "join_request_response",
                                 "save_to_database": True,
-                                "node_id": "PBSJzhYiE1ffqGxA1JMVV",
+                                "node_id": "join_request",
                                 "next_node_id": "",
                                 "min_length": 0,
                                 "max_length": 0,
                                 "retry_message": "Пожалуйста, попробуйте еще раз.",
                                 "success_message": ""
                             }
-                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел PBSJzhYiE1ffqGxA1JMVV)")
-                            logging.info(f"✅ Узел PBSJzhYiE1ffqGxA1JMVV настроен для сбора ввода (collectUserInput=true)")
-                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
-                            builder = InlineKeyboardBuilder()
-                            builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="Jc-PmusaPm7bBzDNxpWwW"))
-                            builder.adjust(1)
-                            keyboard = builder.as_markup()
-                            await message.answer(text, reply_markup=keyboard)
-                            logging.info(f"✅ Показаны inline кнопки для узла PBSJzhYiE1ffqGxA1JMVV с collectUserInput (ожидание ввода активно)")
-                        elif current_node_id == "Jc-PmusaPm7bBzDNxpWwW":
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел join_request)")
+                            logging.info(f"✅ Узел join_request настроен для сбора ввода (collectUserInput=true)")
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
+                            await message.answer(text)
+                            # Настраиваем ожидание ввода для message узла (универсальная функция опяяяяеделит тип: text/photo/video/audio/document)
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "join_request_response",
+                                "save_to_database": True,
+                                "node_id": "join_request",
+                                "next_node_id": "",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел join_request)")
+                        elif current_node_id == "decline_response":
                             text = "Понятно! Если передумаешь, напиши /start! 😊"
                             # Замена переменных в тексте
                             # Инициализируем базовые переменные пользователя если их нет
@@ -2092,6 +8398,39 @@ async def handle_user_input(message: types.Message):
                             
                             logging.info("✅ Переход к следующему уялу выполнен успешно")
                             break  # Нет автоперехода, завершаем цикл
+                        elif current_node_id == "pin_message_node":
+                            logging.info(f"Переход к узлу pin_message_node типа pin_message")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "unpin_message_node":
+                            logging.info(f"Переход к узлу unpin_message_node типа unpin_message")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "delete_message_node":
+                            logging.info(f"Переход к узлу delete_message_node типа delete_message")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "ban_user_node":
+                            logging.info(f"Переход к узлу ban_user_node типа ban_user")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "unban_user_node":
+                            logging.info(f"Переход к узлу unban_user_node типа unban_user")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "mute_user_node":
+                            logging.info(f"Переход к узлу mute_user_node типа mute_user")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "unmute_user_node":
+                            logging.info(f"Переход к узлу unmute_user_node типа unmute_user")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "kick_user_node":
+                            logging.info(f"Переход к узлу kick_user_node типа kick_user")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "promote_user_node":
+                            logging.info(f"Переход к узлу promote_user_node типа promote_user")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "demote_user_node":
+                            logging.info(f"Переход к узлу demote_user_node типа demote_user")
+                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "admin_rights_node":
+                            logging.info(f"Переход к узлу admin_rights_node типа admin_rights")
+                            break  # Выходим из цикла для неизвестного типа узла
                         else:
                             logging.warning(f"Неизвестный узел: {current_node_id}")
                             break  # Выходим из цикла при неизвестном узле
@@ -2102,8 +8441,8 @@ async def handle_user_input(message: types.Message):
         
         # Обработка старого формата (для совместимости)
         # Находим узел для получения настроек
-        logging.info(f"DEBUG old format: checking inputNodes: XR_oCZ5omC8H71KgDCP5g, PBSJzhYiE1ffqGxA1JMVV")
-        if waiting_node_id == "XR_oCZ5omC8H71KgDCP5g":
+        logging.info(f"DEBUG old format: checking inputNodes: start, join_request")
+        if waiting_node_id == "start":
             
             # Сохраняем ответ пользователя
             import datetime
@@ -2127,14 +8466,14 @@ async def handle_user_input(message: types.Message):
             
             # Переходим к следующему узлу
             try:
-                # Отправляем сообщение для узла PBSJzhYiE1ffqGxA1JMVV
+                # Отправляем сообщение для узла join_request
                 text = "Хочешь присоединиться к нашему чату? 🚀"
-                # Настраиваем новое ожидание ввода для узла PBSJzhYiE1ffqGxA1JMVV
+                # Настраиваем новое ожидание ввода для узла join_request
                 user_data[user_id]["waiting_for_input"] = {
                     "type": "text",
                     "variable": "join_request_response",
                     "save_to_database": True,
-                    "node_id": "PBSJzhYiE1ffqGxA1JMVV",
+                    "node_id": "join_request",
                     "next_node_id": "",
                     "min_length": 0,
                     "max_length": 0,
@@ -2142,19 +8481,15 @@ async def handle_user_input(message: types.Message):
                     "success_message": ""
                 }
                 
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="Jc-PmusaPm7bBzDNxpWwW"))
-                builder.adjust(1)
-                keyboard = builder.as_markup()
                 # Заменяем все переменные в тексте
                 text = replace_variables_in_text(text, user_vars)
-                await message.answer(text, reply_markup=keyboard)
+                await message.answer(text)
                 
                 logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
                 logging.error(f"Ошябка при переходе к следующему узлу: {e}")
             return
-        elif waiting_node_id == "PBSJzhYiE1ffqGxA1JMVV":
+        elif waiting_node_id == "join_request":
             
             # Сохраняем ответ пользователя
             import datetime
@@ -2226,7 +8561,6 @@ async def main():
         
         # Регистрация middleware для сохранения сообщений
         dp.message.middleware(message_logging_middleware)
-        dp.callback_query.middleware(callback_query_logging_middleware)
         
         print("🤖 Бот запущен и готов к работе!")
         await dp.start_polling(bot)

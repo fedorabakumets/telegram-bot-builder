@@ -20,6 +20,7 @@ import { collectInputTargetNodes } from './utils/collectInputTargetNodes';
 import { filterInlineNodes } from './Keyboard/filterInlineNodes';
 import { addInputTargetNodes } from './utils/addInputTargetNodes';
 import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration, generateUtilityFunctions } from './generate';
+import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
 import { generateMessageLoggingCode } from './generate/generate-message-logging';
 import { extractNodeData } from './utils/extractNodeData';
 import { generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
@@ -219,8 +220,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем UTF-8 кодировку и базовые импорты в начало файла
   code += generateUtf8EncodingCode();
 
-  // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы
-  code += generateSafeEditOrSendCode(hasInlineButtons(nodes || []), hasAutoTransitions(nodes || []));
+  // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
+  const hasInlineButtonsResult = hasInlineButtons(nodes || []);
+  const hasAutoTransitionsResult = hasAutoTransitions(nodes || []);
+  const hasNodesRequiringSafeEditOrSendResult = hasNodesRequiringSafeEditOrSend(nodes || []);
+
+  code += generateSafeEditOrSendCode(hasInlineButtonsResult || hasNodesRequiringSafeEditOrSendResult, hasAutoTransitionsResult);
 
   code += generateBasicBotSetupCode();
 

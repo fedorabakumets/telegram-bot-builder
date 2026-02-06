@@ -200,8 +200,15 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ Не применяем специальную логику: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
             }
 
+            // Проверяем, существует ли целевой узел перед вызовом обработчика
+            const targetExists = nodes.some(n => n.id === nextNodeId);
             code += '        try:\n';
-            code += `            await handle_callback_${nextNodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
+            if (targetExists) {
+                code += `            await handle_callback_${nextNodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
+            } else {
+                code += `            logging.warning(f"⚠️ Целевой узел не найден: {next_node_id}, завершаем переход")\n`;
+                code += `            await callback_query.message.edit_text("Переход завершен")\n`;
+            }
             code += '        except Exception as e:\n';
             code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
             code += `            await callback_query.message.edit_text("Переход завершен")\n`;

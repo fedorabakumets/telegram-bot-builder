@@ -1,12 +1,12 @@
 {
   "sheets": [
     {
-      "id": "iH8j-no06ePy_NylKmcf-",
-      "name": "🎉 Приветствие (копия)",
+      "id": "CThrQ0xT38NcEKNfFttSX",
+      "name": "🎉 Приветствие",
       "nodes": [
         {
           "_y": 100,
-          "id": "XR_oCZ5omC8H71KgDCP5g",
+          "id": "start",
           "data": {
             "buttons": [],
             "command": "/start",
@@ -31,7 +31,7 @@
             "oneTimeKeyboard": false,
             "collectUserInput": true,
             "enableStatistics": true,
-            "inputTargetNodeId": "PBSJzhYiE1ffqGxA1JMVV",
+            "inputTargetNodeId": "join_request",
             "enableConditionalMessages": false,
             "conditionalMessages": [],
             "enablePhotoInput": false,
@@ -51,15 +51,23 @@
         },
         {
           "_y": 641.6875,
-          "id": "PBSJzhYiE1ffqGxA1JMVV",
+          "id": "join_request",
           "data": {
             "buttons": [
+              {
+                "id": "btn-yes",
+                "text": "Да 😎",
+                "value": "yes",
+                "action": "goto",
+                "target": "gender_selection",
+                "buttonType": "option"
+              },
               {
                 "id": "btn-no",
                 "text": "Нет 🙅",
                 "value": "no",
                 "action": "goto",
-                "target": "Jc-PmusaPm7bBzDNxpWwW",
+                "target": "decline_response",
                 "buttonType": "option"
               }
             ],
@@ -68,7 +76,7 @@
             "adminOnly": false,
             "showInMenu": true,
             "messageText": "Хочешь присоединиться к нашему чату? 🚀",
-            "keyboardType": "inline",
+            "keyboardType": "none",
             "requiresAuth": false,
             "inputVariable": "join_request_response",
             "isPrivateOnly": false,
@@ -96,7 +104,7 @@
         },
         {
           "_y": 969.734375,
-          "id": "Jc-PmusaPm7bBzDNxpWwW",
+          "id": "decline_response",
           "data": {
             "buttons": [],
             "markdown": false,
@@ -132,8 +140,434 @@
           }
         }
       ],
-      "createdAt": "2026-02-06T19:39:37.728Z",
-      "updatedAt": "2026-02-06T19:54:17.069Z",
+      "createdAt": "2026-02-06T20:29:28.416Z",
+      "updatedAt": "2026-02-06T20:36:06.357Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "connections": []
+    },
+    {
+      "id": "R448qHO-nMOGHYsyHjQoc",
+      "name": "📝 Управление контентом",
+      "nodes": [
+        {
+          "id": "pin_message_node",
+          "data": {
+            "buttons": [],
+            "command": "/pin_message",
+            "synonyms": [
+              "закрепить",
+              "прикрепить",
+              "зафиксировать"
+            ],
+            "messageText": "📌 Сообщение успешно закреплено!",
+            "keyboardType": "none",
+            "disableNotification": false,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "pin_message",
+          "position": {
+            "x": 200,
+            "y": 300
+          }
+        },
+        {
+          "id": "unpin_message_node",
+          "data": {
+            "buttons": [],
+            "command": "/unpin_message",
+            "synonyms": [
+              "открепить",
+              "отцепить",
+              "убрать закрепление"
+            ],
+            "messageText": "📌❌ Сообщение успешно откреплено!",
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "unpin_message",
+          "position": {
+            "x": 400,
+            "y": 300
+          }
+        },
+        {
+          "id": "delete_message_node",
+          "data": {
+            "buttons": [],
+            "command": "/delete_message",
+            "synonyms": [
+              "удалить",
+              "стереть",
+              "убрать сообщение"
+            ],
+            "messageText": "🗑️ Сообщение успешно удалено!",
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "delete_message",
+          "position": {
+            "x": 600,
+            "y": 300
+          }
+        }
+      ],
+      "createdAt": "2026-02-06T20:29:28.416Z",
+      "updatedAt": "2026-02-06T20:29:28.416Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "connections": []
+    },
+    {
+      "id": "otHu1ScSCmxeDkaHta04b",
+      "name": "👥 Управление пользователями",
+      "nodes": [
+        {
+          "id": "ban_user_node",
+          "data": {
+            "reason": "Нарушение правил группы",
+            "buttons": [],
+            "command": "/ban_user",
+            "synonyms": [
+              "забанить",
+              "заблокировать",
+              "бан"
+            ],
+            "untilDate": 0,
+            "messageText": "🚫 Пользователь заблокирован в группе!",
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "ban_user",
+          "position": {
+            "x": 100,
+            "y": 500
+          }
+        },
+        {
+          "id": "unban_user_node",
+          "data": {
+            "buttons": [],
+            "command": "/unban_user",
+            "synonyms": [
+              "разбанить",
+              "разблокировать",
+              "unbан"
+            ],
+            "messageText": "✅ Пользователь разблокирован!",
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "unban_user",
+          "position": {
+            "x": 250,
+            "y": 500
+          }
+        },
+        {
+          "id": "mute_user_node",
+          "data": {
+            "reason": "Нарушение правил группы",
+            "buttons": [],
+            "command": "/mute_user",
+            "duration": 3600,
+            "synonyms": [
+              "замутить",
+              "заглушить",
+              "мут"
+            ],
+            "messageText": "🔇 Пользователь ограничен в правах!",
+            "canSendPolls": false,
+            "keyboardType": "none",
+            "canInviteUsers2": false,
+            "canPinMessages2": false,
+            "canSendMessages": false,
+            "canChangeGroupInfo": false,
+            "canSendMediaMessages": false,
+            "canSendOtherMessages": false,
+            "canAddWebPagePreviews": false,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "mute_user",
+          "position": {
+            "x": 400,
+            "y": 500
+          }
+        },
+        {
+          "id": "unmute_user_node",
+          "data": {
+            "buttons": [],
+            "command": "/unmute_user",
+            "synonyms": [
+              "размутить",
+              "разглушить",
+              "анмут"
+            ],
+            "messageText": "🔊 Ограничения с пользователя сняты!",
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "unmute_user",
+          "position": {
+            "x": 550,
+            "y": 500
+          }
+        },
+        {
+          "id": "kick_user_node",
+          "data": {
+            "reason": "Нарушение правил группы",
+            "buttons": [],
+            "command": "/kick_user",
+            "synonyms": [
+              "кикнуть",
+              "исключить",
+              "выгнать"
+            ],
+            "messageText": "👢 Пользователь исключен из группы!",
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "kick_user",
+          "position": {
+            "x": 700,
+            "y": 500
+          }
+        },
+        {
+          "id": "promote_user_node",
+          "data": {
+            "buttons": [],
+            "command": "/promote_user",
+            "synonyms": [
+              "повысить",
+              "назначить админом",
+              "промоут"
+            ],
+            "canBanUsers": false,
+            "isAnonymous": false,
+            "messageText": "👑 Пользователь назначен администратором!",
+            "canAddAdmins": false,
+            "keyboardType": "none",
+            "canChangeInfo": false,
+            "canInviteUsers": true,
+            "canPinMessages": true,
+            "canDeleteMessages": true,
+            "canPromoteMembers": false,
+            "canRestrictMembers": false,
+            "canManageVideoChats": false,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "promote_user",
+          "position": {
+            "x": 500,
+            "y": 700
+          }
+        },
+        {
+          "id": "demote_user_node",
+          "data": {
+            "buttons": [],
+            "command": "/demote_user",
+            "synonyms": [
+              "понизить",
+              "снять с админа",
+              "демоут"
+            ],
+            "messageText": "👤 Пользователь снят с должности администратора!",
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "demote_user",
+          "position": {
+            "x": 700,
+            "y": 700
+          }
+        },
+        {
+          "id": "admin_rights_node",
+          "data": {
+            "buttons": [],
+            "command": "/admin_rights",
+            "synonyms": [
+              "права админа",
+              "настроить права",
+              "тг права",
+              "права администратора",
+              "admin rights"
+            ],
+            "adminOnly": true,
+            "description": "Настройка прав администратора в группе (только для админов)",
+            "messageText": "⚙️ Права администратора настроены для пользователя!\n\n💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights",
+            "is_anonymous": false,
+            "keyboardType": "none",
+            "isPrivateOnly": false,
+            "requiresGroup": true,
+            "can_change_info": false,
+            "can_manage_chat": false,
+            "can_invite_users": true,
+            "can_pin_messages": true,
+            "adminChatIdSource": "current_chat",
+            "adminUserIdSource": "reply_to_message",
+            "can_manage_topics": false,
+            "can_delete_messages": true,
+            "can_promote_members": false,
+            "can_restrict_members": true,
+            "can_manage_video_chats": false,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "admin_rights",
+          "position": {
+            "x": 300,
+            "y": 900
+          }
+        }
+      ],
+      "createdAt": "2026-02-06T20:29:28.416Z",
+      "updatedAt": "2026-02-06T20:29:28.416Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -145,5 +579,133 @@
     }
   ],
   "version": 2,
-  "activeSheetId": "iH8j-no06ePy_NylKmcf-"
+  "activeSheetId": "CThrQ0xT38NcEKNfFttSX",
+  "interSheetConnections": [
+    {
+      "id": "inter-welcome-basic",
+      "sourceHandle": "btn-yes",
+      "sourceNodeId": "join_request",
+      "targetHandle": "target",
+      "targetNodeId": "gender_selection",
+      "sourceSheetId": "welcome_sheet",
+      "targetSheetId": "basic_info_sheet"
+    },
+    {
+      "id": "inter-basic-metro",
+      "sourceHandle": "source",
+      "sourceNodeId": "age_input",
+      "targetHandle": "target",
+      "targetNodeId": "metro_selection",
+      "sourceSheetId": "basic_info_sheet",
+      "targetSheetId": "metro_sheet"
+    },
+    {
+      "id": "inter-metro-interests",
+      "sourceHandle": "source",
+      "sourceNodeId": "metro_selection",
+      "targetHandle": "target",
+      "targetNodeId": "interests_categories",
+      "sourceSheetId": "metro_sheet",
+      "targetSheetId": "interests_sheet"
+    },
+    {
+      "id": "inter-interests-personal",
+      "sourceHandle": "source",
+      "sourceNodeId": "interests_categories",
+      "targetHandle": "target",
+      "targetNodeId": "marital_status",
+      "sourceSheetId": "interests_sheet",
+      "targetSheetId": "personal_sheet"
+    },
+    {
+      "id": "inter-personal-profile",
+      "sourceHandle": "source",
+      "sourceNodeId": "extra_info",
+      "targetHandle": "target",
+      "targetNodeId": "profile_complete",
+      "sourceSheetId": "personal_sheet",
+      "targetSheetId": "profile_sheet"
+    },
+    {
+      "id": "inter-profile-basic-gender",
+      "sourceHandle": "btn-edit-gender",
+      "sourceNodeId": "show_profile",
+      "targetHandle": "target",
+      "targetNodeId": "gender_selection",
+      "sourceSheetId": "profile_sheet",
+      "targetSheetId": "basic_info_sheet"
+    },
+    {
+      "id": "inter-profile-basic-name",
+      "sourceHandle": "btn-edit-name",
+      "sourceNodeId": "show_profile",
+      "targetHandle": "target",
+      "targetNodeId": "name_input",
+      "sourceSheetId": "profile_sheet",
+      "targetSheetId": "basic_info_sheet"
+    },
+    {
+      "id": "inter-profile-basic-age",
+      "sourceHandle": "btn-edit-age",
+      "sourceNodeId": "show_profile",
+      "targetHandle": "target",
+      "targetNodeId": "age_input",
+      "sourceSheetId": "profile_sheet",
+      "targetSheetId": "basic_info_sheet"
+    },
+    {
+      "id": "inter-profile-metro",
+      "sourceHandle": "btn-edit-metro",
+      "sourceNodeId": "show_profile",
+      "targetHandle": "target",
+      "targetNodeId": "metro_selection",
+      "sourceSheetId": "profile_sheet",
+      "targetSheetId": "metro_sheet"
+    },
+    {
+      "id": "inter-profile-interests",
+      "sourceHandle": "btn-edit-interests",
+      "sourceNodeId": "show_profile",
+      "targetHandle": "target",
+      "targetNodeId": "interests_categories",
+      "sourceSheetId": "profile_sheet",
+      "targetSheetId": "interests_sheet"
+    },
+    {
+      "id": "inter-profile-personal-marital",
+      "sourceHandle": "btn-edit-marital",
+      "sourceNodeId": "show_profile",
+      "targetHandle": "target",
+      "targetNodeId": "marital_status",
+      "sourceSheetId": "profile_sheet",
+      "targetSheetId": "personal_sheet"
+    },
+    {
+      "id": "inter-profile-personal-orientation",
+      "sourceHandle": "btn-edit-orientation",
+      "sourceNodeId": "show_profile",
+      "targetHandle": "target",
+      "targetNodeId": "sexual_orientation",
+      "sourceSheetId": "profile_sheet",
+      "targetSheetId": "personal_sheet"
+    },
+    {
+      "id": "inter-profile-personal-channel",
+      "sourceHandle": "btn-edit-channel",
+      "sourceNodeId": "show_profile",
+      "targetHandle": "target",
+      "targetNodeId": "channel_choice",
+      "sourceSheetId": "profile_sheet",
+      "targetSheetId": "personal_sheet"
+    },
+    {
+      "id": "inter-profile-personal-extra",
+      "sourceHandle": "btn-edit-extra",
+      "sourceNodeId": "show_profile",
+      "targetHandle": "target",
+      "targetNodeId": "extra_info",
+      "sourceSheetId": "profile_sheet",
+      "targetSheetId": "personal_sheet"
+    }
+  ]
 }
