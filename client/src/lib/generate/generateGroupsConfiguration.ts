@@ -1,4 +1,5 @@
 import { BotGroup } from '@shared/schema';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Функция для генерации конфигурации подключенных групп
@@ -10,24 +11,31 @@ export function generateGroupsConfiguration(groups: BotGroup[]): string {
     return '';
   }
 
-  let code = '';
-  code += '# Подключенные группы\n';
-  code += 'CONNECTED_GROUPS = {\n';
+  // Собираем весь код в массив строк для автоматической обработки
+  const codeLines: string[] = [];
+  
+  codeLines.push('# Подключенные группы');
+  codeLines.push('CONNECTED_GROUPS = {');
   groups.forEach((group, index) => {
     const groupId = group.groupId || 'None';
     const isLast = index === groups.length - 1;
-    code += `    "${group.name}": {\n`;
-    code += `        "id": ${groupId === 'None' ? 'None' : `"${groupId}"`},\n`;
-    code += `        "url": "${group.url}",\n`;
-    code += `        "is_admin": ${group.isAdmin ? 'True' : 'False'},\n`;
-    code += `        "chat_type": "${group.chatType || 'group'}",\n`;
+    codeLines.push(`    "${group.name}": {`);
+    codeLines.push(`        "id": ${groupId === 'None' ? 'None' : `"${groupId}"`},`);
+    codeLines.push(`        "url": "${group.url}",`);
+    codeLines.push(`        "is_admin": ${group.isAdmin ? 'True' : 'False'},`);
+    codeLines.push(`        "chat_type": "${group.chatType || 'group'}",`);
     if (group.adminRights) {
-      code += `        "admin_rights": ${JSON.stringify(group.adminRights, null, 12).replace(/"/g, "'")},\n`;
+      codeLines.push(`        "admin_rights": ${JSON.stringify(group.adminRights, null, 12).replace(/"/g, "'")},`);
     }
-    code += `        "description": "${group.description || ''}"\n`;
-    code += `    }${isLast ? '' : ','}\n`;
+    codeLines.push(`        "description": "${group.description || ''}"`);
+    codeLines.push(`    }${isLast ? '' : ','}`);
   });
-  code += '}\n\n';
+  codeLines.push('}');
+  codeLines.push('');
 
-  return code;
+  // Применяем автоматическое добавление комментариев ко всему коду
+  // Функция автоматически определяет имя файла
+  const processedCode = processCodeWithAutoComments(codeLines, 'generateGroupsConfiguration.ts');
+  
+  return processedCode.join('\n');
 }
