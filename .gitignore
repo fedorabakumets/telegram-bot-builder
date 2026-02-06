@@ -51,3 +51,11 @@ Thumbs.db
 *.sqlite
 .vercel
 .env*.local
+
+# VSCode settings
+.vscode/settings.json
+
+# Config files
+tsconfig.json
+.eslintrc.json
+eslint.config.js
