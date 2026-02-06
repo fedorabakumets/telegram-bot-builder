@@ -686,8 +686,6 @@ export function BotControl({}: BotControlProps) {
   // Объединяем информацию о ботах
   const allBotInfos = botInfoQueries.map(query => query.data).filter(Boolean) as BotInfo[];
 
-  const isRunning = allBotStatuses.some(status => status.status === 'running');
-
   // Toggle user database enabled mutation
   const toggleDatabaseMutation = useMutation({
     mutationFn: ({ projectId, enabled }: { projectId: number; enabled: boolean }) =>
