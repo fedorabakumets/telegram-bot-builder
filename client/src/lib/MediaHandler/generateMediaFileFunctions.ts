@@ -132,7 +132,11 @@ async def send_photo_with_caption(chat_id: int, photo_source, caption: str = Non
         # Проверяем, является ли photo_source относительным путем к локальному файлу
         if isinstance(photo_source, str) and photo_source.startswith('/uploads/'):
             # Для локальных файлов используем FSInputFile для отправки напрямую с диска
-            file_path = os.getcwd() + photo_source
+            # Путь к файлу строим от корня проекта (на уровень выше папки с ботом)
+            import os
+            bot_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(bot_dir)
+            file_path = os.path.join(project_root, photo_source[1:])  # убираем первый символ '/'
             result = await bot.send_photo(chat_id, FSInputFile(file_path), caption=caption, **kwargs)
         else:
             result = await bot.send_photo(chat_id, photo_source, caption=caption, **kwargs)

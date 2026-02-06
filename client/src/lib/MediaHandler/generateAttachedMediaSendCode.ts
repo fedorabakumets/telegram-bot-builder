@@ -99,7 +99,11 @@ export function generateAttachedMediaSendCode(
     // Проверяем, является ли URL относительным путем к локальному файлу
     if (nodeData.imageUrl.startsWith('/uploads/')) {
       // Для локальных файлов используем FSInputFile для отправки напрямую с диска
-      codeLines.push(`${indentLevel}static_image_path = os.getcwd() + "${nodeData.imageUrl}"`);
+      // Путь к файлу строим от корня проекта (на уровень выше папки с ботом)
+      codeLines.push(`${indentLevel}import os`);
+      codeLines.push(`${indentLevel}bot_dir = os.path.dirname(os.path.abspath(__file__))`);
+      codeLines.push(`${indentLevel}project_root = os.path.dirname(bot_dir)`);
+      codeLines.push(`${indentLevel}static_image_path = os.path.join(project_root, "${nodeData.imageUrl.substring(1)}")`);  // убираем первый символ '/'
       codeLines.push(`${indentLevel}static_image_url = FSInputFile(static_image_path)`);
     } else {
       codeLines.push(`${indentLevel}static_image_url = "${nodeData.imageUrl}"`);
@@ -215,7 +219,10 @@ export function generateAttachedMediaSendCode(
   // Проверяем, является ли медиа относительным путем к локальному файлу и форматируем полный URL или используем FSInputFile
   codeLines.push(`${indentLevel}        # Проверяем, является ли медиа относительным путем к локальному файлу`);
   codeLines.push(`${indentLevel}        if str(attached_media).startswith('/uploads/'):`);
-  codeLines.push(`${indentLevel}            attached_media_path = os.getcwd() + attached_media`);
+  codeLines.push(`${indentLevel}            import os`);
+  codeLines.push(`${indentLevel}            bot_dir = os.path.dirname(os.path.abspath(__file__))`);
+  codeLines.push(`${indentLevel}            project_root = os.path.dirname(bot_dir)`);
+  codeLines.push(`${indentLevel}            attached_media_path = os.path.join(project_root, attached_media[1:])`);  // убираем первый символ '/'
   codeLines.push(`${indentLevel}            attached_media_url = FSInputFile(attached_media_path)`);
   codeLines.push(`${indentLevel}        else:`);
   codeLines.push(`${indentLevel}            attached_media_url = attached_media`);

@@ -1136,7 +1136,10 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
               code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
               // Проверяем, является ли URL относительным путем к локальному файлу
               if (targetNode.data.imageUrl.startsWith('/uploads/')) {
-                code += `    image_path = os.getcwd() + "${targetNode.data.imageUrl}"\n`;
+                code += `    import os\n`;
+                code += `    bot_dir = os.path.dirname(os.path.abspath(__file__))\n`;
+                code += `    project_root = os.path.dirname(bot_dir)\n`;
+                code += `    image_path = os.path.join(project_root, "${targetNode.data.imageUrl.substring(1)}")\n`;  // убираем первый символ '/'
                 code += `    image_url = FSInputFile(image_path)\n`;
               } else {
                 code += `    image_url = "${targetNode.data.imageUrl}"\n`;
@@ -1230,7 +1233,10 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 code += `    # Узел command содержит изображение: ${targetNode.data.imageUrl}\n`;
                 // Проверяем, является ли URL относительным путем к локальному файлу
                 if (targetNode.data.imageUrl.startsWith('/uploads/')) {
-                  code += `    image_path = os.getcwd() + "${targetNode.data.imageUrl}"\n`;
+                  code += `    import os\n`;
+                  code += `    bot_dir = os.path.dirname(os.path.abspath(__file__))\n`;
+                  code += `    project_root = os.path.dirname(bot_dir)\n`;
+                  code += `    image_path = os.path.join(project_root, "${targetNode.data.imageUrl.substring(1)}")\n`;  // убираем первый символ '/'
                   code += `    image_url = FSInputFile(image_path)\n`;
                 } else {
                   code += `    image_url = "${targetNode.data.imageUrl}"\n`;
