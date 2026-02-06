@@ -16,8 +16,8 @@ def get_upload_file_path(file_path):
     import os
     # Получаем директорию файла бота
     bot_dir = os.path.dirname(os.path.abspath(__file__))
-    # Поднимаемся на уровень выше к корню проекта
-    project_root = os.path.dirname(bot_dir)
+    # Поднимаемся на два уровня выше к корню проекта
+    project_root = os.path.dirname(os.path.dirname(bot_dir))  # поднимаемся из bots/bot_17_24 в bots, затем в корень
     # Формируем путь к файлу, убирая начальный символ '/' и используя правильные разделители
     relative_path = file_path[1:]  # убираем начальный '/'
     return os.path.join(project_root, relative_path)
