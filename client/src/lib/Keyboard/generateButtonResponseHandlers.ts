@@ -31,11 +31,11 @@ export function generateButtonResponseHandlers(code: string, userInputNodes: Nod
     const responseOptions = node.data.responseOptions || [];
 
     // Обработчики для каждого варианта ответа
-    responseOptions.forEach((option: ResponseOption | string, index: number) => {
+    responseOptions.forEach((option, index: number) => {
       // Нормализуем option к объекту ResponseOption
       const normalizedOption: ResponseOption = typeof option === 'string'
         ? { text: option, value: option }
-        : option;
+        : option as ResponseOption;
 
       code += `\n@dp.callback_query(F.data == "response_${node.id}_${index}")\n`;
       const safeFunctionName = `${node.id}_${index}`.replace(/[^a-zA-Z0-9_]/g, '_');
