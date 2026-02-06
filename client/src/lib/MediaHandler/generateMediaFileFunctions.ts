@@ -3,6 +3,24 @@ export function generateMediaFileFunctions() {
 
   // Add media file functions that handle photo registration and processing
   code += `
+# Функция для получения пути к файлу в папке uploads
+def get_upload_file_path(file_path):
+    """Получает правильный путь к файлу в папке uploads
+
+    Args:
+        file_path: Путь к файлу в формате /uploads/...
+
+    Returns:
+        Полный путь к файлу в файловой системе
+    """
+    import os
+    # Получаем директорию файла бота
+    bot_dir = os.path.dirname(os.path.abspath(__file__))
+    # Поднимаемся на уровень выше к корню проекта
+    project_root = os.path.dirname(bot_dir)
+    # Формируем путь к файлу, убирая начальный символ '/'
+    return os.path.join(project_root, file_path[1:])
+
 async def register_telegram_photo(message_id: int, file_id: str, bot_token: str, media_type: str = "photo"):
     """Регистр��рует фото из Telegram в системе
 
@@ -132,11 +150,7 @@ async def send_photo_with_caption(chat_id: int, photo_source, caption: str = Non
         # Проверяем, является ли photo_source относительным путем к локальному файлу
         if isinstance(photo_source, str) and photo_source.startswith('/uploads/'):
             # Для локальных файлов используем FSInputFile для отправки напрямую с диска
-            # Путь к файлу строим от корня проекта (на уровень выше папки с ботом)
-            import os
-            bot_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.dirname(bot_dir)
-            file_path = os.path.join(project_root, photo_source[1:])  # убираем первый символ '/'
+            file_path = get_upload_file_path(photo_source)
             result = await bot.send_photo(chat_id, FSInputFile(file_path), caption=caption, **kwargs)
         else:
             result = await bot.send_photo(chat_id, photo_source, caption=caption, **kwargs)

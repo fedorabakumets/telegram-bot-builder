@@ -29,11 +29,7 @@ export function generateKeyboard(node: Node): string {
     // Проверяем, является ли URL относительным путем к локальному файлу
     if (node.data.imageUrl.startsWith('/uploads/')) {
       // Для локальных файлов используем FSInputFile для отправки напрямую с диска
-      // Путь к файлу строим от корня проекта (на уровень выше папки с ботом)
-      code += `    import os\n`;
-      code += `    bot_dir = os.path.dirname(os.path.abspath(__file__))\n`;
-      code += `    project_root = os.path.dirname(bot_dir)\n`;
-      code += `    image_path = os.path.join(project_root, "${node.data.imageUrl.substring(1)}")\n`;  // убираем первый символ '/'
+      code += `    image_path = get_upload_file_path("${node.data.imageUrl}")\n`;
       code += `    image_url = FSInputFile(image_path)\n`;
     } else {
       code += `    image_url = "${node.data.imageUrl}"\n`;
