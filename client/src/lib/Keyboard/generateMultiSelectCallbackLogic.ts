@@ -106,6 +106,29 @@ export function generateMultiSelectCallbackLogic(
 `;
     code += `    if not node_id:
 `;
+    code += `        # Резервный поиск: ищем узел, который содержит кнопку с target, совпадающим с button_id
+`;
+    code += `        logging.info(f"🔍 Резервный поиск узла по button_id: {button_id}")
+`;
+    code += `
+`;
+    // Добавляем цикл по всем узлам и их кнопкам для поиска совпадения
+    multiSelectNodes.forEach((node: Node) => {
+      const selectionButtons = node.data.buttons?.filter((btn: { action: string; }) => btn.action === 'selection') || [];
+      selectionButtons.forEach((button: Button) => {
+        const buttonValue = button.target || button.id || button.text;
+        code += `        if not node_id and button_id == "${buttonValue}":
+`;
+        code += `            node_id = "${node.id}"
+`;
+        code += `            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+`;
+      });
+    });
+    code += `
+`;
+    code += `    if not node_id:
+`;
     code += `        logging.warning(f"⚠️ Не удалось найти node_id для callback_data: {callback_data}")
 `;
     code += `        return
