@@ -1528,13 +1528,16 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 const nextConnection = connections.find(conn => conn.source === targetNode.id);
                 const nextNodeId = nextConnection ? nextConnection.target : null;
 
+                // ИСПОЛЬЗУЕМ inputTargetNodeId из данных узла, если nextConnection не найден
+                const finalNextNodeId = nextNodeId || targetNode.data.inputTargetNodeId || '';
+
                 code += '    # Настраиваем ожидание ввода (collectUserInput=true)\n';
                 code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
                 code += `        "type": "${inputType}",\n`;
                 code += `        "variable": "${inputVariable}",\n`;
                 code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
                 code += `        "node_id": "${targetNode.id}",\n`;
-                code += `        "next_node_id": "${nextNodeId || ''}"\n`;
+                code += `        "next_node_id": "${finalNextNodeId}"\n`;
                 code += '    }\n';
               } else {
                 code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
