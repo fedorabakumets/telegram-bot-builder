@@ -32,8 +32,7 @@ export function generateUniversalVariableReplacement(indentLevel: string): strin
   code += `${indentLevel}if not isinstance(user_vars, dict):\n`;
   code += `${indentLevel}    user_vars = user_data.get(user_id, {})\n`;
   code += `${indentLevel}\n`;
-  code += `${indentLevel}# Заменяем все переменные в тексте\n`;
-  code += `${indentLevel}text = replace_variables_in_text(text, user_vars)\n`;
+  // Удаляем строку, которая использует переменную text до её определения
 
   return code;
 }

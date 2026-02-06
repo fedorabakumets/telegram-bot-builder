@@ -266,14 +266,42 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
 
     // Не нужен else блок - text уже инициализирован основным сообщением
     codeLines.push('');
+
+    // Добавляем замену переменных в тексте для условных сообщений
+    codeLines.push('');
+    codeLines.push('    # Подставляем все доступные переменные пользователя в текст');
+    codeLines.push('    user_vars = await get_user_from_db(user_id)');
+    codeLines.push('    if not user_vars:');
+    codeLines.push('        user_vars = user_data.get(user_id, {})');
+    codeLines.push('');
+    codeLines.push('    # get_user_from_db теперь возвращает уже обработанные user_data');
+    codeLines.push('    if not isinstance(user_vars, dict):');
+    codeLines.push('        user_vars = user_data.get(user_id, {})');
+    codeLines.push('');
+    codeLines.push('    # Заменяем все переменные в тексте');
+    codeLines.push('    text = replace_variables_in_text(text, user_vars)');
   } else {
     codeLines.push(`    text = ${formattedText}`);
+
+    // Добавляем замену переменных в тексте ПОСЛЕ определения переменной text
+    codeLines.push('');
+    codeLines.push('    # Подставляем все доступные переменные пользователя в текст');
+    codeLines.push('    user_vars = await get_user_from_db(user_id)');
+    codeLines.push('    if not user_vars:');
+    codeLines.push('        user_vars = user_data.get(user_id, {})');
+    codeLines.push('');
+    codeLines.push('    # get_user_from_db теперь возвращает уже обработанные user_data');
+    codeLines.push('    if not isinstance(user_vars, dict):');
+    codeLines.push('        user_vars = user_data.get(user_id, {})');
+    codeLines.push('');
+    codeLines.push('    # Заменяем все переменные в тексте');
+    codeLines.push('    text = replace_variables_in_text(text, user_vars)');
   }
 
   // Для множественного выбора используем уже созданную клавиатуру
   if (node.data.allowMultipleSelection) {
     codeLines.push('    await message.answer(text, reply_markup=keyboard)');
-    
+
     // Применяем автоматическое добавление комментариев ко всему коду
     const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
     return processedCode.join('\n');
@@ -305,7 +333,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean): 
       codeLines.push('    )');
       codeLines.push(`    await handle_callback_${safeFunctionName}(temp_callback)`);
       codeLines.push(`    logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")`);
-      
+
       // Применяем автоматическое добавление комментариев ко всему коду
       const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
       return processedCode.join('\n');
