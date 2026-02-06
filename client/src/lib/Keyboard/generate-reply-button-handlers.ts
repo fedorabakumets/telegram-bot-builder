@@ -81,7 +81,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
                 // Проверяем, является ли URL относительным путем к локальному файлу
                 if (targetNode.data.imageUrl.startsWith('/uploads/')) {
-                  code += `    image_url = f"{API_BASE_URL}${targetNode.data.imageUrl}"\n`;
+                  code += `    image_path = "." + "${targetNode.data.imageUrl}"\n`;
+                  code += `    image_url = FSInputFile(image_path)\n`;
                 } else {
                   code += `    image_url = "${targetNode.data.imageUrl}"\n`;
                 }
@@ -273,7 +274,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
                 // Проверяем, является ли URL относительным путем к локальному файлу
                 if (targetNode.data.imageUrl.startsWith('/uploads/')) {
-                  code += `    image_url = f"{API_BASE_URL}${targetNode.data.imageUrl}"\n`;
+                  code += `    image_path = "." + "${targetNode.data.imageUrl}"\n`;
+                  code += `    image_url = FSInputFile(image_path)\n`;
                 } else {
                   code += `    image_url = "${targetNode.data.imageUrl}"\n`;
                 }

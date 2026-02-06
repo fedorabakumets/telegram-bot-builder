@@ -28,7 +28,9 @@ export function generateKeyboard(node: Node): string {
     code += `    # Узел содержит изображение: ${node.data.imageUrl}\n`;
     // Проверяем, является ли URL относительным путем к локальному файлу
     if (node.data.imageUrl.startsWith('/uploads/')) {
-      code += `    image_url = f"{API_BASE_URL}${node.data.imageUrl}"\n`;
+      // Для локальных файлов используем FSInputFile для отправки напрямую с диска
+      code += `    image_path = "." + "${node.data.imageUrl}"\n`;
+      code += `    image_url = FSInputFile(image_path)\n`;
     } else {
       code += `    image_url = "${node.data.imageUrl}"\n`;
     }

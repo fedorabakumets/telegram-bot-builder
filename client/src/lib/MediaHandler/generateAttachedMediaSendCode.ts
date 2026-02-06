@@ -98,7 +98,9 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}# Узел содержит статическое изображение: ${nodeData.imageUrl}`);
     // Проверяем, является ли URL относительным путем к локальному файлу
     if (nodeData.imageUrl.startsWith('/uploads/')) {
-      codeLines.push(`${indentLevel}static_image_url = f"{API_BASE_URL}${nodeData.imageUrl}"`);
+      // Для локальных файлов используем FSInputFile для отправки напрямую с диска
+      codeLines.push(`${indentLevel}static_image_path = "." + "${nodeData.imageUrl}"`);
+      codeLines.push(`${indentLevel}static_image_url = FSInputFile(static_image_path)`);
     } else {
       codeLines.push(`${indentLevel}static_image_url = "${nodeData.imageUrl}"`);
     }
@@ -210,10 +212,11 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
   codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, user_vars)`);
 
-  // Проверяем, является ли медиа относительным путем к локальному файлу и форматируем полный URL
+  // Проверяем, является ли медиа относительным путем к локальному файлу и форматируем полный URL или используем FSInputFile
   codeLines.push(`${indentLevel}        # Проверяем, является ли медиа относительным путем к локальному файлу`);
   codeLines.push(`${indentLevel}        if str(attached_media).startswith('/uploads/'):`);
-  codeLines.push(`${indentLevel}            attached_media_url = f"{API_BASE_URL}{attached_media}"`);
+  codeLines.push(`${indentLevel}            attached_media_path = "." + attached_media`);
+  codeLines.push(`${indentLevel}            attached_media_url = FSInputFile(attached_media_path)`);
   codeLines.push(`${indentLevel}        else:`);
   codeLines.push(`${indentLevel}            attached_media_url = attached_media`);
 
