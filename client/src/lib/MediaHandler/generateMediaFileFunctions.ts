@@ -18,8 +18,9 @@ def get_upload_file_path(file_path):
     bot_dir = os.path.dirname(os.path.abspath(__file__))
     # Поднимаемся на уровень выше к корню проекта
     project_root = os.path.dirname(bot_dir)
-    # Формируем путь к файлу, убирая начальный символ '/'
-    return os.path.join(project_root, file_path[1:])
+    # Формируем путь к файлу, убирая начальный символ '/' и используя правильные разделители
+    relative_path = file_path[1:]  # убираем начальный '/'
+    return os.path.join(project_root, relative_path)
 
 async def register_telegram_photo(message_id: int, file_id: str, bot_token: str, media_type: str = "photo"):
     """Регистр��рует фото из Telegram в системе
