@@ -59,16 +59,6 @@ interface BotStatusResponse {
 
 // Используем тип BotToken из shared/schema.ts
 
-/**
- * Ответ API с информацией о токене по умолчанию
- * @interface DefaultTokenResponse
- */
-interface DefaultTokenResponse {
-  /** Есть ли токен по умолчанию */
-  hasDefault: boolean;
-  /** Токен по умолчанию или null */
-  token: BotToken | null;
-}
 
 /**
  * Информация о боте из Telegram API
@@ -662,16 +652,8 @@ export function BotControl({}: BotControlProps) {
   }, [botStatusQueries]);
 
   // Получаем токены по умолчанию для всех проектов
-  const defaultTokenQueries = projects.map(project =>
-    useQuery<DefaultTokenResponse>({
-      queryKey: [`/api/projects/${project.id}/tokens/default`],
-      enabled: !!projects.length,
-    })
-  );
 
   // Объединяем токены по умолчанию
-  const allDefaultTokens = defaultTokenQueries.map(query => query.data).filter(Boolean) as DefaultTokenResponse[];
-
   // Получаем информацию о ботах (getMe) для всех проектов
   const botInfoQueries = projects.map(project =>
     useQuery<BotInfo>({
@@ -767,7 +749,7 @@ export function BotControl({}: BotControlProps) {
         projectId: botData.projectId
       });
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/tokens`] });
       // Инвалидируем bot/info cache чтобы загрузить свежие данные нового токена
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot/info`] });
@@ -998,10 +980,6 @@ export function BotControl({}: BotControlProps) {
         <div className="space-y-8">
           {projects.map((project, projectIndex) => {
             const projectTokens = allTokens[projectIndex] || [];
-            const projectStatus = allBotStatuses.find(status =>
-              status.instance && projectTokens.some(token => token.id === status.instance?.tokenId)
-            );
-            const isProjectRunning = projectStatus?.status === 'running';
             const projectBotInfo = allBotInfos[projectIndex];
 
             return (
