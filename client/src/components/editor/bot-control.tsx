@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { BotToken } from '@shared/schema';
+import { BotToken, type BotProject } from '@shared/schema';
 import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal, Database, Terminal } from 'lucide-react';
 
 /**
@@ -540,8 +540,23 @@ export function BotControl({}: BotControlProps) {
   const updateBotInfoMutation = useMutation({
     mutationFn: async ({ tokenId, field, value }: { tokenId: number, field: string, value: string }) => {
       // Нужно получить projectId для токена
-      const token = allTokens.flat().find(t => t.id === tokenId);
-      if (!token) throw new Error('Токен не найден');
+      // Используем напрямую API для получения информации о токене, чтобы избежать проблем с кэшем
+      const allTokensFlat = allTokens.flat();
+      const token = allTokensFlat.find(t => t.id === tokenId);
+
+      // Если токен не найден в кэше, попробуем получить его напрямую
+      if (!token) {
+        // В этом случае мы можем получить токены всех проектов снова
+        for (const projectTokens of allTokens) {
+          const foundToken = projectTokens.find(t => t.id === tokenId);
+          if (foundToken) {
+            const response = await apiRequest('PUT', `/api/projects/${foundToken.projectId}/tokens/${tokenId}/bot-info`, { field, value });
+            return response;
+          }
+        }
+        throw new Error('Токен не найден');
+      }
+
       const response = await apiRequest('PUT', `/api/projects/${token.projectId}/tokens/${tokenId}/bot-info`, { field, value });
       return response;
     },
@@ -775,8 +790,22 @@ export function BotControl({}: BotControlProps) {
   const deleteBotMutation = useMutation({
     mutationFn: async (tokenId: number) => {
       // Нужно получить projectId для токена
-      const token = allTokens.flat().find(t => t.id === tokenId);
-      if (!token) throw new Error('Токен не найден');
+      // Используем напрямую API для получения информации о токене, чтобы избежать проблем с кэшем
+      const allTokensFlat = allTokens.flat();
+      const token = allTokensFlat.find(t => t.id === tokenId);
+
+      // Если токен не найден в кэше, попробуем получить его напрямую
+      if (!token) {
+        // В этом случае мы можем получить токены всех проектов снова
+        for (const projectTokens of allTokens) {
+          const foundToken = projectTokens.find(t => t.id === tokenId);
+          if (foundToken) {
+            return apiRequest('DELETE', `/api/projects/${foundToken.projectId}/tokens/${tokenId}`);
+          }
+        }
+        throw new Error('Токен не найден');
+      }
+
       return apiRequest('DELETE', `/api/projects/${token.projectId}/tokens/${tokenId}`);
     },
     onSuccess: () => {
@@ -794,8 +823,22 @@ export function BotControl({}: BotControlProps) {
   const updateTokenMutation = useMutation({
     mutationFn: async ({ tokenId, data }: { tokenId: number; data: { name?: string; description?: string; trackExecutionTime?: number } }) => {
       // Нужно получить projectId для токена
-      const token = allTokens.flat().find(t => t.id === tokenId);
-      if (!token) throw new Error('Токен не найден');
+      // Используем напрямую API для получения информации о токене, чтобы избежать проблем с кэшем
+      const allTokensFlat = allTokens.flat();
+      const token = allTokensFlat.find(t => t.id === tokenId);
+
+      // Если токен не найден в кэше, попробуем получить его напрямую
+      if (!token) {
+        // В этом случае мы можем получить токены всех проектов снова
+        for (const projectTokens of allTokens) {
+          const foundToken = projectTokens.find(t => t.id === tokenId);
+          if (foundToken) {
+            return apiRequest('PUT', `/api/projects/${foundToken.projectId}/tokens/${tokenId}`, data);
+          }
+        }
+        throw new Error('Токен не найден');
+      }
+
       return apiRequest('PUT', `/api/projects/${token.projectId}/tokens/${tokenId}`, data);
     },
     onSuccess: () => {
@@ -817,11 +860,11 @@ export function BotControl({}: BotControlProps) {
       toast({ title: "Бот запущен", description: "Бот успешно запущен и готов к работе." });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot`] });
       // Сразу обновляем статус на фронтенде
-      botStatusQueries.find(q => q.queryKey.includes(String(variables.projectId)))?.refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/projects/bot'] });
       // Обновляем информацию о боте (имя, описание)
-      botInfoQueries.find(q => q.queryKey.includes(String(variables.projectId)))?.refetch();
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot/info`] });
       // Обновляем список токенов чтобы показать актуальное имя бота
-      tokensQueries.find(q => q.queryKey.includes(String(variables.projectId)))?.refetch();
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/tokens`] });
     },
     onError: (error: any) => {
       toast({ title: "Ошибка запуска", description: error.message || "Не удалось запустить бота.", variant: "destructive" });
@@ -837,7 +880,7 @@ export function BotControl({}: BotControlProps) {
       toast({ title: "Бот остановлен", description: "Бот успешно остановлен." });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot`] });
       // Сразу обновляем статус на фронтенде
-      botStatusQueries.find(q => q.queryKey.includes(String(variables.projectId)))?.refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/projects/bot'] });
     },
     onError: (error: any) => {
       toast({ title: "Ошибка остановки", description: error.message || "Не удалось остановить бота.", variant: "destructive" });
@@ -1122,7 +1165,10 @@ export function BotControl({}: BotControlProps) {
                                 <BotProfileEditor
                                   projectId={project.id}
                                   botInfo={projectBotInfo}
-                                  onProfileUpdated={() => botInfoQueries[projectIndex]?.refetch()}
+                                  onProfileUpdated={() => {
+                                    // Обновляем информацию о боте для всех проектов
+                                    queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
+                                  }}
                                 />
 
                                 {(() => {
