@@ -1,5 +1,5 @@
 import { isLoggingEnabled } from "../bot-generator";
-import { generateWaitingStateCode } from "./generateWaitingStateCode";
+import { generateWaitingStateCode } from "../format/generateWaitingStateCode";
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 
 // ============================================================================
