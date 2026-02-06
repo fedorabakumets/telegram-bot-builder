@@ -941,15 +941,13 @@ async def start_handler(message: types.Message):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
-    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
-    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     has_regular_buttons = True
     has_input_collection = False
     # DEBUG: Узел start - hasRegularButtons=True, hasInputCollection=False
     builder = ReplyKeyboardBuilder()
     builder.add(KeyboardButton(text="Новая кнопка"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="start")# @@NODE_END:start@@
+    await message.answer(text, reply_markup=keyboard, node_id="start")# @@NODE_END:start@@
 
 # @@NODE_START:KXHxgAuYHpBd48H807wEJ@@
     # Обработчик для узла KXHxgAuYHpBd48H807wEJ типа message будет сгенерирован отдельно
@@ -1047,12 +1045,10 @@ async def help_handler(message: types.Message):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
-    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
-    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     has_regular_buttons = False
     has_input_collection = False
     # DEBUG: Узел a4OMlgbIxsMYYlXDjNw2F - hasRegularButtons=False, hasInputCollection=False
-    await bot.send_photo(message.chat.id, image_url, caption=text, parse_mode=ParseMode.MARKDOWN, node_id="a4OMlgbIxsMYYlXDjNw2F")# @@NODE_END:a4OMlgbIxsMYYlXDjNw2F@@
+    await message.answer(text, parse_mode=ParseMode.MARKDOWN, node_id="a4OMlgbIxsMYYlXDjNw2F")# @@NODE_END:a4OMlgbIxsMYYlXDjNw2F@@
 
 # Обработчики автопереходов
 
@@ -1130,27 +1126,20 @@ async def handle_callback_a4OMlgbIxsMYYlXDjNw2F(callback_query: types.CallbackQu
     else:
         user_data[user_id]["_has_conditional_keyboard"] = False
     
-    # Устанавливаем переменную изображения для узла
-    user_id = callback_query.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["image_url_a4OMlgbIxsMYYlXDjNw2F"] = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
-    await update_user_data_in_db(user_id, "image_url_a4OMlgbIxsMYYlXDjNw2F", "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg")
-    logging.info(f"✅ Переменная image_url_a4OMlgbIxsMYYlXDjNw2F установлена: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg")
-    
-    # Отправляем сообщение (с проверкой прикрепленного медиа)
-    # Узел содержит статическое изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
-    static_image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
-    
-    # Отправляем статическое изображение
+    # Отправляем сообщение
     try:
-        # Заменяем переменные в тексте перед отправкой
-        processed_caption = replace_variables_in_text(text, user_vars)
-        await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption, parse_mode=ParseMode.NONE, reply_markup=keyboard, node_id="a4OMlgbIxsMYYlXDjNw2F")
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
     except Exception as e:
-        logging.error(f"Ошибка отправки статического изображения: {e}")
-        # Fallback на обычное сообщение при ошибке
-        await safe_edit_or_send(callback_query, text, node_id="a4OMlgbIxsMYYlXDjNw2F", reply_markup=keyboard if keyboard is not None else Nonenone)
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
     user_id = callback_query.from_user.id
     
     
@@ -1213,14 +1202,12 @@ async def handle_reply_PVB19NXVlEi9c5LntzWQo(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    # Узел содержит изображение: https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg
-    image_url = "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg"
     if "conditional_keyboard" not in locals():
         conditional_keyboard = None
     if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard, node_id="KXHxgAuYHpBd48H807wEJ")
+        await message.answer(text, reply_markup=conditional_keyboard)
     else:
-        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="KXHxgAuYHpBd48H807wEJ")
+        await message.answer(text, reply_markup=ReplyKeyboardRemove())
     
     # Проверяем, нужно ли выполнить автопереход из текущего узла
     if user_id in user_data and user_data[user_id].get("collectUserInput_KXHxgAuYHpBd48H807wEJ", False) == True:

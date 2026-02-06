@@ -2751,13 +2751,41 @@ export function PropertiesPanel({
 
                                 if (imageExtensions.includes(extension || '')) {
                                   updates.imageUrl = url;
+                                  // Добавляем переменную в attachedMedia, если её там ещё нет
+                                  const imageUrlVar = `image_url_${selectedNode.id}`;
+                                  let currentAttachedMedia = (selectedNode.data.attachedMedia as string[]) || [];
+                                  if (!currentAttachedMedia.includes(imageUrlVar)) {
+                                    currentAttachedMedia = [...currentAttachedMedia, imageUrlVar];
+                                    updates.attachedMedia = currentAttachedMedia;
+                                  }
                                 } else if (videoExtensions.includes(extension || '')) {
                                   updates.videoUrl = url;
+                                  // Добавляем переменную в attachedMedia, если её там ещё нет
+                                  const videoUrlVar = `video_url_${selectedNode.id}`;
+                                  let currentAttachedMedia = (selectedNode.data.attachedMedia as string[]) || [];
+                                  if (!currentAttachedMedia.includes(videoUrlVar)) {
+                                    currentAttachedMedia = [...currentAttachedMedia, videoUrlVar];
+                                    updates.attachedMedia = currentAttachedMedia;
+                                  }
                                 } else if (audioExtensions.includes(extension || '')) {
                                   updates.audioUrl = url;
+                                  // Добавляем переменную в attachedMedia, если её там ещё нет
+                                  const audioUrlVar = `audio_url_${selectedNode.id}`;
+                                  let currentAttachedMedia = (selectedNode.data.attachedMedia as string[]) || [];
+                                  if (!currentAttachedMedia.includes(audioUrlVar)) {
+                                    currentAttachedMedia = [...currentAttachedMedia, audioUrlVar];
+                                    updates.attachedMedia = currentAttachedMedia;
+                                  }
                                 } else {
                                   updates.documentUrl = url;
                                   updates.documentName = fileName || 'document';
+                                  // Добавляем переменную в attachedMedia, если её там ещё нет
+                                  const documentUrlVar = `document_url_${selectedNode.id}`;
+                                  let currentAttachedMedia = (selectedNode.data.attachedMedia as string[]) || [];
+                                  if (!currentAttachedMedia.includes(documentUrlVar)) {
+                                    currentAttachedMedia = [...currentAttachedMedia, documentUrlVar];
+                                    updates.attachedMedia = currentAttachedMedia;
+                                  }
                                 }
 
                                 onNodeUpdate(selectedNode.id, updates);

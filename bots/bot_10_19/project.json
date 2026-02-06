@@ -20,14 +20,15 @@
               }
             ],
             "command": "/start",
-            "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
             "markdown": false,
             "adminOnly": false,
             "allowSkip": false,
             "formatMode": "none",
             "showInMenu": true,
             "description": "Запустить бота",
+            "documentUrl": "https://irozk.ru/images/doc/pdf_primer.pdf",
             "messageText": "Привет! Я ваш новый бот. Нажмите /help для получения помощи.",
+            "documentName": "document",
             "keyboardType": "reply",
             "requiresAuth": false,
             "attachedMedia": [],
@@ -52,11 +53,10 @@
           }
         },
         {
-          "_y": 639.140625,
+          "_y": 524.859375,
           "id": "KXHxgAuYHpBd48H807wEJ",
           "data": {
             "buttons": [],
-            "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
             "markdown": false,
             "adminOnly": false,
             "allowSkip": false,
@@ -83,16 +83,15 @@
           "type": "message",
           "position": {
             "x": 100,
-            "y": 639.140625
+            "y": 524.859375
           }
         },
         {
-          "_y": 1129.515625,
+          "_y": 847.15625,
           "id": "a4OMlgbIxsMYYlXDjNw2F",
           "data": {
             "buttons": [],
             "command": "/help",
-            "imageUrl": "https://img.freepik.com/free-photo/cartoon-style-hugging-day-celebration_23-2151033271.jpg",
             "markdown": true,
             "adminOnly": false,
             "allowSkip": false,
@@ -119,12 +118,12 @@
           "type": "command",
           "position": {
             "x": 100,
-            "y": 1129.515625
+            "y": 847.15625
           }
         }
       ],
       "createdAt": "2026-02-05T18:32:56.989Z",
-      "updatedAt": "2026-02-06T00:21:47.593Z",
+      "updatedAt": "2026-02-06T00:59:49.304Z",
       "viewState": {
         "pan": {
           "x": 0,
