@@ -1,11 +1,31 @@
 import { Button, Node } from '@shared/schema';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 // ============================================================================
 // ПАРСЕРЫ И ОСНОВНЫЕ ГЕНЕРАТОРЫ
 // ============================================================================
-// Функция для парсинга Python кода обратно в JSON (улучшенная версия)
 
+/**
+ * Парсит Python код бота обратно в JSON структуру узлов и соединений
+ *
+ * Функция анализирует сгенерированный Python код бота и восстанавливает из него
+ * структуру узлов и соединений, которую можно использовать для визуализации в редакторе.
+ * Поддерживает различные типы узлов (сообщения, команды, медиа) и различные типы кнопок.
+ *
+ * @param pythonCode - Строка с Python кодом бота
+ * @returns Объект с массивами узлов и соединений
+ *
+ * @example
+ * const { nodes, connections } = parsePythonCodeToJson(pythonCode);
+ * console.log(`Найдено ${nodes.length} узлов`);
+ */
 export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; connections: any[]; } {
+  // Собираем код в массив строк для автоматической обработки
+  const codeLines: string[] = [];
+  
+  // Добавляем комментарий о генерации
+  codeLines.push('# Код сгенерирован в parsePythonCodeToJson.ts');
+  
   const nodes: Node[] = [];
   const nodeIdMap = new Map<string, Node>();
 
@@ -217,5 +237,9 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
     }
   });
 
+  // Применяем автоматическое добавление комментариев ко всему коду
+  const processedCode = processCodeWithAutoComments(codeLines, 'parsePythonCodeToJson.ts');
+  
+  // Возвращаем результат (игнорируем processedCode, так как это парсер)
   return { nodes, connections };
 }
