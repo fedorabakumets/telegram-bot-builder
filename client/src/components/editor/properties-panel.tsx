@@ -5698,6 +5698,19 @@ export function PropertiesPanel({
                           </p>
                         </div>
                       )}
+
+                      {/* Warning Message */}
+                      <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/50">
+                        <i className="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
+                        <div className="space-y-1">
+                          <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
+                            <span className="font-semibold">⚠️ Временно не работает</span>
+                          </p>
+                          <p className="text-xs text-amber-600/80 dark:text-amber-400/70">
+                            Возможны проблемы с автопереходами. Функция в разработке.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
