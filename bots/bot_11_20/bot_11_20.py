@@ -1158,11 +1158,6 @@ async def start_handler(message: types.Message):
     # Обработчик для узла extra_info типа message будет сгенерирован отдельно
 # @@NODE_END:extra_info@@
 
-# @@NODE_START:profile_complete@@
-
-    # Обработчик для узла profile_complete типа message будет сгенерирован отдельно
-# @@NODE_END:profile_complete@@
-
 # @@NODE_START:show_profile@@
 
 # Код сгенерирован в generateCommandHandler.ts
@@ -1327,6 +1322,11 @@ async def profile_handler(message: types.Message):
     keyboard = builder.as_markup()
     await message.answer(text, reply_markup=keyboard, node_id="show_profile")
 # @@NODE_END:show_profile@@
+
+# @@NODE_START:profile_complete@@
+
+    # Обработчик для узла profile_complete типа message будет сгенерирован отдельно
+# @@NODE_END:profile_complete@@
 
 # @@NODE_START:chat_link@@
 
@@ -13461,10 +13461,10 @@ async def handle_user_input(message: types.Message):
                     await handle_callback_channel_choice(fake_callback)
                 elif skip_button_target == "extra_info":
                     await handle_callback_extra_info(fake_callback)
-                elif skip_button_target == "profile_complete":
-                    await handle_callback_profile_complete(fake_callback)
                 elif skip_button_target == "show_profile":
                     await handle_callback_show_profile(fake_callback)
+                elif skip_button_target == "profile_complete":
+                    await handle_callback_profile_complete(fake_callback)
                 elif skip_button_target == "chat_link":
                     await handle_callback_chat_link(fake_callback)
                 elif skip_button_target == "help_command":
@@ -15681,62 +15681,6 @@ async def handle_user_input(message: types.Message):
                             "skip_buttons": [{"text":"Пропустить ⏭️","target":"profile_complete"}]
                         }
                         logging.info(f"✅ Сояяяятояние ожид����ия настроено: modes=['button', 'text'] для пер��менной extra_info (узел extra_info)")
-                    elif next_node_id == "profile_complete":
-                        # Обычный узел - отправляем сообщение
-                        text = """🎉 Отлично! Твой профиль заполнен!
-
-👤 Твоя анкета:
-Пол: {gender}
-Имя: {user_name}
-Возраст: {user_age}
-Метро: {metro_stations}
-Интересы: {user_interests}
-Семейное положение: {marital_status}
-Ориентация: {sexual_orientation}
-
-💬 Источник: {user_source}
-
-Можешь посмотреть полную анкету или сразу получить ссылку на чат!"""
-                        user_data[user_id] = user_data.get(user_id, {})
-                        # Инициализируем базовые переменные пользователя если их нет
-                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                            # Получаем объект пользователя из сообщения или callback
-                            user_obj = None
-                            # Безопасно проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                                user_obj = locals().get('message').from_user
-                            # Безопасно проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                                user_obj = locals().get('callback_query').from_user
-
-                            if user_obj:
-                                init_user_variables(user_id, user_obj)
-                        
-                        # Подставляем все доступные переменные пользователя в текст
-                        user_vars = await get_user_from_db(user_id)
-                        if not user_vars:
-                            user_vars = user_data.get(user_id, {})
-                        
-                        # get_user_from_db теперь возвращает уже обработанные user_data
-                        if not isinstance(user_vars, dict):
-                            user_vars = user_data.get(user_id, {})
-                        
-                        # Создаем inline клавиатуру
-                        builder = InlineKeyboardBuilder()
-                        logging.info(f"Создана кнопка команды: Ссылка на чат 🔗 -> cmd_link")
-                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
-# Генерация обычного текста кнопки: "Ссылка на чат 🔗"
-# Результат: "Ссылка на чат 🔗"
-"Ссылка на чат 🔗", callback_data="cmd_link"))
-                        logging.info(f"Создана кнопка команды: Редактировать профиль ✏️ -> cmd_profile")
-                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
-# Генерация обычного текста кнопки: "Редактировать профиль ✏️"
-# Результат: "Редактировать профиль ✏️"
-"Редактировать профиль ✏️", callback_data="cmd_profile"))
-                        builder.adjust(1)
-                        keyboard = builder.as_markup()
-                        logging.info(f"Условная навигация к обычному узлу: profile_complete")
-                        await message.answer(text, reply_markup=keyboard)
                     elif next_node_id == "show_profile":
                         # Обычный узел - отправляем сообщение
                         text = """👤 Твой профиль:
@@ -15822,6 +15766,62 @@ async def handle_user_input(message: types.Message):
                         builder.adjust(2)
                         keyboard = builder.as_markup()
                         logging.info(f"Условная навигация к обычному узлу: show_profile")
+                        await message.answer(text, reply_markup=keyboard)
+                    elif next_node_id == "profile_complete":
+                        # Обычный узел - отправляем сообщение
+                        text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_stations}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+
+💬 Источник: {user_source}
+
+Можешь посмотреть полную анкету или сразу получить ссылку на чат!"""
+                        user_data[user_id] = user_data.get(user_id, {})
+                        # Инициализируем базовые переменные пользователя если их нет
+                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                            # Получаем объект пользователя из сообщения или callback
+                            user_obj = None
+                            # Безопасно проверяем наличие message (для message handlers)
+                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                user_obj = locals().get('message').from_user
+                            # Безопасно проверяем наличие callback_query (для callback handlers)
+                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                user_obj = locals().get('callback_query').from_user
+
+                            if user_obj:
+                                init_user_variables(user_id, user_obj)
+                        
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_vars = await get_user_from_db(user_id)
+                        if not user_vars:
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # get_user_from_db теперь возвращает уже обработанные user_data
+                        if not isinstance(user_vars, dict):
+                            user_vars = user_data.get(user_id, {})
+                        
+                        # Создаем inline клавиатуру
+                        builder = InlineKeyboardBuilder()
+                        logging.info(f"Создана кнопка команды: Ссылка на чат 🔗 -> cmd_link")
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Ссылка на чат 🔗"
+# Результат: "Ссылка на чат 🔗"
+"Ссылка на чат 🔗", callback_data="cmd_link"))
+                        logging.info(f"Создана кнопка команды: Редактировать профиль ✏️ -> cmd_profile")
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Редактировать профиль ✏️"
+# Результат: "Редактировать профиль ✏️"
+"Редактировать профиль ✏️", callback_data="cmd_profile"))
+                        builder.adjust(1)
+                        keyboard = builder.as_markup()
+                        logging.info(f"Условная навигация к обычному узлу: profile_complete")
                         await message.answer(text, reply_markup=keyboard)
                     elif next_node_id == "chat_link":
                         # Обычный узел - отправляем сообщение
@@ -16491,10 +16491,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         await handle_callback_channel_choice(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "extra_info":
                         await handle_callback_extra_info(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "profile_complete":
-                        await handle_callback_profile_complete(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "show_profile":
                         await handle_callback_show_profile(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "profile_complete":
+                        await handle_callback_profile_complete(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "chat_link":
                         await handle_callback_chat_link(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "help_command":
@@ -16577,10 +16577,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             await handle_callback_channel_choice(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "extra_info":
                             await handle_callback_extra_info(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "profile_complete":
-                            await handle_callback_profile_complete(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "show_profile":
                             await handle_callback_show_profile(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "profile_complete":
+                            await handle_callback_profile_complete(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "chat_link":
                             await handle_callback_chat_link(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "help_command":
@@ -16695,10 +16695,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             await handle_callback_channel_choice(fake_callback)
                         elif skip_target == "extra_info":
                             await handle_callback_extra_info(fake_callback)
-                        elif skip_target == "profile_complete":
-                            await handle_callback_profile_complete(fake_callback)
                         elif skip_target == "show_profile":
                             await handle_callback_show_profile(fake_callback)
+                        elif skip_target == "profile_complete":
+                            await handle_callback_profile_complete(fake_callback)
                         elif skip_target == "chat_link":
                             await handle_callback_chat_link(fake_callback)
                         elif skip_target == "help_command":
@@ -16839,10 +16839,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                                 await handle_callback_channel_choice(fake_callback)
                             elif skip_target == "extra_info":
                                 await handle_callback_extra_info(fake_callback)
-                            elif skip_target == "profile_complete":
-                                await handle_callback_profile_complete(fake_callback)
                             elif skip_target == "show_profile":
                                 await handle_callback_show_profile(fake_callback)
+                            elif skip_target == "profile_complete":
+                                await handle_callback_profile_complete(fake_callback)
                             elif skip_target == "chat_link":
                                 await handle_callback_chat_link(fake_callback)
                             elif skip_target == "help_command":
@@ -19196,6 +19196,16 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
                             logging.info(f"✅ Показаны inline кнопки для узла extra_info с collectUserInput (ожидание ввода активно)")
+                        elif current_node_id == "show_profile":
+                            # Выполняяем команду /profile
+                            from types import SimpleNamespace
+                            fake_message = SimpleNamespace()
+                            fake_message.from_user = message.from_user
+                            fake_message.chat = message.chat
+                            fake_message.date = message.date
+                            fake_message.answer = message.answer
+                            await profile_handler(fake_message)
+                            break  # Выходим из цикла после вяполяеняя команды
                         elif current_node_id == "profile_complete":
                             text = """🎉 Отлично! Твой профиль заполнен!
 
@@ -19259,16 +19269,6 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             
                             logging.info("✅ Переход к следующему уялу выполнен успешно")
                             break  # Нет автоперехода, завершаем цикл
-                        elif current_node_id == "show_profile":
-                            # Выполняяем команду /profile
-                            from types import SimpleNamespace
-                            fake_message = SimpleNamespace()
-                            fake_message.from_user = message.from_user
-                            fake_message.chat = message.chat
-                            fake_message.date = message.date
-                            fake_message.answer = message.answer
-                            await profile_handler(fake_message)
-                            break  # Выходим из цикла после вяполяеняя команды
                         elif current_node_id == "chat_link":
                             # Выполняяем команду /link
                             from types import SimpleNamespace
@@ -19762,7 +19762,42 @@ https://t.me/+agkIVgCzHtY2ZTA6
             return
 
 # Обработчики для кнопок команд
-# Найдено 3 кнопок команд: cmd_link, cmd_profile, cmd_start
+# Найдено 3 кнопок команд: cmd_start, cmd_link, cmd_profile
+
+@dp.callback_query(lambda c: c.data == "cmd_start")
+async def handle_cmd_start(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    logging.info(f"Обработка кнопки команды: cmd_start -> /start (пользователь {callback_query.from_user.id})")
+    # Симулияуем выполнение команды /start
+    
+    # Создаем fake message object для команды
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.date = callback_query.message.date
+    fake_message.answer = callback_query.message.answer
+    fake_message.edit_text = callback_query.message.edit_text
+    
+    # Вызываем start handler через edit_text
+    # Создаем специальный объект для редактирования сообщения
+    class FakeMessageEdit:
+        def __init__(self, callback_query):
+            self.from_user = callback_query.from_user
+            self.chat = callback_query.message.chat
+            self.date = callback_query.message.date
+            self.message_id = callback_query.message.message_id
+            self._callback_query = callback_query
+        
+        async def answer(self, text, parse_mode=None, reply_markup=None):
+            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
+        
+        async def edit_text(self, text, parse_mode=None, reply_markup=None):
+            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
+    
+    fake_edit_message = FakeMessageEdit(callback_query)
+    await start_handler(fake_edit_message)
+    logging.info(f"Команда /start выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
 
 @dp.callback_query(lambda c: c.data == "cmd_link")
 async def handle_cmd_link(callback_query: types.CallbackQuery):
@@ -19801,41 +19836,6 @@ async def handle_cmd_profile(callback_query: types.CallbackQuery):
     # Вызываем profile handler
     await profile_handler(fake_message)
     logging.info(f"Команда /profile выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
-
-@dp.callback_query(lambda c: c.data == "cmd_start")
-async def handle_cmd_start(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    logging.info(f"Обработка кнопки команды: cmd_start -> /start (пользователь {callback_query.from_user.id})")
-    # Симулияуем выполнение команды /start
-    
-    # Создаем fake message object для команды
-    from types import SimpleNamespace
-    fake_message = SimpleNamespace()
-    fake_message.from_user = callback_query.from_user
-    fake_message.chat = callback_query.message.chat
-    fake_message.date = callback_query.message.date
-    fake_message.answer = callback_query.message.answer
-    fake_message.edit_text = callback_query.message.edit_text
-    
-    # Вызываем start handler через edit_text
-    # Создаем специальный объект для редактирования сообщения
-    class FakeMessageEdit:
-        def __init__(self, callback_query):
-            self.from_user = callback_query.from_user
-            self.chat = callback_query.message.chat
-            self.date = callback_query.message.date
-            self.message_id = callback_query.message.message_id
-            self._callback_query = callback_query
-        
-        async def answer(self, text, parse_mode=None, reply_markup=None):
-            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
-        
-        async def edit_text(self, text, parse_mode=None, reply_markup=None):
-            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
-    
-    fake_edit_message = FakeMessageEdit(callback_query)
-    await start_handler(fake_edit_message)
-    logging.info(f"Команда /start выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
 
 # Универсальный fallback-обработчик для всех необработанных текстовых сообщений
 @dp.message(F.text)

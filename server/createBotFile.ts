@@ -53,6 +53,18 @@ export async function createCompleteBotFiles(
     mkdirSync(botDir, { recursive: true });
   }
 
+  // Нормализуем данные проекта, добавляя все возможные поля условных сообщений
+  let normalizedBotData = botData;
+  try {
+    // Импортируем функцию нормализации
+    const { normalizeProjectData } = await import("../client/src/utils/normalize-project-data");
+    normalizedBotData = normalizeProjectData(botData);
+  } catch (error) {
+    console.warn("Не удалось импортировать функцию нормализации данных проекта:", error);
+    // Если не удалось импортировать, используем оригинальные данные
+    normalizedBotData = botData;
+  }
+
   // Создаем основной файл бота в его папке
   const fileName = `bot_${projectId}_${tokenId}.py`;
   const mainFile = join(botDir, fileName);
@@ -76,7 +88,7 @@ export async function createCompleteBotFiles(
   assets.push(requirementsPath);
 
   // 2. README.md
-  const readmeContent = generateReadme(botData, botName);
+  const readmeContent = generateReadme(normalizedBotData, botName);
   const readmePath = join(botDir, 'README.md');
   writeFileSync(readmePath, readmeContent);
   assets.push(readmePath);
@@ -94,7 +106,7 @@ export async function createCompleteBotFiles(
   assets.push(configPath);
 
   // 5. JSON файл с данными проекта
-  const jsonData = JSON.stringify(botData, null, 2);
+  const jsonData = JSON.stringify(normalizedBotData, null, 2);
   const jsonPath = join(botDir, 'project.json');
   writeFileSync(jsonPath, jsonData);
   assets.push(jsonPath);

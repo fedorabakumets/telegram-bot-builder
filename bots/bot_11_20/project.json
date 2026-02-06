@@ -31,7 +31,17 @@
             "oneTimeKeyboard": false,
             "collectUserInput": true,
             "enableStatistics": true,
-            "inputTargetNodeId": "join_request"
+            "inputTargetNodeId": "join_request",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "start",
           "position": {
@@ -40,7 +50,7 @@
           }
         },
         {
-          "_y": 300,
+          "_y": 641.6875,
           "id": "join_request",
           "data": {
             "buttons": [
@@ -73,16 +83,27 @@
             "resizeKeyboard": true,
             "oneTimeKeyboard": true,
             "collectUserInput": true,
-            "enableStatistics": true
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
             "x": 100,
-            "y": 300
+            "y": 641.6875
           }
         },
         {
-          "_y": 500,
+          "_y": 969.734375,
           "id": "decline_response",
           "data": {
             "buttons": [],
@@ -97,17 +118,30 @@
             "removeKeyboard": true,
             "resizeKeyboard": true,
             "oneTimeKeyboard": false,
-            "enableStatistics": true
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
             "x": 100,
-            "y": 500
+            "y": 969.734375
           }
         }
       ],
       "createdAt": "2026-02-06T05:28:10.576Z",
-      "updatedAt": "2026-02-06T17:30:22.177Z",
+      "updatedAt": "2026-02-06T17:53:20.558Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -154,7 +188,18 @@
             "inputVariable": "gender",
             "resizeKeyboard": true,
             "oneTimeKeyboard": true,
-            "collectUserInput": true
+            "collectUserInput": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -178,7 +223,17 @@
             "inputVariable": "user_name",
             "enableTextInput": true,
             "collectUserInput": true,
-            "inputTargetNodeId": "age_input"
+            "inputTargetNodeId": "age_input",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -202,7 +257,17 @@
             "inputVariable": "user_age",
             "enableTextInput": true,
             "collectUserInput": true,
-            "inputTargetNodeId": "metro_selection"
+            "inputTargetNodeId": "metro_selection",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -291,7 +356,18 @@
             "inputVariable": "metro_stations",
             "resizeKeyboard": true,
             "oneTimeKeyboard": true,
-            "collectUserInput": true
+            "collectUserInput": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -454,7 +530,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "metro_stations",
             "continueButtonTarget": "interests_categories",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -610,7 +699,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "metro_stations",
             "continueButtonTarget": "interests_categories",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -724,7 +826,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "metro_stations",
             "continueButtonTarget": "interests_categories",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -838,7 +953,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "metro_stations",
             "continueButtonTarget": "interests_categories",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -936,7 +1064,20 @@
             "oneTimeKeyboard": true,
             "multiSelectVariable": "interests_categories",
             "continueButtonTarget": "marital_status",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -1023,7 +1164,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "user_interests",
             "continueButtonTarget": "marital_status",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -1110,7 +1264,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "user_interests",
             "continueButtonTarget": "marital_status",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -1183,7 +1350,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "user_interests",
             "continueButtonTarget": "marital_status",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -1263,7 +1443,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "user_interests",
             "continueButtonTarget": "marital_status",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -1343,7 +1536,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "user_interests",
             "continueButtonTarget": "marital_status",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -1423,7 +1629,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "user_interests",
             "continueButtonTarget": "marital_status",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -1503,7 +1722,20 @@
             "keyboardType": "inline",
             "multiSelectVariable": "user_interests",
             "continueButtonTarget": "marital_status",
-            "allowMultipleSelection": true
+            "allowMultipleSelection": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
@@ -1528,6 +1760,7 @@
       "name": "💝 Личная информация",
       "nodes": [
         {
+          "_y": 100,
           "id": "marital_status",
           "data": {
             "buttons": [
@@ -1570,20 +1803,37 @@
               "отношения",
               "статус"
             ],
+            "adminOnly": false,
+            "showInMenu": true,
             "messageText": "Твое семейное положение: 💍",
             "keyboardType": "inline",
+            "requiresAuth": false,
             "inputVariable": "marital_status",
+            "isPrivateOnly": false,
             "resizeKeyboard": true,
             "oneTimeKeyboard": true,
-            "collectUserInput": true
+            "collectUserInput": true,
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
-            "x": 400,
-            "y": 300
+            "x": 100,
+            "y": 100
           }
         },
         {
+          "_y": 300,
           "id": "sexual_orientation",
           "data": {
             "buttons": [
@@ -1634,20 +1884,37 @@
               "предпочтения",
               "интерес"
             ],
+            "adminOnly": false,
+            "showInMenu": true,
             "messageText": "Твоя ориентация: 🌈",
             "keyboardType": "inline",
+            "requiresAuth": false,
             "inputVariable": "sexual_orientation",
+            "isPrivateOnly": false,
             "resizeKeyboard": true,
             "oneTimeKeyboard": true,
-            "collectUserInput": true
+            "collectUserInput": true,
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
-            "x": 400,
-            "y": 500
+            "x": 100,
+            "y": 300
           }
         },
         {
+          "_y": 500,
           "id": "channel_choice",
           "data": {
             "buttons": [
@@ -1667,22 +1934,38 @@
               "телеграм",
               "ссылка"
             ],
+            "adminOnly": false,
+            "showInMenu": true,
             "messageText": "Хочешь указать свой телеграм-канал? 📢\n\nВведи ссылку, ник с @ или просто имя канала, либо нажми 'Пропустить':",
             "keyboardType": "inline",
+            "requiresAuth": false,
             "inputVariable": "telegram_channel",
+            "isPrivateOnly": false,
             "resizeKeyboard": true,
             "enableTextInput": true,
             "oneTimeKeyboard": true,
             "collectUserInput": true,
-            "inputTargetNodeId": "extra_info"
+            "enableStatistics": true,
+            "inputTargetNodeId": "extra_info",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
-            "x": 400,
-            "y": 700
+            "x": 100,
+            "y": 500
           }
         },
         {
+          "_y": 700,
           "id": "extra_info",
           "data": {
             "buttons": [
@@ -1702,24 +1985,39 @@
               "больше",
               "еще"
             ],
+            "adminOnly": false,
+            "showInMenu": true,
             "messageText": "Хочешь добавить что-то ещё о себе? 📝\n\nРасскажи о себе (до 2000 символов) или нажми 'Пропустить':",
             "keyboardType": "inline",
+            "requiresAuth": false,
             "inputVariable": "extra_info",
+            "isPrivateOnly": false,
             "resizeKeyboard": true,
             "enableTextInput": true,
             "oneTimeKeyboard": true,
             "collectUserInput": true,
-            "inputTargetNodeId": "profile_complete"
+            "enableStatistics": true,
+            "inputTargetNodeId": "profile_complete",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "message",
           "position": {
-            "x": 400,
-            "y": 900
+            "x": 100,
+            "y": 700
           }
         }
       ],
       "createdAt": "2026-02-06T05:28:10.576Z",
-      "updatedAt": "2026-02-06T05:28:10.576Z",
+      "updatedAt": "2026-02-06T17:53:36.134Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -1734,38 +2032,7 @@
       "name": "👤 Профиль",
       "nodes": [
         {
-          "id": "profile_complete",
-          "data": {
-            "buttons": [
-              {
-                "id": "btn-chat-link",
-                "text": "Ссылка на чат 🔗",
-                "action": "command",
-                "target": "/link",
-                "buttonType": "normal"
-              },
-              {
-                "id": "btn-show-profile-edit",
-                "text": "Редактировать профиль ✏️",
-                "action": "command",
-                "target": "/profile",
-                "buttonType": "normal"
-              }
-            ],
-            "markdown": false,
-            "synonyms": [],
-            "messageText": "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\n\n💬 Источник: {user_source}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
-            "keyboardType": "inline",
-            "resizeKeyboard": true,
-            "oneTimeKeyboard": true
-          },
-          "type": "message",
-          "position": {
-            "x": 400,
-            "y": 300
-          }
-        },
-        {
+          "_y": 100,
           "id": "show_profile",
           "data": {
             "buttons": [
@@ -1855,15 +2122,83 @@
             "messageText": "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\n\n💬 Источник: {user_source}\n\n✏️ Выберите действие:",
             "keyboardType": "inline",
             "requiresAuth": false,
-            "isPrivateOnly": false
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "command",
           "position": {
-            "x": 400,
-            "y": 500
+            "x": 100,
+            "y": 100
           }
         },
         {
+          "_y": 948.515625,
+          "id": "profile_complete",
+          "data": {
+            "buttons": [
+              {
+                "id": "btn-chat-link",
+                "text": "Ссылка на чат 🔗",
+                "action": "command",
+                "target": "/link",
+                "buttonType": "normal"
+              },
+              {
+                "id": "btn-show-profile-edit",
+                "text": "Редактировать профиль ✏️",
+                "action": "command",
+                "target": "/profile",
+                "buttonType": "normal"
+              }
+            ],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\n\n💬 Источник: {user_source}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": true,
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 948.515625
+          }
+        },
+        {
+          "_y": 1485.0625,
           "id": "chat_link",
           "data": {
             "buttons": [],
@@ -1883,15 +2218,32 @@
             "messageText": "🔗 Актуальная ссылка на чат:\n\nhttps://t.me/+agkIVgCzHtY2ZTA6\n\nДобро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉",
             "keyboardType": "none",
             "requiresAuth": false,
-            "isPrivateOnly": false
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "command",
           "position": {
-            "x": 400,
-            "y": 700
+            "x": 100,
+            "y": 1485.0625
           }
         },
         {
+          "_y": 1876.4375,
           "id": "help_command",
           "data": {
             "buttons": [
@@ -1937,17 +2289,33 @@
             "messageText": "🤖 **Добро пожаловать в справочный центр!**\n\n🌟 **ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot**\n*Твой помощник в знакомствах*\n\n🎯 **ОСНОВНЫЕ КОМАНДЫ:**\n\n🚀 `/start` — *Начать заново*\n   📝 Синонимы: `старт`, `начать`, `привет`, `начало`, `начинаем`\n\n👤 `/profile` — *Мой профиль*\n   📝 Синонимы: `профиль`, `анкета`, `мой профиль`, `посмотреть профиль`, `редактировать профиль`\n\n🔗 `/link` — *Ссылка на чат*\n   📝 Синонимы: `ссылка`, `чат`, `сообщество`, `впрогулке`, `линк`\n\n🆘 `/help` — *Эта справка*\n   📝 Синонимы: `помощь`, `справка`, `команды`, `что писать`, `как пользоваться`\n\n📋 **РАЗДЕЛЫ АНКЕТЫ И ИХ СИНОНИМЫ:**\n\n👫 **Пол:** мужской, женский\n   📝 Синонимы: `пол`, `gender`\n\n🏷️ **Имя:** любое имя\n   📝 Синонимы: `имя`, `как зовут`, `назовись`\n\n🎂 **Возраст:** число от 18 до 99\n   📝 Синонимы: `возраст`, `лет`, `сколько лет`\n\n🚇 **Метро:** выбор линии и станции\n   📝 Синонимы: `метро`, `станция`\n   🟥 Красная линия: `красная линия`, `кировско-выборгская`, `красная ветка`\n   🟦 Синяя линия: `синяя линия`, `московско-петроградская`, `синяя ветка`\n   🟩 Зеленая линия: `зеленая линия`, `невско-василеостровская`, `зеленая ветка`\n   🟧 Оранжевая линия: `оранжевая линия`, `правобережная`, `оранжевая ветка`\n   🟪 Фиолетовая линия: `фиолетовая линия`, `фрунзенско-приморская`, `фиолетовая ветка`\n\n🎨 **Интересы и их синонимы:**\n   🎮 Хобби: `хобби`, `увлечения`, `занятия`, `игры`\n   🤝 Социальная жизнь: `общение`, `социальное`, `люди`, `тусовки`\n   🎭 Творчество: `творчество`, `искусство`, `рисование`, `музыка`\n   💪 Активный образ жизни: `активность`, `активный`, `движение`, `здоровье`\n   🍕 Еда и напитки: `еда`, `напитки`, `кухня`, `рестораны`\n   ⚽ Спорт: `спорт`, `фитнес`, `тренировки`, `футбол`\n\n💑 **Семейное положение:** поиск, отношения, женат/замужем, сложно\n   📝 Синонимы: `семейное положение`, `статус`, `отношения`, `семья`\n\n🌈 **Ориентация:** гетеро, гей, лесби, би, другое\n   📝 Синонимы: `ориентация`, `предпочтения`\n\n📺 **Телеграм-канал:** опционально\n   📝 Синонимы: `тгк`, `телеграм`, `канал`, `тг канал`\n\n📖 **О себе:** дополнительная информация\n   📝 Синонимы: `о себе`, `описание`, `расскажи`, `инфо`\n\n👮‍♂️ **КОМАНДЫ МОДЕРАЦИИ:**\n\n**Управление контентом:**\n📌 `/pin_message` - Закрепить сообщение\n   📝 Синонимы: `закрепить`, `прикрепить`, `зафиксировать`\n\n📌❌ `/unpin_message` - Открепить сообщение\n   📝 Синонимы: `открепить`, `отцепить`, `убрать закрепление`\n\n🗑️ `/delete_message` - Удалить сообщение\n   📝 Синонимы: `удалить`, `стереть`, `убрать сообщение`\n\n**Управление пользователями:**\n🚫 `/ban_user` - Заблокировать пользователя\n   📝 Синонимы: `забанить`, `заблокировать`, `бан`\n\n✅ `/unban_user` - Разблокировать пользователя\n   📝 Синонимы: `разбанить`, `разблокировать`, `unbán`\n\n🔇 `/mute_user` - Ограничить пользователя\n   📝 Синонимы: `замутить`, `заглушить`, `мут`\n\n🔊 `/unmute_user` - Снять ограничения\n   📝 Синонимы: `размутить`, `разглушить`, `анмут`\n\n👢 `/kick_user` - Исключить пользователя\n   📝 Синонимы: `кикнуть`, `исключить`, `выгнать`\n\n👑 `/promote_user` - Назначить администратором\n   📝 Синонимы: `повысить`, `назначить админом`, `промоут`\n\n👤 `/demote_user` - Снять с администратора\n   📝 Синонимы: `понизить`, `снять с админа`, `демоут`\n\n⚙️ `/admin_rights` - Настроить права администратора\n   📝 Синонимы: `права админа`, `настроить права`, `тг права`\n   ⚠️ Только для администраторов группы!\n   💡 Ответьте на сообщение пользователя командой\n\n**Примеры использования:**\n• Ответьте на сообщение командой для его обработки\n• Используйте команды в ответ на сообщения нарушителей\n• Команды с правами работают только в группах/супергруппах\n• Все действия логируются для отчетности\n\n💡 **ПОЛЕЗНЫЕ СОВЕТЫ:**\n\n✨ Можешь писать команды или синонимы в любом месте разговора\n✨ Бот поймет твои сообщения даже без команд\n✨ В любой момент можешь написать /start для начала заново\n✨ Используй /profile для изменения любых данных\n✨ Нажми на любое выделенное слово чтобы скопировать его!\n\n🎉 **Удачных знакомств в Питере!** 🎉",
             "keyboardType": "inline",
             "requiresAuth": false,
-            "isPrivateOnly": false
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "command",
           "position": {
-            "x": 400,
-            "y": 900
+            "x": 100,
+            "y": 1876.4375
           }
         }
       ],
       "createdAt": "2026-02-06T05:28:10.576Z",
-      "updatedAt": "2026-02-06T05:28:10.576Z",
+      "updatedAt": "2026-02-06T18:27:46.315Z",
       "viewState": {
         "zoom": 1,
         "position": {
@@ -1973,7 +2341,20 @@
             ],
             "messageText": "📌 Сообщение успешно закреплено!",
             "keyboardType": "none",
-            "disableNotification": false
+            "disableNotification": false,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "pin_message",
           "position": {
@@ -1992,7 +2373,20 @@
               "убрать закрепление"
             ],
             "messageText": "📌❌ Сообщение успешно откреплено!",
-            "keyboardType": "none"
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "unpin_message",
           "position": {
@@ -2011,7 +2405,20 @@
               "убрать сообщение"
             ],
             "messageText": "🗑️ Сообщение успешно удалено!",
-            "keyboardType": "none"
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "delete_message",
           "position": {
@@ -2048,7 +2455,20 @@
             ],
             "untilDate": 0,
             "messageText": "🚫 Пользователь заблокирован в группе!",
-            "keyboardType": "none"
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "ban_user",
           "position": {
@@ -2067,7 +2487,20 @@
               "unbан"
             ],
             "messageText": "✅ Пользователь разблокирован!",
-            "keyboardType": "none"
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "unban_user",
           "position": {
@@ -2096,7 +2529,20 @@
             "canChangeGroupInfo": false,
             "canSendMediaMessages": false,
             "canSendOtherMessages": false,
-            "canAddWebPagePreviews": false
+            "canAddWebPagePreviews": false,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "mute_user",
           "position": {
@@ -2115,7 +2561,20 @@
               "анмут"
             ],
             "messageText": "🔊 Ограничения с пользователя сняты!",
-            "keyboardType": "none"
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "unmute_user",
           "position": {
@@ -2135,7 +2594,20 @@
               "выгнать"
             ],
             "messageText": "👢 Пользователь исключен из группы!",
-            "keyboardType": "none"
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "kick_user",
           "position": {
@@ -2164,7 +2636,20 @@
             "canDeleteMessages": true,
             "canPromoteMembers": false,
             "canRestrictMembers": false,
-            "canManageVideoChats": false
+            "canManageVideoChats": false,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "promote_user",
           "position": {
@@ -2183,7 +2668,20 @@
               "демоут"
             ],
             "messageText": "👤 Пользователь снят с должности администратора!",
-            "keyboardType": "none"
+            "keyboardType": "none",
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "demote_user",
           "position": {
@@ -2220,7 +2718,20 @@
             "can_delete_messages": true,
             "can_promote_members": false,
             "can_restrict_members": true,
-            "can_manage_video_chats": false
+            "can_manage_video_chats": false,
+            "enableConditionalMessages": false,
+            "conditionalMessages": [],
+            "collectUserInput": false,
+            "enableTextInput": false,
+            "enablePhotoInput": false,
+            "enableVideoInput": false,
+            "enableAudioInput": false,
+            "enableDocumentInput": false,
+            "inputVariable": "",
+            "photoInputVariable": "",
+            "videoInputVariable": "",
+            "audioInputVariable": "",
+            "documentInputVariable": ""
           },
           "type": "admin_rights",
           "position": {
@@ -2242,7 +2753,7 @@
     }
   ],
   "version": 2,
-  "activeSheetId": "jOFXeA2n0OmlSZYLYc8rS",
+  "activeSheetId": "jiXXAkJC730FapERy8JL0",
   "interSheetConnections": [
     {
       "id": "inter-welcome-basic",
