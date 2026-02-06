@@ -86,7 +86,7 @@ export class DatabaseManager {
       }
       this.connectionStats.lastHealthCheck = new Date();
 
-      console.log('Проверка работоспособности базы данных прошла успешно');
+      // console.log('Проверка работоспособности базы данных прошла успешно');
       return true;
     } catch (error: any) {
       console.error('Проверка работоспособности базы данных не удалась:', error?.message);
