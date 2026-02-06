@@ -607,6 +607,10 @@ export function Canvas({
         setZoom(newZoom);
       }
     }
+    // Prevent page zoom on trackpad pinch gesture
+    if (e.ctrlKey) {
+      e.preventDefault();
+    }
   }, [zoom]);
 
   // Handle panning
@@ -668,6 +672,10 @@ export function Canvas({
 
     // Если касание на узле или уже перетаскивается узел, не начинаем панорамирование холста
     if (isOnNode || isNodeBeingDragged) {
+      // Но всё равно предотвращаем стандартное поведение для жестов масштабирования
+      if (e.touches.length >= 2) {
+        e.preventDefault();
+      }
       return;
     }
 
@@ -698,6 +706,10 @@ export function Canvas({
 
     // Если касание на узле или перетаскивается узел, не панорамируем холст
     if (isOnNode || isNodeBeingDragged) {
+      // Но всё равно предотвращаем стандартное поведение для жестов масштабирования
+      if (e.touches.length >= 2) {
+        e.preventDefault();
+      }
       return;
     }
 
@@ -853,8 +865,25 @@ export function Canvas({
       }
     };
 
+    // Обработчик для предотвращения масштабирования всей страницы на trackpad
+    const handleGesture = (e: Event) => {
+      if ((e as any).ctrlKey) {
+        e.preventDefault();
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    // Добавляем обработчики для предотвращения жестов масштабирования
+    document.addEventListener('gesturestart', handleGesture, { passive: false });
+    document.addEventListener('gesturechange', handleGesture, { passive: false });
+    document.addEventListener('gestureend', handleGesture, { passive: false });
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('gesturestart', handleGesture);
+      document.removeEventListener('gesturechange', handleGesture);
+      document.removeEventListener('gestureend', handleGesture);
+    };
   }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction]);
 
 
@@ -877,14 +906,25 @@ export function Canvas({
       setIsPanning(false);
     };
 
+    // Обработчик для предотвращения масштабирования всей страницы при ctrl+колесо мыши
+    const preventPageZoom = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    };
+
     if (isPanning) {
       document.addEventListener('mousemove', handleGlobalMouseMove);
       document.addEventListener('mouseup', handleGlobalMouseUp);
     }
 
+    // Добавляем обработчик для предотвращения масштабирования всей страницы
+    document.addEventListener('wheel', preventPageZoom, { passive: false });
+
     return () => {
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('wheel', preventPageZoom);
     };
   }, [isPanning, panStart, lastPanPosition]);
 
@@ -1135,7 +1175,9 @@ export function Canvas({
             backgroundPosition: `${pan.x}px ${pan.y}px`,
             minHeight: '2000vh',
             minWidth: '2000vw',
-            cursor: isPanning ? 'grabbing' : 'grab'
+            cursor: isPanning ? 'grabbing' : 'grab',
+            // Предотвращение масштабирования на сенсорных устройствах
+            touchAction: 'none'
           }}
           data-drag-over={isDragOver}
           data-canvas-drop-zone
