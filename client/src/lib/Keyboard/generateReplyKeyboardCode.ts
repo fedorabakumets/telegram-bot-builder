@@ -1,4 +1,4 @@
-import { generateButtonText } from './generateButtonText';
+import { generateButtonText } from '../format/generateButtonText';
 import { toPythonBoolean } from "../format/toPythonBoolean";
 
 // Функция для генерации reply клавиатуры

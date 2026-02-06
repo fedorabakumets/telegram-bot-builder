@@ -1,4 +1,4 @@
-import { generateButtonText } from '../Keyboard/generateButtonText';
+import { generateButtonText } from '../format/generateButtonText';
 import { Node } from '@shared/schema';
 
 export function generateVoiceHandler(node: Node): string {
