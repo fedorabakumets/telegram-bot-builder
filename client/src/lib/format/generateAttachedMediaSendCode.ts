@@ -4,7 +4,76 @@ import { generateWaitingStateCode } from "./generateWaitingStateCode";
 // ============================================================================
 // ГЕНЕРАТОРЫ МЕДИА И УСЛОВНЫХ СООБЩЕНИЙ
 // ============================================================================
-// Функция для генерации кода отправки медиа из attachedMedia
+
+/**
+ * Генерирует Python код для отправки медиа-сообщений из переменных attachedMedia.
+ * Функция создает полный Python код с обработкой различных типов медиа (изображения, видео, аудио, документы),
+ * поддержкой статических изображений, автопереходов между узлами и обработкой ошибок.
+ * 
+ * Логика работы:
+ * 1. Проверяет наличие статического изображения в узле и обрабатывает его отдельно
+ * 2. Обрабатывает динамические медиа из переменных attachedMedia
+ * 3. Генерирует код в зависимости от типа медиа (photo, video, audio, document)
+ * 4. Поддерживает автопереходы между узлами при необходимости
+ * 5. Устанавливает состояние ожидания ввода для узлов, которые собирают данные от пользователя
+ * 6. Предоставляет fallback на текстовые сообщения при ошибках или отсутствии медиа
+ * 
+ * @param attachedMedia - Массив переменных медиа для отправки
+ * @param mediaVariablesMap - Карта соответствий переменных медиа и их типов
+ * @param _text - Текст сообщения для отправки (не используется напрямую)
+ * @param parseMode - Режим форматирования текста (HTML, Markdown, etc.)
+ * @param keyboard - Клавиатура для отправки вместе с сообщением
+ * @param nodeId - Идентификатор текущего узла
+ * @param indentLevel - Уровень отступа для генерируемого кода
+ * @param autoTransitionTo - Идентификатор узла для автоперехода (опционально)
+ * @param collectUserInput - Флаг сбора ввода от пользователя (по умолчанию true)
+ * @param nodeData - Дополнительные данные узла (опционально)
+ * @returns Сгенерированный Python код для отправки медиа
+ * 
+ * @example
+ * // Базовое использование для отправки изображения
+ * const code = generateAttachedMediaSendCode(
+ *   ['image_url_node1'],
+ *   new Map([['image_url_node1', { type: 'photo', variable: 'image_url_node1' }]]),
+ *   'Посмотрите на это изображение',
+ *   'HTML',
+ *   'None',
+ *   'node1',
+ *   '    ',
+ *   undefined,
+ *   true
+ * );
+ * 
+ * @example
+ * // С автопереходом и клавиатурой
+ * const code = generateAttachedMediaSendCode(
+ *   ['video_url_node2'],
+ *   new Map([['video_url_node2', { type: 'video', variable: 'video_url_node2' }]]),
+ *   'Смотрите видео!',
+ *   'HTML',
+ *   'keyboard_object',
+ *   'node2',
+ *   '    ',
+ *   'node3',
+ *   false
+ * );
+ * 
+ * @example
+ * // Со статическим изображением
+ * const nodeData = { imageUrl: 'https://example.com/image.jpg' };
+ * const code = generateAttachedMediaSendCode(
+ *   [],
+ *   new Map(),
+ *   'Статическое изображение',
+ *   'None',
+ *   'None',
+ *   'node4',
+ *   '    ',
+ *   undefined,
+ *   true,
+ *   nodeData
+ * );
+ */
 export function generateAttachedMediaSendCode(
   attachedMedia: string[],
   mediaVariablesMap: Map<string, { type: string; variable: string; }>,
