@@ -238,8 +238,8 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
   });
 
   // Применяем автоматическое добавление комментариев ко всему коду
-  const processedCode = processCodeWithAutoComments(codeLines, 'parsePythonCodeToJson.ts');
+  processCodeWithAutoComments(codeLines, 'parsePythonCodeToJson.ts');
   
-  // Возвращаем результат (игнорируем processedCode, так как это парсер)
+  // Возвращаем результат
   return { nodes, connections };
 }
