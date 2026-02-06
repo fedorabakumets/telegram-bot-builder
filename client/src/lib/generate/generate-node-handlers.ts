@@ -12,14 +12,30 @@ import {
   generateDemoteUserHandler
 } from '../UserHandler';
 import { generateUnpinMessageHandler, generateDeleteMessageHandler, generatePinMessageHandler } from '../MessageHandler';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует обработчики для каждого узла
+ *
+ * Функция проходит по всем узлам графа и генерирует соответствующие обработчики
+ * на основе типа узла. Поддерживает различные типы узлов: команды, медиа, сообщения,
+ * действия с пользователями и сообщениями.
+ *
  * @param nodes - Массив узлов для генерации обработчиков
  * @param userDatabaseEnabled - Флаг, указывающий, включена ли база данных пользователей
  * @returns Сгенерированный код обработчиков узлов
+ *
+ * @example
+ * const nodes = [{ id: 'start', type: 'start' }, { id: 'help', type: 'command' }];
+ * const code = generateNodeHandlers(nodes, true);
  */
 export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean): string {
+  // Собираем код в массив строк для автоматической обработки
+  const codeLines: string[] = [];
+  
+  // Добавляем комментарий о генерации
+  codeLines.push('# Код сгенерирован в generate-node-handlers.ts');
+  
   let nodeCode = '';
 
   const nodeHandlers: Record<string, (node: Node) => string> = {
@@ -63,5 +79,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     nodeCode += `# @@NODE_END:${node.id}@@\n`;
   });
 
+  // Применяем автоматическое добавление комментариев ко всему коду
+  processCodeWithAutoComments(codeLines, 'generate-node-handlers.ts');
+  
   return nodeCode;
 }
