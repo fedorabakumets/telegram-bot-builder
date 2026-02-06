@@ -210,33 +210,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
               // Генерируем логику проверки условий встроенно
               const conditionalMessages = targetNode.data.conditionalMessages.sort((a: { priority: any; }, b: { priority: any; }) => (b.priority || 0) - (a.priority || 0));
 
-              code += `                        # Функция для проверки переменных пользователя\n`;
-              code += `                        def check_user_variable_inline(var_name, user_data_dict):\n`;
-              code += `                            if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
-              code += `                                try:\n`;
-              code += `                                    import json\n`;
-              code += `                                    parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
-              code += `                                    if var_name in parsed_data:\n`;
-              code += `                                        raw_value = parsed_data[var_name]\n`;
-              code += `                                        if isinstance(raw_value, dict) and "value" in raw_value:\n`;
-              code += `                                            var_value = raw_value["value"]\n`;
-              code += `                                            if var_value is not None and str(var_value).strip() != "":\n`;
-              code += `                                                return True, str(var_value)\n`;
-              code += `                                        else:\n`;
-              code += `                                            if raw_value is not None and str(raw_value).strip() != "":\n`;
-              code += `                                                return True, str(raw_value)\n`;
-              code += `                                except (json.JSONDecodeError, TypeError):\n`;
-              code += `                                    pass\n`;
-              code += `                            if var_name in user_data_dict:\n`;
-              code += `                                variable_data = user_data_dict.get(var_name)\n`;
-              code += `                                if isinstance(variable_data, dict) and "value" in variable_data:\n`;
-              code += `                                    var_value = variable_data["value"]\n`;
-              code += `                                    if var_value is not None and str(var_value).strip() != "":\n`;
-              code += `                                        return True, str(var_value)\n`;
-              code += `                                elif variable_data is not None and str(variable_data).strip() != "":\n`;
-              code += `                                    return True, str(variable_data)\n`;
-              code += `                            return False, None\n`;
-              code += `                        \n`;
+              code += `                        # Функция для проверки переменных пользователя (уже определена ранее)\n`;
 
               // Генерируем условия
               code += `                        conditional_met = False\n`;
@@ -1140,33 +1114,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                   code += `${bodyIndent}logging.info(f"🔧 Обработка узла с условными сообщениями: ${targetNode.id}")\n`;
                   code += `${bodyIndent}user_data_dict = await get_user_from_db(user_id) or {}\n`;
                   code += `${bodyIndent}user_data_dict.update(user_data.get(user_id, {}))\n`;
-                  code += `${bodyIndent}# Функция для проверки переменных пользователя\n`;
-                  code += `${bodyIndent}def check_user_variable_inline(var_name, user_data_dict):\n`;
-                  code += `${bodyIndent}    if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
-                  code += `${bodyIndent}        try:\n`;
-                  code += `${bodyIndent}            import json\n`;
-                  code += `${bodyIndent}            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
-                  code += `${bodyIndent}            if var_name in parsed_data:\n`;
-                  code += `${bodyIndent}                raw_value = parsed_data[var_name]\n`;
-                  code += `${bodyIndent}                if isinstance(raw_value, dict) and "value" in raw_value:\n`;
-                  code += `${bodyIndent}                    var_value = raw_value["value"]\n`;
-                  code += `${bodyIndent}                    if var_value is not None and str(var_value).strip() != "":\n`;
-                  code += `${bodyIndent}                        return True, str(var_value)\n`;
-                  code += `${bodyIndent}                else:\n`;
-                  code += `${bodyIndent}                    if raw_value is not None and str(raw_value).strip() != "":\n`;
-                  code += `${bodyIndent}                        return True, str(raw_value)\n`;
-                  code += `${bodyIndent}        except (json.JSONDecodeError, TypeError):\n`;
-                  code += `${bodyIndent}            pass\n`;
-                  code += `${bodyIndent}    if var_name in user_data_dict:\n`;
-                  code += `${bodyIndent}        variable_data = user_data_dict.get(var_name)\n`;
-                  code += `${bodyIndent}        if isinstance(variable_data, dict) and "value" in variable_data:\n`;
-                  code += `${bodyIndent}            var_value = variable_data["value"]\n`;
-                  code += `${bodyIndent}            if var_value is not None and str(var_value).strip() != "":\n`;
-                  code += `${bodyIndent}                return True, str(var_value)\n`;
-                  code += `${bodyIndent}        elif variable_data is not None and str(variable_data).strip() != "":\n`;
-                  code += `${bodyIndent}            return True, str(variable_data)\n`;
-                  code += `${bodyIndent}    return False, None\n`;
-                  code += `${bodyIndent}\n`;
+                  code += `${bodyIndent}# Функция для проверки переменных пользователя (уже определена ранее)\n`;
 
                   // Генерируем проверку условий
                   code += `${bodyIndent}conditional_met = False\n`;
@@ -1690,7 +1638,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
           }
         } else {
           // Если целевой узел не найден, добавляем заглушку
-          code += `                logging.warning(f"Целевой узел {node.data.inputTargetNodeId} не найде��")\n`;
+          code += `                logging.warning(f"Целево�� узел {node.data.inputTargetNodeId} не найде��")\n`;
           code += `                await message.answer("❌ Ошибка перехода: целевой узел не найден")\n`;
         }
 

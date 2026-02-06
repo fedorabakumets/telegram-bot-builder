@@ -114,58 +114,8 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
   code += `${indentLevel}    return text_content\n`;
   code += `${indentLevel}\n`;
 
-  // Генерируем единую функцию проверки переменных
-  code += `${indentLevel}# Функция для проверки переменных пользователя\n`;
-  code += `${indentLevel}def check_user_variable(var_name, user_data_dict):\n`;
-  code += `${indentLevel}    """Проверяет существование и получает значение переменной пользователя"""\n`;
-  code += `${indentLevel}    # Сначала проверяем в поле user_data (из БД)\n`;
-  code += `${indentLevel}    if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
-  code += `${indentLevel}        try:\n`;
-  code += `${indentLevel}            import json\n`;
-  code += `${indentLevel}            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
-  code += `${indentLevel}            if var_name in parsed_data:\n`;
-  code += `${indentLevel}                raw_value = parsed_data[var_name]\n`;
-  code += `${indentLevel}                if isinstance(raw_value, dict) and "value" in raw_value:\n`;
-  code += `${indentLevel}                    var_value = raw_value["value"]\n`;
-  code += `${indentLevel}                    # Проверяем, что значение действительно существует и не пустое\n`;
-  code += `${indentLevel}                    if var_value is not None and str(var_value).strip() != "":\n`;
-  code += `${indentLevel}                        return True, str(var_value)\n`;
-  code += `${indentLevel}                else:\n`;
-  code += `${indentLevel}                    # Проверяем, что значение действительно существует и не пустое\n`;
-  code += `${indentLevel}                    if raw_value is not None and str(raw_value).strip() != "":\n`;
-  code += `${indentLevel}                        return True, str(raw_value)\n`;
-  code += `${indentLevel}        except (json.JSONDecodeError, TypeError):\n`;
-  code += `${indentLevel}            pass\n`;
-  code += `${indentLevel}    \n`;
-  code += `${indentLevel}    # Проверяем в локальных данных (без вложенности user_data)\n`;
-  code += `${indentLevel}    if var_name in user_data_dict:\n`;
-  code += `${indentLevel}        variable_data = user_data_dict.get(var_name)\n`;
-  code += `${indentLevel}        if isinstance(variable_data, dict) and "value" in variable_data:\n`;
-  code += `${indentLevel}            var_value = variable_data["value"]\n`;
-  code += `${indentLevel}            # Проверяем, что значение действительно существует и не пустое\n`;
-  code += `${indentLevel}            if var_value is not None and str(var_value).strip() != "":\n`;
-  code += `${indentLevel}                return True, str(var_value)\n`;
-  code += `${indentLevel}        elif variable_data is not None and str(variable_data).strip() != "":\n`;
-  code += `${indentLevel}            return True, str(variable_data)\n`;
-  code += `${indentLevel}    \n`;
-  code += `${indentLevel}    # Дополнительная проверка: если переменная не найдена напрямую, проверяем, не является ли она частью user_data в другом формате\n`;
-  code += `${indentLevel}    # Это может случиться, если переменная была сохранена в формате, отличном от ожидаемого\n`;
-  code += `${indentLevel}    if "user_data" in user_data_dict and isinstance(user_data_dict["user_data"], dict):\n`;
-  code += `${indentLevel}        nested_data = user_data_dict["user_data"]\n`;
-  code += `${indentLevel}        if var_name in nested_data:\n`;
-  code += `${indentLevel}            raw_value = nested_data[var_name]\n`;
-  code += `${indentLevel}            if isinstance(raw_value, dict) and "value" in raw_value:\n`;
-  code += `${indentLevel}                var_value = raw_value["value"]\n`;
-  code += `${indentLevel}                # Проверяем, что значение действительно существует и не пустое\n`;
-  code += `${indentLevel}                if var_value is not None and str(var_value).strip() != "":\n`;
-  code += `${indentLevel}                    return True, str(var_value)\n`;
-  code += `${indentLevel}            else:\n`;
-  code += `${indentLevel}                # Проверяем, что значение действительно существует и не пустое\n`;
-  code += `${indentLevel}                if raw_value is not None and str(raw_value).strip() != "":\n`;
-  code += `${indentLevel}                    return True, str(raw_value)\n`;
-  code += `${indentLevel}    \n`;
-  code += `${indentLevel}    return False, None\n`;
-  code += `${indentLevel}\n`;
+  // Функция check_user_variable уже определена глобально
+  code += `${indentLevel}# Функция для проверки переменных пользователя (уже определена ранее)\n`;
 
   // Создаем единую if/elif/else структуру для всех условий
   for (let i = 0; i < sortedConditions.length; i++) {
@@ -206,7 +156,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
         for (let j = 0; j < variableNames.length; j++) {
           const varName = variableNames[j];
           const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-          code += `${indentLevel}    check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
+          code += `${indentLevel}    check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
         }
         code += `${indentLevel}):\n`;
 
@@ -214,7 +164,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
         code += `${indentLevel}    # Собираем значения переменных\n`;
         code += `${indentLevel}    variable_values = {}\n`;
         for (const varName of variableNames) {
-          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
+          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable_inline("${varName}", user_data_dict)\n`;
         }
 
         // Только переопределяем text если условное сообщение не пустое
@@ -301,9 +251,9 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           const varName = variableNames[j];
           const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
           if (logicOperator === 'AND') {
-            code += `${indentLevel}    not check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
+            code += `${indentLevel}    not check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
           } else {
-            code += `${indentLevel}    not check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
+            code += `${indentLevel}    not check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
           }
         }
         code += `${indentLevel}):\n`;
@@ -372,7 +322,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
         for (let j = 0; j < variableNames.length; j++) {
           const varName = variableNames[j];
           const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-          code += `${indentLevel}    check_user_variable("${varName}", user_data_dict)[1] == "${condition.expectedValue || ''}"${operator}\n`;
+          code += `${indentLevel}    check_user_variable_inline("${varName}", user_data_dict)[1] == "${condition.expectedValue || ''}"${operator}\n`;
         }
         code += `${indentLevel}):\n`;
 
@@ -380,7 +330,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
         code += `${indentLevel}    # Собираем значения переменных\n`;
         code += `${indentLevel}    variable_values = {}\n`;
         for (const varName of variableNames) {
-          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
+          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable_inline("${varName}", user_data_dict)\n`;
         }
 
         code += `${indentLevel}    text = ${conditionText}\n`;
@@ -453,7 +403,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
         for (let j = 0; j < variableNames.length; j++) {
           const varName = variableNames[j];
           const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-          code += `${indentLevel}    (check_user_variable("${varName}", user_data_dict)[1] is not None and "${condition.expectedValue || ''}" in str(check_user_variable("${varName}", user_data_dict)[1]))${operator}\n`;
+          code += `${indentLevel}    (check_user_variable_inline("${varName}", user_data_dict)[1] is not None and "${condition.expectedValue || ''}" in str(check_user_variable_inline("${varName}", user_data_dict)[1]))${operator}\n`;
         }
         code += `${indentLevel}):\n`;
 
@@ -461,7 +411,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
         code += `${indentLevel}    # Собираем значения переменных\n`;
         code += `${indentLevel}    variable_values = {}\n`;
         for (const varName of variableNames) {
-          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
+          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable_inline("${varName}", user_data_dict)\n`;
         }
 
         code += `${indentLevel}    text = ${conditionText}\n`;

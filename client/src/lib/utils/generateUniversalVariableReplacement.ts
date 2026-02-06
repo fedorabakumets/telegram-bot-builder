@@ -32,7 +32,35 @@ export function generateUniversalVariableReplacement(indentLevel: string): strin
   code += `${indentLevel}if not isinstance(user_vars, dict):\n`;
   code += `${indentLevel}    user_vars = user_data.get(user_id, {})\n`;
   code += `${indentLevel}\n`;
-  // Удаляем строку, которая использует переменную text до её определения
+
+  // Добавляем определение функции check_user_variable_inline
+  code += `${indentLevel}# Функция для проверки переменных пользователя\n`;
+  code += `${indentLevel}def check_user_variable_inline(var_name, user_data_dict):\n`;
+  code += `${indentLevel}    if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
+  code += `${indentLevel}        try:\n`;
+  code += `${indentLevel}            import json\n`;
+  code += `${indentLevel}            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
+  code += `${indentLevel}            if var_name in parsed_data:\n`;
+  code += `${indentLevel}                raw_value = parsed_data[var_name]\n`;
+  code += `${indentLevel}                if isinstance(raw_value, dict) and "value" in raw_value:\n`;
+  code += `${indentLevel}                    var_value = raw_value["value"]\n`;
+  code += `${indentLevel}                    if var_value is not None and str(var_value).strip() != "":\n`;
+  code += `${indentLevel}                        return True, str(var_value)\n`;
+  code += `${indentLevel}                else:\n`;
+  code += `${indentLevel}                    if raw_value is not None and str(raw_value).strip() != "":\n`;
+  code += `${indentLevel}                        return True, str(raw_value)\n`;
+  code += `${indentLevel}        except (json.JSONDecodeError, TypeError):\n`;
+  code += `${indentLevel}            pass\n`;
+  code += `${indentLevel}    if var_name in user_data_dict:\n`;
+  code += `${indentLevel}        variable_data = user_data_dict.get(var_name)\n`;
+  code += `${indentLevel}        if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+  code += `${indentLevel}            var_value = variable_data["value"]\n`;
+  code += `${indentLevel}            if var_value is not None and str(var_value).strip() != "":\n`;
+  code += `${indentLevel}                return True, str(var_value)\n`;
+  code += `${indentLevel}        elif variable_data is not None and str(variable_data).strip() != "":\n`;
+  code += `${indentLevel}            return True, str(variable_data)\n`;
+  code += `${indentLevel}    return False, None\n`;
+  code += `${indentLevel}\n`;
 
   return code;
 }

@@ -1254,41 +1254,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                     code += '            user_data_dict = await get_user_from_db(user_id) or {}\n';
                     code += '            user_data_dict.update(user_data.get(user_id, {}))\n\n';
 
-                    // Добавляем определение функции check_user_variable в локальную область видимости
-                    code += '            # яункция для проверки переменных пользователя\n';
-                    code += '            def check_user_variable(var_name, user_data_dict):\n';
-                    code += '                """Проверяет существование я получает значение переменной пользователя"""\n';
-                    code += '                # Сначала проверяем в поле user_data (из БД)\n';
-                    code += '                if "user_data" in user_data_dict and user_data_dict["user_data"]:\n';
-                    code += '                    try:\n';
-                    code += '                        import json\n';
-                    code += '                        parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n';
-                    code += '                        if var_name in parsed_data:\n';
-                    code += '                            raw_value = parsed_data[var_name]\n';
-                    code += '                            if isinstance(raw_value, dict) and "value" in raw_value:\n';
-                    code += '                                var_value = raw_value["value"]\n';
-                    code += '                                # Проверяем, что значение действительно существует и не пустое\n';
-                    code += '                                if var_value is not None and str(var_value).strip() != "":\n';
-                    code += '                                    return True, str(var_value)\n';
-                    code += '                            else:\n';
-                    code += '                                # Проверяем, что значение действительно существует и не пустое\n';
-                    code += '                                if raw_value is not None and str(raw_value).strip() != "":\n';
-                    code += '                                    return True, str(raw_value)\n';
-                    code += '                    except (json.JSONDecodeError, TypeError):\n';
-                    code += '                        pass\n';
-                    code += '                \n';
-                    code += '                # Проверяем в локальных данных (без вложенности user_data)\n';
-                    code += '                if var_name in user_data_dict:\n';
-                    code += '                    variable_data = user_data_dict.get(var_name)\n';
-                    code += '                    if isinstance(variable_data, dict) and "value" in variable_data:\n';
-                    code += '                        var_value = variable_data["value"]\n';
-                    code += '                        # Проверяем, что значение действительно существует и не пустое\n';
-                    code += '                        if var_value is not None and str(var_value).strip() != "":\n';
-                    code += '                            return True, str(var_value)\n';
-                    code += '                    elif variable_data is not None and str(variable_data).strip() != "":\n';
-                    code += '                        return True, str(variable_data)\n';
-                    code += '                \n';
-                    code += '                return False, None\n\n';
+                    // Функция check_user_variable уже определена глобально
+                    code += '            # яункция для проверки переменных пользователя (уже определена ранее)\n';
 
                     // Генерируем условную логику для этого узла
                     const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a: { priority: any; }, b: { priority: any; }) => (b.priority || 0) - (a.priority || 0));
@@ -1315,7 +1282,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         for (let j = 0; j < variableNames.length; j++) {
                           const varName = variableNames[j];
                           const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-                          code += `                check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
+                          code += `                check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
                         }
                         code += `            ):\n`;
 
@@ -1323,7 +1290,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += `                # Собираем значения переменных\n`;
                         code += `                variable_values = {}\n`;
                         for (const varName of variableNames) {
-                          code += `                _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
+                          code += `                _, variable_values["${varName}"] = check_user_variable_inline("${varName}", user_data_dict)\n`;
                         }
 
                         code += `                text = ${conditionText}\n`;
