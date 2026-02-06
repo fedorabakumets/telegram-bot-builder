@@ -905,12 +905,16 @@ async def set_bot_commands():
 # Устанавливаем команды для бота
     await bot.set_my_commands(commands)
 
+# Код сгенерирован в generate-node-handlers.ts
 
 # @@NODE_START:start@@
+
 # Код сгенерирован в generateStartHandler.ts
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(CommandStart())
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
 async def start_handler(message: types.Message):
 
     # Регистрируем пользователя в системе
@@ -931,6 +935,7 @@ async def start_handler(message: types.Message):
 
     # Резервное сохранение в локальное хранилище
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not saved_to_db:
         user_data[user_id] = {
             "username": username,
@@ -945,26 +950,31 @@ async def start_handler(message: types.Message):
 
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     # get_user_from_db теперь возвращает уже обработанные user_data
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = """🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!
@@ -976,11 +986,13 @@ async def start_handler(message: types.Message):
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
 
     # get_user_from_db теперь возвращает уже обработанные user_data
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
 
@@ -988,26 +1000,31 @@ async def start_handler(message: types.Message):
     text = replace_variables_in_text(text, user_vars)
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     # get_user_from_db теперь возвращает уже обработанные user_data
 # Код сгенерирован в generateStartHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
@@ -1028,104 +1045,131 @@ async def start_handler(message: types.Message):
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": ""
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_source (узел start)")# @@NODE_END:start@@
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_source (узел start)")
+# @@NODE_END:start@@
 
 # @@NODE_START:join_request@@
+
     # Обработчик для узла join_request типа message будет сгенерирован отдельно
 # @@NODE_END:join_request@@
 
 # @@NODE_START:decline_response@@
+
     # Обработчик для узла decline_response типа message будет сгенерирован отдельно
 # @@NODE_END:decline_response@@
 
 # @@NODE_START:gender_selection@@
+
     # Обработчик для узла gender_selection типа message будет сгенерирован отдельно
 # @@NODE_END:gender_selection@@
 
 # @@NODE_START:name_input@@
+
     # Обработчик для узла name_input типа message будет сгенерирован отдельно
 # @@NODE_END:name_input@@
 
 # @@NODE_START:age_input@@
+
     # Обработчик для узла age_input типа message будет сгенерирован отдельно
 # @@NODE_END:age_input@@
 
 # @@NODE_START:metro_selection@@
+
     # Обработчик для узла metro_selection типа message будет сгенерирован отдельно
 # @@NODE_END:metro_selection@@
 
 # @@NODE_START:red_line_stations@@
+
     # Обработчик для узла red_line_stations типа message будет сгенерирован отдельно
 # @@NODE_END:red_line_stations@@
 
 # @@NODE_START:blue_line_stations@@
+
     # Обработчик для узла blue_line_stations типа message будет сгенерирован отдельно
 # @@NODE_END:blue_line_stations@@
 
 # @@NODE_START:green_line_stations@@
+
     # Обработчик для узла green_line_stations типа message будет сгенерирован отдельно
 # @@NODE_END:green_line_stations@@
 
 # @@NODE_START:purple_line_stations@@
+
     # Обработчик для узла purple_line_stations типа message будет сгенерирован отдельно
 # @@NODE_END:purple_line_stations@@
 
 # @@NODE_START:interests_categories@@
+
     # Обработчик для узла interests_categories типа message будет сгенерирован отдельно
 # @@NODE_END:interests_categories@@
 
 # @@NODE_START:music_interests@@
+
     # Обработчик для узла music_interests типа message будет сгенерирован отдельно
 # @@NODE_END:music_interests@@
 
 # @@NODE_START:hobby_interests@@
+
     # Обработчик для узла hobby_interests типа message будет сгенерирован отдельно
 # @@NODE_END:hobby_interests@@
 
 # @@NODE_START:social_interests@@
+
     # Обработчик для узла social_interests типа message будет сгенерирован отдельно
 # @@NODE_END:social_interests@@
 
 # @@NODE_START:creativity_interests@@
+
     # Обработчик для узла creativity_interests типа message будет сгенерирован отдельно
 # @@NODE_END:creativity_interests@@
 
 # @@NODE_START:active_interests@@
+
     # Обработчик для узла active_interests типа message будет сгенерирован отдельно
 # @@NODE_END:active_interests@@
 
 # @@NODE_START:food_interests@@
+
     # Обработчик для узла food_interests типа message будет сгенерирован отдельно
 # @@NODE_END:food_interests@@
 
 # @@NODE_START:sport_interests@@
+
     # Обработчик для узла sport_interests типа message будет сгенерирован отдельно
 # @@NODE_END:sport_interests@@
 
 # @@NODE_START:marital_status@@
+
     # Обработчик для узла marital_status типа message будет сгенерирован отдельно
 # @@NODE_END:marital_status@@
 
 # @@NODE_START:sexual_orientation@@
+
     # Обработчик для узла sexual_orientation типа message будет сгенерирован отдельно
 # @@NODE_END:sexual_orientation@@
 
 # @@NODE_START:channel_choice@@
+
     # Обработчик для узла channel_choice типа message будет сгенерирован отдельно
 # @@NODE_END:channel_choice@@
 
 # @@NODE_START:extra_info@@
+
     # Обработчик для узла extra_info типа message будет сгенерирован отдельно
 # @@NODE_END:extra_info@@
 
 # @@NODE_START:profile_complete@@
+
     # Обработчик для узла profile_complete типа message будет сгенерирован отдельно
 # @@NODE_END:profile_complete@@
 
 # @@NODE_START:show_profile@@
+
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("profile"))
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
 async def profile_handler(message: types.Message):
     logging.info(f"Команда /profile вызвана пользователем {message.from_user.id}")
     # Сохраняем пользователя и статистику использования команд
@@ -1146,6 +1190,7 @@ async def profile_handler(message: types.Message):
 
     # Обновляем статистику команд в БД
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if saved_to_db:
         await update_user_data_in_db(user_id, "command_profile", datetime.now().isoformat())
 
@@ -1154,6 +1199,7 @@ async def profile_handler(message: types.Message):
     user_name = init_user_variables(user_id, message.from_user)
 
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if "commands_used" not in user_data[user_id]:
         user_data[user_id]["commands_used"] = {}
     user_data[user_id]["commands_used"]["/profile"] = user_data[user_id]["commands_used"].get("/profile", 0) + 1
@@ -1175,50 +1221,60 @@ async def profile_handler(message: types.Message):
     # Универсальная замена переменных
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     # get_user_from_db теперь возвращает уже обработанные user_data
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     # get_user_from_db теперь возвращает уже обработанные user_data
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
@@ -1227,24 +1283,58 @@ async def profile_handler(message: types.Message):
     # DEBUG: Узел show_profile - hasRegularButtons=True, hasInputCollection=False
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="👤 Изменить пол", callback_data="gender_selection"))
-    builder.add(InlineKeyboardButton(text="✏️ Изменить имя", callback_data="name_input"))
-    builder.add(InlineKeyboardButton(text="🎂 Изменить возраст", callback_data="age_input"))
-    builder.add(InlineKeyboardButton(text="🚇 Изменить метро", callback_data="metro_selection"))
-    builder.add(InlineKeyboardButton(text="🎯 Изменить интересы", callback_data="interests_categories"))
-    builder.add(InlineKeyboardButton(text="💍 Изменить семейное положение", callback_data="marital_status"))
-    builder.add(InlineKeyboardButton(text="🌈 Изменить ориентацию", callback_data="sexual_orientation"))
-    builder.add(InlineKeyboardButton(text="📢 Указать ТГК", callback_data="channel_choice"))
-    builder.add(InlineKeyboardButton(text="📝 Добавить о себе", callback_data="extra_info"))
-    builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👤 Изменить пол"
+# Результат: "👤 Изменить пол"
+"👤 Изменить пол", callback_data="gender_selection"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "✏️ Изменить имя"
+# Результат: "✏️ Изменить имя"
+"✏️ Изменить имя", callback_data="name_input"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎂 Изменить возраст"
+# Результат: "🎂 Изменить возраст"
+"🎂 Изменить возраст", callback_data="age_input"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🚇 Изменить метро"
+# Результат: "🚇 Изменить метро"
+"🚇 Изменить метро", callback_data="metro_selection"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎯 Изменить интересы"
+# Результат: "🎯 Изменить интересы"
+"🎯 Изменить интересы", callback_data="interests_categories"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "💍 Изменить семейное положение"
+# Результат: "💍 Изменить семейное положение"
+"💍 Изменить семейное положение", callback_data="marital_status"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🌈 Изменить ориентацию"
+# Результат: "🌈 Изменить ориентацию"
+"🌈 Изменить ориентацию", callback_data="sexual_orientation"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "📢 Указать ТГК"
+# Результат: "📢 Указать ТГК"
+"📢 Указать ТГК", callback_data="channel_choice"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "📝 Добавить о себе"
+# Результат: "📝 Добавить о себе"
+"📝 Добавить о себе", callback_data="extra_info"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🔄 Начать заново"
+# Результат: "🔄 Начать заново"
+"🔄 Начать заново", callback_data="cmd_start"))
     builder.adjust(2)
     keyboard = builder.as_markup()
-    await message.answer(text, reply_markup=keyboard, node_id="show_profile")# @@NODE_END:show_profile@@
+    await message.answer(text, reply_markup=keyboard, node_id="show_profile")
+# @@NODE_END:show_profile@@
 
 # @@NODE_START:chat_link@@
+
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("link"))
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
 async def link_handler(message: types.Message):
     logging.info(f"Команда /link вызвана пользователем {message.from_user.id}")
     # Сохраняем пользователя и статистику использования команд
@@ -1265,6 +1355,7 @@ async def link_handler(message: types.Message):
 
     # Обновляем статистику команд в БД
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if saved_to_db:
         await update_user_data_in_db(user_id, "command_link", datetime.now().isoformat())
 
@@ -1273,6 +1364,7 @@ async def link_handler(message: types.Message):
     user_name = init_user_variables(user_id, message.from_user)
 
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if "commands_used" not in user_data[user_id]:
         user_data[user_id]["commands_used"] = {}
     user_data[user_id]["commands_used"]["/link"] = user_data[user_id]["commands_used"].get("/link", 0) + 1
@@ -1286,62 +1378,76 @@ https://t.me/+agkIVgCzHtY2ZTA6
     # Универсальная замена переменных
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     # get_user_from_db теперь возвращает уже обработанные user_data
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     # get_user_from_db теперь возвращает уже обработанные user_data
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
     has_regular_buttons = False
     has_input_collection = False
     # DEBUG: Узел chat_link - hasRegularButtons=False, hasInputCollection=False
-    await message.answer(text, node_id="chat_link")# @@NODE_END:chat_link@@
+    await message.answer(text, node_id="chat_link")
+# @@NODE_END:chat_link@@
 
 # @@NODE_START:help_command@@
+
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("help"))
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
 async def help_handler(message: types.Message):
     logging.info(f"Команда /help вызвана пользователем {message.from_user.id}")
     # Сохраняем пользователя и статистику использования команд
@@ -1362,6 +1468,7 @@ async def help_handler(message: types.Message):
 
     # Обновляем статистику команд в БД
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if saved_to_db:
         await update_user_data_in_db(user_id, "command_help", datetime.now().isoformat())
 
@@ -1370,6 +1477,7 @@ async def help_handler(message: types.Message):
     user_name = init_user_variables(user_id, message.from_user)
 
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if "commands_used" not in user_data[user_id]:
         user_data[user_id]["commands_used"] = {}
     user_data[user_id]["commands_used"]["/help"] = user_data[user_id]["commands_used"].get("/help", 0) + 1
@@ -1490,50 +1598,60 @@ async def help_handler(message: types.Message):
     # Универсальная замена переменных
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     # get_user_from_db теперь возвращает уже обработанные user_data
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     # get_user_from_db теперь возвращает уже обработанные user_data
 # Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     text = replace_variables_in_text(text, user_vars)
@@ -1542,18 +1660,31 @@ async def help_handler(message: types.Message):
     # DEBUG: Узел help_command - hasRegularButtons=True, hasInputCollection=False
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🚀 Начать заполнение", callback_data="cmd_start"))
-    builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="cmd_profile"))
-    builder.add(InlineKeyboardButton(text="🔗 Ссылка на чат", callback_data="cmd_link"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🚀 Начать заполнение"
+# Результат: "🚀 Начать заполнение"
+"🚀 Начать заполнение", callback_data="cmd_start"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👤 Мой профиль"
+# Результат: "👤 Мой профиль"
+"👤 Мой профиль", callback_data="cmd_profile"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🔗 Ссылка на чат"
+# Результат: "🔗 Ссылка на чат"
+"🔗 Ссылка на чат", callback_data="cmd_link"))
     builder.adjust(1)
     keyboard = builder.as_markup()
-    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN, node_id="help_command")# @@NODE_END:help_command@@
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN, node_id="help_command")
+# @@NODE_END:help_command@@
 
 # @@NODE_START:pin_message_node@@
 
+
 # Pin Message Handler
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("pin_message_pin_message_node_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
     """
     Обработчик callback запросов команды закрепления
@@ -1563,6 +1694,7 @@ async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
     chat_id = callback_query.message.chat.id  # Определяем ID группы из контекста сообщения
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if callback_query.message.chat.type not in ['group', 'supergroup']:
         await callback_query.message.answer("❌ Команда работает только в группах")
         return
@@ -1570,6 +1702,7 @@ async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
     # Определяем целевое сообщение из callback_data
     target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_message_id:
         await callback_query.message.answer("❌ Не удалось определить ID сообщения для закрепления")
         return
@@ -1583,6 +1716,7 @@ async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
         await callback_query.message.answer("✅ Сообщение закреплено")
         logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to pin not found" in str(e) or "message not found" in str(e):
             await callback_query.message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -1598,7 +1732,9 @@ async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
         await callback_query.answer()
     except:
         pass
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("pin_message"))
+# Код сгенерирован в generate-node-handlers.ts
 async def pin_message_pin_message_node_command_handler(message: types.Message):
     """
     Обработчик команды /pin_message
@@ -1609,6 +1745,7 @@ async def pin_message_pin_message_node_command_handler(message: types.Message):
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -1616,10 +1753,12 @@ async def pin_message_pin_message_node_command_handler(message: types.Message):
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_message_id = message.reply_to_message.message_id
     else:
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
         else:
@@ -1635,6 +1774,7 @@ async def pin_message_pin_message_node_command_handler(message: types.Message):
         await message.answer("✅ Сообщение закреплено")
         logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to pin not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -1647,7 +1787,9 @@ async def pin_message_pin_message_node_command_handler(message: types.Message):
         logging.error(f"Неожиданная ошибка при закреплении: {e}")
 
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and message.text.lower().startswith("закрепить") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def pin_message_pin_message_node_закрепить_handler(message: types.Message):
     """
     Обработчик для закрепления сообщения по команде 'закрепить'
@@ -1659,6 +1801,7 @@ async def pin_message_pin_message_node_закрепить_handler(message: types
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -1666,6 +1809,7 @@ async def pin_message_pin_message_node_закрепить_handler(message: types
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")
@@ -1684,6 +1828,7 @@ async def pin_message_pin_message_node_закрепить_handler(message: types
         await message.answer("✅ Сообщение закреплено")
         logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to pin not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -1696,7 +1841,9 @@ async def pin_message_pin_message_node_закрепить_handler(message: types
         logging.error(f"Неожиданная ошибка при закреплении: {e}")
 
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and message.text.lower().startswith("прикрепить") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def pin_message_pin_message_node_прикрепить_handler(message: types.Message):
     """
     Обработчик для закрепления сообщения по команде 'прикрепить'
@@ -1708,6 +1855,7 @@ async def pin_message_pin_message_node_прикрепить_handler(message: typ
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -1715,6 +1863,7 @@ async def pin_message_pin_message_node_прикрепить_handler(message: typ
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")
@@ -1733,6 +1882,7 @@ async def pin_message_pin_message_node_прикрепить_handler(message: typ
         await message.answer("✅ Сообщение закреплено")
         logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to pin not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -1745,7 +1895,9 @@ async def pin_message_pin_message_node_прикрепить_handler(message: typ
         logging.error(f"Неожиданная ошибка при закреплении: {e}")
 
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and message.text.lower().startswith("зафиксировать") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def pin_message_pin_message_node_зафиксировать_handler(message: types.Message):
     """
     Обработчик для закрепления сообщения по команде 'зафиксировать'
@@ -1757,6 +1909,7 @@ async def pin_message_pin_message_node_зафиксировать_handler(messag
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -1764,6 +1917,7 @@ async def pin_message_pin_message_node_зафиксировать_handler(messag
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")
@@ -1782,6 +1936,7 @@ async def pin_message_pin_message_node_зафиксировать_handler(messag
         await message.answer("✅ Сообщение закреплено")
         logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to pin not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -1793,13 +1948,17 @@ async def pin_message_pin_message_node_зафиксировать_handler(messag
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при закреплении: {e}")
 
+
 # @@NODE_END:pin_message_node@@
 
 # @@NODE_START:unpin_message_node@@
 
+
 # Unpin Message Handler
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("unpin_message_unpin_message_node_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery):
     """
     Обработчик callback запросов команды открепления
@@ -1809,6 +1968,7 @@ async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery
     chat_id = callback_query.message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if callback_query.message.chat.type not in ['group', 'supergroup']:
         await callback_query.message.answer("❌ Команда работает только в группах")
         return
@@ -1818,6 +1978,7 @@ async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery
         await callback_query.message.answer("✅ Все сообщения откреплены")
         logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to unpin not found" in str(e) or "not found" in str(e):
             await callback_query.message.answer("❌ Нечего откреплять")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -1834,7 +1995,9 @@ async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery
     except:
         pass
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("unpin_message"))
+# Код сгенерирован в generate-node-handlers.ts
 async def unpin_message_unpin_message_node_command_handler(message: types.Message):
     """
     Обработчик команды /unpin_message
@@ -1845,6 +2008,7 @@ async def unpin_message_unpin_message_node_command_handler(message: types.Messag
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -1852,10 +2016,12 @@ async def unpin_message_unpin_message_node_command_handler(message: types.Messag
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_message_id = message.reply_to_message.message_id
     else:
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
         else:
@@ -1863,6 +2029,7 @@ async def unpin_message_unpin_message_node_command_handler(message: types.Messag
             target_message_id = None
     
     try:
+# Код сгенерирован в generate-node-handlers.ts
         if target_message_id:
             await bot.unpin_chat_message(
                 chat_id=chat_id,
@@ -1875,6 +2042,7 @@ async def unpin_message_unpin_message_node_command_handler(message: types.Messag
             await message.answer("✅ Все сообщения откреплены")
             logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to unpin not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -1887,7 +2055,9 @@ async def unpin_message_unpin_message_node_command_handler(message: types.Messag
         logging.error(f"Неожиданная ошибка при откреплении: {e}")
 
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and message.text.lower().startswith("открепить") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def unpin_message_unpin_message_node_открепить_handler(message: types.Message):
     """
     Обработчик для открепления сообщения по команде 'открепить'
@@ -1899,6 +2069,7 @@ async def unpin_message_unpin_message_node_открепить_handler(message: t
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -1906,6 +2077,7 @@ async def unpin_message_unpin_message_node_открепить_handler(message: t
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления в группе {chat_id}")
@@ -1916,6 +2088,7 @@ async def unpin_message_unpin_message_node_открепить_handler(message: t
     
     try:
         # Открепляем сообщение в текущей группе
+# Код сгенерирован в generate-node-handlers.ts
         if target_message_id:
             await bot.unpin_chat_message(
                 chat_id=chat_id,
@@ -1928,6 +2101,7 @@ async def unpin_message_unpin_message_node_открепить_handler(message: t
             await message.answer("✅ Все сообщения откреплены")
             logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to unpin not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -1940,7 +2114,9 @@ async def unpin_message_unpin_message_node_открепить_handler(message: t
         logging.error(f"Неожиданная ошибка при откреплении: {e}")
 
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and message.text.lower().startswith("отцепить") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def unpin_message_unpin_message_node_отцепить_handler(message: types.Message):
     """
     Обработчик для открепления сообщения по команде 'отцепить'
@@ -1952,6 +2128,7 @@ async def unpin_message_unpin_message_node_отцепить_handler(message: typ
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -1959,6 +2136,7 @@ async def unpin_message_unpin_message_node_отцепить_handler(message: typ
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления в группе {chat_id}")
@@ -1969,6 +2147,7 @@ async def unpin_message_unpin_message_node_отцепить_handler(message: typ
     
     try:
         # Открепляем сообщение в текущей группе
+# Код сгенерирован в generate-node-handlers.ts
         if target_message_id:
             await bot.unpin_chat_message(
                 chat_id=chat_id,
@@ -1981,6 +2160,7 @@ async def unpin_message_unpin_message_node_отцепить_handler(message: typ
             await message.answer("✅ Все сообщения откреплены")
             logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to unpin not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -1993,7 +2173,9 @@ async def unpin_message_unpin_message_node_отцепить_handler(message: typ
         logging.error(f"Неожиданная ошибка при откреплении: {e}")
 
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and message.text.lower().startswith("убрать закрепление") and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def unpin_message_unpin_message_node_убрать_закрепление_handler(message: types.Message):
     """
     Обработчик для открепления сообщения по команде 'убрать закрепление'
@@ -2005,6 +2187,7 @@ async def unpin_message_unpin_message_node_убрать_закрепление_h
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -2012,6 +2195,7 @@ async def unpin_message_unpin_message_node_убрать_закрепление_h
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления в группе {chat_id}")
@@ -2022,6 +2206,7 @@ async def unpin_message_unpin_message_node_убрать_закрепление_h
     
     try:
         # Открепляем сообщение в текущей группе
+# Код сгенерирован в generate-node-handlers.ts
         if target_message_id:
             await bot.unpin_chat_message(
                 chat_id=chat_id,
@@ -2034,6 +2219,7 @@ async def unpin_message_unpin_message_node_убрать_закрепление_h
             await message.answer("✅ Все сообщения откреплены")
             logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to unpin not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -2045,13 +2231,17 @@ async def unpin_message_unpin_message_node_убрать_закрепление_h
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при откреплении: {e}")
 
+
 # @@NODE_END:unpin_message_node@@
 
 # @@NODE_START:delete_message_node@@
 
+
 # Delete Message Handler
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("delete_message_delete_message_node_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def handle_callback_delete_message_node(callback_query: types.CallbackQuery):
     """
     Обработчик callback запросов команды удаления
@@ -2061,6 +2251,7 @@ async def handle_callback_delete_message_node(callback_query: types.CallbackQuer
     chat_id = callback_query.message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if callback_query.message.chat.type not in ['group', 'supergroup']:
         await callback_query.message.answer("❌ Команда работает только в группах")
         return
@@ -2068,6 +2259,7 @@ async def handle_callback_delete_message_node(callback_query: types.CallbackQuer
     # Определяем целевое сообщение из callback_data
     target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_message_id:
         await callback_query.message.answer("❌ Не удалось определить ID сообщения для удаления")
         return
@@ -2080,6 +2272,7 @@ async def handle_callback_delete_message_node(callback_query: types.CallbackQuer
         await callback_query.message.answer("🗑️ Сообщение успешно удалено!")
         logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to delete not found" in str(e) or "message not found" in str(e):
             await callback_query.message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -2100,7 +2293,9 @@ async def handle_callback_delete_message_node(callback_query: types.CallbackQuer
 # Поддерживает ответ на сообщение для автоматического определения target message ID
 # Работает в любых группах где бот имеет права администратора
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("delete_message"))
+# Код сгенерирован в generate-node-handlers.ts
 async def delete_message_delete_message_node_command_handler(message: types.Message):
     """
     Обработчик команды /delete_message
@@ -2110,6 +2305,7 @@ async def delete_message_delete_message_node_command_handler(message: types.Mess
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -2117,6 +2313,7 @@ async def delete_message_delete_message_node_command_handler(message: types.Mess
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -2124,6 +2321,7 @@ async def delete_message_delete_message_node_command_handler(message: types.Mess
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления")
@@ -2141,6 +2339,7 @@ async def delete_message_delete_message_node_command_handler(message: types.Mess
         await message.answer("🗑️ Сообщение успешно удалено!")
         logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to delete not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -2153,7 +2352,9 @@ async def delete_message_delete_message_node_command_handler(message: types.Mess
         logging.error(f"Неожиданная ошибка при удалении: {e}")
 
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and (message.text.lower() == "удалить" or message.text.lower().startswith("удалить ")) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def delete_message_delete_message_node_удалить_handler(message: types.Message):
     """
     Обработчик синонима 'удалить' для удаления сообщения
@@ -2165,6 +2366,7 @@ async def delete_message_delete_message_node_удалить_handler(message: typ
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -2172,6 +2374,7 @@ async def delete_message_delete_message_node_удалить_handler(message: typ
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним 'удалить'")
@@ -2189,6 +2392,7 @@ async def delete_message_delete_message_node_удалить_handler(message: typ
         await message.answer("🗑️ Сообщение успешно удалено!")
         logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним 'удалить'")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to delete not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -2201,7 +2405,9 @@ async def delete_message_delete_message_node_удалить_handler(message: typ
         logging.error(f"Неожиданная ошибка при удалении через синоним 'удалить': {e}")
 
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and (message.text.lower() == "стереть" or message.text.lower().startswith("стереть ")) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def delete_message_delete_message_node_стереть_handler(message: types.Message):
     """
     Обработчик синонима 'стереть' для удаления сообщения
@@ -2213,6 +2419,7 @@ async def delete_message_delete_message_node_стереть_handler(message: typ
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -2220,6 +2427,7 @@ async def delete_message_delete_message_node_стереть_handler(message: typ
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним 'стереть'")
@@ -2237,6 +2445,7 @@ async def delete_message_delete_message_node_стереть_handler(message: typ
         await message.answer("🗑️ Сообщение успешно удалено!")
         logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним 'стереть'")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to delete not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -2249,7 +2458,9 @@ async def delete_message_delete_message_node_стереть_handler(message: typ
         logging.error(f"Неожиданная ошибка при удалении через синоним 'стереть': {e}")
 
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and (message.text.lower() == "убрать сообщение" or message.text.lower().startswith("убрать сообщение ")) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def delete_message_delete_message_node_убрать_сообщение_handler(message: types.Message):
     """
     Обработчик синонима 'убрать сообщение' для удаления сообщения
@@ -2261,6 +2472,7 @@ async def delete_message_delete_message_node_убрать_сообщение_han
     # Определяем целевое сообщение
     target_message_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         # Если есть ответ на сообщение - используем его
         target_message_id = message.reply_to_message.message_id
@@ -2268,6 +2480,7 @@ async def delete_message_delete_message_node_убрать_сообщение_han
     else:
         # Если нет ответа, проверяем текст на наличие ID сообщения
         text_parts = message.text.split()
+# Код сгенерирован в generate-node-handlers.ts
         if len(text_parts) > 1 and text_parts[1].isdigit():
             target_message_id = int(text_parts[1])
             logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним 'убрать сообщение'")
@@ -2285,6 +2498,7 @@ async def delete_message_delete_message_node_убрать_сообщение_han
         await message.answer("🗑️ Сообщение успешно удалено!")
         logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним 'убрать сообщение'")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "message to delete not found" in str(e) or "message not found" in str(e):
             await message.answer("❌ Сообщение не найдено")
         elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
@@ -2296,12 +2510,16 @@ async def delete_message_delete_message_node_убрать_сообщение_han
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при удалении через синоним 'убрать сообщение': {e}")
 
+
 # @@NODE_END:delete_message_node@@
 
 # @@NODE_START:ban_user_node@@
 
+
 # Ban User Handler
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("ban_user"))
+# Код сгенерирован в generate-node-handlers.ts
 async def ban_user_ban_user_node_command_handler(message: types.Message):
     """
     Обработчик команды /ban_user
@@ -2312,6 +2530,7 @@ async def ban_user_ban_user_node_command_handler(message: types.Message):
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -2319,21 +2538,26 @@ async def ban_user_ban_user_node_command_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
         target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name
     else:
         text_parts = message.text.split()
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для блокировки")
         return
@@ -2347,6 +2571,7 @@ async def ban_user_ban_user_node_command_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
         logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для блокировки пользователя")
         else:
@@ -2356,7 +2581,9 @@ async def ban_user_ban_user_node_command_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при блокировке: {e}")
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["забанить", "заблокировать", "бан"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def ban_user_ban_user_node_handler(message: types.Message):
     """
     Обработчик для блокировки пользователя
@@ -2370,21 +2597,26 @@ async def ban_user_ban_user_node_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
         target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name
     else:
         text_parts = message.text.split()
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для блокировки")
         return
@@ -2398,6 +2630,7 @@ async def ban_user_ban_user_node_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
         logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для блокировки пользователя")
         else:
@@ -2407,12 +2640,16 @@ async def ban_user_ban_user_node_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при блокировке: {e}")
 
+
 # @@NODE_END:ban_user_node@@
 
 # @@NODE_START:unban_user_node@@
 
+
 # Unban User Handler
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("unban_user"))
+# Код сгенерирован в generate-node-handlers.ts
 async def unban_user_unban_user_node_command_handler(message: types.Message):
     """
     Обработчик команды /unban_user
@@ -2423,6 +2660,7 @@ async def unban_user_unban_user_node_command_handler(message: types.Message):
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -2431,16 +2669,20 @@ async def unban_user_unban_user_node_command_handler(message: types.Message):
     target_user_id = None
     
     # Проверяем, есть ли ответ на сообщение
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
         logging.info(f"Определен пользователь для разбана из reply: {target_user_id}")
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для разблокировки")
             return
@@ -2455,6 +2697,7 @@ async def unban_user_unban_user_node_command_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
         logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для разблокировки пользователя")
         else:
@@ -2464,7 +2707,9 @@ async def unban_user_unban_user_node_command_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при разблокировке: {e}")
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["разбанить", "разблокировать", "unbан"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def unban_user_unban_user_node_handler(message: types.Message):
     """
     Обработчик для разблокировки пользователя
@@ -2478,16 +2723,20 @@ async def unban_user_unban_user_node_handler(message: types.Message):
     target_user_id = None
     
     # Проверяем, есть ли ответ на сообщение
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
         logging.info(f"Определен пользователь для разбана из reply: {target_user_id}")
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для разблокировки")
             return
@@ -2502,6 +2751,7 @@ async def unban_user_unban_user_node_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
         logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для разблокировки пользователя")
         else:
@@ -2511,12 +2761,16 @@ async def unban_user_unban_user_node_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при разблокировке: {e}")
 
+
 # @@NODE_END:unban_user_node@@
 
 # @@NODE_START:mute_user_node@@
 
+
 # Mute User Handler
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("mute_user"))
+# Код сгенерирован в generate-node-handlers.ts
 async def mute_user_mute_user_node_command_handler(message: types.Message):
     """
     Обработчик команды /mute_user
@@ -2527,6 +2781,7 @@ async def mute_user_mute_user_node_command_handler(message: types.Message):
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -2534,19 +2789,24 @@ async def mute_user_mute_user_node_command_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для ограничения")
         return
@@ -2580,6 +2840,7 @@ async def mute_user_mute_user_node_command_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
         logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id} в группе {chat_id} на 3600 секунд")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для ограничения пользователя")
         else:
@@ -2589,7 +2850,9 @@ async def mute_user_mute_user_node_command_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при ограничении: {e}")
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["замутить", "заглушить", "мут"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def mute_user_mute_user_node_handler(message: types.Message):
     """
     Обработчик для ограничения пользователя
@@ -2602,19 +2865,24 @@ async def mute_user_mute_user_node_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для ограничения")
         return
@@ -2648,6 +2916,7 @@ async def mute_user_mute_user_node_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
         logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id} в группе {chat_id} на 3600 секунд")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для ограничения пользователя")
         else:
@@ -2657,12 +2926,16 @@ async def mute_user_mute_user_node_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при ограничении: {e}")
 
+
 # @@NODE_END:mute_user_node@@
 
 # @@NODE_START:unmute_user_node@@
 
+
 # Unmute User Handler
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("unmute_user"))
+# Код сгенерирован в generate-node-handlers.ts
 async def unmute_user_unmute_user_node_command_handler(message: types.Message):
     """
     Обработчик команды /unmute_user
@@ -2673,6 +2946,7 @@ async def unmute_user_unmute_user_node_command_handler(message: types.Message):
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -2680,19 +2954,24 @@ async def unmute_user_unmute_user_node_command_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для снятия ограничений")
         return
@@ -2716,6 +2995,7 @@ async def unmute_user_unmute_user_node_command_handler(message: types.Message):
         await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
         logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для снятия ограничений")
         else:
@@ -2725,7 +3005,9 @@ async def unmute_user_unmute_user_node_command_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при снятии ограничений: {e}")
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["размутить", "разглушить", "анмут"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def unmute_user_unmute_user_node_handler(message: types.Message):
     """
     Обработчик для снятия ограничений с пользователя
@@ -2738,19 +3020,24 @@ async def unmute_user_unmute_user_node_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для снятия ограничений")
         return
@@ -2774,6 +3061,7 @@ async def unmute_user_unmute_user_node_handler(message: types.Message):
         await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
         logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для снятия ограничений")
         else:
@@ -2783,12 +3071,16 @@ async def unmute_user_unmute_user_node_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при снятии ограничений: {e}")
 
+
 # @@NODE_END:unmute_user_node@@
 
 # @@NODE_START:kick_user_node@@
 
+
 # Kick User Handler
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("kick_user"))
+# Код сгенерирован в generate-node-handlers.ts
 async def kick_user_kick_user_node_command_handler(message: types.Message):
     """
     Обработчик команды /kick_user
@@ -2799,6 +3091,7 @@ async def kick_user_kick_user_node_command_handler(message: types.Message):
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -2806,19 +3099,24 @@ async def kick_user_kick_user_node_command_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для исключения")
         return
@@ -2840,6 +3138,7 @@ async def kick_user_kick_user_node_command_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
         logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для исключения пользователя")
         else:
@@ -2849,7 +3148,9 @@ async def kick_user_kick_user_node_command_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при исключении: {e}")
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["кикнуть", "исключить", "выгнать"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def kick_user_kick_user_node_handler(message: types.Message):
     """
     Обработчик для исключения пользователя из группы
@@ -2863,19 +3164,24 @@ async def kick_user_kick_user_node_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для исключения")
         return
@@ -2902,6 +3208,7 @@ async def kick_user_kick_user_node_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
         logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для исключения пользователя")
         else:
@@ -2911,12 +3218,16 @@ async def kick_user_kick_user_node_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при исключении: {e}")
 
+
 # @@NODE_END:kick_user_node@@
 
 # @@NODE_START:promote_user_node@@
 
+
 # Promote User Handler
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("promote_user"))
+# Код сгенерирован в generate-node-handlers.ts
 async def promote_user_promote_user_node_command_handler(message: types.Message):
     """
     Обработчик команды /promote_user
@@ -2927,6 +3238,7 @@ async def promote_user_promote_user_node_command_handler(message: types.Message)
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -2934,19 +3246,24 @@ async def promote_user_promote_user_node_command_handler(message: types.Message)
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для повышения")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для повышения")
         return
@@ -2968,6 +3285,7 @@ async def promote_user_promote_user_node_command_handler(message: types.Message)
         await message.answer(f"✅ Пользователь {target_user_id} назначен администратором!")
         logging.info(f"Пользователь {target_user_id} назначен администратором {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e) or "RIGHT_FORBIDDEN" in str(e):
             await message.answer("❌ Недостаточно прав для назначения администраторов. Бот должен быть администратором с правом назначать других администраторов.")
         elif "USER_NOT_PARTICIPANT" in str(e):
@@ -2981,7 +3299,9 @@ async def promote_user_promote_user_node_command_handler(message: types.Message)
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при назначении админа: {e}")
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["повысить", "назначить админом", "промоут"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def promote_user_promote_user_node_handler(message: types.Message):
     """
     Обработчик для назначения пользователя администратором
@@ -2995,19 +3315,24 @@ async def promote_user_promote_user_node_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для назначения администратором")
         return
@@ -3037,6 +3362,7 @@ async def promote_user_promote_user_node_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} назначен администратором\nПрава: {rights_text}")
         logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e) or "RIGHT_FORBIDDEN" in str(e):
             await message.answer("❌ Недостаточно прав для назначения администратора. Бот должен быть администратором с правом назначать других администраторов.")
         elif "USER_NOT_PARTICIPANT" in str(e):
@@ -3050,12 +3376,16 @@ async def promote_user_promote_user_node_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при назначении администратора: {e}")
 
+
 # @@NODE_END:promote_user_node@@
 
 # @@NODE_START:demote_user_node@@
 
+
 # Demote User Handler
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("demote_user"))
+# Код сгенерирован в generate-node-handlers.ts
 async def demote_user_demote_user_node_command_handler(message: types.Message):
     """
     Обработчик команды /demote_user
@@ -3066,6 +3396,7 @@ async def demote_user_demote_user_node_command_handler(message: types.Message):
     chat_id = message.chat.id
     
     # Проверяем, что это группа
+# Код сгенерирован в generate-node-handlers.ts
     if message.chat.type not in ['group', 'supergroup']:
         await message.answer("❌ Команда работает только в группах")
         return
@@ -3073,19 +3404,24 @@ async def demote_user_demote_user_node_command_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для понижения")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для понижения")
         return
@@ -3108,6 +3444,7 @@ async def demote_user_demote_user_node_command_handler(message: types.Message):
         await message.answer(f"✅ Пользователь {target_user_id} снят с должности администратора!")
         logging.info(f"Пользователь {target_user_id} понижен администратором {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для понижения администраторов")
         else:
@@ -3117,7 +3454,9 @@ async def demote_user_demote_user_node_command_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при понижении админа: {e}")
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["понизить", "снять с админа", "демоут"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generate-node-handlers.ts
 async def demote_user_demote_user_node_handler(message: types.Message):
     """
     Обработчик для снятия прав администратора с пользователя
@@ -3131,19 +3470,24 @@ async def demote_user_demote_user_node_handler(message: types.Message):
     # Определяем целевого пользователя
     target_user_id = None
     
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message:
         target_user_id = message.reply_to_message.from_user.id
     else:
         # Пробуем найти упоминание пользователя в сообщении
+# Код сгенерирован в generate-node-handlers.ts
         if message.entities:
             for entity in message.entities:
+# Код сгенерирован в generate-node-handlers.ts
                 if entity.type == "text_mention":
                     target_user_id = entity.user.id
                     break
+# Код сгенерирован в generate-node-handlers.ts
         if not target_user_id:
             await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
             return
     
+# Код сгенерирован в generate-node-handlers.ts
     if not target_user_id:
         await message.answer("❌ Не удалось определить пользователя для снятия прав администратора")
         return
@@ -3167,6 +3511,7 @@ async def demote_user_demote_user_node_handler(message: types.Message):
         await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
         logging.info(f"Права администратора сняты с пользователя {target_user_id} пользователем {user_id} в группе {chat_id}")
     except TelegramBadRequest as e:
+# Код сгенерирован в generate-node-handlers.ts
         if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
             await message.answer("❌ Недостаточно прав для снятия прав администратора")
         else:
@@ -3176,12 +3521,16 @@ async def demote_user_demote_user_node_handler(message: types.Message):
         await message.answer("❌ Произошла неожиданная ошибка")
         logging.error(f"Неожиданная ошибка при снятии прав администратора: {e}")
 
+
 # @@NODE_END:demote_user_node@@
 
 # @@NODE_START:admin_rights_node@@
 
+
 # Interactive Admin Rights Handler for admin_rights_node
+# Код сгенерирован в generate-node-handlers.ts
 @dp.message(Command("admin_rights"))
+# Код сгенерирован в generate-node-handlers.ts
 async def admin_rights_node_command_handler(message: types.Message, bot):
     """
     Основной обработчик команды /admin_rights
@@ -3196,10 +3545,12 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
     # Проверяем права вызывающего пользователя
     try:
         current_user_member = await bot.get_chat_member(chat_id, user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if current_user_member.status not in ['administrator', 'creator']:
             await message.answer("❌ У вас нет прав администратора для использования этой команды")
             return
         
+# Код сгенерирован в generate-node-handlers.ts
         if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):
             await message.answer("❌ У вас нет права на управление правами других администраторов")
             return
@@ -3210,6 +3561,7 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
     # Автоматическое определение целевого пользователя
     
     # 1. Проверяем, есть ли ответ на сообщение
+# Код сгенерирован в generate-node-handlers.ts
     if message.reply_to_message and message.reply_to_message.from_user:
         target_user_id = message.reply_to_message.from_user.id
         logging.info(f"Целевой пользователь определен из ответа на сообщение: {target_user_id}")
@@ -3218,6 +3570,7 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
     elif message.entities:
         for entity in message.entities:
             # Приоритет - прямое упоминание с объектом пользователя
+# Код сгенерирован в generate-node-handlers.ts
             if entity.type == "text_mention" and hasattr(entity, 'user'):
                 target_user_id = entity.user.id
                 logging.info(f"Целевой пользователь определен из прямого упоминания: {target_user_id}")
@@ -3229,6 +3582,7 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
                     # Пытаемся найти пользователя по username через участников чата
                     chat_admins = await bot.get_chat_administrators(chat_id)
                     for member in chat_admins:
+# Код сгенерирован в generate-node-handlers.ts
                         if member.user.username and member.user.username.lower() == username.lower():
                             target_user_id = member.user.id
                             logging.info(f"Целевой пользователь определен из упоминания @{username}: {target_user_id}")
@@ -3238,6 +3592,7 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
                 break
     
     # 3. Проверяем, есть ли ID в тексте команды
+# Код сгенерирован в generate-node-handlers.ts
     if target_user_id is None:
         # Ищем числовой ID в аргументах команды
         import re
@@ -3261,6 +3616,7 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
                 continue
     
     # Если целевой пользователь не определен, показываем инструкцию
+# Код сгенерирован в generate-node-handlers.ts
     if target_user_id is None:
         await message.answer(
             "❓ Укажите пользователя для управления правами:\n"
@@ -3273,6 +3629,7 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
     # Проверяем, что целевой пользователь является администратором
     try:
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await message.answer("❌ Указанный пользователь не является администратором")
             return
@@ -3286,37 +3643,44 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
 
 💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
     # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     
     # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
     
     await message.answer(text, reply_markup=keyboard)
 
+# Код сгенерирован в generate-node-handlers.ts
 async def get_admin_rights_admin_rights_node(bot, chat_id, target_user_id):
     """
     Получает текущие права администратора пользователя в чате
     """
     try:
         member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if hasattr(member, 'status') and member.status in ['administrator', 'creator']:
             # Возвращаем основные права администратора включая управление историями
             return {
@@ -3339,6 +3703,7 @@ async def get_admin_rights_admin_rights_node(bot, chat_id, target_user_id):
         logging.error(f"Ошибка при получении прав администратора: {e}")
         return None
 
+# Код сгенерирован в generate-node-handlers.ts
 async def create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id, node_id="admin_rights_node"):
     """
     Создает интерактивную клавиатуру с кнопками-переключателями прав
@@ -3348,6 +3713,7 @@ async def create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_us
     
     builder = InlineKeyboardBuilder()
     
+# Код сгенерирован в generate-node-handlers.ts
     if current_rights is None:
         # Пользователь не администратор
         builder.add(InlineKeyboardButton(text="❌ Пользователь не является администратором", callback_data="no_admin"))
@@ -3385,7 +3751,9 @@ async def create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_us
     builder.adjust(1)  # Располагаем кнопки в одну колонку для лучшей читаемости
     return builder.as_markup()
 
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data == "admin_rights_node")
+# Код сгенерирован в generate-node-handlers.ts
 async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Обработчик callback для узла admin_rights: admin_rights_node
@@ -3400,11 +3768,13 @@ async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery,
     # Проверяем права БОТА (не пользователя) на управление правами администраторов
     try:
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
         
         # Проверяем, может ли бот управлять правами других администраторов
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
@@ -3419,6 +3789,7 @@ async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery,
     target_user_id = user_id  # По умолчанию управляем своими правами
     
     # Если это ответ на сообщение, берем пользователя из ответа
+# Код сгенерирован в generate-node-handlers.ts
     if hasattr(callback_query.message, 'reply_to_message') and callback_query.message.reply_to_message:
         target_user_id = callback_query.message.reply_to_message.from_user.id
         logging.info(f"Управляем правами пользователя {target_user_id} из ответа на сообщение")
@@ -3428,25 +3799,30 @@ async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery,
 
 💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
     # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
 
+# Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
     
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
     
     # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
@@ -3465,7 +3841,9 @@ async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery,
 
 
 # Обработчик переключения права: can_change_info
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_change_i_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_change_info_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_change_info для пользователя
@@ -3476,6 +3854,7 @@ async def toggle_can_change_info_admin_rights_node(callback_query: types.Callbac
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -3492,16 +3871,19 @@ async def toggle_can_change_info_admin_rights_node(callback_query: types.Callbac
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -3557,7 +3939,9 @@ async def toggle_can_change_info_admin_rights_node(callback_query: types.Callbac
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: can_delete_messages
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_delete_m_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_delete_messages_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_delete_messages для пользователя
@@ -3568,6 +3952,7 @@ async def toggle_can_delete_messages_admin_rights_node(callback_query: types.Cal
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -3584,16 +3969,19 @@ async def toggle_can_delete_messages_admin_rights_node(callback_query: types.Cal
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -3649,7 +4037,9 @@ async def toggle_can_delete_messages_admin_rights_node(callback_query: types.Cal
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: can_restrict_members
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_restrict_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_restrict_members_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_restrict_members для пользователя
@@ -3660,6 +4050,7 @@ async def toggle_can_restrict_members_admin_rights_node(callback_query: types.Ca
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -3676,16 +4067,19 @@ async def toggle_can_restrict_members_admin_rights_node(callback_query: types.Ca
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -3741,7 +4135,9 @@ async def toggle_can_restrict_members_admin_rights_node(callback_query: types.Ca
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: can_invite_users
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_invite_u_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_invite_users_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_invite_users для пользователя
@@ -3752,6 +4148,7 @@ async def toggle_can_invite_users_admin_rights_node(callback_query: types.Callba
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -3768,16 +4165,19 @@ async def toggle_can_invite_users_admin_rights_node(callback_query: types.Callba
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -3833,7 +4233,9 @@ async def toggle_can_invite_users_admin_rights_node(callback_query: types.Callba
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: can_pin_messages
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_pin_mess_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_pin_messages_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_pin_messages для пользователя
@@ -3844,6 +4246,7 @@ async def toggle_can_pin_messages_admin_rights_node(callback_query: types.Callba
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -3860,16 +4263,19 @@ async def toggle_can_pin_messages_admin_rights_node(callback_query: types.Callba
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -3925,7 +4331,9 @@ async def toggle_can_pin_messages_admin_rights_node(callback_query: types.Callba
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: can_manage_video_chats
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_manage_v_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_manage_video_chats_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_manage_video_chats для пользователя
@@ -3936,6 +4344,7 @@ async def toggle_can_manage_video_chats_admin_rights_node(callback_query: types.
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -3952,16 +4361,19 @@ async def toggle_can_manage_video_chats_admin_rights_node(callback_query: types.
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -4017,7 +4429,9 @@ async def toggle_can_manage_video_chats_admin_rights_node(callback_query: types.
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: can_post_stories
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_post_sto_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_post_stories_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_post_stories для пользователя
@@ -4028,6 +4442,7 @@ async def toggle_can_post_stories_admin_rights_node(callback_query: types.Callba
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -4044,16 +4459,19 @@ async def toggle_can_post_stories_admin_rights_node(callback_query: types.Callba
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -4109,7 +4527,9 @@ async def toggle_can_post_stories_admin_rights_node(callback_query: types.Callba
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: can_edit_stories
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_edit_sto_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_edit_stories_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_edit_stories для пользователя
@@ -4120,6 +4540,7 @@ async def toggle_can_edit_stories_admin_rights_node(callback_query: types.Callba
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -4136,16 +4557,19 @@ async def toggle_can_edit_stories_admin_rights_node(callback_query: types.Callba
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -4201,7 +4625,9 @@ async def toggle_can_edit_stories_admin_rights_node(callback_query: types.Callba
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: can_delete_stories
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_delete_s_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_delete_stories_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_delete_stories для пользователя
@@ -4212,6 +4638,7 @@ async def toggle_can_delete_stories_admin_rights_node(callback_query: types.Call
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -4228,16 +4655,19 @@ async def toggle_can_delete_stories_admin_rights_node(callback_query: types.Call
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -4293,7 +4723,9 @@ async def toggle_can_delete_stories_admin_rights_node(callback_query: types.Call
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: is_anonymous
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_is_anonymous_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_is_anonymous_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право is_anonymous для пользователя
@@ -4304,6 +4736,7 @@ async def toggle_is_anonymous_admin_rights_node(callback_query: types.CallbackQu
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -4320,16 +4753,19 @@ async def toggle_is_anonymous_admin_rights_node(callback_query: types.CallbackQu
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -4385,7 +4821,9 @@ async def toggle_is_anonymous_admin_rights_node(callback_query: types.CallbackQu
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик переключения права: can_promote_members
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("tr_can_promote__"))
+# Код сгенерирован в generate-node-handlers.ts
 async def toggle_can_promote_members_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Переключает право can_promote_members для пользователя
@@ -4396,6 +4834,7 @@ async def toggle_can_promote_members_admin_rights_node(callback_query: types.Cal
     try:
         data_parts = callback_query.data.split('_')
         # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
+# Код сгенерирован в generate-node-handlers.ts
         if len(data_parts) < 4:
             raise ValueError("Недостаточно частей в callback_data")
         target_user_id = int(data_parts[-2])
@@ -4412,16 +4851,19 @@ async def toggle_can_promote_members_admin_rights_node(callback_query: types.Cal
     try:
         # Проверяем права БОТА на управление правами администраторов
         bot_member = await bot.get_chat_member(chat_id, bot.id)
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
             return
             
+# Код сгенерирован в generate-node-handlers.ts
         if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
             await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
             return
         
         # Получаем текущие права целевого пользователя
         target_member = await bot.get_chat_member(chat_id, target_user_id)
+# Код сгенерирован в generate-node-handlers.ts
         if target_member.status not in ['administrator', 'creator']:
             await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
             return
@@ -4477,7 +4919,9 @@ async def toggle_can_promote_members_admin_rights_node(callback_query: types.Cal
         await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
 
 # Обработчик кнопки обновления прав
+# Код сгенерирован в generate-node-handlers.ts
 @dp.callback_query(lambda c: c.data.startswith("ref_"))
+# Код сгенерирован в generate-node-handlers.ts
 async def refresh_admin_rights_admin_rights_node(callback_query: types.CallbackQuery, bot):
     """
     Обновляет отображение прав администратора
@@ -4504,8 +4948,8 @@ async def refresh_admin_rights_admin_rights_node(callback_query: types.CallbackQ
         logging.error(f"Ошибка при обновлении прав: {e}")
         await safe_edit_or_send(callback_query, "❌ Не удалось обновить права. Попробуйте позже.")
 
-# @@NODE_END:admin_rights_node@@
 
+# @@NODE_END:admin_rights_node@@
 # Обработчики синонимов
 # @@NODE_START:start@@
 
@@ -8414,8 +8858,14 @@ async def handle_callback_gender_selection(callback_query: types.CallbackQuery):
     
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input_btn_0"))
-    builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input_btn_1"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Мужчина 👨"
+# Результат: "Мужчина 👨"
+"Мужчина 👨", callback_data="name_input_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женщина 👩"
+# Результат: "Женщина 👩"
+"Женщина 👩", callback_data="name_input_btn_1"))
     keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -9002,7 +9452,10 @@ async def handle_callback_red_line_stations(callback_query: types.CallbackQuery)
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_e_stations")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_e_stations"))
-    builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -9277,7 +9730,10 @@ async def handle_callback_blue_line_stations(callback_query: types.CallbackQuery
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_e_stations")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_e_stations"))
-    builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -9528,7 +9984,10 @@ async def handle_callback_green_line_stations(callback_query: types.CallbackQuer
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_e_stations")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_e_stations"))
-    builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -9779,7 +10238,10 @@ async def handle_callback_purple_line_stations(callback_query: types.CallbackQue
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_e_stations")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_e_stations"))
-    builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -9979,13 +10441,34 @@ async def handle_callback_interests_categories(callback_query: types.CallbackQue
     
     # Создаем inline клавиатуру с поддержкой множественного выбора
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="music_interests_btn_0"))
-    builder.add(InlineKeyboardButton(text="🎨 Хобби", callback_data="hobby_interests_btn_1"))
-    builder.add(InlineKeyboardButton(text="👥 Общение", callback_data="social_interests_btn_2"))
-    builder.add(InlineKeyboardButton(text="🎭 Творчество", callback_data="creativity_interests_btn_3"))
-    builder.add(InlineKeyboardButton(text="⚽ Активности", callback_data="active_interests_btn_4"))
-    builder.add(InlineKeyboardButton(text="🍔 Еда", callback_data="food_interests_btn_5"))
-    builder.add(InlineKeyboardButton(text="🏋️ Спорт", callback_data="sport_interests_btn_6"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎵 Музыка"
+# Результат: "🎵 Музыка"
+"🎵 Музыка", callback_data="music_interests_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎨 Хобби"
+# Результат: "🎨 Хобби"
+"🎨 Хобби", callback_data="hobby_interests_btn_1"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👥 Общение"
+# Результат: "👥 Общение"
+"👥 Общение", callback_data="social_interests_btn_2"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎭 Творчество"
+# Результат: "🎭 Творчество"
+"🎭 Творчество", callback_data="creativity_interests_btn_3"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⚽ Активности"
+# Результат: "⚽ Активности"
+"⚽ Активности", callback_data="active_interests_btn_4"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🍔 Еда"
+# Результат: "🍔 Еда"
+"🍔 Еда", callback_data="food_interests_btn_5"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🏋️ Спорт"
+# Результат: "🏋️ Спорт"
+"🏋️ Спорт", callback_data="sport_interests_btn_6"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -10230,7 +10713,10 @@ async def handle_callback_music_interests(callback_query: types.CallbackQuery):
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_interests")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_interests"))
-    builder.add(InlineKeyboardButton(text="⬅️ Назад к категориям", callback_data="interests_categories_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к категориям"
+# Результат: "⬅️ Назад к категориям"
+"⬅️ Назад к категориям", callback_data="interests_categories_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -10465,7 +10951,10 @@ async def handle_callback_hobby_interests(callback_query: types.CallbackQuery):
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_interests")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_interests"))
-    builder.add(InlineKeyboardButton(text="⬅️ Назад к категориям", callback_data="interests_categories_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к категориям"
+# Результат: "⬅️ Назад к категориям"
+"⬅️ Назад к категориям", callback_data="interests_categories_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -10690,7 +11179,10 @@ async def handle_callback_social_interests(callback_query: types.CallbackQuery):
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_interests")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_interests"))
-    builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -10919,7 +11411,10 @@ async def handle_callback_creativity_interests(callback_query: types.CallbackQue
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_interests")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_interests"))
-    builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -11148,7 +11643,10 @@ async def handle_callback_active_interests(callback_query: types.CallbackQuery):
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_interests")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_interests"))
-    builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -11377,7 +11875,10 @@ async def handle_callback_food_interests(callback_query: types.CallbackQuery):
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_interests")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_interests"))
-    builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -11606,7 +12107,10 @@ async def handle_callback_sport_interests(callback_query: types.CallbackQuery):
     # Кнопка "Готово" для множественного выбора
     logging.info(f"🔘 Создаем кнопку Готово -> done_interests")
     builder.add(InlineKeyboardButton(text="Готово", callback_data="done_interests"))
-    builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories_btn_0"))
     builder.adjust(2)
     keyboard = builder.as_markup()
     
@@ -11750,10 +12254,22 @@ async def handle_callback_marital_status(callback_query: types.CallbackQuery):
     
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation_btn_0"))
-    builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation_btn_1"))
-    builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation_btn_2"))
-    builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation_btn_3"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation_btn_1"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation_btn_2"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation_btn_3"))
     keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -11909,11 +12425,26 @@ async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery
     
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Гетеро 👫", callback_data="channel_choice_btn_0"))
-    builder.add(InlineKeyboardButton(text="Гей 👬", callback_data="channel_choice_btn_1"))
-    builder.add(InlineKeyboardButton(text="Лесбиянка 👭", callback_data="channel_choice_btn_2"))
-    builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="channel_choice_btn_3"))
-    builder.add(InlineKeyboardButton(text="Другое 🎭", callback_data="channel_choice_btn_4"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Гетеро 👫"
+# Результат: "Гетеро 👫"
+"Гетеро 👫", callback_data="channel_choice_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Гей 👬"
+# Результат: "Гей 👬"
+"Гей 👬", callback_data="channel_choice_btn_1"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Лесбиянка 👭"
+# Результат: "Лесбиянка 👭"
+"Лесбиянка 👭", callback_data="channel_choice_btn_2"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Би 🌈"
+# Результат: "Би 🌈"
+"Би 🌈", callback_data="channel_choice_btn_3"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Другое 🎭"
+# Результат: "Другое 🎭"
+"Другое 🎭", callback_data="channel_choice_btn_4"))
     keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -12089,7 +12620,10 @@ async def handle_callback_channel_choice(callback_query: types.CallbackQuery):
     
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="extra_info_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Пропустить ⏭️"
+# Результат: "Пропустить ⏭️"
+"Пропустить ⏭️", callback_data="extra_info_btn_0"))
     keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -12271,7 +12805,10 @@ async def handle_callback_extra_info(callback_query: types.CallbackQuery):
     
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="profile_complete_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Пропустить ⏭️"
+# Результат: "Пропустить ⏭️"
+"Пропустить ⏭️", callback_data="profile_complete_btn_0"))
     keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -12432,9 +12969,15 @@ async def handle_callback_profile_complete(callback_query: types.CallbackQuery):
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     # Кнопка команды: Ссылка на чат 🔗 -> /link
-    builder.add(InlineKeyboardButton(text="Ссылка на чат 🔗", callback_data="cmd_link"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Ссылка на чат 🔗"
+# Результат: "Ссылка на чат 🔗"
+"Ссылка на чат 🔗", callback_data="cmd_link"))
     # Кнопка команды: Редактировать профиль ✏️ -> /profile
-    builder.add(InlineKeyboardButton(text="Редактировать профиль ✏️", callback_data="cmd_profile"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Редактировать профиль ✏️"
+# Результат: "Редактировать профиль ✏️"
+"Редактировать профиль ✏️", callback_data="cmd_profile"))
     keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -12734,8 +13277,14 @@ async def handle_callback_join_request(callback_query: types.CallbackQuery):
     
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection_btn_0"))
-    builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response_btn_1"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Да 😎"
+# Результат: "Да 😎"
+"Да 😎", callback_data="gender_selection_btn_0"))
+    builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Нет 🙅"
+# Результат: "Нет 🙅"
+"Нет 🙅", callback_data="decline_response_btn_1"))
     keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -13045,8 +13594,14 @@ async def handle_user_input(message: types.Message):
                             user_vars = user_data.get(user_id, {})
                         
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
-                        builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Да 😎"
+# Результат: "Да 😎"
+"Да 😎", callback_data="gender_selection"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Нет 🙅"
+# Результат: "Нет 🙅"
+"Нет 🙅", callback_data="decline_response"))
                         builder.adjust(1)
                         keyboard = builder.as_markup()
                         await message.answer(text, reply_markup=keyboard)
@@ -13119,8 +13674,14 @@ async def handle_user_input(message: types.Message):
                             user_vars = user_data.get(user_id, {})
                         
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input"))
-                        builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Мужчина 👨"
+# Результат: "Мужчина 👨"
+"Мужчина 👨", callback_data="name_input"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женщина 👩"
+# Результат: "Женщина 👩"
+"Женщина 👩", callback_data="name_input"))
                         builder.adjust(1)
                         keyboard = builder.as_markup()
                         await message.answer(text, reply_markup=keyboard)
@@ -13200,12 +13761,30 @@ async def handle_user_input(message: types.Message):
                             user_vars = user_data.get(user_id, {})
                         
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line_stations"))
-                        builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line_stations"))
-                        builder.add(InlineKeyboardButton(text="Зелёная ветка 🟩", callback_data="green_line_stations"))
-                        builder.add(InlineKeyboardButton(text="Фиолетовая ветка 🟪", callback_data="purple_line_stations"))
-                        builder.add(InlineKeyboardButton(text="Я из ЛО 🏡", callback_data="interests_categories"))
-                        builder.add(InlineKeyboardButton(text="Я не в Питере 🌍", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Красная ветка 🟥"
+# Результат: "Красная ветка 🟥"
+"Красная ветка 🟥", callback_data="red_line_stations"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Синяя ветка 🟦"
+# Результат: "Синяя ветка 🟦"
+"Синяя ветка 🟦", callback_data="blue_line_stations"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Зелёная ветка 🟩"
+# Результат: "Зелёная ветка 🟩"
+"Зелёная ветка 🟩", callback_data="green_line_stations"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Фиолетовая ветка 🟪"
+# Результат: "Фиолетовая ветка 🟪"
+"Фиолетовая ветка 🟪", callback_data="purple_line_stations"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Я из ЛО 🏡"
+# Результат: "Я из ЛО 🏡"
+"Я из ЛО 🏡", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Я не в Питере 🌍"
+# Результат: "Я не в Питере 🌍"
+"Я не в Питере 🌍", callback_data="interests_categories"))
                         builder.adjust(2)
                         keyboard = builder.as_markup()
                         await message.answer(text, reply_markup=keyboard)
@@ -13416,7 +13995,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}🟥 Проспект Ветеранов"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_veteranov'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_veteranov"))
-                        builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_red_line_stations"))
                         builder.adjust(2)
@@ -13614,7 +14196,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}🟦 Купчино"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_kupchino'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_kupchino"))
-                        builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_blue_line_stations"))
                         builder.adjust(2)
@@ -13770,7 +14355,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}🟩 Беговая"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_begovaya'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_begovaya"))
-                        builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_green_line_stations"))
                         builder.adjust(2)
@@ -13926,7 +14514,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}🟪 Международная"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_mezhdunar'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_mezhdunar"))
-                        builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_purple_line_stations"))
                         builder.adjust(2)
@@ -13971,13 +14562,34 @@ async def handle_user_input(message: types.Message):
                         user_data[user_id]["multi_select_type"] = "selection"
                         user_data[user_id]["multi_select_variable"] = "interests_categories"
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="music_interests"))
-                        builder.add(InlineKeyboardButton(text="🎨 Хобби", callback_data="hobby_interests"))
-                        builder.add(InlineKeyboardButton(text="👥 Общение", callback_data="social_interests"))
-                        builder.add(InlineKeyboardButton(text="🎭 Творчество", callback_data="creativity_interests"))
-                        builder.add(InlineKeyboardButton(text="⚽ Активности", callback_data="active_interests"))
-                        builder.add(InlineKeyboardButton(text="🍔 Еда", callback_data="food_interests"))
-                        builder.add(InlineKeyboardButton(text="🏋️ Спорт", callback_data="sport_interests"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎵 Музыка"
+# Результат: "🎵 Музыка"
+"🎵 Музыка", callback_data="music_interests"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎨 Хобби"
+# Результат: "🎨 Хобби"
+"🎨 Хобби", callback_data="hobby_interests"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👥 Общение"
+# Результат: "👥 Общение"
+"👥 Общение", callback_data="social_interests"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎭 Творчество"
+# Результат: "🎭 Творчество"
+"🎭 Творчество", callback_data="creativity_interests"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⚽ Активности"
+# Результат: "⚽ Активности"
+"⚽ Активности", callback_data="active_interests"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🍔 Еда"
+# Результат: "🍔 Еда"
+"🍔 Еда", callback_data="food_interests"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🏋️ Спорт"
+# Результат: "🏋️ Спорт"
+"🏋️ Спорт", callback_data="sport_interests"))
                         builder.adjust(2)
                         keyboard = builder.as_markup()
                         # Заменяем все переменные в тексте
@@ -14103,7 +14715,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}🎵 R&B"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_music_rnb'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_music_rnb"))
-                        builder.add(InlineKeyboardButton(text="⬅️ Назад к категориям", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к категориям"
+# Результат: "⬅️ Назад к категориям"
+"⬅️ Назад к категориям", callback_data="interests_categories"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_music_interests"))
                         builder.adjust(2)
@@ -14231,7 +14846,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}💻 Технологии"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_hobby_tech'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_hobby_tech"))
-                        builder.add(InlineKeyboardButton(text="⬅️ Назад к категориям", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к категориям"
+# Результат: "⬅️ Назад к категориям"
+"⬅️ Назад к категориям", callback_data="interests_categories"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_hobby_interests"))
                         builder.adjust(2)
@@ -14343,7 +14961,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}👥 Сообщества"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_social_community'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_social_community"))
-                        builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_social_interests"))
                         builder.adjust(2)
@@ -14462,7 +15083,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}🎭 Театр"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_creati_theater'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_creati_theater"))
-                        builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_creativity_interests"))
                         builder.adjust(2)
@@ -14581,7 +15205,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}💃 Танцы"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_active_dancing'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_active_dancing"))
-                        builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_active_interests"))
                         builder.adjust(2)
@@ -14700,7 +15327,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}🥗 Здоровое питание"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_food_healthy_food'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_food_healthy_food"))
-                        builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_food_interests"))
                         builder.adjust(2)
@@ -14819,7 +15449,10 @@ async def handle_user_input(message: types.Message):
                         final_text = f"{selected_mark}🎮 Киберспорт"
                         logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_sport_esports'")
                         builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_sport_esports"))
-                        builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                         # Добавляем кнопку "Готово" для множественного выбора
                         builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_sport_interests"))
                         builder.adjust(2)
@@ -14857,10 +15490,22 @@ async def handle_user_input(message: types.Message):
                             user_vars = user_data.get(user_id, {})
                         
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-                        builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-                        builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-                        builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
                         builder.adjust(1)
                         keyboard = builder.as_markup()
                         await message.answer(text, reply_markup=keyboard)
@@ -14904,11 +15549,26 @@ async def handle_user_input(message: types.Message):
                             user_vars = user_data.get(user_id, {})
                         
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="Гетеро 👫", callback_data="channel_choice"))
-                        builder.add(InlineKeyboardButton(text="Гей 👬", callback_data="channel_choice"))
-                        builder.add(InlineKeyboardButton(text="Лесбиянка 👭", callback_data="channel_choice"))
-                        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="channel_choice"))
-                        builder.add(InlineKeyboardButton(text="Другое 🎭", callback_data="channel_choice"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Гетеро 👫"
+# Результат: "Гетеро 👫"
+"Гетеро 👫", callback_data="channel_choice"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Гей 👬"
+# Результат: "Гей 👬"
+"Гей 👬", callback_data="channel_choice"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Лесбиянка 👭"
+# Результат: "Лесбиянка 👭"
+"Лесбиянка 👭", callback_data="channel_choice"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Би 🌈"
+# Результат: "Би 🌈"
+"Би 🌈", callback_data="channel_choice"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Другое 🎭"
+# Результат: "Другое 🎭"
+"Другое 🎭", callback_data="channel_choice"))
                         builder.adjust(1)
                         keyboard = builder.as_markup()
                         await message.answer(text, reply_markup=keyboard)
@@ -14954,7 +15614,10 @@ async def handle_user_input(message: types.Message):
                             user_vars = user_data.get(user_id, {})
                         
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="extra_info"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Пропустить ⏭️"
+# Результат: "Пропустить ⏭️"
+"Пропустить ⏭️", callback_data="extra_info"))
                         builder.adjust(1)
                         keyboard = builder.as_markup()
                         await message.answer(text, reply_markup=keyboard)
@@ -15000,7 +15663,10 @@ async def handle_user_input(message: types.Message):
                             user_vars = user_data.get(user_id, {})
                         
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="profile_complete"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Пропустить ⏭️"
+# Результат: "Пропустить ⏭️"
+"Пропустить ⏭️", callback_data="profile_complete"))
                         builder.adjust(1)
                         keyboard = builder.as_markup()
                         await message.answer(text, reply_markup=keyboard)
@@ -15058,9 +15724,15 @@ async def handle_user_input(message: types.Message):
                         # Создаем inline клавиатуру
                         builder = InlineKeyboardBuilder()
                         logging.info(f"Создана кнопка команды: Ссылка на чат 🔗 -> cmd_link")
-                        builder.add(InlineKeyboardButton(text="Ссылка на чат 🔗", callback_data="cmd_link"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Ссылка на чат 🔗"
+# Результат: "Ссылка на чат 🔗"
+"Ссылка на чат 🔗", callback_data="cmd_link"))
                         logging.info(f"Создана кнопка команды: Редактировать профиль ✏️ -> cmd_profile")
-                        builder.add(InlineKeyboardButton(text="Редактировать профиль ✏️", callback_data="cmd_profile"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Редактировать профиль ✏️"
+# Результат: "Редактировать профиль ✏️"
+"Редактировать профиль ✏️", callback_data="cmd_profile"))
                         builder.adjust(1)
                         keyboard = builder.as_markup()
                         logging.info(f"Условная навигация к обычному узлу: profile_complete")
@@ -15106,17 +15778,47 @@ async def handle_user_input(message: types.Message):
                         
                         # Создаем inline клавиатуру
                         builder = InlineKeyboardBuilder()
-                        builder.add(InlineKeyboardButton(text="👤 Изменить пол", callback_data="gender_selection"))
-                        builder.add(InlineKeyboardButton(text="✏️ Изменить имя", callback_data="name_input"))
-                        builder.add(InlineKeyboardButton(text="🎂 Изменить возраст", callback_data="age_input"))
-                        builder.add(InlineKeyboardButton(text="🚇 Изменить метро", callback_data="metro_selection"))
-                        builder.add(InlineKeyboardButton(text="🎯 Изменить интересы", callback_data="interests_categories"))
-                        builder.add(InlineKeyboardButton(text="💍 Изменить семейное положение", callback_data="marital_status"))
-                        builder.add(InlineKeyboardButton(text="🌈 Изменить ориентацию", callback_data="sexual_orientation"))
-                        builder.add(InlineKeyboardButton(text="📢 Указать ТГК", callback_data="channel_choice"))
-                        builder.add(InlineKeyboardButton(text="📝 Добавить о себе", callback_data="extra_info"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👤 Изменить пол"
+# Результат: "👤 Изменить пол"
+"👤 Изменить пол", callback_data="gender_selection"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "✏️ Изменить имя"
+# Результат: "✏️ Изменить имя"
+"✏️ Изменить имя", callback_data="name_input"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎂 Изменить возраст"
+# Результат: "🎂 Изменить возраст"
+"🎂 Изменить возраст", callback_data="age_input"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🚇 Изменить метро"
+# Результат: "🚇 Изменить метро"
+"🚇 Изменить метро", callback_data="metro_selection"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎯 Изменить интересы"
+# Результат: "🎯 Изменить интересы"
+"🎯 Изменить интересы", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "💍 Изменить семейное положение"
+# Результат: "💍 Изменить семейное положение"
+"💍 Изменить семейное положение", callback_data="marital_status"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🌈 Изменить ориентацию"
+# Результат: "🌈 Изменить ориентацию"
+"🌈 Изменить ориентацию", callback_data="sexual_orientation"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "📢 Указать ТГК"
+# Результат: "📢 Указать ТГК"
+"📢 Указать ТГК", callback_data="channel_choice"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "📝 Добавить о себе"
+# Результат: "📝 Добавить о себе"
+"📝 Добавить о себе", callback_data="extra_info"))
                         logging.info(f"Создана кнопка команды: 🔄 Начать заново -> cmd_start")
-                        builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🔄 Начать заново"
+# Результат: "🔄 Начать заново"
+"🔄 Начать заново", callback_data="cmd_start"))
                         builder.adjust(2)
                         keyboard = builder.as_markup()
                         logging.info(f"Условная навигация к обычному узлу: show_profile")
@@ -15295,11 +15997,20 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # Создаем inline клавиатуру
                         builder = InlineKeyboardBuilder()
                         logging.info(f"Создана кнопка команды: 🚀 Начать заполнение -> cmd_start")
-                        builder.add(InlineKeyboardButton(text="🚀 Начать заполнение", callback_data="cmd_start"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🚀 Начать заполнение"
+# Результат: "🚀 Начать заполнение"
+"🚀 Начать заполнение", callback_data="cmd_start"))
                         logging.info(f"Создана кнопка команды: 👤 Мой профиль -> cmd_profile")
-                        builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="cmd_profile"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👤 Мой профиль"
+# Результат: "👤 Мой профиль"
+"👤 Мой профиль", callback_data="cmd_profile"))
                         logging.info(f"Создана кнопка команды: 🔗 Ссылка на чат -> cmd_link")
-                        builder.add(InlineKeyboardButton(text="🔗 Ссылка на чат", callback_data="cmd_link"))
+                        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🔗 Ссылка на чат"
+# Результат: "🔗 Ссылка на чат"
+"🔗 Ссылка на чат", callback_data="cmd_link"))
                         builder.adjust(1)
                         keyboard = builder.as_markup()
                         logging.info(f"Условная навигация к обычному узлу: help_command")
@@ -16287,8 +16998,14 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             logging.info(f"✅ Узел join_request настроен для сбора ввода (collectUserInput=true)")
                             # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
-                            builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
-                            builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Да 😎"
+# Результат: "Да 😎"
+"Да 😎", callback_data="gender_selection"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Нет 🙅"
+# Результат: "Нет 🙅"
+"Нет 🙅", callback_data="decline_response"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
@@ -16377,8 +17094,14 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             logging.info(f"✅ Узел gender_selection настроен для сбора ввода (collectUserInput=true)")
                             # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
-                            builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input"))
-                            builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Мужчина 👨"
+# Результат: "Мужчина 👨"
+"Мужчина 👨", callback_data="name_input"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женщина 👩"
+# Результат: "Женщина 👩"
+"Женщина 👩", callback_data="name_input"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
@@ -16559,12 +17282,30 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             logging.info(f"✅ Узел metro_selection настроен для сбора ввода (collectUserInput=true)")
                             # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
-                            builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line_stations"))
-                            builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line_stations"))
-                            builder.add(InlineKeyboardButton(text="Зелёная ветка 🟩", callback_data="green_line_stations"))
-                            builder.add(InlineKeyboardButton(text="Фиолетовая ветка 🟪", callback_data="purple_line_stations"))
-                            builder.add(InlineKeyboardButton(text="Я из ЛО 🏡", callback_data="interests_categories"))
-                            builder.add(InlineKeyboardButton(text="Я не в Питере 🌍", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Красная ветка 🟥"
+# Результат: "Красная ветка 🟥"
+"Красная ветка 🟥", callback_data="red_line_stations"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Синяя ветка 🟦"
+# Результат: "Синяя ветка 🟦"
+"Синяя ветка 🟦", callback_data="blue_line_stations"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Зелёная ветка 🟩"
+# Результат: "Зелёная ветка 🟩"
+"Зелёная ветка 🟩", callback_data="green_line_stations"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Фиолетовая ветка 🟪"
+# Результат: "Фиолетовая ветка 🟪"
+"Фиолетовая ветка 🟪", callback_data="purple_line_stations"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Я из ЛО 🏡"
+# Результат: "Я из ЛО 🏡"
+"Я из ЛО 🏡", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Я не в Питере 🌍"
+# Результат: "Я не в Питере 🌍"
+"Я не в Питере 🌍", callback_data="interests_categories"))
                             builder.adjust(2)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
@@ -16765,7 +17506,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}🟥 Проспект Ветеранов"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_veteranov'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_veteranov"))
-                            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_red_line_stations"))
                             builder.adjust(2)
@@ -16961,7 +17705,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}🟦 Купчино"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_kupchino'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_kupchino"))
-                            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_blue_line_stations"))
                             builder.adjust(2)
@@ -17115,7 +17862,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}🟩 Беговая"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_begovaya'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_begovaya"))
-                            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_green_line_stations"))
                             builder.adjust(2)
@@ -17269,7 +18019,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}🟪 Международная"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_mezhdunar'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_mezhdunar"))
-                            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_purple_line_stations"))
                             builder.adjust(2)
@@ -17312,13 +18065,34 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             user_data[user_id]["multi_select_type"] = "selection"
                             user_data[user_id]["multi_select_variable"] = "interests_categories"
                             builder = InlineKeyboardBuilder()
-                            builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="music_interests"))
-                            builder.add(InlineKeyboardButton(text="🎨 Хобби", callback_data="hobby_interests"))
-                            builder.add(InlineKeyboardButton(text="👥 Общение", callback_data="social_interests"))
-                            builder.add(InlineKeyboardButton(text="🎭 Творчество", callback_data="creativity_interests"))
-                            builder.add(InlineKeyboardButton(text="⚽ Активности", callback_data="active_interests"))
-                            builder.add(InlineKeyboardButton(text="🍔 Еда", callback_data="food_interests"))
-                            builder.add(InlineKeyboardButton(text="🏋️ Спорт", callback_data="sport_interests"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎵 Музыка"
+# Результат: "🎵 Музыка"
+"🎵 Музыка", callback_data="music_interests"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎨 Хобби"
+# Результат: "🎨 Хобби"
+"🎨 Хобби", callback_data="hobby_interests"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👥 Общение"
+# Результат: "👥 Общение"
+"👥 Общение", callback_data="social_interests"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎭 Творчество"
+# Результат: "🎭 Творчество"
+"🎭 Творчество", callback_data="creativity_interests"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⚽ Активности"
+# Результат: "⚽ Активности"
+"⚽ Активности", callback_data="active_interests"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🍔 Еда"
+# Результат: "🍔 Еда"
+"🍔 Еда", callback_data="food_interests"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🏋️ Спорт"
+# Результат: "🏋️ Спорт"
+"🏋️ Спорт", callback_data="sport_interests"))
                             builder.adjust(2)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
@@ -17442,7 +18216,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}🎵 R&B"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_music_rnb'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_music_rnb"))
-                            builder.add(InlineKeyboardButton(text="⬅️ Назад к категориям", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к категориям"
+# Результат: "⬅️ Назад к категориям"
+"⬅️ Назад к категориям", callback_data="interests_categories"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_music_interests"))
                             builder.adjust(2)
@@ -17568,7 +18345,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}💻 Технологии"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_hobby_tech'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_hobby_tech"))
-                            builder.add(InlineKeyboardButton(text="⬅️ Назад к категориям", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к категориям"
+# Результат: "⬅️ Назад к категориям"
+"⬅️ Назад к категориям", callback_data="interests_categories"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_hobby_interests"))
                             builder.adjust(2)
@@ -17678,7 +18458,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}👥 Сообщества"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_social_community'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_social_community"))
-                            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_social_interests"))
                             builder.adjust(2)
@@ -17795,7 +18578,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}🎭 Театр"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_creati_theater'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_creati_theater"))
-                            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_creativity_interests"))
                             builder.adjust(2)
@@ -17912,7 +18698,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}💃 Танцы"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_active_dancing'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_active_dancing"))
-                            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_active_interests"))
                             builder.adjust(2)
@@ -18029,7 +18818,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}🥗 Здоровое питание"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_food_healthy_food'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_food_healthy_food"))
-                            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_food_interests"))
                             builder.adjust(2)
@@ -18146,7 +18938,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             final_text = f"{selected_mark}🎮 Киберспорт"
                             logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_sport_esports'")
                             builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_sport_esports"))
-                            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
                             # Добавляем кнопку "Готово" для множественного выбора
                             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_sport_interests"))
                             builder.adjust(2)
@@ -18199,10 +18994,22 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             logging.info(f"✅ Узел marital_status настроен для сбора ввода (collectUserInput=true)")
                             # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
-                            builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-                            builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-                            builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-                            builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
@@ -18253,11 +19060,26 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             logging.info(f"✅ Узел sexual_orientation настроен для сбора ввода (collectUserInput=true)")
                             # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
-                            builder.add(InlineKeyboardButton(text="Гетеро 👫", callback_data="channel_choice"))
-                            builder.add(InlineKeyboardButton(text="Гей 👬", callback_data="channel_choice"))
-                            builder.add(InlineKeyboardButton(text="Лесбиянка 👭", callback_data="channel_choice"))
-                            builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="channel_choice"))
-                            builder.add(InlineKeyboardButton(text="Другое 🎭", callback_data="channel_choice"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Гетеро 👫"
+# Результат: "Гетеро 👫"
+"Гетеро 👫", callback_data="channel_choice"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Гей 👬"
+# Результат: "Гей 👬"
+"Гей 👬", callback_data="channel_choice"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Лесбиянка 👭"
+# Результат: "Лесбиянка 👭"
+"Лесбиянка 👭", callback_data="channel_choice"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Би 🌈"
+# Результат: "Би 🌈"
+"Би 🌈", callback_data="channel_choice"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Другое 🎭"
+# Результат: "Другое 🎭"
+"Другое 🎭", callback_data="channel_choice"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
@@ -18310,7 +19132,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             logging.info(f"✅ Узел channel_choice настроен для сбора ввода (collectUserInput=true)")
                             # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
-                            builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="extra_info"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Пропустить ⏭️"
+# Результат: "Пропустить ⏭️"
+"Пропустить ⏭️", callback_data="extra_info"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
@@ -18363,7 +19188,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             logging.info(f"✅ Узел extra_info настроен для сбора ввода (collectUserInput=true)")
                             # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
                             builder = InlineKeyboardBuilder()
-                            builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="profile_complete"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Пропустить ⏭️"
+# Результат: "Пропустить ⏭️"
+"Пропустить ⏭️", callback_data="profile_complete"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
@@ -18412,9 +19240,15 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # Создаем inline клавиатуру
                             builder = InlineKeyboardBuilder()
                             logging.info(f"Создана кнопка команды: Ссылка на чат 🔗 -> cmd_link")
-                            builder.add(InlineKeyboardButton(text="Ссылка на чат 🔗", callback_data="cmd_link"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Ссылка на чат 🔗"
+# Результат: "Ссылка на чат 🔗"
+"Ссылка на чат 🔗", callback_data="cmd_link"))
                             logging.info(f"Создана кнопка команды: Редактировать профиль ✏️ -> cmd_profile")
-                            builder.add(InlineKeyboardButton(text="Редактировать профиль ✏️", callback_data="cmd_profile"))
+                            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Редактировать профиль ✏️"
+# Результат: "Редактировать профиль ✏️"
+"Редактировать профиль ✏️", callback_data="cmd_profile"))
                             builder.adjust(1)
                             keyboard = builder.as_markup()
                             await message.answer(text, reply_markup=keyboard)
@@ -18539,8 +19373,14 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 }
                 
                 builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
-                builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Да 😎"
+# Результат: "Да 😎"
+"Да 😎", callback_data="gender_selection"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Нет 🙅"
+# Результат: "Нет 🙅"
+"Нет 🙅", callback_data="decline_response"))
                 builder.adjust(1)
                 keyboard = builder.as_markup()
                 # Заменяем все переменные в тексте
@@ -18692,12 +19532,30 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 }
                 
                 builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line_stations"))
-                builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line_stations"))
-                builder.add(InlineKeyboardButton(text="Зелёная ветка 🟩", callback_data="green_line_stations"))
-                builder.add(InlineKeyboardButton(text="Фиолетовая ветка 🟪", callback_data="purple_line_stations"))
-                builder.add(InlineKeyboardButton(text="Я из ЛО 🏡", callback_data="interests_categories"))
-                builder.add(InlineKeyboardButton(text="Я не в Питере 🌍", callback_data="interests_categories"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Красная ветка 🟥"
+# Результат: "Красная ветка 🟥"
+"Красная ветка 🟥", callback_data="red_line_stations"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Синяя ветка 🟦"
+# Результат: "Синяя ветка 🟦"
+"Синяя ветка 🟦", callback_data="blue_line_stations"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Зелёная ветка 🟩"
+# Результат: "Зелёная ветка 🟩"
+"Зелёная ветка 🟩", callback_data="green_line_stations"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Фиолетовая ветка 🟪"
+# Результат: "Фиолетовая ветка 🟪"
+"Фиолетовая ветка 🟪", callback_data="purple_line_stations"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Я из ЛО 🏡"
+# Результат: "Я из ЛО 🏡"
+"Я из ЛО 🏡", callback_data="interests_categories"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Я не в Питере 🌍"
+# Результат: "Я не в Питере 🌍"
+"Я не в Питере 🌍", callback_data="interests_categories"))
                 builder.adjust(2)
                 keyboard = builder.as_markup()
                 # Заменяем все переменные в тексте
@@ -18825,7 +19683,10 @@ https://t.me/+agkIVgCzHtY2ZTA6
                 }
                 
                 builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="profile_complete"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Пропустить ⏭️"
+# Результат: "Пропустить ⏭️"
+"Пропустить ⏭️", callback_data="profile_complete"))
                 builder.adjust(1)
                 keyboard = builder.as_markup()
                 # Заменяем все переменные в тексте
@@ -18877,9 +19738,15 @@ https://t.me/+agkIVgCzHtY2ZTA6
 Можешь посмотреть полную анкету или сразу получить ссылку на чат!"""
                 builder = InlineKeyboardBuilder()
                 logging.info(f"Создана кнопка команды: Ссылка на чат 🔗 -> cmd_link")
-                builder.add(InlineKeyboardButton(text="Ссылка на чат 🔗", callback_data="cmd_link"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Ссылка на чат 🔗"
+# Результат: "Ссылка на чат 🔗"
+"Ссылка на чат 🔗", callback_data="cmd_link"))
                 logging.info(f"Создана кнопка команды: Редактировать профиль ✏️ -> cmd_profile")
-                builder.add(InlineKeyboardButton(text="Редактировать профиль ✏️", callback_data="cmd_profile"))
+                builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Редактировать профиль ✏️"
+# Результат: "Редактировать профиль ✏️"
+"Редактировать профиль ✏️", callback_data="cmd_profile"))
                 builder.adjust(1)
                 keyboard = builder.as_markup()
                 # Заменяем все переменные в тексте
@@ -19145,13 +20012,34 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="music_interests"))
-            builder.add(InlineKeyboardButton(text="🎨 Хобби", callback_data="hobby_interests"))
-            builder.add(InlineKeyboardButton(text="👥 Общение", callback_data="social_interests"))
-            builder.add(InlineKeyboardButton(text="🎭 Творчество", callback_data="creativity_interests"))
-            builder.add(InlineKeyboardButton(text="⚽ Активности", callback_data="active_interests"))
-            builder.add(InlineKeyboardButton(text="🍔 Еда", callback_data="food_interests"))
-            builder.add(InlineKeyboardButton(text="🏋️ Спорт", callback_data="sport_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎵 Музыка"
+# Результат: "🎵 Музыка"
+"🎵 Музыка", callback_data="music_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎨 Хобби"
+# Результат: "🎨 Хобби"
+"🎨 Хобби", callback_data="hobby_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👥 Общение"
+# Результат: "👥 Общение"
+"👥 Общение", callback_data="social_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎭 Творчество"
+# Результат: "🎭 Творчество"
+"🎭 Творчество", callback_data="creativity_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⚽ Активности"
+# Результат: "⚽ Активности"
+"⚽ Активности", callback_data="active_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🍔 Еда"
+# Результат: "🍔 Еда"
+"🍔 Еда", callback_data="food_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🏋️ Спорт"
+# Результат: "🏋️ Спорт"
+"🏋️ Спорт", callback_data="sport_interests"))
             builder.adjust(2)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19171,13 +20059,34 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="music_interests"))
-            builder.add(InlineKeyboardButton(text="🎨 Хобби", callback_data="hobby_interests"))
-            builder.add(InlineKeyboardButton(text="👥 Общение", callback_data="social_interests"))
-            builder.add(InlineKeyboardButton(text="🎭 Творчество", callback_data="creativity_interests"))
-            builder.add(InlineKeyboardButton(text="⚽ Активности", callback_data="active_interests"))
-            builder.add(InlineKeyboardButton(text="🍔 Еда", callback_data="food_interests"))
-            builder.add(InlineKeyboardButton(text="🏋️ Спорт", callback_data="sport_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎵 Музыка"
+# Результат: "🎵 Музыка"
+"🎵 Музыка", callback_data="music_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎨 Хобби"
+# Результат: "🎨 Хобби"
+"🎨 Хобби", callback_data="hobby_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👥 Общение"
+# Результат: "👥 Общение"
+"👥 Общение", callback_data="social_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎭 Творчество"
+# Результат: "🎭 Творчество"
+"🎭 Творчество", callback_data="creativity_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⚽ Активности"
+# Результат: "⚽ Активности"
+"⚽ Активности", callback_data="active_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🍔 Еда"
+# Результат: "🍔 Еда"
+"🍔 Еда", callback_data="food_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🏋️ Спорт"
+# Результат: "🏋️ Спорт"
+"🏋️ Спорт", callback_data="sport_interests"))
             builder.adjust(2)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19197,13 +20106,34 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="music_interests"))
-            builder.add(InlineKeyboardButton(text="🎨 Хобби", callback_data="hobby_interests"))
-            builder.add(InlineKeyboardButton(text="👥 Общение", callback_data="social_interests"))
-            builder.add(InlineKeyboardButton(text="🎭 Творчество", callback_data="creativity_interests"))
-            builder.add(InlineKeyboardButton(text="⚽ Активности", callback_data="active_interests"))
-            builder.add(InlineKeyboardButton(text="🍔 Еда", callback_data="food_interests"))
-            builder.add(InlineKeyboardButton(text="🏋️ Спорт", callback_data="sport_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎵 Музыка"
+# Результат: "🎵 Музыка"
+"🎵 Музыка", callback_data="music_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎨 Хобби"
+# Результат: "🎨 Хобби"
+"🎨 Хобби", callback_data="hobby_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👥 Общение"
+# Результат: "👥 Общение"
+"👥 Общение", callback_data="social_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎭 Творчество"
+# Результат: "🎭 Творчество"
+"🎭 Творчество", callback_data="creativity_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⚽ Активности"
+# Результат: "⚽ Активности"
+"⚽ Активности", callback_data="active_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🍔 Еда"
+# Результат: "🍔 Еда"
+"🍔 Еда", callback_data="food_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🏋️ Спорт"
+# Результат: "🏋️ Спорт"
+"🏋️ Спорт", callback_data="sport_interests"))
             builder.adjust(2)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19223,13 +20153,34 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="music_interests"))
-            builder.add(InlineKeyboardButton(text="🎨 Хобби", callback_data="hobby_interests"))
-            builder.add(InlineKeyboardButton(text="👥 Общение", callback_data="social_interests"))
-            builder.add(InlineKeyboardButton(text="🎭 Творчество", callback_data="creativity_interests"))
-            builder.add(InlineKeyboardButton(text="⚽ Активности", callback_data="active_interests"))
-            builder.add(InlineKeyboardButton(text="🍔 Еда", callback_data="food_interests"))
-            builder.add(InlineKeyboardButton(text="🏋️ Спорт", callback_data="sport_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎵 Музыка"
+# Результат: "🎵 Музыка"
+"🎵 Музыка", callback_data="music_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎨 Хобби"
+# Результат: "🎨 Хобби"
+"🎨 Хобби", callback_data="hobby_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "👥 Общение"
+# Результат: "👥 Общение"
+"👥 Общение", callback_data="social_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🎭 Творчество"
+# Результат: "🎭 Творчество"
+"🎭 Творчество", callback_data="creativity_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⚽ Активности"
+# Результат: "⚽ Активности"
+"⚽ Активности", callback_data="active_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🍔 Еда"
+# Результат: "🍔 Еда"
+"🍔 Еда", callback_data="food_interests"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "🏋️ Спорт"
+# Результат: "🏋️ Спорт"
+"🏋️ Спорт", callback_data="sport_interests"))
             builder.adjust(2)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19247,10 +20198,22 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
             builder.adjust(1)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19268,10 +20231,22 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
             builder.adjust(1)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19289,10 +20264,22 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
             builder.adjust(1)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19310,10 +20297,22 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
             builder.adjust(1)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19331,10 +20330,22 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
             builder.adjust(1)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19352,10 +20363,22 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
             builder.adjust(1)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19373,10 +20396,22 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
             builder.adjust(1)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19394,10 +20429,22 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             if not isinstance(user_vars, dict):
                 user_vars = {}
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-            builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
             builder.adjust(1)
             keyboard = builder.as_markup()
             await callback_query.message.answer(text, reply_markup=keyboard)
@@ -19966,7 +21013,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Ленинский проспект", callback_data="ms_stations_leninsky"))
             selected_mark = "✅ " if "🟥 Проспект Ветеранов" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Проспект Ветеранов", callback_data="ms_stations_veteranov"))
-            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_red_line_stations"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла red_line_stations (multi-select)")
             builder.adjust(2)
@@ -20007,7 +21057,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Звездная", callback_data="ms_stations_zvezdnaya"))
             selected_mark = "✅ " if "🟦 Купчино" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Купчино", callback_data="ms_stations_kupchino"))
-            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_blue_line_stations"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла blue_line_stations (multi-select)")
             builder.adjust(2)
@@ -20036,7 +21089,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Новокрестовская", callback_data="ms_stations_novokrestovsk"))
             selected_mark = "✅ " if "🟩 Беговая" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Беговая", callback_data="ms_stations_begovaya"))
-            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_green_line_stations"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла green_line_stations (multi-select)")
             builder.adjust(2)
@@ -20065,7 +21121,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Бухарестская", callback_data="ms_stations_buharestskaya"))
             selected_mark = "✅ " if "🟪 Международная" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Международная", callback_data="ms_stations_mezhdunar"))
-            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к веткам"
+# Результат: "⬅️ Назад к веткам"
+"⬅️ Назад к веткам", callback_data="metro_selection"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_purple_line_stations"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла purple_line_stations (multi-select)")
             builder.adjust(2)
@@ -20086,7 +21145,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🎸 Инди", callback_data="ms_music_indie"))
             selected_mark = "✅ " if "🎵 R&B" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🎵 R&B", callback_data="ms_music_rnb"))
-            builder.add(InlineKeyboardButton(text="⬅️ Назад к категориям", callback_data="interests_categories"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к категориям"
+# Результат: "⬅️ Назад к категориям"
+"⬅️ Назад к категориям", callback_data="interests_categories"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_music_interests"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла music_interests (multi-select)")
             builder.adjust(2)
@@ -20107,7 +21169,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🐕 Животные", callback_data="ms_hobby_pets"))
             selected_mark = "✅ " if "💻 Технологии" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}💻 Технологии", callback_data="ms_hobby_tech"))
-            builder.add(InlineKeyboardButton(text="⬅️ Назад к категориям", callback_data="interests_categories"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ Назад к категориям"
+# Результат: "⬅️ Назад к категориям"
+"⬅️ Назад к категориям", callback_data="interests_categories"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_hobby_interests"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла hobby_interests (multi-select)")
             builder.adjust(2)
@@ -20124,7 +21189,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🎪 Мероприятия", callback_data="ms_social_events"))
             selected_mark = "✅ " if "👥 Сообщества" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}👥 Сообщества", callback_data="ms_social_community"))
-            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_social_interests"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла social_interests (multi-select)")
             builder.adjust(2)
@@ -20143,7 +21211,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🧶 Рукоделие", callback_data="ms_creati_handmade"))
             selected_mark = "✅ " if "🎭 Театр" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🎭 Театр", callback_data="ms_creati_theater"))
-            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_creativity_interests"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла creativity_interests (multi-select)")
             builder.adjust(2)
@@ -20162,7 +21233,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🏊 Плавание", callback_data="ms_active_swimming"))
             selected_mark = "✅ " if "💃 Танцы" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}💃 Танцы", callback_data="ms_active_dancing"))
-            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_active_interests"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла active_interests (multi-select)")
             builder.adjust(2)
@@ -20181,7 +21255,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🌮 Стрит-фуд", callback_data="ms_food_street_food"))
             selected_mark = "✅ " if "🥗 Здоровое питание" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🥗 Здоровое питание", callback_data="ms_food_healthy_food"))
-            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_food_interests"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла food_interests (multi-select)")
             builder.adjust(2)
@@ -20200,7 +21277,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🥊 Единоборства", callback_data="ms_sport_mma"))
             selected_mark = "✅ " if "🎮 Киберспорт" in selected_list else ""
             builder.add(InlineKeyboardButton(text=f"{selected_mark}🎮 Киберспорт", callback_data="ms_sport_esports"))
-            builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+            builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "⬅️ К категориям"
+# Результат: "⬅️ К категориям"
+"⬅️ К категориям", callback_data="interests_categories"))
             builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_sport_interests"))
             logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла sport_interests (multi-select)")
             builder.adjust(2)
@@ -20559,10 +21639,22 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
             user_vars = {}
         
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
         builder.adjust(1)
         keyboard = builder.as_markup()
         await callback_query.message.answer(text, reply_markup=keyboard)
@@ -20603,10 +21695,22 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
             user_vars = {}
         
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
         builder.adjust(1)
         keyboard = builder.as_markup()
         await callback_query.message.answer(text, reply_markup=keyboard)
@@ -20647,10 +21751,22 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
             user_vars = {}
         
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
         builder.adjust(1)
         keyboard = builder.as_markup()
         await callback_query.message.answer(text, reply_markup=keyboard)
@@ -20691,10 +21807,22 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
             user_vars = {}
         
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
         builder.adjust(1)
         keyboard = builder.as_markup()
         await callback_query.message.answer(text, reply_markup=keyboard)
@@ -20735,10 +21863,22 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
             user_vars = {}
         
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
         builder.adjust(1)
         keyboard = builder.as_markup()
         await callback_query.message.answer(text, reply_markup=keyboard)
@@ -20779,10 +21919,22 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
             user_vars = {}
         
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
         builder.adjust(1)
         keyboard = builder.as_markup()
         await callback_query.message.answer(text, reply_markup=keyboard)
@@ -20823,10 +21975,22 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
             user_vars = {}
         
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
         builder.adjust(1)
         keyboard = builder.as_markup()
         await callback_query.message.answer(text, reply_markup=keyboard)
@@ -20867,10 +22031,22 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
             user_vars = {}
         
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Женат/Замужем 💛", callback_data="sexual_orientation"))
-        builder.add(InlineKeyboardButton(text="Всё сложно 🤷", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Холост/Не замужем 💚"
+# Результат: "Холост/Не замужем 💚"
+"Холост/Не замужем 💚", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "В отношениях 💙"
+# Результат: "В отношениях 💙"
+"В отношениях 💙", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Женат/Замужем 💛"
+# Результат: "Женат/Замужем 💛"
+"Женат/Замужем 💛", callback_data="sexual_orientation"))
+        builder.add(InlineKeyboardButton(text=# Код сгенерирован в generateButtonText.ts
+# Генерация обычного текста кнопки: "Всё сложно 🤷"
+# Результат: "Всё сложно 🤷"
+"Всё сложно 🤷", callback_data="sexual_orientation"))
         builder.adjust(1)
         keyboard = builder.as_markup()
         await callback_query.message.answer(text, reply_markup=keyboard)
