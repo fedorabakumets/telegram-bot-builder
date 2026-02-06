@@ -967,6 +967,8 @@ async def start_handler(message: types.Message):
 # Код сгенерирован в generateStartHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     text = """🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!
 
 Этот бот поможет тебе найти интересных людей в Санкт-Петербурге!
@@ -996,6 +998,8 @@ async def start_handler(message: types.Message):
 # Код сгенерирован в generateStartHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     text = replace_variables_in_text(text, user_vars)
     has_regular_buttons = False
     has_input_collection = True
@@ -1183,6 +1187,8 @@ async def profile_handler(message: types.Message):
 # Код сгенерирован в generateCommandHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateCommandHandler.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -1207,6 +1213,8 @@ async def profile_handler(message: types.Message):
 # Код сгенерирован в generateCommandHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     text = replace_variables_in_text(text, user_vars)
     has_regular_buttons = True
     has_input_collection = False
@@ -1294,6 +1302,8 @@ https://t.me/+agkIVgCzHtY2ZTA6
 # Код сгенерирован в generateCommandHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateCommandHandler.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -1318,6 +1328,8 @@ https://t.me/+agkIVgCzHtY2ZTA6
 # Код сгенерирован в generateCommandHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     text = replace_variables_in_text(text, user_vars)
     has_regular_buttons = False
     has_input_collection = False
@@ -1498,6 +1510,8 @@ async def help_handler(message: types.Message):
 # Код сгенерирован в generateCommandHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализируем базовые переменные пользователя если их нет
 # Код сгенерирован в generateCommandHandler.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -1522,6 +1536,8 @@ async def help_handler(message: types.Message):
 # Код сгенерирован в generateCommandHandler.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     text = replace_variables_in_text(text, user_vars)
     has_regular_buttons = True
     has_input_collection = False
@@ -3294,6 +3310,9 @@ async def admin_rights_node_command_handler(message: types.Message, bot):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
+    
     await message.answer(text, reply_markup=keyboard)
 
 async def get_admin_rights_admin_rights_node(bot, chat_id, target_user_id):
@@ -3434,6 +3453,9 @@ async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery,
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     
     # Создаем интерактивную клавиатуру
     keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
@@ -8395,6 +8417,9 @@ async def handle_callback_gender_selection(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input_btn_0"))
@@ -8540,6 +8565,9 @@ async def handle_callback_decline_response(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     keyboard = None
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -8681,6 +8709,9 @@ async def handle_callback_name_input(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     keyboard = None
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -8874,6 +8905,9 @@ async def handle_callback_red_line_stations(callback_query: types.CallbackQuery)
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -9152,6 +9186,9 @@ async def handle_callback_blue_line_stations(callback_query: types.CallbackQuery
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -9426,6 +9463,9 @@ async def handle_callback_green_line_stations(callback_query: types.CallbackQuer
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -9676,6 +9716,9 @@ async def handle_callback_purple_line_stations(callback_query: types.CallbackQue
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -9926,6 +9969,9 @@ async def handle_callback_interests_categories(callback_query: types.CallbackQue
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -10141,6 +10187,9 @@ async def handle_callback_music_interests(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -10375,6 +10424,9 @@ async def handle_callback_hobby_interests(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -10607,6 +10659,9 @@ async def handle_callback_social_interests(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -10831,6 +10886,9 @@ async def handle_callback_creativity_interests(callback_query: types.CallbackQue
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -11059,6 +11117,9 @@ async def handle_callback_active_interests(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -11287,6 +11348,9 @@ async def handle_callback_food_interests(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -11515,6 +11579,9 @@ async def handle_callback_sport_interests(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Инициализация состояния множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -11716,6 +11783,9 @@ async def handle_callback_marital_status(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation_btn_0"))
@@ -11874,6 +11944,9 @@ async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Гетеро 👫", callback_data="channel_choice_btn_0"))
@@ -12053,6 +12126,9 @@ async def handle_callback_channel_choice(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="extra_info_btn_0"))
@@ -12234,6 +12310,9 @@ async def handle_callback_extra_info(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="profile_complete_btn_0"))
@@ -12393,6 +12472,9 @@ async def handle_callback_profile_complete(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     # Кнопка команды: Ссылка на чат 🔗 -> /link
@@ -12540,6 +12622,9 @@ async def handle_callback_age_input(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     keyboard = None
     
     # Проверяем, есть ли условная клавиатура для использования
@@ -12694,6 +12779,9 @@ async def handle_callback_join_request(callback_query: types.CallbackQuery):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection_btn_0"))
@@ -12792,6 +12880,9 @@ async def handle_user_input(message: types.Message):
     # get_user_from_db теперь возвращает уже обработанные user_data
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
+    
+    # Заменяем все переменные в тексте
+    text = replace_variables_in_text(text, user_vars)
     
     # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick
     
@@ -13004,6 +13095,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         builder = InlineKeyboardBuilder()
                         builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
                         builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
@@ -13047,6 +13141,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: decline_response")
                         await message.answer(text)
                     elif next_node_id == "gender_selection":
@@ -13076,6 +13173,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         builder = InlineKeyboardBuilder()
                         builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input"))
                         builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input"))
@@ -13156,6 +13256,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         builder = InlineKeyboardBuilder()
                         builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line_stations"))
                         builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line_stations"))
@@ -13206,6 +13309,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_red_line_stations"] = []
                         user_data[user_id]["multi_select_node"] = "red_line_stations"
@@ -13410,6 +13516,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_blue_line_stations"] = []
                         user_data[user_id]["multi_select_node"] = "blue_line_stations"
@@ -13607,6 +13716,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_green_line_stations"] = []
                         user_data[user_id]["multi_select_node"] = "green_line_stations"
@@ -13762,6 +13874,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_purple_line_stations"] = []
                         user_data[user_id]["multi_select_node"] = "purple_line_stations"
@@ -13917,6 +14032,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_interests_categories"] = []
                         user_data[user_id]["multi_select_node"] = "interests_categories"
@@ -13965,6 +14083,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_music_interests"] = []
                         user_data[user_id]["multi_select_node"] = "music_interests"
@@ -14092,6 +14213,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_hobby_interests"] = []
                         user_data[user_id]["multi_select_node"] = "hobby_interests"
@@ -14217,6 +14341,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_social_interests"] = []
                         user_data[user_id]["multi_select_node"] = "social_interests"
@@ -14328,6 +14455,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_creativity_interests"] = []
                         user_data[user_id]["multi_select_node"] = "creativity_interests"
@@ -14446,6 +14576,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_active_interests"] = []
                         user_data[user_id]["multi_select_node"] = "active_interests"
@@ -14564,6 +14697,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_food_interests"] = []
                         user_data[user_id]["multi_select_node"] = "food_interests"
@@ -14682,6 +14818,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Инициализируем состояние множественного выбора
                         user_data[user_id]["multi_select_sport_interests"] = []
                         user_data[user_id]["multi_select_node"] = "sport_interests"
@@ -14800,6 +14939,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         builder = InlineKeyboardBuilder()
                         builder.add(InlineKeyboardButton(text="Холост/Не замужем 💚", callback_data="sexual_orientation"))
                         builder.add(InlineKeyboardButton(text="В отношениях 💙", callback_data="sexual_orientation"))
@@ -14846,6 +14988,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         builder = InlineKeyboardBuilder()
                         builder.add(InlineKeyboardButton(text="Гетеро 👫", callback_data="channel_choice"))
                         builder.add(InlineKeyboardButton(text="Гей 👬", callback_data="channel_choice"))
@@ -14895,6 +15040,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         builder = InlineKeyboardBuilder()
                         builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="extra_info"))
                         builder.adjust(1)
@@ -14940,6 +15088,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         builder = InlineKeyboardBuilder()
                         builder.add(InlineKeyboardButton(text="Пропустить ⏭️", callback_data="profile_complete"))
                         builder.adjust(1)
@@ -14995,6 +15146,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Создаем inline клавиатуру
                         builder = InlineKeyboardBuilder()
                         logging.info(f"Создана кнопка команды: Ссылка на чат 🔗 -> cmd_link")
@@ -15043,6 +15197,9 @@ async def handle_user_input(message: types.Message):
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Создаем inline клавиатуру
                         builder = InlineKeyboardBuilder()
                         builder.add(InlineKeyboardButton(text="👤 Изменить пол", callback_data="gender_selection"))
@@ -15090,6 +15247,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: chat_link")
                         await message.answer(text)
                     elif next_node_id == "help_command":
@@ -15229,6 +15389,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         # Создаем inline клавиатуру
                         builder = InlineKeyboardBuilder()
                         logging.info(f"Создана кнопка команды: 🚀 Начать заполнение -> cmd_start")
@@ -15267,6 +15430,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: pin_message_node")
                         await message.answer(text)
                     elif next_node_id == "unpin_message_node":
@@ -15295,6 +15461,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: unpin_message_node")
                         await message.answer(text)
                     elif next_node_id == "delete_message_node":
@@ -15323,6 +15492,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: delete_message_node")
                         await message.answer(text)
                     elif next_node_id == "ban_user_node":
@@ -15351,6 +15523,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: ban_user_node")
                         await message.answer(text)
                     elif next_node_id == "unban_user_node":
@@ -15379,6 +15554,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: unban_user_node")
                         await message.answer(text)
                     elif next_node_id == "mute_user_node":
@@ -15407,6 +15585,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: mute_user_node")
                         await message.answer(text)
                     elif next_node_id == "unmute_user_node":
@@ -15435,6 +15616,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: unmute_user_node")
                         await message.answer(text)
                     elif next_node_id == "kick_user_node":
@@ -15463,6 +15647,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: kick_user_node")
                         await message.answer(text)
                     elif next_node_id == "promote_user_node":
@@ -15491,6 +15678,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: promote_user_node")
                         await message.answer(text)
                     elif next_node_id == "demote_user_node":
@@ -15519,6 +15709,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: demote_user_node")
                         await message.answer(text)
                     elif next_node_id == "admin_rights_node":
@@ -15549,6 +15742,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                         # get_user_from_db теперь возвращает уже обработанные user_data
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
+                        
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
                         logging.info(f"Условная навигация к обычному узлу: admin_rights_node")
                         await message.answer(text)
                     else:
@@ -16192,6 +16388,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Устанавливаем состояние ожидания ввода для узла join_request
@@ -16243,6 +16442,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
@@ -16280,6 +16482,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Устанавливаем состояние ожидания ввода для узла gender_selection
@@ -16333,6 +16538,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Устанавливаем состояние ожидания ввода для узла name_input
@@ -16396,6 +16604,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Устанавливаем состояние ожидания ввода для узла age_input
@@ -16459,6 +16670,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Устанавливаем состояние ожидания ввода для узла metro_selection
@@ -16518,6 +16732,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_red_line_stations"] = []
                             user_data[user_id]["multi_select_node"] = "red_line_stations"
@@ -16720,6 +16937,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_blue_line_stations"] = []
                             user_data[user_id]["multi_select_node"] = "blue_line_stations"
@@ -16915,6 +17135,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_green_line_stations"] = []
                             user_data[user_id]["multi_select_node"] = "green_line_stations"
@@ -17068,6 +17291,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_purple_line_stations"] = []
                             user_data[user_id]["multi_select_node"] = "purple_line_stations"
@@ -17221,6 +17447,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_interests_categories"] = []
                             user_data[user_id]["multi_select_node"] = "interests_categories"
@@ -17267,6 +17496,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_music_interests"] = []
                             user_data[user_id]["multi_select_node"] = "music_interests"
@@ -17392,6 +17624,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_hobby_interests"] = []
                             user_data[user_id]["multi_select_node"] = "hobby_interests"
@@ -17515,6 +17750,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_social_interests"] = []
                             user_data[user_id]["multi_select_node"] = "social_interests"
@@ -17624,6 +17862,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_creativity_interests"] = []
                             user_data[user_id]["multi_select_node"] = "creativity_interests"
@@ -17740,6 +17981,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_active_interests"] = []
                             user_data[user_id]["multi_select_node"] = "active_interests"
@@ -17856,6 +18100,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_food_interests"] = []
                             user_data[user_id]["multi_select_node"] = "food_interests"
@@ -17972,6 +18219,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Инициализируем состояние множественного выбора
                             user_data[user_id]["multi_select_sport_interests"] = []
                             user_data[user_id]["multi_select_node"] = "sport_interests"
@@ -18086,6 +18336,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Устанавливаем состояние ожидания ввода для узла marital_status
@@ -18139,6 +18392,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Устанавливаем состояние ожидания ввода для узла sexual_orientation
@@ -18195,6 +18451,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Устанавливаем состояние ожидания ввода для узла channel_choice
@@ -18247,6 +18506,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Устанавливаем состояние ожидания ввода для узла extra_info
@@ -18310,6 +18572,9 @@ https://t.me/+agkIVgCzHtY2ZTA6
                             # get_user_from_db теперь возвращает уже обработанные user_data
                             if not isinstance(user_vars, dict):
                                 user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
                             # Заменяем все переменные в тексте
                             text = replace_variables_in_text(text, user_vars)
                             # Создаем inline клавиатуру
