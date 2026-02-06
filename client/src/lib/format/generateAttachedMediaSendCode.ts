@@ -1,5 +1,6 @@
 import { isLoggingEnabled } from "../bot-generator";
 import { generateWaitingStateCode } from "./generateWaitingStateCode";
+import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 
 // ============================================================================
 // ГЕНЕРАТОРЫ МЕДИА И УСЛОВНЫХ СООБЩЕНИЙ
@@ -86,53 +87,59 @@ export function generateAttachedMediaSendCode(
   collectUserInput: boolean = true,
   nodeData?: any): string {
   
+  // Собираем весь код в массив строк для автоматической обработки комментариев
+  const codeLines: string[] = [];
+  
   // Проверяем, есть ли статическое изображение в узле
   const hasStaticImage = nodeData && nodeData.imageUrl && nodeData.imageUrl.trim() !== '';
   
   // ИСПРАВЛЕНИЕ: Если есть статическое изображение, используем его напрямую
   if (hasStaticImage) {
-    let code = '';
-    code += `${indentLevel}# Узел содержит статическое изображение: ${nodeData.imageUrl}\n`;
-    code += `${indentLevel}static_image_url = "${nodeData.imageUrl}"\n`;
-    code += `${indentLevel}\n`;
+    codeLines.push(`${indentLevel}# Узел содержит статическое изображение: ${nodeData.imageUrl}`);
+    codeLines.push(`${indentLevel}static_image_url = "${nodeData.imageUrl}"`);
+    codeLines.push(`${indentLevel}`);
     
     // Устанавливаем состояние ожидания ввода если нужно
     if (collectUserInput && nodeData) {
-      code += `${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}\n`;
-      code += generateWaitingStateCode(nodeData, indentLevel);
-      code += `${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки изображения")\n`;
+      codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
+      const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel);
+      const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
+      codeLines.push(...waitingStateLines);
+      codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки изображения")`);
     }
     
-    code += `${indentLevel}# Отправляем статическое изображение\n`;
-    code += `${indentLevel}try:\n`;
-    code += `${indentLevel}    # Заменяем переменные в тексте перед отправкой\n`;
-    code += `${indentLevel}    processed_caption = replace_variables_in_text(text, user_vars)\n`;
+    codeLines.push(`${indentLevel}# Отправляем статическое изображение`);
+    codeLines.push(`${indentLevel}try:`);
+    codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
+    codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, user_vars)`);
     
     const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
     const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
     
-    code += `${indentLevel}    await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
+    codeLines.push(`${indentLevel}    await bot.send_photo(callback_query.from_user.id, static_image_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
     
     // Автопереход если нужен
     if (autoTransitionTo) {
-      code += `${indentLevel}    \n`;
-      code += `${indentLevel}    # Проверяем, нужно ли выполнять автопереход\n`;
-      code += `${indentLevel}    if ${collectUserInput.toString()}:\n`;
+      codeLines.push(`${indentLevel}    `);
+      codeLines.push(`${indentLevel}    # Проверяем, нужно ли выполнять автопереход`);
+      codeLines.push(`${indentLevel}    if ${collectUserInput.toString()}:`);
       const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-      code += `${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
-      code += `${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
-      code += `${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)\n`;
-      code += `${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
-      code += `${indentLevel}        return\n`;
+      codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
+      codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)`);
+      codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}        return`);
     }
     
-    code += `${indentLevel}except Exception as e:\n`;
-    code += `${indentLevel}    logging.error(f"Ошибка отправки статического изображения: {e}")\n`;
-    code += `${indentLevel}    # Fallback на обычное сообщение при ошибке\n`;
+    codeLines.push(`${indentLevel}except Exception as e:`);
+    codeLines.push(`${indentLevel}    logging.error(f"Ошибка отправки статического изображения: {e}")`);
+    codeLines.push(`${indentLevel}    # Fallback на обычное сообщение при ошибке`);
     const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
-    code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
+    codeLines.push(`${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
     
-    return code;
+    // Применяем автоматическое добавление комментариев ко всему коду
+    const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');
+    return processedCode.join('\n');
   }
   
   if (!attachedMedia || attachedMedia.length === 0) {
@@ -150,52 +157,53 @@ export function generateAttachedMediaSendCode(
 
   const { type: mediaType, variable: mediaVariable } = mediaInfo;
 
-  let code = '';
-  code += `${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable}\n`;
-  code += `${indentLevel}attached_media = None\n`;
+  codeLines.push(`${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable}`);
+  codeLines.push(`${indentLevel}attached_media = None`);
 
   // Проверяем, является ли переменная imageUrl или documentUrl (прямые URL-адреса)
   if (mediaVariable.startsWith('image_url_') || mediaVariable.startsWith('document_url_') ||
       mediaVariable.startsWith('video_url_') || mediaVariable.startsWith('audio_url_')) {
     // Для переменных типа image_url_{nodeId} используем прямое значение из переменной
     // Вместо поиска по полю вроде imageUrl, ищем по самой переменной image_url_{nodeId}
-    code += `${indentLevel}if user_vars and "${mediaVariable}" in user_vars:\n`;
-    code += `${indentLevel}    media_data = user_vars["${mediaVariable}"]\n`;
-    code += `${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:\n`;
-    code += `${indentLevel}        attached_media = media_data["value"]\n`;
-    code += `${indentLevel}    elif isinstance(media_data, str):\n`;
-    code += `${indentLevel}        attached_media = media_data\n`;
-    code += `${indentLevel}else:\n`;
-    code += `${indentLevel}    # Проверяем, есть ли медиа в переменных пользователя\n`;
-    code += `${indentLevel}    user_id = callback_query.from_user.id\n`;
-    code += `${indentLevel}    user_node_vars = user_data.get(user_id, {})\n`;
-    code += `${indentLevel}    if "${mediaVariable}" in user_node_vars:\n`;
-    code += `${indentLevel}        attached_media = user_node_vars["${mediaVariable}"]\n`;
+    codeLines.push(`${indentLevel}if user_vars and "${mediaVariable}" in user_vars:`);
+    codeLines.push(`${indentLevel}    media_data = user_vars["${mediaVariable}"]`);
+    codeLines.push(`${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:`);
+    codeLines.push(`${indentLevel}        attached_media = media_data["value"]`);
+    codeLines.push(`${indentLevel}    elif isinstance(media_data, str):`);
+    codeLines.push(`${indentLevel}        attached_media = media_data`);
+    codeLines.push(`${indentLevel}else:`);
+    codeLines.push(`${indentLevel}    # Проверяем, есть ли медиа в переменных пользователя`);
+    codeLines.push(`${indentLevel}    user_id = callback_query.from_user.id`);
+    codeLines.push(`${indentLevel}    user_node_vars = user_data.get(user_id, {})`);
+    codeLines.push(`${indentLevel}    if "${mediaVariable}" in user_node_vars:`);
+    codeLines.push(`${indentLevel}        attached_media = user_node_vars["${mediaVariable}"]`);
   } else {
     // Для других типов переменных используем стандартную логику
-    code += `${indentLevel}if user_vars and "${mediaVariable}" in user_vars:\n`;
-    code += `${indentLevel}    media_data = user_vars["${mediaVariable}"]\n`;
-    code += `${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:\n`;
-    code += `${indentLevel}        attached_media = media_data["value"]\n`;
-    code += `${indentLevel}    elif isinstance(media_data, str):\n`;
-    code += `${indentLevel}        attached_media = media_data\n`;
+    codeLines.push(`${indentLevel}if user_vars and "${mediaVariable}" in user_vars:`);
+    codeLines.push(`${indentLevel}    media_data = user_vars["${mediaVariable}"]`);
+    codeLines.push(`${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:`);
+    codeLines.push(`${indentLevel}        attached_media = media_data["value"]`);
+    codeLines.push(`${indentLevel}    elif isinstance(media_data, str):`);
+    codeLines.push(`${indentLevel}        attached_media = media_data`);
   }
 
-  code += `${indentLevel}\n`;
+  codeLines.push(`${indentLevel}`);
   
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
   if (collectUserInput && nodeData) {
-    code += `${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}\n`;
-    code += generateWaitingStateCode(nodeData, indentLevel);
-    code += `${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки медиа")\n`;
+    codeLines.push(`${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
+    const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel);
+    const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
+    codeLines.push(...waitingStateLines);
+    codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки медиа")`);
   }
 
-  code += `${indentLevel}# Если медиа найдено, отправляем с медиа, иначе обычное сообщение\n`;
-  code += `${indentLevel}if attached_media and str(attached_media).strip():\n`;
-  code += `${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")\n`;
-  code += `${indentLevel}    try:\n`;
-  code += `${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа\n`;
-  code += `${indentLevel}        processed_caption = replace_variables_in_text(text, user_vars)\n`;
+  codeLines.push(`${indentLevel}# Если медиа найдено, отправляем с медиа, иначе обычное сообщение`);
+  codeLines.push(`${indentLevel}if attached_media and str(attached_media).strip():`);
+  codeLines.push(`${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")`);
+  codeLines.push(`${indentLevel}    try:`);
+  codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
+  codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, user_vars)`);
 
   // Генерируем код отправки в зависимости от типа медиа
   const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
@@ -203,72 +211,74 @@ export function generateAttachedMediaSendCode(
 
   switch (mediaType) {
     case 'photo':
-      code += `${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
+      codeLines.push(`${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'video':
-      code += `${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
+      codeLines.push(`${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'audio':
-      code += `${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
+      codeLines.push(`${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'document':
-      code += `${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")\n`;
+      codeLines.push(`${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     default:
-      code += `${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение\n`;
+      codeLines.push(`${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение`);
       const autoTransitionFlagDefault = autoTransitionTo ? ', is_auto_transition=True' : '';
-      code += `${indentLevel}        await safe_edit_or_send(callback_query, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseMode})\n`;
+      codeLines.push(`${indentLevel}        await safe_edit_or_send(callback_query, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseMode})`);
   }
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
   if (autoTransitionTo) {
-    code += `${indentLevel}        \n`;
-    code += `${indentLevel}        # Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true\n`;
-    code += `${indentLevel}        if ${collectUserInput.toString()}:  // Convert boolean to string representation\n`;
+    codeLines.push(`${indentLevel}        `);
+    codeLines.push(`${indentLevel}        # Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true`);
+    codeLines.push(`${indentLevel}        if ${collectUserInput.toString()}:  // Convert boolean to string representation`);
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-    code += `${indentLevel}            # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
-    code += `${indentLevel}            logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
-    code += `${indentLevel}            await handle_callback_${safeAutoTargetId}(callback_query)\n`;
-    code += `${indentLevel}            logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
-    code += `${indentLevel}            return\n`;
-    code += `${indentLevel}        else:\n`;
-    code += `${indentLevel}            # Автопереход пропущен: collectUserInput=false\n`;
-    code += `${indentLevel}            logging.info(f"ℹ️ Узел ${nodeId} не собирает ответы (collectUserInput=false)")\n`;
+    codeLines.push(`${indentLevel}            # ⚡ Автопереход к узлу ${autoTransitionTo}`);
+    codeLines.push(`${indentLevel}            logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
+    codeLines.push(`${indentLevel}            await handle_callback_${safeAutoTargetId}(callback_query)`);
+    codeLines.push(`${indentLevel}            logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+    codeLines.push(`${indentLevel}            return`);
+    codeLines.push(`${indentLevel}        else:`);
+    codeLines.push(`${indentLevel}            # Автопереход пропущен: collectUserInput=false`);
+    codeLines.push(`${indentLevel}            logging.info(f"ℹ️ Узел ${nodeId} не собирает ответы (collectUserInput=false)")`);
   }
 
-  code += `${indentLevel}    except Exception as e:\n`;
-  code += `${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")\n`;
-  code += `${indentLevel}        # Fallback на обычное сообщение при ошибке\n`;
+  codeLines.push(`${indentLevel}    except Exception as e:`);
+  codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")`);
+  codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);
   const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
-  code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
-  code += `${indentLevel}else:\n`;
-  code += `${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение\n`;
-  code += `${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")\n`;
-  code += `${indentLevel}    # Заменяем переменные в тексте перед отправкой\n`;
-  code += `${indentLevel}    processed_text = replace_variables_in_text(text, user_vars)\n`;
+  codeLines.push(`${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
+  codeLines.push(`${indentLevel}else:`);
+  codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
+  codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
+  codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
+  codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, user_vars)`);
   
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если collectUserInput=true, не отправляем сообщение, так как узел ожидает ввод
-  code += `${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:\n`;
-  code += `${indentLevel}        # Узел ожидает ввод, не отправляем сообщение\n`;
-  code += `${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод, пропускаем отправку сообщения")\n`;
-  code += `${indentLevel}    else:\n`;
-  code += `${indentLevel}        await safe_edit_or_send(callback_query, processed_text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
+  codeLines.push(`${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:`);
+  codeLines.push(`${indentLevel}        # Узел ожидает ввод, не отправляем сообщение`);
+  codeLines.push(`${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод, пропускаем отправку сообщения")`);
+  codeLines.push(`${indentLevel}    else:`);
+  codeLines.push(`${indentLevel}        await safe_edit_or_send(callback_query, processed_text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход и для случая без медиа
   if (autoTransitionTo) {
-    code += `${indentLevel}    \n`;
-    code += `${indentLevel}    # Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true\n`;
-    code += `${indentLevel}    if ${collectUserInput.toString()}:  // Convert boolean to string representation\n`;
+    codeLines.push(`${indentLevel}    `);
+    codeLines.push(`${indentLevel}    # Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true`);
+    codeLines.push(`${indentLevel}    if ${collectUserInput.toString()}:  // Convert boolean to string representation`);
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-    code += `${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
-    code += `${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
-    code += `${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)\n`;
-    code += `${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")\n`;
-    code += `${indentLevel}        return\n`;
-    code += `${indentLevel}    else:\n`;
-    code += `${indentLevel}        # Автопереход пропущен: collectUserInput=false\n`;
-    code += `${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} не собирает ответы (collectUserInput=false)")\n`;
+    codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
+    codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
+    codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(callback_query)`);
+    codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+    codeLines.push(`${indentLevel}        return`);
+    codeLines.push(`${indentLevel}    else:`);
+    codeLines.push(`${indentLevel}        # Автопереход пропущен: collectUserInput=false`);
+    codeLines.push(`${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} не собирает ответы (collectUserInput=false)")`);
   }
 
-  return code;
+  // Применяем автоматическое добавление комментариев ко всему коду
+  const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');
+  return processedCode.join('\n');
 }
