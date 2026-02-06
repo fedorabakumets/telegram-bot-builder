@@ -175,8 +175,14 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
           // Создаем inline клавиатуру с кнопками выбора
           if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += `                        # Заменяем все переменные в тексте\n`;
+            code += `                        text = replace_variables_in_text(text, user_vars)\n`;
             code += `                        await message.answer(text, reply_markup=keyboard)\n`;
           } else {
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += `                        # Заменяем все переменные в тексте\n`;
+            code += `                        text = replace_variables_in_text(text, user_vars)\n`;
             code += `                        await message.answer(text)\n`;
           }
           code += `                        logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
@@ -258,6 +264,10 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                     code += `                                text = text.replace("{${varName}}", var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
                   }
 
+                  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                  code += `                            # Заменяем все переменные в тексте\n`;
+                  code += `                            text = replace_variables_in_text(text, user_data_dict)\n`;
+
                   // Когда условие выполнено (переменная уже есть), отмечаем это
                   code += `                            conditional_met = True\n`;
                   code += `                            logging.info(f"✅ Условие выполнено: переменная суяесявует")\n`;
@@ -337,6 +347,11 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                       const mainMessageText = targetNode.data.messageText || 'Введите данные';
                       const mainFormattedText = formatTextForPython(mainMessageText);
                       code += `                                main_text = ${mainFormattedText}\n`;
+
+                      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                      code += `                                # Заменяем все переменные в тексте\n`;
+                      code += `                                main_text = replace_variables_in_text(main_text, user_data_dict)\n`;
+
                       code += `                                await message.answer(main_text)\n`;
                       code += `                            \n`;
 
@@ -830,7 +845,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
 
     /**
      * Проверка типа ввода медиа
-     * Если ожидается медиа-файл, текстовый обработчик должен проигнорировать сообщение
+     * Если ожидается медиа-файл, текстовый обработчи���������������� должен проигнорировать сообщение
      */
     code += '            # ИСПРАВЛЕНИЕ: Проверяем, является ли тип ввода медиа (фото, видео, аудио, документ)\n';
     code += '            # Если да, то текстовый обработчик не должен его обрабатывать\n';
@@ -1068,6 +1083,10 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
             code += `${bodyIndent}# Замена переменных в тексте\n`;
             code += generateUniversalVariableReplacement(bodyIndent);
 
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
+            code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
+
             // Если узел message собирает ввод, настраиваем ожидание
             if (targetNode.data.collectUserInput === true) {
               // Определяем тип ввода - если включены медиа-типы, используем их, иначе текст
@@ -1166,6 +1185,11 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                         const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                         code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                         code += `${bodyIndent}    main_text = text\n`;
+
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                        code += `${bodyIndent}    # Заменяем все переменные в тексте\n`;
+                        code += `${bodyIndent}    main_text = replace_variables_in_text(main_text, user_data_dict)\n`;
+
                         code += `${bodyIndent}    await message.answer(main_text, reply_markup=keyboard)\n`;
 
                         // Проверяем, нужно ли собирать ввод для условного сообщения
@@ -1219,6 +1243,9 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                   const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
                   const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                   code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                  code += `${bodyIndent}    # Заменяем все переменные в тексте\n`;
+                  code += `${bodyIndent}    text = replace_variables_in_text(text, user_vars)\n`;
                   code += `${bodyIndent}    await message.answer(text, reply_markup=keyboard)\n`;
                   code += `${bodyIndent}    logging.info(f"✅ Показана основная reply клавиатура для узла ${targetNode.id}")\n`;
 
@@ -1268,6 +1295,9 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                   const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
                   const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                   code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                  code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
+                  code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
                   code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
                   code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
 
@@ -1280,6 +1310,9 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                   }
                 }
               } else {
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
+                code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
                 code += `${bodyIndent}await message.answer(text)\n`;
 
                 // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок (используем универсальную функцию)
@@ -1330,9 +1363,15 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                 const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
                 const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                 code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
+                code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
                 code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
                 code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для переходного узла")\n`;
               } else {
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
+                code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
                 code += `${bodyIndent}await message.answer(text)\n`;
               }
 
@@ -1563,8 +1602,14 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
             if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               // Используем универсальную функцию для создания inline клавиатуры
               code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += `                # Заменяем все переменные в тексте\n`;
+              code += `                text = replace_variables_in_text(text, user_vars)\n`;
               code += `                await message.answer(text, reply_markup=keyboard)\n`;
             } else {
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += `                # Заменяем все переменные в тексте\n`;
+              code += `                text = replace_variables_in_text(text, user_vars)\n`;
               code += `                await message.answer(text)\n`;
             }
 
@@ -1605,8 +1650,14 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
               // Создаем inline клавиатуру с кнопками выбора
               if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                code += `                # Заменяем все переменные в тексте\n`;
+                code += `                text = replace_variables_in_text(text, user_vars)\n`;
                 code += `                await message.answer(text, reply_markup=keyboard)\n`;
               } else {
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                code += `                # Заменяем все переменные в тексте\n`;
+                code += `                text = replace_variables_in_text(text, user_vars)\n`;
                 code += `                await message.answer(text)\n`;
               }
               code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
@@ -1633,7 +1684,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
           }
         } else {
           // Если целевой узел не найден, добавляем заглушку
-          code += `                logging.warning(f"Целевой узел {node.data.inputTargetNodeId} не найден")\n`;
+          code += `                logging.warning(f"Целевой узел {node.data.inputTargetNodeId} не найде��")\n`;
           code += `                await message.answer("❌ Ошибка перехода: целевой узел не найден")\n`;
         }
 
@@ -1665,7 +1716,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     }
     if (hasAudioInput(nodes || [])) {
       let audioCode = generateAudioHandlerCode();
-      audioCode = audioCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+      audioCode = audioCode.replace('            # (зде��ь будет сгенерированный код навигации)', navigationCode);
       code += audioCode;
     }
     if (hasDocumentInput(nodes || [])) {

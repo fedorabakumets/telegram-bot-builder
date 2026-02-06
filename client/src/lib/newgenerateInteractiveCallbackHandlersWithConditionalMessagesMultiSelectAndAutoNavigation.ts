@@ -132,8 +132,14 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             code += '        \n';
             code += '        # Объединяем клавиатуры\n';
             code += '        combined_keyboard = InlineKeyboardMarkup(inline_keyboard=metro_keyboard.inline_keyboard + result_keyboard.inline_keyboard)\n';
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '        # Заменяем все переменные в тексте\n';
+            code += '        text = replace_variables_in_text(text, user_vars)\n';
             code += '        await bot.send_message(user_id, text, reply_markup=combined_keyboard)\n';
           } else {
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '        # Заменяем все переменные в тексте\n';
+            code += '        text = replace_variables_in_text(text, user_vars)\n';
             code += '        await bot.send_message(user_id, text, reply_markup=metro_keyboard)\n';
           }
 
@@ -157,8 +163,14 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               }
             });
             code += '        keyboard = builder.as_markup()\n';
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '        # Заменяем все переменные в тексте\n';
+            code += '        text = replace_variables_in_text(text, user_vars)\n';
             code += '        await bot.send_message(user_id, text, reply_markup=keyboard)\n';
           } else {
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '        # Заменяем все переменные в тексте\n';
+            code += '        text = replace_variables_in_text(text, user_vars)\n';
             code += '        await bot.send_message(user_id, text)\n';
           }
         } else {
@@ -179,8 +191,14 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               }
             });
             code += '    keyboard = builder.as_markup()\n';
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '    # Заменяем все переменные в тексте\n';
+            code += '    text = replace_variables_in_text(text, user_vars)\n';
             code += '    await bot.send_message(user_id, text, reply_markup=keyboard)\n';
           } else {
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '    # Заменяем все переменные в тексте\n';
+            code += '    text = replace_variables_in_text(text, user_vars)\n';
             code += '    await bot.send_message(user_id, text)\n';
           }
         }
@@ -587,6 +605,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard2}, one_time_keyboard=${oneTimeKeyboard2})\n`;
               }
               code += '    # Для reply клавиатуры нужно отправить новое сообщение\n';
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += '    # Заменяем все переменные в тексте\n';
+              code += '    text = replace_variables_in_text(text, user_vars)\n';
               code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
 
               // Проверяем автопереход для reply клавиатуры
@@ -753,7 +774,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               '    ',
               undefined, // автопереход обрабатывается отдельно ниже
               collectUserInputFlag,
-              targetNode.data // передаем данные узла для проверки статических изображений
+              targetNode.data // передаем данные узла для проверки статических изобра��ений
             );
 
             if (mediaCode) {
@@ -768,12 +789,21 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
               code += '        else:\n';
               code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += '            # Заменяем все переменные в тексте\n';
+              code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await callback_query.message.answer(text)\n';
               code += '    except Exception as e:\n';
               code += '        logging.debug(f"Ошибка отправки сообщения: {e}")\n';
               code += '        if keyboard:\n';
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += '            # Заменяем все переменные в тексте\n';
+              code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
               code += '        else:\n';
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += '            # Заменяем все переменные в тексте\n';
+              code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await callback_query.message.answer(text)\n';
               code += '    \n';
             }
@@ -1102,6 +1132,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += `                await bot.send_photo(callback_query.from_user.id, nav_attached_media, caption=nav_text)\n`;
                         code += `            else:\n`;
                         code += `                logging.info("📝 Медиа не найдено, отправка текстового сообщения")\n`;
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                        code += `                # Заменяем все переменные в тексте\n`;
+                        code += `                nav_text = replace_variables_in_text(nav_text, user_vars)\n`;
                         code += `                await callback_query.message.edit_text(nav_text)\n`;
                       } else {
                         // Проверяем, есть ли reply кнопки
@@ -1120,8 +1153,14 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                           const resizeKeyboard = toPythonBoolean(navTargetNode.data.resizeKeyboard);
                           const oneTimeKeyboard = toPythonBoolean(navTargetNode.data.oneTimeKeyboard);
                           code += `            keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                          code += '            # Заменяем все переменные в тексте\n';
+                          code += '            nav_text = replace_variables_in_text(nav_text, user_vars)\n';
                           code += '            await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)\n';
                         } else {
+                          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                          code += '            # Заменяем все переменные в тексте\n';
+                          code += '            nav_text = replace_variables_in_text(nav_text, user_vars)\n';
                           code += '            await callback_query.message.edit_text(nav_text)\n';
                         }
                       }
@@ -1305,6 +1344,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                               }
                             });
                             code += '                conditional_keyboard = builder.as_markup()\n';
+                            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                            code += '                # Заменяем все переменные в тексте\n';
+                            code += '                text = replace_variables_in_text(text, user_data_dict)\n';
                             code += '                await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n';
                           } else if (condition.keyboardType === 'reply') {
                             code += '                builder = ReplyKeyboardBuilder()\n';
@@ -1323,7 +1365,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                             code += '                await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n';
                           }
                         } else {
-                          // Нет клавиатуры - отправляем только текст
+                          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                          code += '                # Заменяем все переменные в тексте\n';
+                          code += '                text = replace_variables_in_text(text, user_data_dict)\n';
                           code += '                await bot.send_message(user_id, text)\n';
                         }
 
@@ -1371,8 +1415,14 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                       // Создаем inline клавиатуру с кнопками выбора
                       if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                         code += generateInlineKeyboardCode(navTargetNode.data.buttons, '                ', navTargetNode.id, navTargetNode.data, allNodeIds);
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                        code += `                # Заменяем все переменные в тексте\n`;
+                        code += `                text = replace_variables_in_text(text, user_vars)\n`;
                         code += `                await bot.send_message(user_id, text, reply_markup=keyboard)\n`;
                       } else {
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                        code += `                # Заменяем все переменные в тексте\n`;
+                        code += `                text = replace_variables_in_text(text, user_vars)\n`;
                         code += `                await bot.send_message(user_id, text)\n`;
                       }
                       code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполнена")\n`;
@@ -1400,6 +1450,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                       } else {
                         code += `                logging.info(f"Fallback переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
                       }
+                      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                      code += `                # Заменяем все переменные в тексте\n`;
+                      code += `                nav_text = replace_variables_in_text(nav_text, user_vars)\n`;
                       code += `                await bot.send_message(user_id, nav_text)\n`;
                     }
                   } else {
@@ -1429,8 +1482,14 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                       // Создаем inline клавиатуру с кнопками выбора
                       if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                         code += generateInlineKeyboardCode(navTargetNode.data.buttons, '            ', navTargetNode.id, navTargetNode.data, allNodeIds);
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                        code += `            # Заменяем все переменные в тексте\n`;
+                        code += `            text = replace_variables_in_text(text, user_vars)\n`;
                         code += `            await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n`;
                       } else {
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                        code += `            # Заменяем все переменные в тексте\n`;
+                        code += `            text = replace_variables_in_text(text, user_vars)\n`;
                         code += `            await bot.send_message(callback_query.from_user.id, text)\n`;
                       }
                       code += `            logging.info(f"✅ яярямая навигация к узлу множественного выбора ${navTargetNode.id} вяяполяяена")\n`;
@@ -1459,6 +1518,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                       } else {
                         code += `            logging.info(f"Переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
                       }
+                      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                      code += '            # Заменяем все переменные в тексте\n';
+                      code += '            nav_text = replace_variables_in_text(nav_text, user_vars)\n';
                       code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
                     }
                   }
@@ -1468,7 +1530,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               });
 
               code += '        else:\n';
-              code += '            logging.warning(f"Неизяяестный следующий узел: {next_node_id}")\n';
+              code += '            logging.warning(f"Неизяяестны�� следующий узел: {next_node_id}")\n';
             } else {
               code += '        # No nodes available for navigation\n';
               code += '        logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';

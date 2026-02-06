@@ -326,6 +326,10 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
             code += '    \n';
             code += generateUniversalVariableReplacement('    ');
 
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '    # Заменяем все переменные в тексте\n';
+            code += '    text = replace_variables_in_text(text, user_vars)\n';
+
             /**
              * БЛОК 4: Поддержка условных сообщений
              * Позволяет показывать разные сообщения на основе данных пользователя
