@@ -1,5 +1,9 @@
-// Функция для создания уникальных коротких ID для узлов
-
+/**
+ * Генерирует уникальный короткий идентификатор для узла графа
+ * @param nodeId - Идентификатор узла
+ * @param allNodeIds - Массив всех идентификаторов узлов в графе
+ * @returns Уникальный короткий идентификатор
+ */
 export function generateUniqueShortId(nodeId: string, allNodeIds: string[]): string {
   if (!nodeId) return 'node';
 
