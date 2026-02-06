@@ -60,27 +60,30 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   };
 
   nodes.forEach((node: Node) => {
-    nodeCode += `\n# @@NODE_START:${node.id}@@\n`;
+    codeLines.push(`\n# @@NODE_START:${node.id}@@\n`);
 
     const handler = nodeHandlers[node.type];
     if (handler) {
-      nodeCode += handler(node);
+      const handlerCode = handler(node);
+      // Разбиваем код обработчика на строки и добавляем в codeLines
+      handlerCode.split('\n').forEach(line => codeLines.push(line));
     } else {
       // Если нет специфического обработчика, проверим, может быть, это обычный узел сообщения
       if (node.type === 'message' || node.type === 'command') {
         // Для узлов типа message и command без медиа-контента используем стандартную логику
-        nodeCode += `    # Обработчик для узла ${node.id} типа ${node.type} будет сгенерирован отдельно\n`;
+        codeLines.push(`    # Обработчик для узла ${node.id} типа ${node.type} будет сгенерирован отдельно`);
       } else {
-        nodeCode += `    # Нет обработчика для узла типа ${node.type}\n`;
+        codeLines.push(`    # Нет обработчика для узла типа ${node.type}`);
       }
     }
     // Примечание: узлы ввода пользователя и сообщений обрабатываются через обработчики обратного вызова, а не как отдельные обработчики команд
 
-    nodeCode += `# @@NODE_END:${node.id}@@\n`;
+    codeLines.push(`# @@NODE_END:${node.id}@@`);
   });
 
   // Применяем автоматическое добавление комментариев ко всему коду
-  processCodeWithAutoComments(codeLines, 'generate-node-handlers.ts');
+  const processedCode = processCodeWithAutoComments(codeLines, 'generate-node-handlers.ts');
   
-  return nodeCode;
+  // Собираем финальный код из обработанных строк
+  return processedCode.join('\n');
 }
