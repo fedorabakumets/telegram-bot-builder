@@ -1,4 +1,4 @@
-import { escapeForPython } from "./escapeForPython";
+import { escapeForPython } from "../format/escapeForPython";
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 
 /**

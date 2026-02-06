@@ -1,5 +1,5 @@
 import { Button } from "../bot-generator";
-import { generateButtonText } from '../format/generateButtonText';
+import { generateButtonText } from './generateButtonText';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';

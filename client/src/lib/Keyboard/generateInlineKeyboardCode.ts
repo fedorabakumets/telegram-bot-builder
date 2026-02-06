@@ -1,5 +1,5 @@
 import { isLoggingEnabled } from "../bot-generator";
-import { generateButtonText } from '../format/generateButtonText';
+import { generateButtonText } from './generateButtonText';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { generateUniqueShortId } from '../format/generateUniqueShortId';
 import { generateReplyKeyboardCode } from './generateReplyKeyboardCode';

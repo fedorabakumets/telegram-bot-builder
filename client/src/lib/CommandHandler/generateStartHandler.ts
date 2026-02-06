@@ -1,4 +1,4 @@
-import { generateButtonText } from '../format/generateButtonText';
+import { generateButtonText } from '../Keyboard/generateButtonText';
 import { formatTextForPython } from '../format/formatTextForPython';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';

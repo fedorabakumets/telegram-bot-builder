@@ -1,4 +1,4 @@
-import { generateButtonText } from '../format/generateButtonText';
+import { generateButtonText } from '../Keyboard/generateButtonText';
 import { Node } from '@shared/schema';
 
 export function generateContactHandler(node: Node): string {
