@@ -1512,7 +1512,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             code += `    text = ${formattedPrompt}\n`;
 
             if (responseType === 'text') {
-              code += '    await bot.send_message(callback_query.from_user.id, text)\n';
+              code += '    # ИСПРАВЛЕНИЕ: Не отправляем сообщение второй раз, если оно уже было отправлено ранее в обработчике\n';
+              code += '    # Вместо этого, просто настраиваем ожидание ввода\n';
 
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
               const inlineTextCollect = targetNode.data.collectUserInput === true ||
