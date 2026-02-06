@@ -36,8 +36,6 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   // Добавляем комментарий о генерации
   codeLines.push('# Код сгенерирован в generate-node-handlers.ts');
   
-  let nodeCode = '';
-
   const nodeHandlers: Record<string, (node: Node) => string> = {
     start: (node) => generateStartHandler(node, userDatabaseEnabled),
     command: (node) => generateCommandHandler(node, userDatabaseEnabled),
