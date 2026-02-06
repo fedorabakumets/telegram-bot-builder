@@ -384,7 +384,7 @@ export function generateMessageLoggingCode(userDatabaseEnabled: boolean, project
   code += '    """Обертка для bot.send_photo с автоматическим сохранением"""\n';
   code += '    # Проверяем, является ли photo относительным путем к локальному файлу\n';
   code += '    if isinstance(photo, str) and photo.startswith("/uploads/"):\n';
-  code += '        file_path = "." + photo\n';
+  code += '        file_path = os.getcwd() + photo\n';
   code += '        result = await original_send_photo(chat_id, FSInputFile(file_path), *args, caption=caption, **kwargs)\n';
   code += '    else:\n';
   code += '        result = await original_send_photo(chat_id, photo, *args, caption=caption, **kwargs)\n';

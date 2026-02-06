@@ -157,7 +157,7 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
           if (hasImage) {
             // Проверяем, является ли URL относительным путем к локальному файлу
             if (targetNode.data.imageUrl.startsWith('/uploads/')) {
-              code += `                image_path = "." + "${targetNode.data.imageUrl}"\n`;
+              code += `                image_path = os.getcwd() + "${targetNode.data.imageUrl}"\n`;
               code += `                image_url = FSInputFile(image_path)\n`;
               code += `                await bot.send_photo(message.chat.id, image_url, caption=text, parse_mode=parse_mode)\n`;
             } else {
@@ -166,7 +166,7 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
           } else if (hasVideo) {
             // Проверяем, является ли URL относительным путем к локальному файлу
             if (targetNode.data.videoUrl && targetNode.data.videoUrl.startsWith('/uploads/')) {
-              code += `                video_path = "." + "${targetNode.data.videoUrl}"\n`;
+              code += `                video_path = os.getcwd() + "${targetNode.data.videoUrl}"\n`;
               code += `                video_url = FSInputFile(video_path)\n`;
               code += `                await bot.send_video(message.chat.id, video_url, caption=text, parse_mode=parse_mode)\n`;
             } else {
@@ -175,7 +175,7 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
           } else if (hasAudio) {
             // Проверяем, является ли URL относительным путем к локальному файлу
             if (targetNode.data.audioUrl && targetNode.data.audioUrl.startsWith('/uploads/')) {
-              code += `                audio_path = "." + "${targetNode.data.audioUrl}"\n`;
+              code += `                audio_path = os.getcwd() + "${targetNode.data.audioUrl}"\n`;
               code += `                audio_url = FSInputFile(audio_path)\n`;
               code += `                await bot.send_audio(message.chat.id, audio_url, caption=text, parse_mode=parse_mode)\n`;
             } else {
@@ -184,7 +184,7 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
           } else if (hasDocument) {
             // Проверяем, является ли URL относительным путем к локальному файлу
             if (targetNode.data.documentUrl && targetNode.data.documentUrl.startsWith('/uploads/')) {
-              code += `                document_path = "." + "${targetNode.data.documentUrl}"\n`;
+              code += `                document_path = os.getcwd() + "${targetNode.data.documentUrl}"\n`;
               code += `                document_url = FSInputFile(document_path)\n`;
               code += `                await bot.send_document(message.chat.id, document_url, caption=text, parse_mode=parse_mode)\n`;
             } else {

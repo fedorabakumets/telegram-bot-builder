@@ -1145,7 +1145,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += `                logging.info(f"📎 Отправка фото из переменной ${attachedMedia[0]}: {nav_attached_media}")\n`;
                         code += `                # Проверяем, является ли медиа относительным путем к локальному файлу\n`;
                         code += `                if str(nav_attached_media).startswith('/uploads/'):\n`;
-                        code += `                    nav_attached_media_path = "." + nav_attached_media\n`;
+                        code += `                    nav_attached_media_path = os.getcwd() + nav_attached_media\n`;
                         code += `                    nav_attached_media_url = FSInputFile(nav_attached_media_path)\n`;
                         code += `                    await bot.send_photo(callback_query.from_user.id, nav_attached_media_url, caption=nav_text)\n`;
                         code += `                else:\n`;
