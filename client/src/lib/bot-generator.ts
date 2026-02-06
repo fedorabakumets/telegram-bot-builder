@@ -250,7 +250,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем утилитарные функции
   code += generateUtilityFunctions(userDatabaseEnabled);
 
-  // Функции для работы с файлами - только если есть медиа
+  // Функции для работы с файлами - если есть медиа или узлы с изображениями
   if (hasMediaNodes(nodes || [])) {
     code += generateMediaFileFunctions();
   }
@@ -990,7 +990,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Определение типа узла команды (start, command)
    * - Вызов соответствующих обработчиков команд
    * - Обработка команд без соответствующих узлов
-   * - Логирование выполнения команд
+   * - Логирование вып��лнения команд
    * 
    * **Генерируемые обработчики включают:**
    * - Декораторы для callback_query с фильтрацией по data
