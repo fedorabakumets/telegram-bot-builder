@@ -1,7 +1,7 @@
 // Format Module
 // Модуль для форматирования текста и данных в Telegram ботах
 
-export * from './calculateOptimalColumns';
+export * from '../Keyboard/calculateOptimalColumns';
 export * from './createSafeFunctionName';
 export * from './formatTextForPython';
 export * from './generateButtonText';

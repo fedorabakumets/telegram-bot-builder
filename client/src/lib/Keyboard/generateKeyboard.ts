@@ -1,6 +1,6 @@
 import { Button } from "../bot-generator";
 import { generateButtonText } from '../format/generateButtonText';
-import { calculateOptimalColumns } from '../format/calculateOptimalColumns';
+import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
