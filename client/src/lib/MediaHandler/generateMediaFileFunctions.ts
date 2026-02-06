@@ -129,7 +129,12 @@ async def send_photo_with_caption(chat_id: int, photo_source, caption: str = Non
         Результат отправки сообщения
     """
     try:
-        result = await bot.send_photo(chat_id, photo_source, caption=caption, **kwargs)
+        # Проверяем, является ли photo_source относительным путем к локальному файлу
+        if isinstance(photo_source, str) and photo_source.startswith('/uploads/'):
+            full_photo_url = f"{API_BASE_URL}{photo_source}"
+            result = await bot.send_photo(chat_id, full_photo_url, caption=caption, **kwargs)
+        else:
+            result = await bot.send_photo(chat_id, photo_source, caption=caption, **kwargs)
 
         # Сохраняем сообщение в базу данных
         message_data_obj = {"message_id": result.message_id if result else None}

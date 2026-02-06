@@ -155,13 +155,37 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
         if (hasImage || hasVideo || hasAudio || hasDocument) {
           // Отправляем медиа с текстом в качестве подписи (caption)
           if (hasImage) {
-            code += `                await bot.send_photo(message.chat.id, "${targetNode.data.imageUrl}", caption=text, parse_mode=parse_mode)\n`;
+            // Проверяем, является ли URL относительным путем к локальному файлу
+            if (targetNode.data.imageUrl.startsWith('/uploads/')) {
+              code += `                image_url = f"{API_BASE_URL}${targetNode.data.imageUrl}"\n`;
+              code += `                await bot.send_photo(message.chat.id, image_url, caption=text, parse_mode=parse_mode)\n`;
+            } else {
+              code += `                await bot.send_photo(message.chat.id, "${targetNode.data.imageUrl}", caption=text, parse_mode=parse_mode)\n`;
+            }
           } else if (hasVideo) {
-            code += `                await bot.send_video(message.chat.id, "${targetNode.data.videoUrl}", caption=text, parse_mode=parse_mode)\n`;
+            // Проверяем, является ли URL относительным путем к локальному файлу
+            if (targetNode.data.videoUrl && targetNode.data.videoUrl.startsWith('/uploads/')) {
+              code += `                video_url = f"{API_BASE_URL}${targetNode.data.videoUrl}"\n`;
+              code += `                await bot.send_video(message.chat.id, video_url, caption=text, parse_mode=parse_mode)\n`;
+            } else {
+              code += `                await bot.send_video(message.chat.id, "${targetNode.data.videoUrl}", caption=text, parse_mode=parse_mode)\n`;
+            }
           } else if (hasAudio) {
-            code += `                await bot.send_audio(message.chat.id, "${targetNode.data.audioUrl}", caption=text, parse_mode=parse_mode)\n`;
+            // Проверяем, является ли URL относительным путем к локальному файлу
+            if (targetNode.data.audioUrl && targetNode.data.audioUrl.startsWith('/uploads/')) {
+              code += `                audio_url = f"{API_BASE_URL}${targetNode.data.audioUrl}"\n`;
+              code += `                await bot.send_audio(message.chat.id, audio_url, caption=text, parse_mode=parse_mode)\n`;
+            } else {
+              code += `                await bot.send_audio(message.chat.id, "${targetNode.data.audioUrl}", caption=text, parse_mode=parse_mode)\n`;
+            }
           } else if (hasDocument) {
-            code += `                await bot.send_document(message.chat.id, "${targetNode.data.documentUrl}", caption=text, parse_mode=parse_mode)\n`;
+            // Проверяем, является ли URL относительным путем к локальному файлу
+            if (targetNode.data.documentUrl && targetNode.data.documentUrl.startsWith('/uploads/')) {
+              code += `                document_url = f"{API_BASE_URL}${targetNode.data.documentUrl}"\n`;
+              code += `                await bot.send_document(message.chat.id, document_url, caption=text, parse_mode=parse_mode)\n`;
+            } else {
+              code += `                await bot.send_document(message.chat.id, "${targetNode.data.documentUrl}", caption=text, parse_mode=parse_mode)\n`;
+            }
           }
         } else {
           // Добавляем кнопки если есть

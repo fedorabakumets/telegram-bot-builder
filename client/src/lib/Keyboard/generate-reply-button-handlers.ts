@@ -79,7 +79,12 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               // Проверяем, есть ли статическое изображение в целевом узле
               if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
                 code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
-                code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                // Проверяем, является ли URL относительным путем к локальному файлу
+                if (targetNode.data.imageUrl.startsWith('/uploads/')) {
+                  code += `    image_url = f"{API_BASE_URL}${targetNode.data.imageUrl}"\n`;
+                } else {
+                  code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                }
 
                 code += '    builder = ReplyKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn: Button) => {
@@ -266,7 +271,12 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               // Проверяем, есть ли статическое изображение в целевом узле
               if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
                 code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
-                code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                // Проверяем, является ли URL относительным путем к локальному файлу
+                if (targetNode.data.imageUrl.startsWith('/uploads/')) {
+                  code += `    image_url = f"{API_BASE_URL}${targetNode.data.imageUrl}"\n`;
+                } else {
+                  code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                }
 
                 if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                   code += '    # Проверка условных сообщений для целевого узла\n';

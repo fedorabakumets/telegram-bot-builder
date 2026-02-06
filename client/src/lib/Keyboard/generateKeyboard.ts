@@ -26,7 +26,12 @@ export function generateKeyboard(node: Node): string {
   const hasImage = node.data.imageUrl && node.data.imageUrl.trim() !== '';
   if (hasImage) {
     code += `    # Узел содержит изображение: ${node.data.imageUrl}\n`;
-    code += `    image_url = "${node.data.imageUrl}"\n`;
+    // Проверяем, является ли URL относительным путем к локальному файлу
+    if (node.data.imageUrl.startsWith('/uploads/')) {
+      code += `    image_url = f"{API_BASE_URL}${node.data.imageUrl}"\n`;
+    } else {
+      code += `    image_url = "${node.data.imageUrl}"\n`;
+    }
     code += '    \n';
   }
 

@@ -1143,7 +1143,12 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += `                    nav_attached_media = media_data\n`;
                         code += `            if nav_attached_media and str(nav_attached_media).strip():\n`;
                         code += `                logging.info(f"📎 Отправка фото из переменной ${attachedMedia[0]}: {nav_attached_media}")\n`;
-                        code += `                await bot.send_photo(callback_query.from_user.id, nav_attached_media, caption=nav_text)\n`;
+                        code += `                # Проверяем, является ли медиа относительным путем к локальному файлу\n`;
+                        code += `                if str(nav_attached_media).startswith('/uploads/'):\n`;
+                        code += `                    nav_attached_media_url = f"{API_BASE_URL}{nav_attached_media}"\n`;
+                        code += `                    await bot.send_photo(callback_query.from_user.id, nav_attached_media_url, caption=nav_text)\n`;
+                        code += `                else:\n`;
+                        code += `                    await bot.send_photo(callback_query.from_user.id, nav_attached_media, caption=nav_text)\n`;
                         code += `            else:\n`;
                         code += `                logging.info("📝 Медиа не найдено, отправка текстового сообщения")\n`;
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте

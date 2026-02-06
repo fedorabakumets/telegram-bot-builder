@@ -382,7 +382,12 @@ export function generateMessageLoggingCode(userDatabaseEnabled: boolean, project
   code += 'original_send_photo = bot.send_photo\n';
   code += 'async def send_photo_with_logging(chat_id, photo, *args, caption=None, node_id=None, **kwargs):\n';
   code += '    """Обертка для bot.send_photo с автоматическим сохранением"""\n';
-  code += '    result = await original_send_photo(chat_id, photo, *args, caption=caption, **kwargs)\n';
+  code += '    # Проверяем, является ли photo относительным путем к локальному файлу\n';
+  code += '    if isinstance(photo, str) and photo.startswith("/uploads/"):\n';
+  code += '        full_photo_url = f"{API_BASE_URL}{photo}"\n';
+  code += '        result = await original_send_photo(chat_id, full_photo_url, *args, caption=caption, **kwargs)\n';
+  code += '    else:\n';
+  code += '        result = await original_send_photo(chat_id, photo, *args, caption=caption, **kwargs)\n';
   code += '    \n';
   code += '    # Создаем message_data с информацией о фото\n';
   code += '    message_data_obj = {"message_id": result.message_id if result else None}\n';

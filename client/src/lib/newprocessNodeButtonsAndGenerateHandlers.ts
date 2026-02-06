@@ -1134,7 +1134,12 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
             // ИСПРАВЛЕНИЕ: Проверяем наличие изображения в узле
             if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
               code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
-              code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+              // Проверяем, является ли URL относительным путем к локальному файлу
+              if (targetNode.data.imageUrl.startsWith('/uploads/')) {
+                code += `    image_url = f"{API_BASE_URL}${targetNode.data.imageUrl}"\n`;
+              } else {
+                code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+              }
               code += '    try:\n';
               code += '        if keyboard is not None:\n';
               code += `            await bot.send_photo(callback_query.from_user.id, image_url, caption=text, reply_markup=keyboard, node_id="${actualNodeId}"${parseMode})\n`;
@@ -1222,7 +1227,12 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
               // ИСПРАВЛЕНИЕ: Проверяем наличие изображения в command узле без клавиатуры
               if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
                 code += `    # Узел command содержит изображение: ${targetNode.data.imageUrl}\n`;
-                code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                // Проверяем, является ли URL относительным путем к локальному файлу
+                if (targetNode.data.imageUrl.startsWith('/uploads/')) {
+                  code += `    image_url = f"{API_BASE_URL}${targetNode.data.imageUrl}"\n`;
+                } else {
+                  code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                }
                 code += '    # Отправляем сообщение command узла с изображением\n';
                 code += '    try:\n';
                 code += `        await bot.send_photo(callback_query.from_user.id, image_url, caption=text, node_id="${actualNodeId}"${parseMode})\n`;

@@ -96,7 +96,12 @@ export function generateAttachedMediaSendCode(
   // ИСПРАВЛЕНИЕ: Если есть статическое изображение, используем его напрямую
   if (hasStaticImage) {
     codeLines.push(`${indentLevel}# Узел содержит статическое изображение: ${nodeData.imageUrl}`);
-    codeLines.push(`${indentLevel}static_image_url = "${nodeData.imageUrl}"`);
+    // Проверяем, является ли URL относительным путем к локальному файлу
+    if (nodeData.imageUrl.startsWith('/uploads/')) {
+      codeLines.push(`${indentLevel}static_image_url = f"{API_BASE_URL}${nodeData.imageUrl}"`);
+    } else {
+      codeLines.push(`${indentLevel}static_image_url = "${nodeData.imageUrl}"`);
+    }
     codeLines.push(`${indentLevel}`);
     
     // Устанавливаем состояние ожидания ввода если нужно
@@ -205,22 +210,29 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
   codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, user_vars)`);
 
+  // Проверяем, является ли медиа относительным путем к локальному файлу и форматируем полный URL
+  codeLines.push(`${indentLevel}        # Проверяем, является ли медиа относительным путем к локальному файлу`);
+  codeLines.push(`${indentLevel}        if str(attached_media).startswith('/uploads/'):`);
+  codeLines.push(`${indentLevel}            attached_media_url = f"{API_BASE_URL}{attached_media}"`);
+  codeLines.push(`${indentLevel}        else:`);
+  codeLines.push(`${indentLevel}            attached_media_url = attached_media`);
+
   // Генерируем код отправки в зависимости от типа медиа
   const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
   const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
 
   switch (mediaType) {
     case 'photo':
-      codeLines.push(`${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+      codeLines.push(`${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'video':
-      codeLines.push(`${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+      codeLines.push(`${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'audio':
-      codeLines.push(`${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+      codeLines.push(`${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'document':
-      codeLines.push(`${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+      codeLines.push(`${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     default:
       codeLines.push(`${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение`);
