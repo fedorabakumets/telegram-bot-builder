@@ -3,7 +3,31 @@ import { BotData } from '@shared/schema';
 // ============================================================================
 // УТИЛИТЫ ДЛЯ РАБОТЫ С ДАННЫМИ БОТА
 // ============================================================================
-// Функция для преобразования медиа-URL в attachedMedia
+
+/**
+ * Преобразует данные узлов, добавляя медиа-URL в attachedMedia.
+ * Функция сканирует каждый узел на наличие медиа-URL (изображения, видео, аудио, документы)
+ * и создает соответствующие переменные для хранения этих URL в формате attachedMedia.
+ * 
+ * Процесс преобразования:
+ * 1. Проверяет наличие медиа-URL в данных узла
+ * 2. Создает переменные с именами в формате "тип_url_id_узла"
+ * 3. Добавляет эти переменные в массив attachedMedia
+ * 4. Сохраняет оригинальные URL в отдельных переменных для системы
+ * 
+ * @param nodes - Массив узлов для преобразования
+ * @returns Массив преобразованных узлов с обновленными данными
+ * 
+ * @example
+ * // Узел с изображением и видео
+ * const nodes = [{
+ *   id: 'node1',
+ *   data: { imageUrl: 'url1', videoUrl: 'url2' }
+ * }];
+ * const transformed = transformNodeData(nodes);
+ * // Результат: узел с attachedMedia: ['image_url_node1', 'video_url_node1']
+ * // и переменными: image_url_node1: 'url1', video_url_node1: 'url2'
+ */
 function transformNodeData(nodes: any[]): any[] {
   return nodes.map(node => {
     // Проверяем наличие любых медиа-URL и добавляем их в attachedMedia
@@ -58,7 +82,41 @@ function transformNodeData(nodes: any[]): any[] {
   });
 }
 
-// Функция для сбора всех узлов и связей из всех листов проекта
+/**
+ * Извлекает и объединяет все узлы и связи из данных бота.
+ * Функция поддерживает как обычные проекты, так и многолистовые проекты,
+ * автоматически определяя структуру данных и применяя необходимые преобразования.
+ * 
+ * Логика работы:
+ * 1. Проверяет наличие данных бота
+ * 2. Определяет тип проекта (многолистовой или обычный)
+ * 3. Для многолистовых проектов собирает данные со всех листов
+ * 4. Применяет transformNodeData ко всем узлам
+ * 5. Возвращает объединенные результаты
+ * 
+ * @param botData - Данные бота (могут содержать nodes/connections или sheets с узлами и связями)
+ * @returns Объект с массивами nodes и connections
+ * 
+ * @example
+ * // Обычный проект
+ * const botData = {
+ *   nodes: [{ id: 'node1', data: { text: 'Hello' } }],
+ *   connections: [{ from: 'node1', to: 'node2' }]
+ * };
+ * const result = extractNodesAndConnections(botData);
+ * // Возвращает: { nodes: [...], connections: [...] }
+ * 
+ * @example
+ * // Многолистовой проект
+ * const botData = {
+ *   sheets: [
+ *     { nodes: [...], connections: [...] },
+ *     { nodes: [...], connections: [...] }
+ *   ]
+ * };
+ * const result = extractNodesAndConnections(botData);
+ * // Возвращает: { nodes: [...объединенные узлы...], connections: [...объединенные связи...] }
+ */
 export function extractNodesAndConnections(botData: BotData) {
   if (!botData) return { nodes: [], connections: [] };
 
