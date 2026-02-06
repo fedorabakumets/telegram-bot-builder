@@ -494,6 +494,8 @@ export const insertBotProjectSchema = z.object({
   botToken: z.string().nullish(),
   /** Флаг включения пользовательской базы данных (0 = выключена, 1 = включена) */
   userDatabaseEnabled: z.number().min(0).max(1).default(1),
+  /** Флаг необходимости перезапуска бота при обновлении (по умолчанию false) */
+  restartOnUpdate: z.boolean().default(false).optional(),
 });
 
 /**

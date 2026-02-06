@@ -511,7 +511,7 @@ export default function Editor() {
    * Используется для сохранения изменений в проекте на сервере
    */
   const updateProjectMutation = useMutation({
-    mutationFn: async (_data: any) => {
+    mutationFn: async (params: { restartOnUpdate?: boolean } = {}) => {
       if (!activeProject?.id) {
         console.warn('Cannot save: activeProject or ID is undefined');
         return;
@@ -546,7 +546,8 @@ export default function Editor() {
       }
 
       return apiRequest('PUT', `/api/projects/${projectId}`, {
-        data: projectData
+        data: projectData,
+        restartOnUpdate: params.restartOnUpdate || false
       });
     },
     onMutate: async (_variables) => {
@@ -808,7 +809,7 @@ export default function Editor() {
       } else {
         sheetsData = SheetsManager.migrateLegacyData(projectData as BotData);
         // Сохраняем мигрированные данные
-        updateProjectMutation.mutate({ data: sheetsData });
+        updateProjectMutation.mutate({});
       }
       
       // Устанавливаем данные листов для отображения панели

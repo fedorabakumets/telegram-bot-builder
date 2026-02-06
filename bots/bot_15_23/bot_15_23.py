@@ -3,7 +3,10 @@
 Сгенерировано с помощью TelegramBot Builder
 
 Команды для @BotFather:
-start - Приветствие и источник"""
+start - Приветствие и источник
+profile - Показать и редактировать профиль пользователя
+link - Получить ссылку на чат сообщества
+help - Полная справка по всем командам бота и модерации"""
 
 # -*- coding: utf-8 -*-
 import os
@@ -39,6 +42,97 @@ from datetime import datetime, timezone, timedelta
 import json
 import aiohttp
 from aiohttp import TCPConnector
+
+# Safe helper for editing messages with fallback to new message
+async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, **kwargs):
+    """
+    Безопасное редактирование сообщения с fallback на новое сообщение
+    При автопереходе сразу отправляет новое сообщение без попытки редактирования
+    """
+    result = None
+    user_id = None
+    
+    # Получаем user_id для сохранения
+    if hasattr(cbq, "from_user") and cbq.from_user:
+        user_id = str(cbq.from_user.id)
+    elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):
+        user_id = str(cbq.message.chat.id)
+    
+    try:
+        # При автопереходе сразу отправляем новое сообщение без редактирования
+        if is_auto_transition:
+            logging.info(f"⚡ Автопереход: отправляем новое сообщение вместо редактирования")
+            if hasattr(cbq, "message") and cbq.message:
+                result = await cbq.message.answer(text, **kwargs)
+            else:
+                raise Exception("Cannot send message in auto-transition")
+        else:
+            # Пробуем редактировать сообщение
+            if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):
+                result = await cbq.edit_text(text, **kwargs)
+            elif (hasattr(cbq, "message") and cbq.message):
+                result = await cbq.message.edit_text(text, **kwargs)
+            else:
+                raise Exception("No valid edit method found")
+    except Exception as e:
+        # При любой ошибке отправляем новое сообщение
+        if is_auto_transition:
+            logging.info(f"⚡ Автопереход: {e}, отправляем новое сообщение")
+        else:
+            logging.warning(f"Не удалось отредактировать сообщение: {e}, отправляем новое")
+        if hasattr(cbq, "message") and cbq.message:
+            result = await cbq.message.answer(text, **kwargs)
+        else:
+            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")
+            raise
+    
+    # Сохраняем сообщение в базу данных
+    if result and user_id:
+        message_data_obj = {"message_id": result.message_id if hasattr(result, "message_id") else None}
+        
+        # Извлекаем кнопки из reply_markup
+        if "reply_markup" in kwargs:
+            try:
+                reply_markup = kwargs["reply_markup"]
+                buttons_data = []
+                # Обработка inline клавиатуры
+                if hasattr(reply_markup, "inline_keyboard"):
+                    for row in reply_markup.inline_keyboard:
+                        for btn in row:
+                            button_info = {"text": btn.text}
+                            if hasattr(btn, "url") and btn.url:
+                                button_info["url"] = btn.url
+                            if hasattr(btn, "callback_data") and btn.callback_data:
+                                button_info["callback_data"] = btn.callback_data
+                            buttons_data.append(button_info)
+                    if buttons_data:
+                        message_data_obj["buttons"] = buttons_data
+                        message_data_obj["keyboard_type"] = "inline"
+                # Обработка reply клавиатуры
+                elif hasattr(reply_markup, "keyboard"):
+                    for row in reply_markup.keyboard:
+                        for btn in row:
+                            button_info = {"text": btn.text}
+                            if hasattr(btn, "request_contact") and btn.request_contact:
+                                button_info["request_contact"] = True
+                            if hasattr(btn, "request_location") and btn.request_location:
+                                button_info["request_location"] = True
+                            buttons_data.append(button_info)
+                    if buttons_data:
+                        message_data_obj["buttons"] = buttons_data
+                        message_data_obj["keyboard_type"] = "reply"
+            except Exception as btn_error:
+                logging.warning(f"Не удалось извлечь кнопки в safe_edit_or_send: {btn_error}")
+        
+        await save_message_to_api(
+            user_id=user_id,
+            message_type="bot",
+            message_text=text,
+            node_id=node_id,
+            message_data=message_data_obj
+        )
+    
+    return result
 
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = "7713154819:AAEpLG7wuSPtzAto90fcxz5z0UN1evvXafE"
@@ -253,6 +347,44 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
     
     # Продолжаем обработку сообщения
+    return await handler(event, data)
+
+# Middleware для сохранения нажатий на кнопки
+async def callback_query_logging_middleware(handler, event: types.CallbackQuery, data: dict):
+    """Middleware для автоматического сохранения нажатий на кнопки"""
+    try:
+        user_id = str(event.from_user.id)
+        callback_data = event.data or ""
+        
+        # Пытаемся найти текст кнопки из сообщения
+        button_text = None
+        if event.message and hasattr(event.message, "reply_markup"):
+            reply_markup = event.message.reply_markup
+            if hasattr(reply_markup, "inline_keyboard"):
+                for row in reply_markup.inline_keyboard:
+                    for btn in row:
+                        if hasattr(btn, "callback_data") and btn.callback_data == callback_data:
+                            button_text = btn.text
+                            break
+                    if button_text:
+                        break
+        
+        # Сохраняем информацию о нажатии кнопки
+        message_text_to_save = f"[Нажата кнопка: {button_text}]" if button_text else "[Нажата кнопка]"
+        await save_message_to_api(
+            user_id=user_id,
+            message_type="user",
+            message_text=message_text_to_save,
+            message_data={
+                "button_clicked": True,
+                "button_text": button_text,
+                "callback_data": callback_data
+            }
+        )
+    except Exception as e:
+        logging.error(f"Ошибка в middleware сохранения нажатий кнопок: {e}")
+    
+    # Продолжаем обработку callback query
     return await handler(event, data)
 
 # Обертка для сохранения исходящих сообщений
@@ -653,6 +785,18 @@ async def handle_command_start(message):
     """Алиас для start_handler, используется в callback обработчиках"""
     await start_handler(message)
 
+async def handle_command_profile(message):
+    """Алиас для profile_handler, используется в callback обработчиках"""
+    await profile_handler(message)
+
+async def handle_command_link(message):
+    """Алиас для link_handler, используется в callback обработчиках"""
+    await link_handler(message)
+
+async def handle_command_help(message):
+    """Алиас для help_handler, используется в callback обработчиках"""
+    await help_handler(message)
+
 async def update_user_data_in_db(user_id: int, data_key: str, data_value):
     """Обновляет пользовательские данные в базе данных"""
     if not db_pool:
@@ -751,6 +895,12 @@ async def set_bot_commands():
     commands = [
         # Команда start - Приветствие и источник
         BotCommand(command="start", description="Приветствие и источник"),
+        # Команда profile - Показать и редактировать профиль пользователя
+        BotCommand(command="profile", description="Показать и редактировать профиль пользователя"),
+        # Команда link - Получить ссылку на чат сообщества
+        BotCommand(command="link", description="Получить ссылку на чат сообщества"),
+        # Команда help - Полная справка по всем командам бота и модерации
+        BotCommand(command="help", description="Полная справка по всем командам бота и модерации"),
     ]
 # Устанавливаем команды для бота
     await bot.set_my_commands(commands)
@@ -908,3279 +1058,525 @@ async def start_handler(message: types.Message):
     # Обработчик для узла decline_response типа message будет сгенерирован отдельно
 # @@NODE_END:decline_response@@
 
-# @@NODE_START:pin_message_node@@
+# @@NODE_START:gender_selection@@
 
+    # Обработчик для узла gender_selection типа message будет сгенерирован отдельно
+# @@NODE_END:gender_selection@@
 
-# Pin Message Handler
+# @@NODE_START:name_input@@
 
+    # Обработчик для узла name_input типа message будет сгенерирован отдельно
+# @@NODE_END:name_input@@
+
+# @@NODE_START:age_input@@
+
+    # Обработчик для узла age_input типа message будет сгенерирован отдельно
+# @@NODE_END:age_input@@
+
+# @@NODE_START:metro_selection@@
+
+    # Обработчик для узла metro_selection типа message будет сгенерирован отдельно
+# @@NODE_END:metro_selection@@
+
+# @@NODE_START:red_line_stations@@
+
+    # Обработчик для узла red_line_stations типа message будет сгенерирован отдельно
+# @@NODE_END:red_line_stations@@
+
+# @@NODE_START:blue_line_stations@@
+
+    # Обработчик для узла blue_line_stations типа message будет сгенерирован отдельно
+# @@NODE_END:blue_line_stations@@
+
+# @@NODE_START:green_line_stations@@
+
+    # Обработчик для узла green_line_stations типа message будет сгенерирован отдельно
+# @@NODE_END:green_line_stations@@
+
+# @@NODE_START:purple_line_stations@@
+
+    # Обработчик для узла purple_line_stations типа message будет сгенерирован отдельно
+# @@NODE_END:purple_line_stations@@
+
+# @@NODE_START:profile_complete@@
+
+    # Обработчик для узла profile_complete типа message будет сгенерирован отдельно
+# @@NODE_END:profile_complete@@
+
+# @@NODE_START:show_profile@@
+
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("pin_message_pin_message_node_"))
+@dp.message(Command("profile"))
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
-    """
-    Обработчик callback запросов команды закрепления
-    Работает в группах где бот имеет права администратора
-    """
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id  # Определяем ID группы из контекста сообщения
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if callback_query.message.chat.type not in ['group', 'supergroup']:
-        await callback_query.message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевое сообщение из callback_data
-    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_message_id:
-        await callback_query.message.answer("❌ Не удалось определить ID сообщения для закрепления")
-        return
-    
-    try:
-        await bot.pin_chat_message(
-            chat_id=chat_id,
-            message_id=target_message_id,
-            disable_notification=False
-        )
-        await callback_query.message.answer("✅ Сообщение закреплено")
-        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to pin not found" in str(e) or "message not found" in str(e):
-            await callback_query.message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await callback_query.message.answer("❌ Недостаточно прав для закрепления сообщения")
-        else:
-            await callback_query.message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка закрепления сообщения: {e}")
-    except Exception as e:
-        await callback_query.message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при закреплении: {e}")
-    
-    try:
-        await callback_query.answer()
-    except:
-        pass
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("pin_message"))
-# Код сгенерирован в generate-node-handlers.ts
-async def pin_message_pin_message_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /pin_message
-    Работает в группах где бот имеет права администратора
-    Использование: ответ на сообщение или указание ID сообщения
-    """
+async def profile_handler(message: types.Message):
+    logging.info(f"Команда /profile вызвана пользователем {message.from_user.id}")
+    # Сохраняем пользователя и статистику использования команд
     user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_message_id = message.reply_to_message.message_id
-    else:
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-        else:
-            await message.answer("❌ Ответьте на сообщение или напишите /pin_message ID_сообщения")
-            return
-    
-    try:
-        await bot.pin_chat_message(
-            chat_id=chat_id,
-            message_id=target_message_id,
-            disable_notification=False
-        )
-        await message.answer("✅ Сообщение закреплено")
-        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to pin not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для закрепления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка закрепления сообщения: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при закреплении: {e}")
-
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and message.text.lower().startswith("закрепить") and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def pin_message_pin_message_node_закрепить_handler(message: types.Message):
-    """
-    Обработчик для закрепления сообщения по команде 'закрепить'
-    Работает в любых группах где бот имеет права администратора
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} в группе {chat_id}")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")
-        else:
-            logging.info(f"DEBUG: Получен текст закрепить без ID сообщения в группе {chat_id}")
-            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'закрепить ID_сообщения'")
-            return
-    
-    try:
-        # Закрепляем сообщение в текущей группе
-        await bot.pin_chat_message(
-            chat_id=chat_id,
-            message_id=target_message_id,
-            disable_notification=False
-        )
-        await message.answer("✅ Сообщение закреплено")
-        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to pin not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для закрепления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка закрепления сообщения: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при закреплении: {e}")
-
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and message.text.lower().startswith("прикрепить") and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def pin_message_pin_message_node_прикрепить_handler(message: types.Message):
-    """
-    Обработчик для закрепления сообщения по команде 'прикрепить'
-    Работает в любых группах где бот имеет права администратора
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} в группе {chat_id}")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")
-        else:
-            logging.info(f"DEBUG: Получен текст прикрепить без ID сообщения в группе {chat_id}")
-            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'прикрепить ID_сообщения'")
-            return
-    
-    try:
-        # Закрепляем сообщение в текущей группе
-        await bot.pin_chat_message(
-            chat_id=chat_id,
-            message_id=target_message_id,
-            disable_notification=False
-        )
-        await message.answer("✅ Сообщение закреплено")
-        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to pin not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для закрепления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка закрепления сообщения: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при закреплении: {e}")
-
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and message.text.lower().startswith("зафиксировать") and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def pin_message_pin_message_node_зафиксировать_handler(message: types.Message):
-    """
-    Обработчик для закрепления сообщения по команде 'зафиксировать'
-    Работает в любых группах где бот имеет права администратора
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} в группе {chat_id}")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста в группе {chat_id}")
-        else:
-            logging.info(f"DEBUG: Получен текст зафиксировать без ID сообщения в группе {chat_id}")
-            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'зафиксировать ID_сообщения'")
-            return
-    
-    try:
-        # Закрепляем сообщение в текущей группе
-        await bot.pin_chat_message(
-            chat_id=chat_id,
-            message_id=target_message_id,
-            disable_notification=False
-        )
-        await message.answer("✅ Сообщение закреплено")
-        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to pin not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для закрепления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка закрепления сообщения: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при закреплении: {e}")
-
-
-# @@NODE_END:pin_message_node@@
-
-# @@NODE_START:unpin_message_node@@
-
-
-# Unpin Message Handler
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("unpin_message_unpin_message_node_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery):
-    """
-    Обработчик callback запросов команды открепления
-    Работает в группах где бот имеет права администратора
-    """
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if callback_query.message.chat.type not in ['group', 'supergroup']:
-        await callback_query.message.answer("❌ Команда работает только в группах")
-        return
-    
-    try:
-        await bot.unpin_all_chat_messages(chat_id=chat_id)
-        await callback_query.message.answer("✅ Все сообщения откреплены")
-        logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to unpin not found" in str(e) or "not found" in str(e):
-            await callback_query.message.answer("❌ Нечего откреплять")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await callback_query.message.answer("❌ Недостаточно прав для открепления")
-        else:
-            await callback_query.message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка открепления: {e}")
-    except Exception as e:
-        await callback_query.message.answer("❌ Произошла ошибка")
-        logging.error(f"Неожиданная ошибка при откреплении: {e}")
-    
-    try:
-        await callback_query.answer()
-    except:
-        pass
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("unpin_message"))
-# Код сгенерирован в generate-node-handlers.ts
-async def unpin_message_unpin_message_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /unpin_message
-    Работает в группах где бот имеет права администратора
-    Использование: ответ на сообщение или указание ID сообщения
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_message_id = message.reply_to_message.message_id
-    else:
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-        else:
-            # Если нет конкретного сообщения, открепляем все
-            target_message_id = None
-    
-    try:
-# Код сгенерирован в generate-node-handlers.ts
-        if target_message_id:
-            await bot.unpin_chat_message(
-                chat_id=chat_id,
-                message_id=target_message_id
-            )
-            await message.answer("✅ Сообщение откреплено")
-            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")
-        else:
-            await bot.unpin_all_chat_messages(chat_id=chat_id)
-            await message.answer("✅ Все сообщения откреплены")
-            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to unpin not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для открепления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка открепления сообщения: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при откреплении: {e}")
-
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and message.text.lower().startswith("открепить") and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def unpin_message_unpin_message_node_открепить_handler(message: types.Message):
-    """
-    Обработчик для открепления сообщения по команде 'открепить'
-    Работает в любых группах где бот имеет права администратора
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для открепления в группе {chat_id}")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления в группе {chat_id}")
-        else:
-            logging.info(f"DEBUG: Получен текст открепить без ID сообщения - открепим все в группе {chat_id}")
-            # Если нет конкретного сообщения, открепляем все
-            target_message_id = None
-    
-    try:
-        # Открепляем сообщение в текущей группе
-# Код сгенерирован в generate-node-handlers.ts
-        if target_message_id:
-            await bot.unpin_chat_message(
-                chat_id=chat_id,
-                message_id=target_message_id
-            )
-            await message.answer("✅ Сообщение откреплено")
-            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")
-        else:
-            await bot.unpin_all_chat_messages(chat_id=chat_id)
-            await message.answer("✅ Все сообщения откреплены")
-            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to unpin not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для открепления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка открепления сообщения: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при откреплении: {e}")
-
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and message.text.lower().startswith("отцепить") and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def unpin_message_unpin_message_node_отцепить_handler(message: types.Message):
-    """
-    Обработчик для открепления сообщения по команде 'отцепить'
-    Работает в любых группах где бот имеет права администратора
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для открепления в группе {chat_id}")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления в группе {chat_id}")
-        else:
-            logging.info(f"DEBUG: Получен текст отцепить без ID сообщения - открепим все в группе {chat_id}")
-            # Если нет конкретного сообщения, открепляем все
-            target_message_id = None
-    
-    try:
-        # Открепляем сообщение в текущей группе
-# Код сгенерирован в generate-node-handlers.ts
-        if target_message_id:
-            await bot.unpin_chat_message(
-                chat_id=chat_id,
-                message_id=target_message_id
-            )
-            await message.answer("✅ Сообщение откреплено")
-            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")
-        else:
-            await bot.unpin_all_chat_messages(chat_id=chat_id)
-            await message.answer("✅ Все сообщения откреплены")
-            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to unpin not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для открепления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка открепления сообщения: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при откреплении: {e}")
-
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and message.text.lower().startswith("убрать закрепление") and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def unpin_message_unpin_message_node_убрать_закрепление_handler(message: types.Message):
-    """
-    Обработчик для открепления сообщения по команде 'убрать закрепление'
-    Работает в любых группах где бот имеет права администратора
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для открепления в группе {chat_id}")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления в группе {chat_id}")
-        else:
-            logging.info(f"DEBUG: Получен текст убрать закрепление без ID сообщения - открепим все в группе {chat_id}")
-            # Если нет конкретного сообщения, открепляем все
-            target_message_id = None
-    
-    try:
-        # Открепляем сообщение в текущей группе
-# Код сгенерирован в generate-node-handlers.ts
-        if target_message_id:
-            await bot.unpin_chat_message(
-                chat_id=chat_id,
-                message_id=target_message_id
-            )
-            await message.answer("✅ Сообщение откреплено")
-            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")
-        else:
-            await bot.unpin_all_chat_messages(chat_id=chat_id)
-            await message.answer("✅ Все сообщения откреплены")
-            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to unpin not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для открепления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка открепления сообщения: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при откреплении: {e}")
-
-
-# @@NODE_END:unpin_message_node@@
-
-# @@NODE_START:delete_message_node@@
-
-
-# Delete Message Handler
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("delete_message_delete_message_node_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def handle_callback_delete_message_node(callback_query: types.CallbackQuery):
-    """
-    Обработчик callback запросов команды удаления
-    Работает в группах где бот имеет права администратора
-    """
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if callback_query.message.chat.type not in ['group', 'supergroup']:
-        await callback_query.message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевое сообщение из callback_data
-    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_message_id:
-        await callback_query.message.answer("❌ Не удалось определить ID сообщения для удаления")
-        return
-    
-    try:
-        await bot.delete_message(
-            chat_id=chat_id,
-            message_id=target_message_id
-        )
-        await callback_query.message.answer("🗑️ Сообщение успешно удалено!")
-        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to delete not found" in str(e) or "message not found" in str(e):
-            await callback_query.message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await callback_query.message.answer("❌ Недостаточно прав для удаления")
-        else:
-            await callback_query.message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка удаления сообщения: {e}")
-    except Exception as e:
-        await callback_query.message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при удалении: {e}")
-    
-    try:
-        await callback_query.answer()
-    except:
-        pass
-
-# Обработчик для удаления сообщения используя синонимы: удалить, стереть, убрать сообщение
-# Поддерживает ответ на сообщение для автоматического определения target message ID
-# Работает в любых группах где бот имеет права администратора
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("delete_message"))
-# Код сгенерирован в generate-node-handlers.ts
-async def delete_message_delete_message_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /delete_message
-    Работает в любых группах где бот имеет права администратора
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления")
-        else:
-            logging.info(f"DEBUG: Получена команда удаления без ID сообщения")
-            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите '/delete_message ID_сообщения'")
-            return
-    
-    try:
-        # Удаляем сообщение
-        await bot.delete_message(
-            chat_id=chat_id,
-            message_id=target_message_id
-        )
-        await message.answer("🗑️ Сообщение успешно удалено!")
-        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to delete not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для удаления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка удаления сообщения: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при удалении: {e}")
-
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and (message.text.lower() == "удалить" or message.text.lower().startswith("удалить ")) and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def delete_message_delete_message_node_удалить_handler(message: types.Message):
-    """
-    Обработчик синонима 'удалить' для удаления сообщения
-    Работает в группах с ответом на сообщение или с указанием ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления через синоним 'удалить'")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним 'удалить'")
-        else:
-            logging.info(f"DEBUG: Получен синоним 'удалить' без ID сообщения")
-            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'удалить ID_сообщения'")
-            return
-    
-    try:
-        # Удаляем сообщение
-        await bot.delete_message(
-            chat_id=chat_id,
-            message_id=target_message_id
-        )
-        await message.answer("🗑️ Сообщение успешно удалено!")
-        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним 'удалить'")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to delete not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для удаления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка удаления сообщения через синоним 'удалить': {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при удалении через синоним 'удалить': {e}")
-
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and (message.text.lower() == "стереть" or message.text.lower().startswith("стереть ")) and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def delete_message_delete_message_node_стереть_handler(message: types.Message):
-    """
-    Обработчик синонима 'стереть' для удаления сообщения
-    Работает в группах с ответом на сообщение или с указанием ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления через синоним 'стереть'")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним 'стереть'")
-        else:
-            logging.info(f"DEBUG: Получен синоним 'стереть' без ID сообщения")
-            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'стереть ID_сообщения'")
-            return
-    
-    try:
-        # Удаляем сообщение
-        await bot.delete_message(
-            chat_id=chat_id,
-            message_id=target_message_id
-        )
-        await message.answer("🗑️ Сообщение успешно удалено!")
-        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним 'стереть'")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to delete not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для удаления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка удаления сообщения через синоним 'стереть': {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при удалении через синоним 'стереть': {e}")
-
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and (message.text.lower() == "убрать сообщение" or message.text.lower().startswith("убрать сообщение ")) and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def delete_message_delete_message_node_убрать_сообщение_handler(message: types.Message):
-    """
-    Обработчик синонима 'убрать сообщение' для удаления сообщения
-    Работает в группах с ответом на сообщение или с указанием ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевое сообщение
-    target_message_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_message_id = message.reply_to_message.message_id
-        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления через синоним 'убрать сообщение'")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID сообщения
-        text_parts = message.text.split()
-# Код сгенерирован в generate-node-handlers.ts
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_message_id = int(text_parts[1])
-            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления через синоним 'убрать сообщение'")
-        else:
-            logging.info(f"DEBUG: Получен синоним 'убрать сообщение' без ID сообщения")
-            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите 'убрать сообщение ID_сообщения'")
-            return
-    
-    try:
-        # Удаляем сообщение
-        await bot.delete_message(
-            chat_id=chat_id,
-            message_id=target_message_id
-        )
-        await message.answer("🗑️ Сообщение успешно удалено!")
-        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним 'убрать сообщение'")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "message to delete not found" in str(e) or "message not found" in str(e):
-            await message.answer("❌ Сообщение не найдено")
-        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для удаления сообщения")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка удаления сообщения через синоним 'убрать сообщение': {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при удалении через синоним 'убрать сообщение': {e}")
-
-
-# @@NODE_END:delete_message_node@@
-
-# @@NODE_START:ban_user_node@@
-
-
-# Ban User Handler
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("ban_user"))
-# Код сгенерирован в generate-node-handlers.ts
-async def ban_user_ban_user_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /ban_user
-    Работает в группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-        target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name
-    else:
-        text_parts = message.text.split()
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для блокировки")
-        return
-    
-    try:
-        # Баним пользователя
-        await bot.ban_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id
-        )
-        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для блокировки пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка блокировки пользователя: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при блокировке: {e}")
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["забанить", "заблокировать", "бан"]) and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def ban_user_ban_user_node_handler(message: types.Message):
-    """
-    Обработчик для блокировки пользователя
-    Синонимы: забанить, заблокировать, бан
-    Работает в любых группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-        target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name
-    else:
-        text_parts = message.text.split()
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для блокировки")
-        return
-    
-    try:
-        # Баним пользователя
-        await bot.ban_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id
-        )
-        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для блокировки пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка блокировки пользователя: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при блокировке: {e}")
-
-
-# @@NODE_END:ban_user_node@@
-
-# @@NODE_START:unban_user_node@@
-
-
-# Unban User Handler
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("unban_user"))
-# Код сгенерирован в generate-node-handlers.ts
-async def unban_user_unban_user_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /unban_user
-    Работает в группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-    # Проверяем, есть ли ответ на сообщение
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Определен пользователь для разбана из reply: {target_user_id}")
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для разблокировки")
-            return
-    
-    try:
-        # Разбаниваем пользователя
-        await bot.unban_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            only_if_banned=True
-        )
-        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
-        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для разблокировки пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка разблокировки пользователя: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при разблокировке: {e}")
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["разбанить", "разблокировать", "unbан"]) and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def unban_user_unban_user_node_handler(message: types.Message):
-    """
-    Обработчик для разблокировки пользователя
-    Синонимы: разбанить,разблокировать,unbан
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-    # Проверяем, есть ли ответ на сообщение
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Определен пользователь для разбана из reply: {target_user_id}")
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для разблокировки")
-            return
-    
-    try:
-        # Разбаниваем пользователя
-        await bot.unban_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            only_if_banned=True
-        )
-        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
-        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для разблокировки пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка разблокировки пользователя: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при разблокировке: {e}")
-
-
-# @@NODE_END:unban_user_node@@
-
-# @@NODE_START:mute_user_node@@
-
-
-# Mute User Handler
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("mute_user"))
-# Код сгенерирован в generate-node-handlers.ts
-async def mute_user_mute_user_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /mute_user
-    Работает в группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для ограничения")
-        return
-    
-    try:
-        # Вычисляем время окончания мута
-        from datetime import datetime, timedelta
-        until_date = datetime.now() + timedelta(seconds=3600)
-        
-        # Ограничиваем пользователя
-        await bot.restrict_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=False,
-                can_send_media_messages=False,
-                can_send_polls=False,
-                can_send_other_messages=False,
-                can_add_web_page_previews=False,
-                can_change_info=False,
-                can_invite_users=False,
-                can_pin_messages=False
-            ),
-            until_date=until_date
-        )
-        
-        hours = 3600 // 3600
-        minutes = (3600 % 3600) // 60
-        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
-        
-        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id} в группе {chat_id} на 3600 секунд")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для ограничения пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка ограничения пользователя: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при ограничении: {e}")
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["замутить", "заглушить", "мут"]) and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def mute_user_mute_user_node_handler(message: types.Message):
-    """
-    Обработчик для ограничения пользователя
-    Синонимы: замутить,заглушить,мут
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для ограничения")
-        return
-    
-    try:
-        # Вычисляем время окончания мута
-        from datetime import datetime, timedelta
-        until_date = datetime.now() + timedelta(seconds=3600)
-        
-        # Ограничиваем пользователя
-        await bot.restrict_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=False,
-                can_send_media_messages=False,
-                can_send_polls=False,
-                can_send_other_messages=False,
-                can_add_web_page_previews=False,
-                can_change_info=False,
-                can_invite_users=False,
-                can_pin_messages=False
-            ),
-            until_date=until_date
-        )
-        
-        hours = 3600 // 3600
-        minutes = (3600 % 3600) // 60
-        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
-        
-        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id} в группе {chat_id} на 3600 секунд")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для ограничения пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка ограничения пользователя: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при ограничении: {e}")
-
-
-# @@NODE_END:mute_user_node@@
-
-# @@NODE_START:unmute_user_node@@
-
-
-# Unmute User Handler
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("unmute_user"))
-# Код сгенерирован в generate-node-handlers.ts
-async def unmute_user_unmute_user_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /unmute_user
-    Работает в группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для снятия ограничений")
-        return
-    
-    try:
-        # Снимаем ограничения с пользователя
-        await bot.restrict_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=True,
-                can_send_media_messages=True,
-                can_send_polls=True,
-                can_send_other_messages=True,
-                can_add_web_page_previews=True,
-                can_change_info=False,
-                can_invite_users=False,
-                can_pin_messages=False
-            )
-        )
-        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
-        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для снятия ограничений")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка снятия ограничений: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при снятии ограничений: {e}")
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["размутить", "разглушить", "анмут"]) and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def unmute_user_unmute_user_node_handler(message: types.Message):
-    """
-    Обработчик для снятия ограничений с пользователя
-    Синонимы: размутить,разглушить,анмут
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для снятия ограничений")
-        return
-    
-    try:
-        # Снимаем ограничения с пользователя
-        await bot.restrict_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=True,
-                can_send_media_messages=True,
-                can_send_polls=True,
-                can_send_other_messages=True,
-                can_add_web_page_previews=True,
-                can_change_info=False,
-                can_invite_users=False,
-                can_pin_messages=False
-            )
-        )
-        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
-        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для снятия ограничений")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка снятия ограничений: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при снятии ограничений: {e}")
-
-
-# @@NODE_END:unmute_user_node@@
-
-# @@NODE_START:kick_user_node@@
-
-
-# Kick User Handler
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("kick_user"))
-# Код сгенерирован в generate-node-handlers.ts
-async def kick_user_kick_user_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /kick_user
-    Работает в группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для исключения")
-        return
-    
-    try:
-        # Исключаем пользователя (ban + unban)
-        await bot.ban_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id
-        )
-        
-        # Немедленно разбаниваем, чтобы пользователь мог вернуться
-        await bot.unban_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            only_if_banned=True
-        )
-        
-        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для исключения пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка исключения пользователя: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при исключении: {e}")
-
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["кикнуть", "исключить", "выгнать"]) and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def kick_user_kick_user_node_handler(message: types.Message):
-    """
-    Обработчик для исключения пользователя из группы
-    Синонимы: кикнуть,исключить,выгнать
-    Работает в любых группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для исключения")
-        return
-    
-    try:
-        # Исключаем пользователя из группы (кик)
-        await bot.ban_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            revoke_messages=False  # Не удаляем сообщения пользователя
-        )
-        
-        # Добавляем небольшую задержку для корректной обработки
-        import asyncio
-        await asyncio.sleep(0.5)
-        
-        # Сразу же разбаниваем, чтобы пользователь мог зайти обратно
-        await bot.unban_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            only_if_banned=True
-        )
-        
-        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для исключения пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка исключения пользователя: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при исключении: {e}")
-
-
-# @@NODE_END:kick_user_node@@
-
-# @@NODE_START:promote_user_node@@
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
 
+    # Сохраняем пользователя в базу данных
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
 
-# Promote User Handler
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("promote_user"))
-# Код сгенерирован в generate-node-handlers.ts
-async def promote_user_promote_user_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /promote_user
-    Работает в группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для повышения")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для повышения")
-        return
-    
-    try:
-        # Повышаем пользователя до админа
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=False,
-            can_delete_messages=True,
-            can_invite_users=True,
-            can_restrict_members=False,
-            can_pin_messages=True,
-            can_promote_members=False,
-            can_manage_video_chats=False,
-            is_anonymous=False
-        )
-        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором!")
-        logging.info(f"Пользователь {target_user_id} назначен администратором {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e) or "RIGHT_FORBIDDEN" in str(e):
-            await message.answer("❌ Недостаточно прав для назначения администраторов. Бот должен быть администратором с правом назначать других администраторов.")
-        elif "USER_NOT_PARTICIPANT" in str(e):
-            await message.answer("❌ Пользователь не является участником группы")
-        elif "USER_ALREADY_PARTICIPANT" in str(e):
-            await message.answer("❌ Пользователь уже является администратором")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка назначения админа: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при назначении админа: {e}")
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, message.from_user)
+    await update_user_data_in_db(user_id, "user_name", user_name)
+    await update_user_data_in_db(user_id, "first_name", first_name)
+    await update_user_data_in_db(user_id, "last_name", last_name)
+    await update_user_data_in_db(user_id, "username", username)
 
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["повысить", "назначить админом", "промоут"]) and message.chat.type in ['group', 'supergroup'])
-# Код сгенерирован в generate-node-handlers.ts
-async def promote_user_promote_user_node_handler(message: types.Message):
-    """
-    Обработчик для назначения пользователя администратором
-    Синонимы: повысить,назначить админом,промоут
-    Работает в любых группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
+    # Обновляем статистику команд в БД
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для назначения администратором")
-        return
-    
-    try:
-        # Назначаем пользователя администратором
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=False,
-            can_delete_messages=True,
-            can_invite_users=True,
-            can_restrict_members=False,
-            can_pin_messages=True,
-            can_promote_members=False,
-            can_manage_video_chats=False,
-            is_anonymous=False
-        )
-        
-        # Создаем список предоставленных прав
-        rights = []
-        rights.append("удаление сообщений")
-        rights.append("приглашение пользователей")
-        rights.append("закрепление сообщений")
-        rights_text = ", ".join(rights) if rights else "базовые права администратора"
-        
-        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором\nПрава: {rights_text}")
-        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e) or "RIGHT_FORBIDDEN" in str(e):
-            await message.answer("❌ Недостаточно прав для назначения администратора. Бот должен быть администратором с правом назначать других администраторов.")
-        elif "USER_NOT_PARTICIPANT" in str(e):
-            await message.answer("❌ Пользователь не является участником группы")
-        elif "USER_ALREADY_PARTICIPANT" in str(e):
-            await message.answer("❌ Пользователь уже является администратором")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка назначения администратора: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при назначении администратора: {e}")
-
+    if saved_to_db:
+        await update_user_data_in_db(user_id, "command_profile", datetime.now().isoformat())
 
-# @@NODE_END:promote_user_node@@
-
-# @@NODE_START:demote_user_node@@
-
-
-# Demote User Handler
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("demote_user"))
-# Код сгенерирован в generate-node-handlers.ts
-async def demote_user_demote_user_node_command_handler(message: types.Message):
-    """
-    Обработчик команды /demote_user
-    Работает в группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Проверяем, что это группа
-# Код сгенерирован в generate-node-handlers.ts
-    if message.chat.type not in ['group', 'supergroup']:
-        await message.answer("❌ Команда работает только в группах")
-        return
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для понижения")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для понижения")
-        return
-    
-    try:
-        # Понижаем пользователя - убираем все права админа
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=False,
-            can_delete_messages=False,
-            can_invite_users=False,
-            can_restrict_members=False,
-            can_pin_messages=False,
-            can_promote_members=False,
-            can_manage_video_chats=False,
-            can_manage_topics=False,
-            is_anonymous=False
-        )
-        await message.answer(f"✅ Пользователь {target_user_id} снят с должности администратора!")
-        logging.info(f"Пользователь {target_user_id} понижен администратором {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для понижения администраторов")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка понижения админа: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при понижении админа: {e}")
+    # Сохранение в локальное хранилище
+    # Инициализируем базовые переменные пользователя в локальном хранилище
+    user_name = init_user_variables(user_id, message.from_user)
 
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["понизить", "снять с админа", "демоут"]) and message.chat.type in ['group', 'supergroup'])
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-async def demote_user_demote_user_node_handler(message: types.Message):
-    """
-    Обработчик для снятия прав администратора с пользователя
-    Синонимы: понизить,снять с админа,демоут
-    Работает в любых группах где бот имеет права администратора
-    Использование: ответ на сообщение пользователя или указание ID
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id  # Автоматически определяем ID группы из контекста
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        # Пробуем найти упоминание пользователя в сообщении
-# Код сгенерирован в generate-node-handlers.ts
-        if message.entities:
-            for entity in message.entities:
-# Код сгенерирован в generate-node-handlers.ts
-                if entity.type == "text_mention":
-                    target_user_id = entity.user.id
-                    break
-# Код сгенерирован в generate-node-handlers.ts
-        if not target_user_id:
-            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
-            return
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя для снятия прав администратора")
-        return
-    
-    try:
-        # Снимаем права администратора
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=False,
-            can_delete_messages=False,
-            can_invite_users=False,
-            can_restrict_members=False,
-            can_pin_messages=False,
-            can_promote_members=False,
-            can_manage_video_chats=False,
-            can_manage_topics=False,
-            is_anonymous=False
-        )
-        
-        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
-        logging.info(f"Права администратора сняты с пользователя {target_user_id} пользователем {user_id} в группе {chat_id}")
-    except TelegramBadRequest as e:
-# Код сгенерирован в generate-node-handlers.ts
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для снятия прав администратора")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка снятия прав администратора: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка при снятии прав администратора: {e}")
+    if "commands_used" not in user_data[user_id]:
+        user_data[user_id]["commands_used"] = {}
+    user_data[user_id]["commands_used"]["/profile"] = user_data[user_id]["commands_used"].get("/profile", 0) + 1
 
+    text = """👤 Твой профиль:
 
-# @@NODE_END:demote_user_node@@
+Пол: {gender} 👤
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_stations} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
 
-# @@NODE_START:admin_rights_node@@
+💬 Источник: {user_source}
 
-
-# Interactive Admin Rights Handler for admin_rights_node
-# Код сгенерирован в generate-node-handlers.ts
-@dp.message(Command("admin_rights"))
-# Код сгенерирован в generate-node-handlers.ts
-async def admin_rights_node_command_handler(message: types.Message, bot):
-    """
-    Основной обработчик команды /admin_rights
-    Автоматически определяет целевого пользователя из контекста
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    target_user_id = None
-    
-    logging.info(f"Команда admin_rights вызвана пользователем {user_id} в чате {chat_id}")
-    
-    # Проверяем права вызывающего пользователя
-    try:
-        current_user_member = await bot.get_chat_member(chat_id, user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if current_user_member.status not in ['administrator', 'creator']:
-            await message.answer("❌ У вас нет прав администратора для использования этой команды")
-            return
-        
-# Код сгенерирован в generate-node-handlers.ts
-        if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):
-            await message.answer("❌ У вас нет права на управление правами других администраторов")
-            return
-    except Exception as e:
-        await message.answer(f"❌ Ошибка при проверке ваших прав: {e}")
-        return
-    
-    # Автоматическое определение целевого пользователя
-    
-    # 1. Проверяем, есть ли ответ на сообщение
-# Код сгенерирован в generate-node-handlers.ts
-    if message.reply_to_message and message.reply_to_message.from_user:
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Целевой пользователь определен из ответа на сообщение: {target_user_id}")
-    
-    # 2. Проверяем, есть ли упоминание в тексте (@username или прямое упоминание)
-    elif message.entities:
-        for entity in message.entities:
-            # Приоритет - прямое упоминание с объектом пользователя
-# Код сгенерирован в generate-node-handlers.ts
-            if entity.type == "text_mention" and hasattr(entity, 'user'):
-                target_user_id = entity.user.id
-                logging.info(f"Целевой пользователь определен из прямого упоминания: {target_user_id}")
-                break
-            elif entity.type == "mention":
-                # Извлекаем username из упоминания
-                username = message.text[entity.offset+1:entity.offset+entity.length]  # +1 чтобы убрать @
-                try:
-                    # Пытаемся найти пользователя по username через участников чата
-                    chat_admins = await bot.get_chat_administrators(chat_id)
-                    for member in chat_admins:
-# Код сгенерирован в generate-node-handlers.ts
-                        if member.user.username and member.user.username.lower() == username.lower():
-                            target_user_id = member.user.id
-                            logging.info(f"Целевой пользователь определен из упоминания @{username}: {target_user_id}")
-                            break
-                except Exception as e:
-                    logging.warning(f"Не удалось найти пользователя @{username}: {e}")
-                break
-    
-    # 3. Проверяем, есть ли ID в тексте команды
-# Код сгенерирован в generate-node-handlers.ts
-    if target_user_id is None:
-        # Ищем числовой ID в аргументах команды
-        import re
-        # Извлекаем все числа из текста команды (исключая сам command)
-        command_text = message.text or ""
-        numbers = re.findall(r'\b\d{6,}\b', command_text)  # ID обычно 6+ цифр
-        
-        for number_str in numbers:
-            try:
-                potential_user_id = int(number_str)
-                # Проверяем, что это валидный пользователь в чате
-                try:
-                    member_check = await bot.get_chat_member(chat_id, potential_user_id)
-                    target_user_id = potential_user_id
-                    logging.info(f"Целевой пользователь определен из ID в команде: {target_user_id}")
-                    break
-                except Exception:
-                    logging.debug(f"ID {potential_user_id} не найден в чате, попробуем следующий")
-                    continue
-            except ValueError:
-                continue
-    
-    # Если целевой пользователь не определен, показываем инструкцию
-# Код сгенерирован в generate-node-handlers.ts
-    if target_user_id is None:
-        await message.answer(
-            "❓ Укажите пользователя для управления правами:\n"
-            "• Ответьте на сообщение пользователя\n"
-            "• Упомяните пользователя: /admin_rights @username\n"
-            "• Укажите ID: /admin_rights 123456789"
-        )
-        return
-    
-    # Проверяем, что целевой пользователь является администратором
-    try:
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await message.answer("❌ Указанный пользователь не является администратором")
-            return
-    except Exception as e:
-        await message.answer(f"❌ Не удалось проверить пользователя: {e}")
-        return
-    
-    # Создаем и отправляем интерактивную клавиатуру
-    keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-    text = """⚙️ Права администратора настроены для пользователя!
+✏️ Выберите действие:"""
 
-💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
+    # Универсальная замена переменных
     # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
-
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
-    
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
-    
     # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    
-    await message.answer(text, reply_markup=keyboard)
-
+    # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-async def get_admin_rights_admin_rights_node(bot, chat_id, target_user_id):
-    """
-    Получает текущие права администратора пользователя в чате
-    """
-    try:
-        member = await bot.get_chat_member(chat_id, target_user_id)
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-        if hasattr(member, 'status') and member.status in ['administrator', 'creator']:
-            # Возвращаем основные права администратора включая управление историями
-            return {
-                'can_change_info': getattr(member, 'can_change_info', False),
-                'can_delete_messages': getattr(member, 'can_delete_messages', False),
-                'can_restrict_members': getattr(member, 'can_restrict_members', False),
-                'can_invite_users': getattr(member, 'can_invite_users', False),
-                'can_pin_messages': getattr(member, 'can_pin_messages', False),
-                'can_manage_video_chats': getattr(member, 'can_manage_video_chats', False),
-                'can_post_stories': getattr(member, 'can_post_stories', False),
-                'can_edit_stories': getattr(member, 'can_edit_stories', False),
-                'can_delete_stories': getattr(member, 'can_delete_stories', False),
-                'is_anonymous': getattr(member, 'is_anonymous', False),
-                'can_promote_members': getattr(member, 'can_promote_members', False)
-            }
-        else:
-            # Пользователь не является администратором
-            return None
-    except Exception as e:
-        logging.error(f"Ошибка при получении прав администратора: {e}")
-        return None
-
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-async def create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id, node_id="admin_rights_node"):
-    """
-    Создает интерактивную клавиатуру с кнопками-переключателями прав
-    """
-    # Получаем текущие права
-    current_rights = await get_admin_rights_admin_rights_node(bot, chat_id, target_user_id)
-    
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    text = replace_variables_in_text(text, user_vars)
+    has_regular_buttons = True
+    has_input_collection = False
+    # DEBUG: Узел show_profile - hasRegularButtons=True, hasInputCollection=False
+    # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    
-# Код сгенерирован в generate-node-handlers.ts
-    if current_rights is None:
-        # Пользователь не администратор
-        builder.add(InlineKeyboardButton(text="❌ Пользователь не является администратором", callback_data="no_admin"))
-        return builder.as_markup()
-    
-    # Список основных прав администратора включая управление историями
-    admin_rights_list = [
-        ('can_change_info', '🏷️ Изменение профиля'),
-        ('can_delete_messages', '🗑️ Удаление сообщений'),
-        ('can_restrict_members', '🚫 Блокировка участников'),
-        ('can_invite_users', '📨 Приглашение участников'),
-        ('can_pin_messages', '📌 Закрепление сообщений'),
-        ('can_manage_video_chats', '🎥 Управление видеочатами'),
-        ('can_post_stories', '📰 Публикация историй'),
-        ('can_edit_stories', '✏️ Редактирование историй'),
-        ('can_delete_stories', '🗑️ Удаление историй'),
-        ('is_anonymous', '🔒 Анонимность'),
-        ('can_promote_members', '👑 Назначение администраторов')
-    ]
-    
-    # Создаем кнопки с индикаторами состояния
-    for right_key, right_name in admin_rights_list:
-        is_enabled = current_rights.get(right_key, False)
-        indicator = "✅" if is_enabled else "❌"
-        button_text = f"{indicator} {right_name}"
-        # Укорачиваем callback_data для соблюдения лимита Telegram (64 байта)
-        short_node_id = str(hash(node_id))[-6:]  # Берем последние 6 символов хэша
-        callback_data = f"tr_{right_key[:12]}_{target_user_id}_{short_node_id}"
-        builder.add(InlineKeyboardButton(text=button_text, callback_data=callback_data))
-    
-    # Кнопка для обновления состояния (с коротким callback_data)
-    short_node_id = str(hash(node_id))[-6:]  # Берем последние 6 символов хэша
-    builder.add(InlineKeyboardButton(text="🔄 Обновить", callback_data=f"ref_{target_user_id}_{short_node_id}"))
-    
-    builder.adjust(1)  # Располагаем кнопки в одну колонку для лучшей читаемости
-    return builder.as_markup()
+    builder.add(InlineKeyboardButton(text="👤 Изменить пол", callback_data="gender_selection"))
+    builder.add(InlineKeyboardButton(text="✏️ Изменить имя", callback_data="name_input"))
+    builder.add(InlineKeyboardButton(text="🎂 Изменить возраст", callback_data="age_input"))
+    builder.add(InlineKeyboardButton(text="🚇 Изменить метро", callback_data="metro_selection"))
+    builder.add(InlineKeyboardButton(text="🎯 Изменить интересы", callback_data="interests_categories"))
+    builder.add(InlineKeyboardButton(text="💍 Изменить семейное положение", callback_data="marital_status"))
+    builder.add(InlineKeyboardButton(text="🌈 Изменить ориентацию", callback_data="sexual_orientation"))
+    builder.add(InlineKeyboardButton(text="📢 Указать ТГК", callback_data="channel_choice"))
+    builder.add(InlineKeyboardButton(text="📝 Добавить о себе", callback_data="extra_info"))
+    builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+    builder.adjust(2)
+    keyboard = builder.as_markup()
+    await message.answer(text, reply_markup=keyboard, node_id="show_profile")
+# @@NODE_END:show_profile@@
 
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data == "admin_rights_node")
-# Код сгенерирован в generate-node-handlers.ts
-async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Обработчик callback для узла admin_rights: admin_rights_node
-    Отображает интерактивную клавиатуру для управления правами администратора
-    """
-    await callback_query.answer()
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    logging.info(f"Обработка callback admin_rights от пользователя {user_id} в чате {chat_id}")
-    
-    # Проверяем права БОТА (не пользователя) на управление правами администраторов
-    try:
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-        
-        # Проверяем, может ли бот управлять правами других администраторов
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-    except Exception as e:
-        logging.error(f"Ошибка при проверке прав администратора: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось проверить права администратора. Попробуйте позже.")
-        return
-    
-    # Получаем target_user_id (пользователя, чьи права будем менять)
-    # В данном случае, мы будем управлять правами пользователя, который вызвал команду
-    # Но это можно изменить для работы с replied сообщениями
-    target_user_id = user_id  # По умолчанию управляем своими правами
-    
-    # Если это ответ на сообщение, берем пользователя из ответа
-# Код сгенерирован в generate-node-handlers.ts
-    if hasattr(callback_query.message, 'reply_to_message') and callback_query.message.reply_to_message:
-        target_user_id = callback_query.message.reply_to_message.from_user.id
-        logging.info(f"Управляем правами пользователя {target_user_id} из ответа на сообщение")
-    
-    # Текст сообщения
-    text = """⚙️ Права администратора настроены для пользователя!
+# @@NODE_START:chat_link@@
 
-💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+@dp.message(Command("link"))
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+async def link_handler(message: types.Message):
+    logging.info(f"Команда /link вызвана пользователем {message.from_user.id}")
+    # Сохраняем пользователя и статистику использования команд
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+
+    # Сохраняем пользователя в базу данных
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
+
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, message.from_user)
+    await update_user_data_in_db(user_id, "user_name", user_name)
+    await update_user_data_in_db(user_id, "first_name", first_name)
+    await update_user_data_in_db(user_id, "last_name", last_name)
+    await update_user_data_in_db(user_id, "username", username)
+
+    # Обновляем статистику команд в БД
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if saved_to_db:
+        await update_user_data_in_db(user_id, "command_link", datetime.now().isoformat())
+
+    # Сохранение в локальное хранилище
+    # Инициализируем базовые переменные пользователя в локальном хранилище
+    user_name = init_user_variables(user_id, message.from_user)
+
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if "commands_used" not in user_data[user_id]:
+        user_data[user_id]["commands_used"] = {}
+    user_data[user_id]["commands_used"]["/link"] = user_data[user_id]["commands_used"].get("/link", 0) + 1
+
+    text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
+
+    # Универсальная замена переменных
     # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
         # Получаем объект пользователя из сообщения или callback
         user_obj = None
         # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
         if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
             user_obj = locals().get('message').from_user
         # Безопасно проверяем наличие callback_query (для callback handlers)
         elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
             user_obj = locals().get('callback_query').from_user
-
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
         if user_obj:
             init_user_variables(user_id, user_obj)
-    
     # Подставляем все доступные переменные пользователя в текст
     user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
     if not user_vars:
         user_vars = user_data.get(user_id, {})
-    
     # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
-    
-    
-    # Создаем интерактивную клавиатуру
-    keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-    
-    # Отправляем/обновляем сообщение с клавиатурой
-    try:
-        # Пробуем отредактировать сообщение (работает для inline callbacks)
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-    except Exception as e:
-        # Если не удалось отредактировать (например, для text commands), отправляем новое сообщение
-        logging.info(f"Отправляем новое сообщение admin_rights: {e}")
-        await callback_query.message.answer(text, reply_markup=keyboard)
+    # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    text = replace_variables_in_text(text, user_vars)
+    has_regular_buttons = False
+    has_input_collection = False
+    # DEBUG: Узел chat_link - hasRegularButtons=False, hasInputCollection=False
+    await message.answer(text, node_id="chat_link")
+# @@NODE_END:chat_link@@
 
+# @@NODE_START:help_command@@
 
-# Обработчик переключения права: can_change_info
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_change_i_"))
+@dp.message(Command("help"))
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_change_info_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_change_info для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_change_info для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_change_info', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_change_info'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_change_info' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_change_info: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+async def help_handler(message: types.Message):
+    logging.info(f"Команда /help вызвана пользователем {message.from_user.id}")
+    # Сохраняем пользователя и статистику использования команд
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
 
-# Обработчик переключения права: can_delete_messages
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_delete_m_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_delete_messages_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_delete_messages для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_delete_messages для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_delete_messages', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_delete_messages'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_delete_messages' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_delete_messages: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+    # Сохраняем пользователя в базу данных
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
 
-# Обработчик переключения права: can_restrict_members
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_restrict_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_restrict_members_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_restrict_members для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_restrict_members для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_restrict_members', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_restrict_members'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_restrict_members' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_restrict_members: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, message.from_user)
+    await update_user_data_in_db(user_id, "user_name", user_name)
+    await update_user_data_in_db(user_id, "first_name", first_name)
+    await update_user_data_in_db(user_id, "last_name", last_name)
+    await update_user_data_in_db(user_id, "username", username)
 
-# Обработчик переключения права: can_invite_users
+    # Обновляем статистику команд в БД
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_invite_u_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_invite_users_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_invite_users для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_invite_users для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_invite_users', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_invite_users'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_invite_users' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_invite_users: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+    if saved_to_db:
+        await update_user_data_in_db(user_id, "command_help", datetime.now().isoformat())
 
-# Обработчик переключения права: can_pin_messages
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_pin_mess_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_pin_messages_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_pin_messages для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_pin_messages для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_pin_messages', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_pin_messages'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_pin_messages' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_pin_messages: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+    # Сохранение в локальное хранилище
+    # Инициализируем базовые переменные пользователя в локальном хранилище
+    user_name = init_user_variables(user_id, message.from_user)
 
-# Обработчик переключения права: can_manage_video_chats
+# Код сгенерирован в generateCommandHandler.ts
 # Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_manage_v_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_manage_video_chats_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_manage_video_chats для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_manage_video_chats для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_manage_video_chats', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_manage_video_chats'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_manage_video_chats' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_manage_video_chats: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+    if "commands_used" not in user_data[user_id]:
+        user_data[user_id]["commands_used"] = {}
+    user_data[user_id]["commands_used"]["/help"] = user_data[user_id]["commands_used"].get("/help", 0) + 1
 
-# Обработчик переключения права: can_post_stories
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_post_sto_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_post_stories_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_post_stories для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_post_stories для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_post_stories', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_post_stories'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_post_stories' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_post_stories: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+    text = """🤖 **Добро пожаловать в справочный центр!**
 
-# Обработчик переключения права: can_edit_stories
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_edit_sto_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_edit_stories_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_edit_stories для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_edit_stories для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_edit_stories', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_edit_stories'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_edit_stories' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_edit_stories: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+🌟 **ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot**
+*Твой помощник в знакомствах*
 
-# Обработчик переключения права: can_delete_stories
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_delete_s_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_delete_stories_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_delete_stories для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_delete_stories для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_delete_stories', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_delete_stories'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_delete_stories' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_delete_stories: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+🎯 **ОСНОВНЫЕ КОМАНДЫ:**
 
-# Обработчик переключения права: is_anonymous
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_is_anonymous_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_is_anonymous_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право is_anonymous для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право is_anonymous для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'is_anonymous', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['is_anonymous'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'is_anonymous' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права is_anonymous: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+🚀 `/start` — *Начать заново*
+   📝 Синонимы: `старт`, `начать`, `привет`, `начало`, `начинаем`
 
-# Обработчик переключения права: can_promote_members
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("tr_can_promote__"))
-# Код сгенерирован в generate-node-handlers.ts
-async def toggle_can_promote_members_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Переключает право can_promote_members для пользователя
-    """
-    await callback_query.answer()
-    
-    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>
-    try:
-        data_parts = callback_query.data.split('_')
-        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']
-# Код сгенерирован в generate-node-handlers.ts
-        if len(data_parts) < 4:
-            raise ValueError("Недостаточно частей в callback_data")
-        target_user_id = int(data_parts[-2])
-        node_hash = data_parts[-1]
-        logging.info(f"Переключаем право can_promote_members для пользователя {target_user_id}")
-    except (ValueError, IndexError) as e:
-        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
-        await callback_query.answer("❌ Ошибка в данных кнопки")
-        return
-    
-    user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Проверяем права БОТА на управление правами администраторов
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")
-            return
-            
-# Код сгенерирован в generate-node-handlers.ts
-        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
-            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")
-            return
-        
-        # Получаем текущие права целевого пользователя
-        target_member = await bot.get_chat_member(chat_id, target_user_id)
-# Код сгенерирован в generate-node-handlers.ts
-        if target_member.status not in ['administrator', 'creator']:
-            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")
-            return
-        
-        # Получаем текущее состояние права
-        current_value = getattr(target_member, 'can_promote_members', False)
-        new_value = not current_value
-        
-        # Подготавливаем права для обновления
-        permissions = {
-            'can_change_info': getattr(target_member, 'can_change_info', False),
-            'can_delete_messages': getattr(target_member, 'can_delete_messages', False),
-            'can_restrict_members': getattr(target_member, 'can_restrict_members', False),
-            'can_invite_users': getattr(target_member, 'can_invite_users', False),
-            'can_pin_messages': getattr(target_member, 'can_pin_messages', False),
-            'can_manage_video_chats': getattr(target_member, 'can_manage_video_chats', False),
-            'can_post_stories': getattr(target_member, 'can_post_stories', False),
-            'can_edit_stories': getattr(target_member, 'can_edit_stories', False),
-            'can_delete_stories': getattr(target_member, 'can_delete_stories', False),
-            'is_anonymous': getattr(target_member, 'is_anonymous', False),
-            'can_promote_members': getattr(target_member, 'can_promote_members', False),
-        }
-        permissions['can_promote_members'] = new_value
-        
-        # Применяем изменения
-        await bot.promote_chat_member(
-            chat_id=chat_id,
-            user_id=target_user_id,
-            can_change_info=permissions['can_change_info'],
-            can_delete_messages=permissions['can_delete_messages'],
-            can_restrict_members=permissions['can_restrict_members'],
-            can_invite_users=permissions['can_invite_users'],
-            can_pin_messages=permissions['can_pin_messages'],
-            can_manage_video_chats=permissions['can_manage_video_chats'],
-            can_post_stories=permissions['can_post_stories'],
-            can_edit_stories=permissions['can_edit_stories'],
-            can_delete_stories=permissions['can_delete_stories'],
-            is_anonymous=permissions['is_anonymous'],
-            can_promote_members=permissions['can_promote_members'],
-        )
-        
-        # Обновляем клавиатуру с новым состоянием
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право 'can_promote_members' для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при переключении права can_promote_members: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")
+👤 `/profile` — *Мой профиль*
+   📝 Синонимы: `профиль`, `анкета`, `мой профиль`, `посмотреть профиль`, `редактировать профиль`
 
-# Обработчик кнопки обновления прав
-# Код сгенерирован в generate-node-handlers.ts
-@dp.callback_query(lambda c: c.data.startswith("ref_"))
-# Код сгенерирован в generate-node-handlers.ts
-async def refresh_admin_rights_admin_rights_node(callback_query: types.CallbackQuery, bot):
-    """
-    Обновляет отображение прав администратора
-    """
-    await callback_query.answer("🔄 Обновляем...")
-    
-    # Парсим данные: ref_<user_id>_<node_hash>
-    data_parts = callback_query.data.split('_')
-    target_user_id = int(data_parts[-2])
-    
-    chat_id = callback_query.message.chat.id
-    
-    try:
-        # Создаем обновленную клавиатуру
-        keyboard = await create_admin_rights_keyboard_admin_rights_node(bot, chat_id, target_user_id)
-        
-        # Обновляем сообщение
-        text = "⚙️ Управление правами администратора"
-        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        
-        logging.info(f"Обновлены права для пользователя {target_user_id}")
-        
-    except Exception as e:
-        logging.error(f"Ошибка при обновлении прав: {e}")
-        await safe_edit_or_send(callback_query, "❌ Не удалось обновить права. Попробуйте позже.")
+🔗 `/link` — *Ссылка на чат*
+   📝 Синонимы: `ссылка`, `чат`, `сообщество`, `впрогулке`, `линк`
 
+🆘 `/help` — *Эта справка*
+   📝 Синонимы: `помощь`, `справка`, `команды`, `что писать`, `как пользоваться`
 
-# @@NODE_END:admin_rights_node@@
+📋 **РАЗДЕЛЫ АНКЕТЫ И ИХ СИНОНИМЫ:**
+
+👫 **Пол:** мужской, женский
+   📝 Синонимы: `пол`, `gender`
+
+🏷️ **Имя:** любое имя
+   📝 Синонимы: `имя`, `как зовут`, `назовись`
+
+🎂 **Возраст:** число от 18 до 99
+   📝 Синонимы: `возраст`, `лет`, `сколько лет`
+
+🚇 **Метро:** выбор линии и станции
+   📝 Синонимы: `метро`, `станция`
+   🟥 Красная линия: `красная линия`, `кировско-выборгская`, `красная ветка`
+   🟦 Синяя линия: `синяя линия`, `московско-петроградская`, `синяя ветка`
+   🟩 Зеленая линия: `зеленая линия`, `невско-василеостровская`, `зеленая ветка`
+   🟧 Оранжевая линия: `оранжевая линия`, `правобережная`, `оранжевая ветка`
+   🟪 Фиолетовая линия: `фиолетовая линия`, `фрунзенско-приморская`, `фиолетовая ветка`
+
+🎨 **Интересы и их синонимы:**
+   🎮 Хобби: `хобби`, `увлечения`, `занятия`, `игры`
+   🤝 Социальная жизнь: `общение`, `социальное`, `люди`, `тусовки`
+   🎭 Творчество: `творчество`, `искусство`, `рисование`, `музыка`
+   💪 Активный образ жизни: `активность`, `активный`, `движение`, `здоровье`
+   🍕 Еда и напитки: `еда`, `напитки`, `кухня`, `рестораны`
+   ⚽ Спорт: `спорт`, `фитнес`, `тренировки`, `футбол`
+
+💑 **Семейное положение:** поиск, отношения, женат/замужем, сложно
+   📝 Синонимы: `семейное положение`, `статус`, `отношения`, `семья`
+
+🌈 **Ориентация:** гетеро, гей, лесби, би, другое
+   📝 Синонимы: `ориентация`, `предпочтения`
+
+📺 **Телеграм-канал:** опционально
+   📝 Синонимы: `тгк`, `телеграм`, `канал`, `тг канал`
+
+📖 **О себе:** дополнительная информация
+   📝 Синонимы: `о себе`, `описание`, `расскажи`, `инфо`
+
+👮‍♂️ **КОМАНДЫ МОДЕРАЦИИ:**
+
+**Управление контентом:**
+📌 `/pin_message` - Закрепить сообщение
+   📝 Синонимы: `закрепить`, `прикрепить`, `зафиксировать`
+
+📌❌ `/unpin_message` - Открепить сообщение
+   📝 Синонимы: `открепить`, `отцепить`, `убрать закрепление`
+
+🗑️ `/delete_message` - Удалить сообщение
+   📝 Синонимы: `удалить`, `стереть`, `убрать сообщение`
+
+**Управление пользователями:**
+🚫 `/ban_user` - Заблокировать пользователя
+   📝 Синонимы: `забанить`, `заблокировать`, `бан`
+
+✅ `/unban_user` - Разблокировать пользователя
+   📝 Синонимы: `разбанить`, `разблокировать`, `unbán`
+
+🔇 `/mute_user` - Ограничить пользователя
+   📝 Синонимы: `замутить`, `заглушить`, `мут`
+
+🔊 `/unmute_user` - Снять ограничения
+   📝 Синонимы: `размутить`, `разглушить`, `анмут`
+
+👢 `/kick_user` - Исключить пользователя
+   📝 Синонимы: `кикнуть`, `исключить`, `выгнать`
+
+👑 `/promote_user` - Назначить администратором
+   📝 Синонимы: `повысить`, `назначить админом`, `промоут`
+
+👤 `/demote_user` - Снять с администратора
+   📝 Синонимы: `понизить`, `снять с админа`, `демоут`
+
+⚙️ `/admin_rights` - Настроить права администратора
+   📝 Синонимы: `права админа`, `настроить права`, `тг права`
+   ⚠️ Только для администраторов группы!
+   💡 Ответьте на сообщение пользователя командой
+
+**Примеры использования:**
+• Ответьте на сообщение командой для его обработки
+• Используйте команды в ответ на сообщения нарушителей
+• Команды с правами работают только в группах/супергруппах
+• Все действия логируются для отчетности
+
+💡 **ПОЛЕЗНЫЕ СОВЕТЫ:**
+
+✨ Можешь писать команды или синонимы в любом месте разговора
+✨ Бот поймет твои сообщения даже без команд
+✨ В любой момент можешь написать /start для начала заново
+✨ Используй /profile для изменения любых данных
+✨ Нажми на любое выделенное слово чтобы скопировать его!
+
+🎉 **Удачных знакомств в Питере!** 🎉"""
+
+    # Универсальная замена переменных
+    # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    # Инициализируем базовые переменные пользователя если их нет
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    # get_user_from_db теперь возвращает уже обработанные user_data
+# Код сгенерирован в generateCommandHandler.ts
+# Код сгенерирован в generate-node-handlers.ts
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    text = replace_variables_in_text(text, user_vars)
+    has_regular_buttons = True
+    has_input_collection = False
+    # DEBUG: Узел help_command - hasRegularButtons=True, hasInputCollection=False
+    # Создаем inline клавиатуру с кнопками
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🚀 Начать заполнение", callback_data="cmd_start"))
+    builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="cmd_profile"))
+    builder.add(InlineKeyboardButton(text="🔗 Ссылка на чат", callback_data="cmd_link"))
+    builder.adjust(1)
+    keyboard = builder.as_markup()
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN, node_id="help_command")
+# @@NODE_END:help_command@@
 # Обработчики синонимов
 # @@NODE_START:start@@
 
@@ -4217,15 +1613,15 @@ async def start_synonym_начинаем_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
 # @@NODE_END:start@@
-# @@NODE_START:pin_message_node@@
+# @@NODE_START:gender_selection@@
 
-@dp.message(lambda message: message.text and message.text.lower() == "закрепить")
-async def message_pin_message_node_synonym_закрепить_handler(message: types.Message):
-    # Синоним для сообщения pin_message_node
+@dp.message(lambda message: message.text and message.text.lower() == "пол")
+async def message_gender_selection_synonym_пол_handler(message: types.Message):
+    # Синоним для сообщения gender_selection
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} написал синоним 'закрепить' для узла pin_message_node")
+    logging.info(f"Пользователь {user_id} написал синоним 'пол' для узла gender_selection")
     
-    # Обрабатываем синоним как переход к узлу pin_message_node
+    # Обрабатываем синоним как переход к узлу gender_selection
     # Создаем Mock callback для эмуляции кнопки
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -4241,18 +1637,18 @@ async def message_pin_message_node_synonym_закрепить_handler(message: t
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
     
-    mock_callback = MockCallback("pin_message_node", message.from_user, message)
-    await handle_callback_pin_message_node(mock_callback)
-# @@NODE_END:pin_message_node@@
-# @@NODE_START:pin_message_node@@
+    mock_callback = MockCallback("gender_selection", message.from_user, message)
+    await handle_callback_gender_selection(mock_callback)
+# @@NODE_END:gender_selection@@
+# @@NODE_START:gender_selection@@
 
-@dp.message(lambda message: message.text and message.text.lower() == "прикрепить")
-async def message_pin_message_node_synonym_прикрепить_handler(message: types.Message):
-    # Синоним для сообщения pin_message_node
+@dp.message(lambda message: message.text and message.text.lower() == "гендер")
+async def message_gender_selection_synonym_гендер_handler(message: types.Message):
+    # Синоним для сообщения gender_selection
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} написал синоним 'прикрепить' для узла pin_message_node")
+    logging.info(f"Пользователь {user_id} написал синоним 'гендер' для узла gender_selection")
     
-    # Обрабатываем синоним как переход к узлу pin_message_node
+    # Обрабатываем синоним как переход к узлу gender_selection
     # Создаем Mock callback для эмуляции кнопки
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -4268,18 +1664,18 @@ async def message_pin_message_node_synonym_прикрепить_handler(message:
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
     
-    mock_callback = MockCallback("pin_message_node", message.from_user, message)
-    await handle_callback_pin_message_node(mock_callback)
-# @@NODE_END:pin_message_node@@
-# @@NODE_START:pin_message_node@@
+    mock_callback = MockCallback("gender_selection", message.from_user, message)
+    await handle_callback_gender_selection(mock_callback)
+# @@NODE_END:gender_selection@@
+# @@NODE_START:gender_selection@@
 
-@dp.message(lambda message: message.text and message.text.lower() == "зафиксировать")
-async def message_pin_message_node_synonym_зафиксировать_handler(message: types.Message):
-    # Синоним для сообщения pin_message_node
+@dp.message(lambda message: message.text and message.text.lower() == "мужчина")
+async def message_gender_selection_synonym_мужчина_handler(message: types.Message):
+    # Синоним для сообщения gender_selection
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} написал синоним 'зафиксировать' для узла pin_message_node")
+    logging.info(f"Пользователь {user_id} написал синоним 'мужчина' для узла gender_selection")
     
-    # Обрабатываем синоним как переход к узлу pin_message_node
+    # Обрабатываем синоним как переход к узлу gender_selection
     # Создаем Mock callback для эмуляции кнопки
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -4295,18 +1691,18 @@ async def message_pin_message_node_synonym_зафиксировать_handler(me
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
     
-    mock_callback = MockCallback("pin_message_node", message.from_user, message)
-    await handle_callback_pin_message_node(mock_callback)
-# @@NODE_END:pin_message_node@@
-# @@NODE_START:unpin_message_node@@
+    mock_callback = MockCallback("gender_selection", message.from_user, message)
+    await handle_callback_gender_selection(mock_callback)
+# @@NODE_END:gender_selection@@
+# @@NODE_START:gender_selection@@
 
-@dp.message(lambda message: message.text and message.text.lower() == "открепить")
-async def message_unpin_message_node_synonym_открепить_handler(message: types.Message):
-    # Синоним для сообщения unpin_message_node
+@dp.message(lambda message: message.text and message.text.lower() == "женщина")
+async def message_gender_selection_synonym_женщина_handler(message: types.Message):
+    # Синоним для сообщения gender_selection
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} написал синоним 'открепить' для узла unpin_message_node")
+    logging.info(f"Пользователь {user_id} написал синоним 'женщина' для узла gender_selection")
     
-    # Обрабатываем синоним как переход к узлу unpin_message_node
+    # Обрабатываем синоним как переход к узлу gender_selection
     # Создаем Mock callback для эмуляции кнопки
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -4322,18 +1718,18 @@ async def message_unpin_message_node_synonym_открепить_handler(message:
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
     
-    mock_callback = MockCallback("unpin_message_node", message.from_user, message)
-    await handle_callback_unpin_message_node(mock_callback)
-# @@NODE_END:unpin_message_node@@
-# @@NODE_START:unpin_message_node@@
+    mock_callback = MockCallback("gender_selection", message.from_user, message)
+    await handle_callback_gender_selection(mock_callback)
+# @@NODE_END:gender_selection@@
+# @@NODE_START:name_input@@
 
-@dp.message(lambda message: message.text and message.text.lower() == "отцепить")
-async def message_unpin_message_node_synonym_отцепить_handler(message: types.Message):
-    # Синоним для сообщения unpin_message_node
+@dp.message(lambda message: message.text and message.text.lower() == "имя")
+async def message_name_input_synonym_имя_handler(message: types.Message):
+    # Синоним для сообщения name_input
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} написал синоним 'отцепить' для узла unpin_message_node")
+    logging.info(f"Пользователь {user_id} написал синоним 'имя' для узла name_input")
     
-    # Обрабатываем синоним как переход к узлу unpin_message_node
+    # Обрабатываем синоним как переход к узлу name_input
     # Создаем Mock callback для эмуляции кнопки
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -4349,18 +1745,18 @@ async def message_unpin_message_node_synonym_отцепить_handler(message: t
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
     
-    mock_callback = MockCallback("unpin_message_node", message.from_user, message)
-    await handle_callback_unpin_message_node(mock_callback)
-# @@NODE_END:unpin_message_node@@
-# @@NODE_START:unpin_message_node@@
+    mock_callback = MockCallback("name_input", message.from_user, message)
+    await handle_callback_name_input(mock_callback)
+# @@NODE_END:name_input@@
+# @@NODE_START:name_input@@
 
-@dp.message(lambda message: message.text and message.text.lower() == "убрать закрепление")
-async def message_unpin_message_node_synonym_убрать_закрепление_handler(message: types.Message):
-    # Синоним для сообщения unpin_message_node
+@dp.message(lambda message: message.text and message.text.lower() == "зовут")
+async def message_name_input_synonym_зовут_handler(message: types.Message):
+    # Синоним для сообщения name_input
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} написал синоним 'убрать закрепление' для узла unpin_message_node")
+    logging.info(f"Пользователь {user_id} написал синоним 'зовут' для узла name_input")
     
-    # Обрабатываем синоним как переход к узлу unpin_message_node
+    # Обрабатываем синоним как переход к узлу name_input
     # Создаем Mock callback для эмуляции кнопки
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -4376,18 +1772,18 @@ async def message_unpin_message_node_synonym_убрать_закрепление
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
     
-    mock_callback = MockCallback("unpin_message_node", message.from_user, message)
-    await handle_callback_unpin_message_node(mock_callback)
-# @@NODE_END:unpin_message_node@@
-# @@NODE_START:delete_message_node@@
+    mock_callback = MockCallback("name_input", message.from_user, message)
+    await handle_callback_name_input(mock_callback)
+# @@NODE_END:name_input@@
+# @@NODE_START:name_input@@
 
-@dp.message(lambda message: message.text and message.text.lower() == "удалить")
-async def message_delete_message_node_synonym_удалить_handler(message: types.Message):
-    # Синоним для сообщения delete_message_node
+@dp.message(lambda message: message.text and message.text.lower() == "называют")
+async def message_name_input_synonym_называют_handler(message: types.Message):
+    # Синоним для сообщения name_input
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} написал синоним 'удалить' для узла delete_message_node")
+    logging.info(f"Пользователь {user_id} написал синоним 'называют' для узла name_input")
     
-    # Обрабатываем синоним как переход к узлу delete_message_node
+    # Обрабатываем синоним как переход к узлу name_input
     # Создаем Mock callback для эмуляции кнопки
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -4403,18 +1799,18 @@ async def message_delete_message_node_synonym_удалить_handler(message: ty
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
     
-    mock_callback = MockCallback("delete_message_node", message.from_user, message)
-    await handle_callback_delete_message_node(mock_callback)
-# @@NODE_END:delete_message_node@@
-# @@NODE_START:delete_message_node@@
+    mock_callback = MockCallback("name_input", message.from_user, message)
+    await handle_callback_name_input(mock_callback)
+# @@NODE_END:name_input@@
+# @@NODE_START:name_input@@
 
-@dp.message(lambda message: message.text and message.text.lower() == "стереть")
-async def message_delete_message_node_synonym_стереть_handler(message: types.Message):
-    # Синоним для сообщения delete_message_node
+@dp.message(lambda message: message.text and message.text.lower() == "как зовут")
+async def message_name_input_synonym_как_зовут_handler(message: types.Message):
+    # Синоним для сообщения name_input
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} написал синоним 'стереть' для узла delete_message_node")
+    logging.info(f"Пользователь {user_id} написал синоним 'как зовут' для узла name_input")
     
-    # Обрабатываем синоним как переход к узлу delete_message_node
+    # Обрабатываем синоним как переход к узлу name_input
     # Создаем Mock callback для эмуляции кнопки
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -4430,18 +1826,18 @@ async def message_delete_message_node_synonym_стереть_handler(message: ty
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
     
-    mock_callback = MockCallback("delete_message_node", message.from_user, message)
-    await handle_callback_delete_message_node(mock_callback)
-# @@NODE_END:delete_message_node@@
-# @@NODE_START:delete_message_node@@
+    mock_callback = MockCallback("name_input", message.from_user, message)
+    await handle_callback_name_input(mock_callback)
+# @@NODE_END:name_input@@
+# @@NODE_START:age_input@@
 
-@dp.message(lambda message: message.text and message.text.lower() == "убрать сообщение")
-async def message_delete_message_node_synonym_убрать_сообщение_handler(message: types.Message):
-    # Синоним для сообщения delete_message_node
+@dp.message(lambda message: message.text and message.text.lower() == "возраст")
+async def message_age_input_synonym_возраст_handler(message: types.Message):
+    # Синоним для сообщения age_input
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} написал синоним 'убрать сообщение' для узла delete_message_node")
+    logging.info(f"Пользователь {user_id} написал синоним 'возраст' для узла age_input")
     
-    # Обрабатываем синоним как переход к узлу delete_message_node
+    # Обрабатываем синоним как переход к узлу age_input
     # Создаем Mock callback для эмуляции кнопки
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -4457,1462 +1853,653 @@ async def message_delete_message_node_synonym_убрать_сообщение_ha
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
     
-    mock_callback = MockCallback("delete_message_node", message.from_user, message)
-    await handle_callback_delete_message_node(mock_callback)
-# @@NODE_END:delete_message_node@@
-# @@NODE_START:ban_user_node@@
+    mock_callback = MockCallback("age_input", message.from_user, message)
+    await handle_callback_age_input(mock_callback)
+# @@NODE_END:age_input@@
+# @@NODE_START:age_input@@
 
-@dp.message(lambda message: message.text and (message.text.lower() == "забанить" or message.text.lower().startswith("забанить ")) and message.chat.type in ['group', 'supergroup'])
-async def ban_user_ban_user_node_synonym_забанить_handler(message: types.Message):
-    """
-    Обработчик синонима 'забанить' для ban_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "лет")
+async def message_age_input_synonym_лет_handler(message: types.Message):
+    # Синоним для сообщения age_input
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'лет' для узла age_input")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу age_input
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'забанить' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'забанить' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'забанить ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "ban_user"
-    try:
-        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
-        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("age_input", message.from_user, message)
+    await handle_callback_age_input(mock_callback)
+# @@NODE_END:age_input@@
+# @@NODE_START:age_input@@
 
-# @@NODE_END:ban_user_node@@
-# @@NODE_START:ban_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "заблокировать" or message.text.lower().startswith("заблокировать ")) and message.chat.type in ['group', 'supergroup'])
-async def ban_user_ban_user_node_synonym_заблокировать_handler(message: types.Message):
-    """
-    Обработчик синонима 'заблокировать' для ban_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "годы")
+async def message_age_input_synonym_годы_handler(message: types.Message):
+    # Синоним для сообщения age_input
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'годы' для узла age_input")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу age_input
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'заблокировать' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'заблокировать' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'заблокировать ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "ban_user"
-    try:
-        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
-        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("age_input", message.from_user, message)
+    await handle_callback_age_input(mock_callback)
+# @@NODE_END:age_input@@
+# @@NODE_START:age_input@@
 
-# @@NODE_END:ban_user_node@@
-# @@NODE_START:ban_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "бан" or message.text.lower().startswith("бан ")) and message.chat.type in ['group', 'supergroup'])
-async def ban_user_ban_user_node_synonym_бан_handler(message: types.Message):
-    """
-    Обработчик синонима 'бан' для ban_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "сколько лет")
+async def message_age_input_synonym_сколько_лет_handler(message: types.Message):
+    # Синоним для сообщения age_input
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'сколько лет' для узла age_input")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу age_input
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'бан' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'бан' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'бан ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "ban_user"
-    try:
-        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
-        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("age_input", message.from_user, message)
+    await handle_callback_age_input(mock_callback)
+# @@NODE_END:age_input@@
+# @@NODE_START:metro_selection@@
 
-# @@NODE_END:ban_user_node@@
-# @@NODE_START:unban_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "разбанить" or message.text.lower().startswith("разбанить ")) and message.chat.type in ['group', 'supergroup'])
-async def unban_user_unban_user_node_synonym_разбанить_handler(message: types.Message):
-    """
-    Обработчик синонима 'разбанить' для unban_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "метро")
+async def message_metro_selection_synonym_метро_handler(message: types.Message):
+    # Синоним для сообщения metro_selection
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'метро' для узла metro_selection")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу metro_selection
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'разбанить' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'разбанить' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'разбанить ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "unban_user"
-    try:
-        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
-        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
-        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("metro_selection", message.from_user, message)
+    await handle_callback_metro_selection(mock_callback)
+# @@NODE_END:metro_selection@@
+# @@NODE_START:metro_selection@@
 
-# @@NODE_END:unban_user_node@@
-# @@NODE_START:unban_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "разблокировать" or message.text.lower().startswith("разблокировать ")) and message.chat.type in ['group', 'supergroup'])
-async def unban_user_unban_user_node_synonym_разблокировать_handler(message: types.Message):
-    """
-    Обработчик синонима 'разблокировать' для unban_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "станция")
+async def message_metro_selection_synonym_станция_handler(message: types.Message):
+    # Синоним для сообщения metro_selection
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'станция' для узла metro_selection")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу metro_selection
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'разблокировать' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'разблокировать' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'разблокировать ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "unban_user"
-    try:
-        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
-        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
-        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("metro_selection", message.from_user, message)
+    await handle_callback_metro_selection(mock_callback)
+# @@NODE_END:metro_selection@@
+# @@NODE_START:metro_selection@@
 
-# @@NODE_END:unban_user_node@@
-# @@NODE_START:unban_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "unbан" or message.text.lower().startswith("unbан ")) and message.chat.type in ['group', 'supergroup'])
-async def unban_user_unban_user_node_synonym_unbан_handler(message: types.Message):
-    """
-    Обработчик синонима 'unbан' для unban_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "где живу")
+async def message_metro_selection_synonym_где_живу_handler(message: types.Message):
+    # Синоним для сообщения metro_selection
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'где живу' для узла metro_selection")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу metro_selection
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'unbан' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'unbан' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'unbан ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "unban_user"
-    try:
-        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
-        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
-        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("metro_selection", message.from_user, message)
+    await handle_callback_metro_selection(mock_callback)
+# @@NODE_END:metro_selection@@
+# @@NODE_START:metro_selection@@
 
-# @@NODE_END:unban_user_node@@
-# @@NODE_START:mute_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "замутить" or message.text.lower().startswith("замутить ")) and message.chat.type in ['group', 'supergroup'])
-async def mute_user_mute_user_node_synonym_замутить_handler(message: types.Message):
-    """
-    Обработчик синонима 'замутить' для mute_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "район")
+async def message_metro_selection_synonym_район_handler(message: types.Message):
+    # Синоним для сообщения metro_selection
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'район' для узла metro_selection")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу metro_selection
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'замутить' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'замутить' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'замутить ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "mute_user"
-    try:
-        from datetime import datetime, timedelta
-        until_date = datetime.now() + timedelta(seconds=3600)
-        await bot.restrict_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=False,
-                can_send_media_messages=False
-            ), until_date=until_date
-        )
-        hours = 3600 // 3600
-        minutes = (3600 % 3600) // 60
-        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
-        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("metro_selection", message.from_user, message)
+    await handle_callback_metro_selection(mock_callback)
+# @@NODE_END:metro_selection@@
+# @@NODE_START:red_line_stations@@
 
-# @@NODE_END:mute_user_node@@
-# @@NODE_START:mute_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "заглушить" or message.text.lower().startswith("заглушить ")) and message.chat.type in ['group', 'supergroup'])
-async def mute_user_mute_user_node_synonym_заглушить_handler(message: types.Message):
-    """
-    Обработчик синонима 'заглушить' для mute_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "красная линия")
+async def message_red_line_stations_synonym_красная_линия_handler(message: types.Message):
+    # Синоним для сообщения red_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'красная линия' для узла red_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу red_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'заглушить' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'заглушить' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'заглушить ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "mute_user"
-    try:
-        from datetime import datetime, timedelta
-        until_date = datetime.now() + timedelta(seconds=3600)
-        await bot.restrict_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=False,
-                can_send_media_messages=False
-            ), until_date=until_date
-        )
-        hours = 3600 // 3600
-        minutes = (3600 % 3600) // 60
-        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
-        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("red_line_stations", message.from_user, message)
+    await handle_callback_red_line_stations(mock_callback)
+# @@NODE_END:red_line_stations@@
+# @@NODE_START:red_line_stations@@
 
-# @@NODE_END:mute_user_node@@
-# @@NODE_START:mute_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "мут" or message.text.lower().startswith("мут ")) and message.chat.type in ['group', 'supergroup'])
-async def mute_user_mute_user_node_synonym_мут_handler(message: types.Message):
-    """
-    Обработчик синонима 'мут' для mute_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "кировско-выборгская")
+async def message_red_line_stations_synonym_кировско_выборгская_handler(message: types.Message):
+    # Синоним для сообщения red_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'кировско-выборгская' для узла red_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу red_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'мут' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'мут' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'мут ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "mute_user"
-    try:
-        from datetime import datetime, timedelta
-        until_date = datetime.now() + timedelta(seconds=3600)
-        await bot.restrict_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=False,
-                can_send_media_messages=False
-            ), until_date=until_date
-        )
-        hours = 3600 // 3600
-        minutes = (3600 % 3600) // 60
-        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
-        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("red_line_stations", message.from_user, message)
+    await handle_callback_red_line_stations(mock_callback)
+# @@NODE_END:red_line_stations@@
+# @@NODE_START:red_line_stations@@
 
-# @@NODE_END:mute_user_node@@
-# @@NODE_START:unmute_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "размутить" or message.text.lower().startswith("размутить ")) and message.chat.type in ['group', 'supergroup'])
-async def unmute_user_unmute_user_node_synonym_размутить_handler(message: types.Message):
-    """
-    Обработчик синонима 'размутить' для unmute_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "красная ветка")
+async def message_red_line_stations_synonym_красная_ветка_handler(message: types.Message):
+    # Синоним для сообщения red_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'красная ветка' для узла red_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу red_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'размутить' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'размутить' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'размутить ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "unmute_user"
-    try:
-        await bot.restrict_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=True, can_send_media_messages=True,
-                can_send_polls=True, can_send_other_messages=True,
-                can_add_web_page_previews=True
-            )
-        )
-        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
-        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("red_line_stations", message.from_user, message)
+    await handle_callback_red_line_stations(mock_callback)
+# @@NODE_END:red_line_stations@@
+# @@NODE_START:blue_line_stations@@
 
-# @@NODE_END:unmute_user_node@@
-# @@NODE_START:unmute_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "разглушить" or message.text.lower().startswith("разглушить ")) and message.chat.type in ['group', 'supergroup'])
-async def unmute_user_unmute_user_node_synonym_разглушить_handler(message: types.Message):
-    """
-    Обработчик синонима 'разглушить' для unmute_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "синяя линия")
+async def message_blue_line_stations_synonym_синяя_линия_handler(message: types.Message):
+    # Синоним для сообщения blue_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'синяя линия' для узла blue_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу blue_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'разглушить' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'разглушить' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'разглушить ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "unmute_user"
-    try:
-        await bot.restrict_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=True, can_send_media_messages=True,
-                can_send_polls=True, can_send_other_messages=True,
-                can_add_web_page_previews=True
-            )
-        )
-        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
-        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("blue_line_stations", message.from_user, message)
+    await handle_callback_blue_line_stations(mock_callback)
+# @@NODE_END:blue_line_stations@@
+# @@NODE_START:blue_line_stations@@
 
-# @@NODE_END:unmute_user_node@@
-# @@NODE_START:unmute_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "анмут" or message.text.lower().startswith("анмут ")) and message.chat.type in ['group', 'supergroup'])
-async def unmute_user_unmute_user_node_synonym_анмут_handler(message: types.Message):
-    """
-    Обработчик синонима 'анмут' для unmute_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "московско-петроградская")
+async def message_blue_line_stations_synonym_московско_петроградская_handler(message: types.Message):
+    # Синоним для сообщения blue_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'московско-петроградская' для узла blue_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу blue_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'анмут' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'анмут' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'анмут ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "unmute_user"
-    try:
-        await bot.restrict_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            permissions=types.ChatPermissions(
-                can_send_messages=True, can_send_media_messages=True,
-                can_send_polls=True, can_send_other_messages=True,
-                can_add_web_page_previews=True
-            )
-        )
-        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
-        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("blue_line_stations", message.from_user, message)
+    await handle_callback_blue_line_stations(mock_callback)
+# @@NODE_END:blue_line_stations@@
+# @@NODE_START:blue_line_stations@@
 
-# @@NODE_END:unmute_user_node@@
-# @@NODE_START:kick_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "кикнуть" or message.text.lower().startswith("кикнуть ")) and message.chat.type in ['group', 'supergroup'])
-async def kick_user_kick_user_node_synonym_кикнуть_handler(message: types.Message):
-    """
-    Обработчик синонима 'кикнуть' для kick_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "синяя ветка")
+async def message_blue_line_stations_synonym_синяя_ветка_handler(message: types.Message):
+    # Синоним для сообщения blue_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'синяя ветка' для узла blue_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу blue_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'кикнуть' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'кикнуть' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'кикнуть ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "kick_user"
-    try:
-        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
-        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id)
-        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("blue_line_stations", message.from_user, message)
+    await handle_callback_blue_line_stations(mock_callback)
+# @@NODE_END:blue_line_stations@@
+# @@NODE_START:green_line_stations@@
 
-# @@NODE_END:kick_user_node@@
-# @@NODE_START:kick_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "исключить" or message.text.lower().startswith("исключить ")) and message.chat.type in ['group', 'supergroup'])
-async def kick_user_kick_user_node_synonym_исключить_handler(message: types.Message):
-    """
-    Обработчик синонима 'исключить' для kick_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "зеленая линия")
+async def message_green_line_stations_synonym_зеленая_линия_handler(message: types.Message):
+    # Синоним для сообщения green_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'зеленая линия' для узла green_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу green_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'исключить' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'исключить' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'исключить ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "kick_user"
-    try:
-        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
-        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id)
-        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("green_line_stations", message.from_user, message)
+    await handle_callback_green_line_stations(mock_callback)
+# @@NODE_END:green_line_stations@@
+# @@NODE_START:green_line_stations@@
 
-# @@NODE_END:kick_user_node@@
-# @@NODE_START:kick_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "выгнать" or message.text.lower().startswith("выгнать ")) and message.chat.type in ['group', 'supergroup'])
-async def kick_user_kick_user_node_synonym_выгнать_handler(message: types.Message):
-    """
-    Обработчик синонима 'выгнать' для kick_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "невско-василеостровская")
+async def message_green_line_stations_synonym_невско_василеостровская_handler(message: types.Message):
+    # Синоним для сообщения green_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'невско-василеостровская' для узла green_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу green_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'выгнать' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'выгнать' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'выгнать ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "kick_user"
-    try:
-        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
-        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id)
-        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: Нарушение правил группы")
-        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("green_line_stations", message.from_user, message)
+    await handle_callback_green_line_stations(mock_callback)
+# @@NODE_END:green_line_stations@@
+# @@NODE_START:green_line_stations@@
 
-# @@NODE_END:kick_user_node@@
-# @@NODE_START:promote_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "повысить" or message.text.lower().startswith("повысить ")) and message.chat.type in ['group', 'supergroup'])
-async def promote_user_promote_user_node_synonym_повысить_handler(message: types.Message):
-    """
-    Обработчик синонима 'повысить' для promote_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "зеленая ветка")
+async def message_green_line_stations_synonym_зеленая_ветка_handler(message: types.Message):
+    # Синоним для сообщения green_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'зеленая ветка' для узла green_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу green_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'повысить' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'повысить' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'повысить ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "promote_user"
-    try:
-        await bot.promote_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            can_delete_messages=True,
-            can_invite_users=True,
-            can_pin_messages=True
-        )
-        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором")
-        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("green_line_stations", message.from_user, message)
+    await handle_callback_green_line_stations(mock_callback)
+# @@NODE_END:green_line_stations@@
+# @@NODE_START:purple_line_stations@@
 
-# @@NODE_END:promote_user_node@@
-# @@NODE_START:promote_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "назначить админом" or message.text.lower().startswith("назначить админом ")) and message.chat.type in ['group', 'supergroup'])
-async def promote_user_promote_user_node_synonym_назначить_админом_handler(message: types.Message):
-    """
-    Обработчик синонима 'назначить админом' для promote_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "фиолетовая линия")
+async def message_purple_line_stations_synonym_фиолетовая_линия_handler(message: types.Message):
+    # Синоним для сообщения purple_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'фиолетовая линия' для узла purple_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу purple_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'назначить админом' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'назначить админом' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'назначить админом ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "promote_user"
-    try:
-        await bot.promote_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            can_delete_messages=True,
-            can_invite_users=True,
-            can_pin_messages=True
-        )
-        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором")
-        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("purple_line_stations", message.from_user, message)
+    await handle_callback_purple_line_stations(mock_callback)
+# @@NODE_END:purple_line_stations@@
+# @@NODE_START:purple_line_stations@@
 
-# @@NODE_END:promote_user_node@@
-# @@NODE_START:promote_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "промоут" or message.text.lower().startswith("промоут ")) and message.chat.type in ['group', 'supergroup'])
-async def promote_user_promote_user_node_synonym_промоут_handler(message: types.Message):
-    """
-    Обработчик синонима 'промоут' для promote_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "фрунзенско-приморская")
+async def message_purple_line_stations_synonym_фрунзенско_приморская_handler(message: types.Message):
+    # Синоним для сообщения purple_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'фрунзенско-приморская' для узла purple_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу purple_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'промоут' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'промоут' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'промоут ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "promote_user"
-    try:
-        await bot.promote_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            can_delete_messages=True,
-            can_invite_users=True,
-            can_pin_messages=True
-        )
-        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором")
-        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("purple_line_stations", message.from_user, message)
+    await handle_callback_purple_line_stations(mock_callback)
+# @@NODE_END:purple_line_stations@@
+# @@NODE_START:purple_line_stations@@
 
-# @@NODE_END:promote_user_node@@
-# @@NODE_START:demote_user_node@@
-
-@dp.message(lambda message: message.text and (message.text.lower() == "понизить" or message.text.lower().startswith("понизить ")) and message.chat.type in ['group', 'supergroup'])
-async def demote_user_demote_user_node_synonym_понизить_handler(message: types.Message):
-    """
-    Обработчик синонима 'понизить' для demote_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
+@dp.message(lambda message: message.text and message.text.lower() == "фиолетовая ветка")
+async def message_purple_line_stations_synonym_фиолетовая_ветка_handler(message: types.Message):
+    # Синоним для сообщения purple_line_stations
     user_id = message.from_user.id
-    chat_id = message.chat.id
+    logging.info(f"Пользователь {user_id} написал синоним 'фиолетовая ветка' для узла purple_line_stations")
     
-    # Определяем целевого пользователя
-    target_user_id = None
+    # Обрабатываем синоним как переход к узлу purple_line_stations
+    # Создаем Mock callback для эмуляции кнопки
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self):
+            pass  # Mock метод, ничего не делаем
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
     
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'понизить' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'понизить' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'понизить ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "demote_user"
-    try:
-        await bot.promote_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            can_change_info=False, can_delete_messages=False,
-            can_invite_users=False, can_restrict_members=False,
-            can_pin_messages=False, can_promote_members=False
-        )
-        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
-        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+    mock_callback = MockCallback("purple_line_stations", message.from_user, message)
+    await handle_callback_purple_line_stations(mock_callback)
+# @@NODE_END:purple_line_stations@@
+# @@NODE_START:show_profile@@
 
-# @@NODE_END:demote_user_node@@
-# @@NODE_START:demote_user_node@@
+@dp.message(lambda message: message.text and message.text.lower() == "профиль")
+async def profile_synonym_профиль_handler(message: types.Message):
+    # Синоним для команды /profile
+    await profile_handler(message)
+# @@NODE_END:show_profile@@
+# @@NODE_START:show_profile@@
 
-@dp.message(lambda message: message.text and (message.text.lower() == "снять с админа" or message.text.lower().startswith("снять с админа ")) and message.chat.type in ['group', 'supergroup'])
-async def demote_user_demote_user_node_synonym_снять_с_админа_handler(message: types.Message):
-    """
-    Обработчик синонима 'снять с админа' для demote_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'снять с админа' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'снять с админа' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'снять с админа ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "demote_user"
-    try:
-        await bot.promote_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            can_change_info=False, can_delete_messages=False,
-            can_invite_users=False, can_restrict_members=False,
-            can_pin_messages=False, can_promote_members=False
-        )
-        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
-        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+@dp.message(lambda message: message.text and message.text.lower() == "анкета")
+async def profile_synonym_анкета_handler(message: types.Message):
+    # Синоним для команды /profile
+    await profile_handler(message)
+# @@NODE_END:show_profile@@
+# @@NODE_START:show_profile@@
 
-# @@NODE_END:demote_user_node@@
-# @@NODE_START:demote_user_node@@
+@dp.message(lambda message: message.text and message.text.lower() == "мои данные")
+async def profile_synonym_мои_данные_handler(message: types.Message):
+    # Синоним для команды /profile
+    await profile_handler(message)
+# @@NODE_END:show_profile@@
+# @@NODE_START:show_profile@@
 
-@dp.message(lambda message: message.text and (message.text.lower() == "демоут" or message.text.lower().startswith("демоут ")) and message.chat.type in ['group', 'supergroup'])
-async def demote_user_demote_user_node_synonym_демоут_handler(message: types.Message):
-    """
-    Обработчик синонима 'демоут' для demote_user
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'демоут' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'демоут' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'демоут ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "demote_user"
-    try:
-        await bot.promote_chat_member(
-            chat_id=chat_id, user_id=target_user_id,
-            can_change_info=False, can_delete_messages=False,
-            can_invite_users=False, can_restrict_members=False,
-            can_pin_messages=False, can_promote_members=False
-        )
-        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
-        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+@dp.message(lambda message: message.text and message.text.lower() == "редактировать")
+async def profile_synonym_редактировать_handler(message: types.Message):
+    # Синоним для команды /profile
+    await profile_handler(message)
+# @@NODE_END:show_profile@@
+# @@NODE_START:chat_link@@
 
-# @@NODE_END:demote_user_node@@
-# @@NODE_START:admin_rights_node@@
+@dp.message(lambda message: message.text and message.text.lower() == "ссылка")
+async def link_synonym_ссылка_handler(message: types.Message):
+    # Синоним для команды /link
+    await link_handler(message)
+# @@NODE_END:chat_link@@
+# @@NODE_START:chat_link@@
 
-@dp.message(lambda message: message.text and (message.text.lower() == "права админа" or message.text.lower().startswith("права админа ")))
-async def admin_rights_admin_rights_node_synonym_права_админа_handler(message: types.Message):
-    """
-    Обработчик синонима 'права админа' для admin_rights
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'права админа' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'права админа' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'права админа ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "admin_rights"
-    try:
-        # Создаем Mock callback для эмуляции inline кнопки admin_rights
-        class MockCallback:
-            def __init__(self, data, user, msg):
-                self.data = data
-                self.from_user = user
-                self.message = msg
-            async def answer(self):
-                pass  # Mock метод, ничего не делаем
-            async def edit_text(self, text, **kwargs):
-                try:
-                    return await self.message.edit_text(text, **kwargs)
-                except Exception as e:
-                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
-                    return await self.message.answer(text, **kwargs)
-        
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
-        # bot уже определен глобально
-        await handle_callback_admin_rights_node(mock_callback, bot)
-        return  # Завершаем обработку, так как все сделано в callback
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+@dp.message(lambda message: message.text and message.text.lower() == "чат")
+async def link_synonym_чат_handler(message: types.Message):
+    # Синоним для команды /link
+    await link_handler(message)
+# @@NODE_END:chat_link@@
+# @@NODE_START:chat_link@@
 
-# @@NODE_END:admin_rights_node@@
-# @@NODE_START:admin_rights_node@@
+@dp.message(lambda message: message.text and message.text.lower() == "сообщество")
+async def link_synonym_сообщество_handler(message: types.Message):
+    # Синоним для команды /link
+    await link_handler(message)
+# @@NODE_END:chat_link@@
+# @@NODE_START:chat_link@@
 
-@dp.message(lambda message: message.text and (message.text.lower() == "настроить права" or message.text.lower().startswith("настроить права ")))
-async def admin_rights_admin_rights_node_synonym_настроить_права_handler(message: types.Message):
-    """
-    Обработчик синонима 'настроить права' для admin_rights
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'настроить права' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'настроить права' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'настроить права ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "admin_rights"
-    try:
-        # Создаем Mock callback для эмуляции inline кнопки admin_rights
-        class MockCallback:
-            def __init__(self, data, user, msg):
-                self.data = data
-                self.from_user = user
-                self.message = msg
-            async def answer(self):
-                pass  # Mock метод, ничего не делаем
-            async def edit_text(self, text, **kwargs):
-                try:
-                    return await self.message.edit_text(text, **kwargs)
-                except Exception as e:
-                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
-                    return await self.message.answer(text, **kwargs)
-        
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
-        # bot уже определен глобально
-        await handle_callback_admin_rights_node(mock_callback, bot)
-        return  # Завершаем обработку, так как все сделано в callback
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+@dp.message(lambda message: message.text and message.text.lower() == "впрогулке")
+async def link_synonym_впрогулке_handler(message: types.Message):
+    # Синоним для команды /link
+    await link_handler(message)
+# @@NODE_END:chat_link@@
+# @@NODE_START:chat_link@@
 
-# @@NODE_END:admin_rights_node@@
-# @@NODE_START:admin_rights_node@@
+@dp.message(lambda message: message.text and message.text.lower() == "линк")
+async def link_synonym_линк_handler(message: types.Message):
+    # Синоним для команды /link
+    await link_handler(message)
+# @@NODE_END:chat_link@@
+# @@NODE_START:help_command@@
 
-@dp.message(lambda message: message.text and (message.text.lower() == "тг права" or message.text.lower().startswith("тг права ")))
-async def admin_rights_admin_rights_node_synonym_тг_права_handler(message: types.Message):
-    """
-    Обработчик синонима 'тг права' для admin_rights
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'тг права' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'тг права' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'тг права ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "admin_rights"
-    try:
-        # Создаем Mock callback для эмуляции inline кнопки admin_rights
-        class MockCallback:
-            def __init__(self, data, user, msg):
-                self.data = data
-                self.from_user = user
-                self.message = msg
-            async def answer(self):
-                pass  # Mock метод, ничего не делаем
-            async def edit_text(self, text, **kwargs):
-                try:
-                    return await self.message.edit_text(text, **kwargs)
-                except Exception as e:
-                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
-                    return await self.message.answer(text, **kwargs)
-        
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
-        # bot уже определен глобально
-        await handle_callback_admin_rights_node(mock_callback, bot)
-        return  # Завершаем обработку, так как все сделано в callback
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+@dp.message(lambda message: message.text and message.text.lower() == "помощь")
+async def help_synonym_помощь_handler(message: types.Message):
+    # Синоним для команды /help
+    await help_handler(message)
+# @@NODE_END:help_command@@
+# @@NODE_START:help_command@@
 
-# @@NODE_END:admin_rights_node@@
-# @@NODE_START:admin_rights_node@@
+@dp.message(lambda message: message.text and message.text.lower() == "справка")
+async def help_synonym_справка_handler(message: types.Message):
+    # Синоним для команды /help
+    await help_handler(message)
+# @@NODE_END:help_command@@
+# @@NODE_START:help_command@@
 
-@dp.message(lambda message: message.text and (message.text.lower() == "права администратора" or message.text.lower().startswith("права администратора ")))
-async def admin_rights_admin_rights_node_synonym_права_администратора_handler(message: types.Message):
-    """
-    Обработчик синонима 'права администратора' для admin_rights
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'права администратора' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'права администратора' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'права администратора ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "admin_rights"
-    try:
-        # Создаем Mock callback для эмуляции inline кнопки admin_rights
-        class MockCallback:
-            def __init__(self, data, user, msg):
-                self.data = data
-                self.from_user = user
-                self.message = msg
-            async def answer(self):
-                pass  # Mock метод, ничего не делаем
-            async def edit_text(self, text, **kwargs):
-                try:
-                    return await self.message.edit_text(text, **kwargs)
-                except Exception as e:
-                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
-                    return await self.message.answer(text, **kwargs)
-        
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
-        # bot уже определен глобально
-        await handle_callback_admin_rights_node(mock_callback, bot)
-        return  # Завершаем обработку, так как все сделано в callback
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+@dp.message(lambda message: message.text and message.text.lower() == "команды")
+async def help_synonym_команды_handler(message: types.Message):
+    # Синоним для команды /help
+    await help_handler(message)
+# @@NODE_END:help_command@@
+# @@NODE_START:help_command@@
 
-# @@NODE_END:admin_rights_node@@
-# @@NODE_START:admin_rights_node@@
+@dp.message(lambda message: message.text and message.text.lower() == "что писать")
+async def help_synonym_что_писать_handler(message: types.Message):
+    # Синоним для команды /help
+    await help_handler(message)
+# @@NODE_END:help_command@@
+# @@NODE_START:help_command@@
 
-@dp.message(lambda message: message.text and (message.text.lower() == "admin rights" or message.text.lower().startswith("admin rights ")))
-async def admin_rights_admin_rights_node_synonym_admin_rights_handler(message: types.Message):
-    """
-    Обработчик синонима 'admin rights' для admin_rights
-    Работает в группах с ответом на сообщение или с указанием ID пользователя
-    """
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    
-    # Определяем целевого пользователя
-    target_user_id = None
-    
-    if message.reply_to_message:
-        # Если есть ответ на сообщение - используем его
-        target_user_id = message.reply_to_message.from_user.id
-        logging.info(f"Пользователь {user_id} использовал команду 'admin rights' для пользователя {target_user_id} (через ответ)")
-    else:
-        # Если нет ответа, проверяем текст на наличие ID пользователя
-        text_parts = message.text.split()
-        if len(text_parts) > 1 and text_parts[1].isdigit():
-            target_user_id = int(text_parts[1])
-            logging.info(f"Пользователь {user_id} использовал команду 'admin rights' для пользователя {target_user_id} (через ID)")
-        else:
-            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите 'admin rights ID_пользователя'")
-            return
-    
-    if not target_user_id:
-        await message.answer("❌ Не удалось определить пользователя")
-        return
-    
-    # Тип текущего узла для логирования
-    current_node_type = "admin_rights"
-    try:
-        # Создаем Mock callback для эмуляции inline кнопки admin_rights
-        class MockCallback:
-            def __init__(self, data, user, msg):
-                self.data = data
-                self.from_user = user
-                self.message = msg
-            async def answer(self):
-                pass  # Mock метод, ничего не делаем
-            async def edit_text(self, text, **kwargs):
-                try:
-                    return await self.message.edit_text(text, **kwargs)
-                except Exception as e:
-                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
-                    return await self.message.answer(text, **kwargs)
-        
-        mock_callback = MockCallback("admin_rights_node", message.from_user, message)
-        # bot уже определен глобально
-        await handle_callback_admin_rights_node(mock_callback, bot)
-        return  # Завершаем обработку, так как все сделано в callback
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для выполнения операции")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
-        logging.error(f"Ошибка {current_node_type}: {e}")
-    except Exception as e:
-        await message.answer("❌ Произошла неожиданная ошибка")
-        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
+@dp.message(lambda message: message.text and message.text.lower() == "как пользоваться")
+async def help_synonym_как_пользоваться_handler(message: types.Message):
+    # Синоним для команды /help
+    await help_handler(message)
+# @@NODE_END:help_command@@
+# @@NODE_START:help_command@@
 
-# @@NODE_END:admin_rights_node@@
+@dp.message(lambda message: message.text and message.text.lower() == "админ справка")
+async def help_synonym_админ_справка_handler(message: types.Message):
+    # Синоним для команды /help
+    await help_handler(message)
+# @@NODE_END:help_command@@
+# @@NODE_START:help_command@@
 
-# Обработчики автопереходов
+@dp.message(lambda message: message.text and message.text.lower() == "админ помощь")
+async def help_synonym_админ_помощь_handler(message: types.Message):
+    # Синоним для команды /help
+    await help_handler(message)
+# @@NODE_END:help_command@@
+# @@NODE_START:help_command@@
 
-@dp.callback_query(lambda c: c.data == "join_request" or c.data.startswith("join_request_btn_") or c.data == "done_in_request")
-async def handle_callback_join_request(callback_query: types.CallbackQuery):
+@dp.message(lambda message: message.text and message.text.lower() == "админ команды")
+async def help_synonym_админ_команды_handler(message: types.Message):
+    # Синоним для команды /help
+    await help_handler(message)
+# @@NODE_END:help_command@@
+
+# Обработчики inline кнопок
+
+@dp.callback_query(lambda c: c.data == "gender_selection" or c.data.startswith("gender_selection_btn_") or c.data == "done_selection")
+async def handle_callback_gender_selection(callback_query: types.CallbackQuery):
     # Безопасное получение данных из callback_query
     try:
         user_id = callback_query.from_user.id
         callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_join_request для пользователя {user_id}")
+        logging.info(f"🔵 Вызван callback handler: handle_callback_gender_selection для пользователя {user_id}")
     except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_join_request: {e}")
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_gender_selection: {e}")
         return
     
     # Проверяем флаг hideAfterClick для кнопок
@@ -5927,25 +2514,25 @@ async def handle_callback_join_request(callback_query: types.CallbackQuery):
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Устанавливаем флаг collectUserInput для узла join_request
+    # Устанавливаем флаг collectUserInput для узла gender_selection
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_join_request"] = True
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла join_request: true")
+    user_data[user_id]["collectUserInput_gender_selection"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла gender_selection: true")
     
     # Проверяем, был ли переход через кнопку с skipDataCollection
     skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
     if not skip_transition_flag:
-        await update_user_data_in_db(user_id, "join_request_response", callback_query.data)
-        logging.info(f"Переменная join_request_response сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+        await update_user_data_in_db(user_id, "gender", callback_query.data)
+        logging.info(f"Переменная gender сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
     else:
         # Сбрасываем флаг
         if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
             del user_data[user_id]["skipDataCollectionTransition"]
-        logging.info(f"Переход через skipDataCollection, переменная join_request_response не сохраняется (пользователь {user_id})")
+        logging.info(f"Переход через skipDataCollection, переменная gender не сохраняется (пользователь {user_id})")
     
-    # Обрабатываем узел join_request: join_request
-    text = "Хочешь присоединиться к нашему чату? 🚀"
+    # Обрабатываем узел gender_selection: gender_selection
+    text = "Укажи свой пол: 👨👩"
     
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -5970,7 +2557,11 @@ async def handle_callback_join_request(callback_query: types.CallbackQuery):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
-    keyboard = None
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input_btn_0"))
+    builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input_btn_1"))
+    keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
     # Инициализируем переменную conditional_keyboard, если она не была определена
@@ -6005,30 +2596,54 @@ async def handle_callback_join_request(callback_query: types.CallbackQuery):
     user_data[user_id]["waiting_for_input"] = {
         "type": "text",
         "modes": ["text"],
-        "variable": "join_request_response",
+        "variable": "gender",
         "save_to_database": True,
-        "node_id": "join_request",
+        "node_id": "gender_selection",
         "next_node_id": "",
         "min_length": 0,
         "max_length": 0,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": ""
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел join_request)")
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной gender (узел gender_selection)")
     user_id = callback_query.from_user.id
+    
+    # Сохраняем нажатие кнопки в базу данных
+    # Ищем текят кнопки по callback_data
+    button_display_text = "Да 😎"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура
+    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
+    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if not has_conditional_keyboard_for_save:
+        # Сохраняем в базу данных с правильным именем переяенной
+        await update_user_data_in_db(user_id, "join_request_response", button_display_text)
+        logging.info(f"Переменная join_request_response сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    else:
+        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
     
     
     # Удаляем старое сообщение
     
-    text = "Хочешь присоединиться к нашему чату? 🚀"
+    text = "Укажи свой пол: 👨👩"
     # ИСПРАВЛЕНИЕ: Не отправляем сообщение второй раз, если оно уже было отправлено ранее в обработчике
     # Вместо этого, просто настраиваем ожидание ввода
     # Настраиваем ожидание ввода (collectUserInput=true)
     user_data[callback_query.from_user.id]["waiting_for_input"] = {
         "type": "text",
-        "variable": "join_request_response",
+        "variable": "gender",
         "save_to_database": False,
-        "node_id": "join_request",
+        "node_id": "gender_selection",
         "next_node_id": ""
     }
     return
@@ -6162,15 +2777,15 @@ async def handle_callback_decline_response(callback_query: types.CallbackQuery):
     
     return
 
-@dp.callback_query(lambda c: c.data == "pin_message_node" or c.data.startswith("pin_message_node_btn_") or c.data == "done_ssage_node")
-async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "name_input" or c.data.startswith("name_input_btn_") or c.data == "done_name_input")
+async def handle_callback_name_input(callback_query: types.CallbackQuery):
     # Безопасное получение данных из callback_query
     try:
         user_id = callback_query.from_user.id
         callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_pin_message_node для пользователя {user_id}")
+        logging.info(f"🔵 Вызван callback handler: handle_callback_name_input для пользователя {user_id}")
     except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_pin_message_node: {e}")
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_name_input: {e}")
         return
     
     # Проверяем флаг hideAfterClick для кнопок
@@ -6185,14 +2800,27 @@ async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Устанавливаем флаг collectUserInput для узла pin_message_node
+    # Устанавливаем флаг collectUserInput для узла name_input
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_pin_message_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла pin_message_node: false")
+    user_data[user_id]["collectUserInput_name_input"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла name_input: true")
     
-    # Обрабатываем узел pin_message_node: pin_message_node
-    text = "📌 Сообщение успешно закреплено!"
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "user_name", callback_query.data)
+        logging.info(f"Переменная user_name сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная user_name не сохраняется (пользователь {user_id})")
+    
+    # Обрабатываем узел name_input: name_input
+    text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
     
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -6252,30 +2880,1718 @@ async def handle_callback_pin_message_node(callback_query: types.CallbackQuery):
     user_data[user_id]["waiting_for_input"] = {
         "type": "text",
         "modes": ["text"],
-        "variable": "response_pin_message_node",
+        "variable": "user_name",
         "save_to_database": True,
-        "node_id": "pin_message_node",
+        "node_id": "name_input",
+        "next_node_id": "age_input",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_name (узел name_input)")
+    user_id = callback_query.from_user.id
+    
+    # Сохраняем нажатие кнопки в базу данных
+    # Ищем текят кнопки по callback_data
+    # Определяем тякст кнопки по callback_data
+    button_display_text = "Неизвестная кнопка"
+    if callback_query.data.endswith("_btn_0"):
+        button_display_text = "Мужчина 👨"
+    if callback_query.data.endswith("_btn_1"):
+        button_display_text = "Женщина 👩"
+    # Дополнительная проверка по точному соответствию callback_data
+    if callback_query.data == "name_input":
+        button_display_text = "Мужчина 👨"
+    if callback_query.data == "name_input":
+        button_display_text = "Женщина 👩"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура
+    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
+    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if not has_conditional_keyboard_for_save:
+        # Сохраняем в базу данных с правильным именем переяенной
+        await update_user_data_in_db(user_id, "gender", button_display_text)
+        logging.info(f"Переменная gender сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    else:
+        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
+    
+    
+    # Удаляем старое сообщение
+    
+    text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+    # ИСПРАВЛЕНИЕ: Не отправляем сообщение второй раз, если оно уже было отправлено ранее в обработчике
+    # Вместо этого, просто настраиваем ожидание ввода
+    # Настраиваем ожидание ввода (collectUserInput=true)
+    user_data[callback_query.from_user.id]["waiting_for_input"] = {
+        "type": "text",
+        "variable": "user_name",
+        "save_to_database": False,
+        "node_id": "name_input",
+        "next_node_id": "age_input"
+    }
+    return
+
+@dp.callback_query(lambda c: c.data == "red_line_stations" or c.data.startswith("red_line_stations_btn_") or c.data == "done_e_stations")
+async def handle_callback_red_line_stations(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_red_line_stations для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_red_line_stations: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла red_line_stations
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_red_line_stations"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла red_line_stations: false")
+    
+    # Проверяем, является ли это кнопкой "Готово"
+    if callback_data == "done_e_stations":
+        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")
+        
+        # Сохраняем выбранные значения в базу данных
+        selected_options = user_data.get(user_id, {}).get("multi_select_red_line_stations", [])
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            
+            # Универсальная логика аккумуляции для всех множественных выборов
+            # Загружаем существующие значения
+            existing_data = await get_user_data_from_db(user_id, "metro_stations")
+            existing_selections = []
+            if existing_data and existing_data.strip():
+                existing_selections = [s.strip() for s in existing_data.split(",") if s.strip()]
+            
+            # Объединяем существующие и новые выборы (убираем дубли)
+            all_selections = list(set(existing_selections + selected_options))
+            final_text = ", ".join(all_selections)
+            await update_user_data_in_db(user_id, "metro_stations", final_text)
+            logging.info(f"✅ Аккумялировано в переменную metro_stations: {final_text}")
+        
+        # Очищаем состояние множественного выбора
+        if user_id in user_data:
+            user_data[user_id].pop("multi_select_red_line_stations", None)
+            user_data[user_id].pop("multi_select_node", None)
+            user_data[user_id].pop("multi_select_type", None)
+            user_data[user_id].pop("multi_select_variable", None)
+        
+        # Переход к следующему узлу
+        next_node_id = "interests_categories"
+        try:
+            logging.warning(f"⚠️ Целевой узел не найден: {next_node_id}, завершаем переход")
+            await callback_query.message.edit_text("Переход завершен")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+            await callback_query.message.edit_text("Переход завершен")
+        return
+    
+    # Обрабатываем узел red_line_stations: red_line_stations
+    text = """🟥 Кировско-Выборгская линия
+
+Выбери свою станцию:"""
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    # Инициализация состояния множественного выбора
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    
+    # Загружаем ранее выбранные варианты
+    saved_selections = []
+    if user_vars:
+        for var_name, var_data in user_vars.items():
+            if var_name == "metro_stations":
+                if isinstance(var_data, dict) and "value" in var_data:
+                    selections_str = var_data["value"]
+                elif isinstance(var_data, str):
+                    selections_str = var_data
+                else:
+                    continue
+                if selections_str and selections_str.strip():
+                    saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                    break
+    
+    # Инициализируем состояние если его нет
+    if "multi_select_red_line_stations" not in user_data[user_id]:
+        user_data[user_id]["multi_select_red_line_stations"] = saved_selections.copy()
+    user_data[user_id]["multi_select_node"] = "red_line_stations"
+    user_data[user_id]["multi_select_type"] = "inline"
+    user_data[user_id]["multi_select_variable"] = "metro_stations"
+    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+    
+    # Создаем inline клавиатуру с поддержкой множественного выбора
+    builder = InlineKeyboardBuilder()
+    # Кнопка выбора 1: 🟥 Девяткино
+    logging.info(f"🔘 Создаем кнопку: 🟥 Девяткино -> ms_stations_vyatkino")
+    selected_mark = "✅ " if "🟥 Девяткино" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Девяткино", callback_data="ms_stations_vyatkino"))
+    # Кнопка выбора 2: 🟥 Гражданский проспект
+    logging.info(f"🔘 Создаем кнопку: 🟥 Гражданский проспект -> ms_stations_zhdansky")
+    selected_mark = "✅ " if "🟥 Гражданский проспект" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Гражданский проспект", callback_data="ms_stations_zhdansky"))
+    # Кнопка выбора 3: 🟥 Академическая
+    logging.info(f"🔘 Создаем кнопку: 🟥 Академическая -> ms_stations_cheskaya")
+    selected_mark = "✅ " if "🟥 Академическая" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Академическая", callback_data="ms_stations_cheskaya"))
+    # Кнопка выбора 4: 🟥 Политехническая
+    logging.info(f"🔘 Создаем кнопку: 🟥 Политехническая -> ms_stations_cheskaya")
+    selected_mark = "✅ " if "🟥 Политехническая" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Политехническая", callback_data="ms_stations_cheskaya"))
+    # Кнопка выбора 5: 🟥 Площадь Мужества
+    logging.info(f"🔘 Создаем кнопку: 🟥 Площадь Мужества -> ms_stations_uzhestva")
+    selected_mark = "✅ " if "🟥 Площадь Мужества" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Площадь Мужества", callback_data="ms_stations_uzhestva"))
+    # Кнопка выбора 6: 🟥 Лесная
+    logging.info(f"🔘 Создаем кнопку: 🟥 Лесная -> ms_stations_lesnaya")
+    selected_mark = "✅ " if "🟥 Лесная" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Лесная", callback_data="ms_stations_lesnaya"))
+    # Кнопка выбора 7: 🟥 Выборгская
+    logging.info(f"🔘 Создаем кнопку: 🟥 Выборгская -> ms_stations_orgskaya")
+    selected_mark = "✅ " if "🟥 Выборгская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Выборгская", callback_data="ms_stations_orgskaya"))
+    # Кнопка выбора 8: 🟥 Площадь Ленина
+    logging.info(f"🔘 Создаем кнопку: 🟥 Площадь Ленина -> ms_stations_l_lenina")
+    selected_mark = "✅ " if "🟥 Площадь Ленина" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Площадь Ленина", callback_data="ms_stations_l_lenina"))
+    # Кнопка выбора 9: 🟥 Чернышевская
+    logging.info(f"🔘 Создаем кнопку: 🟥 Чернышевская -> ms_stations_hevskaya")
+    selected_mark = "✅ " if "🟥 Чернышевская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Чернышевская", callback_data="ms_stations_hevskaya"))
+    # Кнопка выбора 10: 🟥 Площадь Восстания
+    logging.info(f"🔘 Создаем кнопку: 🟥 Площадь Восстания -> ms_stations_sstaniya")
+    selected_mark = "✅ " if "🟥 Площадь Восстания" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Площадь Восстания", callback_data="ms_stations_sstaniya"))
+    # Кнопка выбора 11: 🟥 Владимирская
+    logging.info(f"🔘 Создаем кнопку: 🟥 Владимирская -> ms_stations_mirskaya")
+    selected_mark = "✅ " if "🟥 Владимирская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Владимирская", callback_data="ms_stations_mirskaya"))
+    # Кнопка выбора 12: 🟥 Пушкинская
+    logging.info(f"🔘 Создаем кнопку: 🟥 Пушкинская -> ms_stations_kinskaya")
+    selected_mark = "✅ " if "🟥 Пушкинская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Пушкинская", callback_data="ms_stations_kinskaya"))
+    # Кнопка выбора 13: 🟥 Технологический институт-1
+    logging.info(f"🔘 Создаем кнопку: 🟥 Технологический институт-1 -> ms_stations_nstitut1")
+    selected_mark = "✅ " if "🟥 Технологический институт-1" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Технологический институт-1", callback_data="ms_stations_nstitut1"))
+    # Кнопка выбора 14: 🟥 Балтийская
+    logging.info(f"🔘 Создаем кнопку: 🟥 Балтийская -> ms_stations_tiyskaya")
+    selected_mark = "✅ " if "🟥 Балтийская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Балтийская", callback_data="ms_stations_tiyskaya"))
+    # Кнопка выбора 15: 🟥 Нарвская
+    logging.info(f"🔘 Создаем кнопку: 🟥 Нарвская -> ms_stations_arvskaya")
+    selected_mark = "✅ " if "🟥 Нарвская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Нарвская", callback_data="ms_stations_arvskaya"))
+    # Кнопка выбора 16: 🟥 Кировский завод
+    logging.info(f"🔘 Создаем кнопку: 🟥 Кировский завод -> ms_stations_kirovsky")
+    selected_mark = "✅ " if "🟥 Кировский завод" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Кировский завод", callback_data="ms_stations_kirovsky"))
+    # Кнопка выбора 17: 🟥 Автово
+    logging.info(f"🔘 Создаем кнопку: 🟥 Автово -> ms_stations_avtovo")
+    selected_mark = "✅ " if "🟥 Автово" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Автово", callback_data="ms_stations_avtovo"))
+    # Кнопка выбора 18: 🟥 Ленинский проспект
+    logging.info(f"🔘 Создаем кнопку: 🟥 Ленинский проспект -> ms_stations_leninsky")
+    selected_mark = "✅ " if "🟥 Ленинский проспект" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Ленинский проспект", callback_data="ms_stations_leninsky"))
+    # Кнопка выбора 19: 🟥 Проспект Ветеранов
+    logging.info(f"🔘 Создаем кнопку: 🟥 Проспект Ветеранов -> ms_stations_eteranov")
+    selected_mark = "✅ " if "🟥 Проспект Ветеранов" in user_data[user_id]["multi_select_red_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Проспект Ветеранов", callback_data="ms_stations_eteranov"))
+    # Кнопка "Готово" для множественного выбора
+    logging.info(f"🔘 Создаем кнопку Готово -> done_e_stations")
+    builder.add(InlineKeyboardButton(text="Готово", callback_data="done_e_stations"))
+    builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
+    builder.adjust(2)
+    keyboard = builder.as_markup()
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_red_line_stations",
+        "save_to_database": True,
+        "node_id": "red_line_stations",
         "next_node_id": "",
         "min_length": 0,
         "max_length": 0,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": ""
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_pin_message_node (узел pin_message_node)")
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_red_line_stations (узел red_line_stations)")
+    user_id = callback_query.from_user.id
+    
+    # Сохраняем нажатие кнопки в базу данных
+    # Ищем текят кнопки по callback_data
+    button_display_text = "Красная ветка 🟥"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура
+    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
+    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if not has_conditional_keyboard_for_save:
+        # Сохраняем в базу данных с правильным именем переяенной
+        await update_user_data_in_db(user_id, "metro_stations", button_display_text)
+        logging.info(f"Переменная metro_stations сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    else:
+        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "blue_line_stations" or c.data.startswith("blue_line_stations_btn_") or c.data == "done_e_stations")
+async def handle_callback_blue_line_stations(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_blue_line_stations для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_blue_line_stations: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла blue_line_stations
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_blue_line_stations"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла blue_line_stations: false")
+    
+    # Проверяем, является ли это кнопкой "Готово"
+    if callback_data == "done_e_stations":
+        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")
+        
+        # Сохраняем выбранные значения в базу данных
+        selected_options = user_data.get(user_id, {}).get("multi_select_blue_line_stations", [])
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            
+            # Универсальная логика аккумуляции для всех множественных выборов
+            # Загружаем существующие значения
+            existing_data = await get_user_data_from_db(user_id, "metro_stations")
+            existing_selections = []
+            if existing_data and existing_data.strip():
+                existing_selections = [s.strip() for s in existing_data.split(",") if s.strip()]
+            
+            # Объединяем существующие и новые выборы (убираем дубли)
+            all_selections = list(set(existing_selections + selected_options))
+            final_text = ", ".join(all_selections)
+            await update_user_data_in_db(user_id, "metro_stations", final_text)
+            logging.info(f"✅ Аккумялировано в переменную metro_stations: {final_text}")
+        
+        # Очищаем состояние множественного выбора
+        if user_id in user_data:
+            user_data[user_id].pop("multi_select_blue_line_stations", None)
+            user_data[user_id].pop("multi_select_node", None)
+            user_data[user_id].pop("multi_select_type", None)
+            user_data[user_id].pop("multi_select_variable", None)
+        
+        # Переход к следующему узлу
+        next_node_id = "interests_categories"
+        try:
+            logging.warning(f"⚠️ Целевой узел не найден: {next_node_id}, завершаем переход")
+            await callback_query.message.edit_text("Переход завершен")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+            await callback_query.message.edit_text("Переход завершен")
+        return
+    
+    # Обрабатываем узел blue_line_stations: blue_line_stations
+    text = """🟦 Московско-Петроградская линия
+
+Выбери свою станцию:"""
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    # Инициализация состояния множественного выбора
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    
+    # Загружаем ранее выбранные варианты
+    saved_selections = []
+    if user_vars:
+        for var_name, var_data in user_vars.items():
+            if var_name == "metro_stations":
+                if isinstance(var_data, dict) and "value" in var_data:
+                    selections_str = var_data["value"]
+                elif isinstance(var_data, str):
+                    selections_str = var_data
+                else:
+                    continue
+                if selections_str and selections_str.strip():
+                    saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                    break
+    
+    # Инициализируем состояние если его нет
+    if "multi_select_blue_line_stations" not in user_data[user_id]:
+        user_data[user_id]["multi_select_blue_line_stations"] = saved_selections.copy()
+    user_data[user_id]["multi_select_node"] = "blue_line_stations"
+    user_data[user_id]["multi_select_type"] = "inline"
+    user_data[user_id]["multi_select_variable"] = "metro_stations"
+    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+    
+    # Создаем inline клавиатуру с поддержкой множественного выбора
+    builder = InlineKeyboardBuilder()
+    # Кнопка выбора 1: 🟦 Парнас
+    logging.info(f"🔘 Создаем кнопку: 🟦 Парнас -> ms_stations_parnas")
+    selected_mark = "✅ " if "🟦 Парнас" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Парнас", callback_data="ms_stations_parnas"))
+    # Кнопка выбора 2: 🟦 Проспект Просвещения
+    logging.info(f"🔘 Создаем кнопку: 🟦 Проспект Просвещения -> ms_stations_prosvesh")
+    selected_mark = "✅ " if "🟦 Проспект Просвещения" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Проспект Просвещения", callback_data="ms_stations_prosvesh"))
+    # Кнопка выбора 3: 🟦 Озерки
+    logging.info(f"🔘 Создаем кнопку: 🟦 Озерки -> ms_stations_ozerki")
+    selected_mark = "✅ " if "🟦 Озерки" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Озерки", callback_data="ms_stations_ozerki"))
+    # Кнопка выбора 4: 🟦 Удельная
+    logging.info(f"🔘 Создаем кнопку: 🟦 Удельная -> ms_stations_udelnaya")
+    selected_mark = "✅ " if "🟦 Удельная" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Удельная", callback_data="ms_stations_udelnaya"))
+    # Кнопка выбора 5: 🟦 Пионерская
+    logging.info(f"🔘 Создаем кнопку: 🟦 Пионерская -> ms_stations_nerskaya")
+    selected_mark = "✅ " if "🟦 Пионерская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Пионерская", callback_data="ms_stations_nerskaya"))
+    # Кнопка выбора 6: 🟦 Черная речка
+    logging.info(f"🔘 Создаем кнопку: 🟦 Черная речка -> ms_stations_chernaya")
+    selected_mark = "✅ " if "🟦 Черная речка" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Черная речка", callback_data="ms_stations_chernaya"))
+    # Кнопка выбора 7: 🟦 Петроградская
+    logging.info(f"🔘 Создаем кнопку: 🟦 Петроградская -> ms_stations_radskaya")
+    selected_mark = "✅ " if "🟦 Петроградская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Петроградская", callback_data="ms_stations_radskaya"))
+    # Кнопка выбора 8: 🟦 Горьковская
+    logging.info(f"🔘 Создаем кнопку: 🟦 Горьковская -> ms_stations_kovskaya")
+    selected_mark = "✅ " if "🟦 Горьковская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Горьковская", callback_data="ms_stations_kovskaya"))
+    # Кнопка выбора 9: 🟦 Невский проспект
+    logging.info(f"🔘 Создаем кнопку: 🟦 Невский проспект -> ms_stations_nevsky")
+    selected_mark = "✅ " if "🟦 Невский проспект" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Невский проспект", callback_data="ms_stations_nevsky"))
+    # Кнопка выбора 10: 🟦 Сенная площадь
+    logging.info(f"🔘 Создаем кнопку: 🟦 Сенная площадь -> ms_stations_sennaya")
+    selected_mark = "✅ " if "🟦 Сенная площадь" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Сенная площадь", callback_data="ms_stations_sennaya"))
+    # Кнопка выбора 11: 🟦 Технологический институт-2
+    logging.info(f"🔘 Создаем кнопку: 🟦 Технологический институт-2 -> ms_stations_nstitut2")
+    selected_mark = "✅ " if "🟦 Технологический институт-2" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Технологический институт-2", callback_data="ms_stations_nstitut2"))
+    # Кнопка выбора 12: 🟦 Фрунзенская
+    logging.info(f"🔘 Создаем кнопку: 🟦 Фрунзенская -> ms_stations_zenskaya")
+    selected_mark = "✅ " if "🟦 Фрунзенская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Фрунзенская", callback_data="ms_stations_zenskaya"))
+    # Кнопка выбора 13: 🟦 Московские ворота
+    logging.info(f"🔘 Создаем кнопку: 🟦 Московские ворота -> ms_stations_k_vorota")
+    selected_mark = "✅ " if "🟦 Московские ворота" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Московские ворота", callback_data="ms_stations_k_vorota"))
+    # Кнопка выбора 14: 🟦 Электросила
+    logging.info(f"🔘 Создаем кнопку: 🟦 Электросила -> ms_stations_ktrosila")
+    selected_mark = "✅ " if "🟦 Электросила" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Электросила", callback_data="ms_stations_ktrosila"))
+    # Кнопка выбора 15: 🟦 Парк Победы
+    logging.info(f"🔘 Создаем кнопку: 🟦 Парк Победы -> ms_stations_k_pobedy")
+    selected_mark = "✅ " if "🟦 Парк Победы" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Парк Победы", callback_data="ms_stations_k_pobedy"))
+    # Кнопка выбора 16: 🟦 Московская
+    logging.info(f"🔘 Создаем кнопку: 🟦 Московская -> ms_stations_kovskaya")
+    selected_mark = "✅ " if "🟦 Московская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Московская", callback_data="ms_stations_kovskaya"))
+    # Кнопка выбора 17: 🟦 Звездная
+    logging.info(f"🔘 Создаем кнопку: 🟦 Звездная -> ms_stations_vezdnaya")
+    selected_mark = "✅ " if "🟦 Звездная" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Звездная", callback_data="ms_stations_vezdnaya"))
+    # Кнопка выбора 18: 🟦 Купчино
+    logging.info(f"🔘 Создаем кнопку: 🟦 Купчино -> ms_stations_kupchino")
+    selected_mark = "✅ " if "🟦 Купчино" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Купчино", callback_data="ms_stations_kupchino"))
+    # Кнопка "Готово" для множественного выбора
+    logging.info(f"🔘 Создаем кнопку Готово -> done_e_stations")
+    builder.add(InlineKeyboardButton(text="Готово", callback_data="done_e_stations"))
+    builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
+    builder.adjust(2)
+    keyboard = builder.as_markup()
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_blue_line_stations",
+        "save_to_database": True,
+        "node_id": "blue_line_stations",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_blue_line_stations (узел blue_line_stations)")
+    user_id = callback_query.from_user.id
+    
+    # Сохраняем нажатие кнопки в базу данных
+    # Ищем текят кнопки по callback_data
+    button_display_text = "Синяя ветка 🟦"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура
+    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
+    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if not has_conditional_keyboard_for_save:
+        # Сохраняем в базу данных с правильным именем переяенной
+        await update_user_data_in_db(user_id, "metro_stations", button_display_text)
+        logging.info(f"Переменная metro_stations сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    else:
+        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "green_line_stations" or c.data.startswith("green_line_stations_btn_") or c.data == "done_e_stations")
+async def handle_callback_green_line_stations(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_green_line_stations для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_green_line_stations: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла green_line_stations
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_green_line_stations"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла green_line_stations: false")
+    
+    # Проверяем, является ли это кнопкой "Готово"
+    if callback_data == "done_e_stations":
+        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")
+        
+        # Сохраняем выбранные значения в базу данных
+        selected_options = user_data.get(user_id, {}).get("multi_select_green_line_stations", [])
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            
+            # Универсальная логика аккумуляции для всех множественных выборов
+            # Загружаем существующие значения
+            existing_data = await get_user_data_from_db(user_id, "metro_stations")
+            existing_selections = []
+            if existing_data and existing_data.strip():
+                existing_selections = [s.strip() for s in existing_data.split(",") if s.strip()]
+            
+            # Объединяем существующие и новые выборы (убираем дубли)
+            all_selections = list(set(existing_selections + selected_options))
+            final_text = ", ".join(all_selections)
+            await update_user_data_in_db(user_id, "metro_stations", final_text)
+            logging.info(f"✅ Аккумялировано в переменную metro_stations: {final_text}")
+        
+        # Очищаем состояние множественного выбора
+        if user_id in user_data:
+            user_data[user_id].pop("multi_select_green_line_stations", None)
+            user_data[user_id].pop("multi_select_node", None)
+            user_data[user_id].pop("multi_select_type", None)
+            user_data[user_id].pop("multi_select_variable", None)
+        
+        # Переход к следующему узлу
+        next_node_id = "interests_categories"
+        try:
+            logging.warning(f"⚠️ Целевой узел не найден: {next_node_id}, завершаем переход")
+            await callback_query.message.edit_text("Переход завершен")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+            await callback_query.message.edit_text("Переход завершен")
+        return
+    
+    # Обрабатываем узел green_line_stations: green_line_stations
+    text = """🟩 Невско-Василеостровская линия
+
+Выбери свою станцию:"""
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    # Инициализация состояния множественного выбора
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    
+    # Загружаем ранее выбранные варианты
+    saved_selections = []
+    if user_vars:
+        for var_name, var_data in user_vars.items():
+            if var_name == "metro_stations":
+                if isinstance(var_data, dict) and "value" in var_data:
+                    selections_str = var_data["value"]
+                elif isinstance(var_data, str):
+                    selections_str = var_data
+                else:
+                    continue
+                if selections_str and selections_str.strip():
+                    saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                    break
+    
+    # Инициализируем состояние если его нет
+    if "multi_select_green_line_stations" not in user_data[user_id]:
+        user_data[user_id]["multi_select_green_line_stations"] = saved_selections.copy()
+    user_data[user_id]["multi_select_node"] = "green_line_stations"
+    user_data[user_id]["multi_select_type"] = "inline"
+    user_data[user_id]["multi_select_variable"] = "metro_stations"
+    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+    
+    # Создаем inline клавиатуру с поддержкой множественного выбора
+    builder = InlineKeyboardBuilder()
+    # Кнопка выбора 1: 🟩 Приморская
+    logging.info(f"🔘 Создаем кнопку: 🟩 Приморская -> ms_stations_morskaya")
+    selected_mark = "✅ " if "🟩 Приморская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Приморская", callback_data="ms_stations_morskaya"))
+    # Кнопка выбора 2: 🟩 Василеостровская
+    logging.info(f"🔘 Создаем кнопку: 🟩 Василеостровская -> ms_stations_sileostr")
+    selected_mark = "✅ " if "🟩 Василеостровская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Василеостровская", callback_data="ms_stations_sileostr"))
+    # Кнопка выбора 3: 🟩 Гостиный двор
+    logging.info(f"🔘 Создаем кнопку: 🟩 Гостиный двор -> ms_stations_gostiny")
+    selected_mark = "✅ " if "🟩 Гостиный двор" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Гостиный двор", callback_data="ms_stations_gostiny"))
+    # Кнопка выбора 4: 🟩 Маяковская
+    logging.info(f"🔘 Создаем кнопку: 🟩 Маяковская -> ms_stations_kovskaya")
+    selected_mark = "✅ " if "🟩 Маяковская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Маяковская", callback_data="ms_stations_kovskaya"))
+    # Кнопка выбора 5: 🟩 Площадь Александра Невского-1
+    logging.info(f"🔘 Создаем кнопку: 🟩 Площадь Александра Невского-1 -> ms_stations_pl_nevsk")
+    selected_mark = "✅ " if "🟩 Площадь Александра Невского-1" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Площадь Александра Невского-1", callback_data="ms_stations_pl_nevsk"))
+    # Кнопка выбора 6: 🟩 Елизаровская
+    logging.info(f"🔘 Создаем кнопку: 🟩 Елизаровская -> ms_stations_rovskaya")
+    selected_mark = "✅ " if "🟩 Елизаровская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Елизаровская", callback_data="ms_stations_rovskaya"))
+    # Кнопка выбора 7: 🟩 Ломоносовская
+    logging.info(f"🔘 Создаем кнопку: 🟩 Ломоносовская -> ms_stations_sovskaya")
+    selected_mark = "✅ " if "🟩 Ломоносовская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Ломоносовская", callback_data="ms_stations_sovskaya"))
+    # Кнопка выбора 8: 🟩 Пролетарская
+    logging.info(f"🔘 Создаем кнопку: 🟩 Пролетарская -> ms_stations_tarskaya")
+    selected_mark = "✅ " if "🟩 Пролетарская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Пролетарская", callback_data="ms_stations_tarskaya"))
+    # Кнопка выбора 9: 🟩 Обухово
+    logging.info(f"🔘 Создаем кнопку: 🟩 Обухово -> ms_stations_obuhovo")
+    selected_mark = "✅ " if "🟩 Обухово" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Обухово", callback_data="ms_stations_obuhovo"))
+    # Кнопка выбора 10: 🟩 Рыбацкое
+    logging.info(f"🔘 Создаем кнопку: 🟩 Рыбацкое -> ms_stations_rybackoe")
+    selected_mark = "✅ " if "🟩 Рыбацкое" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Рыбацкое", callback_data="ms_stations_rybackoe"))
+    # Кнопка выбора 11: 🟩 Новокрестовская
+    logging.info(f"🔘 Создаем кнопку: 🟩 Новокрестовская -> ms_stations_restovsk")
+    selected_mark = "✅ " if "🟩 Новокрестовская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Новокрестовская", callback_data="ms_stations_restovsk"))
+    # Кнопка выбора 12: 🟩 Беговая
+    logging.info(f"🔘 Создаем кнопку: 🟩 Беговая -> ms_stations_begovaya")
+    selected_mark = "✅ " if "🟩 Беговая" in user_data[user_id]["multi_select_green_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Беговая", callback_data="ms_stations_begovaya"))
+    # Кнопка "Готово" для множественного выбора
+    logging.info(f"🔘 Создаем кнопку Готово -> done_e_stations")
+    builder.add(InlineKeyboardButton(text="Готово", callback_data="done_e_stations"))
+    builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
+    builder.adjust(2)
+    keyboard = builder.as_markup()
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_green_line_stations",
+        "save_to_database": True,
+        "node_id": "green_line_stations",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_green_line_stations (узел green_line_stations)")
+    user_id = callback_query.from_user.id
+    
+    # Сохраняем нажатие кнопки в базу данных
+    # Ищем текят кнопки по callback_data
+    button_display_text = "Зелёная ветка 🟩"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура
+    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
+    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if not has_conditional_keyboard_for_save:
+        # Сохраняем в базу данных с правильным именем переяенной
+        await update_user_data_in_db(user_id, "metro_stations", button_display_text)
+        logging.info(f"Переменная metro_stations сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    else:
+        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "purple_line_stations" or c.data.startswith("purple_line_stations_btn_") or c.data == "done_e_stations")
+async def handle_callback_purple_line_stations(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_purple_line_stations для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_purple_line_stations: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла purple_line_stations
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_purple_line_stations"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла purple_line_stations: false")
+    
+    # Проверяем, является ли это кнопкой "Готово"
+    if callback_data == "done_e_stations":
+        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")
+        
+        # Сохраняем выбранные значения в базу данных
+        selected_options = user_data.get(user_id, {}).get("multi_select_purple_line_stations", [])
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            
+            # Универсальная логика аккумуляции для всех множественных выборов
+            # Загружаем существующие значения
+            existing_data = await get_user_data_from_db(user_id, "metro_stations")
+            existing_selections = []
+            if existing_data and existing_data.strip():
+                existing_selections = [s.strip() for s in existing_data.split(",") if s.strip()]
+            
+            # Объединяем существующие и новые выборы (убираем дубли)
+            all_selections = list(set(existing_selections + selected_options))
+            final_text = ", ".join(all_selections)
+            await update_user_data_in_db(user_id, "metro_stations", final_text)
+            logging.info(f"✅ Аккумялировано в переменную metro_stations: {final_text}")
+        
+        # Очищаем состояние множественного выбора
+        if user_id in user_data:
+            user_data[user_id].pop("multi_select_purple_line_stations", None)
+            user_data[user_id].pop("multi_select_node", None)
+            user_data[user_id].pop("multi_select_type", None)
+            user_data[user_id].pop("multi_select_variable", None)
+        
+        # Переход к следующему узлу
+        next_node_id = "interests_categories"
+        try:
+            logging.warning(f"⚠️ Целевой узел не найден: {next_node_id}, завершаем переход")
+            await callback_query.message.edit_text("Переход завершен")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+            await callback_query.message.edit_text("Переход завершен")
+        return
+    
+    # Обрабатываем узел purple_line_stations: purple_line_stations
+    text = """🟪 Фрунзенско-Приморская линия
+
+Выбери свою станцию:"""
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    # Инициализация состояния множественного выбора
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    
+    # Загружаем ранее выбранные варианты
+    saved_selections = []
+    if user_vars:
+        for var_name, var_data in user_vars.items():
+            if var_name == "metro_stations":
+                if isinstance(var_data, dict) and "value" in var_data:
+                    selections_str = var_data["value"]
+                elif isinstance(var_data, str):
+                    selections_str = var_data
+                else:
+                    continue
+                if selections_str and selections_str.strip():
+                    saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                    break
+    
+    # Инициализируем состояние если его нет
+    if "multi_select_purple_line_stations" not in user_data[user_id]:
+        user_data[user_id]["multi_select_purple_line_stations"] = saved_selections.copy()
+    user_data[user_id]["multi_select_node"] = "purple_line_stations"
+    user_data[user_id]["multi_select_type"] = "inline"
+    user_data[user_id]["multi_select_variable"] = "metro_stations"
+    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+    
+    # Создаем inline клавиатуру с поддержкой множественного выбора
+    builder = InlineKeyboardBuilder()
+    # Кнопка выбора 1: 🟪 Комендантский проспект
+    logging.info(f"🔘 Создаем кнопку: 🟪 Комендантский проспект -> ms_stations_ndantsky")
+    selected_mark = "✅ " if "🟪 Комендантский проспект" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Комендантский проспект", callback_data="ms_stations_ndantsky"))
+    # Кнопка выбора 2: 🟪 Старая Деревня
+    logging.info(f"🔘 Создаем кнопку: 🟪 Старая Деревня -> ms_stations_staraya")
+    selected_mark = "✅ " if "🟪 Старая Деревня" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Старая Деревня", callback_data="ms_stations_staraya"))
+    # Кнопка выбора 3: 🟪 Крестовский остров
+    logging.info(f"🔘 Создаем кнопку: 🟪 Крестовский остров -> ms_stations_estovsky")
+    selected_mark = "✅ " if "🟪 Крестовский остров" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Крестовский остров", callback_data="ms_stations_estovsky"))
+    # Кнопка выбора 4: 🟪 Чкаловская
+    logging.info(f"🔘 Создаем кнопку: 🟪 Чкаловская -> ms_stations_lovskaya")
+    selected_mark = "✅ " if "🟪 Чкаловская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Чкаловская", callback_data="ms_stations_lovskaya"))
+    # Кнопка выбора 5: 🟪 Спортивная
+    logging.info(f"🔘 Создаем кнопку: 🟪 Спортивная -> ms_stations_rtivnaya")
+    selected_mark = "✅ " if "🟪 Спортивная" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Спортивная", callback_data="ms_stations_rtivnaya"))
+    # Кнопка выбора 6: 🟪 Адмиралтейская
+    logging.info(f"🔘 Создаем кнопку: 🟪 Адмиралтейская -> ms_stations_teyskaya")
+    selected_mark = "✅ " if "🟪 Адмиралтейская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Адмиралтейская", callback_data="ms_stations_teyskaya"))
+    # Кнопка выбора 7: 🟪 Садовая
+    logging.info(f"🔘 Создаем кнопку: 🟪 Садовая -> ms_stations_sadovaya")
+    selected_mark = "✅ " if "🟪 Садовая" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Садовая", callback_data="ms_stations_sadovaya"))
+    # Кнопка выбора 8: 🟪 Звенигородская
+    logging.info(f"🔘 Создаем кнопку: 🟪 Звенигородская -> ms_stations_rodskaya")
+    selected_mark = "✅ " if "🟪 Звенигородская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Звенигородская", callback_data="ms_stations_rodskaya"))
+    # Кнопка выбора 9: 🟪 Обводный канал
+    logging.info(f"🔘 Создаем кнопку: 🟪 Обводный канал -> ms_stations_obvodniy")
+    selected_mark = "✅ " if "🟪 Обводный канал" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Обводный канал", callback_data="ms_stations_obvodniy"))
+    # Кнопка выбора 10: 🟪 Волковская
+    logging.info(f"🔘 Создаем кнопку: 🟪 Волковская -> ms_stations_kovskaya")
+    selected_mark = "✅ " if "🟪 Волковская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Волковская", callback_data="ms_stations_kovskaya"))
+    # Кнопка выбора 11: 🟪 Бухарестская
+    logging.info(f"🔘 Создаем кнопку: 🟪 Бухарестская -> ms_stations_estskaya")
+    selected_mark = "✅ " if "🟪 Бухарестская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Бухарестская", callback_data="ms_stations_estskaya"))
+    # Кнопка выбора 12: 🟪 Международная
+    logging.info(f"🔘 Создаем кнопку: 🟪 Международная -> ms_stations_ezhdunar")
+    selected_mark = "✅ " if "🟪 Международная" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+    builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Международная", callback_data="ms_stations_ezhdunar"))
+    # Кнопка "Готово" для множественного выбора
+    logging.info(f"🔘 Создаем кнопку Готово -> done_e_stations")
+    builder.add(InlineKeyboardButton(text="Готово", callback_data="done_e_stations"))
+    builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection_btn_0"))
+    builder.adjust(2)
+    keyboard = builder.as_markup()
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_purple_line_stations",
+        "save_to_database": True,
+        "node_id": "purple_line_stations",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_purple_line_stations (узел purple_line_stations)")
+    user_id = callback_query.from_user.id
+    
+    # Сохраняем нажатие кнопки в базу данных
+    # Ищем текят кнопки по callback_data
+    button_display_text = "Фиолетовая ветка 🟪"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура
+    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
+    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if not has_conditional_keyboard_for_save:
+        # Сохраняем в базу данных с правильным именем переяенной
+        await update_user_data_in_db(user_id, "metro_stations", button_display_text)
+        logging.info(f"Переменная metro_stations сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    else:
+        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
+    
+    
+    return
+
+@dp.callback_query(lambda c: c.data == "metro_selection" or c.data.startswith("metro_selection_btn_") or c.data == "done_selection")
+async def handle_callback_metro_selection(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_metro_selection для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_metro_selection: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла metro_selection
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_metro_selection"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла metro_selection: true")
+    
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "metro_stations", callback_query.data)
+        logging.info(f"Переменная metro_stations сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная metro_stations не сохраняется (пользователь {user_id})")
+    
+    # Обрабатываем узел metro_selection: metro_selection
+    text = """На какой станции метро ты обычно бываешь? 🚇
+
+Выбери свою ветку:"""
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line_stations_btn_0"))
+    builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line_stations_btn_1"))
+    builder.add(InlineKeyboardButton(text="Зелёная ветка 🟩", callback_data="green_line_stations_btn_2"))
+    builder.add(InlineKeyboardButton(text="Фиолетовая ветка 🟪", callback_data="purple_line_stations_btn_3"))
+    builder.add(InlineKeyboardButton(text="Я из ЛО 🏡", callback_data="interests_categories_btn_4"))
+    builder.add(InlineKeyboardButton(text="Я не в Питере 🌍", callback_data="interests_categories_btn_5"))
+    keyboard = builder.as_markup()
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "metro_stations",
+        "save_to_database": True,
+        "node_id": "metro_selection",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной metro_stations (узел metro_selection)")
+    user_id = callback_query.from_user.id
+    
+    # Сохраняем нажатие кнопки в базу данных
+    # Ищем текят кнопки по callback_data
+    button_display_text = "⬅️ Назад к веткам"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура
+    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
+    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if not has_conditional_keyboard_for_save:
+        # Сохраняем в базу данных с правильным именем переяенной
+        await update_user_data_in_db(user_id, "button_click", button_display_text)
+        logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    else:
+        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
+    
+    
+    # Удаляем старое сообщение
+    
+    text = """На какой станции метро ты обычно бываешь? 🚇
+
+Выбери свою ветку:"""
+    # ИСПРАВЛЕНИЕ: Не отправляем сообщение второй раз, если оно уже было отправлено ранее в обработчике
+    # Вместо этого, просто настраиваем ожидание ввода
+    # Настраиваем ожидание ввода (collectUserInput=true)
+    user_data[callback_query.from_user.id]["waiting_for_input"] = {
+        "type": "text",
+        "variable": "metro_stations",
+        "save_to_database": False,
+        "node_id": "metro_selection",
+        "next_node_id": ""
+    }
+    return
+
+@dp.callback_query(lambda c: c.data == "age_input" or c.data.startswith("age_input_btn_") or c.data == "done_age_input")
+async def handle_callback_age_input(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_age_input для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_age_input: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла age_input
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_age_input"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла age_input: true")
+    
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "user_age", callback_query.data)
+        logging.info(f"Переменная user_age сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная user_age не сохраняется (пользователь {user_id})")
+    
+    # Обрабатываем узел age_input: age_input
+    text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    keyboard = None
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "user_age",
+        "save_to_database": True,
+        "node_id": "age_input",
+        "next_node_id": "metro_selection",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_age (узел age_input)")
+    user_id = callback_query.from_user.id
+    
+    # Сохраняем нажатие кнопки в базу данных
+    # Ищем текят кнопки по callback_data
+    button_display_text = "🎂 Изменить возраст"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура
+    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя
+    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if not has_conditional_keyboard_for_save:
+        # Сохраняем в базу данных с правильным именем переяенной
+        await update_user_data_in_db(user_id, "button_click", button_display_text)
+        logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    else:
+        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")
+    
+    
+    # Удаляем старое сообщение
+    
+    text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+    # ИСПРАВЛЕНИЕ: Не отправляем сообщение второй раз, если оно уже было отправлено ранее в обработчике
+    # Вместо этого, просто настраиваем ожидание ввода
+    # Настраиваем ожидание ввода (collectUserInput=true)
+    user_data[callback_query.from_user.id]["waiting_for_input"] = {
+        "type": "text",
+        "variable": "user_age",
+        "save_to_database": False,
+        "node_id": "age_input",
+        "next_node_id": "metro_selection"
+    }
+    return
+
+@dp.callback_query(lambda c: c.data == "join_request" or c.data.startswith("join_request_btn_") or c.data == "done_in_request")
+async def handle_callback_join_request(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_join_request для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_join_request: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла join_request
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_join_request"] = True
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла join_request: true")
+    
+    # Проверяем, был ли переход через кнопку с skipDataCollection
+    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+    if not skip_transition_flag:
+        await update_user_data_in_db(user_id, "join_request_response", callback_query.data)
+        logging.info(f"Переменная join_request_response сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    else:
+        # Сбрасываем флаг
+        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+            del user_data[user_id]["skipDataCollectionTransition"]
+        logging.info(f"Переход через skipDataCollection, переменная join_request_response не сохраняется (пользователь {user_id})")
+    
+    # Обрабатываем узел join_request: join_request
+    text = "Хочешь присоединиться к нашему чату? 🚀"
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection_btn_0"))
+    builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response_btn_1"))
+    keyboard = builder.as_markup()
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "join_request_response",
+        "save_to_database": True,
+        "node_id": "join_request",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел join_request)")
+    user_id = callback_query.from_user.id
+    
+    
+    # Удаляем старое сообщение
+    
+    text = "Хочешь присоединиться к нашему чату? 🚀"
+    # ИСПРАВЛЕНИЕ: Не отправляем сообщение второй раз, если оно уже было отправлено ранее в обработчике
+    # Вместо этого, просто настраиваем ожидание ввода
+    # Настраиваем ожидание ввода (collectUserInput=true)
+    user_data[callback_query.from_user.id]["waiting_for_input"] = {
+        "type": "text",
+        "variable": "join_request_response",
+        "save_to_database": False,
+        "node_id": "join_request",
+        "next_node_id": ""
+    }
+    return
+
+@dp.callback_query(lambda c: c.data == "profile_complete" or c.data.startswith("profile_complete_btn_") or c.data == "done_e_complete")
+async def handle_callback_profile_complete(callback_query: types.CallbackQuery):
+    # Безопасное получение данных из callback_query
+    try:
+        user_id = callback_query.from_user.id
+        callback_data = callback_query.data
+        logging.info(f"🔵 Вызван callback handler: handle_callback_profile_complete для пользователя {user_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_profile_complete: {e}")
+        return
+    
+    # Проверяем флаг hideAfterClick для кнопок
+    
+    
+    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
+    
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    # Устанавливаем флаг collectUserInput для узла profile_complete
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["collectUserInput_profile_complete"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла profile_complete: false")
+    
+    # Обрабатываем узел profile_complete: profile_complete
+    text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_stations}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+
+💬 Источник: {user_source}
+
+Можешь посмотреть полную анкету или сразу получить ссылку на чат!"""
+    
+    # Инициализируем базовые переменные пользователя если их нет
+    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+        # Получаем объект пользователя из сообщения или callback
+        user_obj = None
+        # Безопасно проверяем наличие message (для message handlers)
+        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+            user_obj = locals().get('message').from_user
+        # Безопасно проверяем наличие callback_query (для callback handlers)
+        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+            user_obj = locals().get('callback_query').from_user
+
+        if user_obj:
+            init_user_variables(user_id, user_obj)
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    
+    # get_user_from_db теперь возвращает уже обработанные user_data
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+    
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    # Кнопка команды: Ссылка на чат 🔗 -> /link
+    builder.add(InlineKeyboardButton(text="Ссылка на чат 🔗", callback_data="cmd_link"))
+    # Кнопка команды: Редактировать профиль ✏️ -> /profile
+    builder.add(InlineKeyboardButton(text="Редактировать профиль ✏️", callback_data="cmd_profile"))
+    keyboard = builder.as_markup()
+    
+    # Проверяем, есть ли условная клавиатура для использования
+    # Инициализируем переменную conditional_keyboard, если она не была определена
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    user_id = callback_query.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        user_data[user_id]["_has_conditional_keyboard"] = False
+    
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+        else:
+            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
+            await callback_query.message.answer(text)
+    except Exception as e:
+        logging.debug(f"Ошибка отправки сообщения: {e}")
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    
+    # Устанавливаем waiting_for_input, так как автопереход не выполнен
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "text",
+        "modes": ["text"],
+        "variable": "response_profile_complete",
+        "save_to_database": True,
+        "node_id": "profile_complete",
+        "next_node_id": "",
+        "min_length": 0,
+        "max_length": 0,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": ""
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_profile_complete (узел profile_complete)")
     user_id = callback_query.from_user.id
     
     
     return
 
-@dp.callback_query(lambda c: c.data == "unpin_message_node" or c.data.startswith("unpin_message_node_btn_") or c.data == "done_ssage_node")
-async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "show_profile" or c.data.startswith("show_profile_btn_") or c.data == "done_ow_profile")
+async def handle_callback_show_profile(callback_query: types.CallbackQuery):
     # Безопасное получение данных из callback_query
     try:
         user_id = callback_query.from_user.id
         callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_unpin_message_node для пользователя {user_id}")
+        logging.info(f"🔵 Вызван callback handler: handle_callback_show_profile для пользователя {user_id}")
     except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_unpin_message_node: {e}")
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_show_profile: {e}")
         return
     
     # Проверяем флаг hideAfterClick для кнопок
@@ -6290,14 +4606,26 @@ async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Устанавливаем флаг collectUserInput для узла unpin_message_node
+    # Устанавливаем флаг collectUserInput для узла show_profile
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_unpin_message_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла unpin_message_node: false")
+    user_data[user_id]["collectUserInput_show_profile"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла show_profile: false")
     
-    # Обрабатываем узел unpin_message_node: unpin_message_node
-    text = "📌❌ Сообщение успешно откреплено!"
+    # Обрабатываем узел show_profile: show_profile
+    text = """👤 Твой профиль:
+
+Пол: {gender} 👤
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_stations} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+
+💬 Источник: {user_source}
+
+✏️ Выберите действие:"""
     
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -6322,7 +4650,20 @@ async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
-    keyboard = None
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="👤 Изменить пол", callback_data="gender_selection_btn_0"))
+    builder.add(InlineKeyboardButton(text="✏️ Изменить имя", callback_data="name_input_btn_1"))
+    builder.add(InlineKeyboardButton(text="🎂 Изменить возраст", callback_data="age_input_btn_2"))
+    builder.add(InlineKeyboardButton(text="🚇 Изменить метро", callback_data="metro_selection_btn_3"))
+    builder.add(InlineKeyboardButton(text="🎯 Изменить интересы", callback_data="interests_categories_btn_4"))
+    builder.add(InlineKeyboardButton(text="💍 Изменить семейное положение", callback_data="marital_status_btn_5"))
+    builder.add(InlineKeyboardButton(text="🌈 Изменить ориентацию", callback_data="sexual_orientation_btn_6"))
+    builder.add(InlineKeyboardButton(text="📢 Указать ТГК", callback_data="channel_choice_btn_7"))
+    builder.add(InlineKeyboardButton(text="📝 Добавить о себе", callback_data="extra_info_btn_8"))
+    # Кнопка команды: 🔄 Начать заново -> /start
+    builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+    keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
     # Инициализируем переменную conditional_keyboard, если она не была определена
@@ -6357,30 +4698,30 @@ async def handle_callback_unpin_message_node(callback_query: types.CallbackQuery
     user_data[user_id]["waiting_for_input"] = {
         "type": "text",
         "modes": ["text"],
-        "variable": "response_unpin_message_node",
+        "variable": "response_show_profile",
         "save_to_database": True,
-        "node_id": "unpin_message_node",
+        "node_id": "show_profile",
         "next_node_id": "",
         "min_length": 0,
         "max_length": 0,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": ""
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_unpin_message_node (узел unpin_message_node)")
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_show_profile (узел show_profile)")
     user_id = callback_query.from_user.id
     
     
     return
 
-@dp.callback_query(lambda c: c.data == "delete_message_node" or c.data.startswith("delete_message_node_btn_") or c.data == "done_ssage_node")
-async def handle_callback_delete_message_node(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "chat_link" or c.data.startswith("chat_link_btn_") or c.data == "done_chat_link")
+async def handle_callback_chat_link(callback_query: types.CallbackQuery):
     # Безопасное получение данных из callback_query
     try:
         user_id = callback_query.from_user.id
         callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_delete_message_node для пользователя {user_id}")
+        logging.info(f"🔵 Вызван callback handler: handle_callback_chat_link для пользователя {user_id}")
     except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_delete_message_node: {e}")
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_chat_link: {e}")
         return
     
     # Проверяем флаг hideAfterClick для кнопок
@@ -6395,14 +4736,18 @@ async def handle_callback_delete_message_node(callback_query: types.CallbackQuer
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Устанавливаем флаг collectUserInput для узла delete_message_node
+    # Устанавливаем флаг collectUserInput для узла chat_link
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_delete_message_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла delete_message_node: false")
+    user_data[user_id]["collectUserInput_chat_link"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла chat_link: false")
     
-    # Обрабатываем узел delete_message_node: delete_message_node
-    text = "🗑️ Сообщение успешно удалено!"
+    # Обрабатываем узел chat_link: chat_link
+    text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
     
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -6462,30 +4807,30 @@ async def handle_callback_delete_message_node(callback_query: types.CallbackQuer
     user_data[user_id]["waiting_for_input"] = {
         "type": "text",
         "modes": ["text"],
-        "variable": "response_delete_message_node",
+        "variable": "response_chat_link",
         "save_to_database": True,
-        "node_id": "delete_message_node",
+        "node_id": "chat_link",
         "next_node_id": "",
         "min_length": 0,
         "max_length": 0,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": ""
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_delete_message_node (узел delete_message_node)")
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_chat_link (узел chat_link)")
     user_id = callback_query.from_user.id
     
     
     return
 
-@dp.callback_query(lambda c: c.data == "ban_user_node" or c.data.startswith("ban_user_node_btn_") or c.data == "done_user_node")
-async def handle_callback_ban_user_node(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "help_command" or c.data.startswith("help_command_btn_") or c.data == "done_lp_command")
+async def handle_callback_help_command(callback_query: types.CallbackQuery):
     # Безопасное получение данных из callback_query
     try:
         user_id = callback_query.from_user.id
         callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_ban_user_node для пользователя {user_id}")
+        logging.info(f"🔵 Вызван callback handler: handle_callback_help_command для пользователя {user_id}")
     except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_ban_user_node: {e}")
+        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_help_command: {e}")
         return
     
     # Проверяем флаг hideAfterClick для кнопок
@@ -6500,14 +4845,125 @@ async def handle_callback_ban_user_node(callback_query: types.CallbackQuery):
     # Инициализируем базовые переменные пользователя
     user_name = init_user_variables(user_id, callback_query.from_user)
     
-    # Устанавливаем флаг collectUserInput для узла ban_user_node
+    # Устанавливаем флаг collectUserInput для узла help_command
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_ban_user_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла ban_user_node: false")
+    user_data[user_id]["collectUserInput_help_command"] = False
+    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла help_command: false")
     
-    # Обрабатываем узел ban_user_node: ban_user_node
-    text = "🚫 Пользователь заблокирован в группе!"
+    # Обрабатываем узел help_command: help_command
+    text = """🤖 **Добро пожаловать в справочный центр!**
+
+🌟 **ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot**
+*Твой помощник в знакомствах*
+
+🎯 **ОСНОВНЫЕ КОМАНДЫ:**
+
+🚀 `/start` — *Начать заново*
+   📝 Синонимы: `старт`, `начать`, `привет`, `начало`, `начинаем`
+
+👤 `/profile` — *Мой профиль*
+   📝 Синонимы: `профиль`, `анкета`, `мой профиль`, `посмотреть профиль`, `редактировать профиль`
+
+🔗 `/link` — *Ссылка на чат*
+   📝 Синонимы: `ссылка`, `чат`, `сообщество`, `впрогулке`, `линк`
+
+🆘 `/help` — *Эта справка*
+   📝 Синонимы: `помощь`, `справка`, `команды`, `что писать`, `как пользоваться`
+
+📋 **РАЗДЕЛЫ АНКЕТЫ И ИХ СИНОНИМЫ:**
+
+👫 **Пол:** мужской, женский
+   📝 Синонимы: `пол`, `gender`
+
+🏷️ **Имя:** любое имя
+   📝 Синонимы: `имя`, `как зовут`, `назовись`
+
+🎂 **Возраст:** число от 18 до 99
+   📝 Синонимы: `возраст`, `лет`, `сколько лет`
+
+🚇 **Метро:** выбор линии и станции
+   📝 Синонимы: `метро`, `станция`
+   🟥 Красная линия: `красная линия`, `кировско-выборгская`, `красная ветка`
+   🟦 Синяя линия: `синяя линия`, `московско-петроградская`, `синяя ветка`
+   🟩 Зеленая линия: `зеленая линия`, `невско-василеостровская`, `зеленая ветка`
+   🟧 Оранжевая линия: `оранжевая линия`, `правобережная`, `оранжевая ветка`
+   🟪 Фиолетовая линия: `фиолетовая линия`, `фрунзенско-приморская`, `фиолетовая ветка`
+
+🎨 **Интересы и их синонимы:**
+   🎮 Хобби: `хобби`, `увлечения`, `занятия`, `игры`
+   🤝 Социальная жизнь: `общение`, `социальное`, `люди`, `тусовки`
+   🎭 Творчество: `творчество`, `искусство`, `рисование`, `музыка`
+   💪 Активный образ жизни: `активность`, `активный`, `движение`, `здоровье`
+   🍕 Еда и напитки: `еда`, `напитки`, `кухня`, `рестораны`
+   ⚽ Спорт: `спорт`, `фитнес`, `тренировки`, `футбол`
+
+💑 **Семейное положение:** поиск, отношения, женат/замужем, сложно
+   📝 Синонимы: `семейное положение`, `статус`, `отношения`, `семья`
+
+🌈 **Ориентация:** гетеро, гей, лесби, би, другое
+   📝 Синонимы: `ориентация`, `предпочтения`
+
+📺 **Телеграм-канал:** опционально
+   📝 Синонимы: `тгк`, `телеграм`, `канал`, `тг канал`
+
+📖 **О себе:** дополнительная информация
+   📝 Синонимы: `о себе`, `описание`, `расскажи`, `инфо`
+
+👮‍♂️ **КОМАНДЫ МОДЕРАЦИИ:**
+
+**Управление контентом:**
+📌 `/pin_message` - Закрепить сообщение
+   📝 Синонимы: `закрепить`, `прикрепить`, `зафиксировать`
+
+📌❌ `/unpin_message` - Открепить сообщение
+   📝 Синонимы: `открепить`, `отцепить`, `убрать закрепление`
+
+🗑️ `/delete_message` - Удалить сообщение
+   📝 Синонимы: `удалить`, `стереть`, `убрать сообщение`
+
+**Управление пользователями:**
+🚫 `/ban_user` - Заблокировать пользователя
+   📝 Синонимы: `забанить`, `заблокировать`, `бан`
+
+✅ `/unban_user` - Разблокировать пользователя
+   📝 Синонимы: `разбанить`, `разблокировать`, `unbán`
+
+🔇 `/mute_user` - Ограничить пользователя
+   📝 Синонимы: `замутить`, `заглушить`, `мут`
+
+🔊 `/unmute_user` - Снять ограничения
+   📝 Синонимы: `размутить`, `разглушить`, `анмут`
+
+👢 `/kick_user` - Исключить пользователя
+   📝 Синонимы: `кикнуть`, `исключить`, `выгнать`
+
+👑 `/promote_user` - Назначить администратором
+   📝 Синонимы: `повысить`, `назначить админом`, `промоут`
+
+👤 `/demote_user` - Снять с администратора
+   📝 Синонимы: `понизить`, `снять с админа`, `демоут`
+
+⚙️ `/admin_rights` - Настроить права администратора
+   📝 Синонимы: `права админа`, `настроить права`, `тг права`
+   ⚠️ Только для администраторов группы!
+   💡 Ответьте на сообщение пользователя командой
+
+**Примеры использования:**
+• Ответьте на сообщение командой для его обработки
+• Используйте команды в ответ на сообщения нарушителей
+• Команды с правами работают только в группах/супергруппах
+• Все действия логируются для отчетности
+
+💡 **ПОЛЕЗНЫЕ СОВЕТЫ:**
+
+✨ Можешь писать команды или синонимы в любом месте разговора
+✨ Бот поймет твои сообщения даже без команд
+✨ В любой момент можешь написать /start для начала заново
+✨ Используй /profile для изменения любых данных
+✨ Нажми на любое выделенное слово чтобы скопировать его!
+
+🎉 **Удачных знакомств в Питере!** 🎉"""
     
     # Инициализируем базовые переменные пользователя если их нет
     if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -6532,7 +4988,15 @@ async def handle_callback_ban_user_node(callback_query: types.CallbackQuery):
     if not isinstance(user_vars, dict):
         user_vars = user_data.get(user_id, {})
     
-    keyboard = None
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    # Кнопка команды: 🚀 Начать заполнение -> /start
+    builder.add(InlineKeyboardButton(text="🚀 Начать заполнение", callback_data="cmd_start"))
+    # Кнопка команды: 👤 Мой профиль -> /profile
+    builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="cmd_profile"))
+    # Кнопка команды: 🔗 Ссылка на чат -> /link
+    builder.add(InlineKeyboardButton(text="🔗 Ссылка на чат", callback_data="cmd_link"))
+    keyboard = builder.as_markup()
     
     # Проверяем, есть ли условная клавиатура для использования
     # Инициализируем переменную conditional_keyboard, если она не была определена
@@ -6567,753 +5031,16 @@ async def handle_callback_ban_user_node(callback_query: types.CallbackQuery):
     user_data[user_id]["waiting_for_input"] = {
         "type": "text",
         "modes": ["text"],
-        "variable": "response_ban_user_node",
+        "variable": "response_help_command",
         "save_to_database": True,
-        "node_id": "ban_user_node",
+        "node_id": "help_command",
         "next_node_id": "",
         "min_length": 0,
         "max_length": 0,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": ""
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_ban_user_node (узел ban_user_node)")
-    user_id = callback_query.from_user.id
-    
-    
-    return
-
-@dp.callback_query(lambda c: c.data == "unban_user_node" or c.data.startswith("unban_user_node_btn_") or c.data == "done_user_node")
-async def handle_callback_unban_user_node(callback_query: types.CallbackQuery):
-    # Безопасное получение данных из callback_query
-    try:
-        user_id = callback_query.from_user.id
-        callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_unban_user_node для пользователя {user_id}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_unban_user_node: {e}")
-        return
-    
-    # Проверяем флаг hideAfterClick для кнопок
-    
-    
-    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
-    
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, callback_query.from_user)
-    
-    # Устанавливаем флаг collectUserInput для узла unban_user_node
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_unban_user_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла unban_user_node: false")
-    
-    # Обрабатываем узел unban_user_node: unban_user_node
-    text = "✅ Пользователь разблокирован!"
-    
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
-
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_vars = await get_user_from_db(user_id)
-    if not user_vars:
-        user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
-    if not isinstance(user_vars, dict):
-        user_vars = user_data.get(user_id, {})
-    
-    keyboard = None
-    
-    # Проверяем, есть ли условная клавиатура для использования
-    # Инициализируем переменную conditional_keyboard, если она не была определена
-    if "conditional_keyboard" not in locals():
-        conditional_keyboard = None
-    user_id = callback_query.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-        user_data[user_id]["_has_conditional_keyboard"] = True
-        logging.info("✅ Используем условную клавиатуру для навигации")
-    else:
-        user_data[user_id]["_has_conditional_keyboard"] = False
-    
-    # Отправляем сообщение
-    try:
-        if keyboard:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        else:
-            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
-            await callback_query.message.answer(text)
-    except Exception as e:
-        logging.debug(f"Ошибка отправки сообщения: {e}")
-        if keyboard:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
-    
-    # Устанавливаем waiting_for_input, так как автопереход не выполнен
-    user_data[user_id] = user_data.get(user_id, {})
-    user_data[user_id]["waiting_for_input"] = {
-        "type": "text",
-        "modes": ["text"],
-        "variable": "response_unban_user_node",
-        "save_to_database": True,
-        "node_id": "unban_user_node",
-        "next_node_id": "",
-        "min_length": 0,
-        "max_length": 0,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": ""
-    }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_unban_user_node (узел unban_user_node)")
-    user_id = callback_query.from_user.id
-    
-    
-    return
-
-@dp.callback_query(lambda c: c.data == "mute_user_node" or c.data.startswith("mute_user_node_btn_") or c.data == "done_user_node")
-async def handle_callback_mute_user_node(callback_query: types.CallbackQuery):
-    # Безопасное получение данных из callback_query
-    try:
-        user_id = callback_query.from_user.id
-        callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_mute_user_node для пользователя {user_id}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_mute_user_node: {e}")
-        return
-    
-    # Проверяем флаг hideAfterClick для кнопок
-    
-    
-    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
-    
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, callback_query.from_user)
-    
-    # Устанавливаем флаг collectUserInput для узла mute_user_node
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_mute_user_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла mute_user_node: false")
-    
-    # Обрабатываем узел mute_user_node: mute_user_node
-    text = "🔇 Пользователь ограничен в правах!"
-    
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
-
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_vars = await get_user_from_db(user_id)
-    if not user_vars:
-        user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
-    if not isinstance(user_vars, dict):
-        user_vars = user_data.get(user_id, {})
-    
-    keyboard = None
-    
-    # Проверяем, есть ли условная клавиатура для использования
-    # Инициализируем переменную conditional_keyboard, если она не была определена
-    if "conditional_keyboard" not in locals():
-        conditional_keyboard = None
-    user_id = callback_query.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-        user_data[user_id]["_has_conditional_keyboard"] = True
-        logging.info("✅ Используем условную клавиатуру для навигации")
-    else:
-        user_data[user_id]["_has_conditional_keyboard"] = False
-    
-    # Отправляем сообщение
-    try:
-        if keyboard:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        else:
-            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
-            await callback_query.message.answer(text)
-    except Exception as e:
-        logging.debug(f"Ошибка отправки сообщения: {e}")
-        if keyboard:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
-    
-    # Устанавливаем waiting_for_input, так как автопереход не выполнен
-    user_data[user_id] = user_data.get(user_id, {})
-    user_data[user_id]["waiting_for_input"] = {
-        "type": "text",
-        "modes": ["text"],
-        "variable": "response_mute_user_node",
-        "save_to_database": True,
-        "node_id": "mute_user_node",
-        "next_node_id": "",
-        "min_length": 0,
-        "max_length": 0,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": ""
-    }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_mute_user_node (узел mute_user_node)")
-    user_id = callback_query.from_user.id
-    
-    
-    return
-
-@dp.callback_query(lambda c: c.data == "unmute_user_node" or c.data.startswith("unmute_user_node_btn_") or c.data == "done_user_node")
-async def handle_callback_unmute_user_node(callback_query: types.CallbackQuery):
-    # Безопасное получение данных из callback_query
-    try:
-        user_id = callback_query.from_user.id
-        callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_unmute_user_node для пользователя {user_id}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_unmute_user_node: {e}")
-        return
-    
-    # Проверяем флаг hideAfterClick для кнопок
-    
-    
-    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
-    
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, callback_query.from_user)
-    
-    # Устанавливаем флаг collectUserInput для узла unmute_user_node
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_unmute_user_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла unmute_user_node: false")
-    
-    # Обрабатываем узел unmute_user_node: unmute_user_node
-    text = "🔊 Ограничения с пользователя сняты!"
-    
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
-
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_vars = await get_user_from_db(user_id)
-    if not user_vars:
-        user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
-    if not isinstance(user_vars, dict):
-        user_vars = user_data.get(user_id, {})
-    
-    keyboard = None
-    
-    # Проверяем, есть ли условная клавиатура для использования
-    # Инициализируем переменную conditional_keyboard, если она не была определена
-    if "conditional_keyboard" not in locals():
-        conditional_keyboard = None
-    user_id = callback_query.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-        user_data[user_id]["_has_conditional_keyboard"] = True
-        logging.info("✅ Используем условную клавиатуру для навигации")
-    else:
-        user_data[user_id]["_has_conditional_keyboard"] = False
-    
-    # Отправляем сообщение
-    try:
-        if keyboard:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        else:
-            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
-            await callback_query.message.answer(text)
-    except Exception as e:
-        logging.debug(f"Ошибка отправки сообщения: {e}")
-        if keyboard:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
-    
-    # Устанавливаем waiting_for_input, так как автопереход не выполнен
-    user_data[user_id] = user_data.get(user_id, {})
-    user_data[user_id]["waiting_for_input"] = {
-        "type": "text",
-        "modes": ["text"],
-        "variable": "response_unmute_user_node",
-        "save_to_database": True,
-        "node_id": "unmute_user_node",
-        "next_node_id": "",
-        "min_length": 0,
-        "max_length": 0,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": ""
-    }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_unmute_user_node (узел unmute_user_node)")
-    user_id = callback_query.from_user.id
-    
-    
-    return
-
-@dp.callback_query(lambda c: c.data == "kick_user_node" or c.data.startswith("kick_user_node_btn_") or c.data == "done_user_node")
-async def handle_callback_kick_user_node(callback_query: types.CallbackQuery):
-    # Безопасное получение данных из callback_query
-    try:
-        user_id = callback_query.from_user.id
-        callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_kick_user_node для пользователя {user_id}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_kick_user_node: {e}")
-        return
-    
-    # Проверяем флаг hideAfterClick для кнопок
-    
-    
-    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
-    
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, callback_query.from_user)
-    
-    # Устанавливаем флаг collectUserInput для узла kick_user_node
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_kick_user_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла kick_user_node: false")
-    
-    # Обрабатываем узел kick_user_node: kick_user_node
-    text = "👢 Пользователь исключен из группы!"
-    
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
-
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_vars = await get_user_from_db(user_id)
-    if not user_vars:
-        user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
-    if not isinstance(user_vars, dict):
-        user_vars = user_data.get(user_id, {})
-    
-    keyboard = None
-    
-    # Проверяем, есть ли условная клавиатура для использования
-    # Инициализируем переменную conditional_keyboard, если она не была определена
-    if "conditional_keyboard" not in locals():
-        conditional_keyboard = None
-    user_id = callback_query.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-        user_data[user_id]["_has_conditional_keyboard"] = True
-        logging.info("✅ Используем условную клавиатуру для навигации")
-    else:
-        user_data[user_id]["_has_conditional_keyboard"] = False
-    
-    # Отправляем сообщение
-    try:
-        if keyboard:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        else:
-            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
-            await callback_query.message.answer(text)
-    except Exception as e:
-        logging.debug(f"Ошибка отправки сообщения: {e}")
-        if keyboard:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
-    
-    # Устанавливаем waiting_for_input, так как автопереход не выполнен
-    user_data[user_id] = user_data.get(user_id, {})
-    user_data[user_id]["waiting_for_input"] = {
-        "type": "text",
-        "modes": ["text"],
-        "variable": "response_kick_user_node",
-        "save_to_database": True,
-        "node_id": "kick_user_node",
-        "next_node_id": "",
-        "min_length": 0,
-        "max_length": 0,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": ""
-    }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_kick_user_node (узел kick_user_node)")
-    user_id = callback_query.from_user.id
-    
-    
-    return
-
-@dp.callback_query(lambda c: c.data == "promote_user_node" or c.data.startswith("promote_user_node_btn_") or c.data == "done_user_node")
-async def handle_callback_promote_user_node(callback_query: types.CallbackQuery):
-    # Безопасное получение данных из callback_query
-    try:
-        user_id = callback_query.from_user.id
-        callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_promote_user_node для пользователя {user_id}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_promote_user_node: {e}")
-        return
-    
-    # Проверяем флаг hideAfterClick для кнопок
-    
-    
-    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
-    
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, callback_query.from_user)
-    
-    # Устанавливаем флаг collectUserInput для узла promote_user_node
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_promote_user_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла promote_user_node: false")
-    
-    # Обрабатываем узел promote_user_node: promote_user_node
-    text = "👑 Пользователь назначен администратором!"
-    
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
-
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_vars = await get_user_from_db(user_id)
-    if not user_vars:
-        user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
-    if not isinstance(user_vars, dict):
-        user_vars = user_data.get(user_id, {})
-    
-    keyboard = None
-    
-    # Проверяем, есть ли условная клавиатура для использования
-    # Инициализируем переменную conditional_keyboard, если она не была определена
-    if "conditional_keyboard" not in locals():
-        conditional_keyboard = None
-    user_id = callback_query.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-        user_data[user_id]["_has_conditional_keyboard"] = True
-        logging.info("✅ Используем условную клавиатуру для навигации")
-    else:
-        user_data[user_id]["_has_conditional_keyboard"] = False
-    
-    # Отправляем сообщение
-    try:
-        if keyboard:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        else:
-            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
-            await callback_query.message.answer(text)
-    except Exception as e:
-        logging.debug(f"Ошибка отправки сообщения: {e}")
-        if keyboard:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
-    
-    # Устанавливаем waiting_for_input, так как автопереход не выполнен
-    user_data[user_id] = user_data.get(user_id, {})
-    user_data[user_id]["waiting_for_input"] = {
-        "type": "text",
-        "modes": ["text"],
-        "variable": "response_promote_user_node",
-        "save_to_database": True,
-        "node_id": "promote_user_node",
-        "next_node_id": "",
-        "min_length": 0,
-        "max_length": 0,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": ""
-    }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_promote_user_node (узел promote_user_node)")
-    user_id = callback_query.from_user.id
-    
-    
-    return
-
-@dp.callback_query(lambda c: c.data == "demote_user_node" or c.data.startswith("demote_user_node_btn_") or c.data == "done_user_node")
-async def handle_callback_demote_user_node(callback_query: types.CallbackQuery):
-    # Безопасное получение данных из callback_query
-    try:
-        user_id = callback_query.from_user.id
-        callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_demote_user_node для пользователя {user_id}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_demote_user_node: {e}")
-        return
-    
-    # Проверяем флаг hideAfterClick для кнопок
-    
-    
-    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
-    
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, callback_query.from_user)
-    
-    # Устанавливаем флаг collectUserInput для узла demote_user_node
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_demote_user_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла demote_user_node: false")
-    
-    # Обрабатываем узел demote_user_node: demote_user_node
-    text = "👤 Пользователь снят с должности администратора!"
-    
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
-
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_vars = await get_user_from_db(user_id)
-    if not user_vars:
-        user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
-    if not isinstance(user_vars, dict):
-        user_vars = user_data.get(user_id, {})
-    
-    keyboard = None
-    
-    # Проверяем, есть ли условная клавиатура для использования
-    # Инициализируем переменную conditional_keyboard, если она не была определена
-    if "conditional_keyboard" not in locals():
-        conditional_keyboard = None
-    user_id = callback_query.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-        user_data[user_id]["_has_conditional_keyboard"] = True
-        logging.info("✅ Используем условную клавиатуру для навигации")
-    else:
-        user_data[user_id]["_has_conditional_keyboard"] = False
-    
-    # Отправляем сообщение
-    try:
-        if keyboard:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        else:
-            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
-            await callback_query.message.answer(text)
-    except Exception as e:
-        logging.debug(f"Ошибка отправки сообщения: {e}")
-        if keyboard:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
-    
-    # Устанавливаем waiting_for_input, так как автопереход не выполнен
-    user_data[user_id] = user_data.get(user_id, {})
-    user_data[user_id]["waiting_for_input"] = {
-        "type": "text",
-        "modes": ["text"],
-        "variable": "response_demote_user_node",
-        "save_to_database": True,
-        "node_id": "demote_user_node",
-        "next_node_id": "",
-        "min_length": 0,
-        "max_length": 0,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": ""
-    }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_demote_user_node (узел demote_user_node)")
-    user_id = callback_query.from_user.id
-    
-    
-    return
-
-@dp.callback_query(lambda c: c.data == "admin_rights_node" or c.data.startswith("admin_rights_node_btn_") or c.data == "done_ights_node")
-async def handle_callback_admin_rights_node(callback_query: types.CallbackQuery):
-    # Безопасное получение данных из callback_query
-    try:
-        user_id = callback_query.from_user.id
-        callback_data = callback_query.data
-        logging.info(f"🔵 Вызван callback handler: handle_callback_admin_rights_node для пользователя {user_id}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_admin_rights_node: {e}")
-        return
-    
-    # Проверяем флаг hideAfterClick для кнопок
-    
-    
-    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)
-    
-    # Инициализируем базовые переменные пользователя
-    user_name = init_user_variables(user_id, callback_query.from_user)
-    
-    # Устанавливаем флаг collectUserInput для узла admin_rights_node
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["collectUserInput_admin_rights_node"] = False
-    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла admin_rights_node: false")
-    
-    # Обрабатываем узел admin_rights_node: admin_rights_node
-    text = """⚙️ Права администратора настроены для пользователя!
-
-💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
-    
-    # Инициализируем базовые переменные пользователя если их нет
-    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-        # Получаем объект пользователя из сообщения или callback
-        user_obj = None
-        # Безопасно проверяем наличие message (для message handlers)
-        if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-            user_obj = locals().get('message').from_user
-        # Безопасно проверяем наличие callback_query (для callback handlers)
-        elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-            user_obj = locals().get('callback_query').from_user
-
-        if user_obj:
-            init_user_variables(user_id, user_obj)
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_vars = await get_user_from_db(user_id)
-    if not user_vars:
-        user_vars = user_data.get(user_id, {})
-    
-    # get_user_from_db теперь возвращает уже обработанные user_data
-    if not isinstance(user_vars, dict):
-        user_vars = user_data.get(user_id, {})
-    
-    keyboard = None
-    
-    # Проверяем, есть ли условная клавиатура для использования
-    # Инициализируем переменную conditional_keyboard, если она не была определена
-    if "conditional_keyboard" not in locals():
-        conditional_keyboard = None
-    user_id = callback_query.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-        user_data[user_id]["_has_conditional_keyboard"] = True
-        logging.info("✅ Используем условную клавиатуру для навигации")
-    else:
-        user_data[user_id]["_has_conditional_keyboard"] = False
-    
-    # Отправляем сообщение
-    try:
-        if keyboard:
-            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
-        else:
-            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)
-            await callback_query.message.answer(text)
-    except Exception as e:
-        logging.debug(f"Ошибка отправки сообщения: {e}")
-        if keyboard:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
-    
-    # Устанавливаем waiting_for_input, так как автопереход не выполнен
-    user_data[user_id] = user_data.get(user_id, {})
-    user_data[user_id]["waiting_for_input"] = {
-        "type": "text",
-        "modes": ["text"],
-        "variable": "response_admin_rights_node",
-        "save_to_database": True,
-        "node_id": "admin_rights_node",
-        "next_node_id": "",
-        "min_length": 0,
-        "max_length": 0,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": ""
-    }
-    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_admin_rights_node (узел admin_rights_node)")
+    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной response_help_command (узел help_command)")
     user_id = callback_query.from_user.id
     
     
@@ -7392,28 +5119,30 @@ async def handle_user_input(message: types.Message):
                     await handle_callback_join_request(fake_callback)
                 elif skip_button_target == "decline_response":
                     await handle_callback_decline_response(fake_callback)
-                elif skip_button_target == "pin_message_node":
-                    await handle_callback_pin_message_node(fake_callback)
-                elif skip_button_target == "unpin_message_node":
-                    await handle_callback_unpin_message_node(fake_callback)
-                elif skip_button_target == "delete_message_node":
-                    await handle_callback_delete_message_node(fake_callback)
-                elif skip_button_target == "ban_user_node":
-                    await handle_callback_ban_user_node(fake_callback)
-                elif skip_button_target == "unban_user_node":
-                    await handle_callback_unban_user_node(fake_callback)
-                elif skip_button_target == "mute_user_node":
-                    await handle_callback_mute_user_node(fake_callback)
-                elif skip_button_target == "unmute_user_node":
-                    await handle_callback_unmute_user_node(fake_callback)
-                elif skip_button_target == "kick_user_node":
-                    await handle_callback_kick_user_node(fake_callback)
-                elif skip_button_target == "promote_user_node":
-                    await handle_callback_promote_user_node(fake_callback)
-                elif skip_button_target == "demote_user_node":
-                    await handle_callback_demote_user_node(fake_callback)
-                elif skip_button_target == "admin_rights_node":
-                    await handle_callback_admin_rights_node(fake_callback)
+                elif skip_button_target == "gender_selection":
+                    await handle_callback_gender_selection(fake_callback)
+                elif skip_button_target == "name_input":
+                    await handle_callback_name_input(fake_callback)
+                elif skip_button_target == "age_input":
+                    await handle_callback_age_input(fake_callback)
+                elif skip_button_target == "metro_selection":
+                    await handle_callback_metro_selection(fake_callback)
+                elif skip_button_target == "red_line_stations":
+                    await handle_callback_red_line_stations(fake_callback)
+                elif skip_button_target == "blue_line_stations":
+                    await handle_callback_blue_line_stations(fake_callback)
+                elif skip_button_target == "green_line_stations":
+                    await handle_callback_green_line_stations(fake_callback)
+                elif skip_button_target == "purple_line_stations":
+                    await handle_callback_purple_line_stations(fake_callback)
+                elif skip_button_target == "profile_complete":
+                    await handle_callback_profile_complete(fake_callback)
+                elif skip_button_target == "show_profile":
+                    await handle_callback_show_profile(fake_callback)
+                elif skip_button_target == "chat_link":
+                    await handle_callback_chat_link(fake_callback)
+                elif skip_button_target == "help_command":
+                    await handle_callback_help_command(fake_callback)
                 else:
                     logging.warning(f"Неизвестный целевой узел кнопки skipDataCollection: {skip_button_target}")
             except Exception as e:
@@ -7568,9 +5297,10 @@ async def handle_user_input(message: types.Message):
                         
                         logging.info(f"Условная навигация к обычному узлу: decline_response")
                         await message.answer(text)
-                    elif next_node_id == "pin_message_node":
-                        # Обычный узел - отправляем сообщение
-                        text = "📌 Сообщение успешно закреплено!"
+                    elif next_node_id == "gender_selection":
+                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа
+                        logging.info(f"✅ Показаны кнопки для узла gender_selection с collectUserInput=true")
+                        text = "Укажи свой пол: 👨👩"
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7595,11 +5325,63 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: pin_message_node")
+                        builder = InlineKeyboardBuilder()
+                        builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input"))
+                        builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input"))
+                        builder.adjust(1)
+                        keyboard = builder.as_markup()
+                        await message.answer(text, reply_markup=keyboard)
+                        # Настраиваем ожидание ввода для сохранения ответа кнопки
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "button",
+                            "modes": ['button'],
+                            "variable": "gender",
+                            "save_to_database": True,
+                            "node_id": "gender_selection",
+                            "next_node_id": "",
+                            "skip_buttons": []
+                        }
+                        logging.info(f"✅ Сояяяятояние ожид����ия настроено: modes=['button'] для пер��менной gender (узел gender_selection)")
+                    elif next_node_id == "name_input":
+                        # Узел собирает пользовательский ввод
+                        logging.info(f"🔧 Условная навигация к узлу с вводом: name_input")
+                        text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
                         await message.answer(text)
-                    elif next_node_id == "unpin_message_node":
-                        # Обычный узел - отправляем сообщение
-                        text = "📌❌ Сообщение успешно откреплено!"
+                        # Настраиваем ожидание ввода
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "modes": ["text"],
+                            "variable": "user_name",
+                            "save_to_database": True,
+                            "node_id": "name_input",
+                            "next_node_id": "age_input"
+                        }
+                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_name (узел name_input)")
+                    elif next_node_id == "age_input":
+                        # Узел собирает пользовательский ввод
+                        logging.info(f"🔧 Условная навигация к узлу с вводом: age_input")
+                        text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "modes": ["text"],
+                            "variable": "user_age",
+                            "save_to_database": True,
+                            "node_id": "age_input",
+                            "next_node_id": "metro_selection"
+                        }
+                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_age (узел age_input)")
+                    elif next_node_id == "metro_selection":
+                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа
+                        logging.info(f"✅ Показаны кнопки для узла metro_selection с collectUserInput=true")
+                        text = """На какой станции метро ты обычно бываешь? 🚇
+
+Выбери свою ветку:"""
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7624,11 +5406,33 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: unpin_message_node")
-                        await message.answer(text)
-                    elif next_node_id == "delete_message_node":
-                        # Обычный узел - отправляем сообщение
-                        text = "🗑️ Сообщение успешно удалено!"
+                        builder = InlineKeyboardBuilder()
+                        builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line_stations"))
+                        builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line_stations"))
+                        builder.add(InlineKeyboardButton(text="Зелёная ветка 🟩", callback_data="green_line_stations"))
+                        builder.add(InlineKeyboardButton(text="Фиолетовая ветка 🟪", callback_data="purple_line_stations"))
+                        builder.add(InlineKeyboardButton(text="Я из ЛО 🏡", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text="Я не в Питере 🌍", callback_data="interests_categories"))
+                        builder.adjust(2)
+                        keyboard = builder.as_markup()
+                        await message.answer(text, reply_markup=keyboard)
+                        # Настраиваем ожидание ввода для сохранения ответа кнопки
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "button",
+                            "modes": ['button'],
+                            "variable": "metro_stations",
+                            "save_to_database": True,
+                            "node_id": "metro_selection",
+                            "next_node_id": "",
+                            "skip_buttons": [{"text":"Красная ветка 🟥","target":"red_line_stations"},{"text":"Синяя ветка 🟦","target":"blue_line_stations"},{"text":"Зелёная ветка 🟩","target":"green_line_stations"},{"text":"Фиолетовая ветка 🟪","target":"purple_line_stations"}]
+                        }
+                        logging.info(f"✅ Сояяяятояние ожид����ия настроено: modes=['button'] для пер��менной metro_stations (узел metro_selection)")
+                    elif next_node_id == "red_line_stations":
+                        # Прямая навигация к узлу с множественным выбором red_line_stations
+                        logging.info(f"🔧 Условная навигация к узлу с множественным выбором: red_line_stations")
+                        text = """🟥 Кировско-Выборгская линия
+
+Выбери свою станцию:"""
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7653,11 +5457,187 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: delete_message_node")
-                        await message.answer(text)
-                    elif next_node_id == "ban_user_node":
-                        # Обычный узел - отправляем сообщение
-                        text = "🚫 Пользователь заблокирован в группе!"
+                        # Инициализируем состояние множественного выбора
+                        user_data[user_id]["multi_select_red_line_stations"] = []
+                        user_data[user_id]["multi_select_node"] = "red_line_stations"
+                        user_data[user_id]["multi_select_type"] = "selection"
+                        user_data[user_id]["multi_select_variable"] = "metro_stations"
+                        # Инициализация состояния множественного выбора
+                        if user_id not in user_data:
+                            user_data[user_id] = {}
+                        
+                        # Загружаем ранее выбранные варианты
+                        saved_selections = []
+                        if user_vars:
+                            for var_name, var_data in user_vars.items():
+                                if var_name == "metro_stations":
+                                    if isinstance(var_data, dict) and "value" in var_data:
+                                        selections_str = var_data["value"]
+                                    elif isinstance(var_data, str):
+                                        selections_str = var_data
+                                    else:
+                                        continue
+                                    if selections_str and selections_str.strip():
+                                        saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                                        break
+                        
+                        # Инициализируем состояние если его нет
+                        if "multi_select_red_line_stations" not in user_data[user_id]:
+                            user_data[user_id]["multi_select_red_line_stations"] = saved_selections.copy()
+                        user_data[user_id]["multi_select_node"] = "red_line_stations"
+                        user_data[user_id]["multi_select_type"] = "inline"
+                        user_data[user_id]["multi_select_variable"] = "metro_stations"
+                        logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+                        
+                        builder = InlineKeyboardBuilder()
+                        # Кнопка выбора с галочками: 🟥 Девяткино
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Девяткино' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Девяткино" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Девяткино': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Девяткино"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_devyatkino'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_devyatkino"))
+                        # Кнопка выбора с галочками: 🟥 Гражданский проспект
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Гражданский проспект' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Гражданский проспект" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Гражданский проспект': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Гражданский проспект"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_grazhdansky'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_grazhdansky"))
+                        # Кнопка выбора с галочками: 🟥 Академическая
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Академическая' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Академическая" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Академическая': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Академическая"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_akademicheskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_akademicheskaya"))
+                        # Кнопка выбора с галочками: 🟥 Политехническая
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Политехническая' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Политехническая" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Политехническая': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Политехническая"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_politehnicheskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_politehnicheskaya"))
+                        # Кнопка выбора с галочками: 🟥 Площадь Мужества
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Площадь Мужества' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Площадь Мужества" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Площадь Мужества': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Площадь Мужества"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pl_muzhestva'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pl_muzhestva"))
+                        # Кнопка выбора с галочками: 🟥 Лесная
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Лесная' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Лесная" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Лесная': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Лесная"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_lesnaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_lesnaya"))
+                        # Кнопка выбора с галочками: 🟥 Выборгская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Выборгская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Выборгская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Выборгская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Выборгская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_vyborgskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_vyborgskaya"))
+                        # Кнопка выбора с галочками: 🟥 Площадь Ленина
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Площадь Ленина' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Площадь Ленина" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Площадь Ленина': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Площадь Ленина"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pl_lenina'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pl_lenina"))
+                        # Кнопка выбора с галочками: 🟥 Чернышевская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Чернышевская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Чернышевская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Чернышевская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Чернышевская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_chernyshevskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_chernyshevskaya"))
+                        # Кнопка выбора с галочками: 🟥 Площадь Восстания
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Площадь Восстания' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Площадь Восстания" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Площадь Восстания': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Площадь Восстания"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pl_vosstaniya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pl_vosstaniya"))
+                        # Кнопка выбора с галочками: 🟥 Владимирская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Владимирская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Владимирская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Владимирская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Владимирская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_vladimirskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_vladimirskaya"))
+                        # Кнопка выбора с галочками: 🟥 Пушкинская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Пушкинская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Пушкинская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Пушкинская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Пушкинская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pushkinskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pushkinskaya"))
+                        # Кнопка выбора с галочками: 🟥 Технологический институт-1
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Технологический институт-1' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Технологический институт-1" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Технологический институт-1': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Технологический институт-1"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_tehinstitut1'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_tehinstitut1"))
+                        # Кнопка выбора с галочками: 🟥 Балтийская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Балтийская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Балтийская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Балтийская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Балтийская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_baltiyskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_baltiyskaya"))
+                        # Кнопка выбора с галочками: 🟥 Нарвская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Нарвская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Нарвская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Нарвская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Нарвская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_narvskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_narvskaya"))
+                        # Кнопка выбора с галочками: 🟥 Кировский завод
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Кировский завод' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Кировский завод" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Кировский завод': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Кировский завод"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_kirovsky'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_kirovsky"))
+                        # Кнопка выбора с галочками: 🟥 Автово
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Автово' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Автово" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Автово': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Автово"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_avtovo'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_avtovo"))
+                        # Кнопка выбора с галочками: 🟥 Ленинский проспект
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Ленинский проспект' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Ленинский проспект" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Ленинский проспект': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Ленинский проспект"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_leninsky'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_leninsky"))
+                        # Кнопка выбора с галочками: 🟥 Проспект Ветеранов
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Проспект Ветеранов' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                        selected_mark = "✅ " if "🟥 Проспект Ветеранов" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Проспект Ветеранов': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟥 Проспект Ветеранов"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_veteranov'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_veteranov"))
+                        builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                        # Добавляем кнопку "Готово" для множественного выбора
+                        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_red_line_stations"))
+                        builder.adjust(2)
+                        keyboard = builder.as_markup()
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
+                        await message.answer(text, reply_markup=keyboard)
+                        logging.info(f"✅ Прямая навигация к узлу множественного выбора red_line_stations выполнена")
+                    elif next_node_id == "blue_line_stations":
+                        # Прямая навигация к узлу с множественным выбором blue_line_stations
+                        logging.info(f"🔧 Условная навигация к узлу с множественным выбором: blue_line_stations")
+                        text = """🟦 Московско-Петроградская линия
+
+Выбери свою станцию:"""
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7682,11 +5662,180 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: ban_user_node")
-                        await message.answer(text)
-                    elif next_node_id == "unban_user_node":
-                        # Обычный узел - отправляем сообщение
-                        text = "✅ Пользователь разблокирован!"
+                        # Инициализируем состояние множественного выбора
+                        user_data[user_id]["multi_select_blue_line_stations"] = []
+                        user_data[user_id]["multi_select_node"] = "blue_line_stations"
+                        user_data[user_id]["multi_select_type"] = "selection"
+                        user_data[user_id]["multi_select_variable"] = "metro_stations"
+                        # Инициализация состояния множественного выбора
+                        if user_id not in user_data:
+                            user_data[user_id] = {}
+                        
+                        # Загружаем ранее выбранные варианты
+                        saved_selections = []
+                        if user_vars:
+                            for var_name, var_data in user_vars.items():
+                                if var_name == "metro_stations":
+                                    if isinstance(var_data, dict) and "value" in var_data:
+                                        selections_str = var_data["value"]
+                                    elif isinstance(var_data, str):
+                                        selections_str = var_data
+                                    else:
+                                        continue
+                                    if selections_str and selections_str.strip():
+                                        saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                                        break
+                        
+                        # Инициализируем состояние если его нет
+                        if "multi_select_blue_line_stations" not in user_data[user_id]:
+                            user_data[user_id]["multi_select_blue_line_stations"] = saved_selections.copy()
+                        user_data[user_id]["multi_select_node"] = "blue_line_stations"
+                        user_data[user_id]["multi_select_type"] = "inline"
+                        user_data[user_id]["multi_select_variable"] = "metro_stations"
+                        logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+                        
+                        builder = InlineKeyboardBuilder()
+                        # Кнопка выбора с галочками: 🟦 Парнас
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Парнас' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Парнас" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Парнас': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Парнас"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_parnas'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_parnas"))
+                        # Кнопка выбора с галочками: 🟦 Проспект Просвещения
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Проспект Просвещения' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Проспект Просвещения" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Проспект Просвещения': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Проспект Просвещения"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_prosp_prosvesh'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_prosp_prosvesh"))
+                        # Кнопка выбора с галочками: 🟦 Озерки
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Озерки' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Озерки" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Озерки': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Озерки"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_ozerki'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_ozerki"))
+                        # Кнопка выбора с галочками: 🟦 Удельная
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Удельная' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Удельная" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Удельная': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Удельная"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_udelnaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_udelnaya"))
+                        # Кнопка выбора с галочками: 🟦 Пионерская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Пионерская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Пионерская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Пионерская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Пионерская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pionerskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pionerskaya"))
+                        # Кнопка выбора с галочками: 🟦 Черная речка
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Черная речка' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Черная речка" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Черная речка': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Черная речка"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_chernaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_chernaya"))
+                        # Кнопка выбора с галочками: 🟦 Петроградская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Петроградская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Петроградская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Петроградская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Петроградская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_petrogradskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_petrogradskaya"))
+                        # Кнопка выбора с галочками: 🟦 Горьковская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Горьковская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Горьковская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Горьковская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Горьковская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_gorkovskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_gorkovskaya"))
+                        # Кнопка выбора с галочками: 🟦 Невский проспект
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Невский проспект' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Невский проспект" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Невский проспект': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Невский проспект"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_nevsky'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_nevsky"))
+                        # Кнопка выбора с галочками: 🟦 Сенная площадь
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Сенная площадь' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Сенная площадь" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Сенная площадь': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Сенная площадь"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_sennaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_sennaya"))
+                        # Кнопка выбора с галочками: 🟦 Технологический институт-2
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Технологический институт-2' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Технологический институт-2" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Технологический институт-2': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Технологический институт-2"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_tehinstitut2'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_tehinstitut2"))
+                        # Кнопка выбора с галочками: 🟦 Фрунзенская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Фрунзенская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Фрунзенская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Фрунзенская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Фрунзенская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_frunzenskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_frunzenskaya"))
+                        # Кнопка выбора с галочками: 🟦 Московские ворота
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Московские ворота' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Московские ворота" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Московские ворота': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Московские ворота"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_mosk_vorota'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_mosk_vorota"))
+                        # Кнопка выбора с галочками: 🟦 Электросила
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Электросила' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Электросила" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Электросила': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Электросила"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_elektrosila'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_elektrosila"))
+                        # Кнопка выбора с галочками: 🟦 Парк Победы
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Парк Победы' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Парк Победы" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Парк Победы': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Парк Победы"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_park_pobedy'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_park_pobedy"))
+                        # Кнопка выбора с галочками: 🟦 Московская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Московская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Московская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Московская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Московская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_moskovskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_moskovskaya"))
+                        # Кнопка выбора с галочками: 🟦 Звездная
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Звездная' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Звездная" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Звездная': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Звездная"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_zvezdnaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_zvezdnaya"))
+                        # Кнопка выбора с галочками: 🟦 Купчино
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Купчино' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                        selected_mark = "✅ " if "🟦 Купчино" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Купчино': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟦 Купчино"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_kupchino'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_kupchino"))
+                        builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                        # Добавляем кнопку "Готово" для множественного выбора
+                        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_blue_line_stations"))
+                        builder.adjust(2)
+                        keyboard = builder.as_markup()
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
+                        await message.answer(text, reply_markup=keyboard)
+                        logging.info(f"✅ Прямая навигация к узлу множественного выбора blue_line_stations выполнена")
+                    elif next_node_id == "green_line_stations":
+                        # Прямая навигация к узлу с множественным выбором green_line_stations
+                        logging.info(f"🔧 Условная навигация к узлу с множественным выбором: green_line_stations")
+                        text = """🟩 Невско-Василеостровская линия
+
+Выбери свою станцию:"""
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7711,11 +5860,138 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: unban_user_node")
-                        await message.answer(text)
-                    elif next_node_id == "mute_user_node":
-                        # Обычный узел - отправляем сообщение
-                        text = "🔇 Пользователь ограничен в правах!"
+                        # Инициализируем состояние множественного выбора
+                        user_data[user_id]["multi_select_green_line_stations"] = []
+                        user_data[user_id]["multi_select_node"] = "green_line_stations"
+                        user_data[user_id]["multi_select_type"] = "selection"
+                        user_data[user_id]["multi_select_variable"] = "metro_stations"
+                        # Инициализация состояния множественного выбора
+                        if user_id not in user_data:
+                            user_data[user_id] = {}
+                        
+                        # Загружаем ранее выбранные варианты
+                        saved_selections = []
+                        if user_vars:
+                            for var_name, var_data in user_vars.items():
+                                if var_name == "metro_stations":
+                                    if isinstance(var_data, dict) and "value" in var_data:
+                                        selections_str = var_data["value"]
+                                    elif isinstance(var_data, str):
+                                        selections_str = var_data
+                                    else:
+                                        continue
+                                    if selections_str and selections_str.strip():
+                                        saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                                        break
+                        
+                        # Инициализируем состояние если его нет
+                        if "multi_select_green_line_stations" not in user_data[user_id]:
+                            user_data[user_id]["multi_select_green_line_stations"] = saved_selections.copy()
+                        user_data[user_id]["multi_select_node"] = "green_line_stations"
+                        user_data[user_id]["multi_select_type"] = "inline"
+                        user_data[user_id]["multi_select_variable"] = "metro_stations"
+                        logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+                        
+                        builder = InlineKeyboardBuilder()
+                        # Кнопка выбора с галочками: 🟩 Приморская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Приморская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Приморская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Приморская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Приморская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_primorskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_primorskaya"))
+                        # Кнопка выбора с галочками: 🟩 Василеостровская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Василеостровская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Василеостровская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Василеостровская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Василеостровская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_vasileostr'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_vasileostr"))
+                        # Кнопка выбора с галочками: 🟩 Гостиный двор
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Гостиный двор' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Гостиный двор" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Гостиный двор': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Гостиный двор"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_gostiny'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_gostiny"))
+                        # Кнопка выбора с галочками: 🟩 Маяковская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Маяковская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Маяковская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Маяковская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Маяковская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_mayakovskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_mayakovskaya"))
+                        # Кнопка выбора с галочками: 🟩 Площадь Александра Невского-1
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Площадь Александра Невского-1' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Площадь Александра Невского-1" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Площадь Александра Невского-1': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Площадь Александра Невского-1"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pl_nevsk'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pl_nevsk"))
+                        # Кнопка выбора с галочками: 🟩 Елизаровская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Елизаровская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Елизаровская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Елизаровская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Елизаровская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_elizarovskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_elizarovskaya"))
+                        # Кнопка выбора с галочками: 🟩 Ломоносовская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Ломоносовская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Ломоносовская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Ломоносовская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Ломоносовская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_lomonosovskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_lomonosovskaya"))
+                        # Кнопка выбора с галочками: 🟩 Пролетарская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Пролетарская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Пролетарская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Пролетарская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Пролетарская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_proletarskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_proletarskaya"))
+                        # Кнопка выбора с галочками: 🟩 Обухово
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Обухово' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Обухово" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Обухово': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Обухово"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_obuhovo'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_obuhovo"))
+                        # Кнопка выбора с галочками: 🟩 Рыбацкое
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Рыбацкое' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Рыбацкое" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Рыбацкое': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Рыбацкое"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_rybackoe'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_rybackoe"))
+                        # Кнопка выбора с галочками: 🟩 Новокрестовская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Новокрестовская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Новокрестовская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Новокрестовская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Новокрестовская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_novokrestovsk'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_novokrestovsk"))
+                        # Кнопка выбора с галочками: 🟩 Беговая
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Беговая' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                        selected_mark = "✅ " if "🟩 Беговая" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Беговая': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟩 Беговая"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_begovaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_begovaya"))
+                        builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                        # Добавляем кнопку "Готово" для множественного выбора
+                        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_green_line_stations"))
+                        builder.adjust(2)
+                        keyboard = builder.as_markup()
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
+                        await message.answer(text, reply_markup=keyboard)
+                        logging.info(f"✅ Прямая навигация к узлу множественного выбора green_line_stations выполнена")
+                    elif next_node_id == "purple_line_stations":
+                        # Прямая навигация к узлу с множественным выбором purple_line_stations
+                        logging.info(f"🔧 Условная навигация к узлу с множественным выбором: purple_line_stations")
+                        text = """🟪 Фрунзенско-Приморская линия
+
+Выбери свою станцию:"""
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7740,11 +6016,148 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: mute_user_node")
-                        await message.answer(text)
-                    elif next_node_id == "unmute_user_node":
+                        # Инициализируем состояние множественного выбора
+                        user_data[user_id]["multi_select_purple_line_stations"] = []
+                        user_data[user_id]["multi_select_node"] = "purple_line_stations"
+                        user_data[user_id]["multi_select_type"] = "selection"
+                        user_data[user_id]["multi_select_variable"] = "metro_stations"
+                        # Инициализация состояния множественного выбора
+                        if user_id not in user_data:
+                            user_data[user_id] = {}
+                        
+                        # Загружаем ранее выбранные варианты
+                        saved_selections = []
+                        if user_vars:
+                            for var_name, var_data in user_vars.items():
+                                if var_name == "metro_stations":
+                                    if isinstance(var_data, dict) and "value" in var_data:
+                                        selections_str = var_data["value"]
+                                    elif isinstance(var_data, str):
+                                        selections_str = var_data
+                                    else:
+                                        continue
+                                    if selections_str and selections_str.strip():
+                                        saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                                        break
+                        
+                        # Инициализируем состояние если его нет
+                        if "multi_select_purple_line_stations" not in user_data[user_id]:
+                            user_data[user_id]["multi_select_purple_line_stations"] = saved_selections.copy()
+                        user_data[user_id]["multi_select_node"] = "purple_line_stations"
+                        user_data[user_id]["multi_select_type"] = "inline"
+                        user_data[user_id]["multi_select_variable"] = "metro_stations"
+                        logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+                        
+                        builder = InlineKeyboardBuilder()
+                        # Кнопка выбора с галочками: 🟪 Комендантский проспект
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Комендантский проспект' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Комендантский проспект" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Комендантский проспект': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Комендантский проспект"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_komendantsky'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_komendantsky"))
+                        # Кнопка выбора с галочками: 🟪 Старая Деревня
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Старая Деревня' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Старая Деревня" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Старая Деревня': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Старая Деревня"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_staraya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_staraya"))
+                        # Кнопка выбора с галочками: 🟪 Крестовский остров
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Крестовский остров' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Крестовский остров" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Крестовский остров': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Крестовский остров"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_krestovsky'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_krestovsky"))
+                        # Кнопка выбора с галочками: 🟪 Чкаловская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Чкаловская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Чкаловская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Чкаловская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Чкаловская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_chkalovskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_chkalovskaya"))
+                        # Кнопка выбора с галочками: 🟪 Спортивная
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Спортивная' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Спортивная" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Спортивная': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Спортивная"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_sportivnaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_sportivnaya"))
+                        # Кнопка выбора с галочками: 🟪 Адмиралтейская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Адмиралтейская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Адмиралтейская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Адмиралтейская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Адмиралтейская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_admiralteyskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_admiralteyskaya"))
+                        # Кнопка выбора с галочками: 🟪 Садовая
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Садовая' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Садовая" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Садовая': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Садовая"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_sadovaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_sadovaya"))
+                        # Кнопка выбора с галочками: 🟪 Звенигородская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Звенигородская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Звенигородская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Звенигородская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Звенигородская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_zvenigorodskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_zvenigorodskaya"))
+                        # Кнопка выбора с галочками: 🟪 Обводный канал
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Обводный канал' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Обводный канал" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Обводный канал': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Обводный канал"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_obvodniy'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_obvodniy"))
+                        # Кнопка выбора с галочками: 🟪 Волковская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Волковская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Волковская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Волковская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Волковская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_volkovskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_volkovskaya"))
+                        # Кнопка выбора с галочками: 🟪 Бухарестская
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Бухарестская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Бухарестская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Бухарестская': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Бухарестская"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_buharestskaya'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_buharestskaya"))
+                        # Кнопка выбора с галочками: 🟪 Международная
+                        logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Международная' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                        selected_mark = "✅ " if "🟪 Международная" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                        logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Международная': selected_mark='{selected_mark}'")
+                        final_text = f"{selected_mark}🟪 Международная"
+                        logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_mezhdunar'")
+                        builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_mezhdunar"))
+                        builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                        # Добавляем кнопку "Готово" для множественного выбора
+                        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_purple_line_stations"))
+                        builder.adjust(2)
+                        keyboard = builder.as_markup()
+                        # Заменяем все переменные в тексте
+                        text = replace_variables_in_text(text, user_vars)
+                        await message.answer(text, reply_markup=keyboard)
+                        logging.info(f"✅ Прямая навигация к узлу множественного выбора purple_line_stations выполнена")
+                    elif next_node_id == "profile_complete":
                         # Обычный узел - отправляем сообщение
-                        text = "🔊 Ограничения с пользователя сняты!"
+                        text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_stations}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+
+💬 Источник: {user_source}
+
+Можешь посмотреть полную анкету или сразу получить ссылку на чат!"""
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7769,11 +6182,31 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: unmute_user_node")
-                        await message.answer(text)
-                    elif next_node_id == "kick_user_node":
+                        # Создаем inline клавиатуру
+                        builder = InlineKeyboardBuilder()
+                        logging.info(f"Создана кнопка команды: Ссылка на чат 🔗 -> cmd_link")
+                        builder.add(InlineKeyboardButton(text="Ссылка на чат 🔗", callback_data="cmd_link"))
+                        logging.info(f"Создана кнопка команды: Редактировать профиль ✏️ -> cmd_profile")
+                        builder.add(InlineKeyboardButton(text="Редактировать профиль ✏️", callback_data="cmd_profile"))
+                        builder.adjust(1)
+                        keyboard = builder.as_markup()
+                        logging.info(f"Условная навигация к обычному узлу: profile_complete")
+                        await message.answer(text, reply_markup=keyboard)
+                    elif next_node_id == "show_profile":
                         # Обычный узел - отправляем сообщение
-                        text = "👢 Пользователь исключен из группы!"
+                        text = """👤 Твой профиль:
+
+Пол: {gender} 👤
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_stations} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+
+💬 Источник: {user_source}
+
+✏️ Выберите действие:"""
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7798,11 +6231,30 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: kick_user_node")
-                        await message.answer(text)
-                    elif next_node_id == "promote_user_node":
+                        # Создаем inline клавиатуру
+                        builder = InlineKeyboardBuilder()
+                        builder.add(InlineKeyboardButton(text="👤 Изменить пол", callback_data="gender_selection"))
+                        builder.add(InlineKeyboardButton(text="✏️ Изменить имя", callback_data="name_input"))
+                        builder.add(InlineKeyboardButton(text="🎂 Изменить возраст", callback_data="age_input"))
+                        builder.add(InlineKeyboardButton(text="🚇 Изменить метро", callback_data="metro_selection"))
+                        builder.add(InlineKeyboardButton(text="🎯 Изменить интересы", callback_data="interests_categories"))
+                        builder.add(InlineKeyboardButton(text="💍 Изменить семейное положение", callback_data="marital_status"))
+                        builder.add(InlineKeyboardButton(text="🌈 Изменить ориентацию", callback_data="sexual_orientation"))
+                        builder.add(InlineKeyboardButton(text="📢 Указать ТГК", callback_data="channel_choice"))
+                        builder.add(InlineKeyboardButton(text="📝 Добавить о себе", callback_data="extra_info"))
+                        logging.info(f"Создана кнопка команды: 🔄 Начать заново -> cmd_start")
+                        builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+                        builder.adjust(2)
+                        keyboard = builder.as_markup()
+                        logging.info(f"Условная навигация к обычному узлу: show_profile")
+                        await message.answer(text, reply_markup=keyboard)
+                    elif next_node_id == "chat_link":
                         # Обычный узел - отправляем сообщение
-                        text = "👑 Пользователь назначен администратором!"
+                        text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7827,11 +6279,122 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: promote_user_node")
+                        logging.info(f"Условная навигация к обычному узлу: chat_link")
                         await message.answer(text)
-                    elif next_node_id == "demote_user_node":
+                    elif next_node_id == "help_command":
                         # Обычный узел - отправляем сообщение
-                        text = "👤 Пользователь снят с должности администратора!"
+                        text = """🤖 **Добро пожаловать в справочный центр!**
+
+🌟 **ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot**
+*Твой помощник в знакомствах*
+
+🎯 **ОСНОВНЫЕ КОМАНДЫ:**
+
+🚀 `/start` — *Начать заново*
+   📝 Синонимы: `старт`, `начать`, `привет`, `начало`, `начинаем`
+
+👤 `/profile` — *Мой профиль*
+   📝 Синонимы: `профиль`, `анкета`, `мой профиль`, `посмотреть профиль`, `редактировать профиль`
+
+🔗 `/link` — *Ссылка на чат*
+   📝 Синонимы: `ссылка`, `чат`, `сообщество`, `впрогулке`, `линк`
+
+🆘 `/help` — *Эта справка*
+   📝 Синонимы: `помощь`, `справка`, `команды`, `что писать`, `как пользоваться`
+
+📋 **РАЗДЕЛЫ АНКЕТЫ И ИХ СИНОНИМЫ:**
+
+👫 **Пол:** мужской, женский
+   📝 Синонимы: `пол`, `gender`
+
+🏷️ **Имя:** любое имя
+   📝 Синонимы: `имя`, `как зовут`, `назовись`
+
+🎂 **Возраст:** число от 18 до 99
+   📝 Синонимы: `возраст`, `лет`, `сколько лет`
+
+🚇 **Метро:** выбор линии и станции
+   📝 Синонимы: `метро`, `станция`
+   🟥 Красная линия: `красная линия`, `кировско-выборгская`, `красная ветка`
+   🟦 Синяя линия: `синяя линия`, `московско-петроградская`, `синяя ветка`
+   🟩 Зеленая линия: `зеленая линия`, `невско-василеостровская`, `зеленая ветка`
+   🟧 Оранжевая линия: `оранжевая линия`, `правобережная`, `оранжевая ветка`
+   🟪 Фиолетовая линия: `фиолетовая линия`, `фрунзенско-приморская`, `фиолетовая ветка`
+
+🎨 **Интересы и их синонимы:**
+   🎮 Хобби: `хобби`, `увлечения`, `занятия`, `игры`
+   🤝 Социальная жизнь: `общение`, `социальное`, `люди`, `тусовки`
+   🎭 Творчество: `творчество`, `искусство`, `рисование`, `музыка`
+   💪 Активный образ жизни: `активность`, `активный`, `движение`, `здоровье`
+   🍕 Еда и напитки: `еда`, `напитки`, `кухня`, `рестораны`
+   ⚽ Спорт: `спорт`, `фитнес`, `тренировки`, `футбол`
+
+💑 **Семейное положение:** поиск, отношения, женат/замужем, сложно
+   📝 Синонимы: `семейное положение`, `статус`, `отношения`, `семья`
+
+🌈 **Ориентация:** гетеро, гей, лесби, би, другое
+   📝 Синонимы: `ориентация`, `предпочтения`
+
+📺 **Телеграм-канал:** опционально
+   📝 Синонимы: `тгк`, `телеграм`, `канал`, `тг канал`
+
+📖 **О себе:** дополнительная информация
+   📝 Синонимы: `о себе`, `описание`, `расскажи`, `инфо`
+
+👮‍♂️ **КОМАНДЫ МОДЕРАЦИИ:**
+
+**Управление контентом:**
+📌 `/pin_message` - Закрепить сообщение
+   📝 Синонимы: `закрепить`, `прикрепить`, `зафиксировать`
+
+📌❌ `/unpin_message` - Открепить сообщение
+   📝 Синонимы: `открепить`, `отцепить`, `убрать закрепление`
+
+🗑️ `/delete_message` - Удалить сообщение
+   📝 Синонимы: `удалить`, `стереть`, `убрать сообщение`
+
+**Управление пользователями:**
+🚫 `/ban_user` - Заблокировать пользователя
+   📝 Синонимы: `забанить`, `заблокировать`, `бан`
+
+✅ `/unban_user` - Разблокировать пользователя
+   📝 Синонимы: `разбанить`, `разблокировать`, `unbán`
+
+🔇 `/mute_user` - Ограничить пользователя
+   📝 Синонимы: `замутить`, `заглушить`, `мут`
+
+🔊 `/unmute_user` - Снять ограничения
+   📝 Синонимы: `размутить`, `разглушить`, `анмут`
+
+👢 `/kick_user` - Исключить пользователя
+   📝 Синонимы: `кикнуть`, `исключить`, `выгнать`
+
+👑 `/promote_user` - Назначить администратором
+   📝 Синонимы: `повысить`, `назначить админом`, `промоут`
+
+👤 `/demote_user` - Снять с администратора
+   📝 Синонимы: `понизить`, `снять с админа`, `демоут`
+
+⚙️ `/admin_rights` - Настроить права администратора
+   📝 Синонимы: `права админа`, `настроить права`, `тг права`
+   ⚠️ Только для администраторов группы!
+   💡 Ответьте на сообщение пользователя командой
+
+**Примеры использования:**
+• Ответьте на сообщение командой для его обработки
+• Используйте команды в ответ на сообщения нарушителей
+• Команды с правами работают только в группах/супергруппах
+• Все действия логируются для отчетности
+
+💡 **ПОЛЕЗНЫЕ СОВЕТЫ:**
+
+✨ Можешь писать команды или синонимы в любом месте разговора
+✨ Бот поймет твои сообщения даже без команд
+✨ В любой момент можешь написать /start для начала заново
+✨ Используй /profile для изменения любых данных
+✨ Нажми на любое выделенное слово чтобы скопировать его!
+
+🎉 **Удачных знакомств в Питере!** 🎉"""
                         user_data[user_id] = user_data.get(user_id, {})
                         # Инициализируем базовые переменные пользователя если их нет
                         if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
@@ -7856,39 +6419,18 @@ async def handle_user_input(message: types.Message):
                         if not isinstance(user_vars, dict):
                             user_vars = user_data.get(user_id, {})
                         
-                        logging.info(f"Условная навигация к обычному узлу: demote_user_node")
-                        await message.answer(text)
-                    elif next_node_id == "admin_rights_node":
-                        # Обычный узел - отправляем сообщение
-                        text = """⚙️ Права администратора настроены для пользователя!
-
-💡 Чтобы настроить права, ответьте на сообщение пользователя и используйте команду /admin_rights"""
-                        user_data[user_id] = user_data.get(user_id, {})
-                        # Инициализируем базовые переменные пользователя если их нет
-                        if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
-                            # Получаем объект пользователя из сообщения или callback
-                            user_obj = None
-                            # Безопасно проверяем наличие message (для message handlers)
-                            if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
-                                user_obj = locals().get('message').from_user
-                            # Безопасно проверяем наличие callback_query (для callback handlers)
-                            elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
-                                user_obj = locals().get('callback_query').from_user
-
-                            if user_obj:
-                                init_user_variables(user_id, user_obj)
-                        
-                        # Подставляем все доступные переменные пользователя в текст
-                        user_vars = await get_user_from_db(user_id)
-                        if not user_vars:
-                            user_vars = user_data.get(user_id, {})
-                        
-                        # get_user_from_db теперь возвращает уже обработанные user_data
-                        if not isinstance(user_vars, dict):
-                            user_vars = user_data.get(user_id, {})
-                        
-                        logging.info(f"Условная навигация к обычному узлу: admin_rights_node")
-                        await message.answer(text)
+                        # Создаем inline клавиатуру
+                        builder = InlineKeyboardBuilder()
+                        logging.info(f"Создана кнопка команды: 🚀 Начать заполнение -> cmd_start")
+                        builder.add(InlineKeyboardButton(text="🚀 Начать заполнение", callback_data="cmd_start"))
+                        logging.info(f"Создана кнопка команды: 👤 Мой профиль -> cmd_profile")
+                        builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="cmd_profile"))
+                        logging.info(f"Создана кнопка команды: 🔗 Ссылка на чат -> cmd_link")
+                        builder.add(InlineKeyboardButton(text="🔗 Ссылка на чат", callback_data="cmd_link"))
+                        builder.adjust(1)
+                        keyboard = builder.as_markup()
+                        logging.info(f"Условная навигация к обычному узлу: help_command")
+                        await message.answer(text, reply_markup=keyboard)
                     else:
                         logging.warning(f"Неизвестныя следующий узел: {next_node_id}")
             except Exception as e:
@@ -7976,6 +6518,21 @@ async def handle_user_input(message: types.Message):
                         await start_handler(fake_message)
                     except Exception as e:
                         logging.error(f"Ошибка выполнения команды /start: {e}")
+                elif command == "/profile":
+                    try:
+                        await _profile_handler(fake_message)
+                    except Exception as e:
+                        logging.error(f"Ошибка выполнения команды /profile: {e}")
+                elif command == "/link":
+                    try:
+                        await _link_handler(fake_message)
+                    except Exception as e:
+                        logging.error(f"Ошибка выполнения команды /link: {e}")
+                elif command == "/help":
+                    try:
+                        await _help_handler(fake_message)
+                    except Exception as e:
+                        logging.error(f"Ошибка выполнения команды /help: {e}")
                 else:
                     logging.warning(f"Неизвестная команда: {command}")
             elif option_action == "goto" and option_target:
@@ -7989,28 +6546,30 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_join_request(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "decline_response":
                         await handle_callback_decline_response(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "pin_message_node":
-                        await handle_callback_pin_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "unpin_message_node":
-                        await handle_callback_unpin_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "delete_message_node":
-                        await handle_callback_delete_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "ban_user_node":
-                        await handle_callback_ban_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "unban_user_node":
-                        await handle_callback_unban_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "mute_user_node":
-                        await handle_callback_mute_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "unmute_user_node":
-                        await handle_callback_unmute_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "kick_user_node":
-                        await handle_callback_kick_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "promote_user_node":
-                        await handle_callback_promote_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "demote_user_node":
-                        await handle_callback_demote_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "admin_rights_node":
-                        await handle_callback_admin_rights_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "gender_selection":
+                        await handle_callback_gender_selection(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "name_input":
+                        await handle_callback_name_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "age_input":
+                        await handle_callback_age_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "metro_selection":
+                        await handle_callback_metro_selection(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "red_line_stations":
+                        await handle_callback_red_line_stations(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "blue_line_stations":
+                        await handle_callback_blue_line_stations(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "green_line_stations":
+                        await handle_callback_green_line_stations(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "purple_line_stations":
+                        await handle_callback_purple_line_stations(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "profile_complete":
+                        await handle_callback_profile_complete(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "show_profile":
+                        await handle_callback_show_profile(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "chat_link":
+                        await handle_callback_chat_link(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "help_command":
+                        await handle_callback_help_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -8027,28 +6586,30 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_join_request(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "decline_response":
                             await handle_callback_decline_response(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "pin_message_node":
-                            await handle_callback_pin_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "unpin_message_node":
-                            await handle_callback_unpin_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "delete_message_node":
-                            await handle_callback_delete_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "ban_user_node":
-                            await handle_callback_ban_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "unban_user_node":
-                            await handle_callback_unban_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "mute_user_node":
-                            await handle_callback_mute_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "unmute_user_node":
-                            await handle_callback_unmute_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "kick_user_node":
-                            await handle_callback_kick_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "promote_user_node":
-                            await handle_callback_promote_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "demote_user_node":
-                            await handle_callback_demote_user_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "admin_rights_node":
-                            await handle_callback_admin_rights_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "gender_selection":
+                            await handle_callback_gender_selection(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "name_input":
+                            await handle_callback_name_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "age_input":
+                            await handle_callback_age_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "metro_selection":
+                            await handle_callback_metro_selection(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "red_line_stations":
+                            await handle_callback_red_line_stations(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "blue_line_stations":
+                            await handle_callback_blue_line_stations(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "green_line_stations":
+                            await handle_callback_green_line_stations(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "purple_line_stations":
+                            await handle_callback_purple_line_stations(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "profile_complete":
+                            await handle_callback_profile_complete(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "show_profile":
+                            await handle_callback_show_profile(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "chat_link":
+                            await handle_callback_chat_link(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "help_command":
+                            await handle_callback_help_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -8097,28 +6658,30 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_join_request(fake_callback)
                         elif skip_target == "decline_response":
                             await handle_callback_decline_response(fake_callback)
-                        elif skip_target == "pin_message_node":
-                            await handle_callback_pin_message_node(fake_callback)
-                        elif skip_target == "unpin_message_node":
-                            await handle_callback_unpin_message_node(fake_callback)
-                        elif skip_target == "delete_message_node":
-                            await handle_callback_delete_message_node(fake_callback)
-                        elif skip_target == "ban_user_node":
-                            await handle_callback_ban_user_node(fake_callback)
-                        elif skip_target == "unban_user_node":
-                            await handle_callback_unban_user_node(fake_callback)
-                        elif skip_target == "mute_user_node":
-                            await handle_callback_mute_user_node(fake_callback)
-                        elif skip_target == "unmute_user_node":
-                            await handle_callback_unmute_user_node(fake_callback)
-                        elif skip_target == "kick_user_node":
-                            await handle_callback_kick_user_node(fake_callback)
-                        elif skip_target == "promote_user_node":
-                            await handle_callback_promote_user_node(fake_callback)
-                        elif skip_target == "demote_user_node":
-                            await handle_callback_demote_user_node(fake_callback)
-                        elif skip_target == "admin_rights_node":
-                            await handle_callback_admin_rights_node(fake_callback)
+                        elif skip_target == "gender_selection":
+                            await handle_callback_gender_selection(fake_callback)
+                        elif skip_target == "name_input":
+                            await handle_callback_name_input(fake_callback)
+                        elif skip_target == "age_input":
+                            await handle_callback_age_input(fake_callback)
+                        elif skip_target == "metro_selection":
+                            await handle_callback_metro_selection(fake_callback)
+                        elif skip_target == "red_line_stations":
+                            await handle_callback_red_line_stations(fake_callback)
+                        elif skip_target == "blue_line_stations":
+                            await handle_callback_blue_line_stations(fake_callback)
+                        elif skip_target == "green_line_stations":
+                            await handle_callback_green_line_stations(fake_callback)
+                        elif skip_target == "purple_line_stations":
+                            await handle_callback_purple_line_stations(fake_callback)
+                        elif skip_target == "profile_complete":
+                            await handle_callback_profile_complete(fake_callback)
+                        elif skip_target == "show_profile":
+                            await handle_callback_show_profile(fake_callback)
+                        elif skip_target == "chat_link":
+                            await handle_callback_chat_link(fake_callback)
+                        elif skip_target == "help_command":
+                            await handle_callback_help_command(fake_callback)
                         else:
                             logging.warning(f"Неизвестный целевой узел skipDataCollection медиа: {skip_target}")
                     except Exception as e:
@@ -8193,28 +6756,30 @@ async def handle_user_input(message: types.Message):
                                 await handle_callback_join_request(fake_callback)
                             elif skip_target == "decline_response":
                                 await handle_callback_decline_response(fake_callback)
-                            elif skip_target == "pin_message_node":
-                                await handle_callback_pin_message_node(fake_callback)
-                            elif skip_target == "unpin_message_node":
-                                await handle_callback_unpin_message_node(fake_callback)
-                            elif skip_target == "delete_message_node":
-                                await handle_callback_delete_message_node(fake_callback)
-                            elif skip_target == "ban_user_node":
-                                await handle_callback_ban_user_node(fake_callback)
-                            elif skip_target == "unban_user_node":
-                                await handle_callback_unban_user_node(fake_callback)
-                            elif skip_target == "mute_user_node":
-                                await handle_callback_mute_user_node(fake_callback)
-                            elif skip_target == "unmute_user_node":
-                                await handle_callback_unmute_user_node(fake_callback)
-                            elif skip_target == "kick_user_node":
-                                await handle_callback_kick_user_node(fake_callback)
-                            elif skip_target == "promote_user_node":
-                                await handle_callback_promote_user_node(fake_callback)
-                            elif skip_target == "demote_user_node":
-                                await handle_callback_demote_user_node(fake_callback)
-                            elif skip_target == "admin_rights_node":
-                                await handle_callback_admin_rights_node(fake_callback)
+                            elif skip_target == "gender_selection":
+                                await handle_callback_gender_selection(fake_callback)
+                            elif skip_target == "name_input":
+                                await handle_callback_name_input(fake_callback)
+                            elif skip_target == "age_input":
+                                await handle_callback_age_input(fake_callback)
+                            elif skip_target == "metro_selection":
+                                await handle_callback_metro_selection(fake_callback)
+                            elif skip_target == "red_line_stations":
+                                await handle_callback_red_line_stations(fake_callback)
+                            elif skip_target == "blue_line_stations":
+                                await handle_callback_blue_line_stations(fake_callback)
+                            elif skip_target == "green_line_stations":
+                                await handle_callback_green_line_stations(fake_callback)
+                            elif skip_target == "purple_line_stations":
+                                await handle_callback_purple_line_stations(fake_callback)
+                            elif skip_target == "profile_complete":
+                                await handle_callback_profile_complete(fake_callback)
+                            elif skip_target == "show_profile":
+                                await handle_callback_show_profile(fake_callback)
+                            elif skip_target == "chat_link":
+                                await handle_callback_chat_link(fake_callback)
+                            elif skip_target == "help_command":
+                                await handle_callback_help_command(fake_callback)
                             else:
                                 logging.warning(f"Неизвестный целевой узел skipDataCollection: {skip_target}")
                         except Exception as e:
@@ -8342,24 +6907,14 @@ async def handle_user_input(message: types.Message):
                             }
                             logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел join_request)")
                             logging.info(f"✅ Узел join_request настроен для сбора ввода (collectUserInput=true)")
-                            # Заменяем все переменные в тексте
-                            text = replace_variables_in_text(text, user_vars)
-                            await message.answer(text)
-                            # Настраиваем ожидание ввода для message узла (универсальная функция опяяяяеделит тип: text/photo/video/audio/document)
-                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-                            user_data[message.from_user.id]["waiting_for_input"] = {
-                                "type": "text",
-                                "modes": ["text"],
-                                "variable": "join_request_response",
-                                "save_to_database": True,
-                                "node_id": "join_request",
-                                "next_node_id": "",
-                                "min_length": 0,
-                                "max_length": 0,
-                                "retry_message": "Пожалуйста, попробуйте еще раз.",
-                                "success_message": ""
-                            }
-                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной join_request_response (узел join_request)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
+                            builder = InlineKeyboardBuilder()
+                            builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
+                            builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
+                            builder.adjust(1)
+                            keyboard = builder.as_markup()
+                            await message.answer(text, reply_markup=keyboard)
+                            logging.info(f"✅ Показаны inline кнопки для узла join_request с collectUserInput (ожидание ввода активно)")
                         elif current_node_id == "decline_response":
                             text = "Понятно! Если передумаешь, напиши /start! 😊"
                             # Замена переменных в тексте
@@ -8398,39 +6953,1038 @@ async def handle_user_input(message: types.Message):
                             
                             logging.info("✅ Переход к следующему уялу выполнен успешно")
                             break  # Нет автоперехода, завершаем цикл
-                        elif current_node_id == "pin_message_node":
-                            logging.info(f"Переход к узлу pin_message_node типа pin_message")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "unpin_message_node":
-                            logging.info(f"Переход к узлу unpin_message_node типа unpin_message")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "delete_message_node":
-                            logging.info(f"Переход к узлу delete_message_node типа delete_message")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "ban_user_node":
-                            logging.info(f"Переход к узлу ban_user_node типа ban_user")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "unban_user_node":
-                            logging.info(f"Переход к узлу unban_user_node типа unban_user")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "mute_user_node":
-                            logging.info(f"Переход к узлу mute_user_node типа mute_user")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "unmute_user_node":
-                            logging.info(f"Переход к узлу unmute_user_node типа unmute_user")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "kick_user_node":
-                            logging.info(f"Переход к узлу kick_user_node типа kick_user")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "promote_user_node":
-                            logging.info(f"Переход к узлу promote_user_node типа promote_user")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "demote_user_node":
-                            logging.info(f"Переход к узлу demote_user_node типа demote_user")
-                            break  # Выходим из цикла для неизвестного типа узла
-                        elif current_node_id == "admin_rights_node":
-                            logging.info(f"Переход к узлу admin_rights_node типа admin_rights")
-                            break  # Выходим из цикла для неизвестного типа узла
+                        elif current_node_id == "gender_selection":
+                            text = "Укажи свой пол: 👨👩"
+                            # Замена переменных в тексте
+                            # Инициализируем базовые переменные пользователя если их нет
+                            if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                                # Получаем объект пользователя из сообщения или callback
+                                user_obj = None
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
+                                if user_obj:
+                                    init_user_variables(user_id, user_obj)
+                            
+                            # Подставляем все доступные переменные пользователя в текст
+                            user_vars = await get_user_from_db(user_id)
+                            if not user_vars:
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # get_user_from_db теперь возвращает уже обработанные user_data
+                            if not isinstance(user_vars, dict):
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
+                            # Устанавливаем состояние ожидания ввода для узла gender_selection
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "gender",
+                                "save_to_database": True,
+                                "node_id": "gender_selection",
+                                "next_node_id": "",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной gender (узел gender_selection)")
+                            logging.info(f"✅ Узел gender_selection настроен для сбора ввода (collectUserInput=true)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
+                            builder = InlineKeyboardBuilder()
+                            builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input"))
+                            builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input"))
+                            builder.adjust(1)
+                            keyboard = builder.as_markup()
+                            await message.answer(text, reply_markup=keyboard)
+                            logging.info(f"✅ Показаны inline кнопки для узла gender_selection с collectUserInput (ожидание ввода активно)")
+                        elif current_node_id == "name_input":
+                            text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+                            # Замена переменных в тексте
+                            # Инициализируем базовые переменные пользователя если их нет
+                            if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                                # Получаем объект пользователя из сообщения или callback
+                                user_obj = None
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
+                                if user_obj:
+                                    init_user_variables(user_id, user_obj)
+                            
+                            # Подставляем все доступные переменные пользователя в текст
+                            user_vars = await get_user_from_db(user_id)
+                            if not user_vars:
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # get_user_from_db теперь возвращает уже обработанные user_data
+                            if not isinstance(user_vars, dict):
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
+                            # Устанавливаем состояние ожидания ввода для узла name_input
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "user_name",
+                                "save_to_database": True,
+                                "node_id": "name_input",
+                                "next_node_id": "age_input",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_name (узел name_input)")
+                            logging.info(f"✅ Узел name_input настроен для сбора ввода (collectUserInput=true)")
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
+                            await message.answer(text)
+                            # Настраиваем ожидание ввода для message узла (универсальная функция опяяяяеделит тип: text/photo/video/audio/document)
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "user_name",
+                                "save_to_database": True,
+                                "node_id": "name_input",
+                                "next_node_id": "age_input",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_name (узел name_input)")
+                        elif current_node_id == "age_input":
+                            text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+                            # Замена переменных в тексте
+                            # Инициализируем базовые переменные пользователя если их нет
+                            if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                                # Получаем объект пользователя из сообщения или callback
+                                user_obj = None
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
+                                if user_obj:
+                                    init_user_variables(user_id, user_obj)
+                            
+                            # Подставляем все доступные переменные пользователя в текст
+                            user_vars = await get_user_from_db(user_id)
+                            if not user_vars:
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # get_user_from_db теперь возвращает уже обработанные user_data
+                            if not isinstance(user_vars, dict):
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
+                            # Устанавливаем состояние ожидания ввода для узла age_input
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "user_age",
+                                "save_to_database": True,
+                                "node_id": "age_input",
+                                "next_node_id": "metro_selection",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_age (узел age_input)")
+                            logging.info(f"✅ Узел age_input настроен для сбора ввода (collectUserInput=true)")
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
+                            await message.answer(text)
+                            # Настраиваем ожидание ввода для message узла (универсальная функция опяяяяеделит тип: text/photo/video/audio/document)
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "user_age",
+                                "save_to_database": True,
+                                "node_id": "age_input",
+                                "next_node_id": "metro_selection",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной user_age (узел age_input)")
+                        elif current_node_id == "metro_selection":
+                            text = """На какой станции метро ты обычно бываешь? 🚇
+
+Выбери свою ветку:"""
+                            # Замена переменных в тексте
+                            # Инициализируем базовые переменные пользователя если их нет
+                            if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                                # Получаем объект пользователя из сообщения или callback
+                                user_obj = None
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
+                                if user_obj:
+                                    init_user_variables(user_id, user_obj)
+                            
+                            # Подставляем все доступные переменные пользователя в текст
+                            user_vars = await get_user_from_db(user_id)
+                            if not user_vars:
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # get_user_from_db теперь возвращает уже обработанные user_data
+                            if not isinstance(user_vars, dict):
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
+                            # Устанавливаем состояние ожидания ввода для узла metro_selection
+                            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+                            user_data[message.from_user.id]["waiting_for_input"] = {
+                                "type": "text",
+                                "modes": ["text"],
+                                "variable": "metro_stations",
+                                "save_to_database": True,
+                                "node_id": "metro_selection",
+                                "next_node_id": "",
+                                "min_length": 0,
+                                "max_length": 0,
+                                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                                "success_message": ""
+                            }
+                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной metro_stations (узел metro_selection)")
+                            logging.info(f"✅ Узел metro_selection настроен для сбора ввода (collectUserInput=true)")
+                            # У узла есть inline кнопки - показываем их вместе с ожиданием ввода
+                            builder = InlineKeyboardBuilder()
+                            builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line_stations"))
+                            builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line_stations"))
+                            builder.add(InlineKeyboardButton(text="Зелёная ветка 🟩", callback_data="green_line_stations"))
+                            builder.add(InlineKeyboardButton(text="Фиолетовая ветка 🟪", callback_data="purple_line_stations"))
+                            builder.add(InlineKeyboardButton(text="Я из ЛО 🏡", callback_data="interests_categories"))
+                            builder.add(InlineKeyboardButton(text="Я не в Питере 🌍", callback_data="interests_categories"))
+                            builder.adjust(2)
+                            keyboard = builder.as_markup()
+                            await message.answer(text, reply_markup=keyboard)
+                            logging.info(f"✅ Показаны inline кнопки для узла metro_selection с collectUserInput (ожидание ввода активно)")
+                        elif current_node_id == "red_line_stations":
+                            # Прямая навигация к узлу с множественным выбором red_line_stations
+                            logging.info(f"🔧 Переходим к узлу с множественным выбором: red_line_stations")
+                            text = """🟥 Кировско-Выборгская линия
+
+Выбери свою станцию:"""
+                            user_data[user_id] = user_data.get(user_id, {})
+                            # Инициализируем базовые переменные пользователя если их нет
+                            if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                                # Получаем объект пользователя из сообщения или callback
+                                user_obj = None
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
+                                if user_obj:
+                                    init_user_variables(user_id, user_obj)
+                            
+                            # Подставляем все доступные переменные пользователя в текст
+                            user_vars = await get_user_from_db(user_id)
+                            if not user_vars:
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # get_user_from_db теперь возвращает уже обработанные user_data
+                            if not isinstance(user_vars, dict):
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # Инициализируем состояние множественного выбора
+                            user_data[user_id]["multi_select_red_line_stations"] = []
+                            user_data[user_id]["multi_select_node"] = "red_line_stations"
+                            user_data[user_id]["multi_select_type"] = "selection"
+                            user_data[user_id]["multi_select_variable"] = "metro_stations"
+                            # Инициализация состояния множественного выбора
+                            if user_id not in user_data:
+                                user_data[user_id] = {}
+                            
+                            # Загружаем ранее выбранные варианты
+                            saved_selections = []
+                            if user_vars:
+                                for var_name, var_data in user_vars.items():
+                                    if var_name == "metro_stations":
+                                        if isinstance(var_data, dict) and "value" in var_data:
+                                            selections_str = var_data["value"]
+                                        elif isinstance(var_data, str):
+                                            selections_str = var_data
+                                        else:
+                                            continue
+                                        if selections_str and selections_str.strip():
+                                            saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                                            break
+                            
+                            # Инициализируем состояние если его нет
+                            if "multi_select_red_line_stations" not in user_data[user_id]:
+                                user_data[user_id]["multi_select_red_line_stations"] = saved_selections.copy()
+                            user_data[user_id]["multi_select_node"] = "red_line_stations"
+                            user_data[user_id]["multi_select_type"] = "inline"
+                            user_data[user_id]["multi_select_variable"] = "metro_stations"
+                            logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+                            
+                            builder = InlineKeyboardBuilder()
+                            # Кнопка выбора с галочками: 🟥 Девяткино
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Девяткино' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Девяткино" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Девяткино': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Девяткино"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_devyatkino'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_devyatkino"))
+                            # Кнопка выбора с галочками: 🟥 Гражданский проспект
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Гражданский проспект' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Гражданский проспект" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Гражданский проспект': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Гражданский проспект"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_grazhdansky'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_grazhdansky"))
+                            # Кнопка выбора с галочками: 🟥 Академическая
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Академическая' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Академическая" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Академическая': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Академическая"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_akademicheskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_akademicheskaya"))
+                            # Кнопка выбора с галочками: 🟥 Политехническая
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Политехническая' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Политехническая" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Политехническая': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Политехническая"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_politehnicheskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_politehnicheskaya"))
+                            # Кнопка выбора с галочками: 🟥 Площадь Мужества
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Площадь Мужества' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Площадь Мужества" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Площадь Мужества': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Площадь Мужества"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pl_muzhestva'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pl_muzhestva"))
+                            # Кнопка выбора с галочками: 🟥 Лесная
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Лесная' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Лесная" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Лесная': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Лесная"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_lesnaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_lesnaya"))
+                            # Кнопка выбора с галочками: 🟥 Выборгская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Выборгская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Выборгская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Выборгская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Выборгская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_vyborgskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_vyborgskaya"))
+                            # Кнопка выбора с галочками: 🟥 Площадь Ленина
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Площадь Ленина' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Площадь Ленина" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Площадь Ленина': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Площадь Ленина"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pl_lenina'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pl_lenina"))
+                            # Кнопка выбора с галочками: 🟥 Чернышевская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Чернышевская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Чернышевская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Чернышевская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Чернышевская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_chernyshevskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_chernyshevskaya"))
+                            # Кнопка выбора с галочками: 🟥 Площадь Восстания
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Площадь Восстания' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Площадь Восстания" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Площадь Восстания': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Площадь Восстания"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pl_vosstaniya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pl_vosstaniya"))
+                            # Кнопка выбора с галочками: 🟥 Владимирская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Владимирская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Владимирская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Владимирская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Владимирская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_vladimirskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_vladimirskaya"))
+                            # Кнопка выбора с галочками: 🟥 Пушкинская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Пушкинская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Пушкинская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Пушкинская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Пушкинская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pushkinskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pushkinskaya"))
+                            # Кнопка выбора с галочками: 🟥 Технологический институт-1
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Технологический институт-1' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Технологический институт-1" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Технологический институт-1': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Технологический институт-1"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_tehinstitut1'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_tehinstitut1"))
+                            # Кнопка выбора с галочками: 🟥 Балтийская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Балтийская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Балтийская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Балтийская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Балтийская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_baltiyskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_baltiyskaya"))
+                            # Кнопка выбора с галочками: 🟥 Нарвская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Нарвская' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Нарвская" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Нарвская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Нарвская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_narvskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_narvskaya"))
+                            # Кнопка выбора с галочками: 🟥 Кировский завод
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Кировский завод' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Кировский завод" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Кировский завод': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Кировский завод"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_kirovsky'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_kirovsky"))
+                            # Кнопка выбора с галочками: 🟥 Автово
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Автово' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Автово" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Автово': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Автово"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_avtovo'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_avtovo"))
+                            # Кнопка выбора с галочками: 🟥 Ленинский проспект
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Ленинский проспект' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Ленинский проспект" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Ленинский проспект': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Ленинский проспект"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_leninsky'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_leninsky"))
+                            # Кнопка выбора с галочками: 🟥 Проспект Ветеранов
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟥 Проспект Ветеранов' в списке: {user_data[user_id]['multi_select_red_line_stations']}")
+                            selected_mark = "✅ " if "🟥 Проспект Ветеранов" in user_data[user_id]["multi_select_red_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟥 Проспект Ветеранов': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟥 Проспект Ветеранов"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_veteranov'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_veteranov"))
+                            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                            # Добавляем кнопку "Готово" для множественного выбора
+                            builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_red_line_stations"))
+                            builder.adjust(2)
+                            keyboard = builder.as_markup()
+                            await message.answer(text, reply_markup=keyboard)
+                            logging.info(f"✅ Прямая навигация к узлу множественного выбора red_line_stations выполнена")
+                        elif current_node_id == "blue_line_stations":
+                            # Прямая навигация к узлу с множественным выбором blue_line_stations
+                            logging.info(f"🔧 Переходим к узлу с множественным выбором: blue_line_stations")
+                            text = """🟦 Московско-Петроградская линия
+
+Выбери свою станцию:"""
+                            user_data[user_id] = user_data.get(user_id, {})
+                            # Инициализируем базовые переменные пользователя если их нет
+                            if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                                # Получаем объект пользователя из сообщения или callback
+                                user_obj = None
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
+                                if user_obj:
+                                    init_user_variables(user_id, user_obj)
+                            
+                            # Подставляем все доступные переменные пользователя в текст
+                            user_vars = await get_user_from_db(user_id)
+                            if not user_vars:
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # get_user_from_db теперь возвращает уже обработанные user_data
+                            if not isinstance(user_vars, dict):
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # Инициализируем состояние множественного выбора
+                            user_data[user_id]["multi_select_blue_line_stations"] = []
+                            user_data[user_id]["multi_select_node"] = "blue_line_stations"
+                            user_data[user_id]["multi_select_type"] = "selection"
+                            user_data[user_id]["multi_select_variable"] = "metro_stations"
+                            # Инициализация состояния множественного выбора
+                            if user_id not in user_data:
+                                user_data[user_id] = {}
+                            
+                            # Загружаем ранее выбранные варианты
+                            saved_selections = []
+                            if user_vars:
+                                for var_name, var_data in user_vars.items():
+                                    if var_name == "metro_stations":
+                                        if isinstance(var_data, dict) and "value" in var_data:
+                                            selections_str = var_data["value"]
+                                        elif isinstance(var_data, str):
+                                            selections_str = var_data
+                                        else:
+                                            continue
+                                        if selections_str and selections_str.strip():
+                                            saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                                            break
+                            
+                            # Инициализируем состояние если его нет
+                            if "multi_select_blue_line_stations" not in user_data[user_id]:
+                                user_data[user_id]["multi_select_blue_line_stations"] = saved_selections.copy()
+                            user_data[user_id]["multi_select_node"] = "blue_line_stations"
+                            user_data[user_id]["multi_select_type"] = "inline"
+                            user_data[user_id]["multi_select_variable"] = "metro_stations"
+                            logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+                            
+                            builder = InlineKeyboardBuilder()
+                            # Кнопка выбора с галочками: 🟦 Парнас
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Парнас' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Парнас" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Парнас': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Парнас"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_parnas'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_parnas"))
+                            # Кнопка выбора с галочками: 🟦 Проспект Просвещения
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Проспект Просвещения' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Проспект Просвещения" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Проспект Просвещения': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Проспект Просвещения"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_prosp_prosvesh'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_prosp_prosvesh"))
+                            # Кнопка выбора с галочками: 🟦 Озерки
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Озерки' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Озерки" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Озерки': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Озерки"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_ozerki'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_ozerki"))
+                            # Кнопка выбора с галочками: 🟦 Удельная
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Удельная' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Удельная" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Удельная': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Удельная"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_udelnaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_udelnaya"))
+                            # Кнопка выбора с галочками: 🟦 Пионерская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Пионерская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Пионерская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Пионерская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Пионерская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pionerskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pionerskaya"))
+                            # Кнопка выбора с галочками: 🟦 Черная речка
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Черная речка' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Черная речка" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Черная речка': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Черная речка"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_chernaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_chernaya"))
+                            # Кнопка выбора с галочками: 🟦 Петроградская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Петроградская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Петроградская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Петроградская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Петроградская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_petrogradskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_petrogradskaya"))
+                            # Кнопка выбора с галочками: 🟦 Горьковская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Горьковская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Горьковская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Горьковская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Горьковская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_gorkovskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_gorkovskaya"))
+                            # Кнопка выбора с галочками: 🟦 Невский проспект
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Невский проспект' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Невский проспект" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Невский проспект': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Невский проспект"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_nevsky'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_nevsky"))
+                            # Кнопка выбора с галочками: 🟦 Сенная площадь
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Сенная площадь' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Сенная площадь" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Сенная площадь': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Сенная площадь"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_sennaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_sennaya"))
+                            # Кнопка выбора с галочками: 🟦 Технологический институт-2
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Технологический институт-2' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Технологический институт-2" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Технологический институт-2': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Технологический институт-2"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_tehinstitut2'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_tehinstitut2"))
+                            # Кнопка выбора с галочками: 🟦 Фрунзенская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Фрунзенская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Фрунзенская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Фрунзенская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Фрунзенская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_frunzenskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_frunzenskaya"))
+                            # Кнопка выбора с галочками: 🟦 Московские ворота
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Московские ворота' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Московские ворота" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Московские ворота': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Московские ворота"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_mosk_vorota'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_mosk_vorota"))
+                            # Кнопка выбора с галочками: 🟦 Электросила
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Электросила' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Электросила" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Электросила': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Электросила"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_elektrosila'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_elektrosila"))
+                            # Кнопка выбора с галочками: 🟦 Парк Победы
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Парк Победы' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Парк Победы" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Парк Победы': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Парк Победы"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_park_pobedy'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_park_pobedy"))
+                            # Кнопка выбора с галочками: 🟦 Московская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Московская' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Московская" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Московская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Московская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_moskovskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_moskovskaya"))
+                            # Кнопка выбора с галочками: 🟦 Звездная
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Звездная' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Звездная" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Звездная': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Звездная"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_zvezdnaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_zvezdnaya"))
+                            # Кнопка выбора с галочками: 🟦 Купчино
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟦 Купчино' в списке: {user_data[user_id]['multi_select_blue_line_stations']}")
+                            selected_mark = "✅ " if "🟦 Купчино" in user_data[user_id]["multi_select_blue_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟦 Купчино': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟦 Купчино"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_kupchino'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_kupchino"))
+                            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                            # Добавляем кнопку "Готово" для множественного выбора
+                            builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_blue_line_stations"))
+                            builder.adjust(2)
+                            keyboard = builder.as_markup()
+                            await message.answer(text, reply_markup=keyboard)
+                            logging.info(f"✅ Прямая навигация к узлу множественного выбора blue_line_stations выполнена")
+                        elif current_node_id == "green_line_stations":
+                            # Прямая навигация к узлу с множественным выбором green_line_stations
+                            logging.info(f"🔧 Переходим к узлу с множественным выбором: green_line_stations")
+                            text = """🟩 Невско-Василеостровская линия
+
+Выбери свою станцию:"""
+                            user_data[user_id] = user_data.get(user_id, {})
+                            # Инициализируем базовые переменные пользователя если их нет
+                            if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                                # Получаем объект пользователя из сообщения или callback
+                                user_obj = None
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
+                                if user_obj:
+                                    init_user_variables(user_id, user_obj)
+                            
+                            # Подставляем все доступные переменные пользователя в текст
+                            user_vars = await get_user_from_db(user_id)
+                            if not user_vars:
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # get_user_from_db теперь возвращает уже обработанные user_data
+                            if not isinstance(user_vars, dict):
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # Инициализируем состояние множественного выбора
+                            user_data[user_id]["multi_select_green_line_stations"] = []
+                            user_data[user_id]["multi_select_node"] = "green_line_stations"
+                            user_data[user_id]["multi_select_type"] = "selection"
+                            user_data[user_id]["multi_select_variable"] = "metro_stations"
+                            # Инициализация состояния множественного выбора
+                            if user_id not in user_data:
+                                user_data[user_id] = {}
+                            
+                            # Загружаем ранее выбранные варианты
+                            saved_selections = []
+                            if user_vars:
+                                for var_name, var_data in user_vars.items():
+                                    if var_name == "metro_stations":
+                                        if isinstance(var_data, dict) and "value" in var_data:
+                                            selections_str = var_data["value"]
+                                        elif isinstance(var_data, str):
+                                            selections_str = var_data
+                                        else:
+                                            continue
+                                        if selections_str and selections_str.strip():
+                                            saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                                            break
+                            
+                            # Инициализируем состояние если его нет
+                            if "multi_select_green_line_stations" not in user_data[user_id]:
+                                user_data[user_id]["multi_select_green_line_stations"] = saved_selections.copy()
+                            user_data[user_id]["multi_select_node"] = "green_line_stations"
+                            user_data[user_id]["multi_select_type"] = "inline"
+                            user_data[user_id]["multi_select_variable"] = "metro_stations"
+                            logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+                            
+                            builder = InlineKeyboardBuilder()
+                            # Кнопка выбора с галочками: 🟩 Приморская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Приморская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Приморская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Приморская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Приморская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_primorskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_primorskaya"))
+                            # Кнопка выбора с галочками: 🟩 Василеостровская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Василеостровская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Василеостровская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Василеостровская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Василеостровская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_vasileostr'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_vasileostr"))
+                            # Кнопка выбора с галочками: 🟩 Гостиный двор
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Гостиный двор' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Гостиный двор" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Гостиный двор': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Гостиный двор"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_gostiny'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_gostiny"))
+                            # Кнопка выбора с галочками: 🟩 Маяковская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Маяковская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Маяковская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Маяковская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Маяковская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_mayakovskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_mayakovskaya"))
+                            # Кнопка выбора с галочками: 🟩 Площадь Александра Невского-1
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Площадь Александра Невского-1' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Площадь Александра Невского-1" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Площадь Александра Невского-1': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Площадь Александра Невского-1"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_pl_nevsk'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_pl_nevsk"))
+                            # Кнопка выбора с галочками: 🟩 Елизаровская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Елизаровская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Елизаровская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Елизаровская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Елизаровская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_elizarovskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_elizarovskaya"))
+                            # Кнопка выбора с галочками: 🟩 Ломоносовская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Ломоносовская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Ломоносовская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Ломоносовская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Ломоносовская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_lomonosovskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_lomonosovskaya"))
+                            # Кнопка выбора с галочками: 🟩 Пролетарская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Пролетарская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Пролетарская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Пролетарская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Пролетарская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_proletarskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_proletarskaya"))
+                            # Кнопка выбора с галочками: 🟩 Обухово
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Обухово' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Обухово" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Обухово': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Обухово"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_obuhovo'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_obuhovo"))
+                            # Кнопка выбора с галочками: 🟩 Рыбацкое
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Рыбацкое' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Рыбацкое" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Рыбацкое': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Рыбацкое"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_rybackoe'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_rybackoe"))
+                            # Кнопка выбора с галочками: 🟩 Новокрестовская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Новокрестовская' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Новокрестовская" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Новокрестовская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Новокрестовская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_novokrestovsk'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_novokrestovsk"))
+                            # Кнопка выбора с галочками: 🟩 Беговая
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟩 Беговая' в списке: {user_data[user_id]['multi_select_green_line_stations']}")
+                            selected_mark = "✅ " if "🟩 Беговая" in user_data[user_id]["multi_select_green_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟩 Беговая': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟩 Беговая"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_begovaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_begovaya"))
+                            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                            # Добавляем кнопку "Готово" для множественного выбора
+                            builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_green_line_stations"))
+                            builder.adjust(2)
+                            keyboard = builder.as_markup()
+                            await message.answer(text, reply_markup=keyboard)
+                            logging.info(f"✅ Прямая навигация к узлу множественного выбора green_line_stations выполнена")
+                        elif current_node_id == "purple_line_stations":
+                            # Прямая навигация к узлу с множественным выбором purple_line_stations
+                            logging.info(f"🔧 Переходим к узлу с множественным выбором: purple_line_stations")
+                            text = """🟪 Фрунзенско-Приморская линия
+
+Выбери свою станцию:"""
+                            user_data[user_id] = user_data.get(user_id, {})
+                            # Инициализируем базовые переменные пользователя если их нет
+                            if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                                # Получаем объект пользователя из сообщения или callback
+                                user_obj = None
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
+                                if user_obj:
+                                    init_user_variables(user_id, user_obj)
+                            
+                            # Подставляем все доступные переменные пользователя в текст
+                            user_vars = await get_user_from_db(user_id)
+                            if not user_vars:
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # get_user_from_db теперь возвращает уже обработанные user_data
+                            if not isinstance(user_vars, dict):
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # Инициализируем состояние множественного выбора
+                            user_data[user_id]["multi_select_purple_line_stations"] = []
+                            user_data[user_id]["multi_select_node"] = "purple_line_stations"
+                            user_data[user_id]["multi_select_type"] = "selection"
+                            user_data[user_id]["multi_select_variable"] = "metro_stations"
+                            # Инициализация состояния множественного выбора
+                            if user_id not in user_data:
+                                user_data[user_id] = {}
+                            
+                            # Загружаем ранее выбранные варианты
+                            saved_selections = []
+                            if user_vars:
+                                for var_name, var_data in user_vars.items():
+                                    if var_name == "metro_stations":
+                                        if isinstance(var_data, dict) and "value" in var_data:
+                                            selections_str = var_data["value"]
+                                        elif isinstance(var_data, str):
+                                            selections_str = var_data
+                                        else:
+                                            continue
+                                        if selections_str and selections_str.strip():
+                                            saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
+                                            break
+                            
+                            # Инициализируем состояние если его нет
+                            if "multi_select_purple_line_stations" not in user_data[user_id]:
+                                user_data[user_id]["multi_select_purple_line_stations"] = saved_selections.copy()
+                            user_data[user_id]["multi_select_node"] = "purple_line_stations"
+                            user_data[user_id]["multi_select_type"] = "inline"
+                            user_data[user_id]["multi_select_variable"] = "metro_stations"
+                            logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
+                            
+                            builder = InlineKeyboardBuilder()
+                            # Кнопка выбора с галочками: 🟪 Комендантский проспект
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Комендантский проспект' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Комендантский проспект" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Комендантский проспект': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Комендантский проспект"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_komendantsky'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_komendantsky"))
+                            # Кнопка выбора с галочками: 🟪 Старая Деревня
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Старая Деревня' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Старая Деревня" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Старая Деревня': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Старая Деревня"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_staraya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_staraya"))
+                            # Кнопка выбора с галочками: 🟪 Крестовский остров
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Крестовский остров' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Крестовский остров" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Крестовский остров': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Крестовский остров"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_krestovsky'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_krestovsky"))
+                            # Кнопка выбора с галочками: 🟪 Чкаловская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Чкаловская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Чкаловская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Чкаловская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Чкаловская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_chkalovskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_chkalovskaya"))
+                            # Кнопка выбора с галочками: 🟪 Спортивная
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Спортивная' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Спортивная" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Спортивная': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Спортивная"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_sportivnaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_sportivnaya"))
+                            # Кнопка выбора с галочками: 🟪 Адмиралтейская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Адмиралтейская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Адмиралтейская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Адмиралтейская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Адмиралтейская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_admiralteyskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_admiralteyskaya"))
+                            # Кнопка выбора с галочками: 🟪 Садовая
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Садовая' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Садовая" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Садовая': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Садовая"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_sadovaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_sadovaya"))
+                            # Кнопка выбора с галочками: 🟪 Звенигородская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Звенигородская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Звенигородская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Звенигородская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Звенигородская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_zvenigorodskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_zvenigorodskaya"))
+                            # Кнопка выбора с галочками: 🟪 Обводный канал
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Обводный канал' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Обводный канал" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Обводный канал': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Обводный канал"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_obvodniy'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_obvodniy"))
+                            # Кнопка выбора с галочками: 🟪 Волковская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Волковская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Волковская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Волковская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Волковская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_volkovskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_volkovskaya"))
+                            # Кнопка выбора с галочками: 🟪 Бухарестская
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Бухарестская' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Бухарестская" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Бухарестская': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Бухарестская"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_buharestskaya'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_buharestskaya"))
+                            # Кнопка выбора с галочками: 🟪 Международная
+                            logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '🟪 Международная' в списке: {user_data[user_id]['multi_select_purple_line_stations']}")
+                            selected_mark = "✅ " if "🟪 Международная" in user_data[user_id]["multi_select_purple_line_stations"] else ""
+                            logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '🟪 Международная': selected_mark='{selected_mark}'")
+                            final_text = f"{selected_mark}🟪 Международная"
+                            logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='ms_stations_mezhdunar'")
+                            builder.add(InlineKeyboardButton(text=final_text, callback_data="ms_stations_mezhdunar"))
+                            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+                            # Добавляем кнопку "Готово" для множественного выбора
+                            builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_purple_line_stations"))
+                            builder.adjust(2)
+                            keyboard = builder.as_markup()
+                            await message.answer(text, reply_markup=keyboard)
+                            logging.info(f"✅ Прямая навигация к узлу множественного выбора purple_line_stations выполнена")
+                        elif current_node_id == "profile_complete":
+                            text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_stations}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+
+💬 Источник: {user_source}
+
+Можешь посмотреть полную анкету или сразу получить ссылку на чат!"""
+                            # Замена переменных в тексте
+                            # Инициализируем базовые переменные пользователя если их нет
+                            if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):
+                                # Получаем объект пользователя из сообщения или callback
+                                user_obj = None
+                                # Безопасно проверяем наличие message (для message handlers)
+                                if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):
+                                    user_obj = locals().get('message').from_user
+                                # Безопасно проверяем наличие callback_query (для callback handlers)
+                                elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):
+                                    user_obj = locals().get('callback_query').from_user
+
+                                if user_obj:
+                                    init_user_variables(user_id, user_obj)
+                            
+                            # Подставляем все доступные переменные пользователя в текст
+                            user_vars = await get_user_from_db(user_id)
+                            if not user_vars:
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # get_user_from_db теперь возвращает уже обработанные user_data
+                            if not isinstance(user_vars, dict):
+                                user_vars = user_data.get(user_id, {})
+                            
+                            # Заменяем все переменные в тексте
+                            text = replace_variables_in_text(text, user_vars)
+                            # Создаем inline клавиатуру
+                            builder = InlineKeyboardBuilder()
+                            logging.info(f"Создана кнопка команды: Ссылка на чат 🔗 -> cmd_link")
+                            builder.add(InlineKeyboardButton(text="Ссылка на чат 🔗", callback_data="cmd_link"))
+                            logging.info(f"Создана кнопка команды: Редактировать профиль ✏️ -> cmd_profile")
+                            builder.add(InlineKeyboardButton(text="Редактировать профиль ✏️", callback_data="cmd_profile"))
+                            builder.adjust(1)
+                            keyboard = builder.as_markup()
+                            await message.answer(text, reply_markup=keyboard)
+                            # НЕ отправляем сообщение об успехе здесь - это делается в старом формате
+                            # Очищаем сястояние ожидания ввода после уяпеянояо перехода
+                            if "waiting_for_input" in user_data[user_id]:
+                                del user_data[user_id]["waiting_for_input"]
+                            
+                            logging.info("✅ Переход к следующему уялу выполнен успешно")
+                            break  # Нет автоперехода, завершаем цикл
+                        elif current_node_id == "show_profile":
+                            # Выполняяем команду /profile
+                            from types import SimpleNamespace
+                            fake_message = SimpleNamespace()
+                            fake_message.from_user = message.from_user
+                            fake_message.chat = message.chat
+                            fake_message.date = message.date
+                            fake_message.answer = message.answer
+                            await profile_handler(fake_message)
+                            break  # Выходим из цикла после вяполяеняя команды
+                        elif current_node_id == "chat_link":
+                            # Выполняяем команду /link
+                            from types import SimpleNamespace
+                            fake_message = SimpleNamespace()
+                            fake_message.from_user = message.from_user
+                            fake_message.chat = message.chat
+                            fake_message.date = message.date
+                            fake_message.answer = message.answer
+                            await link_handler(fake_message)
+                            break  # Выходим из цикла после вяполяеняя команды
+                        elif current_node_id == "help_command":
+                            # Выполняяем команду /help
+                            from types import SimpleNamespace
+                            fake_message = SimpleNamespace()
+                            fake_message.from_user = message.from_user
+                            fake_message.chat = message.chat
+                            fake_message.date = message.date
+                            fake_message.answer = message.answer
+                            await help_handler(fake_message)
+                            break  # Выходим из цикла после вяполяеняя команды
                         else:
                             logging.warning(f"Неизвестный узел: {current_node_id}")
                             break  # Выходим из цикла при неизвестном узле
@@ -8441,7 +7995,7 @@ async def handle_user_input(message: types.Message):
         
         # Обработка старого формата (для совместимости)
         # Находим узел для получения настроек
-        logging.info(f"DEBUG old format: checking inputNodes: start, join_request")
+        logging.info(f"DEBUG old format: checking inputNodes: start, join_request, gender_selection, name_input, age_input, metro_selection")
         if waiting_node_id == "start":
             
             # Сохраняем ответ пользователя
@@ -8481,9 +8035,14 @@ async def handle_user_input(message: types.Message):
                     "success_message": ""
                 }
                 
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
+                builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
+                builder.adjust(1)
+                keyboard = builder.as_markup()
                 # Заменяем все переменные в тексте
                 text = replace_variables_in_text(text, user_vars)
-                await message.answer(text)
+                await message.answer(text, reply_markup=keyboard)
                 
                 logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
@@ -8514,6 +8073,239 @@ async def handle_user_input(message: types.Message):
             # Конец цепочки ввода - завершаем обработку
             logging.info("Завершена цепочка сбора пользовательских данных")
             return
+        elif waiting_node_id == "gender_selection":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["gender"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "gender", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: gender = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            
+            logging.info(f"Получен пользовательский ввод: gender = {user_text}")
+            
+            # Конец цепочки ввода - завершаем обработку
+            logging.info("Завершена цепочка сбора пользовательских данных")
+            return
+        elif waiting_node_id == "name_input":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["user_name"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "user_name", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: user_name = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            
+            logging.info(f"Получен пользовательский ввод: user_name = {user_text}")
+            
+            # Переходим к следующему узлу
+            try:
+                # Отправляем сообщение для узла age_input
+                text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+                # Настраиваем новое ожидание ввода для узла age_input
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "user_age",
+                    "save_to_database": True,
+                    "node_id": "age_input",
+                    "next_node_id": "metro_selection",
+                    "min_length": 0,
+                    "max_length": 0,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": ""
+                }
+                
+                # Заменяем все переменные в тексте
+                text = replace_variables_in_text(text, user_vars)
+                await message.answer(text)
+                
+                logging.info("✅ Переход к следующему узлу выполнен успешно")
+            except Exception as e:
+                logging.error(f"Ошябка при переходе к следующему узлу: {e}")
+            return
+        elif waiting_node_id == "age_input":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["user_age"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "user_age", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: user_age = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            
+            logging.info(f"Получен пользовательский ввод: user_age = {user_text}")
+            
+            # Переходим к следующему узлу
+            try:
+                # Отправляем сообщение для узла metro_selection
+                text = """На какой станции метро ты обычно бываешь? 🚇
+
+Выбери свою ветку:"""
+                # Настраиваем новое ожидание ввода для узла metro_selection
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "metro_stations",
+                    "save_to_database": True,
+                    "node_id": "metro_selection",
+                    "next_node_id": "",
+                    "min_length": 0,
+                    "max_length": 0,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": ""
+                }
+                
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line_stations"))
+                builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line_stations"))
+                builder.add(InlineKeyboardButton(text="Зелёная ветка 🟩", callback_data="green_line_stations"))
+                builder.add(InlineKeyboardButton(text="Фиолетовая ветка 🟪", callback_data="purple_line_stations"))
+                builder.add(InlineKeyboardButton(text="Я из ЛО 🏡", callback_data="interests_categories"))
+                builder.add(InlineKeyboardButton(text="Я не в Питере 🌍", callback_data="interests_categories"))
+                builder.adjust(2)
+                keyboard = builder.as_markup()
+                # Заменяем все переменные в тексте
+                text = replace_variables_in_text(text, user_vars)
+                await message.answer(text, reply_markup=keyboard)
+                
+                logging.info("✅ Переход к следующему узлу выполнен успешно")
+            except Exception as e:
+                logging.error(f"Ошябка при переходе к следующему узлу: {e}")
+            return
+        elif waiting_node_id == "metro_selection":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["metro_stations"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "metro_stations", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: metro_stations = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            
+            logging.info(f"Получен пользовательский ввод: metro_stations = {user_text}")
+            
+            # Конец цепочки ввода - завершаем обработку
+            logging.info("Завершена цепочка сбора пользовательских данных")
+            return
+
+# Обработчики для кнопок команд
+# Найдено 3 кнопок команд: cmd_link, cmd_profile, cmd_start
+
+@dp.callback_query(lambda c: c.data == "cmd_link")
+async def handle_cmd_link(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    logging.info(f"Обработка кнопки команды: cmd_link -> /link (пользователь {callback_query.from_user.id})")
+    # Симулияуем выполнение команды /link
+    
+    # Создаем fake message object для команды
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.date = callback_query.message.date
+    fake_message.answer = callback_query.message.answer
+    fake_message.edit_text = callback_query.message.edit_text
+    
+    # Вызываем link handler
+    await link_handler(fake_message)
+    logging.info(f"Команда /link выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
+
+@dp.callback_query(lambda c: c.data == "cmd_profile")
+async def handle_cmd_profile(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    logging.info(f"Обработка кнопки команды: cmd_profile -> /profile (пользователь {callback_query.from_user.id})")
+    # Симулияуем выполнение команды /profile
+    
+    # Создаем fake message object для команды
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.date = callback_query.message.date
+    fake_message.answer = callback_query.message.answer
+    fake_message.edit_text = callback_query.message.edit_text
+    
+    # Вызываем profile handler
+    await profile_handler(fake_message)
+    logging.info(f"Команда /profile выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
+
+@dp.callback_query(lambda c: c.data == "cmd_start")
+async def handle_cmd_start(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    logging.info(f"Обработка кнопки команды: cmd_start -> /start (пользователь {callback_query.from_user.id})")
+    # Симулияуем выполнение команды /start
+    
+    # Создаем fake message object для команды
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.date = callback_query.message.date
+    fake_message.answer = callback_query.message.answer
+    fake_message.edit_text = callback_query.message.edit_text
+    
+    # Вызываем start handler через edit_text
+    # Создаем специальный объект для редактирования сообщения
+    class FakeMessageEdit:
+        def __init__(self, callback_query):
+            self.from_user = callback_query.from_user
+            self.chat = callback_query.message.chat
+            self.date = callback_query.message.date
+            self.message_id = callback_query.message.message_id
+            self._callback_query = callback_query
+        
+        async def answer(self, text, parse_mode=None, reply_markup=None):
+            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
+        
+        async def edit_text(self, text, parse_mode=None, reply_markup=None):
+            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
+    
+    fake_edit_message = FakeMessageEdit(callback_query)
+    await start_handler(fake_edit_message)
+    logging.info(f"Команда /start выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
 
 # Универсальный fallback-обработчик для всех необработанных текстовых сообщений
 @dp.message(F.text)
@@ -8561,6 +8353,7 @@ async def main():
         
         # Регистрация middleware для сохранения сообщений
         dp.message.middleware(message_logging_middleware)
+        dp.callback_query.middleware(callback_query_logging_middleware)
         
         print("🤖 Бот запущен и готов к работе!")
         await dp.start_polling(bot)
@@ -8577,5 +8370,890 @@ async def main():
         
         # Закрываем сессию бота
         await bot.session.close()
+
+# Обработчики для множественного выбора
+@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))
+async def handle_multi_select_callback(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    # Инициализируем базовые переменные пользователя
+    user_name = init_user_variables(user_id, callback_query.from_user)
+    
+    callback_data = callback_query.data
+    
+    # Обработка кнопки "Готово"
+    if callback_data.startswith("done_"):
+        # Завершение множественного выбора (новый формат)
+        logging.info(f"🏁 Обработка кнопки Готово: {callback_data}")
+        short_node_id = callback_data.replace("done_", "")
+        # Находим полный node_id по короткому суффиксу
+        node_id = None
+        if short_node_id == "e_stations":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел: red_line_stations")
+        if short_node_id == "e_stations":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел: blue_line_stations")
+        if short_node_id == "e_stations":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел: green_line_stations")
+        if short_node_id == "e_stations":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел: purple_line_stations")
+    elif callback_data.startswith("multi_select_done_"):
+        # Завершение множественного выбора (старый формат)
+        node_id = callback_data.replace("multi_select_done_", "")
+        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])
+        
+        # Сохраняем выбранные опции в базу данных
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            if node_id == "red_line_stations":
+                await save_user_data_to_db(user_id, "metro_stations", selected_text)
+            if node_id == "blue_line_stations":
+                await save_user_data_to_db(user_id, "metro_stations", selected_text)
+            if node_id == "green_line_stations":
+                await save_user_data_to_db(user_id, "metro_stations", selected_text)
+            if node_id == "purple_line_stations":
+                await save_user_data_to_db(user_id, "metro_stations", selected_text)
+            # Резервное сохранение если узел не найден
+            if not any(node_id == node for node in ["red_line_stations", "blue_line_stations", "green_line_stations", "purple_line_stations"]):
+                await save_user_data_to_db(user_id, f"multi_select_{node_id}", selected_text)
+        
+        # Очищаем состояние множественного выбора
+        if user_id in user_data:
+            user_data[user_id].pop(f"multi_select_{node_id}", None)
+            user_data[user_id].pop("multi_select_node", None)
+        
+        # Переходим к следующему узлу, если указан
+        # Определяем следующий узел для каждого node_id
+        if node_id == "red_line_stations":
+            # Целевой узел не найден, завершаем выбор
+            logging.warning(f"⚠️ Целевой узел не найден: interests_categories")
+            await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)
+        if node_id == "blue_line_stations":
+            # Целевой узел не найден, завершаем выбор
+            logging.warning(f"⚠️ Целевой узел не найден: interests_categories")
+            await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)
+        if node_id == "green_line_stations":
+            # Целевой узел не найден, завершаем выбор
+            logging.warning(f"⚠️ Целевой узел не найден: interests_categories")
+            await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)
+        if node_id == "purple_line_stations":
+            # Целевой узел не найден, завершаем выбор
+            logging.warning(f"⚠️ Целевой узел не найден: interests_categories")
+            await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)
+        return
+    
+    # Обработка выбора опции
+    logging.info(f"📱 Обрабатываем callback_data: {callback_data}")
+    
+    # Поддерживаем и новый формат ms_ и старый multi_select_
+    if callback_data.startswith("ms_"):
+        # Новый короткий формат: ms_shortNodeId_shortTarget
+        parts = callback_data.split("_")
+        if len(parts) >= 3:
+            short_node_id = parts[1]
+            button_id = "_".join(parts[2:])
+            # Находим полный node_id по короткому суффиксу
+            node_id = None
+            logging.info(f"🔍 Ищем узел по короткому ID: {short_node_id}")
+            
+            # Для станций метро ищем по содержимому кнопки, а не по короткому ID
+            if short_node_id == "stations":
+                # Проверяем каждый узел станций на наличие нужной кнопки
+                # Проверяем узел red_line_stations
+                if button_id == "devyatkino":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "grazhdansky":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "akademicheskaya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "politehnicheskaya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "pl_muzhestva":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "lesnaya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "vyborgskaya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "pl_lenina":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "chernyshevskaya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "pl_vosstaniya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "vladimirskaya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "pushkinskaya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "tehinstitut1":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "baltiyskaya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "narvskaya":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "kirovsky":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "avtovo":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "leninsky":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "veteranov":
+                    node_id = "red_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                # Проверяем узел blue_line_stations
+                if button_id == "parnas":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "prosp_prosvesh":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "ozerki":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "udelnaya":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "pionerskaya":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "chernaya":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "petrogradskaya":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "gorkovskaya":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "nevsky":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "sennaya":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "tehinstitut2":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "frunzenskaya":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "mosk_vorota":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "elektrosila":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "park_pobedy":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "moskovskaya":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "zvezdnaya":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "kupchino":
+                    node_id = "blue_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                # Проверяем узел green_line_stations
+                if button_id == "primorskaya":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "vasileostr":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "gostiny":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "mayakovskaya":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "pl_nevsk":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "elizarovskaya":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "lomonosovskaya":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "proletarskaya":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "obuhovo":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "rybackoe":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "novokrestovsk":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "begovaya":
+                    node_id = "green_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                # Проверяем узел purple_line_stations
+                if button_id == "komendantsky":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "staraya":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "krestovsky":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "chkalovskaya":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "sportivnaya":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "admiralteyskaya":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "sadovaya":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "zvenigorodskaya":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "obvodniy":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "volkovskaya":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "buharestskaya":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+                if button_id == "mezhdunar":
+                    node_id = "purple_line_stations"
+                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+            else:
+                # Обычная логика для других узлов
+                pass
+    elif callback_data.startswith("multi_select_"):
+        # Старый формат для обратной совместимости
+        parts = callback_data.split("_")
+        if len(parts) >= 3:
+            node_id = parts[2]
+            button_id = "_".join(parts[3:]) if len(parts) > 3 else parts[2]
+    else:
+        logging.warning(f"⚠️ Неизвестный формат callback_data: {callback_data}")
+        return
+    
+    if not node_id:
+        # Резервный поиск: ищем узел, который содержит кнопку с target, совпадающим с button_id
+        logging.info(f"🔍 Резервный поиск узла по button_id: {button_id}")
+
+        if not node_id and button_id == "devyatkino":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "grazhdansky":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "akademicheskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "politehnicheskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pl_muzhestva":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "lesnaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "vyborgskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pl_lenina":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "chernyshevskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pl_vosstaniya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "vladimirskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pushkinskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "tehinstitut1":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "baltiyskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "narvskaya":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "kirovsky":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "avtovo":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "leninsky":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "veteranov":
+            node_id = "red_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "parnas":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "prosp_prosvesh":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "ozerki":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "udelnaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pionerskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "chernaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "petrogradskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "gorkovskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "nevsky":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "sennaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "tehinstitut2":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "frunzenskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "mosk_vorota":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "elektrosila":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "park_pobedy":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "moskovskaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "zvezdnaya":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "kupchino":
+            node_id = "blue_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "primorskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "vasileostr":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "gostiny":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "mayakovskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "pl_nevsk":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "elizarovskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "lomonosovskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "proletarskaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "obuhovo":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "rybackoe":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "novokrestovsk":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "begovaya":
+            node_id = "green_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "komendantsky":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "staraya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "krestovsky":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "chkalovskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "sportivnaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "admiralteyskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "sadovaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "zvenigorodskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "obvodniy":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "volkovskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "buharestskaya":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+        if not node_id and button_id == "mezhdunar":
+            node_id = "purple_line_stations"
+            logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+
+    if not node_id:
+        logging.warning(f"⚠️ Не удалось найти node_id для callback_data: {callback_data}")
+        return
+    
+    logging.info(f"📱 Определили node_id: {node_id}, button_id: {button_id}")
+    
+    # Инициализируем список выбранных опций с восстановлением из БД
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    
+    # Восстанавливаем ранее выбранные опции из базы данных
+    if f"multi_select_{node_id}" not in user_data[user_id]:
+        # Загружаем сохраненные данные из базы
+        user_vars = await get_user_from_db(user_id)
+        saved_selections = []
+        
+        if user_vars:
+            # Ищем переменную с интересами
+            for var_name, var_data in user_vars.items():
+                if "интерес" in var_name.lower() or var_name == "interests" or var_name.startswith("multi_select_"):
+                    if isinstance(var_data, dict) and "value" in var_data:
+                        saved_str = var_data["value"]
+                    elif isinstance(var_data, str):
+                        saved_str = var_data
+                    else:
+                        saved_str = str(var_data) if var_data else ""
+                    
+                    if saved_str:
+                        saved_selections = [item.strip() for item in saved_str.split(",")]
+                        break
+        
+        user_data[user_id][f"multi_select_{node_id}"] = saved_selections
+    
+    # Находим текст кнопки по button_id
+    button_text = None
+    if node_id == "red_line_stations":
+        if button_id == "devyatkino":
+            button_text = "🟥 Девяткино"
+        if button_id == "grazhdansky":
+            button_text = "🟥 Гражданский проспект"
+        if button_id == "akademicheskaya":
+            button_text = "🟥 Академическая"
+        if button_id == "politehnicheskaya":
+            button_text = "🟥 Политехническая"
+        if button_id == "pl_muzhestva":
+            button_text = "🟥 Площадь Мужества"
+        if button_id == "lesnaya":
+            button_text = "🟥 Лесная"
+        if button_id == "vyborgskaya":
+            button_text = "🟥 Выборгская"
+        if button_id == "pl_lenina":
+            button_text = "🟥 Площадь Ленина"
+        if button_id == "chernyshevskaya":
+            button_text = "🟥 Чернышевская"
+        if button_id == "pl_vosstaniya":
+            button_text = "🟥 Площадь Восстания"
+        if button_id == "vladimirskaya":
+            button_text = "🟥 Владимирская"
+        if button_id == "pushkinskaya":
+            button_text = "🟥 Пушкинская"
+        if button_id == "tehinstitut1":
+            button_text = "🟥 Технологический институт-1"
+        if button_id == "baltiyskaya":
+            button_text = "🟥 Балтийская"
+        if button_id == "narvskaya":
+            button_text = "🟥 Нарвская"
+        if button_id == "kirovsky":
+            button_text = "🟥 Кировский завод"
+        if button_id == "avtovo":
+            button_text = "🟥 Автово"
+        if button_id == "leninsky":
+            button_text = "🟥 Ленинский проспект"
+        if button_id == "veteranov":
+            button_text = "🟥 Проспект Ветеранов"
+    if node_id == "blue_line_stations":
+        if button_id == "parnas":
+            button_text = "🟦 Парнас"
+        if button_id == "prosp_prosvesh":
+            button_text = "🟦 Проспект Просвещения"
+        if button_id == "ozerki":
+            button_text = "🟦 Озерки"
+        if button_id == "udelnaya":
+            button_text = "🟦 Удельная"
+        if button_id == "pionerskaya":
+            button_text = "🟦 Пионерская"
+        if button_id == "chernaya":
+            button_text = "🟦 Черная речка"
+        if button_id == "petrogradskaya":
+            button_text = "🟦 Петроградская"
+        if button_id == "gorkovskaya":
+            button_text = "🟦 Горьковская"
+        if button_id == "nevsky":
+            button_text = "🟦 Невский проспект"
+        if button_id == "sennaya":
+            button_text = "🟦 Сенная площадь"
+        if button_id == "tehinstitut2":
+            button_text = "🟦 Технологический институт-2"
+        if button_id == "frunzenskaya":
+            button_text = "🟦 Фрунзенская"
+        if button_id == "mosk_vorota":
+            button_text = "🟦 Московские ворота"
+        if button_id == "elektrosila":
+            button_text = "🟦 Электросила"
+        if button_id == "park_pobedy":
+            button_text = "🟦 Парк Победы"
+        if button_id == "moskovskaya":
+            button_text = "🟦 Московская"
+        if button_id == "zvezdnaya":
+            button_text = "🟦 Звездная"
+        if button_id == "kupchino":
+            button_text = "🟦 Купчино"
+    if node_id == "green_line_stations":
+        if button_id == "primorskaya":
+            button_text = "🟩 Приморская"
+        if button_id == "vasileostr":
+            button_text = "🟩 Василеостровская"
+        if button_id == "gostiny":
+            button_text = "🟩 Гостиный двор"
+        if button_id == "mayakovskaya":
+            button_text = "🟩 Маяковская"
+        if button_id == "pl_nevsk":
+            button_text = "🟩 Площадь Александра Невского-1"
+        if button_id == "elizarovskaya":
+            button_text = "🟩 Елизаровская"
+        if button_id == "lomonosovskaya":
+            button_text = "🟩 Ломоносовская"
+        if button_id == "proletarskaya":
+            button_text = "🟩 Пролетарская"
+        if button_id == "obuhovo":
+            button_text = "🟩 Обухово"
+        if button_id == "rybackoe":
+            button_text = "🟩 Рыбацкое"
+        if button_id == "novokrestovsk":
+            button_text = "🟩 Новокрестовская"
+        if button_id == "begovaya":
+            button_text = "🟩 Беговая"
+    if node_id == "purple_line_stations":
+        if button_id == "komendantsky":
+            button_text = "🟪 Комендантский проспект"
+        if button_id == "staraya":
+            button_text = "🟪 Старая Деревня"
+        if button_id == "krestovsky":
+            button_text = "🟪 Крестовский остров"
+        if button_id == "chkalovskaya":
+            button_text = "🟪 Чкаловская"
+        if button_id == "sportivnaya":
+            button_text = "🟪 Спортивная"
+        if button_id == "admiralteyskaya":
+            button_text = "🟪 Адмиралтейская"
+        if button_id == "sadovaya":
+            button_text = "🟪 Садовая"
+        if button_id == "zvenigorodskaya":
+            button_text = "🟪 Звенигородская"
+        if button_id == "obvodniy":
+            button_text = "🟪 Обводный канал"
+        if button_id == "volkovskaya":
+            button_text = "🟪 Волковская"
+        if button_id == "buharestskaya":
+            button_text = "🟪 Бухарестская"
+        if button_id == "mezhdunar":
+            button_text = "🟪 Международная"
+    
+    if button_text:
+        logging.info(f"🔘 Обрабатываем кнопку: {button_text}")
+        selected_list = user_data[user_id][f"multi_select_{node_id}"]
+        if button_text in selected_list:
+            selected_list.remove(button_text)
+            logging.info(f"➖ Убрали выбор: {button_text}")
+        else:
+            selected_list.append(button_text)
+            logging.info(f"➕ Добавили выбор: {button_text}")
+        
+        logging.info(f"📋 Текущие выборы: {selected_list}")
+        
+        # Обновляем клавиатуру с галочками
+        builder = InlineKeyboardBuilder()
+        if node_id == "red_line_stations":
+            selected_mark = "✅ " if "🟥 Девяткино" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Девяткино", callback_data="ms_stations_devyatkino"))
+            selected_mark = "✅ " if "🟥 Гражданский проспект" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Гражданский проспект", callback_data="ms_stations_grazhdansky"))
+            selected_mark = "✅ " if "🟥 Академическая" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Академическая", callback_data="ms_stations_akademicheskaya"))
+            selected_mark = "✅ " if "🟥 Политехническая" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Политехническая", callback_data="ms_stations_politehnicheskaya"))
+            selected_mark = "✅ " if "🟥 Площадь Мужества" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Площадь Мужества", callback_data="ms_stations_pl_muzhestva"))
+            selected_mark = "✅ " if "🟥 Лесная" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Лесная", callback_data="ms_stations_lesnaya"))
+            selected_mark = "✅ " if "🟥 Выборгская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Выборгская", callback_data="ms_stations_vyborgskaya"))
+            selected_mark = "✅ " if "🟥 Площадь Ленина" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Площадь Ленина", callback_data="ms_stations_pl_lenina"))
+            selected_mark = "✅ " if "🟥 Чернышевская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Чернышевская", callback_data="ms_stations_chernyshevskaya"))
+            selected_mark = "✅ " if "🟥 Площадь Восстания" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Площадь Восстания", callback_data="ms_stations_pl_vosstaniya"))
+            selected_mark = "✅ " if "🟥 Владимирская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Владимирская", callback_data="ms_stations_vladimirskaya"))
+            selected_mark = "✅ " if "🟥 Пушкинская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Пушкинская", callback_data="ms_stations_pushkinskaya"))
+            selected_mark = "✅ " if "🟥 Технологический институт-1" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Технологический институт-1", callback_data="ms_stations_tehinstitut1"))
+            selected_mark = "✅ " if "🟥 Балтийская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Балтийская", callback_data="ms_stations_baltiyskaya"))
+            selected_mark = "✅ " if "🟥 Нарвская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Нарвская", callback_data="ms_stations_narvskaya"))
+            selected_mark = "✅ " if "🟥 Кировский завод" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Кировский завод", callback_data="ms_stations_kirovsky"))
+            selected_mark = "✅ " if "🟥 Автово" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Автово", callback_data="ms_stations_avtovo"))
+            selected_mark = "✅ " if "🟥 Ленинский проспект" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Ленинский проспект", callback_data="ms_stations_leninsky"))
+            selected_mark = "✅ " if "🟥 Проспект Ветеранов" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟥 Проспект Ветеранов", callback_data="ms_stations_veteranov"))
+            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+            builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_red_line_stations"))
+            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла red_line_stations (multi-select)")
+            builder.adjust(2)
+        if node_id == "blue_line_stations":
+            selected_mark = "✅ " if "🟦 Парнас" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Парнас", callback_data="ms_stations_parnas"))
+            selected_mark = "✅ " if "🟦 Проспект Просвещения" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Проспект Просвещения", callback_data="ms_stations_prosp_prosvesh"))
+            selected_mark = "✅ " if "🟦 Озерки" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Озерки", callback_data="ms_stations_ozerki"))
+            selected_mark = "✅ " if "🟦 Удельная" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Удельная", callback_data="ms_stations_udelnaya"))
+            selected_mark = "✅ " if "🟦 Пионерская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Пионерская", callback_data="ms_stations_pionerskaya"))
+            selected_mark = "✅ " if "🟦 Черная речка" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Черная речка", callback_data="ms_stations_chernaya"))
+            selected_mark = "✅ " if "🟦 Петроградская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Петроградская", callback_data="ms_stations_petrogradskaya"))
+            selected_mark = "✅ " if "🟦 Горьковская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Горьковская", callback_data="ms_stations_gorkovskaya"))
+            selected_mark = "✅ " if "🟦 Невский проспект" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Невский проспект", callback_data="ms_stations_nevsky"))
+            selected_mark = "✅ " if "🟦 Сенная площадь" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Сенная площадь", callback_data="ms_stations_sennaya"))
+            selected_mark = "✅ " if "🟦 Технологический институт-2" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Технологический институт-2", callback_data="ms_stations_tehinstitut2"))
+            selected_mark = "✅ " if "🟦 Фрунзенская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Фрунзенская", callback_data="ms_stations_frunzenskaya"))
+            selected_mark = "✅ " if "🟦 Московские ворота" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Московские ворота", callback_data="ms_stations_mosk_vorota"))
+            selected_mark = "✅ " if "🟦 Электросила" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Электросила", callback_data="ms_stations_elektrosila"))
+            selected_mark = "✅ " if "🟦 Парк Победы" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Парк Победы", callback_data="ms_stations_park_pobedy"))
+            selected_mark = "✅ " if "🟦 Московская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Московская", callback_data="ms_stations_moskovskaya"))
+            selected_mark = "✅ " if "🟦 Звездная" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Звездная", callback_data="ms_stations_zvezdnaya"))
+            selected_mark = "✅ " if "🟦 Купчино" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟦 Купчино", callback_data="ms_stations_kupchino"))
+            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+            builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_blue_line_stations"))
+            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла blue_line_stations (multi-select)")
+            builder.adjust(2)
+        if node_id == "green_line_stations":
+            selected_mark = "✅ " if "🟩 Приморская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Приморская", callback_data="ms_stations_primorskaya"))
+            selected_mark = "✅ " if "🟩 Василеостровская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Василеостровская", callback_data="ms_stations_vasileostr"))
+            selected_mark = "✅ " if "🟩 Гостиный двор" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Гостиный двор", callback_data="ms_stations_gostiny"))
+            selected_mark = "✅ " if "🟩 Маяковская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Маяковская", callback_data="ms_stations_mayakovskaya"))
+            selected_mark = "✅ " if "🟩 Площадь Александра Невского-1" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Площадь Александра Невского-1", callback_data="ms_stations_pl_nevsk"))
+            selected_mark = "✅ " if "🟩 Елизаровская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Елизаровская", callback_data="ms_stations_elizarovskaya"))
+            selected_mark = "✅ " if "🟩 Ломоносовская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Ломоносовская", callback_data="ms_stations_lomonosovskaya"))
+            selected_mark = "✅ " if "🟩 Пролетарская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Пролетарская", callback_data="ms_stations_proletarskaya"))
+            selected_mark = "✅ " if "🟩 Обухово" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Обухово", callback_data="ms_stations_obuhovo"))
+            selected_mark = "✅ " if "🟩 Рыбацкое" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Рыбацкое", callback_data="ms_stations_rybackoe"))
+            selected_mark = "✅ " if "🟩 Новокрестовская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Новокрестовская", callback_data="ms_stations_novokrestovsk"))
+            selected_mark = "✅ " if "🟩 Беговая" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟩 Беговая", callback_data="ms_stations_begovaya"))
+            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+            builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_green_line_stations"))
+            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла green_line_stations (multi-select)")
+            builder.adjust(2)
+        if node_id == "purple_line_stations":
+            selected_mark = "✅ " if "🟪 Комендантский проспект" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Комендантский проспект", callback_data="ms_stations_komendantsky"))
+            selected_mark = "✅ " if "🟪 Старая Деревня" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Старая Деревня", callback_data="ms_stations_staraya"))
+            selected_mark = "✅ " if "🟪 Крестовский остров" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Крестовский остров", callback_data="ms_stations_krestovsky"))
+            selected_mark = "✅ " if "🟪 Чкаловская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Чкаловская", callback_data="ms_stations_chkalovskaya"))
+            selected_mark = "✅ " if "🟪 Спортивная" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Спортивная", callback_data="ms_stations_sportivnaya"))
+            selected_mark = "✅ " if "🟪 Адмиралтейская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Адмиралтейская", callback_data="ms_stations_admiralteyskaya"))
+            selected_mark = "✅ " if "🟪 Садовая" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Садовая", callback_data="ms_stations_sadovaya"))
+            selected_mark = "✅ " if "🟪 Звенигородская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Звенигородская", callback_data="ms_stations_zvenigorodskaya"))
+            selected_mark = "✅ " if "🟪 Обводный канал" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Обводный канал", callback_data="ms_stations_obvodniy"))
+            selected_mark = "✅ " if "🟪 Волковская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Волковская", callback_data="ms_stations_volkovskaya"))
+            selected_mark = "✅ " if "🟪 Бухарестская" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Бухарестская", callback_data="ms_stations_buharestskaya"))
+            selected_mark = "✅ " if "🟪 Международная" in selected_list else ""
+            builder.add(InlineKeyboardButton(text=f"{selected_mark}🟪 Международная", callback_data="ms_stations_mezhdunar"))
+            builder.add(InlineKeyboardButton(text="⬅️ Назад к веткам", callback_data="metro_selection"))
+            builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_purple_line_stations"))
+            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла purple_line_stations (multi-select)")
+            builder.adjust(2)
+        
+        keyboard = builder.as_markup()
+        logging.info(f"🔄 ОБНОВЛЯЕМ клавиатуру для узла {node_id} с галочками")
+        await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+
+# Обработчик для кнопок завершения множественного выбора
+@dp.callback_query(lambda callback_query: callback_query.data and callback_query.data.startswith("multi_select_done_"))
+async def handle_multi_select_done(callback_query: types.CallbackQuery):
+    logging.info(f"🏁 ОБРАБОТЧИК ГОТОВО АКТИВИРОВАН! callback_data: {callback_query.data}")
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    callback_data = callback_query.data
+    
+    logging.info(f"🏁 Завершение множественного выбора: {callback_data}")
+    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущее сообщение ID: {callback_query.message.message_id}")
+    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущий текст сообщения: {callback_query.message.text}")
+    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Есть ли клавиатура: {bool(callback_query.message.reply_markup)}")
+    
+    # Извлекаем node_id из callback_data
+    node_id = callback_data.replace("multi_select_done_", "")
+    logging.info(f"🎯 Node ID для завершения: {node_id}")
+    
+    if node_id == "red_line_stations":
+        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Обрабатываем завершение для узла red_line_stations")
+        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: continueButtonTarget = interests_categories")
+        # Получаем выбранные опции для узла red_line_stations
+        selected_options = user_data.get(user_id, {}).get("multi_select_red_line_stations", [])
+        logging.info(f"📋 ГЕНЕРАТОР DEBUG: Выбранные опции для red_line_stations: {selected_options}")
+        
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            await save_user_data_to_db(user_id, "metro_stations", selected_text)
+            logging.info(f"💾 ГЕНЕРАТОР DEBUG: Сохранили в БД: metro_stations = {selected_text}")
+        else:
+            logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций для сохранения")
+        
+        return
+    
+    if node_id == "blue_line_stations":
+        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Обрабатываем завершение для узла blue_line_stations")
+        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: continueButtonTarget = interests_categories")
+        # Получаем выбранные опции для узла blue_line_stations
+        selected_options = user_data.get(user_id, {}).get("multi_select_blue_line_stations", [])
+        logging.info(f"📋 ГЕНЕРАТОР DEBUG: Выбранные опции для blue_line_stations: {selected_options}")
+        
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            await save_user_data_to_db(user_id, "metro_stations", selected_text)
+            logging.info(f"💾 ГЕНЕРАТОР DEBUG: Сохранили в БД: metro_stations = {selected_text}")
+        else:
+            logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций для сохранения")
+        
+        return
+    
+    if node_id == "green_line_stations":
+        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Обрабатываем завершение для узла green_line_stations")
+        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: continueButtonTarget = interests_categories")
+        # Получаем выбранные опции для узла green_line_stations
+        selected_options = user_data.get(user_id, {}).get("multi_select_green_line_stations", [])
+        logging.info(f"📋 ГЕНЕРАТОР DEBUG: Выбранные опции для green_line_stations: {selected_options}")
+        
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            await save_user_data_to_db(user_id, "metro_stations", selected_text)
+            logging.info(f"💾 ГЕНЕРАТОР DEBUG: Сохранили в БД: metro_stations = {selected_text}")
+        else:
+            logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций для сохранения")
+        
+        return
+    
+    if node_id == "purple_line_stations":
+        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Обрабатываем завершение для узла purple_line_stations")
+        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: continueButtonTarget = interests_categories")
+        # Получаем выбранные опции для узла purple_line_stations
+        selected_options = user_data.get(user_id, {}).get("multi_select_purple_line_stations", [])
+        logging.info(f"📋 ГЕНЕРАТОР DEBUG: Выбранные опции для purple_line_stations: {selected_options}")
+        
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            await save_user_data_to_db(user_id, "metro_stations", selected_text)
+            logging.info(f"💾 ГЕНЕРАТОР DEBUG: Сохранили в БД: metro_stations = {selected_text}")
+        else:
+            logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций для сохранения")
+        
+        return
+    
+
 if __name__ == "__main__":
     asyncio.run(main())

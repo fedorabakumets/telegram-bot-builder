@@ -578,7 +578,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const { data: botStatus, refetch: refetchBotStatus } = useQuery<BotStatusResponse>({
     queryKey: [`/api/projects/${projectId}/bot`],
     refetchInterval: 10000, // Уменьшили с 1 секунды до 10 секунд
-    refetchIntervalInBackground: false, // Не опрашиваем в фоне
+    refetchIntervalInBackground: true, // Продолжаем опрашивать в фоне
     staleTime: 5000, // Считаем данные свежими 5 секунд
   });
 
@@ -599,6 +599,22 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
 
     return () => clearInterval(interval);
   }, [botStatus?.status, botStatus?.instance?.startedAt]);
+
+  // Эффект для обновления статуса при возвращении на вкладку
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Обновляем статус бота при возвращении на вкладку
+        refetchBotStatus();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refetchBotStatus]);
 
   // Получаем все токены проекта (боты)
   const { data: tokens = [], isLoading, refetch } = useQuery<BotToken[]>({

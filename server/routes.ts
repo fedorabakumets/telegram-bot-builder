@@ -583,7 +583,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Если обновляется data (структура бота), перезапускаем бота если он запущен
-      if (validatedData.data) {
+      // Но только если явно указан флаг перезапуска или произошли значительные изменения
+      if (validatedData.data && validatedData.restartOnUpdate) {
         console.log(`Проект ${projectId} обновлен, проверяем необходимость перезапуска бота...`);
         const restartResult = await restartBotIfRunning(projectId);
         if (!restartResult.success) {
@@ -3083,7 +3084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        // Удаляем всех пользователей из таблицы bot_users для данного проекта
+        // Удаляем всех пользовател����й из таблицы bot_users для данного проекта
         const deleteResult = await pool.query(
           `DELETE FROM bot_users WHERE project_id = $1`,
           [projectId]
