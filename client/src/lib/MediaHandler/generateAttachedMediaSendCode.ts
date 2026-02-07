@@ -158,16 +158,27 @@ export function generateAttachedMediaSendCode(
     return '';
   }
 
-  // Пока поддерживаем только первую медиапеременную
-  const firstMediaVar = attachedMedia[0];
-  const mediaInfo = mediaVariablesMap.get(firstMediaVar);
+  // Находим первую переменную из attachedMedia, которая также присутствует в mediaVariablesMap
+  let mediaInfo = null;
+  let mediaVariable = null;
+  let mediaType = null;
 
-  if (!mediaInfo) {
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Медиапеременная ${firstMediaVar} не найдена в mediaVariablesMap`);
-    return '';
+  for (const mediaVar of attachedMedia) {
+    if (mediaVariablesMap.has(mediaVar)) {
+      const info = mediaVariablesMap.get(mediaVar);
+      if (info) {
+        mediaInfo = info;
+        mediaVariable = mediaVar;
+        mediaType = info.type;
+        break; // Используем первую найденную переменную
+      }
+    }
   }
 
-  const { type: mediaType, variable: mediaVariable } = mediaInfo;
+  if (!mediaInfo || !mediaVariable || !mediaType) {
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Ни одна из медиапеременных ${attachedMedia.join(', ')} не найдена в mediaVariablesMap`);
+    return '';
+  }
 
   codeLines.push(`${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable}`);
   codeLines.push(`${indentLevel}attached_media = None`);
