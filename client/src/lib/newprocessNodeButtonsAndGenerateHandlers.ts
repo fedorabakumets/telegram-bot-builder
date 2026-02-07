@@ -494,8 +494,8 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                   const autoTargetId = targetNode.data.autoTransitionTo;
                   const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                   code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                  code += `    logging.info(f"⚡ Автопереход от язла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                  code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                  code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                  code += `    await handle_node_${safeAutoTargetId}(callback_query.message)\n`;
                   code += `    return\n`;
                 }
               }
@@ -529,7 +529,7 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                   code += '    else:\n';
                   code += `        # ⚡ Автопереход к узлу ${autoTargetId} (только если collectUserInput=true)\n`;
                   code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                  code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                  code += `        await handle_node_${safeAutoTargetId}(callback_query.message)\n`;
                   code += `        return\n`;
                 } else {
                   code += '    # Автопереход пропущен: collectUserInput=false\n';

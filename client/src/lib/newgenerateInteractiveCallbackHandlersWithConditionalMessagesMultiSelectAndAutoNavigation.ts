@@ -4,6 +4,7 @@ import { stripHtmlTags, formatTextForPython, generateButtonText, toPythonBoolean
 import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
 import { generateInlineKeyboardCode } from './Keyboard';
 import { generateUniversalVariableReplacement } from './utils';
+import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
 
 export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes: any[], allReferencedNodeIds: Set<string>, allConditionalButtons: Set<string>, code: string, processNodeButtonsAndGenerateHandlers: (processedCallbacks: Set<string>) => void, nodes: any[], allNodeIds: any[], connections: any[], userDatabaseEnabled: boolean, mediaVariablesMap: Map<string, { type: string; variable: string; }>) {
   if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
@@ -774,7 +775,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   '    ',
                   undefined, // автопереход обрабатывается отдельно
                   collectUserInputFlag,
-                  targetNode.data // передаем данные узла для проверки статических изображений
+                  targetNode.data // передаем данные узла для проверки статических изображен����й
                 );
 
                 if (mediaCode) {
@@ -1719,5 +1720,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
       }
     });
   }
+
+  // Генерируем функции handle_node_* для узлов с условными сообщениями
+  code += generateHandleNodeFunctions(nodes, mediaVariablesMap);
+
   return code;
 }

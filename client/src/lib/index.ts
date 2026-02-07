@@ -62,3 +62,6 @@ export { collectInputTargetNodes } from './utils/collectInputTargetNodes';
 // General utilities
 export * from './utils';
 
+// Handle node functions generator
+export { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
+
