@@ -698,9 +698,87 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 code += '    \n';
                 code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
                 code += `    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
+
+                // Проверяем, есть ли прикрепленные медиафайлы и отправляем соответствующим образом
+                const attachedMedia = targetNode.data.attachedMedia || [];
+                if (attachedMedia.length > 0) {
+                  // Используем generateAttachedMediaSendCode для отправки медиа
+                  const parseModeStr = targetNode.data.formatMode || 'HTML';
+                  const keyboardStr = 'keyboard';
+                  const collectUserInputFlag = targetNode.data.collectUserInput === true ||
+                    targetNode.data.enableTextInput === true ||
+                    targetNode.data.enablePhotoInput === true ||
+                    targetNode.data.enableVideoInput === true ||
+                    targetNode.data.enableAudioInput === true ||
+                    targetNode.data.enableDocumentInput === true;
+
+                  const mediaCode = generateAttachedMediaSendCode(
+                    attachedMedia,
+                    mediaVariablesMap,
+                    'text',
+                    parseModeStr,
+                    keyboardStr,
+                    nodeId,
+                    '    ',
+                    undefined, // автопереход обрабатывается отдельно
+                    collectUserInputFlag,
+                    targetNode.data // передаем данные узла для проверки статических изображений
+                  );
+
+                  if (mediaCode) {
+                    code += '    # Отправляем сообщение (с проверкой прикрепленного медиа)\n';
+                    code += mediaCode;
+                  } else {
+                    // Резервный вариант если не удалось сгенерировать код медиа
+                    code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
+                  }
+                } else {
+                  // Обычная отправка без медиа
+                  code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
+                }
+
+                // Убираем return, чтобы автопереходы могли работать
+                return; // Но оставляем return для завершения функции
               }
 
-              code += '    return  # Возвращаемся чтобы не отправить сообщение дважды\n';
+              // Если collectUserInput=true, продолжаем выполнение и отправляем сообщение с медиа
+              // Проверяем, есть ли прикрепленные медиафайлы и отправляем соответствующим образом
+              const attachedMedia = targetNode.data.attachedMedia || [];
+              if (attachedMedia.length > 0) {
+                // Используем generateAttachedMediaSendCode для отправки медиа
+                const parseModeStr = targetNode.data.formatMode || 'HTML';
+                const keyboardStr = 'keyboard';
+                const collectUserInputFlag = targetNode.data.collectUserInput === true ||
+                  targetNode.data.enableTextInput === true ||
+                  targetNode.data.enablePhotoInput === true ||
+                  targetNode.data.enableVideoInput === true ||
+                  targetNode.data.enableAudioInput === true ||
+                  targetNode.data.enableDocumentInput === true;
+
+                const mediaCode = generateAttachedMediaSendCode(
+                  attachedMedia,
+                  mediaVariablesMap,
+                  'text',
+                  parseModeStr,
+                  keyboardStr,
+                  nodeId,
+                  '    ',
+                  undefined, // автопереход обрабатывается отдельно
+                  collectUserInputFlag,
+                  targetNode.data // передаем данные узла для проверки статических изображений
+                );
+
+                if (mediaCode) {
+                  code += '    # Отправляем сообщение (с проверкой прикрепленного медиа)\n';
+                  code += mediaCode;
+                } else {
+                  // Резервный вариант если не удалось сгенерировать код медиа
+                  code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
+                }
+              } else {
+                // Обычная отправка без медиа
+                code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
+              }
             } else {
               // Генерируем inline клавиатуру (по умолчанию)
               code += '    # Create inline keyboard\n';
