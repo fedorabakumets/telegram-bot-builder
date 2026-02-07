@@ -10,4 +10,4 @@ export * from './generateSafeEditOrSendCode';
 export * from './generateBasicBotSetupCode';
 export * from './generateGroupsConfiguration';
 export * from './generateUtilityFunctions';
-export * from './generateMediaFileFunctions';
+export * from '../MediaHandler/generateMediaFileFunctionsold';
