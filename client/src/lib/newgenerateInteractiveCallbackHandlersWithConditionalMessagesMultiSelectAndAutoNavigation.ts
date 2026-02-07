@@ -702,6 +702,15 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 // Проверяем, есть ли прикрепленные медиафайлы и отправляем соответствующим образом
                 const attachedMedia = targetNode.data.attachedMedia || [];
                 if (attachedMedia.length > 0) {
+                  // Обновляем user_vars, чтобы включить только что установленные переменные медиа
+                  code += '    # Обновляем user_vars, чтобы включить только что установленные переменные медиа\n';
+                  code += '    user_vars = await get_user_from_db(callback_query.from_user.id)\n';
+                  code += '    if not user_vars:\n';
+                  code += '        user_vars = user_data.get(callback_query.from_user.id, {})\n';
+                  code += '    # get_user_from_db теперь возвращает уже обработанные user_data\n';
+                  code += '    if not isinstance(user_vars, dict):\n';
+                  code += '        user_vars = user_data.get(callback_query.from_user.id, {})\n';
+
                   // Используем generateAttachedMediaSendCode для отправки медиа
                   const parseModeStr = targetNode.data.formatMode || 'HTML';
                   const keyboardStr = 'keyboard';
