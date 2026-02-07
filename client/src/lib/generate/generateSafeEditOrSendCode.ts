@@ -47,7 +47,10 @@ export function generateSafeEditOrSendCode(hasInlineButtonsOrSpecialNodes: boole
   code += '            logging.info(f"⚡ Автопереход: {e}, отправляем новое сообщение")\n';
   code += '        else:\n';
   code += '            logging.warning(f"Не удалось отредактировать сообщение: {e}, отправляем новое")\n';
-  code += '        if hasattr(cbq, "message") and cbq.message:\n';
+  code += '        # Проверяем, является ли cbq объектом message или callback_query\n';
+  code += '        if hasattr(cbq, "answer"):  # cbq является message\n';
+  code += '            result = await cbq.answer(text, **kwargs)\n';
+  code += '        elif hasattr(cbq, "message") and cbq.message:  # cbq является callback_query\n';
   code += '            result = await cbq.message.answer(text, **kwargs)\n';
   code += '        else:\n';
   code += '            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")\n';
