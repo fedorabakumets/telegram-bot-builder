@@ -123,6 +123,40 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   const variableLines = variableReplacementCode.split('\n').filter(line => line.trim());
   codeLines.push(...variableLines);
 
+  // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
+  if (node.data.imageUrl) {
+    codeLines.push(`    # Сохраняем imageUrl в переменную image_url_${node.id}`);
+    codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
+    codeLines.push(`    user_data[user_id]["image_url_${node.id}"] = "${node.data.imageUrl}"`);
+    if (userDatabaseEnabled) {
+      codeLines.push(`    await update_user_data_in_db(user_id, "image_url_${node.id}", "${node.data.imageUrl}")`);
+    }
+  }
+  if (node.data.documentUrl) {
+    codeLines.push(`    # Сохраняем documentUrl в переменную document_url_${node.id}`);
+    codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
+    codeLines.push(`    user_data[user_id]["document_url_${node.id}"] = "${node.data.documentUrl}"`);
+    if (userDatabaseEnabled) {
+      codeLines.push(`    await update_user_data_in_db(user_id, "document_url_${node.id}", "${node.data.documentUrl}")`);
+    }
+  }
+  if (node.data.videoUrl) {
+    codeLines.push(`    # Сохраняем videoUrl в переменную video_url_${node.id}`);
+    codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
+    codeLines.push(`    user_data[user_id]["video_url_${node.id}"] = "${node.data.videoUrl}"`);
+    if (userDatabaseEnabled) {
+      codeLines.push(`    await update_user_data_in_db(user_id, "video_url_${node.id}", "${node.data.videoUrl}")`);
+    }
+  }
+  if (node.data.audioUrl) {
+    codeLines.push(`    # Сохраняем audioUrl в переменную audio_url_${node.id}`);
+    codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
+    codeLines.push(`    user_data[user_id]["audio_url_${node.id}"] = "${node.data.audioUrl}"`);
+    if (userDatabaseEnabled) {
+      codeLines.push(`    await update_user_data_in_db(user_id, "audio_url_${node.id}", "${node.data.audioUrl}")`);
+    }
+  }
+
   // Восстанавливаем состояние множественного выбора ТОЛЬКО если он включен
   if (node.data.allowMultipleSelection) {
     codeLines.push('');
