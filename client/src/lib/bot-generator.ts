@@ -286,7 +286,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   const inputTargetNodeIds = collectInputTargetNodes(nodes || []);
 
   // Собираем все идентификаторы ссылочных узлов и кнопки условных сообщений
-  const allReferencedNodeIds = new Set<string>();
+  let allReferencedNodeIds = new Set<string>();
   const allConditionalButtons = new Set<string>();
 
   // Добавляем узла из inline кнопок
@@ -993,7 +993,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * от командных кнопок в Telegram боте. Она создает обработчики,
    * которые позволяют выполнять команды через нажатие на inline кнопки.
    * 
-   * **Функциональност�� генерации обработчиков:**
+   * **Функциональност���� генерации обработчиков:**
    * - Создание декораторов @dp.callback_query для каждой команды
    * - Генерация асинхронных функций-обработчиков
    * - Создание fake message объектов для симуляции команд
