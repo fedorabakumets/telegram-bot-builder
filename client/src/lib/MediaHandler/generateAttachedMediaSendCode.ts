@@ -175,9 +175,23 @@ export function generateAttachedMediaSendCode(
     }
   }
 
+  // Если не найдена ни одна переменная из тех, что есть в mediaVariablesMap,
+  // проверим, есть ли вообще какие-то переменные в mediaVariablesMap, соответствующие этому узлу
   if (!mediaInfo || !mediaVariable || !mediaType) {
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Ни одна из медиапеременных ${attachedMedia.join(', ')} не найдена в mediaVariablesMap`);
-    return '';
+    // Перебираем все переменные в mediaVariablesMap, чтобы найти те, которые относятся к этому узлу
+    for (const [mapVar, info] of mediaVariablesMap.entries()) {
+      if (mapVar.endsWith(nodeId)) { // Проверяем, относится ли переменная к текущему узлу
+        mediaInfo = info;
+        mediaVariable = mapVar;
+        mediaType = info.type;
+        break;
+      }
+    }
+
+    if (!mediaInfo || !mediaVariable || !mediaType) {
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Ни одна из медиапеременных ${attachedMedia.join(', ')} не найдена в mediaVariablesMap`);
+      return '';
+    }
   }
 
   codeLines.push(`${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable}`);
