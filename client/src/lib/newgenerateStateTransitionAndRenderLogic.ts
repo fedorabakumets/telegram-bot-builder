@@ -146,6 +146,28 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
           code += `                await update_user_data_in_db(user_id, "audio_url_${targetNode.id}", "${targetNode.data.audioUrl}")\n`;
         }
 
+        // Устанавливаем переменные из attachedMedia
+        if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
+          code += `                # Устанавливаем переменные из attachedMedia\n`;
+          code += `                user_id = message.from_user.id\n`;
+          code += `                if user_id not in user_data:\n`;
+          code += `                    user_data[user_id] = {}\n`;
+
+          targetNode.data.attachedMedia.forEach((mediaVar: string) => {
+            if (mediaVar.startsWith('image_url_')) {
+              // Уже обрабатывается выше
+            } else if (mediaVar.startsWith('video_url_')) {
+              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
+            } else if (mediaVar.startsWith('audio_url_')) {
+              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
+            } else if (mediaVar.startsWith('document_url_')) {
+              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+            }
+          });
+
+          code += `                logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;
+        }
+
         // Проверяем наличие медиа-контента (imageUrl, videoUrl, audioUrl, documentUrl)
         const hasImage = targetNode.data.imageUrl;
         const hasVideo = targetNode.data.videoUrl;
