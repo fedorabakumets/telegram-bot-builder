@@ -231,7 +231,14 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}            attached_media_url = attached_media`);
 
   // Генерируем код отправки в зависимости от типа медиа
-  const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
+  // Убедимся, что переменные keyboard и keyboardHTML определены
+  codeLines.push(`${indentLevel}        # Убедимся, что переменные клавиатуры определены`);
+  codeLines.push(`${indentLevel}        if 'keyboard' not in locals():`);
+  codeLines.push(`${indentLevel}            keyboard = None`);
+  codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
+  codeLines.push(`${indentLevel}            keyboardHTML = None`);
+
+  const keyboardParam = keyboard !== 'None' && keyboard !== None ? ', reply_markup=keyboard' : '';
   const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
 
   switch (mediaType) {
@@ -273,16 +280,16 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")`);
   codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);
   const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
-  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
+  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard${autoTransitionFlag}${parseMode})`);
   codeLines.push(`${indentLevel}else:`);
   codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
   codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
   codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
   codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, user_vars)`);
-  
+
   // ИСПРАВЛЕНИЕ: Если collectUserInput=true, отправляем сообщение и устанавливаем ожидание ввода, иначе просто отправляем сообщение
   codeLines.push(`${indentLevel}    # Отправляем сообщение независимо от collectUserInput`);
-  codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
+  codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=keyboard${autoTransitionFlag}${parseMode})`);
   codeLines.push(`${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:`);
   codeLines.push(`${indentLevel}        # Устанавливаем состояние ожидания ввода`);
   codeLines.push(`${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} настроен на сбор ввода (collectUserInput=true)")`);
