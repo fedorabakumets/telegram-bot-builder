@@ -291,8 +291,11 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, user_vars)`);
 
   // ИСПРАВЛЕНИЕ: Если collectUserInput=true, отправляем сообщение и устанавливаем ожидание ввода, иначе просто отправляем сообщение
+  codeLines.push(`${indentLevel}    # Убедимся, что переменные клавиатуры определены`);
+  codeLines.push(`${indentLevel}    if 'keyboardHTML' not in locals():`);
+  codeLines.push(`${indentLevel}        keyboardHTML = None`);
   codeLines.push(`${indentLevel}    # Отправляем сообщение независимо от collectUserInput`);
-  codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=keyboard${autoTransitionFlag}${parseMode})`);
+  codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=keyboardHTML${autoTransitionFlag}${parseMode})`);
   codeLines.push(`${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:`);
   codeLines.push(`${indentLevel}        # Устанавливаем состояние ожидания ввода`);
   codeLines.push(`${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} настроен на сбор ввода (collectUserInput=true)")`);
