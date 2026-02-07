@@ -748,7 +748,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // ============================================================================
           // ОБРАБОТКА МЕДИА-КОНТЕНТА
           // ============================================================================
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем переменную изображения для узла
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем переменные медиа для узла
           if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
             code += '    # Устанавливаем переменную изображения для узла\n';
             code += '    user_id = callback_query.from_user.id\n';
@@ -759,6 +759,38 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               code += `    await update_user_data_in_db(user_id, "image_url_${nodeId}", "${targetNode.data.imageUrl}")\n`;
             }
             code += `    logging.info(f"✅ Переменная image_url_${nodeId} установлена: ${targetNode.data.imageUrl}")\n`;
+            code += '    \n';
+          }
+
+          // Устанавливаем переменные из attachedMedia
+          if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
+            code += '    # Устанавливаем переменные из attachedMedia\n';
+            code += '    user_id = callback_query.from_user.id\n';
+            code += '    if user_id not in user_data:\n';
+            code += '        user_data[user_id] = {}\n';
+
+            targetNode.data.attachedMedia.forEach((mediaVar: string) => {
+              if (mediaVar.startsWith('image_url_')) {
+                // Уже обрабатывается выше
+              } else if (mediaVar.startsWith('video_url_')) {
+                code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
+                if (userDatabaseEnabled) {
+                  code += `    await update_user_data_in_db(user_id, "${mediaVar}", "${targetNode.data.videoUrl}")\n`;
+                }
+              } else if (mediaVar.startsWith('audio_url_')) {
+                code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
+                if (userDatabaseEnabled) {
+                  code += `    await update_user_data_in_db(user_id, "${mediaVar}", "${targetNode.data.audioUrl}")\n`;
+                }
+              } else if (mediaVar.startsWith('document_url_')) {
+                code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+                if (userDatabaseEnabled) {
+                  code += `    await update_user_data_in_db(user_id, "${mediaVar}", "${targetNode.data.documentUrl}")\n`;
+                }
+              }
+            });
+
+            code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${nodeId}")\n`;
             code += '    \n';
           }
 
