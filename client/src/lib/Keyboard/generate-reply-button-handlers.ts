@@ -74,6 +74,29 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
 
             code += generateUniversalVariableReplacement('    ');
 
+            // Устанавливаем переменные из attachedMedia для целевого узла
+            if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
+              code += '    # Устанавливаем переменные из attachedMedia\n';
+              code += '    user_id = message.from_user.id\n';
+              code += '    if user_id not in user_data:\n';
+              code += '        user_data[user_id] = {}\n';
+
+              targetNode.data.attachedMedia.forEach((mediaVar: string) => {
+                if (mediaVar.startsWith('image_url_')) {
+                  // Уже обрабатывается ниже
+                } else if (mediaVar.startsWith('video_url_')) {
+                  code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
+                } else if (mediaVar.startsWith('audio_url_')) {
+                  code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
+                } else if (mediaVar.startsWith('document_url_')) {
+                  code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+                }
+              });
+
+              code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;
+              code += '    \n';
+            }
+
             // Обрабатываем клавиатуру для целевого узла
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               // Проверяем, есть ли статическое изображение в целевом узле
@@ -226,6 +249,29 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               }
 
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              // Устанавливаем переменные из attachedMedia для целевого узла
+              if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
+                code += '    # Устанавливаем переменные из attachedMedia\n';
+                code += '    user_id = message.from_user.id\n';
+                code += '    if user_id not in user_data:\n';
+                code += '        user_data[user_id] = {}\n';
+
+                targetNode.data.attachedMedia.forEach((mediaVar: string) => {
+                  if (mediaVar.startsWith('image_url_')) {
+                    // Уже обрабатывается ниже
+                  } else if (mediaVar.startsWith('video_url_')) {
+                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
+                  } else if (mediaVar.startsWith('audio_url_')) {
+                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
+                  } else if (mediaVar.startsWith('document_url_')) {
+                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+                  }
+                });
+
+                code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;
+                code += '    \n';
+              }
+
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    # Проверка условных сообщений для целевогя узла\n';
                 code += '    user_record = await get_user_from_db(user_id)\n';
@@ -269,6 +315,29 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
 
             } else {
+              // Устанавливаем переменные из attachedMedia для целевого узла
+              if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
+                code += '    # Устанавливаем переменные из attachedMedia\n';
+                code += '    user_id = message.from_user.id\n';
+                code += '    if user_id not in user_data:\n';
+                code += '        user_data[user_id] = {}\n';
+
+                targetNode.data.attachedMedia.forEach((mediaVar: string) => {
+                  if (mediaVar.startsWith('image_url_')) {
+                    // Уже обрабатывается ниже
+                  } else if (mediaVar.startsWith('video_url_')) {
+                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
+                  } else if (mediaVar.startsWith('audio_url_')) {
+                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
+                  } else if (mediaVar.startsWith('document_url_')) {
+                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+                  }
+                });
+
+                code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;
+                code += '    \n';
+              }
+
               // Проверяем, есть ли статическое изображение в целевом узле
               if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
                 code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
