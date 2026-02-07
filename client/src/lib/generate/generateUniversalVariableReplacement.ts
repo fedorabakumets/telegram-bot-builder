@@ -12,7 +12,7 @@ export function generateUniversalVariableReplacement(indentLevel: string): strin
   code += `${indentLevel}# Заменяем все переменные в тексте\n`;
   code += `${indentLevel}import re\n`;
   code += generateReplaceVariablesFunction(indentLevel);
-  code += `${indentLevel}text = replace_variables_in_text(text, user_vars)\n`;
+  code += `${indentLevel}text = replace_variables_in_text(text, all_user_vars)\n`;
 
   return code;
 }

@@ -314,7 +314,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     codeLines.push('        user_vars = user_data.get(user_id, {})');
     codeLines.push('');
     codeLines.push('    # Заменяем все переменные в тексте');
-    codeLines.push('    text = replace_variables_in_text(text, user_vars)');
+    codeLines.push('    text = replace_variables_in_text(text, all_user_vars)');
   } else {
     codeLines.push(`    text = ${formattedText}`);
 
@@ -330,7 +330,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     codeLines.push('        user_vars = user_data.get(user_id, {})');
     codeLines.push('');
     codeLines.push('    # Заменяем все переменные в тексте');
-    codeLines.push('    text = replace_variables_in_text(text, user_vars)');
+    codeLines.push('    text = replace_variables_in_text(text, all_user_vars)');
   }
 
   // Для множественного выбора используем уже созданную клавиатуру

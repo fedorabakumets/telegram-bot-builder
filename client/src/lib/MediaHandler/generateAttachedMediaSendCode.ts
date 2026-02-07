@@ -183,32 +183,26 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable}`);
   codeLines.push(`${indentLevel}attached_media = None`);
 
-  // Проверяем, является ли переменная imageUrl или documentUrl (прямые URL-адреса)
-  if (mediaVariable.startsWith('image_url_') || mediaVariable.startsWith('document_url_') ||
-      mediaVariable.startsWith('video_url_') || mediaVariable.startsWith('audio_url_')) {
-    // Для переменных типа image_url_{nodeId} используем прямое значение из переменной
-    // Вместо поиска по полю вроде imageUrl, ищем по самой переменной image_url_{nodeId}
-    codeLines.push(`${indentLevel}if user_vars and "${mediaVariable}" in user_vars:`);
-    codeLines.push(`${indentLevel}    media_data = user_vars["${mediaVariable}"]`);
-    codeLines.push(`${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:`);
-    codeLines.push(`${indentLevel}        attached_media = media_data["value"]`);
-    codeLines.push(`${indentLevel}    elif isinstance(media_data, str):`);
-    codeLines.push(`${indentLevel}        attached_media = media_data`);
-    codeLines.push(`${indentLevel}else:`);
-    codeLines.push(`${indentLevel}    # Проверяем, есть ли медиа в переменных пользователя`);
-    codeLines.push(`${indentLevel}    user_id = ${userIdSource}`);
-    codeLines.push(`${indentLevel}    user_node_vars = user_data.get(user_id, {})`);
-    codeLines.push(`${indentLevel}    if "${mediaVariable}" in user_node_vars:`);
-    codeLines.push(`${indentLevel}        attached_media = user_node_vars["${mediaVariable}"]`);
-  } else {
-    // Для других типов переменных используем стандартную логику
-    codeLines.push(`${indentLevel}if user_vars and "${mediaVariable}" in user_vars:`);
-    codeLines.push(`${indentLevel}    media_data = user_vars["${mediaVariable}"]`);
-    codeLines.push(`${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:`);
-    codeLines.push(`${indentLevel}        attached_media = media_data["value"]`);
-    codeLines.push(`${indentLevel}    elif isinstance(media_data, str):`);
-    codeLines.push(`${indentLevel}        attached_media = media_data`);
-  }
+  // Создаем объединенный словарь переменных из базы данных и локального хранилища
+  codeLines.push(`${indentLevel}# Создаем объединенный словарь переменных из базы данных и локального хранилища`);
+  codeLines.push(`${indentLevel}user_id = ${userIdSource}`);
+  codeLines.push(`${indentLevel}all_user_vars = {}`);
+  codeLines.push(`${indentLevel}# Добавляем переменные из базы данных`);
+  codeLines.push(`${indentLevel}if user_vars and isinstance(user_vars, dict):`);
+  codeLines.push(`${indentLevel}    all_user_vars.update(user_vars)`);
+  codeLines.push(`${indentLevel}# Добавляем переменные из локального хранилища`);
+  codeLines.push(`${indentLevel}local_user_vars = user_data.get(user_id, {})`);
+  codeLines.push(`${indentLevel}if isinstance(local_user_vars, dict):`);
+  codeLines.push(`${indentLevel}    all_user_vars.update(local_user_vars)`);
+  codeLines.push(`${indentLevel}`);
+  codeLines.push(`${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable} в объединенном словаре`);
+  codeLines.push(`${indentLevel}attached_media = None`);
+  codeLines.push(`${indentLevel}if "${mediaVariable}" in all_user_vars:`);
+  codeLines.push(`${indentLevel}    media_data = all_user_vars["${mediaVariable}"]`);
+  codeLines.push(`${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:`);
+  codeLines.push(`${indentLevel}        attached_media = media_data["value"]`);
+  codeLines.push(`${indentLevel}    elif isinstance(media_data, str):`);
+  codeLines.push(`${indentLevel}        attached_media = media_data`);
 
   codeLines.push(`${indentLevel}`);
   

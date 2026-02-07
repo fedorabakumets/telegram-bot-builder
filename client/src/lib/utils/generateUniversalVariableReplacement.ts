@@ -32,6 +32,16 @@ export function generateUniversalVariableReplacement(indentLevel: string): strin
   code += `${indentLevel}if not isinstance(user_vars, dict):\n`;
   code += `${indentLevel}    user_vars = user_data.get(user_id, {})\n`;
   code += `${indentLevel}\n`;
+  code += `${indentLevel}# Создаем объединенный словарь переменных из базы данных и локального хранилища\n`;
+  code += `${indentLevel}all_user_vars = {}\n`;
+  code += `${indentLevel}# Добавляем переменные из базы данных\n`;
+  code += `${indentLevel}if user_vars and isinstance(user_vars, dict):\n`;
+  code += `${indentLevel}    all_user_vars.update(user_vars)\n`;
+  code += `${indentLevel}# Добавляем переменные из локального хранилища\n`;
+  code += `${indentLevel}local_user_vars = user_data.get(user_id, {})\n`;
+  code += `${indentLevel}if isinstance(local_user_vars, dict):\n`;
+  code += `${indentLevel}    all_user_vars.update(local_user_vars)\n`;
+  code += `${indentLevel}\n`;
 
   // Добавляем определение функции check_user_variable_inline
   code += `${indentLevel}# Функция для проверки переменных пользователя\n`;
