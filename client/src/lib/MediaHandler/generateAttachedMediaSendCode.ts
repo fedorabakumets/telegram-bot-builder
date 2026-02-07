@@ -180,7 +180,7 @@ export function generateAttachedMediaSendCode(
   if (!mediaInfo || !mediaVariable || !mediaType) {
     // Перебираем все переменные в mediaVariablesMap, чтобы найти те, которые относятся к этому узлу
     for (const [mapVar, info] of mediaVariablesMap.entries()) {
-      if (mapVar.endsWith(nodeId)) { // Проверяем, относится ли переменная к текущему узлу
+      if (mapVar.endsWith('_' + nodeId)) { // Проверяем, относится ли переменная к текущему узлу (например, video_url_start для узла start)
         mediaInfo = info;
         mediaVariable = mapVar;
         mediaType = info.type;
