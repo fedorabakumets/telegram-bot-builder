@@ -280,12 +280,12 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
   codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, user_vars)`);
   
-  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если collectUserInput=true, не отправляем сообщение, так как узел ожидает ввод
+  // ИСПРАВЛЕНИЕ: Если collectUserInput=true, отправляем сообщение и устанавливаем ожидание ввода, иначе просто отправляем сообщение
+  codeLines.push(`${indentLevel}    # Отправляем сообщение независимо от collectUserInput`);
+  codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
   codeLines.push(`${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:`);
-  codeLines.push(`${indentLevel}        # Узел ожидает ввод, не отправляем сообщение`);
-  codeLines.push(`${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод, пропускаем отправку сообщения")`);
-  codeLines.push(`${indentLevel}    else:`);
-  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})`);
+  codeLines.push(`${indentLevel}        # Устанавливаем состояние ожидания ввода`);
+  codeLines.push(`${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} настроен на сбор ввода (collectUserInput=true)")`);
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход и для случая без медиа
   if (autoTransitionTo) {
