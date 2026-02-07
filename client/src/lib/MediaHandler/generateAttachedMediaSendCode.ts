@@ -238,7 +238,7 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
   codeLines.push(`${indentLevel}            keyboardHTML = None`);
 
-  const keyboardParam = keyboard !== 'None' && keyboard !== None ? ', reply_markup=keyboard' : '';
+  const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
   const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
 
   switch (mediaType) {
