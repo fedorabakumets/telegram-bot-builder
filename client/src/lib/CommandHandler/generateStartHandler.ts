@@ -5,6 +5,7 @@ import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { generateAttachedMediaSendCode } from '../MediaHandler/generateAttachedMediaSendCode';
+import { toPythonBoolean } from '../format/toPythonBoolean';
 import { Node } from '@shared/schema';
 
 // ============================================================================
@@ -333,24 +334,61 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     codeLines.push('    text = replace_variables_in_text(text, all_user_vars)');
   }
 
-  // Для множественного выбора используем уже созданную клавиатуру
-  if (node.data.allowMultipleSelection) {
-    codeLines.push('    await message.answer(text, reply_markup=keyboard)');
-
-    // Применяем автоматическое добавление комментариев ко всему коду
-    const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
-    return processedCode.join('\n');
-  }
-
-  // Генерируем клавиатуру
-  const keyboardCode = generateKeyboard(node);
-  const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
-  codeLines.push(...keyboardLines);
-
   // Проверяем, есть ли прикрепленные медиафайлы
   const attachedMedia = node.data.attachedMedia || [];
 
   if (attachedMedia.length > 0) {
+    // Если есть прикрепленные медиа, генерируем только код клавиатуры без отправки сообщения
+    let keyboardCode = '';
+
+    // Определяем тип клавиатуры и генерируем соответствующий код
+    if (node.data.keyboardType === "inline" && node.data.buttons && node.data.buttons.length > 0) {
+      keyboardCode += '    # Создаем inline клавиатуру\n';
+      keyboardCode += '    builder = InlineKeyboardBuilder()\n';
+
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+        } else if (button.action === 'command') {
+          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+          keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+        }
+      });
+
+      keyboardCode += '    builder.adjust(2)  # Используем 2 колонки для консистентности\n';
+      keyboardCode += '    keyboard = builder.as_markup()\n';
+    } else if (node.data.keyboardType === "reply" && node.data.buttons && node.data.buttons.length > 0) {
+      keyboardCode += '    # Создаем reply клавиатуру\n';
+      keyboardCode += '    builder = ReplyKeyboardBuilder()\n';
+
+      node.data.buttons.forEach(button => {
+        if (button.action === "contact" && button.requestContact) {
+          keyboardCode += `    builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
+        } else if (button.action === "location" && button.requestLocation) {
+          keyboardCode += `    builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
+        } else {
+          keyboardCode += `    builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+        }
+      });
+
+      const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
+      const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
+      keyboardCode += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+    } else if (node.data.keyboardType === "none") {
+      // Если тип клавиатуры "none", все равно создаем переменную keyboard, но без клавиатуры
+      keyboardCode += '    keyboard = None\n';
+    } else {
+      // По умолчанию создаем пустую клавиатуру
+      keyboardCode += '    keyboard = None\n';
+    }
+
+    // Добавляем код создания клавиатуры
+    const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+    codeLines.push(...keyboardLines);
+
     // Используем переданный mediaVariablesMap
     if (mediaVariablesMap) {
       // Фильтруем mediaVariablesMap, чтобы получить только те переменные, которые связаны с этим узлом
@@ -378,7 +416,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
       );
 
       if (mediaCode.trim()) {
-        // Заменяем обычную отправку сообщения на отправку с медиа
+        // Используем код медиа вместо обычной отправки сообщения
         const mediaLines = mediaCode.split('\n');
         codeLines.push(...mediaLines);
       } else {
@@ -400,6 +438,21 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
       }
     }
   } else {
+    // Обычная логика без медиа - генерируем клавиатуру и отправляем сообщение
+    // Для множественного выбора используем уже созданную клавиатуру
+    if (node.data.allowMultipleSelection) {
+      codeLines.push('    await message.answer(text, reply_markup=keyboard)');
+
+      // Применяем автоматическое добавление комментариев ко всему коду
+      const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
+      return processedCode.join('\n');
+    }
+
+    // Генерируем клавиатуру
+    const keyboardCode = generateKeyboard(node);
+    const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+    codeLines.push(...keyboardLines);
+
     // Обычная логика без медиа
     if (node.data.allowMultipleSelection) {
       codeLines.push('    await message.answer(text, reply_markup=keyboard)');
@@ -410,7 +463,9 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   }
 
   // ИСПРАВЛЕНИЕ: Добавляем автопереход для узлов start, если он настроен
-  if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
+  // Проверяем, что автопереход не был уже обработан в generateAttachedMediaSendCode
+  // (это определяется по наличию attachedMedia - если они есть, автопереход обрабатывается в generateAttachedMediaSendCode)
+  if (node.data.enableAutoTransition && node.data.autoTransitionTo && attachedMedia.length === 0) {
     // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
     if (node.data.collectUserInput !== false) {
       const autoTransitionTarget = node.data.autoTransitionTo;
