@@ -90,7 +90,11 @@ export function generateAttachedMediaSendCode(
   
   // Собираем весь код в массив строк для автоматической обработки комментариев
   const codeLines: string[] = [];
-  
+
+  // Объявляем переменные для правильного контекста
+  const userIdSource = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
+  const messageSource = handlerContext === 'message' ? 'message' : 'callback_query';
+
   // Проверяем, есть ли статическое изображение в узле
   const hasStaticImage = nodeData && nodeData.imageUrl && nodeData.imageUrl.trim() !== '';
   
@@ -110,8 +114,7 @@ export function generateAttachedMediaSendCode(
     // Устанавливаем состояние ожидания ввода если нужно
     if (collectUserInput && nodeData) {
       codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
-      const userIdSourceForWaiting = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
-      const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSourceForWaiting);
+      const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
       const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
       codeLines.push(...waitingStateLines);
       codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки изображения")`);
@@ -124,9 +127,6 @@ export function generateAttachedMediaSendCode(
 
     const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
     const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
-
-    const userIdSource = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
-    const messageSource = handlerContext === 'message' ? 'message' : 'callback_query';
 
     codeLines.push(`${indentLevel}    await bot.send_photo(${userIdSource}, static_image_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
 
@@ -185,7 +185,6 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}        attached_media = media_data`);
     codeLines.push(`${indentLevel}else:`);
     codeLines.push(`${indentLevel}    # Проверяем, есть ли медиа в переменных пользователя`);
-    const userIdSource = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
     codeLines.push(`${indentLevel}    user_id = ${userIdSource}`);
     codeLines.push(`${indentLevel}    user_node_vars = user_data.get(user_id, {})`);
     codeLines.push(`${indentLevel}    if "${mediaVariable}" in user_node_vars:`);
@@ -205,8 +204,7 @@ export function generateAttachedMediaSendCode(
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
   if (collectUserInput && nodeData) {
     codeLines.push(`${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
-    const userIdSourceForWaiting = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
-    const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSourceForWaiting);
+    const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
     const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
     codeLines.push(...waitingStateLines);
     codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки медиа")`);
@@ -233,9 +231,7 @@ export function generateAttachedMediaSendCode(
 
   switch (mediaType) {
     case 'photo':
-      const userIdSource = handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id';
-  const messageSource = handlerContext === 'message' ? 'message' : 'callback_query';
-  codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+      codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
       break;
     case 'video':
       codeLines.push(`${indentLevel}        await bot.send_video(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
