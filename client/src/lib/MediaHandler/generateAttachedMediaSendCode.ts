@@ -279,8 +279,11 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}    except Exception as e:`);
   codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")`);
   codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);
+  codeLines.push(`${indentLevel}        # Убедимся, что переменные клавиатуры определены`);
+  codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
+  codeLines.push(`${indentLevel}            keyboardHTML = None`);
   const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
-  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard${autoTransitionFlag}${parseMode})`);
+  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboardHTML${autoTransitionFlag}${parseMode})`);
   codeLines.push(`${indentLevel}else:`);
   codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
   codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
