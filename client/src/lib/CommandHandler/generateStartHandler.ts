@@ -438,62 +438,18 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
       }
     }
   } else {
-    // Обычная логика без медиа - генерируем клавиатуру и отправляем сообщение
-    // Для множественного выбора используем уже созданную клавиатуру
-    if (node.data.allowMultipleSelection) {
-      codeLines.push('    await message.answer(text, reply_markup=keyboard)');
-
-      // Применяем автоматическое добавление комментариев ко всему коду
-      const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
-      return processedCode.join('\n');
-    }
-
-    // Генерируем клавиатуру
+    // Обычная логика без медиа - используем функцию generateKeyboard
+    // Она генерирует полный код, включая отправку сообщения
     const keyboardCode = generateKeyboard(node);
+
+    // Вставляем код клавиатуры в нужное место
     const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
     codeLines.push(...keyboardLines);
 
-    // Обычная логика без медиа
-    if (node.data.allowMultipleSelection) {
-      codeLines.push('    await message.answer(text, reply_markup=keyboard)');
-    } else {
-      const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
-      codeLines.push(`    await message.answer(text${keyboardParam})`);
-    }
-  }
-
-  // ИСПРАВЛЕНИЕ: Добавляем автопереход для узлов start, если он настроен
-  // Проверяем, что автопереход не был уже обработан в generateAttachedMediaSendCode
-  // (это определяется по наличию attachedMedia - если они есть, автопереход обрабатывается в generateAttachedMediaSendCode)
-  if (node.data.enableAutoTransition && node.data.autoTransitionTo && attachedMedia.length === 0) {
-    // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
-    if (node.data.collectUserInput !== false) {
-      const autoTransitionTarget = node.data.autoTransitionTo;
-      const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-
-      codeLines.push('');
-      codeLines.push('    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически (только если collectUserInput=true)');
-      codeLines.push(`    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTransitionTarget}")`);
-      codeLines.push('    # Создаем временный callback_query объект для вызова обработчика');
-      codeLines.push('    from aiogram.types import CallbackQuery');
-      codeLines.push('    temp_callback = CallbackQuery(');
-      codeLines.push('        id="auto_transition",');
-      codeLines.push('        from_user=message.from_user,');
-      codeLines.push(`        data="${autoTransitionTarget}",`);
-      codeLines.push('        chat_instance=str(message.chat.id),');
-      codeLines.push('        message=message');
-      codeLines.push('    )');
-      codeLines.push(`    await handle_callback_${safeFunctionName}(temp_callback)`);
-      codeLines.push(`    logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")`);
-
-      // Применяем автоматическое добавление комментариев ко всему коду
-      const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
-      return processedCode.join('\n');
-    } else {
-      codeLines.push('');
-      codeLines.push('    # Автопереход пропущен: collectUserInput=false');
-      codeLines.push(`    logging.info(f"ℹ️ Узел ${node.id} не собирает ответы (collectUserInput=false)")`);
-    }
+    // Возвращаемся, чтобы избежать дублирования отправки сообщения
+    // Применяем автоматическое добавление комментариев ко всему коду
+    const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
+    return processedCode.join('\n');
   }
 
   // Применяем автоматическое добавление комментариев ко всему коду

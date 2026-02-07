@@ -100,6 +100,9 @@ export function generateAttachedMediaSendCode(
   
   // ИСПРАВЛЕНИЕ: Если есть статическое изображение, используем его напрямую
   if (hasStaticImage) {
+    // Убедимся, что переменная keyboardHTML определена
+    codeLines.push(`${indentLevel}keyboardHTML = locals().get('keyboardHTML', None) or globals().get('keyboardHTML', None) or None`);
+
     codeLines.push(`${indentLevel}# Узел содержит статическое изображение: ${nodeData.imageUrl}`);
     // Проверяем, является ли URL относительным путем к локальному файлу
     if (nodeData.imageUrl.startsWith('/uploads/')) {
@@ -157,6 +160,9 @@ export function generateAttachedMediaSendCode(
   if (!attachedMedia || attachedMedia.length === 0) {
     return '';
   }
+
+  // Убедимся, что переменная keyboardHTML определена
+  codeLines.push(`${indentLevel}keyboardHTML = locals().get('keyboardHTML', None) or globals().get('keyboardHTML', None) or None`);
 
   // Находим первую переменную из attachedMedia, которая также присутствует в mediaVariablesMap
   let mediaInfo = null;
@@ -271,7 +277,7 @@ export function generateAttachedMediaSendCode(
     default:
       codeLines.push(`${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение`);
       const autoTransitionFlagDefault = autoTransitionTo ? ', is_auto_transition=True' : '';
-      codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseMode})`);
+      codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseModeParam})`);
   }
 
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
@@ -294,8 +300,7 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")`);
   codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);
   codeLines.push(`${indentLevel}        # Убедимся, что переменные клавиатуры определены`);
-  codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
-  codeLines.push(`${indentLevel}            keyboardHTML = None`);
+  codeLines.push(`${indentLevel}        keyboardHTML = locals().get('keyboardHTML', None) or globals().get('keyboardHTML', None) or None`);
   const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
   codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboardHTML${autoTransitionFlag}${parseModeParam})`);
   codeLines.push(`${indentLevel}else:`);
@@ -306,8 +311,7 @@ export function generateAttachedMediaSendCode(
 
   // ИСПРАВЛЕНИЕ: Если collectUserInput=true, отправляем сообщение и устанавливаем ожидание ввода, иначе просто отправляем сообщение
   codeLines.push(`${indentLevel}    # Убедимся, что переменные клавиатуры определены`);
-  codeLines.push(`${indentLevel}    if 'keyboardHTML' not in locals():`);
-  codeLines.push(`${indentLevel}        keyboardHTML = None`);
+  codeLines.push(`${indentLevel}    keyboardHTML = locals().get('keyboardHTML', None) or globals().get('keyboardHTML', None) or None`);
   codeLines.push(`${indentLevel}    # Отправляем сообщение независимо от collectUserInput`);
   codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=keyboardHTML${autoTransitionFlag}${parseModeParam})`);
   codeLines.push(`${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:`);

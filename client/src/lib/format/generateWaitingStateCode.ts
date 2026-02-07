@@ -5,6 +5,12 @@
 // Автоматически определяет правильное состояние (waiting_for_photo, waiting_for_video и т.д.)
 
 export function generateWaitingStateCode(node: any, indentLevel: string = '    ', userIdSource: string = 'message.from_user.id'): string {
+  // Проверяем, что node и node.data существуют
+  if (!node || !node.data) {
+    console.warn('⚠️ generateWaitingStateCode: node или node.data не определены, возвращаем пустой код');
+    return '';
+  }
+
   // Определяем тип ввода и соответствующее состояние
   const waitingStateKey = 'waiting_for_input'; // Всегда используем одно и то же состояние
   let inputVariable = node.data.inputVariable || `response_${node.id}`;

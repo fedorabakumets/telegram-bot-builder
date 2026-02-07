@@ -310,6 +310,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     allReferencedNodeIds.add(node.id);
   });
 
+  // ФИЛЬТРАЦИЯ: Убедимся, что allReferencedNodeIds содержит только реально существующие узлы
+  // Это предотвращает генерацию обработчиков для удаленных или несуществующих узлов
+  const existingNodeIds = new Set((nodes || []).map(node => node.id));
+  const filteredReferencedNodeIds = new Set<string>();
+  allReferencedNodeIds.forEach(nodeId => {
+    if (existingNodeIds.has(nodeId)) {
+      filteredReferencedNodeIds.add(nodeId);
+    } else {
+      if (isLoggingEnabled()) console.log(`🗑️ УДАЛЕН узел из allReferencedNodeIds: ${nodeId} (не найден в текущих узлах)`);
+    }
+  });
+  allReferencedNodeIds = filteredReferencedNodeIds;
+
   // Генерируем обработчики только если есть inline кнопки или условные кнопки
   generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation();
 
@@ -980,7 +993,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * от командных кнопок в Telegram боте. Она создает обработчики,
    * которые позволяют выполнять команды через нажатие на inline кнопки.
    * 
-   * **Функциональность генерации обработчиков:**
+   * **Функциональност�� генерации обработчиков:**
    * - Создание декораторов @dp.callback_query для каждой команды
    * - Генерация асинхронных функций-обработчиков
    * - Создание fake message объектов для симуляции команд
