@@ -6,7 +6,13 @@ import { generateReplyKeyboardCode } from './generateReplyKeyboardCode';
 
 // Функция для генерации inline клавиатуры с автоматической настройкой колонок
 export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any, allNodeIds?: string[]): string {
-  if (!buttons || buttons.length === 0) return '';
+  if (!buttons || buttons.length === 0) {
+    // Даже если нет кнопок, нужно определить переменные клавиатуры для предотвращения ошибок
+    let code = '';
+    code += `${indentLevel}keyboard = None  # Нет кнопок, клавиатура не нужна\n`;
+    code += `${indentLevel}keyboardHTML = ''  # Заглушка для совместимости\n`;
+    return code;
+  }
 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем keyboardType и делегируем на правильную функцию
   const keyboardType = nodeData?.keyboardType || 'reply';
@@ -126,6 +132,9 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
   const columns = calculateOptimalColumns(allButtons, nodeData);
   code += `${indentLevel}builder.adjust(${columns})\n`;
   code += `${indentLevel}keyboard = builder.as_markup()\n`;
+
+  // Добавляем переменную keyboardHTML как альтернативу (пустая строка по умолчанию)
+  code += `${indentLevel}keyboardHTML = ''  # Заглушка для совместимости\n`;
 
   return code;
 }

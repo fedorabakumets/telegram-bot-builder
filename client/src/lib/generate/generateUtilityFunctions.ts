@@ -12,6 +12,19 @@ export function generateUtilityFunctions(userDatabaseEnabled: boolean): string {
   utilityCode += 'async def is_private_chat(message: types.Message) -> bool:\n';
   utilityCode += '    return message.chat.type == "private"\n\n';
 
+  // Функция для получения пользовательских переменных
+  utilityCode += 'def get_user_variables(user_id):\n';
+  utilityCode += '    """Получает все переменные пользователя из локального хранилища\n';
+  utilityCode += '    \n';
+  utilityCode += '    Args:\n';
+  utilityCode += '        user_id (int): ID пользователя Telegram\n';
+  utilityCode += '    \n';
+  utilityCode += '    Returns:\n';
+  utilityCode += '        dict: Словарь с переменными пользователя или пустой словарь если пользователь не найден\n';
+  utilityCode += '    """\n';
+  utilityCode += '    # Возвращаем переменные пользователя из локального хранилища или пустой словарь\n';
+  utilityCode += '    return user_data.get(user_id, {})\n\n';
+
   if (userDatabaseEnabled) {
     utilityCode += 'async def check_auth(user_id: int) -> bool:\n';
     utilityCode += '    # Проверяем наличие пользователя в БД или локальном хранилище\n';
