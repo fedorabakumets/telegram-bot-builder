@@ -292,6 +292,13 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
               });
 
+              // Вычисляем оптимальное количество колонок для reply клавиатуры
+              const totalButtons = selectionButtons.length + regularButtons.length + (selectionButtons.length > 0 ? 1 : 0); // +1 для кнопки "Готово" если есть кнопки выбора
+              const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
+              const allButtonsForCalculation = Array(totalButtons).fill({});
+              const columns = calculateOptimalColumns(allButtonsForCalculation, multiSelectNodeData);
+              code += `    builder.adjust(${columns})\n`;
+
               const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard !== false);
               const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard === true);
               code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
