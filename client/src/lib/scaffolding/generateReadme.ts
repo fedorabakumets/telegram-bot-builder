@@ -3,10 +3,8 @@ import { generateBotFatherCommands } from "../commands";
 
 
 export function generateReadme(botData: BotData, botName: string): string {
-  const rawNodes = botData?.nodes || [];
-  const nodes = rawNodes.filter(node => node !== null && node !== undefined); // Фильтруем null/undefined
-  const rawConnections = botData?.connections || [];
-  const connections = rawConnections.filter(conn => conn !== null && conn !== undefined); // Фильтруем null/undefined
+  const nodes = botData?.nodes || [];
+  const connections = botData?.connections || [];
   const commandNodes = nodes.filter(node => (node.type === 'start' || node.type === 'command') && node.data?.command
   );
 
@@ -80,8 +78,8 @@ export function generateReadme(botData: BotData, botName: string): string {
   readme += '### Статистика\n\n';
   readme += '- **Всего узлов**: ' + nodes.length + '\n';
   readme += '- **Команд**: ' + commandNodes.length + '\n';
-  readme += '- **Сообщений**: ' + nodes.filter(n => n && n.type === 'message').length + '\n';
-  readme += '- **Кнопок**: ' + (nodes.reduce((sum: number, node: any) => sum + (node?.data?.buttons?.length || 0), 0) as number) + '\n\n';
+  readme += '- **Сообщений**: ' + nodes.filter(n => n.type === 'message').length + '\n';
+  readme += '- **Кнопок**: ' + (nodes.reduce((sum: number, node: any) => sum + (node.data?.buttons?.length || 0), 0) as number) + '\n\n';
 
   readme += '### Безопасность\n\n';
   readme += 'Бот включает следующие функции безопасности:\n';
