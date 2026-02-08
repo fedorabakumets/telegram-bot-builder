@@ -130,14 +130,22 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
     codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, user_vars)`);
 
-    const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
+    // ИСПРАВЛЕНИЕ: Проверяем, определена ли переменная keyboard перед её использованием
+    codeLines.push(`${indentLevel}    # Убедимся, что переменная keyboard определена`);
+    codeLines.push(`${indentLevel}    if 'keyboard' not in locals():`);
+    codeLines.push(`${indentLevel}        keyboard = None`);
+    
     // ИСПРАВЛЕНИЕ: Генерируем parse_mode только если parseMode не пустой и не равен "none"
     let parseModeParam = '';
     if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
       parseModeParam = `, parse_mode=ParseMode.${parseMode.toUpperCase()}`;
     }
 
-    codeLines.push(`${indentLevel}    await bot.send_photo(${userIdSource}, static_image_url, caption=processed_caption${parseModeParam}${keyboardParam}, node_id="${nodeId}")`);
+    // ИСПРАВЛЕНИЕ: Добавляем клавиатуру если она определена
+    codeLines.push(`${indentLevel}    if keyboard is not None:`);
+    codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, static_image_url, caption=processed_caption${parseModeParam}, reply_markup=keyboard, node_id="${nodeId}")`);
+    codeLines.push(`${indentLevel}    else:`);
+    codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, static_image_url, caption=processed_caption${parseModeParam}, node_id="${nodeId}")`);
 
     // Автопереход если нужен
     if (autoTransitionTo) {
@@ -155,6 +163,9 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}except Exception as e:`);
     codeLines.push(`${indentLevel}    logging.error(f"Ошибка отправки статического изображения: {e}")`);
     codeLines.push(`${indentLevel}    # Fallback на обычное сообщение при ошибке`);
+    codeLines.push(`${indentLevel}    # Убедимся, что переменная keyboard определена`);
+    codeLines.push(`${indentLevel}    if 'keyboard' not in locals():`);
+    codeLines.push(`${indentLevel}        keyboard = None`);
     const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
     // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
     let parseModeFallbackParam = '';
@@ -163,7 +174,11 @@ export function generateAttachedMediaSendCode(
     } else {
       parseModeFallbackParam = ', parse_mode=None';
     }
-    codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseModeFallbackParam})`);
+    // ИСПРАВЛЕНИЕ: Добавляем клавиатуру если она определена
+    codeLines.push(`${indentLevel}    if keyboard is not None:`);
+    codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard${autoTransitionFlag}${parseModeFallbackParam})`);
+    codeLines.push(`${indentLevel}    else:`);
+    codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}"${autoTransitionFlag}${parseModeFallbackParam})`);
     
     // Применяем автоматическое добавление комментариев ко всему коду
     const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');

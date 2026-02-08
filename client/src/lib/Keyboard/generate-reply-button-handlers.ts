@@ -100,7 +100,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
             // Обрабатываем клавиатуру для целевого узла
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               // Проверяем, есть ли статическое изображение в целевом узле
-              if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+              if (targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '') {
                 code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
                 // Проверяем, является ли URL относительным путем к локальному файлу
                 if (targetNode.data.imageUrl.startsWith('/uploads/')) {
@@ -272,8 +272,11 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 code += '    \n';
               }
 
+              // Проверяем, есть ли статическое изображение в целевом узле
+              const hasStaticImage = targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '';
+              
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '    # Проверка условных сообщений для целевогя узла\n';
+                code += '    # Проверка условных сообщений для целевого узла\n';
                 code += '    user_record = await get_user_from_db(user_id)\n';
                 code += '    if not user_record:\n';
                 code += '        user_record = user_data.get(user_id, {})\n';
@@ -286,33 +289,71 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 code += '    use_conditional_keyboard = False\n';
                 code += '    conditional_keyboard = None\n';
               }
-              code += '    if use_conditional_keyboard:\n';
 
-              let parseModeTarget = '';
-              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-              } else if (targetNode.data.formatMode === 'html') {
-                parseModeTarget = ', parse_mode=ParseMode.HTML';
-              }
-              code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
-              code += '    else:\n';
-              code += '        builder = InlineKeyboardBuilder()\n';
+              // Генерируем inline клавиатуру
+              code += '    builder = InlineKeyboardBuilder()\n';
               targetNode.data.buttons.forEach((btn: Button, index: number) => {
                 if (btn.action === "url") {
-                  code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
                 } else if (btn.action === 'goto') {
                   const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                  code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
                 } else if (btn.action === 'command') {
                   const commandName = btn.target ? btn.target.replace('/', '') : 'unknown';
                   const callbackData = `cmd_${commandName}`;
-                  code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
                 }
               });
               const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-              code += `        builder.adjust(${columns})\n`;
-              code += '        keyboard = builder.as_markup()\n';
-              code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+              code += `    builder.adjust(${columns})\n`;
+              code += '    keyboard = builder.as_markup()\n';
+              
+              // Если есть статическое изображение, отправляем его с клавиатурой
+              if (hasStaticImage) {
+                code += `    # Узел содержит статическое изображение: ${targetNode.data.imageUrl}\n`;
+                // Проверяем, является ли URL относительным путем к локальному файлу
+                if (targetNode.data.imageUrl?.startsWith('/uploads/')) {
+                  code += `    image_path = get_upload_file_path("${targetNode.data.imageUrl}")\n`;
+                  code += `    image_url = FSInputFile(image_path)\n`;
+                } else {
+                  code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                }
+                
+                let parseModeTarget = '';
+                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                } else if (targetNode.data.formatMode === 'html') {
+                  parseModeTarget = ', parse_mode=ParseMode.HTML';
+                }
+                
+                code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
+              } else {
+                // Нет изображения, отправляем текст с клавиатурой
+                let parseModeTarget = '';
+                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                } else if (targetNode.data.formatMode === 'html') {
+                  parseModeTarget = ', parse_mode=ParseMode.HTML';
+                }
+                
+                code += '    if use_conditional_keyboard:\n';
+                code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                code += '    else:\n';
+                code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+              }
+
+              // Устанавливаем состояние ожидания ввода для inline клавиатуры
+              if (targetNode.data.collectUserInput === true ||
+                targetNode.data.enableTextInput === true ||
+                targetNode.data.enablePhotoInput === true ||
+                targetNode.data.enableVideoInput === true ||
+                targetNode.data.enableAudioInput === true ||
+                targetNode.data.enableDocumentInput === true) {
+                code += '    \n';
+                if (targetNode && targetNode.data) {
+                  code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
+                }
+              }
 
             } else {
               // Устанавливаем переменные из attachedMedia для целевого узла
@@ -339,10 +380,10 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               }
 
               // Проверяем, есть ли статическое изображение в целевом узле
-              if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+              if (targetNode.data.imageUrl?.trim() !== '') {
                 code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
                 // Проверяем, является ли URL относительным путем к локальному файлу
-                if (targetNode.data.imageUrl.startsWith('/uploads/')) {
+                if (targetNode.data.imageUrl?.startsWith('/uploads/')) {
                   code += `    image_path = get_upload_file_path("${targetNode.data.imageUrl}")\n`;
                   code += `    image_url = FSInputFile(image_path)\n`;
                 } else {

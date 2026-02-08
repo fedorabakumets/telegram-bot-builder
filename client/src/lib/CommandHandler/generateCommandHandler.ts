@@ -211,6 +211,14 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean,
   // Проверяем, есть ли прикрепленные медиафайлы
   const attachedMedia = node.data.attachedMedia || [];
 
+  // ИСПРАВЛЕНИЕ: Генерируем клавиатуру ДО обработки медиа, чтобы переменная keyboard была определена
+  // Это нужно для узлов с attachedMedia, которые также имеют кнопки
+  const keyboardCode = generateKeyboard(node);
+  const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+  
+  // Проверяем, есть ли в сгенерированном коде определение переменной keyboard
+  const hasKeyboardDefinition = keyboardLines.some((line: string) => line.includes('keyboard = ') || line.includes('keyboard = '));
+  
   if (attachedMedia.length > 0) {
     // Используем переданный mediaVariablesMap
     if (mediaVariablesMap) {
@@ -234,35 +242,34 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean,
         '    ', // отступ
         node.data.autoTransitionTo, // автопереход
         node.data.collectUserInput !== false, // собирать пользовательский ввод
-        undefined, // nodeData
+        node, // nodeData - передаем весь узел для доступа к imageUrl
         'message' // контекст обработчика
       );
 
       if (mediaCode.trim()) {
-        // Добавляем код медиа
+        // Сначала добавляем код клавиатуры, чтобы переменная keyboard была определена
+        // Но только если клавиатура действительно определена в коде
+        if (hasKeyboardDefinition) {
+          codeLines.push(...keyboardLines);
+        }
+        // Затем добавляем код медиа
         const mediaLines = mediaCode.split('\n');
         codeLines.push(...mediaLines);
       } else {
         // Если код медиа не сгенерирован, используем обычную логику
         // Добавляем клавиатуру (она уже включает код отправки сообщения)
-        const keyboardCode = generateKeyboard(node);
-        const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
         codeLines.push(...keyboardLines);
         // ИСПРАВЛЕНИЕ: Убран дублирующий вызов message.answer, так как generateKeyboard уже добавляет его
       }
     } else {
       // Если mediaVariablesMap не передан, используем обычную логику
       // Добавляем клавиатуру (она уже включает код отправки сообщения)
-      const keyboardCode = generateKeyboard(node);
-      const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
       codeLines.push(...keyboardLines);
       // ИСПРАВЛЕНИЕ: Убран дублирующий вызов message.answer, так как generateKeyboard уже добавляет его
     }
   } else {
     // Обычная логика без медиа
     // Добавляем клавиатуру (она уже включает код отправки сообщения)
-    const keyboardCode = generateKeyboard(node);
-    const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
     codeLines.push(...keyboardLines);
     // ИСПРАВЛЕНИЕ: Убран дублирующий вызов message.answer, так как generateKeyboard уже добавляет его
   }
