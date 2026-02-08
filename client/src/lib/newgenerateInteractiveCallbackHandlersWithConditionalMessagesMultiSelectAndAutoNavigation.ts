@@ -22,191 +22,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
     // Затем обрабатываем узла inline кнопок - создаем обработчики для каждого уникального идентификатора кнопки
     processNodeButtonsAndGenerateHandlers(processedCallbacks);
 
-    // ============================================================================
-    // СПЕЦИАЛЬНАЯ ОБРАБОТКА УЗЛА interests_result
-    // ============================================================================
-    // Этот узел требует особой обработки из-за интеграции с метро-клавиатурой
-    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Убедиться, что interests_result получает обработчик, НО избегать дубликатов
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР CRITICAL FIX: Проверяем interests_result обработяик');
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРяТОР: processedCallbacks перед check:', Array.from(processedCallbacks));
-
-    // Проверяем, был ли interests_result уже обработан в основном цикле
-    const wasInterestsResultProcessed = processedCallbacks.has('cb_interests_result');
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле?', wasInterestsResultProcessed);
-
-    // ИСПРАВЛЕНИЕ: НЕ создаем дублирующий обработчик если он уже есть
-    if (wasInterestsResultProcessed) {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: ПРОПУСКАЕМ создание дублирующего обработчика для interests_result');
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле, избегаем конфликта клавиатур');
-    } else {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Создаем обработчик для interests_result (не найден в основном цикле)');
-      const interestsResultNode = nodes.find(n => n.id === 'interests_result');
-      if (interestsResultNode) {
-        code += `\n@dp.callback_query(lambda c: c.data == "interests_result" or c.data.startswith("interests_result_btn_"))\n`;
-        code += `async def handle_callback_interests_result(callback_query: types.CallbackQuery):\n`;
-        code += '    await callback_query.answer()\n';
-        code += '    # Handle interests_result node\n';
-        code += '    user_id = callback_query.from_user.id\n';
-        code += '    # Инициализируем базовые переменные пользователя\n';
-        code += '    user_name = init_user_variables(user_id, callback_query.from_user)\n';
-        code += '    \n';
-
-        // Добавляем полную обработку сообщений для узла interests_result
-        const messageText = interestsResultNode.data.messageText || "Результат";
-        const cleanedMessageText = stripHtmlTags(messageText);
-        const formattedText = formatTextForPython(cleanedMessageText);
-
-        code += `    text = ${formattedText}\n`;
-        code += '    \n';
-        code += generateUniversalVariableReplacement('    ');
-
-        // ИСПРАВЛЕНИЕ: Специальная логика для interests_result - показываем метро клавиатуру
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Обрабатываем interests_result узел - добавляем метро клавиатуру');
-        code += '    # ИСПРАВЛЕяИЕ: Проверяем, нужно ли показать метро клавиатуру\n';
-        code += '    logging.info("🔧 ГЕНЕРАТОР DEBUG: Вошли в узел interests_result")\n';
-        code += '    # Загружаем флаг из базы данных, если он там есть\n';
-        code += '    user_vars = await get_user_from_db(user_id)\n';
-        code += '    if not user_vars:\n';
-        code += '        user_vars = user_data.get(user_id, {})\n';
-        code += '        logging.info("🔧 ГЕНЕРАТОР DEBUG: user_vars загружены из user_data")\n';
-        code += '    else:\n';
-        code += '        logging.info("🔧 ГЕНЕРАТОР DEBUG: user_vars загружены из базы данных")\n';
-        code += '    \n';
-        code += '    show_metro_keyboard = False\n';
-        code += '    if isinstance(user_vars, dict):\n';
-        code += '        if "show_metro_keyboard" in user_vars:\n';
-        code += '            show_metro_keyboard = str(user_vars["show_metro_keyboard"]).lower() == "true"\n';
-        code += '            logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Нашли show_metro_keyboard в user_vars: {show_metro_keyboard}")\n';
-        code += '    \n';
-        code += '    # Также проверяем локальное хранилище\n';
-        code += '    if not show_metro_keyboard:\n';
-        code += '        show_metro_keyboard = user_data.get(user_id, {}).get("show_metro_keyboard", False)\n';
-        code += '        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Проверили локальное хранилище: {show_metro_keyboard}")\n';
-        code += '    \n';
-        code += '    saved_metro = user_data.get(user_id, {}).get("saved_metro_selection", [])\n';
-        code += '    logging.info(f"🚇 interests_result: show_metro_keyboard={show_metro_keyboard}, saved_metro={saved_metro}")\n';
-        code += '    \n';
-
-        // Няходим узел metro_selection дяя восстановления его кнопок
-        const metroNode = nodes.find(n => n.id.includes('metro_selection'));
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Поиск узла metro_selection - найден: ${metroNode ? 'да' : 'нет'}`);
-        if (metroNode && metroNode.data.buttons) {
-          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел metro_selection найден: ${metroNode.id}, кнопок: ${metroNode.data.buttons.length}`);
-          code += '    # Создаем метро клавиатуру если нужно\n';
-          code += '    if show_metro_keyboard:\n';
-          code += '        logging.info("🚇 ПОКАЗЫВАЕМ метро клавиатяру в interests_result")\n';
-          code += '        builder = InlineKeyboardBuilder()\n';
-
-          // Добавляем кнопки метро
-          metroNode.data.buttons.forEach((btn: Button, index: number) => {
-            const shortNodeId = metroNode.id.slice(-10).replace(/^_+/, '');
-            const callbackData = `ms_${shortNodeId}_${(btn.target || `btn_${index}`).slice(-8)}`;
-            code += `        # Кнопка метро: ${btn.text}\n`;
-            code += `        selected_metro = "${btn.text}" in saved_metro\n`;
-            code += `        button_text = "✅ " + "${btn.text}" if selected_metro else "${btn.text}"\n`;
-            code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
-          });
-
-          // Добавляем кнопку "Готово" с правильным callback_data для handle_multi_select_done
-          const metroCallbackData = `multi_select_done_${metroNode.id}`;
-          code += `        builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="${metroCallbackData}"))\n`;
-          code += '        builder.adjust(2)  # 2 кнопки в ряд\n';
-          code += '        metro_keyboard = builder.as_markup()\n';
-          code += '        \n';
-
-          // Обычные кнопки interests_result
-          code += '        # Добавляем обычные кнопки interests_result\n';
-          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
-            code += '        result_builder = InlineKeyboardBuilder()\n';
-            interestsResultNode.data.buttons.forEach((btn: Button, index: number) => {
-              if (btn.action === "goto" && btn.target) {
-                const btnCallbackData = `${btn.target}_btn_${index}`;
-                code += `        result_builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
-              } else if (btn.action === "command" && btn.target) {
-                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                code += `        result_builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-              } else if (btn.action === "url") {
-                code += `        result_builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-              }
-            });
-            code += '        result_keyboard = result_builder.as_markup()\n';
-            code += '        \n';
-            code += '        # Объединяем клавиатуры\n';
-            code += '        combined_keyboard = InlineKeyboardMarkup(inline_keyboard=metro_keyboard.inline_keyboard + result_keyboard.inline_keyboard)\n';
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '        # Заменяем все переменные в тексте\n';
-            code += '        text = replace_variables_in_text(text, user_vars)\n';
-            code += '        await bot.send_message(user_id, text, reply_markup=combined_keyboard)\n';
-          } else {
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '        # Заменяем все переменные в тексте\n';
-            code += '        text = replace_variables_in_text(text, user_vars)\n';
-            code += '        await bot.send_message(user_id, text, reply_markup=metro_keyboard)\n';
-          }
-
-          code += '        # НЕ сбрасываем флаг show_metro_keyboard, чтобы клавиатура оставалась активной\n';
-          code += '        logging.info("🚇 Клавиатура метро показана и остается активной")\n';
-          code += '    else:\n';
-          code += '        # Обычная логика без метро клавиатуры\n';
-
-          // Обрабатываем кнопки, если есть (без метро клавиатуры)
-          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
-            code += '        builder = InlineKeyboardBuilder()\n';
-            interestsResultNode.data.buttons.forEach((btn: Button, index: number) => {
-              if (btn.action === "goto" && btn.target) {
-                const btnCallbackData = `${btn.target}_btn_${index}`;
-                code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
-              } else if (btn.action === "command" && btn.target) {
-                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-              } else if (btn.action === "url") {
-                code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-              }
-            });
-            code += '        keyboard = builder.as_markup()\n';
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '        # Заменяем все переменные в тексте\n';
-            code += '        text = replace_variables_in_text(text, user_vars)\n';
-            code += '        await bot.send_message(user_id, text, reply_markup=keyboard)\n';
-          } else {
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '        # Заменяем все переменные в тексте\n';
-            code += '        text = replace_variables_in_text(text, user_vars)\n';
-            code += '        await bot.send_message(user_id, text)\n';
-          }
-        } else {
-          if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Узел metro_selection НЕ найден или у него нет кнопок');
-          // Обычная логика если узла метро нет
-          code += '    logging.info("🚇 Узел metro_selection не найден, используем обычную логику")\n';
-          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
-            code += '    builder = InlineKeyboardBuilder()\n';
-            interestsResultNode.data.buttons.forEach((btn: Button, index: number) => {
-              if (btn.action === "goto" && btn.target) {
-                const btnCallbackData = `${btn.target}_btn_${index}`;
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
-              } else if (btn.action === "command" && btn.target) {
-                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-              } else if (btn.action === "url") {
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-              }
-            });
-            code += '    keyboard = builder.as_markup()\n';
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '    # Заменяем все переменные в тексте\n';
-            code += '    text = replace_variables_in_text(text, user_vars)\n';
-            code += '    await bot.send_message(user_id, text, reply_markup=keyboard)\n';
-          } else {
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '    # Заменяем все переменные в тексте\n';
-            code += '    text = replace_variables_in_text(text, user_vars)\n';
-            code += '    await bot.send_message(user_id, text)\n';
-          }
-        }
-        code += '\n';
-      }
-    }
-
+    // ===========================================================================
     // ============================================================================
     // ОСНОВНОЙ ЦИКЛ ГЕНЕРАЦИИ ОБРАБОТЧИКОВ
     // ============================================================================
@@ -226,11 +42,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: кнопок: ${targetNode.data.buttons?.length || 0}`);
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: continueButtonTarget: ${targetNode.data.continueButtonTarget || 'нет'}`);
 
-          if (nodeId === 'interests_result') {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: СОЗДАЕМ ТРЕТИЙ ОБРАБОТЧИК ДЛЯ interests_result!`);
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: interests_result данные:`, JSON.stringify(targetNode.data, null, 2));
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: ЭТО МОЖЕТ БЫТЬ ИСТОЧНИКОМ КОНФЛИКТА КЛАВИАТУР!`);
-          }
+
 
           // ВАЖНО: Не создаем обработчик для "start", если он уже был создан ранее (избегаем дублирования)
           // Но проверяем только узлы с ID 'start', а не узлы с типом 'start'
@@ -244,11 +56,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`Создаем обработчик для узла типа 'start' с ID: ${nodeId}`);
           }
 
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также проверяем interests_result
-          if (nodeId === 'interests_result') {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для interests_result - уже создан в основном цикле`);
-            return; // Избегаем дублирования обработчика interests_result
-          }
+
 
           processedCallbacks.add(`cb_${nodeId}`);
 
@@ -424,7 +232,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: ========================================`);
 
             // Добавляем логику инициализации множественного выбора
-            const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
+            const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_selection';
             const multiSelectKeyboardType = targetNode.data.keyboardType || 'reply';
 
             code += '    # Инициализация состояния множественного выбора\n';
@@ -757,11 +565,11 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 }
 
                 // Убираем return, чтобы автопереходы могли работать
-                return; // Но ос��авляем return для завершения функции
+                return; // Но оставляем return для завершения функции
               }
 
               // Если collectUserInput=true, продолжаем выполнение и отправляем сообщение с медиа
-              // Проверяем, есть ли прикре��ленные медиафайлы и отправляем соответствующим образом
+              // Проверяем, есть ли прикрепленные медиафайлы и отправляем соответствующим образом
               const attachedMedia = targetNode.data.attachedMedia || [];
               if (attachedMedia.length > 0) {
                 // Используем generateAttachedMediaSendCode для отправки медиа
@@ -784,7 +592,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   '    ',
                   undefined, // автопереход обрабатывается отдельно
                   collectUserInputFlag,
-                  targetNode.data // передаем данные узла для провер��������������������и ��тат����ес����их изображен����й
+                  targetNode.data // передаем данные узла для проверяяяяяяяяяяяяяяяяяяяяи яятатяяяяесяяяяих изображеняяяяй
                 );
 
                 if (mediaCode) {
@@ -918,9 +726,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               keyboardStr,
               nodeId,
               '    ',
-              undefined, // автоп��реход обрабатывается отдельно ниже
+              undefined, // автопяяреход обрабатывается отдельно ниже
               collectUserInputFlag,
-              targetNode.data // передаем данные узла для проверки статических изобра��ений
+              targetNode.data // передаем данные узла для проверки статических изобраяяений
             );
 
             if (mediaCode) {
@@ -1447,7 +1255,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, не установлено ли keyboardType="none" на РОДИТЕЛЬСКОМ узле
                         const shouldGenerateKeyboard = navTargetNode.data.keyboardType !== 'none' && condition.keyboardType && condition.keyboardType !== 'none' && condition.buttons && condition.buttons.length > 0;
                         if (shouldGenerateKeyboard) {
-                          code += '                # Создаем клавиатуру для у��ловного сообщения\n';
+                          code += '                # Создаем клавиатуру для уяяловного сообщения\n';
 
                           if (condition.keyboardType === 'inline') {
                             code += '                builder = InlineKeyboardBuilder()\n';
@@ -1543,7 +1351,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += `                text = replace_variables_in_text(text, user_vars)\n`;
                         code += `                await bot.send_message(user_id, text, reply_markup=keyboard)\n`;
                       } else {
-                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обя��ательно вызываем замену переменных в тексте
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обяяяательно вызываем замену переменных в тексте
                         code += `                # Заменяем все переменные в тексте\n`;
                         code += `                text = replace_variables_in_text(text, user_vars)\n`;
                         code += `                await bot.send_message(user_id, text)\n`;
@@ -1557,7 +1365,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                       code += `                nav_text = ${formattedText}\n`;
                       // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
                       if (navTargetNode.data.collectUserInput === true) {
-                        code += `                # ИСПРАВЛЕНИЕ: Проверяем, не была ли переме��ная уже сохранена inline кнопкой\n`;
+                        code += `                # ИСПРАВЛЕНИЕ: Проверяем, не была ли перемеяяная уже сохранена inline кнопкой\n`;
                         code += `                if "${fallbackInputVariable}" not in user_data[user_id] or not user_data[user_id]["${fallbackInputVariable}"]:\n`;
                         code += `                    # Настраиваем ожидание ввода\n`;
                         code += `                    user_data[user_id]["waiting_for_input"] = {\n`;
@@ -1606,7 +1414,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                       if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                         code += generateInlineKeyboardCode(navTargetNode.data.buttons, '            ', navTargetNode.id, navTargetNode.data, allNodeIds);
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                        code += `            # Заменяем все переменны�� в тексте\n`;
+                        code += `            # Заменяем все переменныяя в тексте\n`;
                         code += `            text = replace_variables_in_text(text, user_vars)\n`;
                         code += `            await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n`;
                       } else {
@@ -1653,7 +1461,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               });
 
               code += '        else:\n';
-              code += '            logging.warning(f"Неизяяестны�� следующий узел: {next_node_id}")\n';
+              code += '            logging.warning(f"Неизяяестныяя следующий узел: {next_node_id}")\n';
             } else {
               code += '        # No nodes available for navigation\n';
               code += '        logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
@@ -1742,3 +1550,5 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
   return code;
 }
+
+
