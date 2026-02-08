@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert';
-import { generateStartHandler } from '../CommandHandler/generateStartHandler';
+import { generateStartHandler } from '../CommandHandler/generateStartHandler.ts';
 
 /**
  * Тестирование функции generateStartHandler с различными входными данными
