@@ -29,7 +29,9 @@ import { BotData } from '@shared/schema';
  * // и переменными: image_url_node1: 'url1', video_url_node1: 'url2'
  */
 function transformNodeData(nodes: any[]): any[] {
-  return nodes.map(node => {
+  return nodes
+    .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined значения
+    .map(node => {
     // Проверяем наличие любых медиа-URL и добавляем их в attachedMedia
     const hasImage = node.data?.imageUrl;
     const hasVideo = node.data?.videoUrl;

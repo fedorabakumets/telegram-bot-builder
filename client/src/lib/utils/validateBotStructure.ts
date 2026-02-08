@@ -19,17 +19,17 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
   // Validate each node
   nodes.forEach(node => {
     // Пропускаем валидацию для стартовых узлов без команды
-    if (node.type === 'start' && !node.data.command) {
+    if (node.type === 'start' && !node.data?.command) {
       return; // это просто стартовый узел, не требуется команда
     }
 
     // Для узлов command требуем текст, для остальных это опционально
-    if (!node.data.messageText && node.type === 'command') {
+    if (!node.data?.messageText && node.type === 'command') {
       errors.push(`Узел "${node.id}" должен содержать текст сообщения`);
     }
 
     // Validate commands
-    if ((node.type === 'start' || node.type === 'command') && node.data.command) {
+    if ((node.type === 'start' || node.type === 'command') && node.data?.command) {
       const commandValidation = validateCommand(node.data.command);
       if (!commandValidation.isValid) {
         errors.push(...commandValidation.errors.map(err => `Команда "${node.data.command}": ${err}`));
@@ -37,8 +37,10 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
     }
 
     // Валидация кнопок
-    if (node.data.buttons && Array.isArray(node.data.buttons)) {
-      node.data.buttons.forEach((button: { text: string; action: string; url: any; }) => {
+    if (node.data?.buttons && Array.isArray(node.data.buttons)) {
+      node.data.buttons
+        .filter(button => button !== null && button !== undefined) // Фильтруем null/undefined кнопки
+        .forEach((button: { text: string; action: string; url: any; }) => {
         if (!button.text.trim()) {
           errors.push(`Кнопка в узле "${node.id}" должна содержать текст`);
         }
