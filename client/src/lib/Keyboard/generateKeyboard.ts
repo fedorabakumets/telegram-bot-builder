@@ -135,6 +135,8 @@ export function generateKeyboard(node: Node): string {
         }
       });
 
+      const columns = calculateOptimalColumns(node.data.buttons, node.data);
+      code += `${indent4}builder.adjust(${columns})\n`;
       const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
       const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
       code += `${indent4}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -202,6 +204,8 @@ export function generateKeyboard(node: Node): string {
         node.data.responseOptions.forEach(option => {
           code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
         });
+        const columns = calculateOptimalColumns(node.data.responseOptions, node.data);
+        code += `    builder.adjust(${columns})\n`;
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -321,6 +325,8 @@ export function generateKeyboard(node: Node): string {
           code += `${indent3}builder.add(KeyboardButton(text="${continueText}"))\n`;
         }
 
+        const columns = calculateOptimalColumns(node.data.buttons, node.data);
+        code += `${indent3}builder.adjust(${columns})\n`;
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -354,6 +360,8 @@ export function generateKeyboard(node: Node): string {
           }
         });
 
+        const columns = calculateOptimalColumns(node.data.buttons, node.data);
+        code += `${indent3}builder.adjust(${columns})\n`;
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
