@@ -166,8 +166,8 @@ export function UrlDownloader({
   const downloadUrlMutation = useMutation({
     mutationFn: async ({ url, description, customFileName }: {
       url: string;
-      description?: string;
-      customFileName?: string;
+      description?: string | undefined;
+      customFileName?: string | undefined;
     }) => {
       const response = await apiRequest('POST', `/api/media/download-url/${projectId}`, {
         url,
@@ -187,7 +187,7 @@ export function UrlDownloader({
    * @property {boolean} isPending - Состояние выполнения загрузки
    */
   const downloadUrlsMutation = useMutation({
-    mutationFn: async (urlsData: { url: string; fileName?: string; description?: string }[]) => {
+    mutationFn: async (urlsData: { url: string; fileName?: string | undefined; description?: string | undefined }[]) => {
       const response = await apiRequest('POST', `/api/media/download-urls/${projectId}`, {
         urls: urlsData,
         isPublic,
@@ -252,11 +252,19 @@ export function UrlDownloader({
    * @returns {void}
    */
   const updateUrl = (id: string, url: string) => {
-    setUrls(prev => prev.map(u =>
-      u.id === id
-        ? { ...u, url, status: 'pending' as const, fileInfo: undefined, error: undefined }
-        : u
-    ));
+    setUrls(prev => prev.map(u => {
+      if (u.id === id) {
+        const updatedUrl: UrlData = {
+          ...u,
+          url,
+          status: 'pending' as const,
+          fileInfo: undefined,
+          error: undefined
+        };
+        return updatedUrl;
+      }
+      return u;
+    }));
   };
 
   /**

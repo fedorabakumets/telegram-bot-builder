@@ -21,10 +21,10 @@ interface TelegramClientConfig {
  */
 interface AuthStatus {
   isAuthenticated: boolean;
-  phoneNumber?: string;
-  userId?: string;
-  needsCode?: boolean;
-  needsPassword?: boolean;
+  phoneNumber?: string | undefined;
+  userId?: string | undefined;
+  needsCode?: boolean | undefined;
+  needsPassword?: boolean | undefined;
 }
 
 /**

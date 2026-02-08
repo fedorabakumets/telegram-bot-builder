@@ -17,9 +17,12 @@ const STORAGE_KEYS = {
 } as const;
 
 // Stored types with ISO date strings
-type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string };
-type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null };
-type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null };
+type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt' | 'restartOnUpdate'> & { createdAt: string; updatedAt: string; restartOnUpdate?: boolean };
+type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null | undefined };
+type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null | undefined };
+
+// Define partial versions for updates
+type PartialStoredProject = Partial<Pick<StoredProject, 'name' | 'description' | 'data' | 'botToken' | 'userDatabaseEnabled' | 'ownerId' | 'restartOnUpdate'>>;
 
 export class LocalStorageService {
   private static getNextId(key: string): number {
@@ -150,18 +153,18 @@ export class LocalStorageService {
     return this.reviveProject(stored);
   }
 
-  static updateProject(id: number, data: Partial<InsertBotProject>): BotProject | undefined {
+  static updateProject(id: number, data: PartialStoredProject): BotProject | undefined {
     const storedProjects = this.safeGetItem<StoredProject[]>(STORAGE_KEYS.PROJECTS, []);
     const index = storedProjects.findIndex(p => p.id === id);
-    
+
     if (index === -1) return undefined;
-    
+
     const updated: StoredProject = {
       ...storedProjects[index],
       ...data,
       updatedAt: new Date().toISOString(),
     };
-    
+
     storedProjects[index] = updated;
     this.safeSetItem(STORAGE_KEYS.PROJECTS, storedProjects);
     return this.reviveProject(updated);

@@ -291,6 +291,7 @@ export function Canvas({
       document.addEventListener('mouseup', handleMouseUp);
       return () => document.removeEventListener('mouseup', handleMouseUp);
     }
+    return () => {};
   }, [isSelecting]);
 
   // Обработчик изменения размеров узлов
@@ -1036,6 +1037,7 @@ export function Canvas({
       canvasElement.addEventListener('canvas-drop', handleCanvasDrop as EventListener);
       return () => canvasElement.removeEventListener('canvas-drop', handleCanvasDrop as EventListener);
     }
+    return () => {};
   }, [handleCanvasDrop]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -1243,7 +1245,7 @@ export function Canvas({
                 connectionStart={connectionStart}
                 zoom={zoom}
                 pan={pan}
-                setIsNodeBeingDragged={setIsNodeBeingDragged}
+                setIsNodeBeingDragged={setIsNodeBeingDragged ? setIsNodeBeingDragged : undefined}
                 onSizeChange={handleNodeSizeChange}
               />
             ))}

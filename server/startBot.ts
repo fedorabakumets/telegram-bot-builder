@@ -73,7 +73,7 @@ import { storage } from "./storage";
  * }
  * ```
  */
-export async function startBot(projectId: number, token: string, tokenId: number): Promise<{ success: boolean; error?: string; processId?: string; }> {
+export async function startBot(projectId: number, token: string, tokenId: number): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
   try {
     const processKey = `${projectId}_${tokenId}`;
 

@@ -22,10 +22,10 @@ import { URL } from "node:url";
  */
 export async function checkUrlAccessibility(url: string): Promise<{
   accessible: boolean;
-  mimeType?: string;
-  size?: number;
-  fileName?: string;
-  error?: string;
+  mimeType?: string | undefined;
+  size?: number | undefined;
+  fileName?: string | undefined;
+  error?: string | undefined;
 }> {
   return new Promise((resolve) => {
     try {

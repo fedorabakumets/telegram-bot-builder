@@ -37,8 +37,8 @@ import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Play, Volume2, FileText,
 interface MediaManagerProps {
   projectId: number;
   onSelectFile?: (file: MediaFile) => void;
-  selectedType?: 'photo' | 'video' | 'audio' | 'document';
-  showUploader?: boolean;
+  selectedType?: ('photo' | 'video' | 'audio' | 'document') | undefined;
+  showUploader?: boolean | undefined;
 }
 
 /**

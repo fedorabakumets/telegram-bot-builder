@@ -34,7 +34,7 @@ interface HierarchicalLayoutOptions {
   /** Начальная Y-координата для размещения узлов */
   startY: number;
   /** Карта реальных размеров узлов (если отличаются от стандартных) */
-  nodeSizes?: Map<string, { width: number; height: number }>; // Карта реальных размеров узлов
+  nodeSizes?: Map<string, { width: number; height: number }> | undefined; // Карта реальных размеров узлов
 }
 
 /** Стандартные параметры компоновки */

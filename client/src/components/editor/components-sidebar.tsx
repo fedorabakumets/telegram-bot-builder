@@ -31,7 +31,7 @@ interface ComponentsSidebarProps {
   /** Идентификатор текущего проекта */
   currentProjectId?: number;
   /** Идентификатор активного листа */
-  activeSheetId?: string;
+  activeSheetId?: string | undefined;
 
   // Новые пропсы для управления макетом
   /** Колбэк для переключения видимости холста */

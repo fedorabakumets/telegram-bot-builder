@@ -1175,7 +1175,7 @@ export class DatabaseStorage implements IStorage {
     projectId: number,
     userId: string,
     limit: number = 100
-  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number; }>; })[]> {
+  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number; }> | undefined; })[]> {
     const messages = await this.db
       .select()
       .from(botMessages)

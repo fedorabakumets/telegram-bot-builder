@@ -24,16 +24,16 @@ import {
  * @property {string} [className] - Дополнительный CSS класс
  */
 interface LayoutButtonsProps {
-  onToggleCanvas?: () => void;
-  onToggleHeader?: () => void;
-  onToggleSidebar?: () => void;
-  onToggleProperties?: () => void;
-  onShowFullLayout?: () => void;
-  canvasVisible?: boolean;
-  headerVisible?: boolean;
-  sidebarVisible?: boolean;
-  propertiesVisible?: boolean;
-  className?: string;
+  onToggleCanvas?: (() => void) | undefined;
+  onToggleHeader?: (() => void) | undefined;
+  onToggleSidebar?: (() => void) | undefined;
+  onToggleProperties?: (() => void) | undefined;
+  onShowFullLayout?: (() => void) | undefined;
+  canvasVisible?: boolean | undefined;
+  headerVisible?: boolean | undefined;
+  sidebarVisible?: boolean | undefined;
+  propertiesVisible?: boolean | undefined;
+  className?: string | undefined;
 }
 
 /**

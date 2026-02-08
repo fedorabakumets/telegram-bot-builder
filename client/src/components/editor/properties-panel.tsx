@@ -240,7 +240,7 @@ interface PropertiesPanelProps {
   /** Выбранный узел для редактирования */
   selectedNode: Node | null;
   /** Все узлы текущего листа */
-  allNodes?: Node[];
+  allNodes?: Node[] | undefined;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
   /** Функция изменения типа узла */
@@ -254,11 +254,11 @@ interface PropertiesPanelProps {
   /** Функция удаления кнопки узла */
   onButtonDelete: (nodeId: string, buttonId: string) => void;
   /** Все листы проекта для поддержки межлистовых соединений */
-  allSheets?: any[];
+  allSheets?: any[] | undefined;
   /** ID текущего листа */
-  currentSheetId?: string;
+  currentSheetId?: string | undefined;
   /** Функция закрытия панели */
-  onClose?: () => void;
+  onClose?: (() => void) | undefined;
 }
 
 /**

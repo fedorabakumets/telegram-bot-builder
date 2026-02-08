@@ -289,7 +289,7 @@ export class DatabaseBackup {
     filepath: string;
     size: number;
     created: Date;
-    metadata?: BackupData['metadata'];
+    metadata?: BackupData['metadata'] | undefined;
   }>> {
     try {
       const fs = await import('fs');

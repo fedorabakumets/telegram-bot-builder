@@ -18,12 +18,12 @@ import { BotDataWithSheets } from '@shared/schema';
  */
 export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWithSheets {
   // Копируем данные проекта
-  const normalizedData = JSON.parse(JSON.stringify(projectData));
+  const normalizedData = structuredClone ? structuredClone(projectData) : JSON.parse(JSON.stringify(projectData));
 
   // Проходим по всем листам
-  normalizedData.sheets = normalizedData.sheets.map(sheet => {
+  normalizedData.sheets = normalizedData.sheets.map((sheet: any) => {
     // Проходим по всем узлам в листе
-    const normalizedNodes = sheet.nodes.map(node => {
+    const normalizedNodes = sheet.nodes.map((node: any) => {
       // Проверяем, есть ли у узла поле data
       if (!node.data) {
         node.data = {};
@@ -40,7 +40,7 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
 
       // Нормализуем каждый элемент conditionalMessages
       if (Array.isArray(node.data.conditionalMessages)) {
-        node.data.conditionalMessages = node.data.conditionalMessages.map(condition => {
+        node.data.conditionalMessages = node.data.conditionalMessages.map((condition: any) => {
           // Убедимся, что у каждого условия есть все необходимые поля
           const normalizedCondition = {
             // Обязательные поля
@@ -97,7 +97,7 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
 
           // Нормализуем кнопки в условном сообщении
           if (Array.isArray(normalizedCondition.buttons)) {
-            normalizedCondition.buttons = normalizedCondition.buttons.map(button => ({
+            normalizedCondition.buttons = normalizedCondition.buttons.map((button: any) => ({
               id: button.id || `btn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               text: button.text || 'Кнопка',
               action: button.action || 'goto',

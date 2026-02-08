@@ -43,10 +43,10 @@ function GroupAvatar({
   size = 40,
   className = ""
 }: {
-  avatarUrl?: string | null;
+  avatarUrl?: string | null | undefined;
   groupName: string;
-  size?: number;
-  className?: string;
+  size?: number | undefined;
+  className?: string | undefined;
 }) {
   const [imageError, setImageError] = useState(false);
 
@@ -2974,10 +2974,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               className="flex-1 h-10"
                             />
                             <Button
-                              onClick={() => unpinMessageMutation.mutate({
-                                groupId: selectedGroup.groupId,
-                                messageId: messageIdToUnpin || undefined
-                              })}
+                              onClick={() => {
+                                if (!selectedGroup.groupId) return;
+                                const params: { groupId: string; messageId?: string } = {
+                                  groupId: selectedGroup.groupId
+                                };
+                                if (messageIdToUnpin) {
+                                  params.messageId = messageIdToUnpin;
+                                }
+                                unpinMessageMutation.mutate(params);
+                              }}
                               disabled={unpinMessageMutation.isPending}
                               size="sm"
                               variant="outline"
@@ -3058,12 +3064,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           </div>
 
                           <Button
-                            onClick={() => createInviteLinkMutation.mutate({
-                              groupId: selectedGroup.groupId,
-                              name: inviteLinkName || undefined,
-                              memberLimit: inviteLinkLimit ? parseInt(inviteLinkLimit) : undefined,
-                              createsJoinRequest: false
-                            })}
+                            onClick={() => {
+                              if (!selectedGroup.groupId) return;
+                              const params: { groupId: string; name?: string; memberLimit?: number; createsJoinRequest: boolean } = {
+                                groupId: selectedGroup.groupId,
+                                createsJoinRequest: false
+                              };
+                              if (inviteLinkName) {
+                                params.name = inviteLinkName;
+                              }
+                              if (inviteLinkLimit) {
+                                params.memberLimit = parseInt(inviteLinkLimit);
+                              }
+                              createInviteLinkMutation.mutate(params);
+                            }}
                             disabled={createInviteLinkMutation.isPending}
                             className="w-full gap-2 h-10"
                           >

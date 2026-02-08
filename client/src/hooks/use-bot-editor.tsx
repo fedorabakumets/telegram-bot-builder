@@ -145,6 +145,7 @@ export function useBotEditor(initialData?: BotData) {
       const timeoutId = setTimeout(saveToHistory, 300); // Увеличен дебаунс для избежания частых сохранений
       return () => clearTimeout(timeoutId);
     }
+    return () => {};
   }, [nodes, connections, saveToHistory, history.length]);
 
 

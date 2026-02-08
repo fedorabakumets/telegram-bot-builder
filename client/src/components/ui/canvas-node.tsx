@@ -196,7 +196,7 @@ interface CanvasNodeProps {
   isSelected?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
-  onDuplicate?: () => void;
+  onDuplicate?: (() => void) | undefined;
   onMove?: (position: { x: number; y: number }) => void;
   onMoveEnd?: () => void;
   onConnectionStart?: (nodeId: string, handle: 'source' | 'target') => void;
@@ -206,7 +206,7 @@ interface CanvasNodeProps {
   } | null;
   zoom?: number;
   pan?: { x: number; y: number };
-  setIsNodeBeingDragged?: (isDragging: boolean) => void;
+  setIsNodeBeingDragged?: ((isDragging: boolean) => void) | undefined;
   onSizeChange?: (nodeId: string, size: { width: number; height: number }) => void;
 }
 
@@ -538,7 +538,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       document.addEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = 'grabbing';
       document.body.style.userSelect = 'none';
-      
+
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -546,6 +546,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         document.body.style.userSelect = '';
       };
     }
+    return () => {};
   }, [isDragging, dragOffset, onMove]);
 
   // Touch события уже обрабатываются в handleTouchMove, не нужно добавлять глобальные слушатели
@@ -553,12 +554,13 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     if (isTouchDragging) {
       document.body.style.userSelect = 'none';
       document.body.style.touchAction = 'none'; // Предотвращаем прокрутку при перетаскивании
-      
+
       return () => {
         document.body.style.userSelect = '';
         document.body.style.touchAction = '';
       };
     }
+    return () => {};
   }, [isTouchDragging]);
 
   // ResizeObserver для измерения реальных размеров узла

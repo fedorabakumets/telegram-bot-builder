@@ -260,6 +260,7 @@ router.get('/backup/:filename', async (req, res) => {
         });
       }
     });
+    return; // Явно указываем, что функция завершается
   } catch (error) {
     res.status(500).json({
       success: false,

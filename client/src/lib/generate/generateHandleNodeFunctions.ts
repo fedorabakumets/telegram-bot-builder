@@ -1,8 +1,7 @@
 import { isLoggingEnabled } from '../bot-generator';
 import { generateConditionalMessageLogic } from '../Conditional';
-import { stripHtmlTags, formatTextForPython, getParseMode, generateAttachedMediaSendCode, generateWaitingStateCode, generateButtonText, toPythonBoolean, escapeForJsonString, calculateOptimalColumns } from '../format';
+import { stripHtmlTags, formatTextForPython, getParseMode, generateAttachedMediaSendCode } from '../format';
 import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
-import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
 
 /**
  * Генерирует функции handle_node_* для узлов с условными сообщениями

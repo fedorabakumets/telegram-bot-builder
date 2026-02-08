@@ -4,7 +4,7 @@ import { EnhancedConnectionLine } from './enhanced-connection-line';
 interface ConnectionsLayerProps {
   connections: Connection[];
   nodes: Node[];
-  selectedConnectionId?: string;
+  selectedConnectionId?: string | undefined;
   onConnectionSelect?: (connectionId: string) => void;
   onConnectionDelete?: (connectionId: string) => void;
 }

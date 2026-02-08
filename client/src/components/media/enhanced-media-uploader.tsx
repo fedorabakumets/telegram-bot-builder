@@ -49,11 +49,11 @@ import type { MediaFile } from "@shared/schema";
  * @property {string} [uploadError] - Ошибка загрузки (если есть)
  */
 interface FileWithPreview extends File {
-  preview?: string;
+  preview?: string | undefined;
   id: string;
-  uploadProgress?: number;
-  uploadStatus?: 'pending' | 'uploading' | 'success' | 'error';
-  uploadError?: string;
+  uploadProgress?: number | undefined;
+  uploadStatus?: ('pending' | 'uploading' | 'success' | 'error') | undefined;
+  uploadError?: string | undefined;
 }
 
 /**

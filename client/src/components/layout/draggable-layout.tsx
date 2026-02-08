@@ -233,6 +233,7 @@ const DraggableElement: React.FC<DraggableElementProps> = ({
         document.removeEventListener('mouseup', handleResizeEnd);
       };
     }
+    return () => {};
   }, [isResizing, handleResizeMove, handleResizeEnd]);
 
   if (!element.visible) return null;

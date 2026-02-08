@@ -36,7 +36,7 @@ interface EmojiCategory {
   /** Название категории */
   name: string;
   /** Иконка категории */
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string | undefined }>;
   /** Массив эмодзи в категории */
   emojis: string[];
 }

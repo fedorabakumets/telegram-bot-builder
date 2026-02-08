@@ -53,5 +53,8 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
  * Возвращает ownerId из req.user или null для неавторизованных пользователей
  */
 export function getOwnerIdFromRequest(req: Request): number | null {
-  return req.user?.id ?? null;
+  if (req.user) {
+    return req.user.id;
+  }
+  return null;
 }
