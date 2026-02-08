@@ -1359,6 +1359,8 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 }
                 code += '    # Для reply клавиатуры отправляем новое сообщение\n';
                 code += `    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})\n`;
+                code += '    # Узел metro_selection имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n';
+                code += `    logging.info(f"ℹ️ Узел ${actualNodeId} не собирает ответы (collectUserInput=false)")\n`;
               }
               code += '    \n';
             } else {
@@ -1366,6 +1368,15 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
               // Обрабатываем клавиатуру для целевого узла
               code += `    # DEBUG: Узел ${actualNodeId} - hasRegularButtons=${toPythonBoolean(targetNode.data.buttons && targetNode.data.buttons.length > 0)}, hasInputCollection=False\n`;
               code += `    logging.info(f"DEBUG: Узел ${actualNodeId} обработка кнопок - keyboardType=${targetNode.data.keyboardType}, buttons=${targetNode.data.buttons ? targetNode.data.buttons.length : 0}")\n`;
+
+              // Определяем режим форматирования для целевого узла
+              let parseModeTarget = '';
+              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+              } else if (targetNode.data.formatMode === 'html') {
+                parseModeTarget = ', parse_mode=ParseMode.HTML';
+              }
+
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += `    logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${actualNodeId} с ${targetNode.data.buttons.length} кнопками")\n`;
                 code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
@@ -1374,13 +1385,6 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 // ИСПРАВЛЕНИЕ: Используем универсальную функцию generateInlineKeyboardCode
                 const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', actualNodeId, targetNode.data, allNodeIds);
                 code += keyboardCode;
-                // Определяем режим форматирования для целевого узла
-                let parseModeTarget = '';
-                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-                } else if (targetNode.data.formatMode === 'html') {
-                  parseModeTarget = ', parse_mode=ParseMode.HTML';
-                }
                 code += `    await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
               } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
                 code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
@@ -1388,22 +1392,12 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 code += '        # Создаем reply клавиатуру\n';
                 const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', actualNodeId, targetNode.data);
                 code += keyboardCode;
-                // Определяем режим форматирования для целевого узла
-                let parseModeTarget = '';
-                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-                } else if (targetNode.data.formatMode === 'html') {
-                  parseModeTarget = ', parse_mode=ParseMode.HTML';
-                }
                 code += `    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})\n`;
+
+                // Устанавливаем флаг, что сообщение уже отправлено для reply клавиатуры
+                code += '    # Узел имеет reply клавиатуру - сообщение уже отправлено\n';
+                code += `    logging.info(f"ℹ️ Узел ${actualNodeId} имеет reply клавиатуру - сообщение отправлено")\n`;
               } else {
-                // Определяем режим форматирования для целевого узла
-                let parseModeTarget = '';
-                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-                } else if (targetNode.data.formatMode === 'html') {
-                  parseModeTarget = ', parse_mode=ParseMode.HTML';
-                }
                 // Для автопереходов отправляем новое сообщение вместо редактирования
                 code += `    await callback_query.message.answer(text${parseModeTarget})\n`;
               }
