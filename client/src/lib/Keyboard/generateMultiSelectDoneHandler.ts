@@ -139,7 +139,7 @@ export function generateMultiSelectDoneHandler(
                                 targetNode.data.buttons.forEach((button: Button, index: number) => {
                                     if (button.action === 'selection') {
                                         const cleanText = button.text.replace(/"/g, '\\"');
-                                        const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
+                                        const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${(button.target || button.id || `btn${index}`).slice(-8)}`.replace(/[^a-zA-Z0-9_]/g, '_');
                                         code += `        # Кнопка с галочкой: ${cleanText}\n`;
                                         code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
                                         code += `        button_text = f"{selected_mark}${cleanText}"\n`;

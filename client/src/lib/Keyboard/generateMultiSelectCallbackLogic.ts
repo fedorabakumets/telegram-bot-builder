@@ -22,7 +22,7 @@ export function generateMultiSelectCallbackLogic(
 `;
     code += `            short_node_id = parts[1]
 `;
-    code += `            button_id = "_".join(parts[2:])
+    code += `            button_id = "_".join(parts[2:])  # Используем полное имя для совместимости
 `;
     code += `            # Находим полный node_id по короткому суффиксу
 `;
@@ -47,7 +47,8 @@ export function generateMultiSelectCallbackLogic(
         code += `                # Проверяем узел ${node.id}\n`;
         selectionButtons.forEach((button: Button) => {
           const buttonValue = button.target || button.id || button.text;
-          code += `                if button_id == "${buttonValue}":
+          const buttonValueTruncated = buttonValue.slice(-8);
+          code += `                if button_id == "${buttonValue}" or button_id == "${buttonValueTruncated}":
 `;
           code += `                    node_id = "${node.id}"
 `;
@@ -117,7 +118,8 @@ export function generateMultiSelectCallbackLogic(
       const selectionButtons = node.data.buttons?.filter((btn: { action: string; }) => btn.action === 'selection') || [];
       selectionButtons.forEach((button: Button) => {
         const buttonValue = button.target || button.id || button.text;
-        code += `        if not node_id and button_id == "${buttonValue}":
+        const buttonValueTruncated = buttonValue.slice(-8);
+        code += `        if not node_id and (button_id == "${buttonValue}" or button_id == "${buttonValueTruncated}"):
 `;
         code += `            node_id = "${node.id}"
 `;
@@ -205,7 +207,8 @@ export function generateMultiSelectCallbackLogic(
 `;
         selectionButtons.forEach((button: Button) => {
           const buttonValue = button.target || button.id || button.text;
-          code += `        if button_id == "${buttonValue}":
+          const buttonValueTruncated = buttonValue.slice(-8);
+          code += `        if button_id == "${buttonValue}" or button_id == "${buttonValueTruncated}":
 `;
           code += `            button_text = "${button.text}"
 `;

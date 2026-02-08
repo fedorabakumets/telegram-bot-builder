@@ -100,7 +100,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // Добавляем кнопки метро
           metroNode.data.buttons.forEach((btn: Button, index: number) => {
             const shortNodeId = metroNode.id.slice(-10).replace(/^_+/, '');
-            const callbackData = `ms_${shortNodeId}_${btn.target || `btn_${index}`}`;
+            const callbackData = `ms_${shortNodeId}_${(btn.target || `btn_${index}`).slice(-8)}`;
             code += `        # Кнопка метро: ${btn.text}\n`;
             code += `        selected_metro = "${btn.text}" in saved_metro\n`;
             code += `        button_text = "✅ " + "${btn.text}" if selected_metro else "${btn.text}"\n`;
@@ -775,7 +775,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   '    ',
                   undefined, // автопереход обрабатывается отдельно
                   collectUserInputFlag,
-                  targetNode.data // передаем данные узла для провер������������������и ��тат����ес����их изображен����й
+                  targetNode.data // передаем данные узла для провер��������������������и ��тат����ес����их изображен����й
                 );
 
                 if (mediaCode) {

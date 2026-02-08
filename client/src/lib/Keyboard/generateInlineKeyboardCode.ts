@@ -87,7 +87,7 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
     } else if (button.action === 'selection') {
       // Укорачиваем callback_data для соблюдения лимита Telegram в 64 байта
       const shortNodeId = nodeId ? generateUniqueShortId(nodeId, allNodeIds || []) : 'sel';
-      const shortTarget = button.target || button.id || 'btn'; // Используем полный target без обрезки для совместимости с обработчиком
+      const shortTarget = (button.target || button.id || 'btn').slice(-8); // Обрезаем до 8 последних символов для совместимости с обработчиком
       const callbackData = `ms_${shortNodeId}_${shortTarget}`;
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
 
