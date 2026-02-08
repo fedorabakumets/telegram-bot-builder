@@ -336,7 +336,7 @@ router.post('/backup/upload', upload.single('backup'), async (req, res) => {
       }
     }
 
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     return res.status(500).json({
       success: false,
