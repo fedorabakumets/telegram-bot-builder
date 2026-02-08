@@ -523,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Нормализуем данные проекта для добавления недостающих полей в узлы
       const normalizedProject = normalizeProjectData(project);
       
-      res.json(normalizedProject);
+      return res.json(normalizedProject);
     } catch (error) {
       return res.status(500).json({ message: "Failed to fetch project" });
     }
