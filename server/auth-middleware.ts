@@ -39,13 +39,14 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
  */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.user) {
-    return res.status(401).json({ 
-      success: false, 
-      message: "Требуется авторизация через Telegram" 
+    return res.status(401).json({
+      success: false,
+      message: "Требуется авторизация через Telegram"
     });
   }
-  
+
   next();
+  return; // Явно указываем, что функция завершается
 }
 
 /**

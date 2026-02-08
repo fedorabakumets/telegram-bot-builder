@@ -1162,9 +1162,14 @@ export default function Editor() {
           
           // Сохраняем в проект только если activeProject загружен
           if (activeProject?.id) {
-            updateProjectMutation.mutate({
-              data: templateDataWithSheets
+            // Обновляем botDataWithSheets напрямую, а затем вызываем сохранение
+            setBotDataWithSheets({
+              ...botDataWithSheets,
+              ...templateDataWithSheets
             });
+
+            // Сохраняем изменения в проекте
+            updateProjectMutation.mutate({});
           }
         } else {
           // Обычный шаблон без листов - мигрируем к формату с листами
@@ -1177,9 +1182,14 @@ export default function Editor() {
           
           // Сохраняем в проект только если activeProject загружен
           if (activeProject?.id) {
-            updateProjectMutation.mutate({
-              data: migratedData
+            // Обновляем botDataWithSheets напрямую, а затем вызываем сохранение
+            setBotDataWithSheets({
+              ...botDataWithSheets,
+              ...migratedData
             });
+
+            // Сохраняем изменения в проекте
+            updateProjectMutation.mutate({});
           }
         }
         

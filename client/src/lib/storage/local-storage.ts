@@ -18,8 +18,8 @@ const STORAGE_KEYS = {
 
 // Stored types with ISO date strings
 type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt' | 'restartOnUpdate'> & { createdAt: string; updatedAt: string; restartOnUpdate?: boolean };
-type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null | undefined };
-type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null | undefined };
+type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
+type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
 
 // Define partial versions for updates
 type PartialStoredProject = Partial<Pick<StoredProject, 'name' | 'description' | 'data' | 'botToken' | 'userDatabaseEnabled' | 'ownerId' | 'restartOnUpdate'>>;

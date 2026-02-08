@@ -525,7 +525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(normalizedProject);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch project" });
+      return res.status(500).json({ message: "Failed to fetch project" });
     }
   });
 
@@ -546,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create project" });
+      return res.status(500).json({ message: "Failed to create project" });
     }
   });
 
@@ -598,7 +598,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to update project", error: (error as Error).message });
+      return res.status(500).json({ message: "Failed to update project", error: (error as Error).message });
     }
   });
 
@@ -3084,7 +3084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        // Удаляем всех пользовател����й из таблицы bot_users для данного проекта
+        // Удаляем всех поль��ова��ел����й из таблицы bot_users для данного проекта
         const deleteResult = await pool.query(
           `DELETE FROM bot_users WHERE project_id = $1`,
           [projectId]

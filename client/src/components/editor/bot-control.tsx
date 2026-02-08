@@ -19,6 +19,8 @@ import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal
  * @interface BotControlProps
  */
 interface BotControlProps {
+  projectId?: number;
+  projectName?: string;
 }
 
 /**

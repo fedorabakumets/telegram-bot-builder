@@ -165,7 +165,6 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
     // Обработка автоперехода
     if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
       const autoTargetId = node.data.autoTransitionTo;
-      const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
       code += '    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла\n';
       code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура\n';
       code += '    user_id = message.from_user.id\n';

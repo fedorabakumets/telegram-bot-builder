@@ -262,7 +262,7 @@ router.get('/backup/:filename', async (req, res) => {
     });
     return; // Явно указываем, что функция завершается
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Не удалось скачать резервную копию',
       message: error instanceof Error ? error.message : 'Неизвестная ошибка'
@@ -338,7 +338,7 @@ router.post('/backup/upload', upload.single('backup'), async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Не удалось загрузить файл',
       message: error instanceof Error ? error.message : 'Неизвестная ошибка'
