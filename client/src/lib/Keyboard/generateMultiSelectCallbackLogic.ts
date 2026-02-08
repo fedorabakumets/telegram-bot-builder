@@ -287,9 +287,35 @@ export function generateMultiSelectCallbackLogic(
         if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
         code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))
 `;
-        code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла ${node.id} (multi-select)")
+        // Вычисляем оптимальное количество колонок на основе количества кнопок
+        const totalButtons = selectionButtons.length + regularButtons.length + 1; // +1 для кнопки "Готово"
+        let optimalColumns = 1;
+        if (totalButtons >= 6) {
+          optimalColumns = 2;
+        } else if (totalButtons >= 3) {
+          optimalColumns = 1;
+        } else {
+          optimalColumns = 1;
+        }
+        code += `            # Вычисляем оптимальное количество колонок для узла ${node.id} (всего кнопок: ${totalButtons})
 `;
-        code += `            builder.adjust(2)
+        code += `            total_buttons = ${totalButtons}
+`;
+        code += `            if total_buttons >= 6:
+`;
+        code += `                optimal_columns = 2
+`;
+        code += `            elif total_buttons >= 3:
+`;
+        code += `                optimal_columns = 1
+`;
+        code += `            else:
+`;
+        code += `                optimal_columns = 1
+`;
+        code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns}) для узла ${node.id} (multi-select, всего кнопок: {total_buttons})")
+`;
+        code += `            builder.adjust(optimal_columns)
 `;
       }
     });

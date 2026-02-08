@@ -591,6 +591,10 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                     code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
                   }
                 });
+                // Автоматическое распределение колонок для reply клавиатуры
+                const totalButtons = targetNode.data.buttons.length;
+                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+                code += `        builder.adjust(${columns})\n`;
                 const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
                 const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                 code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -608,6 +612,10 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                     code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
                   }
                 });
+                // Автоматическое распределение колонок для reply клавиатуры
+                const totalButtons2 = targetNode.data.buttons.length;
+                const columns2 = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+                code += `    builder.adjust(${columns2})\n`;
                 const resizeKeyboard2 = toPythonBoolean(targetNode.data.resizeKeyboard);
                 const oneTimeKeyboard2 = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                 code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard2}, one_time_keyboard=${oneTimeKeyboard2})\n`;
@@ -810,6 +818,10 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
                 }
               });
+              // Автоматическое распределение колонок для обычных кнопок
+              const totalButtons = targetNode.data.buttons.length;
+              const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+              code += `    builder.adjust(${columns})\n`;
               code += '    keyboard = builder.as_markup()\n';
             }
           } else {
