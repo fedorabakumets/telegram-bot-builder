@@ -33,6 +33,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
             const safeFunctionName = button.id.replace(/[^a-zA-Z0-9_]/g, '_');
             code += `async def handle_reply_${safeFunctionName}(message: types.Message):\n`;
 
+            // Проверяем, находится ли пользователь в режиме мультивыбора
+            code += '    user_id = message.from_user.id\n';
+            code += '    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":\n';
+            code += '        # Пользователь в режиме мультивыбора, передаем управление общему обработчику\n';
+            code += '        await handle_multi_select_reply(message)\n';
+            code += '        return\n';
+            code += '    \n';
+
             // Генерируем ответ для целевого узла
             const targetText = targetNode.data.messageText || "Сообщение";
             const formattedTargetText = formatTextForPython(targetText);
@@ -571,12 +579,20 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
           // Создаем безопасное имя функции на основе button ID или текста
           const safeFunctionName = (button.id || buttonText).replace(/[^a-zA-Z0-9_]/g, '_');
           code += `async def handle_reply_${safeFunctionName}(message: types.Message):\n`;
-          
+
+          // Проверяем, находится ли пользователь в режиме мультивыбора
+          code += '    user_id = message.from_user.id\n';
+          code += '    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":\n';
+          code += '        # Пользователь в режиме мультивыбора, передаем управление общему обработчику\n';
+          code += '        await handle_multi_select_reply(message)\n';
+          code += '        return\n';
+          code += '    \n';
+
           // Генерируем простой ответ
           code += `    text = "Вы нажали на кнопку: ${buttonText}"\n`;
           code += '    user_id = message.from_user.id\n';
           code += '    \n';
-          
+
           // Инициализация переменных пользователя
           code += '    # Инициализируем базовые переменные пользователя если их нет\n';
           code += '    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):\n';
