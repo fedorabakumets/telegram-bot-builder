@@ -541,7 +541,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ownerId: getOwnerIdFromRequest(req)
       };
       const project = await storage.createBotProject(projectData);
-      res.status(201).json(project);
+      return res.status(201).json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -3084,7 +3084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        // Удаляем всех поль��ова��ел����й из таблицы bot_users для данного проекта
+        // Удаляем в��ех поль��ова��ел����й из таблицы bot_users для данного проекта
         const deleteResult = await pool.query(
           `DELETE FROM bot_users WHERE project_id = $1`,
           [projectId]
