@@ -331,11 +331,11 @@ export function generateMultiSelectCallbackLogic(
         code += `            total_buttons_with_done = ${totalButtonsWithDone}
 `;
         code += `            if total_buttons_with_done >= 6:
-            optimal_columns_with_done = 2
-        elif total_buttons_with_done >= 3:
-            optimal_columns_with_done = 1
-        else:
-            optimal_columns_with_done = 1
+                optimal_columns_with_done = 2
+            elif total_buttons_with_done >= 3:
+                optimal_columns_with_done = 1
+            else:
+                optimal_columns_with_done = 1
 `;
         code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns_with_done}) для узла ${node.id} (multi-select с кнопкой Готово, всего кнопок: {total_buttons_with_done})")
 `;
