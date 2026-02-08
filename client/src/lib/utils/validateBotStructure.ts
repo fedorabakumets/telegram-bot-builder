@@ -39,7 +39,7 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
     // Валидация кнопок
     if (node.data?.buttons && Array.isArray(node.data.buttons)) {
       node.data.buttons
-        .filter(button => button !== null && button !== undefined) // Фильтруем null/undefined кнопки
+        .filter((button: { text: string; action: string; url: any; } | null | undefined) => button !== null && button !== undefined) // Фильтруем null/undefined кнопки
         .forEach((button: { text: string; action: string; url: any; }) => {
         if (!button.text.trim()) {
           errors.push(`Кнопка в узле "${node.id}" должна содержать текст`);
