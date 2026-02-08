@@ -1,5 +1,5 @@
 import { Node } from '@shared/schema';
-import { formatTextForPython } from '../format';
+import { formatTextForPython, generateButtonText, toPythonBoolean } from '../format';
 import { generateInlineKeyboardCode } from '../Keyboard';
 
 /**
@@ -115,6 +115,45 @@ export function generateMultiSelectReplyHandler(
                 code += `                else:\n`;
                 code += `                    selected_list.append("${button.text}")\n`;
                 code += `                    await message.answer("✅ Выбрано: ${button.text}")\n`;
+                code += `                \n`;
+                code += `                # Обновляем клавиатуру с галочками\n`;
+                code += `                builder = ReplyKeyboardBuilder()\n`;
+                code += `                \n`;
+                // Добавляем кнопки выбора с галочками
+                code += `                # Добавляем кнопки выбора с галочками\n`;
+                node.data.buttons?.filter((btn: { action: string; }) => btn.action === 'selection').forEach((selBtn: { text: string; }) => {
+                    code += `                selected_mark = "✅ " if "${selBtn.text}" in selected_list else ""\n`;
+                    code += `                builder.add(KeyboardButton(text=f"{selected_mark}${selBtn.text}"))\n`;
+                });
+                // Добавляем кнопку "Готово" если есть кнопки выбора
+                if (node.data.buttons?.some((btn: { action: string; }) => btn.action === 'selection')) {
+                    const continueText = node.data.continueButtonText || 'Готово';
+                    code += `                builder.add(KeyboardButton(text="${continueText}"))\n`;
+                }
+                // Добавляем обычные кнопки
+                node.data.buttons?.filter((btn: { action: string; }) => btn.action !== 'selection').forEach((regBtn: { text: string; }) => {
+                    code += `                builder.add(KeyboardButton(text="${regBtn.text}"))\n`;
+                });
+                // Вычисляем оптимальное количество колонок
+                const totalButtons = (node.data.buttons?.filter((btn: { action: string; }) => btn.action === 'selection').length || 0) +
+                                   (node.data.buttons?.filter((btn: { action: string; }) => btn.action !== 'selection').length || 0) +
+                                   (node.data.buttons?.some((btn: { action: string; }) => btn.action === 'selection') ? 1 : 0); // +1 для кнопки "Готово"
+                let optimalColumns = 1;
+                if (totalButtons >= 6) {
+                    optimalColumns = 2;
+                } else if (totalButtons >= 3) {
+                    optimalColumns = 1;
+                } else {
+                    optimalColumns = 1;
+                }
+                code += `                builder.adjust(${optimalColumns})\n`;
+                // Применяем настройки клавиатуры
+                const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard !== false);
+                const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard === true);
+                code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                // Отправляем сообщение с обновленной клавиатурой
+                code += `                text = """${node.data.messageText || "Выберите опции:"}"""\n`;
+                code += `                await message.answer(text, reply_markup=keyboard)\n`;
                 code += `                return\n`;
                 code += `            \n`;
             });
