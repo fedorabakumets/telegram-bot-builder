@@ -955,7 +955,6 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 }
 
                 code += '    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=True)\n';
-                code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
               } else {
                 code += '    builder = InlineKeyboardBuilder()\n';
 
@@ -968,7 +967,6 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 }
 
                 code += '    keyboard = builder.as_markup()\n';
-                code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
               }
               code += '    \n';
               code += '    # Инициализируем пользовательские данные если их нет\n';
@@ -1357,8 +1355,9 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 } else if (targetNode.data.formatMode === 'html') {
                   parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
-                code += '    # Для reply клавиатуры отправляем новое сообщение\n';
-                code += `    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})\n`;
+                // NOTE: Отправка сообщения для reply клавиатуры обрабатывается в основной функции
+                // await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})
+                code += '    # Отправка сообщения для reply клавиатуры обрабатывается в основной функции\n';
                 code += '    # Узел metro_selection имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n';
                 code += `    logging.info(f"ℹ️ Узел ${actualNodeId} не собирает ответы (collectUserInput=false)")\n`;
               }
@@ -1392,11 +1391,12 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 code += '        # Создаем reply клавиатуру\n';
                 const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', actualNodeId, targetNode.data);
                 code += keyboardCode;
-                code += `    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})\n`;
+                // NOTE: Отправка сообщения для reply клавиатуры обрабатывается в основной функции
+                // await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})
 
                 // Устанавливаем флаг, что сообщение уже отправлено для reply клавиатуры
-                code += '    # Узел имеет reply клавиатуру - сообщение уже отправлено\n';
-                code += `    logging.info(f"ℹ️ Узел ${actualNodeId} имеет reply клавиатуру - сообщение отправлено")\n`;
+                code += '    # Отправка сообщения для reply клавиатуры обрабатывается в основной функции\n';
+                code += `    logging.info(f"ℹ️ Узел ${actualNodeId} имеет reply клавиатуру")\n`;
               } else {
                 // Для автопереходов отправляем новое сообщение вместо редактирования
                 code += `    await callback_query.message.answer(text${parseModeTarget})\n`;

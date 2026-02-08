@@ -433,7 +433,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
               code += '    # Заменяем все переменные в тексте\n';
               code += '    text = replace_variables_in_text(text, user_vars)\n';
-              code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
+              // NOTE: Отправка сообщения для reply клавиатуры обрабатывается в другом месте
+              // await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
 
               // Проверяем автопереход для reply клавиатуры
               const currentNodeForReplyAutoTransition = nodes.find(n => n.id === nodeId);
