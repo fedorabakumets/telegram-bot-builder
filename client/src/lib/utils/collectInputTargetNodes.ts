@@ -5,8 +5,10 @@
  */
 export function collectInputTargetNodes(nodes: any[]): Set<string> {
   const inputTargetNodeIds = new Set<string>();
-  (nodes || []).forEach(node => {
-    if (node.data.inputTargetNodeId) {
+  (nodes || [])
+    .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
+    .forEach(node => {
+    if (node.data?.inputTargetNodeId) {
       inputTargetNodeIds.add(node.data.inputTargetNodeId);
     }
   });

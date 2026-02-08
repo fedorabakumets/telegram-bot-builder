@@ -4,12 +4,14 @@ import { BotNode } from "../bot-generator";
 export function hasInlineButtons(nodes: BotNode[]): boolean {
   if (!nodes || nodes.length === 0) return false;
 
-  return nodes.some(node => {
+  return nodes
+    .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
+    .some(node => {
     // Проверяем основные inline кнопки
-    const hasMainInlineButtons = node.data.keyboardType === 'inline' && node.data.buttons && node.data.buttons.length > 0;
+    const hasMainInlineButtons = node.data?.keyboardType === 'inline' && node.data?.buttons && node.data?.buttons.length > 0;
 
     // Проверяем inline кнопки в conditionalMessages (любые кнопки с callback действиями)
-    const hasConditionalInlineButtons = node.data.conditionalMessages &&
+    const hasConditionalInlineButtons = node.data?.conditionalMessages &&
       node.data.conditionalMessages.some((condition: any) => condition.buttons && condition.buttons.length > 0
       );
 

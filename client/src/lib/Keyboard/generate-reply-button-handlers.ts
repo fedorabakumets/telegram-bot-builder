@@ -7,7 +7,7 @@ import { checkAutoTransition } from "../utils/checkAutoTransition";
 export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
   let code = '';
   const replyNodes = (nodes || []).filter(node =>
-    node.data.keyboardType === 'reply' && node.data.buttons && node.data.buttons.length > 0
+    node && node.data?.keyboardType === 'reply' && node.data?.buttons && node.data?.buttons.length > 0
   );
 
   if (replyNodes.length > 0) {

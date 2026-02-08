@@ -8,9 +8,11 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
 
   if (!nodes || nodes.length === 0) return mediaVars;
 
-  nodes.forEach(node => {
+  nodes
+    .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
+    .forEach(node => {
     // Собираем переменные из узлов с фото
-    if (node.data.enablePhotoInput && node.data.photoInputVariable) {
+    if (node.data?.enablePhotoInput && node.data?.photoInputVariable) {
       mediaVars.set(node.data.photoInputVariable, {
         type: 'photo',
         variable: node.data.photoInputVariable
@@ -18,7 +20,7 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
     }
 
     // Собираем переменные из узлов с видео
-    if (node.data.enableVideoInput && node.data.videoInputVariable) {
+    if (node.data?.enableVideoInput && node.data?.videoInputVariable) {
       mediaVars.set(node.data.videoInputVariable, {
         type: 'video',
         variable: node.data.videoInputVariable
@@ -26,7 +28,7 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
     }
 
     // Собираем переменные из узлов с аудио
-    if (node.data.enableAudioInput && node.data.audioInputVariable) {
+    if (node.data?.enableAudioInput && node.data?.audioInputVariable) {
       mediaVars.set(node.data.audioInputVariable, {
         type: 'audio',
         variable: node.data.audioInputVariable
@@ -34,7 +36,7 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
     }
 
     // Собираем переменные из узлов с документами
-    if (node.data.enableDocumentInput && node.data.documentInputVariable) {
+    if (node.data?.enableDocumentInput && node.data?.documentInputVariable) {
       mediaVars.set(node.data.documentInputVariable, {
         type: 'document',
         variable: node.data.documentInputVariable
@@ -42,7 +44,7 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
     }
 
     // Собираем переменные из attachedMedia (включая imageUrl)
-    if (node.data.attachedMedia && Array.isArray(node.data.attachedMedia)) {
+    if (node.data?.attachedMedia && Array.isArray(node.data.attachedMedia)) {
       node.data.attachedMedia.forEach((mediaVar: string) => {
         // Проверяем, является ли переменная imageUrl (обычно имеет формат image_url_{nodeId})
         if (mediaVar.startsWith('image_url_')) {
@@ -70,7 +72,7 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
     }
 
     // Собираем переменные из imageUrl и documentUrl напрямую из данных узла
-    if (node.data.imageUrl) {
+    if (node.data?.imageUrl) {
       const mediaVar = `image_url_${node.id}`;
       mediaVars.set(mediaVar, {
         type: 'photo',
@@ -78,7 +80,7 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
       });
     }
 
-    if (node.data.documentUrl) {
+    if (node.data?.documentUrl) {
       const mediaVar = `document_url_${node.id}`;
       mediaVars.set(mediaVar, {
         type: 'document',
@@ -86,7 +88,7 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
       });
     }
 
-    if (node.data.videoUrl) {
+    if (node.data?.videoUrl) {
       const mediaVar = `video_url_${node.id}`;
       mediaVars.set(mediaVar, {
         type: 'video',
@@ -94,7 +96,7 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
       });
     }
 
-    if (node.data.audioUrl) {
+    if (node.data?.audioUrl) {
       const mediaVar = `audio_url_${node.id}`;
       mediaVars.set(mediaVar, {
         type: 'audio',

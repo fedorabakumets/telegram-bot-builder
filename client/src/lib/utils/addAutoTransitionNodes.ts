@@ -8,8 +8,10 @@ import { isLoggingEnabled } from '../bot-generator';
 export function addAutoTransitionNodes(nodes: any[], allReferencedNodeIds: Set<string>): void {
   const loggingEnabled = isLoggingEnabled();
 
-  (nodes || []).forEach(node => {
-    if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
+  (nodes || [])
+    .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
+    .forEach(node => {
+    if (node.data?.enableAutoTransition && node.data?.autoTransitionTo) {
       allReferencedNodeIds.add(node.data.autoTransitionTo);
       if (loggingEnabled) {
         console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);

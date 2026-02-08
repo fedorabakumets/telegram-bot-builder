@@ -253,8 +253,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           processedCallbacks.add(`cb_${nodeId}`);
 
           // Создаем обработчик обратного вызова для этого узла, который может обрабатывать несколько кнопок И кнопку "готово" с мультивыбором
-          const safeFunctionName = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
-          const shortNodeIdForDone = nodeId.slice(-10).replace(/^_+/, ''); // Такой же как в генерации кнопки
+          const safeFunctionName = String(nodeId).replace(/[^a-zA-Z0-9_]/g, '_');
+          const shortNodeIdForDone = String(nodeId).slice(-10).replace(/^_+/, ''); // Такой же как в генерации кнопки
           code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startswith("${nodeId}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    # Безопасное получение данных из callback_query\n';
@@ -280,12 +280,12 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           code += '    \n';
 
           // Устанавливаем флаг collectUserInput для текущего узла
-          const collectUserInputFlag = targetNode.data.collectUserInput === true ||
-            targetNode.data.enableTextInput === true ||
-            targetNode.data.enablePhotoInput === true ||
-            targetNode.data.enableVideoInput === true ||
-            targetNode.data.enableAudioInput === true ||
-            targetNode.data.enableDocumentInput === true;
+          const collectUserInputFlag = targetNode.data?.collectUserInput === true ||
+            targetNode.data?.enableTextInput === true ||
+            targetNode.data?.enablePhotoInput === true ||
+            targetNode.data?.enableVideoInput === true ||
+            targetNode.data?.enableAudioInput === true ||
+            targetNode.data?.enableDocumentInput === true;
           code += `    # Устанавливаем флаг collectUserInput для узла ${nodeId}\n`;
           code += `    if user_id not in user_data:\n`;
           code += '        user_data[user_id] = {}\n';
@@ -297,7 +297,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // ОБРАБОТКА МНОЖЕСТВЕННОГО ВЫБОРА
           // ============================================================================
           // Добавляем обработку кнопки "Готово" для множественного выбора
-          if (targetNode.data.allowMultipleSelection) {
+          if (targetNode.data?.allowMultipleSelection) {
             code += '    # Проверяем, является ли это кнопкой "Готово"\n';
             code += `    if callback_data == "done_${shortNodeIdForDone}":\n`;
             code += '        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")\n';
@@ -360,7 +360,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
           // Обычная обработка узлов без специальной логики
           // Определяем переменную для сохранения на основе родительского узла
-          if (targetNode && targetNode.data.inputVariable) {
+          if (targetNode && targetNode.data?.inputVariable) {
             const variableName = targetNode.data.inputVariable;
             const variableValue = 'callback_query.data';
 
@@ -380,7 +380,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           }
 
           code += `    # Обрабатываем узел ${nodeId}: ${nodeId}\n`;
-          const messageText = targetNode.data.messageText || "Сообщение не задано";
+          const messageText = targetNode.data?.messageText || "Сообщение не задано";
           const formattedText = formatTextForPython(messageText);
           code += `    text = ${formattedText}\n`;
           code += '    \n';
@@ -390,7 +390,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // ОБРАБОТКА УСЛОВНЫХ СООБЩЕНИЙ
           // ============================================================================
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем поддержку условных сообщений
-          if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+          if (targetNode.data?.enableConditionalMessages && targetNode.data?.conditionalMessages && targetNode.data?.conditionalMessages.length > 0) {
             code += '    \n';
             code += '    # Проверка условных сообщений дляя навигации\n';
             code += '    conditional_parse_mode = None\n';
@@ -399,7 +399,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             code += '    if not user_record:\n';
             code += '        user_record = user_data.get(user_id, {})\n';
             code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-            code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+            code += generateConditionalMessageLogic(targetNode.data?.conditionalMessages, '    ');
             code += '    \n';
           }
 
@@ -410,8 +410,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // ГЕНЕРАЦИЯ КЛАВИАТУР (INLINE/REPLY)
           // ============================================================================
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Все узла с кнопками selection обрабатываются как множественный выбор
-          const hasSelectionButtons = targetNode.data.buttons && targetNode.data.buttons.some((btn: { action: string; }) => btn.action === 'selection');
-          if (targetNode.data.allowMultipleSelection || hasSelectionButtons) {
+          const hasSelectionButtons = targetNode.data?.buttons && targetNode.data.buttons.some((btn: { action: string; }) => btn.action === 'selection');
+          if (targetNode.data?.allowMultipleSelection || hasSelectionButtons) {
             // Узел с множественным выбором - создаем специальную клавиатуру
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: ========================================`);
             const reason = hasSelectionButtons ? 'ИМЕЕТ КНОПКИ SELECTION' : 'ИМЕЕТ allowMultipleSelection=true';
@@ -562,7 +562,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               code += '    keyboard = builder.as_markup()\n';
             }
 
-          } else if (targetNode.data.keyboardType !== 'none' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+          } else if (targetNode.data?.keyboardType !== 'none' && targetNode.data?.buttons && targetNode.data?.buttons.length > 0) {
             // Обычные кнопки без множественного выбора
             // ИСПРАВЛЕНИЕ: Проверяем keyboardType узла и генерируем соответствующую клавиатуру
             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: НЕ генерируем клавиатуру если keyboardType === 'none'
@@ -571,7 +571,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               code += '    # Create reply keyboard\n';
 
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли уже создана условная клавиатура
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+              if (targetNode.data?.enableConditionalMessages && targetNode.data?.conditionalMessages && targetNode.data?.conditionalMessages.length > 0) {
                 // Инициализируем переменную conditional_keyboard, если она не была определена
                 code += '    if "conditional_keyboard" not in locals():\n';
                 code += '        conditional_keyboard = None\n';
@@ -624,7 +624,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               if (currentNodeForReplyAutoTransition?.data.enableAutoTransition && currentNodeForReplyAutoTransition?.data.autoTransitionTo) {
                 replyAutoTransitionTarget = currentNodeForReplyAutoTransition.data.autoTransitionTo;
               } else if (currentNodeForReplyAutoTransition && (!currentNodeForReplyAutoTransition.data.buttons || currentNodeForReplyAutoTransition.data.buttons.length === 0)) {
-                const outgoingConnections = connections.filter(conn => conn.source === nodeId);
+                const outgoingConnections = connections.filter(conn => conn && conn.source === nodeId);
                 if (outgoingConnections.length === 1) {
                   replyAutoTransitionTarget = outgoingConnections[0].target;
                 }
@@ -775,7 +775,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   '    ',
                   undefined, // автопереход обрабатывается отдельно
                   collectUserInputFlag,
-                  targetNode.data // передаем данные узла для проверки статических изображен����й
+                  targetNode.data // передаем данные узла для провер����������������и ��тат����ес����их изображен����й
                 );
 
                 if (mediaCode) {
@@ -837,7 +837,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // ОБРАБОТКА МЕДИА-КОНТЕНТА
           // ============================================================================
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем переменные медиа для узла
-          if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+          if (targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '') {
             code += '    # Устанавливаем переменную изображения для узла\n';
             code += '    user_id = callback_query.from_user.id\n';
             code += '    if user_id not in user_data:\n';
@@ -851,7 +851,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           }
 
           // Устанавливаем переменные из attachedMedia
-          if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
+          if (targetNode.data?.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
             code += '    # Устанавливаем переменные из attachedMedia\n';
             code += '    user_id = callback_query.from_user.id\n';
             code += '    if user_id not in user_data:\n';
@@ -883,13 +883,13 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           }
 
           // ИСПРАВЛЕНИЕ: Проверяем наличие прикрепленных медиа ИЛИ статического изображения перед отправкой
-          const attachedMedia = targetNode.data.attachedMedia || [];
-          const hasStaticImage = targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '';
+          const attachedMedia = targetNode.data?.attachedMedia || [];
+          const hasStaticImage = targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '';
 
           if (attachedMedia.length > 0 || hasStaticImage) {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} имеет attachedMedia:`, attachedMedia, 'или статическое изображение:', hasStaticImage);
             // Генерируем код отправки с медиа
-            const parseModeStr = targetNode.data.formatMode || '';
+            const parseModeStr = targetNode.data?.formatMode || '';
             const keyboardStr = 'keyboard if keyboard is not None else None';
             // Определяем, собирает ли узел ввод (учитываем все типы ввода)
             const collectUserInputFlag = targetNode.data.collectUserInput === true ||
@@ -970,7 +970,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           let autoTransitionTarget: string | null = null;
 
           // Сначаля проверяем явный автопереход через флаг
-          if (currentNodeForAutoTransition?.data.enableAutoTransition && currentNodeForAutoTransition?.data.autoTransitionTo) {
+          if (currentNodeForAutoTransition?.data?.enableAutoTransition && currentNodeForAutoTransition?.data?.autoTransitionTo) {
             autoTransitionTarget = currentNodeForAutoTransition.data.autoTransitionTo;
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} имеет явный автопереход к ${autoTransitionTarget}`);
           }
@@ -978,8 +978,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
 
           // Если узел не имеет кнопок и имеет ровно одно исходящее соединение, делаем автопереход
-          else if (currentNodeForAutoTransition && (!currentNodeForAutoTransition.data.buttons || currentNodeForAutoTransition.data.buttons.length === 0)) {
-            const outgoingConnections = connections.filter(conn => conn.source === nodeId);
+          else if (currentNodeForAutoTransition && (!currentNodeForAutoTransition.data?.buttons || currentNodeForAutoTransition.data?.buttons.length === 0)) {
+            const outgoingConnections = connections.filter(conn => conn && conn.source === nodeId);
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Узел ${nodeId} без кнопок, проверяем соединения: ${outgoingConnections.length}`);
             if (outgoingConnections.length === 1) {
               autoTransitionTarget = outgoingConnections[0].target;
@@ -1024,7 +1024,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           }
 
           // ИСПРАВЛЕНИЕ: Если автопереход не произошел, устанавливаем состояние ожидания
-          const collectInputAfterTransitionCheck = targetNode.data.collectUserInput !== false ||
+          const collectInputAfterTransitionCheck = targetNode.data?.collectUserInput !== false ||
             targetNode.data.enableTextInput === true ||
             targetNode.data.enablePhotoInput === true ||
             targetNode.data.enableVideoInput === true ||
@@ -1044,7 +1044,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           code += '    \n';
 
           // Генерируем код для поиска яттекста кнопки
-          const sourceNode = nodes.find(n => n.data.buttons && n.data.buttons.some((btn: { target: string; }) => btn.target === nodeId)
+          const sourceNode = nodes.find(n => n && n.data?.buttons && n.data.buttons.some((btn: { target: string; }) => btn.target === nodeId)
           );
 
           // Если к узлу ведут несколько кнопоя, нужно определить, какую именяо нажали
@@ -1163,7 +1163,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
           // Для узлов с множественным выбором - НЕ делаем автоматический переход при первичном заходе в узел
           // ИСПРАВЛЕНИЕ: редирект только для узлов с кнопками, чтобы избежать дублирования сообщений при автопереходах
-          const hasButtons = currentNode && currentNode.data.buttons && currentNode.data.buttons.length > 0;
+          const hasButtons = currentNode && currentNode.data?.buttons && currentNode.data.buttons.length > 0;
           const shouldRedirect = hasButtons && !(currentNode && currentNode.data.allowMultipleSelection);
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Узел ${nodeId} hasButtons: ${hasButtons}, allowMultipleSelection: ${currentNode?.data.allowMultipleSelection}, shouldRedirect: ${shouldRedirect}`);
 
@@ -1176,7 +1176,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит к continueButtonTarget ${redirectTarget}`);
             } else {
               // Для обычных узлов ищем следующий узел через соединения
-              const nodeConnections = connections.filter(conn => conn.source === nodeId);
+              const nodeConnections = connections.filter(conn => conn && conn.source === nodeId);
               if (nodeConnections.length > 0) {
                 redirectTarget = nodeConnections[0].target;
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит через соединение к ${redirectTarget}`);

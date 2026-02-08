@@ -13,11 +13,12 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
   let code = '';
   
   // Находим узлы, которые имеют условные сообщения и collectUserInput = true
-  const conditionalNodes = nodes.filter(node => 
-    node.data.enableConditionalMessages && 
-    node.data.conditionalMessages && 
-    node.data.conditionalMessages.length > 0 &&
-    node.data.collectUserInput === true
+  const conditionalNodes = nodes.filter(node =>
+    node &&
+    node.data?.enableConditionalMessages &&
+    node.data?.conditionalMessages &&
+    node.data?.conditionalMessages.length > 0 &&
+    node.data?.collectUserInput === true
   );
   
   if (conditionalNodes.length === 0) {

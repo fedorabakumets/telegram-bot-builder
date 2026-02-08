@@ -34,7 +34,9 @@ export function generateSynonymHandlers(nodes: Node[]): string {
     'kick_user', 'promote_user', 'demote_user', 'admin_rights'
   ]);
 
-  const nodesWithSynonyms = nodes.filter(node => node.data.synonyms && node.data.synonyms.length > 0
+  const nodesWithSynonyms = nodes
+    .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
+    .filter(node => node.data?.synonyms && node.data?.synonyms.length > 0
   );
 
   // Если нет узлов с синонимами, возвращаем пустую строку

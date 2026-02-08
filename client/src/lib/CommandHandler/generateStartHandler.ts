@@ -61,23 +61,36 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   codeLines.push('\n@dp.message(CommandStart())');
   codeLines.push('async def start_handler(message: types.Message):');
 
-  // Добавляем проверки безопасности
-  if (node.data.isPrivateOnly) {
-    codeLines.push('    if not await is_private_chat(message):');
-    codeLines.push('        await message.answer("❌ Эта команда доступна только в приватных чатах")');
-    codeLines.push('        return');
-  }
+  // Проверяем, что node и node.data существуют, прежде чем использовать их
+  if (node && node.data) {
+    // Добавляем проверки безопасности
+    if (node.data.isPrivateOnly) {
+      codeLines.push('    if not await is_private_chat(message):');
+      codeLines.push('        await message.answer("❌ Эта команда доступна только в приватных чатах")');
+      codeLines.push('        return');
+    }
 
-  if (node.data.adminOnly) {
-    codeLines.push('    if not await is_admin(message.from_user.id):');
-    codeLines.push('        await message.answer("❌ У вас нет прав для выполнения этой команды")');
-    codeLines.push('        return');
-  }
+    if (node.data.adminOnly) {
+      codeLines.push('    if not await is_admin(message.from_user.id):');
+      codeLines.push('        await message.answer("❌ У вас нет прав для выполнения этой команды")');
+      codeLines.push('        return');
+    }
 
-  if (node.data.requiresAuth) {
-    codeLines.push('    if not await check_auth(message.from_user.id):');
-    codeLines.push('        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")');
-    codeLines.push('        return');
+    if (node.data.requiresAuth) {
+      codeLines.push('    if not await check_auth(message.from_user.id):');
+      codeLines.push('        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")');
+      codeLines.push('        return');
+    }
+  } else {
+    // Если node или node.data не существуют, добавляем минимальный обработчик
+    codeLines.push('    # Узел не содержит необходимых данных, генерируем минимальный обработчик');
+    codeLines.push('    text = "Привет! Добро пожаловать!"');
+    codeLines.push('    await message.answer(text)');
+    codeLines.push('');
+
+    // Применяем автоматическое добавление комментариев ко всему коду
+    const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
+    return processedCode.join('\n');
   }
 
   // Регистрируем пользователя и сохраняем его данные
@@ -125,41 +138,41 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   codeLines.push(...variableLines);
 
   // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
-  if (node.data.imageUrl) {
-    codeLines.push(`    # Сохраняем imageUrl в переменную image_url_${node.id}`);
+  if (node && node.data && node.data.imageUrl) {
+    codeLines.push(`    # Сохраняем imageUrl в переменную image_url_${node.id || 'unknown'}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
-    codeLines.push(`    user_data[user_id]["image_url_${node.id}"] = "${node.data.imageUrl}"`);
+    codeLines.push(`    user_data[user_id]["image_url_${node.id || 'unknown'}"] = "${node.data.imageUrl}"`);
     if (userDatabaseEnabled) {
-      codeLines.push(`    await update_user_data_in_db(user_id, "image_url_${node.id}", "${node.data.imageUrl}")`);
+      codeLines.push(`    await update_user_data_in_db(user_id, "image_url_${node.id || 'unknown'}", "${node.data.imageUrl}")`);
     }
   }
-  if (node.data.documentUrl) {
-    codeLines.push(`    # Сохраняем documentUrl в переменную document_url_${node.id}`);
+  if (node && node.data && node.data.documentUrl) {
+    codeLines.push(`    # Сохраняем documentUrl в переменную document_url_${node.id || 'unknown'}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
-    codeLines.push(`    user_data[user_id]["document_url_${node.id}"] = "${node.data.documentUrl}"`);
+    codeLines.push(`    user_data[user_id]["document_url_${node.id || 'unknown'}"] = "${node.data.documentUrl}"`);
     if (userDatabaseEnabled) {
-      codeLines.push(`    await update_user_data_in_db(user_id, "document_url_${node.id}", "${node.data.documentUrl}")`);
+      codeLines.push(`    await update_user_data_in_db(user_id, "document_url_${node.id || 'unknown'}", "${node.data.documentUrl}")`);
     }
   }
-  if (node.data.videoUrl) {
-    codeLines.push(`    # Сохраняем videoUrl в переменную video_url_${node.id}`);
+  if (node && node.data && node.data.videoUrl) {
+    codeLines.push(`    # Сохраняем videoUrl в переменную video_url_${node.id || 'unknown'}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
-    codeLines.push(`    user_data[user_id]["video_url_${node.id}"] = "${node.data.videoUrl}"`);
+    codeLines.push(`    user_data[user_id]["video_url_${node.id || 'unknown'}"] = "${node.data.videoUrl}"`);
     if (userDatabaseEnabled) {
-      codeLines.push(`    await update_user_data_in_db(user_id, "video_url_${node.id}", "${node.data.videoUrl}")`);
+      codeLines.push(`    await update_user_data_in_db(user_id, "video_url_${node.id || 'unknown'}", "${node.data.videoUrl}")`);
     }
   }
-  if (node.data.audioUrl) {
-    codeLines.push(`    # Сохраняем audioUrl в переменную audio_url_${node.id}`);
+  if (node && node.data && node.data.audioUrl) {
+    codeLines.push(`    # Сохраняем audioUrl в переменную audio_url_${node.id || 'unknown'}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
-    codeLines.push(`    user_data[user_id]["audio_url_${node.id}"] = "${node.data.audioUrl}"`);
+    codeLines.push(`    user_data[user_id]["audio_url_${node.id || 'unknown'}"] = "${node.data.audioUrl}"`);
     if (userDatabaseEnabled) {
-      codeLines.push(`    await update_user_data_in_db(user_id, "audio_url_${node.id}", "${node.data.audioUrl}")`);
+      codeLines.push(`    await update_user_data_in_db(user_id, "audio_url_${node.id || 'unknown'}", "${node.data.audioUrl}")`);
     }
   }
 
   // Восстанавливаем состояние множественного выбора ТОЛЬКО если он включен
-  if (node.data.allowMultipleSelection) {
+  if (node && node.data && node.data.allowMultipleSelection) {
     codeLines.push('');
     codeLines.push('    saved_interests = []');
     codeLines.push('');
@@ -207,14 +220,14 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     codeLines.push('    # Инициализируем состояние множественного выбора');
     codeLines.push('    if user_id not in user_data:');
     codeLines.push('        user_data[user_id] = {}');
-    codeLines.push(`    user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy() if saved_interests else []`);
-    codeLines.push(`    user_data[user_id]["multi_select_node"] = "${node.id}"`);
+    codeLines.push(`    user_data[user_id]["multi_select_${node.id || 'unknown'}"] = saved_interests.copy() if saved_interests else []`);
+    codeLines.push(`    user_data[user_id]["multi_select_node"] = "${node.id || 'unknown'}"`);
     codeLines.push('    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")');
     codeLines.push('');
   }
 
   // Создаем клавиатуру с восстановленными галочками для множественного выбора
-  if (node.data.allowMultipleSelection) {
+  if (node && node.data && node.data.allowMultipleSelection) {
     codeLines.push('    # Создаем клавиатуру с восстановленными галочками');
     codeLines.push('    builder = InlineKeyboardBuilder()');
     codeLines.push('');
@@ -233,7 +246,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     codeLines.push('');
 
     // Добавляем кнопки интересов с галочками
-    const buttons = node.data.buttons || [];
+    const buttons = (node && node.data && node.data.buttons) ? node.data.buttons : [];
     const interestButtons = buttons.filter(btn => btn.action === 'selection');
 
     interestButtons.forEach(button => {
@@ -241,12 +254,12 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
       const buttonTarget = button.target || button.id;
       codeLines.push(`    ${buttonTarget}_selected = check_interest_match("${buttonText}", saved_interests)`);
       codeLines.push(`    ${buttonTarget}_text = "✅ ${buttonText}" if ${buttonTarget}_selected else "${buttonText}"`);
-      codeLines.push(`    builder.add(InlineKeyboardButton(text=${buttonTarget}_text, callback_data="multi_select_${node.id}_${buttonTarget}"))`);
+      codeLines.push(`    builder.add(InlineKeyboardButton(text=${buttonTarget}_text, callback_data="multi_select_${node.id || 'unknown'}_${buttonTarget}"))`);
       codeLines.push('');
     });
 
     // Добавляем кнопки команд и другие кнопки ПЕРЕД кнопкой "Готово"
-    const allButtons = node.data.buttons || [];
+    const allButtons = (node && node.data && node.data.buttons) ? node.data.buttons : [];
     const nonSelectionButtons = allButtons.filter(btn => btn.action !== 'selection');
 
     nonSelectionButtons.forEach(button => {
@@ -262,18 +275,18 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     });
 
     // Добавляем кнопку "Готово"
-    const continueText = node.data.continueButtonText || 'Готово';
-    codeLines.push(`    builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))`);
+    const continueText = (node && node.data && node.data.continueButtonText) ? node.data.continueButtonText : 'Готово';
+    codeLines.push(`    builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id || 'unknown'}"))`);
     codeLines.push('    builder.adjust(2)  # Используем 2 колонки для консистентности');
     codeLines.push('    keyboard = builder.as_markup()');
     codeLines.push('');
   }
 
   // Добавляем обработку условных сообщений
-  const messageText = node.data.messageText || "Привет! Добро пожаловать!";
+  const messageText = (node && node.data && node.data.messageText) ? node.data.messageText : "Привет! Добро пожаловать!";
   const formattedText = formatTextForPython(messageText);
 
-  if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
+  if (node && node.data && node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
     // Инициализируем text основным сообщением ПЕРЕД проверкой условий
     codeLines.push('    # Проверяем условные сообщения');
     codeLines.push(`    text = ${formattedText}  # Основной текст узла как fallback`);
@@ -296,7 +309,21 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     codeLines.push('');
 
     // Generate conditional logic using helper function - условия теперь переопределят text если нужно
-    const conditionalCode = generateConditionalMessageLogic(node.data.conditionalMessages, '    ', node.data);
+    let conditionalMessagesValue: any;
+    if (node && node.data) {
+      conditionalMessagesValue = node.data.conditionalMessages;
+    } else {
+      conditionalMessagesValue = [];
+    }
+
+    let nodeDataValue: any;
+    if (node && node.data) {
+      nodeDataValue = node.data;
+    } else {
+      nodeDataValue = {};
+    }
+
+    const conditionalCode = generateConditionalMessageLogic(conditionalMessagesValue, '    ', nodeDataValue);
     const conditionalLines = conditionalCode.split('\n').filter(line => line.trim());
     codeLines.push(...conditionalLines);
 
@@ -335,49 +362,67 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   }
 
   // Проверяем, есть ли прикрепленные медиафайлы
-  const attachedMedia = node.data.attachedMedia || [];
+  const attachedMedia = (node && node.data && node.data.attachedMedia) ? node.data.attachedMedia : [];
 
   if (attachedMedia.length > 0) {
     // Если есть прикрепленные медиа, генерируем только код клавиатуры без отправки сообщения
     let keyboardCode = '';
 
     // Определяем тип клавиатуры и генерируем соответствующий код
-    if (node.data.keyboardType === "inline" && node.data.buttons && node.data.buttons.length > 0) {
+    if (node && node.data && node.data.keyboardType === "inline" && node.data.buttons && node.data.buttons.length > 0) {
       keyboardCode += '    # Создаем inline клавиатуру\n';
       keyboardCode += '    builder = InlineKeyboardBuilder()\n';
 
-      node.data.buttons.forEach(button => {
-        if (button.action === "url") {
-          keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-        } else if (button.action === 'goto') {
-          const callbackData = button.target || button.id || 'no_action';
-          keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-        } else if (button.action === 'command') {
-          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
-        }
-      });
+      if (node && node.data && node.data.buttons) {
+        node.data.buttons.forEach(button => {
+          if (button.action === "url") {
+            keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+          } else if (button.action === 'goto') {
+            const callbackData = button.target || button.id || 'no_action';
+            keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+          } else if (button.action === 'command') {
+            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+            keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+          }
+        });
+      }
 
       keyboardCode += '    builder.adjust(2)  # Используем 2 колонки для консистентности\n';
       keyboardCode += '    keyboard = builder.as_markup()\n';
-    } else if (node.data.keyboardType === "reply" && node.data.buttons && node.data.buttons.length > 0) {
+    } else if (node && node.data && node.data.keyboardType === "reply" && node.data.buttons && node.data.buttons.length > 0) {
       keyboardCode += '    # Создаем reply клавиатуру\n';
       keyboardCode += '    builder = ReplyKeyboardBuilder()\n';
 
-      node.data.buttons.forEach(button => {
-        if (button.action === "contact" && button.requestContact) {
-          keyboardCode += `    builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-        } else if (button.action === "location" && button.requestLocation) {
-          keyboardCode += `    builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
-        } else {
-          keyboardCode += `    builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
-        }
-      });
+      if (node && node.data && node.data.buttons) {
+        node.data.buttons.forEach(button => {
+          if (button.action === "contact" && button.requestContact) {
+            keyboardCode += `    builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
+          } else if (button.action === "location" && button.requestLocation) {
+            keyboardCode += `    builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
+          } else {
+            keyboardCode += `    builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+          }
+        });
+      }
 
-      const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
-      const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
+      let resizeKeyboardValue: any;
+      if (node && node.data && node.data.resizeKeyboard !== undefined) {
+        resizeKeyboardValue = node.data.resizeKeyboard;
+      } else {
+        resizeKeyboardValue = undefined;
+      }
+
+      let oneTimeKeyboardValue: any;
+      if (node && node.data && node.data.oneTimeKeyboard !== undefined) {
+        oneTimeKeyboardValue = node.data.oneTimeKeyboard;
+      } else {
+        oneTimeKeyboardValue = undefined;
+      }
+
+      const resizeKeyboard = toPythonBoolean(resizeKeyboardValue);
+      const oneTimeKeyboard = toPythonBoolean(oneTimeKeyboardValue);
       keyboardCode += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-    } else if (node.data.keyboardType === "none") {
+    } else if (node && node.data && node.data.keyboardType === "none") {
       // Если тип клавиатуры "none", все равно создаем переменную keyboard, но без клавиатуры
       keyboardCode += '    keyboard = None\n';
     } else {
@@ -401,16 +446,37 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
       });
 
       // Генерируем код для отправки прикрепленных медиа
+      let formatModeValue: any;
+      if (node && node.data) {
+        formatModeValue = node.data.formatMode;
+      } else {
+        formatModeValue = 'HTML';
+      }
+
+      let autoTransitionToValue: any;
+      if (node && node.data) {
+        autoTransitionToValue = node.data.autoTransitionTo;
+      } else {
+        autoTransitionToValue = undefined;
+      }
+
+      let collectUserInputValue: any;
+      if (node && node.data) {
+        collectUserInputValue = node.data.collectUserInput !== false;
+      } else {
+        collectUserInputValue = true;
+      }
+
       const mediaCode = generateAttachedMediaSendCode(
         attachedMedia,
         filteredMediaVariablesMap,
         formattedText, // текст сообщения
-        node.data.formatMode || 'HTML', // режим парсинга
+        formatModeValue, // режим парсинга
         'keyboard', // клавиатура
-        node.id, // ID узла
+        node.id || 'unknown', // ID узла
         '    ', // отступ
-        node.data.autoTransitionTo, // автопереход
-        node.data.collectUserInput !== false, // собирать пользовательский ввод
+        autoTransitionToValue, // автопереход
+        collectUserInputValue, // собирать пользовательский ввод
         undefined, // nodeData
         'message' // контекст обработчика
       );
@@ -421,7 +487,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
         codeLines.push(...mediaLines);
       } else {
         // Если код медиа не сгенерирован, используем обычную логику
-        if (node.data.allowMultipleSelection) {
+        if (node && node.data && node.data.allowMultipleSelection) {
           codeLines.push('    await message.answer(text, reply_markup=keyboard)');
         } else {
           const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
@@ -430,7 +496,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
       }
     } else {
       // Если mediaVariablesMap не передан, используем обычную логику
-      if (node.data.allowMultipleSelection) {
+      if (node && node.data && node.data.allowMultipleSelection) {
         codeLines.push('    await message.answer(text, reply_markup=keyboard)');
       } else {
         const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';

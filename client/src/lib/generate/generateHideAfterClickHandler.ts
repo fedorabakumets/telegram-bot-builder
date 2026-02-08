@@ -10,9 +10,9 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function generateHideAfterClickHandler(node: Node): string {
   // Собираем весь код в массив строк для автоматической обработки
   const codeLines: string[] = [];
-  
+
   // Проверяем, есть ли у узла кнопки с флагом hideAfterClick
-  if (node.data.buttons && Array.isArray(node.data.buttons)) {
+  if (node.data?.buttons && Array.isArray(node.data.buttons)) {
     const hideAfterClickButtons = node.data.buttons.filter((button: Button) => button.hideAfterClick === true);
     
     if (hideAfterClickButtons.length > 0) {
@@ -55,7 +55,7 @@ export function generateHideAfterClickMiddleware(node: Node): string {
   const codeLines: string[] = [];
 
   // Проверяем, есть ли у узла кнопки с флагом hideAfterClick
-  if (node.data.buttons && Array.isArray(node.data.buttons)) {
+  if (node.data?.buttons && Array.isArray(node.data.buttons)) {
     const hideAfterClickButtons = node.data.buttons.filter((button: Button) => button.hideAfterClick === true);
 
     if (hideAfterClickButtons.length > 0) {

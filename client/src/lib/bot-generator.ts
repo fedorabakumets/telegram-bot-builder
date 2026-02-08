@@ -951,8 +951,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     nodes.forEach(node => {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
 
-      // Обычяые кнопки узла
-      if (node.data.buttons) {
+      // Обычные кнопки узла
+      if (node.data?.buttons) {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
         node.data.buttons.forEach((button: Button, index: number) => {
           if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
@@ -967,7 +967,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       }
 
       // Кнопки в условных сообщениях
-      if (node.data.conditionalMessages) {
+      if (node.data?.conditionalMessages) {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
         node.data.conditionalMessages.forEach((condition: any) => {
           if (condition.buttons) {
@@ -993,7 +993,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * от командных кнопок в Telegram боте. Она создает обработчики,
    * которые позволяют выполнять команды через нажатие на inline кнопки.
    * 
-   * **Функциональност���� генерации обработчиков:**
+   * **Функциональност������ генерации обработчиков:**
    * - Создание декораторов @dp.callback_query для каждой команды
    * - Генерация асинхронных функций-обработчиков
    * - Создание fake message объектов для симуляции команд
