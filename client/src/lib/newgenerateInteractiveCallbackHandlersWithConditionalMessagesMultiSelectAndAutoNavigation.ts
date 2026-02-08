@@ -521,7 +521,22 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${targetNode.data.continueButtonTarget}`);
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: selectionButtons.length = ${selectionButtons.length}`);
 
-              // ВСЕГДА добавляем кнопку "Готово" если есть кнопки выбора
+              // Кнопку "Готово" будем добавлять после обычных кнопок, чтобы она была справа от кнопки "Назад"
+
+              // Добавляем обычные кнопки (navigation и другие)
+              regularButtons.forEach((btn: Button, index: number) => {
+                if (btn.action === "goto" && btn.target) {
+                  const btnCallbackData = `${btn.target}_btn_${index}`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
+                } else if (btn.action === "url") {
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
+                } else if (btn.action === "command" && btn.target) {
+                  const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
+                }
+              });
+
+              // Добавляем кнопку "Готово" для множественного выбора после обычных кнопок, чтобы она была справа от кнопки "Назад"
               if (selectionButtons.length > 0) {
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "Готово" (есть ${selectionButtons.length} кнопок выбора)`);
                 code += '    # Кнопка "Готово" для множественного выбора\n';
@@ -538,34 +553,14 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем кнопку "Готово" - нет кнопок выбора`);
               }
 
-              // Добавляем обычные кнопки (navigation и другие)
-              regularButtons.forEach((btn: Button, index: number) => {
-                if (btn.action === "goto" && btn.target) {
-                  const btnCallbackData = `${btn.target}_btn_${index}`;
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
-                } else if (btn.action === "url") {
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                } else if (btn.action === "command" && btn.target) {
-                  const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                }
-              });
-
-              // Автоматическое распределение колонок для множественного выбора (только для кнопок выбора и обычных кнопок)
-              const totalButtons = selectionButtons.length + regularButtons.length;
+              // Пересчитываем общее количество кнопок, включая кнопку "Готово"
+              const totalButtonsWithDone = selectionButtons.length + regularButtons.length + (selectionButtons.length > 0 ? 1 : 0);
               // Для множественного выбора всегда используем nodeData с включенным флагом
               const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
               // Создаем массив с нужным количеством элементов для расчета колонок
-              const allButtonsForCalculation = Array(totalButtons).fill({});
+              const allButtonsForCalculation = Array(totalButtonsWithDone).fill({});
               const columns = calculateOptimalColumns(allButtonsForCalculation, multiSelectNodeData);
               code += `    builder.adjust(${columns})\n`;
-
-              // Добавляем кнопку "Готово" на отдельной строке, чтобы она всегда оставалась внизу
-              if (selectionButtons.length > 0) {
-                code += `    # Добавляем кнопку "Готово" на отдельной строке\n`;
-                code += `    builder.row()\n`; // Переходим на новую строку
-                // Кнопка "Готово" уже была добавлена ранее, но теперь она будет на отдельной строке
-              }
 
               code += '    keyboard = builder.as_markup()\n';
             }
@@ -600,7 +595,6 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   }
                 });
                 // Автоматическое распределение колонок для reply клавиатуры
-                const totalButtons = targetNode.data.buttons.length;
                 const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
                 code += `        builder.adjust(${columns})\n`;
                 const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
@@ -621,7 +615,6 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   }
                 });
                 // Автоматическое распределение колонок для reply клавиатуры
-                const totalButtons2 = targetNode.data.buttons.length;
                 const columns2 = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
                 code += `    builder.adjust(${columns2})\n`;
                 const resizeKeyboard2 = toPythonBoolean(targetNode.data.resizeKeyboard);
@@ -764,7 +757,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 }
 
                 // Убираем return, чтобы автопереходы могли работать
-                return; // Но оставляем return для завершения функции
+                return; // Но ос��авляем return для завершения функции
               }
 
               // Если collectUserInput=true, продолжаем выполнение и отправляем сообщение с медиа
@@ -827,7 +820,6 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 }
               });
               // Автоматическое распределение колонок для обычных кнопок
-              const totalButtons = targetNode.data.buttons.length;
               const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
               code += `    builder.adjust(${columns})\n`;
               code += '    keyboard = builder.as_markup()\n';
@@ -1551,7 +1543,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += `                text = replace_variables_in_text(text, user_vars)\n`;
                         code += `                await bot.send_message(user_id, text, reply_markup=keyboard)\n`;
                       } else {
-                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обя��ательно вызываем замену переменных в тексте
                         code += `                # Заменяем все переменные в тексте\n`;
                         code += `                text = replace_variables_in_text(text, user_vars)\n`;
                         code += `                await bot.send_message(user_id, text)\n`;
