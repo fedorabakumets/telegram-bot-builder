@@ -2715,7 +2715,7 @@ export function PropertiesPanel({
                                 </p>
                                 <ul className="text-xs sm:text-sm text-amber-600 dark:text-amber-400 space-y-1 pl-4 list-disc">
                                   <li>✅ Прикрепление изображений по URL</li>
-                                
+                                  <li>⚠️ Прикрепление медиа с localhost работает, но могут быть проблемы с некоторыми связями</li>
                                 </ul>
                               </div>
                             </div>
