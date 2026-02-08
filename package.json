@@ -38,7 +38,8 @@
     "db:push": "drizzle-kit push",
     "db:test": "tsx --tsconfig tsconfig.node.json server/test-db-connection.ts",
     "railway:setup": "node scripts/setup-railway-db.js",
-    "railway:build": "npm run build:fast"
+    "railway:build": "npm run build:fast",
+    "test": "node run-tests.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -149,6 +150,7 @@
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
     "vite": "^6.2.0",
+    "vite-tsconfig-paths": "^6.1.0",
     "vitest": "^4.0.18"
   },
   "optionalDependencies": {

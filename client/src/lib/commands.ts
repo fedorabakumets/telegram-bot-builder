@@ -167,8 +167,9 @@ export function generateBotFatherCommands(nodes: any[]): string {
     return '';
   }
   
-  const commandNodes = nodes.filter(node => 
-    (node.type === 'start' || node.type === 'command') && 
+  const commandNodes = nodes.filter(node =>
+    node &&
+    (node.type === 'start' || node.type === 'command') &&
     node.data?.command &&
     (node.data?.showInMenu !== false) // Включаем команды где showInMenu = true, undefined или не установлено
   );
