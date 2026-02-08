@@ -244,33 +244,27 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean,
         codeLines.push(...mediaLines);
       } else {
         // Если код медиа не сгенерирован, используем обычную логику
-        // Добавляем клавиатуру
+        // Добавляем клавиатуру (она уже включает код отправки сообщения)
         const keyboardCode = generateKeyboard(node);
         const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
         codeLines.push(...keyboardLines);
-
-        const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
-        codeLines.push(`    await message.answer(text${keyboardParam})`);
+        // ИСПРАВЛЕНИЕ: Убран дублирующий вызов message.answer, так как generateKeyboard уже добавляет его
       }
     } else {
       // Если mediaVariablesMap не передан, используем обычную логику
-      // Добавляем клавиатуру
+      // Добавляем клавиатуру (она уже включает код отправки сообщения)
       const keyboardCode = generateKeyboard(node);
       const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
       codeLines.push(...keyboardLines);
-
-      const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
-      codeLines.push(`    await message.answer(text${keyboardParam})`);
+      // ИСПРАВЛЕНИЕ: Убран дублирующий вызов message.answer, так как generateKeyboard уже добавляет его
     }
   } else {
     // Обычная логика без медиа
-    // Добавляем клавиатуру
+    // Добавляем клавиатуру (она уже включает код отправки сообщения)
     const keyboardCode = generateKeyboard(node);
     const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
     codeLines.push(...keyboardLines);
-
-    const keyboardParam = keyboardCode.includes('keyboard') ? ', reply_markup=keyboard' : '';
-    codeLines.push(`    await message.answer(text${keyboardParam})`);
+    // ИСПРАВЛЕНИЕ: Убран дублирующий вызов message.answer, так как generateKeyboard уже добавляет его
   }
 
   // Применяем автоматическое добавление комментариев ко всему коду

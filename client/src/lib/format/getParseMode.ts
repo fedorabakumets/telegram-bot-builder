@@ -19,13 +19,15 @@ export function getParseMode(formatMode: string): string {
   // Собираем код в массив строк для автоматической обработки
   const codeLines: string[] = [];
   
-  if (formatMode === 'html') {
-    codeLines.push(', parse_mode=ParseMode.HTML');
-  } else if (formatMode === 'markdown') {
-    codeLines.push(', parse_mode=ParseMode.MARKDOWN');
-  } else {
-    codeLines.push('');
+  // ИСПРАВЛЕНИЕ: Проверяем, что formatMode не пустой и не равен "none"
+  if (formatMode && formatMode.trim() !== '' && formatMode.trim().toLowerCase() !== 'none') {
+    if (formatMode.toLowerCase() === 'html') {
+      codeLines.push(', parse_mode=ParseMode.HTML');
+    } else if (formatMode.toLowerCase() === 'markdown') {
+      codeLines.push(', parse_mode=ParseMode.MARKDOWN');
+    }
   }
+  // Если formatMode пустой или равен "none", возвращаем пустую строку
   
   // Применяем автоматическое добавление комментариев ко всему коду
   const processedCode = processCodeWithAutoComments(codeLines, 'getParseMode.ts');
