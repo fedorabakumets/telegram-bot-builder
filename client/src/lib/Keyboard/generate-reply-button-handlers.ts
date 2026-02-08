@@ -114,6 +114,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 targetNode.data.buttons.forEach((btn: Button) => {
                   code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
                 });
+                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+                code += `    builder.adjust(${columns})\n`;
                 const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
                 const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                 code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -183,6 +185,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 targetNode.data.buttons.forEach((btn: Button) => {
                   code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
                 });
+                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+                code += `    builder.adjust(${columns})\n`;
                 const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
                 const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                 code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
