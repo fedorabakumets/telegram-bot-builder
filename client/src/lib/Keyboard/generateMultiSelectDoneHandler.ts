@@ -1,5 +1,5 @@
 import { Node, Button } from '@shared/schema';
-import { formatTextForPython, generateUniqueShortId } from '../format';
+import { formatTextForPython, generateUniqueShortId, toPythonBoolean } from '../format';
 import { generateInlineKeyboardCode } from '.';
 
 export function generateMultiSelectDoneHandler(
@@ -129,8 +129,8 @@ export function generateMultiSelectDoneHandler(
                                 });
                                 const continueText = targetNode.data.continueButtonText || 'Готово';
                                 code += `        builder.add(KeyboardButton(text="${continueText}"))\n`;
-                                const resizeKeyboard = targetNode.data.resizeKeyboard !== false;
-                                const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true;
+                                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard !== false);
+                                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard === true);
                                 code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                                 code += `        \n`;
                                 code += `        await bot.send_message(user_id, text, reply_markup=keyboard)\n`;

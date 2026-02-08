@@ -292,8 +292,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
               });
 
-              const resizeKeyboard = targetNode.data.resizeKeyboard !== false;
-              const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true;
+              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard !== false);
+              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard === true);
               code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
             } else {
               // Inline клавиатура для множественного выбора
