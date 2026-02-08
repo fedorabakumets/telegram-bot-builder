@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FolderOpen, Bookmark, Download, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Menu, Code, Github, LogOut, MessageCircle } from 'lucide-react';
+import { FolderOpen, Bookmark, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Menu, Code, Github, LogOut, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { LayoutConfig } from './layout-manager';
@@ -88,7 +88,6 @@ export function AdaptiveHeader({
   botInfo,
   currentTab,
   onTabChange,
-  onExport,
   onSaveAsTemplate,
   onLoadTemplate,
   onToggleHeader,
@@ -377,18 +376,7 @@ export function AdaptiveHeader({
           </Button>
         )}
 
-        <Button
-          size="sm"
-          onClick={() => {
-            onExport();
-            setIsMobileMenuOpen(false);
-          }}
-          className={`flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 text-white rounded-lg font-medium text-xs sm:text-sm shadow-md shadow-green-500/30 hover:shadow-lg hover:shadow-green-500/40 transition-all ${onSaveAsTemplate ? 'sm:col-span-1' : 'sm:col-span-2'}`}
-          data-testid="button-mobile-export"
-        >
-          <Download className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-          <span>Экспорт</span>
-        </Button>
+
 
         <Button
           size="sm"
@@ -511,14 +499,7 @@ export function AdaptiveHeader({
       
 
       
-      <Button 
-        size="sm"
-        onClick={onExport}
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 text-white px-3 py-1.5 text-xs font-semibold shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 rounded-lg transition-all duration-200 max-sm:px-2 max-sm:py-1 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
-      >
-        <i className="fas fa-download text-xs max-sm:mx-auto"></i>
-        <span className="max-sm:hidden ml-1.5">Экспорт</span>
-      </Button>
+  
       
       {isVertical && (
         <div className="h-px w-full bg-border my-2"></div>
@@ -567,6 +548,20 @@ export function AdaptiveHeader({
         </Button>
       )}
 
+      <div className={`${isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'} text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm`}>
+        <span className="hidden sm:inline-block text-slate-700 dark:text-slate-300">
+          Присоединяйтесь к нашему чату в Telegram:
+        </span>
+        <a
+          href="https://t.me/bot_builder_chat"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-1 text-blue-600 dark:text-blue-300 hover:underline font-semibold"
+        >
+          @bot_builder_chat
+        </a>
+      </div>
+
       <Button
         variant="outline"
         size="sm"
@@ -586,21 +581,6 @@ export function AdaptiveHeader({
       <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
         <ThemeToggle />
       </div>
-    </div>
-
-    <div className={`${isVertical ? 'w-full px-3 py-1.5 mt-2' : 'flex items-center px-3 py-1.5 mt-1'} text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm`}>
-      <span className="hidden sm:inline-block text-slate-700 dark:text-slate-300">
-        Присоединяйтесь к нашему чату в Telegram:
-      </span>
-      <a
-        href="https://t.me/bot_builder_chat"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="ml-1 text-blue-600 dark:text-blue-300 hover:underline font-semibold"
-      >
-        @bot_builder_chat
-      </a>
-    </div>
     </div>
   );
 
