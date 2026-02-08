@@ -97,8 +97,30 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               code += '    \n';
             }
 
-            // Обрабатываем клавиатуру для целевого узла
-            if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            // Проверяем, является ли узел узлом с множественным выбором
+            const isMultiSelectNode = targetNode.data.allowMultipleSelection === true;
+
+            if (isMultiSelectNode) {
+              // Для узлов с множественным выбором вызываем соответствующий обработчик
+              code += '    # Узел является узлом с множественным выбором\n';
+              code += '    # Создаем фиктивный callback и вызываем соответствующий обработчик\n';
+              code += '    class MockCallback:\n';
+              code += '        def __init__(self, data, user, msg):\n';
+              code += '            self.data = data\n';
+              code += '            self.from_user = user\n';
+              code += '            self.message = msg\n';
+              code += '        async def answer(self):\n';
+              code += '            pass  # Mock метод, ничего не делаем\n';
+              code += '        async def edit_text(self, text, **kwargs):\n';
+              code += '            try:\n';
+              code += '                return await self.message.edit_text(text, **kwargs)\n';
+              code += '            except Exception as e:\n';
+              code += '                logging.warning(f"Не удалось отредактировать сообщение: {e}")\n';
+              code += '                return await self.message.answer(text, **kwargs)\n';
+              code += '    \n';
+              code += `    mock_callback = MockCallback("${targetNode.id}", message.from_user, message)\n`;
+              code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
+            } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               // Проверяем, есть ли статическое изображение в целевом узле
               if (targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '') {
                 code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
@@ -253,207 +275,257 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               }
 
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-              // Устанавливаем переменные из attachedMedia для целевого узла
-              if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
-                code += '    # Устанавливаем переменные из attachedMedia\n';
-                code += '    user_id = message.from_user.id\n';
-                code += '    if user_id not in user_data:\n';
-                code += '        user_data[user_id] = {}\n';
+              // Проверяем, является ли узел узлом с множественным выбором
+              const isMultiSelectNode = targetNode.data.allowMultipleSelection === true;
 
-                targetNode.data.attachedMedia.forEach((mediaVar: string) => {
-                  if (mediaVar.startsWith('image_url_')) {
-                    // Уже обрабатывается ниже
-                  } else if (mediaVar.startsWith('video_url_')) {
-                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
-                  } else if (mediaVar.startsWith('audio_url_')) {
-                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
-                  } else if (mediaVar.startsWith('document_url_')) {
-                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+              if (isMultiSelectNode) {
+                // Для узлов с множественным выбором вызываем соответствующий обработчик
+                code += '    # Узел является узлом с множественным выбором\n';
+                code += '    # Создаем фиктивный callback и вызываем соответствующий обработчик\n';
+                code += '    class MockCallback:\n';
+                code += '        def __init__(self, data, user, msg):\n';
+                code += '            self.data = data\n';
+                code += '            self.from_user = user\n';
+                code += '            self.message = msg\n';
+                code += '        async def answer(self):\n';
+                code += '            pass  # Mock метод, ничего не делаем\n';
+                code += '        async def edit_text(self, text, **kwargs):\n';
+                code += '            try:\n';
+                code += '                return await self.message.edit_text(text, **kwargs)\n';
+                code += '            except Exception as e:\n';
+                code += '                logging.warning(f"Не удалось отредактировать сообщение: {e}")\n';
+                code += '                return await self.message.answer(text, **kwargs)\n';
+                code += '    \n';
+                code += `    mock_callback = MockCallback("${targetNode.id}", message.from_user, message)\n`;
+                code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
+              } else {
+                // Устанавливаем переменные из attachedMedia для целевого узла
+                if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
+                  code += '    # Устанавливаем переменные из attachedMedia\n';
+                  code += '    user_id = message.from_user.id\n';
+                  code += '    if user_id not in user_data:\n';
+                  code += '        user_data[user_id] = {}\n';
+
+                  targetNode.data.attachedMedia.forEach((mediaVar: string) => {
+                    if (mediaVar.startsWith('image_url_')) {
+                      // Уже обрабатывается ниже
+                    } else if (mediaVar.startsWith('video_url_')) {
+                      code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
+                    } else if (mediaVar.startsWith('audio_url_')) {
+                      code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
+                    } else if (mediaVar.startsWith('document_url_')) {
+                      code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+                    }
+                  });
+
+                  code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;
+                  code += '    \n';
+                }
+
+                // Проверяем, есть ли статическое изображение в целевом узле
+                const hasStaticImage = targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '';
+
+                if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                  code += '    # Проверка условных сообщений для целевого узла\n';
+                  code += '    user_record = await get_user_from_db(user_id)\n';
+                  code += '    if not user_record:\n';
+                  code += '        user_record = user_data.get(user_id, {})\n';
+                  code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                  code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                  code += '    \n';
+                  code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+                  code += '    use_conditional_keyboard = conditional_keyboard is not None\n';
+                } else {
+                  code += '    use_conditional_keyboard = False\n';
+                  code += '    conditional_keyboard = None\n';
+                }
+
+                // Генерируем inline клавиатуру
+                code += '    builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                  if (btn.action === "url") {
+                    code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
+                    code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command') {
+                    const commandName = btn.target ? btn.target.replace('/', '') : 'unknown';
+                    const callbackData = `cmd_${commandName}`;
+                    code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
                   }
                 });
+                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+                code += `    builder.adjust(${columns})\n`;
+                code += '    keyboard = builder.as_markup()\n';
 
-                code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;
-                code += '    \n';
-              }
+                // Если есть статическое изображение, отправляем его с клавиатурой
+                if (hasStaticImage) {
+                  code += `    # Узел содержит статическое изображение: ${targetNode.data.imageUrl}\n`;
+                  // Проверяем, является ли URL относительным путем к локальному файлу
+                  if (targetNode.data.imageUrl?.startsWith('/uploads/')) {
+                    code += `    image_path = get_upload_file_path("${targetNode.data.imageUrl}")\n`;
+                    code += `    image_url = FSInputFile(image_path)\n`;
+                  } else {
+                    code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                  }
 
-              // Проверяем, есть ли статическое изображение в целевом узле
-              const hasStaticImage = targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '';
-              
-              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                code += '    # Проверка условных сообщений для целевого узла\n';
-                code += '    user_record = await get_user_from_db(user_id)\n';
-                code += '    if not user_record:\n';
-                code += '        user_record = user_data.get(user_id, {})\n';
-                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-                code += '    \n';
-                code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
-                code += '    use_conditional_keyboard = conditional_keyboard is not None\n';
-              } else {
-                code += '    use_conditional_keyboard = False\n';
-                code += '    conditional_keyboard = None\n';
-              }
+                  let parseModeTarget = '';
+                  if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                    parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                  } else if (targetNode.data.formatMode === 'html') {
+                    parseModeTarget = ', parse_mode=ParseMode.HTML';
+                  }
 
-              // Генерируем inline клавиатуру
-              code += '    builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                if (btn.action === "url") {
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                } else if (btn.action === 'goto') {
-                  const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                } else if (btn.action === 'command') {
-                  const commandName = btn.target ? btn.target.replace('/', '') : 'unknown';
-                  const callbackData = `cmd_${commandName}`;
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                }
-              });
-              const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-              code += `    builder.adjust(${columns})\n`;
-              code += '    keyboard = builder.as_markup()\n';
-              
-              // Если есть статическое изображение, отправляем его с клавиатурой
-              if (hasStaticImage) {
-                code += `    # Узел содержит статическое изображение: ${targetNode.data.imageUrl}\n`;
-                // Проверяем, является ли URL относительным путем к локальному файлу
-                if (targetNode.data.imageUrl?.startsWith('/uploads/')) {
-                  code += `    image_path = get_upload_file_path("${targetNode.data.imageUrl}")\n`;
-                  code += `    image_url = FSInputFile(image_path)\n`;
+                  code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
                 } else {
-                  code += `    image_url = "${targetNode.data.imageUrl}"\n`;
-                }
-                
-                let parseModeTarget = '';
-                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-                } else if (targetNode.data.formatMode === 'html') {
-                  parseModeTarget = ', parse_mode=ParseMode.HTML';
-                }
-                
-                code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
-              } else {
-                // Нет изображения, отправляем текст с клавиатурой
-                let parseModeTarget = '';
-                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-                } else if (targetNode.data.formatMode === 'html') {
-                  parseModeTarget = ', parse_mode=ParseMode.HTML';
-                }
-                
-                code += '    if use_conditional_keyboard:\n';
-                code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
-                code += '    else:\n';
-                code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
-              }
+                  // Нет изображения, отправляем текст с клавиатурой
+                  let parseModeTarget = '';
+                  if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                    parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                  } else if (targetNode.data.formatMode === 'html') {
+                    parseModeTarget = ', parse_mode=ParseMode.HTML';
+                  }
 
-              // Устанавливаем состояние ожидания ввода для inline клавиатуры
-              if (targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true) {
-                code += '    \n';
-                if (targetNode && targetNode.data) {
-                  code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
+                  code += '    if use_conditional_keyboard:\n';
+                  code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                  code += '    else:\n';
+                  code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+                }
+
+                // Устанавливаем состояние ожидания ввода для inline клавиатуры
+                if (targetNode.data.collectUserInput === true ||
+                  targetNode.data.enableTextInput === true ||
+                  targetNode.data.enablePhotoInput === true ||
+                  targetNode.data.enableVideoInput === true ||
+                  targetNode.data.enableAudioInput === true ||
+                  targetNode.data.enableDocumentInput === true) {
+                  code += '    \n';
+                  if (targetNode && targetNode.data) {
+                    code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
+                  }
                 }
               }
 
             } else {
-              // Устанавливаем переменные из attachedMedia для целевого узла
-              if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
-                code += '    # Устанавливаем переменные из attachedMedia\n';
-                code += '    user_id = message.from_user.id\n';
-                code += '    if user_id not in user_data:\n';
-                code += '        user_data[user_id] = {}\n';
+              // Проверяем, является ли узел узлом с множественным выбором
+              const isMultiSelectNode = targetNode.data.allowMultipleSelection === true;
 
-                targetNode.data.attachedMedia.forEach((mediaVar: string) => {
-                  if (mediaVar.startsWith('image_url_')) {
-                    // Уже обрабатывается ниже
-                  } else if (mediaVar.startsWith('video_url_')) {
-                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
-                  } else if (mediaVar.startsWith('audio_url_')) {
-                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
-                  } else if (mediaVar.startsWith('document_url_')) {
-                    code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
-                  }
-                });
-
-                code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;
+              if (isMultiSelectNode) {
+                // Для узлов с множественным выбором вызываем соответствующий обработчик
+                code += '    # Узел является узлом с множественным выбором\n';
+                code += '    # Создаем фиктивный callback и вызываем соответствующий обработчик\n';
+                code += '    class MockCallback:\n';
+                code += '        def __init__(self, data, user, msg):\n';
+                code += '            self.data = data\n';
+                code += '            self.from_user = user\n';
+                code += '            self.message = msg\n';
+                code += '        async def answer(self):\n';
+                code += '            pass  # Mock метод, ничего не делаем\n';
+                code += '        async def edit_text(self, text, **kwargs):\n';
+                code += '            try:\n';
+                code += '                return await self.message.edit_text(text, **kwargs)\n';
+                code += '            except Exception as e:\n';
+                code += '                logging.warning(f"Не удалось отредактировать сообщение: {e}")\n';
+                code += '                return await self.message.answer(text, **kwargs)\n';
                 code += '    \n';
-              }
-
-              // Проверяем, есть ли статическое изображение в целевом узле
-              if (targetNode.data.imageUrl?.trim() !== '') {
-                code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
-                // Проверяем, является ли URL относительным путем к локальному файлу
-                if (targetNode.data.imageUrl?.startsWith('/uploads/')) {
-                  code += `    image_path = get_upload_file_path("${targetNode.data.imageUrl}")\n`;
-                  code += `    image_url = FSInputFile(image_path)\n`;
-                } else {
-                  code += `    image_url = "${targetNode.data.imageUrl}"\n`;
-                }
-
-                if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                  code += '    # Проверка условных сообщений для целевого узла\n';
-                  code += '    conditional_parse_mode = None\n';
-                  code += '    conditional_keyboard = None\n';
-                  code += '    user_record = await get_user_from_db(user_id)\n';
-                  code += '    if not user_record:\n';
-                  code += '        user_record = user_data.get(user_id, {})\n';
-                  code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                  code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-                  code += '    \n';
-                }
-                code += '    if "conditional_keyboard" not in locals():\n';
-                code += '        conditional_keyboard = None\n';
-                code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
-
-                let parseModeTarget = '';
-                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-                } else if (targetNode.data.formatMode === 'html') {
-                  parseModeTarget = ', parse_mode=ParseMode.HTML';
-                }
-                code += `        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
-                code += '    else:\n';
-                code += `        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                code += `    mock_callback = MockCallback("${targetNode.id}", message.from_user, message)\n`;
+                code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
               } else {
-                if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-                  code += '    # Проверка условных сообщений для целевого узла\n';
-                  code += '    conditional_parse_mode = None\n';
-                  code += '    conditional_keyboard = None\n';
-                  code += '    user_record = await get_user_from_db(user_id)\n';
-                  code += '    if not user_record:\n';
-                  code += '        user_record = user_data.get(user_id, {})\n';
-                  code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-                  code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                // Устанавливаем переменные из attachedMedia для целевого узла
+                if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
+                  code += '    # Устанавливаем переменные из attachedMedia\n';
+                  code += '    user_id = message.from_user.id\n';
+                  code += '    if user_id not in user_data:\n';
+                  code += '        user_data[user_id] = {}\n';
+
+                  targetNode.data.attachedMedia.forEach((mediaVar: string) => {
+                    if (mediaVar.startsWith('image_url_')) {
+                      // Уже обрабатывается ниже
+                    } else if (mediaVar.startsWith('video_url_')) {
+                      code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
+                    } else if (mediaVar.startsWith('audio_url_')) {
+                      code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
+                    } else if (mediaVar.startsWith('document_url_')) {
+                      code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+                    }
+                  });
+
+                  code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;
                   code += '    \n';
                 }
-                code += '    if "conditional_keyboard" not in locals():\n';
-                code += '        conditional_keyboard = None\n';
-                code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
 
-                let parseModeTarget = '';
-                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-                } else if (targetNode.data.formatMode === 'html') {
-                  parseModeTarget = ', parse_mode=ParseMode.HTML';
+                // Проверяем, есть ли статическое изображение в целевом узле
+                if (targetNode.data.imageUrl?.trim() !== '') {
+                  code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
+                  // Проверяем, является ли URL относительным путем к локальному файлу
+                  if (targetNode.data.imageUrl?.startsWith('/uploads/')) {
+                    code += `    image_path = get_upload_file_path("${targetNode.data.imageUrl}")\n`;
+                    code += `    image_url = FSInputFile(image_path)\n`;
+                  } else {
+                    code += `    image_url = "${targetNode.data.imageUrl}"\n`;
+                  }
+
+                  if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                    code += '    # Проверка условных сообщений для целевого узла\n';
+                    code += '    conditional_parse_mode = None\n';
+                    code += '    conditional_keyboard = None\n';
+                    code += '    user_record = await get_user_from_db(user_id)\n';
+                    code += '    if not user_record:\n';
+                    code += '        user_record = user_data.get(user_id, {})\n';
+                    code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                    code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                    code += '    \n';
+                  }
+                  code += '    if "conditional_keyboard" not in locals():\n';
+                  code += '        conditional_keyboard = None\n';
+                  code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+
+                  let parseModeTarget = '';
+                  if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                    parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                  } else if (targetNode.data.formatMode === 'html') {
+                    parseModeTarget = ', parse_mode=ParseMode.HTML';
+                  }
+                  code += `        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                  code += '    else:\n';
+                  code += `        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                } else {
+                  if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                    code += '    # Проверка условных сообщений для целевого узла\n';
+                    code += '    conditional_parse_mode = None\n';
+                    code += '    conditional_keyboard = None\n';
+                    code += '    user_record = await get_user_from_db(user_id)\n';
+                    code += '    if not user_record:\n';
+                    code += '        user_record = user_data.get(user_id, {})\n';
+                    code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                    code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                    code += '    \n';
+                  }
+                  code += '    if "conditional_keyboard" not in locals():\n';
+                  code += '        conditional_keyboard = None\n';
+                  code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+
+                  let parseModeTarget = '';
+                  if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                    parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                  } else if (targetNode.data.formatMode === 'html') {
+                    parseModeTarget = ', parse_mode=ParseMode.HTML';
+                  }
+                  code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                  code += '    else:\n';
+                  code += `        await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
                 }
-                code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
-                code += '    else:\n';
-                code += `        await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
-              }
 
-              if (targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true) {
-                code += '    \n';
-                if (targetNode && targetNode.data) {
-                  code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
+                if (targetNode.data.collectUserInput === true ||
+                  targetNode.data.enableTextInput === true ||
+                  targetNode.data.enablePhotoInput === true ||
+                  targetNode.data.enableVideoInput === true ||
+                  targetNode.data.enableAudioInput === true ||
+                  targetNode.data.enableDocumentInput === true) {
+                  code += '    \n';
+                  if (targetNode && targetNode.data) {
+                    code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
+                  }
                 }
               }
 

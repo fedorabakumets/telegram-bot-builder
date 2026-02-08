@@ -16,7 +16,8 @@ uploads/*
 !uploads/README.md
 
 # Generated bot files - exclude all files but keep README.md
-
+bots/*
+!bots/README.md
 
 # Environment variables
 .env
