@@ -477,7 +477,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
         '    ', // отступ
         autoTransitionToValue, // автопереход
         collectUserInputValue, // собирать пользовательский ввод
-        undefined, // nodeData
+        node, // nodeData - передаем весь узел для доступа к imageUrl
         'message' // контекст обработчика
       );
 

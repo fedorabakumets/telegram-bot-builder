@@ -100,8 +100,35 @@ export function generateAttachedMediaSendCode(
   
   // ИСПРАВЛЕНИЕ: Если есть статическое изображение, используем его напрямую
   if (hasStaticImage) {
-    // Убедимся, что переменная keyboardHTML определена
-    codeLines.push(`${indentLevel}keyboardHTML = locals().get('keyboardHTML', None) or globals().get('keyboardHTML', None) or None`);
+    // ИСПРАВЛЕНИЕ: Генерируем клавиатуру если есть кнопки у узла
+    const hasButtons = nodeData && nodeData.data && nodeData.data.buttons && nodeData.data.buttons.length > 0;
+    const hasReplyKeyboard = nodeData && nodeData.data && nodeData.data.keyboardType === 'reply';
+    const hasInlineKeyboard = nodeData && nodeData.data && nodeData.data.keyboardType === 'inline';
+
+    if (hasButtons && (hasReplyKeyboard || hasInlineKeyboard)) {
+      // Генерируем код клавиатуры
+      const { generateKeyboard } = require('../Keyboard/generateKeyboard');
+      const keyboardCode = generateKeyboard(nodeData);
+      
+      // ИСПРАВЛЕНИЕ: Извлекаем только код генерации клавиатуры, без отправки сообщения
+      // Разбираем сгенерированный код на строки
+      const keyboardLines = keyboardCode.split('\n');
+      
+      for (const line of keyboardLines) {
+        // Пропускаем строки, которые отправляют сообщения (await message.answer или await bot.send_photo)
+        if (line.includes('await message.answer') || line.includes('await bot.send_photo')) {
+          continue;
+        }
+        // Добавляем строки, которые генерируют клавиатуру
+        codeLines.push(line);
+      }
+    }
+
+    // Убедимся, что переменная keyboard определена
+    codeLines.push(`${indentLevel}# Убедимся, что переменная keyboard определена`);
+    codeLines.push(`${indentLevel}if 'keyboard' not in locals():`);
+    codeLines.push(`${indentLevel}    keyboard = None`);
+    codeLines.push(`${indentLevel}`);
 
     codeLines.push(`${indentLevel}# Узел содержит статическое изображение: ${nodeData.imageUrl}`);
     // Проверяем, является ли URL относительным путем к локальному файлу
@@ -129,11 +156,6 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}try:`);
     codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
     codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, user_vars)`);
-
-    // ИСПРАВЛЕНИЕ: Проверяем, определена ли переменная keyboard перед её использованием
-    codeLines.push(`${indentLevel}    # Убедимся, что переменная keyboard определена`);
-    codeLines.push(`${indentLevel}    if 'keyboard' not in locals():`);
-    codeLines.push(`${indentLevel}        keyboard = None`);
     
     // ИСПРАВЛЕНИЕ: Генерируем parse_mode только если parseMode не пустой и не равен "none"
     let parseModeParam = '';
@@ -163,9 +185,6 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}except Exception as e:`);
     codeLines.push(`${indentLevel}    logging.error(f"Ошибка отправки статического изображения: {e}")`);
     codeLines.push(`${indentLevel}    # Fallback на обычное сообщение при ошибке`);
-    codeLines.push(`${indentLevel}    # Убедимся, что переменная keyboard определена`);
-    codeLines.push(`${indentLevel}    if 'keyboard' not in locals():`);
-    codeLines.push(`${indentLevel}        keyboard = None`);
     const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
     // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
     let parseModeFallbackParam = '';
