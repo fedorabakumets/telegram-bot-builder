@@ -312,13 +312,34 @@ export function generateMultiSelectCallbackLogic(
 `;
         code += `            builder.adjust(optimal_columns)
 `;
-        // Добавляем кнопку "Готово" на отдельной строке, чтобы она всегда оставалась внизу
+        // Добавляем кнопку "Готово" после кнопки "Назад", чтобы она была справа
         const continueText = node.data.continueButtonText || 'Готово';
         const doneCallbackData = `multi_select_done_${node.id}`;
-        if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData} на отдельной строке`);
-        code += `            # Добавляем кнопку "Готово" на отдельной строке
+        if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData} после обычных кнопок`);
+        // Пересчитываем количество кнопок, включая кнопку "Готово"
+        const totalButtonsWithDone = totalButtons + 1;
+        let optimalColumnsWithDone;
+        if (totalButtonsWithDone >= 6) {
+          optimalColumnsWithDone = 2;
+        } else if (totalButtonsWithDone >= 3) {
+          optimalColumnsWithDone = 1;
+        } else {
+          optimalColumnsWithDone = 1;
+        }
+        code += `            # Пересчитываем количество колонок с учетом кнопки "Готово": ${totalButtonsWithDone} кнопок
 `;
-        code += `            builder.row()
+        code += `            total_buttons_with_done = ${totalButtonsWithDone}
+`;
+        code += `            if total_buttons_with_done >= 6:
+            optimal_columns_with_done = 2
+        elif total_buttons_with_done >= 3:
+            optimal_columns_with_done = 1
+        else:
+            optimal_columns_with_done = 1
+`;
+        code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns_with_done}) для узла ${node.id} (multi-select с кнопкой Готово, всего кнопок: {total_buttons_with_done})")
+`;
+        code += `            builder.adjust(optimal_columns_with_done)
 `;
         code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))
 `;
