@@ -567,20 +567,6 @@ export function AdaptiveHeader({
         </Button>
       )}
 
-      <div className={`${isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'} text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm`}>
-        <span className="hidden sm:inline-block text-slate-700 dark:text-slate-300">
-          Присоединяйтесь к нашему чату в Telegram:
-        </span>
-        <a
-          href="https://t.me/bot_builder_chat"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-1 text-blue-600 dark:text-blue-300 hover:underline font-semibold"
-        >
-          @bot_builder_chat
-        </a>
-      </div>
-
       <Button
         variant="outline"
         size="sm"
@@ -600,6 +586,21 @@ export function AdaptiveHeader({
       <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
         <ThemeToggle />
       </div>
+    </div>
+
+    <div className={`${isVertical ? 'w-full px-3 py-1.5 mt-2' : 'flex items-center px-3 py-1.5 mt-1'} text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm`}>
+      <span className="hidden sm:inline-block text-slate-700 dark:text-slate-300">
+        Присоединяйтесь к нашему чату в Telegram:
+      </span>
+      <a
+        href="https://t.me/bot_builder_chat"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="ml-1 text-blue-600 dark:text-blue-300 hover:underline font-semibold"
+      >
+        @bot_builder_chat
+      </a>
+    </div>
     </div>
   );
 
