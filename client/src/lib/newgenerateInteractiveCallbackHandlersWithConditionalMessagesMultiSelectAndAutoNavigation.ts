@@ -551,14 +551,22 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 }
               });
 
-              // Автоматическое распределение колонок для множественного выбора
-              const totalButtons = selectionButtons.length + (targetNode.data.continueButtonTarget ? 1 : 0) + regularButtons.length;
+              // Автоматическое распределение колонок для множественного выбора (только для кнопок выбора и обычных кнопок)
+              const totalButtons = selectionButtons.length + regularButtons.length;
               // Для множественного выбора всегда используем nodeData с включенным флагом
               const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
               // Создаем массив с нужным количеством элементов для расчета колонок
               const allButtonsForCalculation = Array(totalButtons).fill({});
               const columns = calculateOptimalColumns(allButtonsForCalculation, multiSelectNodeData);
               code += `    builder.adjust(${columns})\n`;
+
+              // Добавляем кнопку "Готово" на отдельной строке, чтобы она всегда оставалась внизу
+              if (selectionButtons.length > 0) {
+                code += `    # Добавляем кнопку "Готово" на отдельной строке\n`;
+                code += `    builder.row()\n`; // Переходим на новую строку
+                // Кнопка "Готово" уже была добавлена ранее, но теперь она будет на отдельной строке
+              }
+
               code += '    keyboard = builder.as_markup()\n';
             }
 
@@ -760,7 +768,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               }
 
               // Если collectUserInput=true, продолжаем выполнение и отправляем сообщение с медиа
-              // Проверяем, есть ли прикрепленные медиафайлы и отправляем соответствующим образом
+              // Проверяем, есть ли прикре��ленные медиафайлы и отправляем соответствующим образом
               const attachedMedia = targetNode.data.attachedMedia || [];
               if (attachedMedia.length > 0) {
                 // Используем generateAttachedMediaSendCode для отправки медиа
