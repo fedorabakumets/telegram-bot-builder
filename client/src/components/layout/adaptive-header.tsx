@@ -225,6 +225,22 @@ export function AdaptiveHeader({
   // Мобильная версия действий
   const MobileActions = () => (
     <div className="flex flex-col gap-3 sm:gap-4">
+      {/* Приглашение в Telegram-чат */}
+      <div className="px-3 py-2.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm text-center">
+        <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+          Присоединяйтесь к нашему чату в Telegram:
+        </p>
+        <a
+          href="https://t.me/bot_builder_chat"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-blue-300 hover:underline font-semibold text-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          @bot_builder_chat
+        </a>
+      </div>
+
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
         <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:gap-2.5">
@@ -236,8 +252,8 @@ export function AdaptiveHeader({
                 setIsMobileMenuOpen(false);
               }}
               className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                headerVisible 
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40' 
+                headerVisible
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
               title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
@@ -247,7 +263,7 @@ export function AdaptiveHeader({
               <span className="sm:hidden">{headerVisible ? 'Скрыть' : 'Показать'} шапку</span>
             </Button>
           )}
-          
+
           {onToggleSidebar && (
             <Button
               size="sm"
@@ -256,8 +272,8 @@ export function AdaptiveHeader({
                 setIsMobileMenuOpen(false);
               }}
               className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                sidebarVisible 
-                  ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/40' 
+                sidebarVisible
+                  ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/40'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
               title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
@@ -267,7 +283,7 @@ export function AdaptiveHeader({
               <span className="sm:hidden">{sidebarVisible ? 'Скрыть' : 'Показать'} панель</span>
             </Button>
           )}
-          
+
           {onToggleCanvas && (
             <Button
               size="sm"
@@ -276,8 +292,8 @@ export function AdaptiveHeader({
                 setIsMobileMenuOpen(false);
               }}
               className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                canvasVisible 
-                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/40' 
+                canvasVisible
+                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/40'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
               title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
@@ -287,7 +303,7 @@ export function AdaptiveHeader({
               <span className="sm:hidden">{canvasVisible ? 'Скрыть' : 'Показать'} холст</span>
             </Button>
           )}
-          
+
           {onToggleProperties && (
             <Button
               size="sm"
@@ -296,8 +312,8 @@ export function AdaptiveHeader({
                 setIsMobileMenuOpen(false);
               }}
               className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                propertiesVisible 
-                  ? 'bg-pink-600 text-white shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/40' 
+                propertiesVisible
+                  ? 'bg-pink-600 text-white shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/40'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
               title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
@@ -307,7 +323,7 @@ export function AdaptiveHeader({
               <span className="sm:hidden">{propertiesVisible ? 'Скрыть' : 'Показать'} свойства</span>
             </Button>
           )}
-          
+
           {onToggleCode && (
             <Button
               size="sm"
@@ -316,8 +332,8 @@ export function AdaptiveHeader({
                 setIsMobileMenuOpen(false);
               }}
               className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                codeVisible 
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40' 
+                codeVisible
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
               title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
@@ -329,10 +345,10 @@ export function AdaptiveHeader({
           )}
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
         {onLoadTemplate && (
-          <Button 
+          <Button
             size="sm"
             onClick={() => {
               onLoadTemplate();
@@ -345,9 +361,9 @@ export function AdaptiveHeader({
             <span>Шаблоны</span>
           </Button>
         )}
-        
+
         {onSaveAsTemplate && (
-          <Button 
+          <Button
             size="sm"
             onClick={() => {
               onSaveAsTemplate();
@@ -360,8 +376,8 @@ export function AdaptiveHeader({
             <span>Сохранить</span>
           </Button>
         )}
-        
-        <Button 
+
+        <Button
           size="sm"
           onClick={() => {
             onExport();
@@ -373,8 +389,8 @@ export function AdaptiveHeader({
           <Download className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
           <span>Экспорт</span>
         </Button>
-        
-        <Button 
+
+        <Button
           size="sm"
           asChild
           className={`flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg font-medium text-xs sm:text-sm transition-all ${onSaveAsTemplate ? '' : 'sm:col-span-2'}`}
@@ -391,7 +407,7 @@ export function AdaptiveHeader({
             <span>GitHub</span>
           </a>
         </Button>
-        
+
         <div className="flex justify-center sm:col-span-2 pt-2">
           <ThemeToggle />
         </div>
@@ -550,9 +566,23 @@ export function AdaptiveHeader({
           <span>Вход</span>
         </Button>
       )}
-      
-      <Button 
-        variant="outline" 
+
+      <div className={`${isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'} text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm`}>
+        <span className="hidden sm:inline-block text-slate-700 dark:text-slate-300">
+          Присоединяйтесь к нашему чату в Telegram:
+        </span>
+        <a
+          href="https://t.me/bot_builder_chat"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-1 text-blue-600 dark:text-blue-300 hover:underline font-semibold"
+        >
+          @bot_builder_chat
+        </a>
+      </div>
+
+      <Button
+        variant="outline"
         size="sm"
         asChild
         className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-500/50 rounded-lg transition-all`}
@@ -566,7 +596,21 @@ export function AdaptiveHeader({
           <Github className="h-3.5 w-3.5" />
         </a>
       </Button>
-      
+
+      <div className={`${isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'} text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm`}>
+        <span className="hidden sm:inline-block text-slate-700 dark:text-slate-300">
+          Присоединяйтесь к нашему чату в Telegram:
+        </span>
+        <a
+          href="https://t.me/bot_builder_chat"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-1 text-blue-600 dark:text-blue-300 hover:underline font-semibold"
+        >
+          @bot_builder_chat
+        </a>
+      </div>
+
       <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
         <ThemeToggle />
       </div>
