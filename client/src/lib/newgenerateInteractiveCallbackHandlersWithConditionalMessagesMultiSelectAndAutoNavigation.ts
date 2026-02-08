@@ -592,19 +592,13 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   '    ',
                   undefined, // автопереход обрабатывается отдельно
                   collectUserInputFlag,
-                  targetNode.data // передаем данные узла для проверяяяяяяяяяяяяяяяяяяяяи яятатяяяяесяяяяих изображеняяяяй
+                  targetNode.data // передаем данные узла для проверки статических изображений
                 );
 
                 if (mediaCode) {
                   code += '    # Отправляем сообщение (с проверкой прикрепленного медиа)\n';
                   code += mediaCode;
-                } else {
-                  // Резервный вариант если не удалось сгенерировать код медиа
-                  code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
                 }
-              } else {
-                // Обычная отправка без медиа
-                code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
               }
             } else {
               // Генерируем inline клавиатуру (по умолчанию)
@@ -809,7 +803,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
           if (autoTransitionTarget) {
             const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем кяд автоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем кяд ��втоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
             code += '    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла\n';
             code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура\n';
             code += '    user_id = callback_query.from_user.id\n';
