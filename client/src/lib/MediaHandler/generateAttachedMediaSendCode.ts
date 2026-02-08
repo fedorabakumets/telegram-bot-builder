@@ -113,13 +113,15 @@ export function generateAttachedMediaSendCode(
       codeLines.push(`${indentLevel}static_image_url = "${nodeData.imageUrl}"`);
     }
     codeLines.push(`${indentLevel}`);
-    
+
     // Устанавливаем состояние ожидания ввода если нужно
     if (collectUserInput && nodeData) {
       codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
-      const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
-      const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
-      codeLines.push(...waitingStateLines);
+      if (nodeData && nodeData.data) {
+        const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+        const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
+        codeLines.push(...waitingStateLines);
+      }
       codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки изображения")`);
     }
     
@@ -229,9 +231,11 @@ export function generateAttachedMediaSendCode(
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
   if (collectUserInput && nodeData) {
     codeLines.push(`${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
-    const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
-    const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
-    codeLines.push(...waitingStateLines);
+    if (nodeData && nodeData.data) {
+      const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+      const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
+      codeLines.push(...waitingStateLines);
+    }
     codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки медиа")`);
   }
 

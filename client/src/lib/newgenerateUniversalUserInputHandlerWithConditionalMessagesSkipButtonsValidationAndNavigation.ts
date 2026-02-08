@@ -1081,7 +1081,9 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
 
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
               code += `${bodyIndent}# Устанавливаем состояние ожидания ввода для узла ${targetNode.id}\n`;
-              code += generateWaitingStateCode(targetNode, bodyIndent);
+              if (targetNode && targetNode.data) {
+                code += generateWaitingStateCode(targetNode, bodyIndent);
+              }
               code += `${bodyIndent}logging.info(f"✅ Узел ${targetNode.id} настроен для сбора ввода (collectUserInput=true)")\n`;
 
               // Если у узла есть кнопки, показываем их ВМЕСТЕ с ожиданием ввода
@@ -1260,7 +1262,9 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                     targetNode.data.enableVideoInput === true || targetNode.data.enableAudioInput === true ||
                     targetNode.data.enableDocumentInput === true || targetNode.data.collectUserInput === true) {
                     code += `${bodyIndent}# Настраиваем ожидание ввода для message узла с reply кнопками (используем универсальную функцию)\n`;
-                    code += generateWaitingStateCode(targetNode, bodyIndent);
+                    if (targetNode && targetNode.data) {
+                      code += generateWaitingStateCode(targetNode, bodyIndent);
+                    }
                   }
                 }
               } else {
@@ -1271,7 +1275,9 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
 
                 // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок (используем универсальную функцию)
                 code += `${bodyIndent}# Настраиваем ожидание ввода для message узла (универсальная функция опяяяяеделит тип: text/photo/video/audio/document)\n`;
-                code += generateWaitingStateCode(targetNode, bodyIndent);
+                if (targetNode && targetNode.data) {
+                  code += generateWaitingStateCode(targetNode, bodyIndent);
+                }
               }
             } else {
               // Если узел не собирает ввод, проверяем есть ли inline или reply кнопки
@@ -1682,7 +1688,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
 
     generateUserInputValidationAndContinuationLogic();
 
-    // Генерируем логику навигации для каждого типа узла
+    // ��енерируем логику навигации для каждого типа узла
     generateStateTransitionAndRenderLogic();
   }
   return code;

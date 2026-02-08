@@ -775,7 +775,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   '    ',
                   undefined, // автопереход обрабатывается отдельно
                   collectUserInputFlag,
-                  targetNode.data // передаем данные узла для провер����������������и ��тат����ес����их изображен����й
+                  targetNode.data // передаем данные узла для провер������������������и ��тат����ес����их изображен����й
                 );
 
                 if (mediaCode) {
@@ -1033,7 +1033,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
           if (collectInputAfterTransitionCheck) {
             code += '    # Устанавливаем waiting_for_input, так как автопереход не выполнен\n';
-            code += generateWaitingStateCode(targetNode, '    ', 'user_id');
+            if (targetNode && targetNode.data) {
+              code += generateWaitingStateCode(targetNode, '    ', 'user_id');
+            }
           }
 
           // ============================================================================
@@ -1320,7 +1322,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += '                # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода\n';
                         code += `                # Тип ввода: ${inputType}\n`;
                         // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode с правильным контекстом callback_query
-                        code += generateWaitingStateCode(navTargetNode, '                ', 'callback_query.from_user.id').split('\n').map(line => line ? '            ' + line : '').join('\n');
+                        if (navTargetNode && navTargetNode.data) {
+                          code += generateWaitingStateCode(navTargetNode, '                ', 'callback_query.from_user.id').split('\n').map(line => line ? '            ' + line : '').join('\n');
+                        }
                         code += '            else:\n';
                         code += `                logging.info(f"⏭️ Переменная ${inputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
                       }
@@ -1541,7 +1545,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                       code += `                nav_text = ${formattedText}\n`;
                       // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
                       if (navTargetNode.data.collectUserInput === true) {
-                        code += `                # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n`;
+                        code += `                # ИСПРАВЛЕНИЕ: Проверяем, не была ли переме��ная уже сохранена inline кнопкой\n`;
                         code += `                if "${fallbackInputVariable}" not in user_data[user_id] or not user_data[user_id]["${fallbackInputVariable}"]:\n`;
                         code += `                    # Настраиваем ожидание ввода\n`;
                         code += `                    user_data[user_id]["waiting_for_input"] = {\n`;

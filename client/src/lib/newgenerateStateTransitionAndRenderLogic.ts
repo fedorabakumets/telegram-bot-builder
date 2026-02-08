@@ -57,7 +57,9 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
         if (targetNode.data.enableTextInput || targetNode.data.collectUserInput ||
           targetNode.data.enablePhotoInput || targetNode.data.enableVideoInput ||
           targetNode.data.enableAudioInput || targetNode.data.enableDocumentInput) {
-          code += generateWaitingStateCode(targetNode, '                ');
+          if (targetNode && targetNode.data) {
+            code += generateWaitingStateCode(targetNode, '                ');
+          }
         }
       } else if (targetNode.type === 'message') {
         // Добавляем поддержку условных сообщений для узлов сообщений

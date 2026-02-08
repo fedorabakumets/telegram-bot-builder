@@ -7,14 +7,21 @@ export function hasInlineButtons(nodes: BotNode[]): boolean {
   return nodes
     .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
     .some(node => {
-    // Проверяем основные inline кнопки
-    const hasMainInlineButtons = node.data?.keyboardType === 'inline' && node.data?.buttons && node.data?.buttons.length > 0;
+    // Проверяем, есть ли callback кнопки в основном узле (независимо от keyboardType)
+    const hasMainCallbackButtons = node.data?.buttons &&
+      Array.isArray(node.data.buttons) &&
+      node.data.buttons.some((button: any) => button.action === 'callback');
 
-    // Проверяем inline кнопки в conditionalMessages (любые кнопки с callback действиями)
+    // Проверяем inline кнопки в conditionalMessages (только callback кнопки)
     const hasConditionalInlineButtons = node.data?.conditionalMessages &&
-      node.data.conditionalMessages.some((condition: any) => condition.buttons && condition.buttons.length > 0
+      Array.isArray(node.data.conditionalMessages) &&
+      node.data.conditionalMessages.some((condition: any) =>
+        condition.buttons &&
+        Array.isArray(condition.buttons) &&
+        condition.buttons.some((button: any) => button.action === 'callback')
       );
 
-    return hasMainInlineButtons || hasConditionalInlineButtons;
+    // Возвращаем true, если есть callback кнопки в основном узле или в conditional messages
+    return hasMainCallbackButtons || hasConditionalInlineButtons;
   });
 }

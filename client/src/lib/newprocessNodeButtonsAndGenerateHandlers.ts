@@ -539,7 +539,7 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
             }
 
             // КРИТИЧЕСКИ ВАЖНАЯ ЛОГИКА: Если этот узел имеет collectUserInput, настраиваем состояние ожидания
-            if (targetNode.data.collectUserInput === true) {
+            if (targetNode && targetNode.data && targetNode.data.collectUserInput === true) {
 
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть inline кнопки И НЕТ текстового/медиа ввода, НЕ настраиваем ожидание ввода
               // Для reply кнопояя ВСЕГДА настраиваем ожидание ввода если enableTextInput === true
@@ -562,7 +562,9 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
                 code += '    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput\n';
                 code += '    # Используем универсальную функцию для определения правильного типа ввода (text/photo/video/audio/document)\n';
                 // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode с правильным контекстом callback_query
-                code += generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
+                if (targetNode && targetNode.data) {
+                  code += generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
+                }
               }
             }
           }
@@ -1298,18 +1300,20 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
             }
 
             // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла (основной цикл)
-            if (targetNode.data.collectUserInput === true) {
+            if (targetNode && targetNode.data && targetNode.data.collectUserInput === true) {
               // Настраиваем сбор пользовательского ввода
               code += '    # Активируем сбор пользовательского ввода (основной цикл)\n';
               code += '    if callback_query.from_user.id not in user_data:\n';
               code += '        user_data[callback_query.from_user.id] = {}\n';
               code += '    \n';
               // Используем helper функцию с правильным контекстом callback_query
-              code += generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
+              if (targetNode && targetNode.data) {
+                code += generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
+              }
               code += '    \n';
 
               // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок с проверкой условной клавиатуры
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              if (targetNode && targetNode.data && targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += '    # Проверяем, есть ли условная клавиатуря для этого узла\n';
                 code += '    if "keyboard" not in locals() or keyboard is None:\n';
                 code += '        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';

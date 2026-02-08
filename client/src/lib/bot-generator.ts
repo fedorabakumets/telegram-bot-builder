@@ -38,6 +38,7 @@ import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './genera
 import { generateTransitionLogicForMultiSelectCompletion } from './generate-transition-logic-multi-select';
 import { identifyNodesRequiringMultiSelectLogic } from './identifyNodesRequiringMultiSelectLogic';
 import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
+import { hasUploadImageUrls } from './utils/hasUploadImageUrls';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
 import { newgenerateStateTransitionAndRenderLogic } from './newgenerateStateTransitionAndRenderLogic';
@@ -225,7 +226,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   const hasAutoTransitionsResult = hasAutoTransitions(nodes || []);
   const hasNodesRequiringSafeEditOrSendResult = hasNodesRequiringSafeEditOrSend(nodes || []);
 
-  code += generateSafeEditOrSendCode(hasInlineButtonsResult || hasNodesRequiringSafeEditOrSendResult, hasAutoTransitionsResult);
+  // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
+  // ИЛИ если включена база данных пользователей (т.к. callback-обработчики могут использовать эту функцию)
+  code += generateSafeEditOrSendCode(hasInlineButtonsResult || hasNodesRequiringSafeEditOrSendResult || userDatabaseEnabled, hasAutoTransitionsResult || userDatabaseEnabled);
 
   code += generateBasicBotSetupCode();
 
@@ -250,8 +253,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем утилитарные функции
   code += generateUtilityFunctions(userDatabaseEnabled);
 
-  // Функции для работы с файлами - если есть медиа или узлы с изображениями
-  if (hasMediaNodes(nodes || [])) {
+  // Функции для работы с файлами - если есть медиа или узлы с изображениями из папки uploads
+  // ИЛИ если включена база данных пользователей (для функции send_photo_with_logging)
+  if (hasMediaNodes(nodes || []) || hasUploadImageUrls(nodes || []) || userDatabaseEnabled) {
     code += generateMediaFileFunctions();
   }
 

@@ -180,7 +180,9 @@ export function generateKeyboard(node: Node): string {
     // Дополнительно настраиваем сбор ответов с полной структурой ожидания ввода
     code += '    \n';
     code += '    # Дополнительно: настраиваем полную структуру ожидания ввода для узла с кнопками\n';
-    code += generateWaitingStateCode(node, '    ');
+    if (node && node.data) {
+      code += generateWaitingStateCode(node, '    ');
+    }
 
     return code;
   }
@@ -264,7 +266,9 @@ export function generateKeyboard(node: Node): string {
     // Устанавливаем состояние ожидания ввода
     code += '    \n';
     code += '    # Устанавливаем состояние ожидания ввода с полной структурой\n';
-    code += generateWaitingStateCode(node, '    ');
+    if (node && node.data) {
+      code += generateWaitingStateCode(node, '    ');
+    }
 
     return code;
   }

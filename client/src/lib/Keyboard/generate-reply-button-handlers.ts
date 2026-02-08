@@ -407,7 +407,9 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 targetNode.data.enableAudioInput === true ||
                 targetNode.data.enableDocumentInput === true) {
                 code += '    \n';
-                code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
+                if (targetNode && targetNode.data) {
+                  code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
+                }
               }
 
               // Проверяем, нужно ли выполнить автопереход из целевого узла
