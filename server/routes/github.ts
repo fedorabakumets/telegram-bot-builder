@@ -81,13 +81,13 @@ githubRouter.post('/push-to-github', async (_req, res) => {
       sha: commitResponse.data.sha
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Успешно отправлено в GitHub!',
       commit: commitResponse.data.sha
     });
   } catch (error) {
     console.error('Ошибка отправки в GitHub:', error);
-    res.status(500).json({ error: (error as any).message });
+    return res.status(500).json({ error: (error as any).message });
   }
 });
