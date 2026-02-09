@@ -281,36 +281,48 @@ export function generateMultiSelectCallbackLogic(
           }
         });
 
-        // Вычисляем оптимальное количество колонок на основе количества кнопок (без кнопки "Готово")
-        // ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения кнопок
-        const totalButtons = selectionButtons.length + regularButtons.length;
-        // Используем calculateOptimalColumns для согласованности с начальной клавиатурой
-        const optimalColumns = calculateOptimalColumns(node.data.buttons, node.data);
-        code += `            # Вычисляем оптимальное количество колонок для узла ${node.id} (без учета кнопки "Готово": ${totalButtons} кнопок)
-`;
-        code += `            total_buttons = ${totalButtons}
-`;
-        code += `            # ИСПРАВЛЕНИЕ: Используем согласованное количество колонок для постоянного расположения кнопок
-`;
-        code += `            optimal_columns = ${optimalColumns}
-`;
-        code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns}) для узла ${node.id} (multi-select, кнопок выбора: {total_buttons})")
-`;
-        code += `            builder.adjust(optimal_columns)
-`;
-        // Добавляем кнопку "Готово" после кнопки "Назад", чтобы она была справа
+        // Добавляем кнопку "Готово" к кнопкам перед расчетом количества колонок
         const continueText = node.data.continueButtonText || 'Готово';
         const doneCallbackData = `multi_select_done_${node.id}`;
-        if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData} после обычных кнопок`);
-        // Пересчитываем количество кнопок, включая кнопку "Готово"
-        const totalButtonsWithDone = totalButtons + 1;
-        // ИСПРАВЛЕНИЕ: Используем согласованное количество колонок для постоянного расположения
-        // Добавляем кнопку "Готово" для расчета количества колонок
+
+        // Добавляем временную кнопку "Готово" к общему списку для правильного расчета
         const allButtonsWithDone = [...node.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
         const optimalColumnsWithDone = calculateOptimalColumns(allButtonsWithDone, node.data);
-        code += `            # Пересчитываем количество колонок с учетом кнопки "Готово": ${totalButtonsWithDone} кнопок
+
+        // Добавляем все кнопки выбора
+        selectionButtons.forEach(button => {
+          const shortNodeId = generateUniqueShortId(node.id, allNodeIds || []);
+          const shortTarget = button.target || button.id || 'btn';
+          const callbackData = `ms_${shortNodeId}_${shortTarget}`;
+          if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка выбора: "${button.text}" -> callback_data: ${callbackData}`);
+          code += `            builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${button.text}' in selected_list else ''}${button.text}", callback_data="${callbackData}"))
 `;
-        code += `            total_buttons_with_done = ${totalButtonsWithDone}
+        });
+
+        // Добавляем обычные кнопки
+        regularButtons.forEach((button: Button) => {
+          if (button.action === 'goto') {
+            const callbackData = button.target || button.id || 'no_action';
+            code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))
+`;
+          } else if (button.action === 'url') {
+            code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))
+`;
+          } else if (button.action === 'command') {
+            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+            code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))
+`;
+          }
+        });
+
+        // Добавляем кнопку "Готово" ПЕРЕД вызовом adjust(), чтобы она учитывалась в распределении
+        code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))
+`;
+
+        // Теперь применяем adjust() ко всем кнопкам, включая "Готово"
+        code += `            # Вычисляем оптимальное количество колонок для узла ${node.id} (включая кнопку "Готово": ${allButtonsWithDone.length} кнопок)
+`;
+        code += `            total_buttons_with_done = ${allButtonsWithDone.length}
 `;
         code += `            # ИСПРАВЛЕНИЕ: Используем согласованное количество колонок для постоянного расположения кнопок
 `;
@@ -319,8 +331,6 @@ export function generateMultiSelectCallbackLogic(
         code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns_with_done}) для узла ${node.id} (multi-select с кнопкой Готово, всего кнопок: {total_buttons_with_done})")
 `;
         code += `            builder.adjust(optimal_columns_with_done)
-`;
-        code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))
 `;
       }
     });
