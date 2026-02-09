@@ -261,6 +261,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += 'from aiogram.types import ReplyKeyboardMarkup\n';
   }
 
+  // Проверяем, есть ли узлы с inline клавиатурами, которые требуют InlineKeyboardMarkup
+  const hasInlineKeyboardNodes = (nodes || []).some(node =>
+    node.data?.keyboardType === 'inline' ||
+    (node.data?.buttons && node.data.buttons.some((btn: Button) => btn.action === 'url' || btn.action === 'goto'))
+  );
+
+  if (hasInlineKeyboardNodes) {
+    code += 'from aiogram.types import InlineKeyboardMarkup\n';
+  }
+
   // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
   if (hasMediaNodesResult || hasStickerNodes || hasVoiceNodes || hasLocationNodes || hasContactNodes) {
     code += 'from aiogram.exceptions import TelegramBadRequest\n';
