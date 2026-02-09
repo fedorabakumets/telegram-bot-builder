@@ -241,6 +241,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   }
 
+  // Проверяем, есть ли узлы с настройками форматирования текста
+  const hasFormatModeNodes = (nodes || []).some(node =>
+    node.data?.formatMode || node.data?.markdown === true
+  );
+
+  if (hasFormatModeNodes) {
+    code += 'from aiogram.enums import ParseMode\n';
+  }
+
   // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
   if (hasMediaNodesResult || hasStickerNodes || hasVoiceNodes || hasLocationNodes || hasContactNodes) {
     code += 'from aiogram.exceptions import TelegramBadRequest\n';
