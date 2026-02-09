@@ -20,7 +20,8 @@ export function generateUniversalVariableReplacement(indentLevel: string): strin
   code += `${indentLevel}    elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):\n`;
   code += `${indentLevel}        user_obj = locals().get('callback_query').from_user\n`;
   code += `\n`;
-  code += `${indentLevel}    if user_obj:\n`;
+  code += `${indentLevel}    # Проверяем, что user_obj определен и инициализируем переменные пользователя\n`;
+  code += `${indentLevel}    if user_obj is not None:\n`;
   code += `${indentLevel}        init_user_variables(user_id, user_obj)\n`;
   code += `${indentLevel}\n`;
   code += `${indentLevel}# Подставляем все доступные переменные пользователя в текст\n`;
