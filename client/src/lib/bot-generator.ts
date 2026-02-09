@@ -241,15 +241,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   }
 
-  // Проверяем, есть ли узлы с настройками форматирования текста, которые приведут к использованию ParseMode
-  const hasFormatModeNodes = (nodes || []).some(node =>
-    (node.data?.formatMode && (node.data.formatMode.toLowerCase() === 'html' || node.data.formatMode.toLowerCase() === 'markdown'))
-    || node.data?.markdown === true
-  );
-
-  if (hasFormatModeNodes) {
-    code += 'from aiogram.enums import ParseMode\n';
-  }
 
   // Проверяем, есть ли узлы с URL-изображениями, которые требуют URLInputFile
   const hasUrlImageNodes = (nodes || []).some(node =>
