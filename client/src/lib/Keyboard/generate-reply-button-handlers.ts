@@ -597,7 +597,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
           code += '    # Инициализируем базовые переменные пользователя если их нет\n';
           code += '    if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):\n';
           code += '        user_obj = message.from_user\n';
-          code += '        if user_obj:\n';
+          code += '        if user_obj is not None:\n';
           code += '            init_user_variables(user_id, user_obj)\n';
           code += '    \n';
           
