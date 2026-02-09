@@ -55,7 +55,7 @@ export function calculateOptimalColumns(buttons: any[], nodeData?: any): number 
 
   const totalButtons = buttons.length;
 
-  // Если это множественный выбор, всегда используем 2 колонки для красивого вида
+  // Если это множественный выбор, всегда используем 2 колонки для красивого вида и постоянного расположения
   if (nodeData?.allowMultipleSelection) {
     return 2;
   }

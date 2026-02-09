@@ -372,7 +372,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
               // Создаем массив с нужным количеством элементов для расчета колонок
               const allButtonsForCalculation = Array(totalButtonsWithDone).fill({});
-              const columns = calculateOptimalColumns(allButtonsForCalculation, multiSelectNodeData);
+              // ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения
+              const columns = 2; // Всегда используем 2 колонки для узлов с множественным выбором
+              code += `    # ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения кнопок\n`;
               code += `    builder.adjust(${columns})\n`;
 
               code += '    keyboard = builder.as_markup()\n';

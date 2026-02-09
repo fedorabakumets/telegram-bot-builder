@@ -125,7 +125,13 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
     // Добавляем виртуальную кнопку "Готово" для правильного подсчета колонок
     allButtons.push({ text: nodeData?.continueButtonText || 'Готово' });
   }
-  const columns = calculateOptimalColumns(allButtons, nodeData);
+  // ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для узлов с множественным выбором
+  let columns;
+  if (isMultipleSelection) {
+    columns = 2; // Всегда используем 2 колонки для узлов с множественным выбором
+  } else {
+    columns = calculateOptimalColumns(allButtons, nodeData);
+  }
   code += `${indentLevel}builder.adjust(${columns})\n`;
   code += `${indentLevel}keyboard = builder.as_markup()\n`;
 

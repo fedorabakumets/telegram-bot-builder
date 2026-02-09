@@ -281,30 +281,16 @@ export function generateMultiSelectCallbackLogic(
         });
 
         // Вычисляем оптимальное количество колонок на основе количества кнопок (без кнопки "Готово")
+        // ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения кнопок
         const totalButtons = selectionButtons.length + regularButtons.length;
-        let optimalColumns = 1;
-        if (totalButtons >= 6) {
-          optimalColumns = 2;
-        } else if (totalButtons >= 3) {
-          optimalColumns = 1;
-        } else {
-          optimalColumns = 1;
-        }
+        let optimalColumns = 2; // Используем 2 колонки для постоянного расположения, как в начальной клавиатуре
         code += `            # Вычисляем оптимальное количество колонок для узла ${node.id} (без учета кнопки "Готово": ${totalButtons} кнопок)
 `;
         code += `            total_buttons = ${totalButtons}
 `;
-        code += `            if total_buttons >= 6:
+        code += `            # ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения кнопок
 `;
-        code += `                optimal_columns = ${optimalColumns}
-`;
-        code += `            elif total_buttons >= 3:
-`;
-        code += `                optimal_columns = 1
-`;
-        code += `            else:
-`;
-        code += `                optimal_columns = 1
+        code += `            optimal_columns = ${optimalColumns}
 `;
         code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns}) для узла ${node.id} (multi-select, кнопок выбора: {total_buttons})")
 `;
@@ -316,24 +302,15 @@ export function generateMultiSelectCallbackLogic(
         if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData} после обычных кнопок`);
         // Пересчитываем количество кнопок, включая кнопку "Готово"
         const totalButtonsWithDone = totalButtons + 1;
-        let optimalColumnsWithDone;
-        if (totalButtonsWithDone >= 6) {
-          optimalColumnsWithDone = 2;
-        } else if (totalButtonsWithDone >= 3) {
-          optimalColumnsWithDone = 1;
-        } else {
-          optimalColumnsWithDone = 1;
-        }
+        // ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения
+        let optimalColumnsWithDone = 2; // Используем 2 колонки для постоянного расположения
         code += `            # Пересчитываем количество колонок с учетом кнопки "Готово": ${totalButtonsWithDone} кнопок
 `;
         code += `            total_buttons_with_done = ${totalButtonsWithDone}
 `;
-        code += `            if total_buttons_with_done >= 6:
-                optimal_columns_with_done = ${optimalColumnsWithDone}
-            elif total_buttons_with_done >= 3:
-                optimal_columns_with_done = ${optimalColumnsWithDone}
-            else:
-                optimal_columns_with_done = ${optimalColumnsWithDone}
+        code += `            # ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения кнопок
+`;
+        code += `            optimal_columns_with_done = ${optimalColumnsWithDone}
 `;
         code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns_with_done}) для узла ${node.id} (multi-select с кнопкой Готово, всего кнопок: {total_buttons_with_done})")
 `;
