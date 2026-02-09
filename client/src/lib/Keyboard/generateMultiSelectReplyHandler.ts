@@ -106,7 +106,8 @@ export function generateMultiSelectReplyHandler(
             code += `        if node_id == "${node.id}":\n`;
             selectionButtons.forEach((button: { text: any; }) => {
                 code += `            # Проверяем текст кнопки, убирая галочку при необходимости\n`;
-                code += `            if user_input.replace("✅ ", "").strip() == "${button.text}":\n`;
+                code += `            clean_user_input = user_input.replace("✅ ", "").strip()\n`;
+                code += `            if clean_user_input == "${button.text}":\n`;
                 code += `                if f"multi_select_{node_id}" not in user_data[user_id]:\n`;
                 code += `                    user_data[user_id][f"multi_select_{node_id}"] = []\n`;
                 code += `                \n`;
