@@ -1,6 +1,7 @@
 import { Node, Button } from '@shared/schema';
 import { formatTextForPython, generateUniqueShortId, toPythonBoolean } from '../format';
 import { generateInlineKeyboardCode } from '.';
+import { calculateOptimalColumns } from './calculateOptimalColumns';
 
 export function generateMultiSelectDoneHandler(
     nodes: Node[],
@@ -141,8 +142,14 @@ export function generateMultiSelectDoneHandler(
                                         code += `        builder.add(InlineKeyboardButton(text=f"{'✅ ' if cleanText in user_data[user_id]['multi_select_' + targetNode.id] else ''}{cleanText}", callback_data="${callbackData}"))\n`;
                                     }
                                 });
-                                code += `        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${targetNode.id}"))\n`;
-                                code += `        builder.adjust(2)\n`;
+                                // Добавляем кнопку "Готово" и вычисляем оптимальное количество колонок
+                                const continueText = targetNode.data.continueButtonText || 'Готово';
+                                code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${targetNode.id}"))\n`;
+
+                                // Вычисляем оптимальное количество колонок для всех кнопок (включая кнопку "Готово")
+                                const allButtons = [...targetNode.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
+                                const columns = calculateOptimalColumns(allButtons, targetNode.data);
+                                code += `        builder.adjust(${columns})\n`;
                                 code += `        keyboard = builder.as_markup()\n`;
                                 code += `        \n`;
                                 code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
