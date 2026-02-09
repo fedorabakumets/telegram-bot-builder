@@ -43,5 +43,10 @@ export function hasInputCollection(nodes: BotNode[]): boolean {
     return conditions.some((cond: any) => cond.waitForTextInput);
   });
 
-  return hasCollectInput || hasTextInput || hasPhotoInput || hasVideoInput || hasAudioInput || hasDocumentInput || hasConditionalInput;
+  // Проверяем узлы с множественным выбором (multi-select)
+  const hasMultiSelect = nodes
+    .filter(node => node !== null && node !== undefined)
+    .some(node => node.data?.allowMultipleSelection === true);
+
+  return hasCollectInput || hasTextInput || hasPhotoInput || hasVideoInput || hasAudioInput || hasDocumentInput || hasConditionalInput || hasMultiSelect;
 }

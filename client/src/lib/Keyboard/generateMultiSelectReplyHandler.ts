@@ -150,7 +150,58 @@ export function generateMultiSelectReplyHandler(
     });
 
     code += '    \n';
-    code += '    # Если не множественный выбор, передаем дальше по цепочке обработчиков\n';
+    code += '    # Обработка обычных кнопок (goto) в режиме множественного выбора\n';
+    code += '    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":\n';
+    code += '        node_id = user_data[user_id]["multi_select_node"]\n';
+    code += '        # Ищем узел, чтобы получить информацию о кнопках\n';
+
+    // Добавляем обработку кнопок с действием "goto"
+    multiSelectNodes.forEach((node: Node) => {
+        if (node.data.buttons && Array.isArray(node.data.buttons)) {
+            const gotoButtons = node.data.buttons.filter((btn: any) => btn.action === 'goto' && btn.target);
+
+            if (gotoButtons.length > 0) {
+                code += `        if node_id == "${node.id}":\n`;
+
+                gotoButtons.forEach((button: any) => {
+                    const targetNode = nodes.find((n: Node) => n.id === button.target);
+                    if (targetNode) {
+                        code += `            if user_input == "${button.text}":\n`;
+                        code += `                # Сохраняем текущее состояние выбора перед переходом\n`;
+                        code += `                selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n`;
+                        code += `                if selected_options:\n`;
+                        code += `                    selected_text = ", ".join(selected_options)\n`;
+                        code += `                    await save_user_data_to_db(user_id, "${node.data.multiSelectVariable || `multi_select_${node.id}`}", selected_text)\n`;
+                        code += `                # Очищаем состояние множественного выбора перед переходом\n`;
+                        code += `                user_data[user_id].pop(f"multi_select_{node_id}", None)\n`;
+                        code += `                user_data[user_id].pop("multi_select_node", None)\n`;
+                        code += `                user_data[user_id].pop("multi_select_type", None)\n`;
+
+                        if (targetNode.type === 'command') {
+                            const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
+                            code += `                await handle_command_${safeCommandName}(message)\n`;
+                        } else {
+                            // Для обычных узлов создаем фиктивный callback и вызываем соответствующий обработчик
+                            code += '                import types as aiogram_types\n';
+                            code += '                fake_callback = aiogram_types.SimpleNamespace(\n';
+                            code += '                    id="multi_select_goto",\n';
+                            code += '                    from_user=message.from_user,\n';
+                            code += '                    chat_instance="",\n';
+                            code += `                    data="${button.target}",\n`;
+                            code += '                    message=message,\n';
+                            code += '                    answer=lambda text="", show_alert=False: None\n';
+                            code += '                )\n';
+                            code += `                await handle_callback_${button.target.replace(/[^a-zA-Z0-9_]/g, '_')}(fake_callback)\n`;
+                        }
+                        code += `                return\n`;
+                    }
+                });
+            }
+        }
+    });
+
+    code += '    \n';
+    code += '    # Если не множественный выбор или кнопка не найдена, передаем дальше по цепочке обработчиков\n';
     code += '    pass\n';
     code += '\n';
 
