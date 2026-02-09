@@ -273,6 +273,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += 'from datetime import datetime\n';
   }
 
+  // Проверяем, есть ли узлы, которые требуют импорт ParseMode
+  const hasNodesRequiringParseMode = (nodes || []).some(node =>
+    node.data?.formatMode &&
+    (node.data.formatMode.toLowerCase() === 'html' ||
+     node.data.formatMode.toLowerCase() === 'markdown')
+  );
+
+  if (hasNodesRequiringParseMode) {
+    code += 'from aiogram.enums import ParseMode\n';
+  }
+
   // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
   // Проверяем, есть ли узлы, которые используют TelegramBadRequest в обработчиках исключений
   const hasNodesRequiringTelegramBadRequest = (nodes || []).some(node =>
