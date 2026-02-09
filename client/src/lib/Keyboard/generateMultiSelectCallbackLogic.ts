@@ -261,7 +261,7 @@ export function generateMultiSelectCallbackLogic(
           const shortTarget = button.target || button.id || 'btn';
           const callbackData = `ms_${shortNodeId}_${shortTarget}`;
           if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> callback_data: ${callbackData}`);
-          code += `            builder.add(InlineKeyboardButton(text=f"{'✅ ' if button.text in selected_list else ''}{button.text}", callback_data="${callbackData}"))
+          code += `            builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${button.text}' in selected_list else ''}${button.text}", callback_data="${callbackData}"))
 `;
         });
 
