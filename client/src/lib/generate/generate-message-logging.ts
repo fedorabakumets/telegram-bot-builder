@@ -117,7 +117,7 @@ export function generateMessageLoggingCode(userDatabaseEnabled: boolean, project
   code += '        \n';
   code += '        if use_ssl:\n';
   code += '            # Для внешних соединений используем SSL-контекст\n';
-  code += '            connector = aiohttp.TCPConnector(ssl=True)\n';
+  code += '            connector = TCPConnector(ssl=True)\n';
   code += '        else:\n';
   code += '            # Для локальных соединений не используем SSL-контекст\n';
   code += '            # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения\n';
@@ -125,7 +125,7 @@ export function generateMessageLoggingCode(userDatabaseEnabled: boolean, project
   code += '            ssl_context = ssl.create_default_context()\n';
   code += '            ssl_context.check_hostname = False\n';
   code += '            ssl_context.verify_mode = ssl.CERT_NONE\n';
-  code += '            connector = aiohttp.TCPConnector(ssl=ssl_context)\n';
+  code += '            connector = TCPConnector(ssl=ssl_context)\n';
   code += '        \n';
   code += '        async with aiohttp.ClientSession(connector=connector) as session:\n';
   code += '            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as response:\n';
@@ -207,7 +207,7 @@ export function generateMessageLoggingCode(userDatabaseEnabled: boolean, project
   code += '                \n';
   code += '                if use_ssl_media:\n';
   code += '                    # Для внешних соединений используем SSL-контекст\n';
-  code += '                    connector = aiohttp.TCPConnector(ssl=True)\n';
+  code += '                    connector = TCPConnector(ssl=True)\n';
   code += '                else:\n';
   code += '                    # Для локальных соединений не используем SSL-контекст\n';
   code += '                    # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения\n';
@@ -215,7 +215,7 @@ export function generateMessageLoggingCode(userDatabaseEnabled: boolean, project
   code += '                    ssl_context = ssl.create_default_context()\n';
   code += '                    ssl_context.check_hostname = False\n';
   code += '                    ssl_context.verify_mode = ssl.CERT_NONE\n';
-  code += '                    connector = aiohttp.TCPConnector(ssl=ssl_context)\n';
+  code += '                    connector = TCPConnector(ssl=ssl_context)\n';
   code += '                \n';
   code += '                async with aiohttp.ClientSession(connector=connector) as session:\n';
   code += '                    async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:\n';
@@ -460,7 +460,7 @@ export function generateMessageLoggingCode(userDatabaseEnabled: boolean, project
   code += '            \n';
   code += '            if use_ssl_media:\n';
   code += '                # Для внешних соединений используем SSL-контекст\n';
-  code += '                connector = aiohttp.TCPConnector(ssl=True)\n';
+  code += '                connector = TCPConnector(ssl=True)\n';
   code += '            else:\n';
   code += '                # Для локальных соединений не используем SSL-контекст\n';
   code += '                # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения\n';
@@ -468,7 +468,7 @@ export function generateMessageLoggingCode(userDatabaseEnabled: boolean, project
   code += '                ssl_context = ssl.create_default_context()\n';
   code += '                ssl_context.check_hostname = False\n';
   code += '                ssl_context.verify_mode = ssl.CERT_NONE\n';
-  code += '                connector = aiohttp.TCPConnector(ssl=ssl_context)\n';
+  code += '                connector = TCPConnector(ssl=ssl_context)\n';
   code += '            \n';
   code += '            async with aiohttp.ClientSession(connector=connector) as session:\n';
   code += '                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:\n';

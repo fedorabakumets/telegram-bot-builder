@@ -67,7 +67,7 @@ async def handle_photo_input(message: types.Message):
             
             if use_ssl_media3:
                 # Для внешних соединений используем SSL-контекст
-                connector = aiohttp.TCPConnector(ssl=True)
+                connector = TCPConnector(ssl=True)
             else:
                 # Для локальных соединений не используем SSL-контекст
                 # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения
@@ -75,7 +75,7 @@ async def handle_photo_input(message: types.Message):
                 ssl_context = ssl.create_default_context()
                 ssl_context.check_hostname = False
                 ssl_context.verify_mode = ssl.CERT_NONE
-                connector = aiohttp.TCPConnector(ssl=ssl_context)
+                connector = TCPConnector(ssl=ssl_context)
             
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:

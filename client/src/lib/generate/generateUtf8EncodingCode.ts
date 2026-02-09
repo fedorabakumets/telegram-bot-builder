@@ -28,14 +28,11 @@ export function generateUtf8EncodingCode(): string {
   code += 'import logging\n';
   code += 'import signal\n';
   code += 'from aiogram import Bot, Dispatcher, types, F\n';
-  code += 'from aiogram.filters import CommandStart, Command\n';
-  code += 'from aiogram.exceptions import TelegramBadRequest\n';
   code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from aiogram.enums import ParseMode\n';
   code += 'from typing import Optional\n';
   code += 'import asyncpg\n';
-  code += 'from datetime import datetime, timezone, timedelta\n';
   code += 'import json\n';
   code += 'import aiohttp\n';
   code += 'from aiohttp import TCPConnector\n\n';
