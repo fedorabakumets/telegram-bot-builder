@@ -277,8 +277,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               // Добавляем кнопки выбора с отметками о состоянии
               selectionButtons.forEach((button: { text: any; }, index: number) => {
                 code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
-                code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
-                code += `    builder.add(KeyboardButton(text=f"{selected_mark}${button.text}"))\n`;
+                code += `    builder.add(KeyboardButton(text=f"{'✅ ' if button.text in user_data[user_id]['multi_select_' + nodeId] else ''}{button.text}"))\n`;
               });
 
               // Добавляем кнопку "Готово"
@@ -326,8 +325,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                 if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
                 code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
                 code += `    logging.info(f"🔘 Создаем кнопку: ${button.text} -> ${callbackData}")\n`;
-                code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
-                code += `    builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
+                code += `    builder.add(InlineKeyboardButton(text=f"{'✅ ' if button.text in user_data[user_id]['multi_select_' + nodeId] else ''}{button.text}", callback_data="${callbackData}"))\n`;
               });
 
               // Добавляем кнопку "Готово" для множественного выбора

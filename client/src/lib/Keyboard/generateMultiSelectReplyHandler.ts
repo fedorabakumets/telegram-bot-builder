@@ -123,8 +123,7 @@ export function generateMultiSelectReplyHandler(
                 // Добавляем кнопки выбора с галочками
                 code += `                # Добавляем кнопки выбора с галочками (используем selected_list)\n`;
                 node.data.buttons?.filter((btn: { action: string; }) => btn.action === 'selection').forEach((selBtn: { text: string; }) => {
-                    code += `                selected_mark = "✅ " if "${selBtn.text}" in selected_list else ""  # используем selected_list\n`;
-                    code += `                builder.add(KeyboardButton(text=f"{selected_mark}${selBtn.text}"))\n`;
+                    code += `                builder.add(KeyboardButton(text=f"{'✅ ' if selBtn.text in selected_list else ''}{selBtn.text}"))\n`;
                 });
                 // Добавляем кнопку "Готово" если есть кнопки выбора
                 if (node.data.buttons?.some((btn: { action: string; }) => btn.action === 'selection')) {

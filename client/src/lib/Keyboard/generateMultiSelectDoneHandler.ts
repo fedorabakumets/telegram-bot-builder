@@ -121,9 +121,7 @@ export function generateMultiSelectDoneHandler(
                                     if (button.action === 'selection') {
                                         const cleanText = button.text.replace(/"/g, '\\"');
                                         code += `        # Кнопка выбора: ${cleanText}\n`;
-                                        code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
-                                        code += `        button_text = f"{selected_mark}${cleanText}"\n`;
-                                        code += `        builder.add(KeyboardButton(text=button_text))\n`;
+                                        code += `        builder.add(KeyboardButton(text=f"{'✅ ' if cleanText in user_data[user_id]['multi_select_' + targetNode.id] else ''}{cleanText}"))\n`;
                                     }
                                 });
                                 const continueText = targetNode.data.continueButtonText || 'Готово';
@@ -140,9 +138,7 @@ export function generateMultiSelectDoneHandler(
                                         const cleanText = button.text.replace(/"/g, '\\"');
                                         const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${(button.target || button.id || `btn${index}`).slice(-8)}`.replace(/[^a-zA-Z0-9_]/g, '_');
                                         code += `        # Кнопка с галочкой: ${cleanText}\n`;
-                                        code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
-                                        code += `        button_text = f"{selected_mark}${cleanText}"\n`;
-                                        code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
+                                        code += `        builder.add(InlineKeyboardButton(text=f"{'✅ ' if cleanText in user_data[user_id]['multi_select_' + targetNode.id] else ''}{cleanText}", callback_data="${callbackData}"))\n`;
                                     }
                                 });
                                 code += `        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${targetNode.id}"))\n`;

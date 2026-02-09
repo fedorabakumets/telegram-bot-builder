@@ -97,12 +97,8 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ ГАЛОЧКИ для кнопки selection: ${button.text} (узел: ${nodeId})`);
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: 📋 ДАННЫЕ КНОПКИ: text="${button.text}", target="${button.target}", id="${button.id}"`);
         code += `${indentLevel}# Кнопка выбора с галочками: ${button.text}\n`;
-        code += `${indentLevel}logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '${button.text}' в списке: {user_data[user_id]['multi_select_${nodeId}']}")\n`;
-        code += `${indentLevel}selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
-        code += `${indentLevel}logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '${button.text}': selected_mark='{selected_mark}'")\n`;
-        code += `${indentLevel}final_text = f"{selected_mark}${button.text}"\n`;
-        code += `${indentLevel}logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='${callbackData}'")\n`;
-        code += `${indentLevel}builder.add(InlineKeyboardButton(text=final_text, callback_data="${callbackData}"))\n`;
+        code += `${indentLevel}logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '{button.text}' в списке: {{user_data[user_id]['multi_select_${nodeId}']}}")\n`;
+        code += `${indentLevel}builder.add(InlineKeyboardButton(text=f"{'✅ ' if button.text in user_data[user_id]['multi_select_' + nodeId] else ''}{button.text}", callback_data="{callbackData}"))\n`;
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ СГЕНЕРИРОВАН КОД ГАЛОЧЕК для ${button.text} с детальным логированием`);
       } else {
         if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем галочки для ${button.text} (isMultipleSelection=${isMultipleSelection})`);
