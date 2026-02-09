@@ -28,7 +28,7 @@ export function generateUtf8EncodingCode(): string {
   code += 'import logging\n';
   code += 'import signal\n';
   code += 'from aiogram import Bot, Dispatcher, types, F\n';
-  code += 'from aiogram.types import KeyboardButton, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, FSInputFile\n';
+  code += 'from aiogram.types import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand, ReplyKeyboardRemove, FSInputFile\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from typing import Optional\n';
   code += 'import asyncpg\n';

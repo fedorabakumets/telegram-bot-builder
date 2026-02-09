@@ -26,7 +26,24 @@ interface ResponseOption {
  * - handle_callback_*: обработчики для других callback кнопок
  * - start_handler и другие обработчики команд
  */
+// Функция для проверки наличия кнопок с URL-ссылками
+function hasUrlButtons(nodes: Node[]): boolean {
+  for (const node of nodes) {
+    if (node.data?.buttons && Array.isArray(node.data.buttons)) {
+      for (const button of node.data.buttons) {
+        if (button.action === 'url' && button.url) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 export function generateButtonResponseHandlers(code: string, userInputNodes: Node[], nodes: Node[]): string {
+  // Проверяем, есть ли кнопки с URL-ссылками в проекте
+  const hasUrlButtonsInProject = hasUrlButtons(nodes);
+
   userInputNodes.forEach(node => {
     const responseOptions = node.data.responseOptions || [];
 
@@ -182,14 +199,19 @@ export function generateButtonResponseHandlers(code: string, userInputNodes: Nod
       code += '        option_target = current_option.get("target", "")\n';
       code += '        option_url = current_option.get("url", "")\n';
       code += '        \n';
-      code += '        if option_action == "url" and option_url:\n';
-      code += '            # Открываем ссылку\n';
-      code += '            from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup\n';
-      code += '            keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
-      code += '                [InlineKeyboardButton(text="🔗 Открыть ссылку", url=option_url)]\n';
-      code += '            ])\n';
-      code += '            await callback_query.message.edit_text(f"{success_message}\\n\\n✅ Ваш выбор: {selected_text}", reply_markup=keyboard)\n';
-      code += '        elif option_action == "command" and option_target:\n';
+
+      // Добавляем обработку URL-ссылок только если в проекте есть такие кнопки
+      if (hasUrlButtonsInProject) {
+        code += '        if option_action == "url" and option_url:\n';
+        code += '            # Открываем ссылку\n';
+        code += '            keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
+        code += '                [InlineKeyboardButton(text="🔗 Открыть ссылку", url=option_url)]\n';
+        code += '            ])\n';
+        code += '            await callback_query.message.edit_text(f"{success_message}\\n\\n✅ Ваш выбор: {selected_text}", reply_markup=keyboard)\n';
+        code += '        elif option_action == "command" and option_target:\n';
+      } else {
+        code += '        if option_action == "command" and option_target:\n';
+      }
       code += '            # Выполняем команду\n';
       code += '            command = option_target\n';
       code += '            if not command.startswith("/"):\n';

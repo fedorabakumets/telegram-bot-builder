@@ -6,7 +6,24 @@ import { hasPhotoInput, generatePhotoHandlerCode, hasVideoInput, generateVideoHa
 import { generateUniversalVariableReplacement, generateCheckUserVariableFunction } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
 
+// Функция для проверки наличия кнопок с URL-ссылками
+function hasUrlButtons(nodes: any[]): boolean {
+  for (const node of nodes) {
+    if (node.data?.buttons && Array.isArray(node.data.buttons)) {
+      for (const button of node.data.buttons) {
+        if (button.action === 'url' && button.url) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes: any[], code: string, allNodeIds: any[], connections: any[], generateAdHocInputCollectionHandler: () => void, generateContinuationLogicForButtonBasedInput: () => string, generateUserInputValidationAndContinuationLogic: () => void, generateStateTransitionAndRenderLogic: () => void) {
+  // Проверяем, есть ли кнопки с URL-ссылками в проекте
+  const hasUrlButtonsInProject = hasUrlButtons(nodes);
+
   if (hasInputCollection(nodes || [])) {
     code += '\n\n# Универсальный обработчик пользовательского ввода\n';
     code += '@dp.message(F.text)\n';
@@ -634,14 +651,18 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Обработка различных типов действий
      * Поддерживает переходы по URL, выполнение команд и навигацию к узлам
      */
-    code += '            if option_action == "url" and option_url:\n';
-    code += '                # Открытие ссылки\n';
-    code += '                url = option_url\n';
-    code += '                keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
-    code += '                    [InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]\n';
-    code += '                ])\n';
-    code += '                await message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)\n';
-    code += '            elif option_action == "command" and option_target:\n';
+    if (hasUrlButtonsInProject) {
+      code += '            if option_action == "url" and option_url:\n';
+      code += '                # Открытие ссылки\n';
+      code += '                url = option_url\n';
+      code += '                keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
+      code += '                    [InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]\n';
+      code += '                ])\n';
+      code += '                await message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)\n';
+      code += '            elif option_action == "command" and option_target:\n';
+    } else {
+      code += '            if option_action == "command" and option_target:\n';
+    }
 
     /**
      * Выполнение команды
@@ -833,7 +854,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '                logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается медиа ({input_type})")\n';
     code += '                return\n';
     code += '        else:\n';
-    code += '            # Старый формат - waiting_config это строка с node_id\n';
+    code += '            # Старый формат - waiting_config э��о строка с node_id\n';
     code += '            waiting_node_id = waiting_config\n';
     code += '            input_type = user_data[user_id].get("input_type", "text")\n';
     code += '            variable_name = user_data[user_id].get("input_variable", "user_response")\n';
@@ -1671,7 +1692,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     }
     if (hasVideoInput(nodes || [])) {
       let videoCode = generateVideoHandlerCode();
-      videoCode = videoCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
+      videoCode = videoCode.replace('            # (з��есь будет сгенерированный код навигации)', navigationCode);
       code += videoCode;
     }
     if (hasAudioInput(nodes || [])) {
