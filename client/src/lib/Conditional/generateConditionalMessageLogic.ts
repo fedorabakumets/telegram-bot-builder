@@ -3,6 +3,7 @@ import { stripHtmlTags } from '../format/stripHtmlTags';
 import { formatTextForPython } from '../format/formatTextForPython';
 import { generateConditionalKeyboard } from "./generateConditionalKeyboard";
 import { toPythonBoolean } from "../format/toPythonBoolean";
+import { generateCheckUserVariableFunction } from "../utils/generateUniversalVariableReplacement";
 
 /**
  * Генерирует Python код логики условных сообщений для Telegram бота.
@@ -114,8 +115,8 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
   code += `${indentLevel}    return text_content\n`;
   code += `${indentLevel}\n`;
 
-  // Функция check_user_variable уже определена глобально
-  code += `${indentLevel}# Функция для проверки переменных пользователя (уже определена ранее)\n`;
+  // Добавляем определение функции check_user_variable_inline
+  code += generateCheckUserVariableFunction(indentLevel);
 
   // Создаем единую if/elif/else структуру для всех условий
   for (let i = 0; i < sortedConditions.length; i++) {

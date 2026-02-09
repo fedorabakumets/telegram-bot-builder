@@ -43,7 +43,17 @@ export function generateUniversalVariableReplacement(indentLevel: string): strin
   code += `${indentLevel}    all_user_vars.update(local_user_vars)\n`;
   code += `${indentLevel}\n`;
 
-  // Добавляем определение функции check_user_variable_inline
+  return code;
+}
+
+/**
+ * Генерирует код определения функции check_user_variable_inline.
+ * @param indentLevel - уровень отступа для генерируемого кода.
+ * @returns строка с Python кодом функции.
+ */
+export function generateCheckUserVariableFunction(indentLevel: string): string {
+  let code = '';
+
   code += `${indentLevel}# Функция для проверки переменных пользователя\n`;
   code += `${indentLevel}def check_user_variable_inline(var_name, user_data_dict):\n`;
   code += `${indentLevel}    if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;

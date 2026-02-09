@@ -3,7 +3,7 @@ import { formatTextForPython, stripHtmlTags, toPythonBoolean, generateButtonText
 import { generateInlineKeyboardCode } from './Keyboard';
 import { generateReplyHideAfterClickHandler } from './Keyboard/generateReplyHideAfterClickHandler';
 import { hasPhotoInput, generatePhotoHandlerCode, hasVideoInput, generateVideoHandlerCode, hasAudioInput, generateAudioHandlerCode, hasDocumentInput, generateDocumentHandlerCode } from './MediaHandler';
-import { generateUniversalVariableReplacement } from './utils';
+import { generateUniversalVariableReplacement, generateCheckUserVariableFunction } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
 
 export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes: any[], code: string, allNodeIds: any[], connections: any[], generateAdHocInputCollectionHandler: () => void, generateContinuationLogicForButtonBasedInput: () => string, generateUserInputValidationAndContinuationLogic: () => void, generateStateTransitionAndRenderLogic: () => void) {
@@ -210,7 +210,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
               // Генерируем логику проверки условий встроенно
               const conditionalMessages = targetNode.data.conditionalMessages.sort((a: { priority: any; }, b: { priority: any; }) => (b.priority || 0) - (a.priority || 0));
 
-              code += `                        # Функция для проверки переменных пользователя (уже определена ранее)\n`;
+              code += generateCheckUserVariableFunction('                        ');
 
               // Генерируем условия
               code += `                        conditional_met = False\n`;

@@ -3,7 +3,7 @@ import { generateConditionalMessageLogic } from './Conditional';
 import { stripHtmlTags, formatTextForPython, generateButtonText, toPythonBoolean, generateUniqueShortId, calculateOptimalColumns, generateAttachedMediaSendCode, generateWaitingStateCode } from './format';
 import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateUniversalVariableReplacement } from './utils';
+import { generateUniversalVariableReplacement, generateCheckUserVariableFunction } from './utils';
 import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
 
 export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes: any[], allReferencedNodeIds: Set<string>, allConditionalButtons: Set<string>, code: string, processNodeButtonsAndGenerateHandlers: (processedCallbacks: Set<string>) => void, nodes: any[], allNodeIds: any[], connections: any[], userDatabaseEnabled: boolean, mediaVariablesMap: Map<string, { type: string; variable: string; }>) {
@@ -1206,8 +1206,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                     code += '            user_data_dict = await get_user_from_db(user_id) or {}\n';
                     code += '            user_data_dict.update(user_data.get(user_id, {}))\n\n';
 
-                    // Функция check_user_variable уже определена глобально
-                    code += '            # яункция для проверки переменных пользователя (уже определена ранее)\n';
+                    // Добавляем определение функции check_user_variable_inline
+                    code += generateCheckUserVariableFunction('            ');
 
                     // Генерируем условную логику для этого узла
                     const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a: { priority: any; }, b: { priority: any; }) => (b.priority || 0) - (a.priority || 0));
