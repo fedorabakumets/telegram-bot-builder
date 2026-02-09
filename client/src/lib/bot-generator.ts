@@ -271,6 +271,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += 'from aiogram.types import InlineKeyboardMarkup\n';
   }
 
+  // Проверяем, есть ли узлы с URL-изображениями, которые требуют URLInputFile
+  const hasUrlImageNodes = (nodes || []).some(node =>
+    node.data?.imageUrl && node.data.imageUrl.startsWith('http')
+  );
+
+  if (hasUrlImageNodes) {
+    code += 'from aiogram.types import URLInputFile\n';
+  }
+
   // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
   if (hasMediaNodesResult || hasStickerNodes || hasVoiceNodes || hasLocationNodes || hasContactNodes) {
     code += 'from aiogram.exceptions import TelegramBadRequest\n';
