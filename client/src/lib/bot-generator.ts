@@ -241,9 +241,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   }
 
-  // Проверяем, есть ли узлы с настройками форматирования текста
+  // Проверяем, есть ли узлы с настройками форматирования текста, которые приведут к использованию ParseMode
   const hasFormatModeNodes = (nodes || []).some(node =>
-    node.data?.formatMode || node.data?.markdown === true
+    (node.data?.formatMode && (node.data.formatMode.toLowerCase() === 'html' || node.data.formatMode.toLowerCase() === 'markdown'))
+    || node.data?.markdown === true
   );
 
   if (hasFormatModeNodes) {
