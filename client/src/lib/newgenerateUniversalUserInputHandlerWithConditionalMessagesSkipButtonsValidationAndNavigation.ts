@@ -34,7 +34,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '    # Инициализируем базовые переменные пользователя\n';
     code += '    user_name = init_user_variables(user_id, message.from_user)\n';
     code += '    \n';
-    code += generateUniversalVariableReplacement('    ');
+    code += generateUniversalVariableReplacement('    ', true);
     code += '    \n';
     code += '    # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick\n';
     code += `    ${generateReplyHideAfterClickHandler(nodes)}\n`;

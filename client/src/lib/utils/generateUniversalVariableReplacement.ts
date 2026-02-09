@@ -4,20 +4,30 @@
  * 'message' или 'callback_query' в локальной области видимости,
  * прежде чем пытаться получить доступ к ним.
  * @param indentLevel - уровень отступа для генерируемого кода.
+ * @param useDirectAccess - использовать прямой доступ к переменной message (для контекстов, где message гарантированно доступен)
  * @returns строка с Python кодом.
  */
-export function generateUniversalVariableReplacement(indentLevel: string): string {
+export function generateUniversalVariableReplacement(indentLevel: string, useDirectAccess: boolean = false): string {
   let code = '';
 
   code += `${indentLevel}# Инициализируем базовые переменные пользователя если их нет\n`;
   code += `${indentLevel}# Получаем объект пользователя из сообщения или callback\n`;
   code += `${indentLevel}user_obj = None\n`;
-  code += `${indentLevel}# Безопасно проверяем наличие message (для message handlers)\n`;
-  code += `${indentLevel}if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):\n`;
-  code += `${indentLevel}    user_obj = locals().get('message').from_user\n`;
-  code += `${indentLevel}# Безопасно проверяем наличие callback_query (для callback handlers)\n`;
-  code += `${indentLevel}elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):\n`;
-  code += `${indentLevel}    user_obj = locals().get('callback_query').from_user\n`;
+
+  if (useDirectAccess) {
+    // В контексте, где message гарантированно доступен как параметр функции
+    code += `${indentLevel}# Используем прямой доступ к message (гарантированно доступен как параметр функции)\n`;
+    code += `${indentLevel}user_obj = message.from_user\n`;
+  } else {
+    // Универсальный код для безопасной проверки наличия message или callback_query
+    code += `${indentLevel}# Безопасно проверяем наличие message (для message handlers)\n`;
+    code += `${indentLevel}if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):\n`;
+    code += `${indentLevel}    user_obj = locals().get('message').from_user\n`;
+    code += `${indentLevel}# Безопасно проверяем наличие callback_query (для callback handlers)\n`;
+    code += `${indentLevel}elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):\n`;
+    code += `${indentLevel}    user_obj = locals().get('callback_query').from_user\n`;
+  }
+
   code += `\n`;
   code += `${indentLevel}if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):\n`;
   code += `${indentLevel}    # Проверяем, что user_obj определен и инициализируем переменные пользователя\n`;
