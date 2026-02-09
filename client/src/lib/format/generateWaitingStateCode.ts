@@ -34,14 +34,25 @@ export function generateWaitingStateCode(node: any, indentLevel: string = '    '
   } else {
     // Для текстовых узлов проверяем наличие кнопок И текстового ввода
     const hasReplyButtons = node.data.keyboardType === 'reply' && node.data.buttons && node.data.buttons.length > 0;
+    const hasInlineButtons = node.data.keyboardType === 'inline' && node.data.buttons && node.data.buttons.length > 0;
+    const hasMultipleSelection = node.data.allowMultipleSelection === true;
     const hasTextInput = node.data.enableTextInput === true || node.data.collectUserInput === true;
 
-    if (hasReplyButtons) {
+    // Для узлов с любыми кнопками (включая множественный выбор) добавляем режим кнопок
+    if (hasReplyButtons || hasInlineButtons || hasMultipleSelection) {
       modes.push('button');
     }
-    if (hasTextInput || !hasReplyButtons) {
-      // Если нет кнопок или включен текстовый ввод - добавляем text
+
+    // Добавляем текстовый режим только если:
+    // 1. Включен текстовый ввод (enableTextInput или collectUserInput)
+    // 2. И это НЕ узел с множественным выбором
+    if (hasTextInput && !hasMultipleSelection) {
       modes.push('text');
+    }
+
+    // Если нет ни кнопок, ни текстового ввода, но есть множественный выбор - добавляем button
+    if (hasMultipleSelection && modes.length === 0) {
+      modes.push('button');
     }
   }
 
