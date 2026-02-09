@@ -191,6 +191,10 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
         }
 
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также заменяем все остальные переменные из user_vars
+        code += `${indentLevel}    # Заменяем все остальные переменные в тексте\n`;
+        code += `${indentLevel}    text = replace_variables_in_text(text, user_vars)\n`;
+
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
         code += `${indentLevel}    # ВАЖНО: Логируем состояние условной клавиатуры для отладки\n`;
@@ -350,6 +354,10 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
         }
 
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также заменяем все остальные переменные из user_vars
+        code += `${indentLevel}    # Заменяем все остальные переменные в тексте\n`;
+        code += `${indentLevel}    text = replace_variables_in_text(text, user_vars)\n`;
+
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
 
@@ -430,6 +438,10 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
           code += `${indentLevel}    if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
           code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
         }
+
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также заменяем все остальные переменные из user_vars
+        code += `${indentLevel}    # Заменяем все остальные переменные в тексте\n`;
+        code += `${indentLevel}    text = replace_variables_in_text(text, user_vars)\n`;
 
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
