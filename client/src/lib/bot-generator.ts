@@ -251,26 +251,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += 'from aiogram.enums import ParseMode\n';
   }
 
-  // Проверяем, есть ли узлы с reply клавиатурами, которые требуют ReplyKeyboardMarkup
-  const hasReplyKeyboardNodes = (nodes || []).some(node =>
-    node.data?.keyboardType === 'reply' ||
-    (node.data?.buttons && node.data.buttons.some((btn: Button) => btn.action === 'selection'))
-  );
-
-  if (hasReplyKeyboardNodes) {
-    code += 'from aiogram.types import ReplyKeyboardMarkup\n';
-  }
-
-  // Проверяем, есть ли узлы с inline клавиатурами, которые требуют InlineKeyboardMarkup
-  const hasInlineKeyboardNodes = (nodes || []).some(node =>
-    node.data?.keyboardType === 'inline' ||
-    (node.data?.buttons && node.data.buttons.some((btn: Button) => btn.action === 'url' || btn.action === 'goto'))
-  );
-
-  if (hasInlineKeyboardNodes) {
-    code += 'from aiogram.types import InlineKeyboardMarkup\n';
-  }
-
   // Проверяем, есть ли узлы с URL-изображениями, которые требуют URLInputFile
   const hasUrlImageNodes = (nodes || []).some(node =>
     node.data?.imageUrl && node.data.imageUrl.startsWith('http')
@@ -1014,7 +994,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    */
   function collectAllCommandCallbacksFromNodes(): Set<string> {
     const commandButtons = new Set<string>();
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАяМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАяМ СБ��Р КНОПОК КОМАНД из', nodes.length, 'узлов');
 
     nodes.forEach(node => {
       if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
