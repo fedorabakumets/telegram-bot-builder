@@ -125,7 +125,7 @@ export function generateMultiSelectReplyHandler(
                 code += `                # Добавляем кнопки выбора с галочками (используем selected_list)\n`;
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 node.data.buttons?.filter((btn: { action: string; }) => btn.action === 'selection').forEach((selBtn: { text: string; }) => {
-                    code += `                builder.add(KeyboardButton(text=f"{'✅ ' if selBtn.text in selected_list else ''}${selBtn.text}"))\n`;
+                    code += `                builder.add(KeyboardButton(text=f"{'✅ ' if '${selBtn.text}' in selected_list else ''}${selBtn.text}"))\n`;
                 });
                 // Добавляем кнопку "Готово" если есть кнопки выбора
                 if (node.data.buttons?.some((btn: { action: string; }) => btn.action === 'selection')) {
