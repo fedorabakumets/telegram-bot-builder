@@ -1,48 +1,49 @@
 ﻿// Внешние зависимости
+import { BotData, BotGroup, buttonSchema, Node } from '@shared/schema';
 import { z } from 'zod';
-import { BotData, Node, BotGroup, buttonSchema } from '@shared/schema';
 
 // Внутренние модули - использование экспорта бочек
+import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateBotFatherCommands } from './commands';
-import { generateSynonymHandlers } from './Synonyms';
+import { collectConditionalMessageButtons } from './Conditional/collectConditionalMessageButtons';
 import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './Conditional/conditional-button-handler';
 import {
   extractNodesAndConnections,
-  formatTextForPython} from './format';
-import { generateInlineKeyboardCode } from './Keyboard';
-import { hasMediaNodes } from './utils/hasMediaNodes';
-import { hasInlineButtons } from './utils/hasInlineButtons';
-import { hasAutoTransitions } from './utils/hasAutoTransitions';
-import { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml } from './scaffolding';
-import { processInlineButtonNodes } from './Keyboard/processInlineButtonNodes';
-import { processConnectionTargets } from './utils/processConnectionTargets';
-import { collectInputTargetNodes } from './utils/collectInputTargetNodes';
-import { filterInlineNodes } from './Keyboard/filterInlineNodes';
-import { addInputTargetNodes } from './utils/addInputTargetNodes';
-import { generateDatabaseCode, generateNodeNavigation, generateUtf8EncodingCode, generateSafeEditOrSendCode, generateBasicBotSetupCode, generateGroupsConfiguration, generateUtilityFunctions } from './generate';
-import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
-import { generateMessageLoggingCode } from './generate/generate-message-logging';
-import { extractNodeData } from './utils/extractNodeData';
-import { generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
-import { collectConditionalMessageButtons } from './Conditional/collectConditionalMessageButtons';
-import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
-import { generateNodeHandlers } from './generate/generate-node-handlers';
-import { generateBotCommandsSetup } from './bot-commands-setup';
-import { generateButtonResponseHandlers } from './Keyboard/generateButtonResponseHandlers';
-import { generateReplyButtonHandlers } from './Keyboard/generate-reply-button-handlers';
-import { generateMultiSelectReplyHandler } from './Keyboard/generateMultiSelectReplyHandler';
-import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';
-import { generateMultiSelectDoneHandler } from './Keyboard/generateMultiSelectDoneHandler';
-import { generateMultiSelectCallbackLogic } from './Keyboard/generateMultiSelectCallbackLogic';
+  formatTextForPython
+} from './format';
+import { generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
-import { generateTransitionLogicForMultiSelectCompletion } from './generate-transition-logic-multi-select';
-import { identifyNodesRequiringMultiSelectLogic } from './identifyNodesRequiringMultiSelectLogic';
+import { generateMessageLoggingCode } from './generate/generate-message-logging';
+import { generateNodeHandlers } from './generate/generate-node-handlers';
+import { generateInlineKeyboardCode } from './Keyboard';
+import { filterInlineNodes } from './Keyboard/filterInlineNodes';
+import { generateReplyButtonHandlers } from './Keyboard/generate-reply-button-handlers';
+import { generateTransitionLogicForMultiSelectCompletion } from './Keyboard/generate-transition-logic-multi-select';
+import { generateButtonResponseHandlers } from './Keyboard/generateButtonResponseHandlers';
+import { generateMultiSelectCallbackLogic } from './Keyboard/generateMultiSelectCallbackLogic';
+import { generateMultiSelectDoneHandler } from './Keyboard/generateMultiSelectDoneHandler';
+import { generateMultiSelectReplyHandler } from './Keyboard/generateMultiSelectReplyHandler';
+import { identifyNodesRequiringMultiSelectLogic } from './Keyboard/identifyNodesRequiringMultiSelectLogic';
+import { processInlineButtonNodes } from './Keyboard/processInlineButtonNodes';
+import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';
 import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
-import { hasUploadImageUrls } from './utils/hasUploadImageUrls';
-import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
 import { newgenerateStateTransitionAndRenderLogic } from './newgenerateStateTransitionAndRenderLogic';
-import { createProcessNodeButtonsFunction } from './process-node-buttons';
+import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation';
+import { createProcessNodeButtonsFunction } from './newprocessNodeButtonsAndGenerateHandlers';
+import { generateConfigYaml, generateDockerfile, generateReadme, generateRequirementsTxt } from './scaffolding';
+import { generateSynonymHandlers } from './Synonyms';
+import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
+import { addInputTargetNodes } from './utils/addInputTargetNodes';
+import { collectInputTargetNodes } from './utils/collectInputTargetNodes';
+import { extractNodeData } from './utils/extractNodeData';
+import { generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
+import { hasAutoTransitions } from './utils/hasAutoTransitions';
+import { hasInlineButtons } from './utils/hasInlineButtons';
+import { hasMediaNodes } from './utils/hasMediaNodes';
+import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
+import { hasUploadImageUrls } from './utils/hasUploadImageUrls';
+import { processConnectionTargets } from './utils/processConnectionTargets';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -277,7 +278,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   const hasNodesRequiringParseMode = (nodes || []).some(node =>
     node.data?.formatMode &&
     (node.data.formatMode.toLowerCase() === 'html' ||
-     node.data.formatMode.toLowerCase() === 'markdown')
+      node.data.formatMode.toLowerCase() === 'markdown')
   );
 
   if (hasNodesRequiringParseMode) {
@@ -339,9 +340,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем функции для работы с базой данных
   code += generateDatabaseCode(userDatabaseEnabled, nodes || []);
 
- 
 
- 
+
+
 
   // Добавляем утилитарные функции
   code += generateUtilityFunctions(userDatabaseEnabled);
@@ -1551,19 +1552,19 @@ export interface CodeWithMap {
 }
 
 // Повторный экспорт функций каркаса
-export { generateRequirementsTxt, generateDockerfile, generateReadme, generateConfigYaml };
+export { generateConfigYaml, generateDockerfile, generateReadme, generateRequirementsTxt };
 // ============================================================================
-  // ТИПЫ ДЛЯ УЗЛОВ БОТА
-  // ============================================================================
+// ТИПЫ ДЛЯ УЗЛОВ БОТА
+// ============================================================================
 
-  export interface BotNode {
-    type: string;
-    data: {
-      buttons?: Button[];
-      [key: string]: any;
-    };
+export interface BotNode {
+  type: string;
+  data: {
+    buttons?: Button[];
     [key: string]: any;
-  }
+  };
+  [key: string]: any;
+}
 
 
 

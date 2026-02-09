@@ -1,9 +1,10 @@
 import { Button } from './bot-generator';
-import { formatTextForPython, stripHtmlTags, toPythonBoolean, generateButtonText, generateWaitingStateCode, calculateOptimalColumns } from './format';
+import { calculateOptimalColumns, formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
 import { generateReplyHideAfterClickHandler } from './Keyboard/generateReplyHideAfterClickHandler';
-import { hasPhotoInput, generatePhotoHandlerCode, hasVideoInput, generateVideoHandlerCode, hasAudioInput, generateAudioHandlerCode, hasDocumentInput, generateDocumentHandlerCode } from './MediaHandler';
-import { generateUniversalVariableReplacement, generateCheckUserVariableFunction } from './utils';
+import { mediafiles } from './MediaHandler/mediafiles';
+import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
+import { generateCheckUserVariableFunction, generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
 
 // Функция для проверки наличия кнопок с URL-ссылками
@@ -54,49 +55,16 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Ищет нажатую кнопку среди кнопок пропуска сбора данных
      * и выполняет переход к указанному узлу без сохранения данных
      */
-    code += '        # ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n';
-    code += '        skip_buttons = config.get("skip_buttons", [])\n';
-    code += '        skip_button_target = None\n';
-    code += '        for skip_btn in skip_buttons:\n';
-    code += '            if skip_btn.get("text") == user_text:\n';
-    code += '                skip_button_target = skip_btn.get("target")\n';
-    code += '                logging.info(f"⏭️ Нажата кнопка с skipDataCollection: {user_text} -> {skip_button_target}")\n';
-    code += '                break\n';
-    code += '        \n';
+    code = skipDataCollection(code);
 
     /**
      * Навигация при нажатии кнопки пропуска
      * Очищает состояние ожидания и переходит к целевому узлу кнопки
      */
-    code += '        # Если нажата кнопка пропуска - переходим к её target без сохранения\n';
-    code += '        if skip_button_target:\n';
-    code += '            # Очищаем состояние ожидания\n';
-    code += '            del user_data[user_id]["waiting_for_conditional_input"]\n';
-    code += '            \n';
-    code += '            # Переходим к целевому узлу кнопки\n';
-    code += '            try:\n';
-    code += '                logging.info(f"🚀 Переходим к узлу кнопки skipDataCollection: {skip_button_target}")\n';
-    code += '                import types as aiogram_types\n';
-    code += '                fake_callback = aiogram_types.SimpleNamespace(\n';
-    code += '                    id="skip_button_nav",\n';
-    code += '                    from_user=message.from_user,\n';
-    code += '                    chat_instance="",\n';
-    code += '                    data=skip_button_target,\n';
-    code += '                    message=message,\n';
-    code += '                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
-    code += '                )\n';
+    code = skip_button_target(code);
 
     // Генерируем навигацию для кнопок skipDataCollection
-    if (nodes.length > 0) {
-      nodes.forEach((targetNode, idx) => {
-        const cond = idx === 0 ? 'if' : 'elif';
-        const safeFnName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `                ${cond} skip_button_target == "${targetNode.id}":\n`;
-        code += `                    await handle_callback_${safeFnName}(fake_callback)\n`;
-      });
-      code += '                else:\n';
-      code += '                    logging.warning(f"Неизвестный целевой узел кнопки skipDataCollection: {skip_button_target}")\n';
-    }
+    code = skipDataCollectionnavigate(nodes, code);
 
     code += '            except Exception as e:\n';
     code += '                logging.error(f"Ошибка при переходе к узлу кнопки skipDataCollection {skip_button_target}: {e}")\n';
@@ -106,67 +74,13 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Сохраняет введенный текст в пользовательские данные и базу данных
      * с поддержкой автоматического именования переменных
      */
-    code += '        \n';
-    code += '        # Сохраняем текстовый ввод для условного сообщения (обычный случай без skipDataCollection)\n';
-    code += '        condition_id = config.get("condition_id", "unknown")\n';
-    code += '        next_node_id = config.get("next_node_id")\n';
-    code += '        \n';
-    code += '        # Сохраняем ответ пользователя\n';
-    code += '        timestamp = get_moscow_time()\n';
-    code += '        # Используем переменную из конфигурации или создаем автоматическую\n';
-    code += '        input_variable = config.get("input_variable", "")\n';
-    code += '        if input_variable:\n';
-    code += '            variable_name = input_variable\n';
-    code += '        else:\n';
-    code += '            variable_name = f"conditional_response_{condition_id}"\n';
-    code += '        \n';
-    code += '        # Сохраняем в пользовательские данные\n';
-    code += '        user_data[user_id][variable_name] = user_text\n';
-    code += '        \n';
-    code += '        # Сохраняем в базу данных\n';
-    code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)\n';
-    code += '        if saved_to_db:\n';
-    code += '            logging.info(f"✅ Условный ответ сохранен в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
-    code += '        else:\n';
-    code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
-    code += '        \n';
-    code += '        # Очищаем состояние ожидания\n';
-    code += '        del user_data[user_id]["waiting_for_conditional_input"]\n';
-    code += '        \n';
-    code += '        logging.info(f"Получен ответ на условное сообщение: {variable_name} = {user_text}")\n';
-    code += '        \n';
+    code = answersave(code);
 
     /**
      * Навигация после сохранения ответа
      * Переходит к следующему узлу если указан, с поддержкой команд
      */
-    code += '        # Переходим к следующему узлу если указан\n';
-    code += '        if next_node_id:\n';
-    code += '            try:\n';
-    code += '                logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-    code += '                \n';
-    code += '                # Проверяем, является ли это командой\n';
-    code += '                if next_node_id == "profile_command":\n';
-    code += '                    logging.info("Переход к команде /profile")\n';
-    code += '                    # Проверяем существование profile_handler перед вызовом\n';
-    code += '                    profile_func = globals().get("profile_handler")\n';
-    code += '                    if profile_func:\n';
-    code += '                        await profile_func(message)\n';
-    code += '                    else:\n';
-    code += '                        logging.warning("profile_handler не найден, пропускаем вызов")\n';
-    code += '                        await message.answer("Команда /profile не найдена")\n';
-    code += '                else:\n';
-    code += '                    # Создаем фиктивный callback для навигации к обычному узлу\n';
-    code += '                    import types as aiogram_types\n';
-    code += '                    fake_callback = aiogram_types.SimpleNamespace(\n';
-    code += '                        id="conditional_nav",\n';
-    code += '                        from_user=message.from_user,\n';
-    code += '                        chat_instance="",\n';
-    code += '                        data=next_node_id,\n';
-    code += '                        message=message,\n';
-    code += '                        answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
-    code += '                    )\n';
-    code += '                    \n';
+    code = navigateaftersave(code);
 
     if (nodes.length > 0) {
       nodes.forEach((targetNode, index) => {
@@ -1685,26 +1599,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     // Добавляем навигацию к целевому узлу
     const navigationCode = generateContinuationLogicForButtonBasedInput();
     // Генерируем обработчики для медиа-файлов
-    if (hasPhotoInput(nodes || [])) {
-      let photoCode = generatePhotoHandlerCode();
-      photoCode = photoCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
-      code += photoCode;
-    }
-    if (hasVideoInput(nodes || [])) {
-      let videoCode = generateVideoHandlerCode();
-      videoCode = videoCode.replace('            # (зzzесь будет сгенерированный код навигации)', navigationCode);
-      code += videoCode;
-    }
-    if (hasAudioInput(nodes || [])) {
-      let audioCode = generateAudioHandlerCode();
-      audioCode = audioCode.replace('            # (здеzzь будет сгенерированный код навигации)', navigationCode);
-      code += audioCode;
-    }
-    if (hasDocumentInput(nodes || [])) {
-      let docCode = generateDocumentHandlerCode();
-      docCode = docCode.replace('            # (здесь будет сгенерированный код навигации)', navigationCode);
-      code += docCode;
-    }
+    code = mediafiles(nodes, navigationCode, code);
 
 
     generateUserInputValidationAndContinuationLogic();
@@ -1714,3 +1609,68 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
   }
   return code;
 }
+function navigateaftersave(code: string) {
+  code += '        # Переходим к следующему узлу если указан\n';
+  code += '        if next_node_id:\n';
+  code += '            try:\n';
+  code += '                logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+  code += '                \n';
+  code += '                # Проверяем, является ли это командой\n';
+  code += '                if next_node_id == "profile_command":\n';
+  code += '                    logging.info("Переход к команде /profile")\n';
+  code += '                    # Проверяем существование profile_handler перед вызовом\n';
+  code += '                    profile_func = globals().get("profile_handler")\n';
+  code += '                    if profile_func:\n';
+  code += '                        await profile_func(message)\n';
+  code += '                    else:\n';
+  code += '                        logging.warning("profile_handler не найден, пропускаем вызов")\n';
+  code += '                        await message.answer("Команда /profile не найдена")\n';
+  code += '                else:\n';
+  code += '                    # Создаем фиктивный callback для навигации к обычному узлу\n';
+  code += '                    import types as aiogram_types\n';
+  code += '                    fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                        id="conditional_nav",\n';
+  code += '                        from_user=message.from_user,\n';
+  code += '                        chat_instance="",\n';
+  code += '                        data=next_node_id,\n';
+  code += '                        message=message,\n';
+  code += '                        answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                    )\n';
+  code += '                    \n';
+  return code;
+}
+
+function answersave(code: string) {
+  code += '        \n';
+  code += '        # Сохраняем текстовый ввод для условного сообщения (обычный случай без skipDataCollection)\n';
+  code += '        condition_id = config.get("condition_id", "unknown")\n';
+  code += '        next_node_id = config.get("next_node_id")\n';
+  code += '        \n';
+  code += '        # Сохраняем ответ пользователя\n';
+  code += '        timestamp = get_moscow_time()\n';
+  code += '        # Используем переменную из конфигурации или создаем автоматическую\n';
+  code += '        input_variable = config.get("input_variable", "")\n';
+  code += '        if input_variable:\n';
+  code += '            variable_name = input_variable\n';
+  code += '        else:\n';
+  code += '            variable_name = f"conditional_response_{condition_id}"\n';
+  code += '        \n';
+  code += '        # Сохраняем в пользовательские данные\n';
+  code += '        user_data[user_id][variable_name] = user_text\n';
+  code += '        \n';
+  code += '        # Сохраняем в базу данных\n';
+  code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)\n';
+  code += '        if saved_to_db:\n';
+  code += '            logging.info(f"✅ Условный ответ сохранен в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+  code += '        else:\n';
+  code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '        \n';
+  code += '        # Очищаем состояние ожидания\n';
+  code += '        del user_data[user_id]["waiting_for_conditional_input"]\n';
+  code += '        \n';
+  code += '        logging.info(f"Получен ответ на условное сообщение: {variable_name} = {user_text}")\n';
+  code += '        \n';
+  return code;
+}
+
+
