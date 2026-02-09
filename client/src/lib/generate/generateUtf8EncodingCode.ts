@@ -27,7 +27,6 @@ export function generateUtf8EncodingCode(): string {
   code += 'import asyncio\n';
   code += 'import logging\n';
   code += 'import signal\n';
-  code += 'import locale\n';
   code += 'from aiogram import Bot, Dispatcher, types, F\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
   code += 'from aiogram.exceptions import TelegramBadRequest\n';
