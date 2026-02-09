@@ -1,0 +1,32 @@
+export function answersave(code: string) {
+    code += '        \n';
+    code += '        # Сохраняем текстовый ввод для условного сообщения (обычный случай без skipDataCollection)\n';
+    code += '        condition_id = config.get("condition_id", "unknown")\n';
+    code += '        next_node_id = config.get("next_node_id")\n';
+    code += '        \n';
+    code += '        # Сохраняем ответ пользователя\n';
+    code += '        timestamp = get_moscow_time()\n';
+    code += '        # Используем переменную из конфигурации или создаем автоматическую\n';
+    code += '        input_variable = config.get("input_variable", "")\n';
+    code += '        if input_variable:\n';
+    code += '            variable_name = input_variable\n';
+    code += '        else:\n';
+    code += '            variable_name = f"conditional_response_{condition_id}"\n';
+    code += '        \n';
+    code += '        # Сохраняем в пользовательские данные\n';
+    code += '        user_data[user_id][variable_name] = user_text\n';
+    code += '        \n';
+    code += '        # Сохраняем в базу данных\n';
+    code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)\n';
+    code += '        if saved_to_db:\n';
+    code += '            logging.info(f"✅ Условный ответ сохранен в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+    code += '        else:\n';
+    code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+    code += '        \n';
+    code += '        # Очищаем состояние ожидания\n';
+    code += '        del user_data[user_id]["waiting_for_conditional_input"]\n';
+    code += '        \n';
+    code += '        logging.info(f"Получен ответ на условное сообщение: {variable_name} = {user_text}")\n';
+    code += '        \n';
+    return code;
+}
