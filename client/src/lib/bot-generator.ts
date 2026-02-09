@@ -221,6 +221,24 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем UTF-8 кодировку и базовые импорты в начало файла
   code += generateUtf8EncodingCode();
 
+  // Определяем, нужны ли специфичные импорты
+  const hasCommandNodes = (nodes || []).some(node => node.type === 'command' ||
+    (node.data.buttons && node.data.buttons.some((btn: Button) => btn.action === 'command')));
+  const hasMediaNodesResult = hasMediaNodes(nodes || []);
+  const hasStickerNodes = (nodes || []).some(node => node.type === 'sticker');
+  const hasVoiceNodes = (nodes || []).some(node => node.type === 'voice');
+  const hasLocationNodes = (nodes || []).some(node => node.type === 'location');
+  const hasContactNodes = (nodes || []).some(node => node.type === 'contact');
+
+  if (hasCommandNodes) {
+    code += 'from aiogram.filters import Command\n';
+  }
+
+  // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
+  if (hasMediaNodesResult || hasStickerNodes || hasVoiceNodes || hasLocationNodes || hasContactNodes) {
+    code += 'from aiogram.exceptions import TelegramBadRequest\n';
+  }
+
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
   const hasInlineButtonsResult = hasInlineButtons(nodes || []);
   const hasAutoTransitionsResult = hasAutoTransitions(nodes || []);
