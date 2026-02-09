@@ -7,10 +7,10 @@
  * @module generateStartNodeHandlerWithConditionalLogicAndImages
  */
 
-import { Button } from './bot-generator';
-import { generateConditionalMessageLogic } from './Conditional';
-import { calculateOptimalColumns, formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from './format';
-import { generateUniversalVariableReplacement } from './utils';
+import { Button } from '../bot-generator';
+import { generateConditionalMessageLogic } from '../Conditional';
+import { calculateOptimalColumns, formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../format';
+import { generateUniversalVariableReplacement } from '../utils';
 
 /**
  * Генерирует обработчик для стартового узла с поддержкой условной логики и изображений
