@@ -491,9 +491,9 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                 code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
                 code += `                            "skip_buttons": ${skipButtonsJson2572}\n`;
                 code += `                        }\n`;
-                code += `                        logging.info(f"✅ Сояяяятояние ожид����ия настроено: modes=${btnModesList} для пер��менной ${inputVariable} (узел ${targetNode.id})")\n`;
+                code += `                        logging.info(f"✅ Сояяяятояние ожидzzzzия настроено: modes=${btnModesList} для перzzменной ${inputVariable} (узел ${targetNode.id})")\n`;
               } else {
-                // Обычн����е ожидание ввода если кнопок нет
+                // Обычнzzzzе ожидание ввода если кнопок нет
                 code += `                        # Узел собирает пользовательский ввод\n`;
                 code += `                        logging.info(f"🔧 Условная навигация к узлу с вводом: ${targetNode.id}")\n`;
                 code += `                        text = ${formattedText}\n`;
@@ -830,7 +830,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
 
     /**
      * Обработка различных форматов конфигурации
-     * Поддерживает новый формат (словарь) и старый формат (строка) для об��атной совместимости
+     * Поддерживает новый формат (словарь) и старый формат (строка) для обzzатной совместимости
      */
     code += '        # Проверяем формат конфигурации - новый (словарь) или старый (строка)\n';
     code += '        if isinstance(waiting_config, dict):\n';
@@ -846,7 +846,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
 
     /**
      * Проверка типа ввода медиа
-     * Если ожидается медиа-файл, текстовый обработчи���������������� должен проигнорировать сообщение
+     * Если ожидается медиа-файл, текстовый обработчиzzzzzzzzzzzzzzzz должен проигнорировать сообщение
      */
     code += '            # ИСПРАВЛЕНИЕ: Проверяем, является ли тип ввода медиа (фото, видео, аудио, документ)\n';
     code += '            # Если да, то текстовый обработчик не должен его обрабатывать\n';
@@ -854,7 +854,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '                logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается медиа ({input_type})")\n';
     code += '                return\n';
     code += '        else:\n';
-    code += '            # Старый формат - waiting_config э��о строка с node_id\n';
+    code += '            # Старый формат - waiting_config эzzо строка с node_id\n';
     code += '            waiting_node_id = waiting_config\n';
     code += '            input_type = user_data[user_id].get("input_type", "text")\n';
     code += '            variable_name = user_data[user_id].get("input_variable", "user_response")\n';
@@ -1321,7 +1321,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
                   }
                 });
 
-                // ВОССТАНОВ��ЕНИЕ: Добав��яем ум��ое р���сположение кнопок по колонкам
+                // ВОССТАНОВzzЕНИЕ: Добавzzяем умzzое рzzzсположение кнопок по колонкам
                 const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
                 code += `${bodyIndent}builder.adjust(${columns})\n`;
                 code += `${bodyIndent}keyboard = builder.as_markup()\n`;
@@ -1535,13 +1535,13 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
       code += `            # Сохраняем в базу данных\n`;
       code += `            saved_to_db = await update_user_data_in_db(user_id, "${variableName}", response_data)\n`;
       code += `            if saved_to_db:\n`;
-      code += `                logging.info(f"✅ Данные сохранены в БД: ${variableName} = {user_text} (пользователь {user_id})")\n`;
+      code += `                logging.info(f"✅ Данные сохранены в БД: ${variableName} = {user_text} (пользователь {user_id}, узел {waiting_node_id})")\n`;
       code += `            else:\n`;
       code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
       code += `            \n`;
 
       code += `            \n`;
-      code += `            logging.info(f"Получен пользовательский ввод: ${variableName} = {user_text}")\n`;
+      code += `            logging.info(f"Получен пользовательский ввод: ${variableName} = {user_text}, узел: {waiting_node_id}")\n`;
       code += `            \n`;
 
       // Навигация к следующему узлу
@@ -1665,7 +1665,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
           }
         } else {
           // Если целевой узел не найден, добавляем заглушку
-          code += `                logging.warning(f"Целево�� узел {node.data.inputTargetNodeId} не найде��")\n`;
+          code += `                logging.warning(f"Целевоzz узел {node.data.inputTargetNodeId} не найдеzz")\n`;
           code += `                await message.answer("❌ Ошибка перехода: целевой узел не найден")\n`;
         }
 
@@ -1692,12 +1692,12 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     }
     if (hasVideoInput(nodes || [])) {
       let videoCode = generateVideoHandlerCode();
-      videoCode = videoCode.replace('            # (з��есь будет сгенерированный код навигации)', navigationCode);
+      videoCode = videoCode.replace('            # (зzzесь будет сгенерированный код навигации)', navigationCode);
       code += videoCode;
     }
     if (hasAudioInput(nodes || [])) {
       let audioCode = generateAudioHandlerCode();
-      audioCode = audioCode.replace('            # (зде��ь будет сгенерированный код навигации)', navigationCode);
+      audioCode = audioCode.replace('            # (здеzzь будет сгенерированный код навигации)', navigationCode);
       code += audioCode;
     }
     if (hasDocumentInput(nodes || [])) {
@@ -1709,7 +1709,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
 
     generateUserInputValidationAndContinuationLogic();
 
-    // ��енерируем логику навигации для каждого типа узла
+    // zzенерируем логику навигации для каждого типа узла
     generateStateTransitionAndRenderLogic();
   }
   return code;
