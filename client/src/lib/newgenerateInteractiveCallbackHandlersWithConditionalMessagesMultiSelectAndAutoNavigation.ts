@@ -740,6 +740,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               code += '    # Отправляем сообщение\n';
               code += '    try:\n';
               code += '        if keyboard:\n';
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += '            # Заменяем все переменные в тексте\n';
+              code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
               code += '        else:\n';
               code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
@@ -767,21 +770,33 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             code += '    # Отправляем сообщение\n';
             code += '    try:\n';
             code += '        if keyboard:\n';
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '            # Заменяем все переменные в тексте\n';
+            code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
             code += '        else:\n';
             code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '            # Заменяем все переменные в тексте\n';
+            code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text)\n';
             code += '    except Exception as e:\n';
             code += '        logging.debug(f"Ошибка отправки сообщения: {e}")\n';
             code += '        if keyboard:\n';
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '            # Заменяем все переменные в тексте\n';
+            code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
             code += '        else:\n';
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '            # Заменяем все переменные в тексте\n';
+            code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text)\n';
             code += '    \n';
           }
 
           // ============================================================================
-          // СИСТЕМА АВТОПЕРЕХОДОВ
+          // СИСТЕМА АВТО��ЕРЕХОДОВ
           // ============================================================================
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем автопереход сразу после отправки сообщения
           const currentNodeForAutoTransition = nodes.find(n => n.id === nodeId);
@@ -789,7 +804,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // Для узлов без кнопок проверяем автопереход либо по флагу enableAutoTransition, либо по единственному соединению
           let autoTransitionTarget: string | null = null;
 
-          // Сначаля проверяем явный автопереход через флаг
+          // Сначаля проверяем явный автоп��реход через флаг
           if (currentNodeForAutoTransition?.data?.enableAutoTransition && currentNodeForAutoTransition?.data?.autoTransitionTo) {
             autoTransitionTarget = currentNodeForAutoTransition.data.autoTransitionTo;
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} имеет явный автопереход к ${autoTransitionTarget}`);
