@@ -140,6 +140,7 @@ export function generateMessageNodeHandlerWithKeyboardAndInputCollection(code: s
             code += '    # Отправка сообщения для reply клавиатуры обрабатывается в основной функции\n';
             code += '    # Узел metro_selection имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n';
             code += `    logging.info(f"ℹ️ Узел ${actualNodeId} не собирает ответы (collectUserInput=false)")\n`;
+            code += `    # Переменная parseModeTarget определена для совместимости: ${parseModeTarget}\n`;
         }
         code += '    \n';
     } else {

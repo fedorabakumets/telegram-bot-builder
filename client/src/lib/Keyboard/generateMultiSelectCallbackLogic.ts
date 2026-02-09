@@ -296,7 +296,7 @@ export function generateMultiSelectCallbackLogic(
 `;
         code += `            if total_buttons >= 6:
 `;
-        code += `                optimal_columns = 2
+        code += `                optimal_columns = ${optimalColumns}
 `;
         code += `            elif total_buttons >= 3:
 `;
@@ -329,11 +329,11 @@ export function generateMultiSelectCallbackLogic(
         code += `            total_buttons_with_done = ${totalButtonsWithDone}
 `;
         code += `            if total_buttons_with_done >= 6:
-                optimal_columns_with_done = 2
+                optimal_columns_with_done = ${optimalColumnsWithDone}
             elif total_buttons_with_done >= 3:
-                optimal_columns_with_done = 1
+                optimal_columns_with_done = ${optimalColumnsWithDone}
             else:
-                optimal_columns_with_done = 1
+                optimal_columns_with_done = ${optimalColumnsWithDone}
 `;
         code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns_with_done}) для узла ${node.id} (multi-select с кнопкой Готово, всего кнопок: {total_buttons_with_done})")
 `;
