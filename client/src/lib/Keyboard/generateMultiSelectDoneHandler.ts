@@ -92,7 +92,6 @@ export function generateMultiSelectDoneHandler(
                             code += `            user_data_field = user_record.get("user_data", {})
 `;
                             code += `            if isinstance(user_data_field, str):\n`;
-                            code += `                import json\n`;
                             code += `                try:\n`;
                             code += `                    user_vars = json.loads(user_data_field)\n`;
                             code += `                except:\n`;

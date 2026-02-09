@@ -105,7 +105,6 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     code += '                    user_data = row_dict["user_data"]\n';
     code += '                    if isinstance(user_data, str):\n';
     code += '                        try:\n';
-    code += '                            import json\n';
     code += '                            return json.loads(user_data)\n';
     code += '                        except (json.JSONDecodeError, TypeError):\n';
     code += '                            return {}\n';
@@ -158,7 +157,6 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     code += '    if not db_pool:\n';
     code += '        return False\n';
     code += '    try:\n';
-    code += '        import json\n';
     code += '        async with db_pool.acquire() as conn:\n';
     code += '            # Сначала создаём или получаем существующую запись\n';
     code += '            await conn.execute("""\n';
@@ -190,7 +188,6 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     code += '    if not db_pool:\n';
     code += '        return False\n';
     code += '    try:\n';
-    code += '        import json\n';
     code += '        async with db_pool.acquire() as conn:\n';
     code += '            # Сначала создаём или получаем существующую запись\n';
     code += '            await conn.execute("""\n';
@@ -217,7 +214,6 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     code += '    if not db_pool:\n';
     code += '        return False\n';
     code += '    try:\n';
-    code += '        import json\n';
     code += '        async with db_pool.acquire() as conn:\n';
     code += '            await conn.execute("""\n';
     code += '                INSERT INTO bot_messages (user_id, message_type, message_text, message_data, node_id)\n';

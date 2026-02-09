@@ -48,7 +48,6 @@ export function generateUniversalVariableReplacement(indentLevel: string): strin
   code += `${indentLevel}def check_user_variable_inline(var_name, user_data_dict):\n`;
   code += `${indentLevel}    if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
   code += `${indentLevel}        try:\n`;
-  code += `${indentLevel}            import json\n`;
   code += `${indentLevel}            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
   code += `${indentLevel}            if var_name in parsed_data:\n`;
   code += `${indentLevel}                raw_value = parsed_data[var_name]\n`;

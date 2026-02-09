@@ -184,7 +184,6 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
       codeLines.push('    if user_record and isinstance(user_record, dict):');
       codeLines.push('        user_data_field = user_record.get("user_data", {})');
       codeLines.push('        if isinstance(user_data_field, str):');
-      codeLines.push('            import json');
       codeLines.push('            try:');
       codeLines.push('                user_vars = json.loads(user_data_field)');
       codeLines.push('            except:');

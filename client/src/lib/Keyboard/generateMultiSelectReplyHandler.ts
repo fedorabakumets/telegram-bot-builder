@@ -50,13 +50,13 @@ export function generateMultiSelectReplyHandler(
         const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
         code += `        if node_id == "${node.id}" and user_input == "${continueText}":\n`;
         code += `            # Завершение множественного выбора для узла ${node.id}\n`;
-        code += `            selected_options = user_data.get(user_id, {}).get("multi_select_{node_id}", [])\n`;
+        code += `            selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n`;
         code += `            if selected_options:\n`;
         code += `                selected_text = ", ".join(selected_options)\n`;
         code += `                await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
         code += `            \n`;
         code += `            # Очищаем состояние\n`;
-        code += `            user_data[user_id].pop("multi_select_{node_id}", None)\n`;
+        code += `            user_data[user_id].pop(f"multi_select_{node_id}", None)\n`;
         code += `            user_data[user_id].pop("multi_select_node", None)\n`;
         code += `            user_data[user_id].pop("multi_select_type", None)\n`;
         code += `            \n`;
@@ -104,13 +104,12 @@ export function generateMultiSelectReplyHandler(
         if (selectionButtons.length > 0) {
             code += `        if node_id == "${node.id}":\n`;
             selectionButtons.forEach((button: { text: any; }) => {
-                code += `            # Убираем галочку из текста кнопки при проверке\n`;
-                code += `            clean_input = user_input.replace("✅ ", "").strip()\n`;
-                code += `            if clean_input == "${button.text}":\n`;
-                code += `                if "multi_select_{node_id}" not in user_data[user_id]:\n`;
-                code += `                    user_data[user_id]["multi_select_{node_id}"] = []\n`;
+                code += `            # Проверяем текст кнопки, убирая галочку при необходимости\n`;
+                code += `            if user_input.replace("✅ ", "").strip() == "${button.text}":\n`;
+                code += `                if f"multi_select_{node_id}" not in user_data[user_id]:\n`;
+                code += `                    user_data[user_id][f"multi_select_{node_id}"] = []\n`;
                 code += `                \n`;
-                code += `                selected_list = user_data[user_id]["multi_select_{node_id}"]\n`;
+                code += `                selected_list = user_data[user_id][f"multi_select_{node_id}"]  # Variable used below to manage selections\n`;
                 code += `                if "${button.text}" in selected_list:\n`;
                 code += `                    selected_list.remove("${button.text}")\n`;
                 code += `                    await message.answer("❌ Убрано: ${button.text}")\n`;
@@ -119,40 +118,28 @@ export function generateMultiSelectReplyHandler(
                 code += `                    await message.answer("✅ Выбрано: ${button.text}")\n`;
                 code += `                \n`;
                 code += `                # Обновляем клавиатуру с галочками\n`;
-                code += `                builder = ReplyKeyboardBuilder()\n`;
+                code += `                builder = ReplyKeyboardBuilder()  # Variable used for building keyboard\n`;
                 code += `                \n`;
                 // Добавляем кнопки выбора с галочками
-                code += `                # Добавляем кнопки выбора с галочками\n`;
+                code += `                # Добавляем кнопки выбора с галочками (используем selected_list)\n`;
                 node.data.buttons?.filter((btn: { action: string; }) => btn.action === 'selection').forEach((selBtn: { text: string; }) => {
-                    code += `                selected_mark = "✅ " if "${selBtn.text}" in selected_list else ""\n`;
+                    code += `                selected_mark = "✅ " if "${selBtn.text}" in selected_list else ""  # используем selected_list\n`;
                     code += `                builder.add(KeyboardButton(text=f"{selected_mark}${selBtn.text}"))\n`;
                 });
                 // Добавляем кнопку "Готово" если есть кнопки выбора
                 if (node.data.buttons?.some((btn: { action: string; }) => btn.action === 'selection')) {
                     const continueText = node.data.continueButtonText || 'Готово';
-                    code += `                builder.add(KeyboardButton(text="${continueText}"))\n`;
+                    code += `                builder.add(KeyboardButton(text="${continueText}"))  # используем builder\n`;
                 }
                 // Добавляем обычные кнопки
                 node.data.buttons?.filter((btn: { action: string; }) => btn.action !== 'selection').forEach((regBtn: { text: string; }) => {
-                    code += `                builder.add(KeyboardButton(text="${regBtn.text}"))\n`;
+                    code += `                builder.add(KeyboardButton(text="${regBtn.text}"))  # используем builder\n`;
                 });
-                // Вычисляем оптимальное количество колонок
-                const totalButtons = (node.data.buttons?.filter((btn: { action: string; }) => btn.action === 'selection').length || 0) +
-                                   (node.data.buttons?.filter((btn: { action: string; }) => btn.action !== 'selection').length || 0) +
-                                   (node.data.buttons?.some((btn: { action: string; }) => btn.action === 'selection') ? 1 : 0); // +1 для кнопки "Готово"
-                let optimalColumns = 1;
-                if (totalButtons >= 6) {
-                    optimalColumns = 2;
-                } else if (totalButtons >= 3) {
-                    optimalColumns = 1;
-                } else {
-                    optimalColumns = 1;
-                }
-                code += `                builder.adjust(${optimalColumns})\n`;
                 // Применяем настройки клавиатуры
                 const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard !== false);
                 const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard === true);
-                code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                code += `                builder.adjust(2)\n`;
+                code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})  # builder variable is used here\n`;
                 // Отправляем сообщение с обновленной клавиатурой
                 code += `                text = """${node.data.messageText || "Выберите опции:"}"""\n`;
                 code += `                await message.answer(text, reply_markup=keyboard)\n`;
