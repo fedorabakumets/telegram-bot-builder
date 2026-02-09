@@ -251,6 +251,28 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += 'from aiogram.types import URLInputFile\n';
   }
 
+  // Проверяем, есть ли узлы, которые требуют импорт datetime
+  const hasNodesRequiringDatetime = (nodes || []).some(node =>
+    node.type === 'command' ||  // Команды могут использовать datetime для логирования времени вызова
+    node.type === 'mute_user' || // mute_user использует datetime для вычисления времени окончания
+    node.type === 'ban_user' || // ban_user может использовать datetime для временных банов
+    node.type === 'message' || // Сообщения могут использовать datetime для временных меток
+    node.type === 'sticker' || // Медиа-контент может использовать datetime для временных меток
+    node.type === 'voice' || // Медиа-контент может использовать datetime для временных меток
+    node.type === 'animation' || // Медиа-контент может использовать datetime для временных меток
+    node.type === 'photo' || // Медиа-контент может использовать datetime для временных меток
+    node.type === 'video' || // Медиа-контент может использовать datetime для временных меток
+    node.type === 'document' || // Медиа-контент может использовать datetime для временных меток
+    node.type === 'audio' || // Медиа-контент может использовать datetime для временных меток
+    node.type === 'location' || // Медиа-контент может использовать datetime для временных меток
+    node.type === 'contact' || // Медиа-контент может использовать datetime для временных меток
+    node.type === 'group_event' // Обработчики событий в группах могут использовать datetime для логирования
+  );
+
+  if (hasNodesRequiringDatetime || userDatabaseEnabled) {
+    code += 'from datetime import datetime\n';
+  }
+
   // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
   // Проверяем, есть ли узлы, которые используют TelegramBadRequest в обработчиках исключений
   const hasNodesRequiringTelegramBadRequest = (nodes || []).some(node =>
