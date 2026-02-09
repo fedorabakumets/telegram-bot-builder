@@ -30,7 +30,6 @@ export function generateUtf8EncodingCode(): string {
   code += 'from aiogram import Bot, Dispatcher, types, F\n';
   code += 'from aiogram.types import KeyboardButton, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, FSInputFile\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
-  code += 'from aiogram.enums import ParseMode\n';
   code += 'from typing import Optional\n';
   code += 'import asyncpg\n';
   code += 'import json\n';
