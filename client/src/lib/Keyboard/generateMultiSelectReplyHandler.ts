@@ -1,6 +1,7 @@
 import { Node } from '@shared/schema';
 import { formatTextForPython, toPythonBoolean } from '../format';
 import { generateInlineKeyboardCode } from '../Keyboard';
+import { calculateOptimalColumns } from './calculateOptimalColumns';
 
 /**
  * Checks if there are any nodes with multi-select reply buttons.
@@ -138,7 +139,11 @@ export function generateMultiSelectReplyHandler(
                 // Применяем настройки клавиатуры
                 const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard !== false);
                 const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard === true);
-                code += `                builder.adjust(2)\n`;
+
+                // Вычисляем оптимальное количество колонок для клавиатуры
+                const allButtons = [...node.data.buttons];
+                const columns = calculateOptimalColumns(allButtons, node.data);
+                code += `                builder.adjust(${columns})\n`;
                 code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})  # builder variable is used here\n`;
                 // Отправляем сообщение с обновленной клавиатурой
                 code += `                text = """${node.data.messageText || "Выберите опции:"}"""\n`;
