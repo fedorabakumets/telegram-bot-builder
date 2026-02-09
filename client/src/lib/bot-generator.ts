@@ -224,14 +224,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Определяем, нужны ли специфичные импорты
   const hasCommandNodes = (nodes || []).some(node => node.type === 'command' ||
     (node.data.buttons && node.data.buttons.some((btn: Button) => btn.action === 'command')));
+  const hasStartNodes = (nodes || []).some(node => node.type === 'start');
   const hasMediaNodesResult = hasMediaNodes(nodes || []);
   const hasStickerNodes = (nodes || []).some(node => node.type === 'sticker');
   const hasVoiceNodes = (nodes || []).some(node => node.type === 'voice');
   const hasLocationNodes = (nodes || []).some(node => node.type === 'location');
   const hasContactNodes = (nodes || []).some(node => node.type === 'contact');
 
-  if (hasCommandNodes) {
-    code += 'from aiogram.filters import Command\n';
+  if (hasCommandNodes || hasStartNodes) {
+    // Если есть команды или стартовые узлы, добавляем соответствующие импорты
+    if (hasStartNodes) {
+      code += 'from aiogram.filters import CommandStart\n';
+    }
+    if (hasCommandNodes) {
+      code += 'from aiogram.filters import Command\n';
+    }
   }
 
   // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
