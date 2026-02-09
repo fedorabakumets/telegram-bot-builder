@@ -41,6 +41,7 @@ export function generateMultiSelectReplyHandler(
     code += '    user_input = message.text\n';
     code += '    \n';
     code += '    # Проверяем, находится ли пользователь в режиме множественного выбора reply\n';
+    code += '    logging.info(f"🔍 Проверяем режим множественного выбора для пользователя {user_id}: {user_data.get(user_id, {})}")\n';
     code += '    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":\n';
     code += '        node_id = user_data[user_id]["multi_select_node"]\n';
     code += '        \n';
