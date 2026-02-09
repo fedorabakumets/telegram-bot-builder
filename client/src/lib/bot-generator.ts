@@ -252,7 +252,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
-  if (hasMediaNodesResult || hasStickerNodes || hasVoiceNodes || hasLocationNodes || hasContactNodes) {
+  // Проверяем, есть ли узлы, которые используют TelegramBadRequest в обработчиках исключений
+  const hasNodesRequiringTelegramBadRequest = (nodes || []).some(node =>
+    node.type === 'delete_message' ||
+    node.type === 'pin_message' ||
+    node.type === 'unpin_message' ||
+    node.type === 'ban_user' ||
+    node.type === 'unban_user' ||
+    node.type === 'mute_user' ||
+    node.type === 'unmute_user' ||
+    node.type === 'kick_user' ||
+    node.type === 'promote_user' ||
+    node.type === 'demote_user' ||
+    node.type === 'admin_rights' ||
+    node.type === 'sticker' ||
+    node.type === 'voice' ||
+    node.type === 'animation' ||
+    node.type === 'location' ||
+    node.type === 'contact' ||
+    hasMediaNodesResult ||
+    hasStickerNodes ||
+    hasVoiceNodes ||
+    hasLocationNodes ||
+    hasContactNodes
+  );
+
+  if (hasNodesRequiringTelegramBadRequest) {
     code += 'from aiogram.exceptions import TelegramBadRequest\n';
   }
 
