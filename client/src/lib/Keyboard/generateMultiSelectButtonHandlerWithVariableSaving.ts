@@ -179,7 +179,7 @@ export function generateMultiSelectButtonHandlerWithVariableSaving(targetNode: a
             code += '    if user_id in user_data:\n';
             code += '        # Удаляем waiting_for_input чтобы текстовый обработчик не перезаписал данные\n';
             code += '        if "waiting_for_input" in user_data[user_id]:\n';
-            code += `            if user_data[user_id]["waiting_for_input"] == "${parentNode.id}":\n`;
+            code += `            if user_data[user_id]["waiting_for_input"].get("node_id") == "${parentNode.id}":\n`;
             code += '                del user_data[user_id]["waiting_for_input"]\n';
             code += `                logging.info(f"Состояние ожидания ввода очищено для переменной ${variableName} (пользователь {user_id})")\n`;
             code += '    \n';
