@@ -136,7 +136,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   codeLines.push(...variableLines);
 
   // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
-  if (node && node.data && node.data.imageUrl) {
+  if (node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined') {
     codeLines.push(`    # Сохраняем imageUrl в переменную image_url_${node.id || 'unknown'}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
     codeLines.push(`    user_data[user_id]["image_url_${node.id || 'unknown'}"] = "${node.data.imageUrl}"`);

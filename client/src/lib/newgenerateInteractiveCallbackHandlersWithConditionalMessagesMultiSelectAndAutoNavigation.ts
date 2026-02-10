@@ -656,7 +656,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // ОБРАБОТКА МЕДИА-КОНТЕНТА
           // ============================================================================
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем переменные медиа для узла
-          if (targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+          if (targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '' && targetNode.data.imageUrl !== 'undefined') {
             code += '    # Устанавливаем переменную изображения для узла\n';
             code += '    user_id = callback_query.from_user.id\n';
             code += '    if user_id not in user_data:\n';

@@ -106,7 +106,7 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean,
   codeLines.push(`    user_data[user_id]["commands_used"]["${command}"] = user_data[user_id]["commands_used"].get("${command}", 0) + 1`);
 
   // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
-  if (node.data.imageUrl) {
+  if (node.data.imageUrl && node.data.imageUrl !== 'undefined') {
     codeLines.push(`    # Сохраняем imageUrl в переменную image_url_${node.id}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
     codeLines.push(`    user_data[user_id]["image_url_${node.id}"] = "${node.data.imageUrl}"`);

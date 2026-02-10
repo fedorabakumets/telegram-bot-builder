@@ -119,7 +119,7 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
         }
 
         // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
-        if (targetNode.data.imageUrl) {
+        if (targetNode.data.imageUrl && targetNode.data.imageUrl !== 'undefined') {
           code += `                # Сохраняем imageUrl в переменную image_url_${targetNode.id}\n`;
           code += `                user_id = message.from_user.id\n`;
           code += `                user_data[user_id] = user_data.get(user_id, {})\n`;

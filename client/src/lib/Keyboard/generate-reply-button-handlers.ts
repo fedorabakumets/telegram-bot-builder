@@ -130,7 +130,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
             } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               // Проверяем, есть ли статическое изображение в целевом узле
-              if (targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+              if (targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '' && targetNode.data.imageUrl !== 'undefined') {
                 code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
                 // Проверяем, является ли URL относительным путем к локальному файлу
                 if (targetNode.data.imageUrl.startsWith('/uploads/')) {
@@ -370,10 +370,10 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 if (hasStaticImage) {
                   code += `    # Узел содержит статическое изображение: ${targetNode.data.imageUrl}\n`;
                   // Проверяем, является ли URL относительным путем к локальному файлу
-                  if (targetNode.data.imageUrl?.startsWith('/uploads/')) {
+                  if (targetNode.data.imageUrl?.startsWith('/uploads/') && targetNode.data.imageUrl !== 'undefined') {
                     code += `    image_path = get_upload_file_path("${targetNode.data.imageUrl}")\n`;
                     code += `    image_url = FSInputFile(image_path)\n`;
-                  } else {
+                  } else if (targetNode.data.imageUrl && targetNode.data.imageUrl !== 'undefined') {
                     code += `    image_url = "${targetNode.data.imageUrl}"\n`;
                   }
 
@@ -463,13 +463,13 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 }
 
                 // Проверяем, есть ли статическое изображение в целевом узле
-                if (targetNode.data.imageUrl?.trim() !== '') {
+                if (targetNode.data.imageUrl?.trim() !== '' && targetNode.data.imageUrl !== 'undefined') {
                   code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
                   // Проверяем, является ли URL относительным путем к локальному файлу
-                  if (targetNode.data.imageUrl?.startsWith('/uploads/')) {
+                  if (targetNode.data.imageUrl?.startsWith('/uploads/') && targetNode.data.imageUrl !== 'undefined') {
                     code += `    image_path = get_upload_file_path("${targetNode.data.imageUrl}")\n`;
                     code += `    image_url = FSInputFile(image_path)\n`;
-                  } else {
+                  } else if (targetNode.data.imageUrl && targetNode.data.imageUrl !== 'undefined') {
                     code += `    image_url = "${targetNode.data.imageUrl}"\n`;
                   }
 

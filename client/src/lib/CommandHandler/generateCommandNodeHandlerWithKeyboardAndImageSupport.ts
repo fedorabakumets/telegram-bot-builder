@@ -84,7 +84,7 @@ export function generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode
         code += '    keyboard = builder.as_markup()\n';
 
         // ИСПРАВЛЕНИЕ: Проверяем наличие изображения в command узле
-        if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+        if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '' && targetNode.data.imageUrl !== 'undefined') {
             code += `    # Узел command содержит изображение: ${targetNode.data.imageUrl}\n`;
             code += `    image_url = "${targetNode.data.imageUrl}"\n`;
             code += '    # Отправляем сообщение command узла с изображением и клавиатурой\n';
@@ -101,7 +101,7 @@ export function generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode
         }
     } else {
         // ИСПРАВЛЕНИЕ: Проверяем наличие изображения в command узле без клавиатуры
-        if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+        if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '' && targetNode.data.imageUrl !== 'undefined') {
             code += `    # Узел command содержит изображение: ${targetNode.data.imageUrl}\n`;
             // Проверяем, является ли URL относительным путем к локальному файлу
             if (targetNode.data.imageUrl.startsWith('/uploads/')) {

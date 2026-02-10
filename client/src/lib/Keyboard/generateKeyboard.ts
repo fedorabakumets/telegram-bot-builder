@@ -23,7 +23,7 @@ export function generateKeyboard(node: Node): string {
   code += '    \n';
 
   // Проверяем наличие изображения в узле
-  const hasImage = node.data.imageUrl && node.data.imageUrl.trim() !== '';
+  const hasImage = node.data.imageUrl && node.data.imageUrl.trim() !== '' && node.data.imageUrl !== 'undefined';
   if (hasImage) {
     if (node.data.imageUrl) {
       code += `    # Узел содержит изображение: ${node.data.imageUrl}\n`;

@@ -112,7 +112,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
     code += '    user_id = message.from_user.id\n';
     code += '    if user_id not in user_data:\n';
     code += '        user_data[user_id] = {}\n';
-    if (node.data.imageUrl) {
+    if (node.data.imageUrl && node.data.imageUrl !== 'undefined') {
       code += `    user_data[user_id]["image_url_${node.id}"] = "${node.data.imageUrl}"\n`;
       code += `    await update_user_data_in_db(user_id, "image_url_${node.id}", "${node.data.imageUrl}")\n`;
       code += `    logging.info(f"✅ Переменная image_url_${node.id} установлена: ${node.data.imageUrl}")\n`;

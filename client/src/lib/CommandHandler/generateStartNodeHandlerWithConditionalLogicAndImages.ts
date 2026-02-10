@@ -113,7 +113,7 @@ export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode
     codeLines.push('    # Отправляем сообщение start узла');
 
     // ИСПРАВЛЕНИЕ: Проверяем наличие изображения в узле
-    if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '') {
+    if (targetNode.data.imageUrl && targetNode.data.imageUrl.trim() !== '' && targetNode.data.imageUrl !== 'undefined') {
         codeLines.push(`    # Узел содержит изображение: ${targetNode.data.imageUrl}`);
         // Проверяем, является ли URL относительным путем к локальному файлу
         if (targetNode.data.imageUrl.startsWith('/uploads/')) {
