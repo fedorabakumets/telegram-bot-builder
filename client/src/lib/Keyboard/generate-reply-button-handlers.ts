@@ -331,7 +331,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 }
 
                 // Проверяем, есть ли статическое изображение в целевом узле
-                const hasStaticImage = targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '';
+                const hasStaticImage = targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '' && targetNode.data.imageUrl !== 'undefined';
 
                 if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                   code += '    # Проверка условных сообщений для целевого узла\n';
@@ -463,7 +463,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 }
 
                 // Проверяем, есть ли статическое изображение в целевом узле
-                if (targetNode.data.imageUrl?.trim() !== '' && targetNode.data.imageUrl !== 'undefined') {
+                if (targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '' && targetNode.data.imageUrl !== 'undefined') {
                   code += `    # Узел содержит изображение: ${targetNode.data.imageUrl}\n`;
                   // Проверяем, является ли URL относительным путем к локальному файлу
                   if (targetNode.data.imageUrl?.startsWith('/uploads/') && targetNode.data.imageUrl !== 'undefined') {
