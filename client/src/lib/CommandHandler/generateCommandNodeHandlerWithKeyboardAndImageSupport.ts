@@ -14,6 +14,7 @@
 import { Button } from '../bot-generator';
 import { calculateOptimalColumns, formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../format';
 import { generateUniversalVariableReplacement } from '../utils';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует Python-код обработчика узла команды с поддержкой клавиатуры и изображений
@@ -122,5 +123,9 @@ export function generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode
             code += `        await callback_query.message.answer(text${parseMode})\n`;
         }
     }
-    return code;
+
+    // Применяем автоматическое добавление комментариев ко всему коду
+    const codeLines = code.split('\n');
+    const processedCodeLines = processCodeWithAutoComments(codeLines, 'generateCommandNodeHandlerWithKeyboardAndImageSupport.ts');
+    return processedCodeLines.join('\n');
 }

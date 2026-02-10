@@ -12,6 +12,7 @@
 
 import { generateConditionalMessageLogic } from '../Conditional';
 import { formatTextForPython } from '../format';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует Python-код для обработки текста сообщения, условных сообщений и замены переменных
@@ -117,5 +118,13 @@ export function generateKeyboardAndProcessAttachedMedia(node: { id: string; type
         codeLines.push('    # Заменяем все переменные в тексте');
         codeLines.push('    text = replace_variables_in_text(text, all_user_vars)');
     }
+
+    // Применяем автоматическое добавление комментариев ко всему коду
+    const processedCodeLines = processCodeWithAutoComments(codeLines, 'generateKeyboardAndProcessAttachedMedia.ts');
+
+    // Обновляем оригинальный массив
+    codeLines.length = 0;
+    codeLines.push(...processedCodeLines);
+
     return formattedText;
 }

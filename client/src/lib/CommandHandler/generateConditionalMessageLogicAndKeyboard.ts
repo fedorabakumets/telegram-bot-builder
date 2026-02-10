@@ -11,6 +11,7 @@
  */
 
 import { generateAttachedMediaSendCode, generateButtonText, toPythonBoolean } from '../format';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует Python-код для обработки условных сообщений и генерации клавиатуры
@@ -182,4 +183,11 @@ export function generateConditionalMessageLogicAndKeyboard(node: { id: string; t
             codeLines.push(`    await message.answer(text${keyboardParam})`);
         }
     }
+
+    // Применяем автоматическое добавление комментариев ко всему коду
+    const processedCodeLines = processCodeWithAutoComments(codeLines, 'generateConditionalMessageLogicAndKeyboard.ts');
+
+    // Обновляем оригинальный массив
+    codeLines.length = 0;
+    codeLines.push(...processedCodeLines);
 }

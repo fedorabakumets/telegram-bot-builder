@@ -11,6 +11,7 @@
  */
 
 import { generateButtonText } from '../format';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует Python-код для инициализации и восстановления состояния множественного выбора
@@ -151,4 +152,11 @@ export function initializeAndRestoreMultipleSelectionState(node: { id: string; t
         codeLines.push('    keyboard = builder.as_markup()');
         codeLines.push('');
     }
+
+    // Применяем автоматическое добавление комментариев ко всему коду
+    const processedCodeLines = processCodeWithAutoComments(codeLines, 'initializeAndRestoreMultipleSelectionState.ts');
+
+    // Обновляем оригинальный массив
+    codeLines.length = 0;
+    codeLines.push(...processedCodeLines);
 }
