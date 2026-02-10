@@ -97,7 +97,7 @@ export function generateAttachedMediaSendCode(
 
   // Проверяем, есть ли статическое изображение в узле
   const hasStaticImage = nodeData && nodeData.imageUrl && nodeData.imageUrl.trim() !== '' && nodeData.imageUrl !== 'undefined';
-  
+
   // ИСПРАВЛЕНИЕ: Если есть статическое изображение, используем его напрямую
   if (hasStaticImage) {
     // ИСПРАВЛЕНИЕ: Генерируем клавиатуру если есть кнопки у узла
@@ -109,11 +109,11 @@ export function generateAttachedMediaSendCode(
       // Генерируем код клавиатуры
       const { generateKeyboard } = require('../Keyboard/generateKeyboard');
       const keyboardCode = generateKeyboard(nodeData);
-      
+
       // ИСПРАВЛЕНИЕ: Извлекаем только код генерации клавиатуры, без отправки сообщения
       // Разбираем сгенерированный код на строки
       const keyboardLines = keyboardCode.split('\n');
-      
+
       for (const line of keyboardLines) {
         // Пропускаем строки, которые отправляют сообщения (await message.answer или await bot.send_photo)
         if (line.includes('await message.answer') || line.includes('await bot.send_photo')) {
@@ -134,39 +134,69 @@ export function generateAttachedMediaSendCode(
     // Проверяем, является ли URL относительным путем к локальному файлу
     if (nodeData.imageUrl && nodeData.imageUrl.startsWith('/uploads/')) {
       // Для локальных файлов используем FSInputFile для отправки напрямую с диска
-      codeLines.push(`${indentLevel}static_image_path = get_upload_file_path("${nodeData.imageUrl}")`);
-      codeLines.push(`${indentLevel}static_image_url = FSInputFile(static_image_path)`);
-    } else if (nodeData.imageUrl && nodeData.imageUrl !== 'undefined') {
-      codeLines.push(`${indentLevel}static_image_url = "${nodeData.imageUrl}"`);
+      codeLines.push(`${indentLevel}image_path = get_upload_file_path("${nodeData.imageUrl}")`);
+      codeLines.push(`${indentLevel}image_url = FSInputFile(image_path)`);
     } else {
-      // Если imageUrl не определен или равен 'undefined', используем текстовое сообщение
-      codeLines.push(`${indentLevel}# Изображение не определено, отправляем текстовое сообщение`);
-
-      // Устанавливаем состояние ожидания ввода если нужно
-      if (collectUserInput && nodeData) {
-        codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
-        if (nodeData && nodeData.data) {
-          const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
-          const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
-          codeLines.push(...waitingStateLines);
-        }
-        codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки текста")`);
-      }
-
-      codeLines.push(`${indentLevel}await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard)`);
-
-      // Автопереход если нужен
-      if (autoTransitionTo) {
-        codeLines.push(`${indentLevel}# Проверяем, нужно ли выполнять автопереход`);
-        codeLines.push(`${indentLevel}if ${collectUserInput.toString()}:`);
-        const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-        codeLines.push(`${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}`);
-        codeLines.push(`${indentLevel}    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-        codeLines.push(`${indentLevel}    await handle_callback_${safeAutoTargetId}(${messageSource})`);
-        codeLines.push(`${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
-      }
-      codeLines.push(`${indentLevel}return`);
+      codeLines.push(`${indentLevel}image_url = "${nodeData.imageUrl}"`);
     }
+
+    // Устанавливаем состояние ожидания ввода если нужно
+    if (collectUserInput && nodeData) {
+      codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
+      if (nodeData && nodeData.data) {
+        const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+        const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
+        codeLines.push(...waitingStateLines);
+      }
+      codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки изображения")`);
+    }
+
+    codeLines.push(`${indentLevel}# Отправляем статическое изображение`);
+    codeLines.push(`${indentLevel}try:`);
+    codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
+    codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, user_vars)`);
+
+    // ИСПРАВЛЕНИЕ: Генерируем parse_mode только если parseMode не пустой и не равен "none"
+    let parseModeParam = '';
+    if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
+      parseModeParam = `, parse_mode=ParseMode.${parseMode.toUpperCase()}`;
+    }
+
+    // ИСПРАВЛЕНИЕ: Добавляем клавиатуру если она определена
+    codeLines.push(`${indentLevel}    if keyboard is not None:`);
+    codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, reply_markup=keyboard, node_id="${nodeId}")`);
+    codeLines.push(`${indentLevel}    else:`);
+    codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, node_id="${nodeId}")`);
+
+    // Автопереход если нужен
+    if (autoTransitionTo) {
+      codeLines.push(`${indentLevel}    `);
+      codeLines.push(`${indentLevel}    # Проверяем, нужно ли выполнять автопереход`);
+      codeLines.push(`${indentLevel}    if ${collectUserInput.toString()}:`);
+      const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
+      codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
+      codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(${messageSource})`);
+      codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}        return`);
+    }
+
+    codeLines.push(`${indentLevel}except Exception as e:`);
+    codeLines.push(`${indentLevel}    logging.error(f"Ошибка отправки статического изображения: {e}")`);
+    codeLines.push(`${indentLevel}    # Fallback на обычное сообщение при ошибке`);
+    const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
+    // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
+    let parseModeFallbackParam = '';
+    if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
+      parseModeFallbackParam = `, parse_mode=ParseMode.${parseMode.toUpperCase()}`;
+    } else {
+      parseModeFallbackParam = ', parse_mode=None';
+    }
+    // ИСПРАВЛЕНИЕ: Добавляем клавиатуру если она определена
+    codeLines.push(`${indentLevel}    if keyboard is not None:`);
+    codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard${autoTransitionFlag}${parseModeFallbackParam})`);
+    codeLines.push(`${indentLevel}    else:`);
+    codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}"${autoTransitionFlag}${parseModeFallbackParam})`);
   } else {
     // Если статическое изображение не определено, просто отправляем текстовое сообщение
     // Устанавливаем состояние ожидания ввода если нужно
@@ -193,7 +223,6 @@ export function generateAttachedMediaSendCode(
       codeLines.push(`${indentLevel}    await handle_callback_${safeAutoTargetId}(${messageSource})`);
       codeLines.push(`${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
     }
-    codeLines.push(`${indentLevel}return`);
   }
 
   // Если у нас дошли до сюда, значит статического изображения не было,
