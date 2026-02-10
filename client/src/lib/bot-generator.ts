@@ -23,10 +23,12 @@ import { generateButtonResponseHandlers } from './Keyboard/generateButtonRespons
 import { generateMultiSelectCallbackLogic } from './Keyboard/generateMultiSelectCallbackLogic';
 import { generateMultiSelectDoneHandler } from './Keyboard/generateMultiSelectDoneHandler';
 import { generateMultiSelectReplyHandler } from './Keyboard/generateMultiSelectReplyHandler';
+import { hasInlineButtons } from './Keyboard/hasInlineButtons';
 import { identifyNodesRequiringMultiSelectLogic } from './Keyboard/identifyNodesRequiringMultiSelectLogic';
 import { processInlineButtonNodes } from './Keyboard/processInlineButtonNodes';
 import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';
 import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
+import { hasMediaNodes } from './MediaHandler/hasMediaNodes';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
 import { newgenerateStateTransitionAndRenderLogic } from './newgenerateStateTransitionAndRenderLogic';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation';
@@ -39,10 +41,8 @@ import { collectInputTargetNodes } from './utils/collectInputTargetNodes';
 import { extractNodeData } from './utils/extractNodeData';
 import { generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
 import { hasAutoTransitions } from './utils/hasAutoTransitions';
-import { hasInlineButtons } from './utils/hasInlineButtons';
-import { hasMediaNodes } from './utils/hasMediaNodes';
 import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
-import { hasUploadImageUrls } from './utils/hasUploadImageUrls';
+import { hasUploadImageUrls } from './MediaHandler/hasUploadImageUrls';
 import { processConnectionTargets } from './utils/processConnectionTargets';
 
 
