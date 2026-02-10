@@ -1,7 +1,52 @@
+/**
+ * @fileoverview Модуль для генерации обработчика узла команды с поддержкой клавиатуры и изображений
+ *
+ * Этот модуль предоставляет функцию для генерации Python-кода обработчика узла команды,
+ * которая:
+ * - Обрабатывает команды с различными типами клавиатур (inline)
+ * - Поддерживает отправку изображений вместе с сообщениями
+ * - Обеспечивает корректную замену переменных в тексте сообщения
+ * - Обрабатывает переходы между узлами
+ *
+ * @module generateCommandNodeHandlerWithKeyboardAndImageSupport
+ */
+
 import { Button } from '../bot-generator';
 import { calculateOptimalColumns, formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../format';
 import { generateUniversalVariableReplacement } from '../utils';
 
+/**
+ * Генерирует Python-код обработчика узла команды с поддержкой клавиатуры и изображений
+ *
+ * Функция генерирует Python-код, который:
+ * - Обрабатывает команды с различными типами клавиатур (inline)
+ * - Поддерживает отправку изображений вместе с сообщениями
+ * - Обеспечивает корректную замену переменных в тексте сообщения
+ * - Обрабатывает переходы между узлами
+ *
+ * @param targetNode - Узел конфигурации команды, содержащий настройки и данные команды
+ * @param code - Строка с исходным кодом, в которую будет добавлен новый код
+ * @param actualNodeId - Идентификатор текущего узла
+ *
+ * @returns Обновленная строка с Python-кодом
+ *
+ * @example
+ * const targetNode = {
+ *   id: "command-node-1",
+ *   data: {
+ *     command: "/help",
+ *     messageText: "Справка по команде",
+ *     keyboardType: "inline",
+ *     buttons: [
+ *       { text: "Назад", action: "goto", target: "main_menu" }
+ *     ],
+ *     imageUrl: "https://example.com/image.jpg"
+ *   }
+ * };
+ * let code = "";
+ * const result = generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode, code, "node-1");
+ * // result теперь содержит Python-код обработчика команды
+ */
 export function generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode: any, code: string, actualNodeId: any) {
     const command = targetNode.data.command || '/start';
     const commandMessage = targetNode.data.messageText || `Выполняем команду ${command}`;
