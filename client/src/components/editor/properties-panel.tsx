@@ -2908,15 +2908,6 @@ export function PropertiesPanel({
                         {/* Multiple Selection Settings */}
                         {selectedNode.data.allowMultipleSelection && (
                           <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-teal-50/40 to-cyan-50/30 dark:from-teal-950/20 dark:to-cyan-950/10 border border-teal-200/40 dark:border-teal-800/30 hover:border-teal-300/60 dark:hover:border-teal-700/60 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-all duration-200 group">
-                            {/* Предупреждение о проблемах с Reply кнопками */}
-                            {selectedNode.data.keyboardType === 'reply' && (
-                              <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
-                                <i className="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
-                                <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
-                                  С множественным выбором у Reply кнопок могут быть проблемы. Рекомендуется использовать Inline кнопки.
-                                </p>
-                              </div>
-                            )}
 
                             <div className="flex items-start gap-2.5 sm:gap-3">
                               <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-teal-200/50 dark:bg-teal-900/40 group-hover:bg-teal-300/50 dark:group-hover:bg-teal-800/50 transition-all">

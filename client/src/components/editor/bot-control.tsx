@@ -25,7 +25,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotToken, type BotProject } from '@shared/schema';
-import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal, Database, Terminal } from 'lucide-react';
+import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal, Database, Terminal, Code } from 'lucide-react';
 import { setCommentsEnabled, areCommentsEnabled } from '@/lib/utils/generateGeneratedComment';
 
 /**
@@ -1599,7 +1599,7 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
                         <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${commentsGenerationEnabled
                           ? 'bg-blue-500/8 border-blue-500/30 dark:bg-blue-500/10 dark:border-blue-500/40'
                           : 'bg-gray-500/8 border-gray-500/30 dark:bg-gray-500/10 dark:border-gray-500/40'}`} data-testid="comments-generation-toggle-container-bot-card">
-                          <i className={`fas fa-code text-xs sm:text-sm flex-shrink-0 ${commentsGenerationEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`} />
+                          <Code className={`w-4 h-4 flex-shrink-0 ${commentsGenerationEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`} />
                           <Label htmlFor="comments-generation-toggle" className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${commentsGenerationEnabled
                             ? 'text-blue-700 dark:text-blue-300'
                             : 'text-gray-700 dark:text-gray-300'}`}>Генерация комментариев</Label>
@@ -1610,13 +1610,6 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
                             onCheckedChange={handleToggleCommentsGeneration} />
                         </div>
 
-                        {/* Предупреждение о переключателе логов */}
-                        <div className="sm:col-span-2 flex items-start gap-2 p-2.5 sm:p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
-                          <i className="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
-                          <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
-                            Переключатель логов может не работать при тестировке
-                          </p>
-                        </div>
 
                         {/* Execution Timer */}
                         {isThisTokenRunning && (
