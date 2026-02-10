@@ -55,7 +55,4 @@ Thumbs.db
 # VSCode settings
 .vscode/settings.json
 
-# Config files
-tsconfig.json
-.eslintrc.json
-eslint.config.js
+

@@ -121,17 +121,49 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
       <div className="bg-gray-800 px-4 py-2 flex justify-between items-center">
         <h3 className="font-semibold">Терминал</h3>
         <div className="flex space-x-2">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={clearTerminal}
             className="text-white hover:bg-gray-700"
           >
             Очистить
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              // Копируем весь вывод в буфер обмена
+              const outputText = lines.map(line => line.content).join('\n');
+              navigator.clipboard.writeText(outputText);
+            }}
+            className="text-white hover:bg-gray-700"
+          >
+            Копировать
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              // Сохраняем вывод в файл
+              const outputText = lines.map(line => line.content).join('\n');
+              const blob = new Blob([outputText], { type: 'text/plain' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `terminal-output-${new Date().toISOString().slice(0, 19)}.txt`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }}
+            className="text-white hover:bg-gray-700"
+          >
+            Сохранить
+          </Button>
           {onToggleVisibility && (
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               onClick={onToggleVisibility}
               className="text-white hover:bg-gray-700"
