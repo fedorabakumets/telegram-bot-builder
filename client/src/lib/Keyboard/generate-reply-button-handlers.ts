@@ -33,12 +33,26 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
             const safeFunctionName = button.id.replace(/[^a-zA-Z0-9_]/g, '_');
             code += `async def handle_reply_${safeFunctionName}(message: types.Message):\n`;
 
+            // Проверяем, есть ли узлы с мультивыбором в боте, чтобы избежать вызова несуществующей функции
+            const hasMultiSelectNodes = (nodes || []).some((node: any) =>
+              node.data?.allowMultipleSelection === true && node.data?.keyboardType === 'reply'
+            );
+
             // Проверяем, находится ли пользователь в режиме мультивыбора
             code += '    user_id = message.from_user.id\n';
             code += '    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":\n';
-            code += '        # Пользователь в режиме мультивыбора, передаем управление общему обработчику\n';
-            code += '        await handle_multi_select_reply(message)\n';
-            code += '        return\n';
+
+            if (hasMultiSelectNodes) {
+              code += '        # Пользователь в режиме мультивыбора, передаем управление общему обработчику\n';
+              code += '        await handle_multi_select_reply(message)\n';
+              code += '        return\n';
+            } else {
+              // Если нет узлов с мультивыбором, просто выходим из режима мультивыбора
+              code += '        # Пользователь в режиме мультивыбора, но нет узлов с мультивыбором - очищаем состояние\n';
+              code += '        user_data[user_id].pop("multi_select_node", None)\n';
+              code += '        user_data[user_id].pop("multi_select_type", None)\n';
+              code += '        user_data[user_id].pop(f"multi_select_{user_data[user_id].get("multi_select_node", "")}", None)\n';
+            }
             code += '    \n';
 
             // Генерируем ответ для целевого узла
@@ -580,12 +594,26 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
           const safeFunctionName = (button.id || buttonText).replace(/[^a-zA-Z0-9_]/g, '_');
           code += `async def handle_reply_${safeFunctionName}(message: types.Message):\n`;
 
+          // Проверяем, есть ли узлы с мультивыбором в боте, чтобы избежать вызова несуществующей функции
+          const hasMultiSelectNodes2 = (nodes || []).some((node: any) =>
+            node.data?.allowMultipleSelection === true && node.data?.keyboardType === 'reply'
+          );
+
           // Проверяем, находится ли пользователь в режиме мультивыбора
           code += '    user_id = message.from_user.id\n';
           code += '    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":\n';
-          code += '        # Пользователь в режиме мультивыбора, передаем управление общему обработчику\n';
-          code += '        await handle_multi_select_reply(message)\n';
-          code += '        return\n';
+
+          if (hasMultiSelectNodes2) {
+            code += '        # Пользователь в режиме мультивыбора, передаем управление общему обработчику\n';
+            code += '        await handle_multi_select_reply(message)\n';
+            code += '        return\n';
+          } else {
+            // Если нет узлов с мультивыбором, просто выходим из режима мультивыбора
+            code += '        # Пользователь в режиме мультивыбора, но нет узлов с мультивыбором - очищаем состояние\n';
+            code += '        user_data[user_id].pop("multi_select_node", None)\n';
+            code += '        user_data[user_id].pop("multi_select_type", None)\n';
+            code += '        user_data[user_id].pop(f"multi_select_{user_data[user_id].get("multi_select_node", "")}", None)\n';
+          }
           code += '    \n';
 
           // Генерируем простой ответ
