@@ -31,7 +31,7 @@ export default function TemplatesPageWrapper() {
   const { toast } = useToast();
   const { user } = useTelegramAuth();
 
-  const { data: templates = [], isLoading, isError, error } = useQuery<BotTemplate[]>({
+  const { data: templates = [], isLoading, isError } = useQuery<BotTemplate[]>({
     queryKey: ['/api/templates'],
     retry: 2, // Повторить запрос 2 раза в случае ошибки
     staleTime: 10 * 60 * 1000, // Считать данные свежими 10 минут

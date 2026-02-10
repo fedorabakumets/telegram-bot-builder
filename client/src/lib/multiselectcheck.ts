@@ -12,7 +12,7 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
     code += '        \n';
 
     // Добавляем обработку кнопок "Готово" для разных узлов
-    nodes.forEach((node, idx) => {
+    nodes.forEach((node, _idx) => {
         if (node.data && node.data.allowMultipleSelection) {
             const continueText = node.data.continueButtonText || 'Готово';
             code += `        if node_id == "${node.id}" and user_input == "${continueText}":\n`;

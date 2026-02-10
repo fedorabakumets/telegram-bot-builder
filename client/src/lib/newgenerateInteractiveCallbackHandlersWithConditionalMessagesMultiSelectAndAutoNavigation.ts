@@ -367,11 +367,8 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               }
 
               // Пересчитываем общее количество кнопок, включая кнопку "Готово"
-              const totalButtonsWithDone = selectionButtons.length + regularButtons.length + (selectionButtons.length > 0 ? 1 : 0);
               // Для множественного выбора всегда используем nodeData с включенным флагом
-              const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
               // Создаем массив с нужным количеством элементов для расчета колонок
-              const allButtonsForCalculation = Array(totalButtonsWithDone).fill({});
               // ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения
               const columns = 2; // Всегда используем 2 колонки для узлов с множественным выбором
               code += `    # ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения кнопок\n`;

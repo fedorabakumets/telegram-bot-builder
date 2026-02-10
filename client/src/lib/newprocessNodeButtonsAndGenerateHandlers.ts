@@ -446,7 +446,7 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
              */
           } else if (targetNode.type === 'start') {
             // Обрабатываем узла начала в запросах обратного вызова - показываем начальное сообщение с кнопками
-            code = generateStartNodeHandlerWithConditionalLogicAndImages(targetNode, code, actualNodeId);
+            code = generateStartNodeHandlerWithConditionalLogicAndImages(targetNode, code, actualNodeId).join('\n');
 
             /**
              * БЛОК 10: Обработка command узлов

@@ -17,10 +17,12 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
  * Генерирует обработчик для стартового узла с поддержкой условной логики и изображений
  *
  * @param {any} targetNode - Узел, для которого генерируется обработчик
- * @param {string[]} codeLines - Массив строк кода, в который будет добавлен новый функционал
+ * @param {string} code - Исходный код, в который будет добавлен новый функционал
  * @param {any} actualNodeId - Идентификатор текущего узла
+ * @returns {string} Обновленный код с добавленной логикой обработки стартового узла
  */
-export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode: any, codeLines: string[], actualNodeId: any) {
+export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode: any, code: string, actualNodeId: any) {
+    const codeLines: string[] = code.split('\n');
     const messageText = targetNode.data.messageText || "Добро пожаловать!";
     const cleanedMessageText = stripHtmlTags(messageText);
     const formattedText = formatTextForPython(cleanedMessageText);
@@ -148,7 +150,6 @@ export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode
     // Применяем автоматическое добавление комментариев ко всему коду
     const processedCodeLines = processCodeWithAutoComments(codeLines, 'generateStartNodeHandlerWithConditionalLogicAndImages.ts');
 
-    // Обновляем оригинальный массив
-    codeLines.length = 0;
-    codeLines.push(...processedCodeLines);
+    // Возвращаем обновленный массив
+    return processedCodeLines;
 }
