@@ -84,7 +84,6 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
       <TerminalComponent
         ref={terminalRef}
         isVisible={terminalVisible}
-        onToggleVisibility={() => setTerminalVisible(!terminalVisible)}
       />
     </>
   );
