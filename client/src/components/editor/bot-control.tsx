@@ -1689,16 +1689,6 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
                             onCheckedChange={handleToggleCommentsGeneration} />
                         </div>
 
-                        {/* Bot Terminal */}
-                        <div className="sm:col-span-2 flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border bg-gradient-to-r from-purple-500/8 to-indigo-500/8 border-purple-500/30 dark:from-purple-500/10 dark:to-indigo-500/10 dark:border-purple-500/40">
-                          <BotTerminal
-                            projectId={project.id}
-                            tokenId={token.id}
-                            isBotRunning={isThisTokenRunning}
-                          />
-                        </div>
-
-
                         {/* Execution Timer */}
                         {isThisTokenRunning && (
                           <div className={`sm:col-span-2 flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border bg-gradient-to-r from-amber-500/8 to-orange-500/8 border-amber-500/30 dark:from-amber-500/10 dark:to-orange-500/10 dark:border-amber-500/40`} data-testid="timer-display-bot-card">
@@ -1711,6 +1701,17 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
                                 {formatExecutionTime(currentElapsedSeconds)}
                               </p>
                             </div>
+                          </div>
+                        )}
+
+                        {/* Bot Terminal */}
+                        {isThisTokenRunning && (
+                          <div className="sm:col-span-2 flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border bg-gradient-to-r from-purple-500/8 to-indigo-500/8 border-purple-500/30 dark:from-purple-500/10 dark:to-indigo-500/10 dark:border-purple-500/40">
+                            <BotTerminal
+                              projectId={project.id}
+                              tokenId={token.id}
+                              isBotRunning={isThisTokenRunning}
+                            />
                           </div>
                         )}
                       </div>
