@@ -241,6 +241,8 @@ export function sendOutputToTerminals(content: string, type: 'stdout' | 'stderr'
   const connections = activeConnections.get(connectionKey);
 
   if (connections) {
+    console.log(`Отправка сообщения '${content.substring(0, 50)}...' (${type}) для ${connectionKey}, количество соединений: ${connections.size}`);
+
     const message: TerminalMessage = {
       type,
       content,
