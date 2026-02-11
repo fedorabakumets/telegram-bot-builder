@@ -77,10 +77,12 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
           </div>
         </div>
 
-        <TerminalComponent
-          ref={terminalRef}
-          isVisible={terminalVisible}
-        />
+        <div className={`transition-all duration-200 ${terminalVisible ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none'}`}>
+          <TerminalComponent
+            ref={terminalRef}
+            isVisible={terminalVisible}
+          />
+        </div>
       </div>
     </>
   );

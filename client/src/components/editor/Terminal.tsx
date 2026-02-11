@@ -86,7 +86,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
   useEffect(() => {
     if (outputContainerRef.current) {
       // Учитываем масштаб при прокрутке
-      outputContainerRef.current.scrollTop = outputContainerRef.current.scrollHeight / scale;
+      // При масштабировании высота контента изменяется, поэтому прокручиваем на полную высоту
+      outputContainerRef.current.scrollTop = outputContainerRef.current.scrollHeight;
     }
   }, [lines, scale]);
 
@@ -275,33 +276,43 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
 
       {/* Контейнер для вывода */}
       <div
-        ref={outputContainerRef}
-        className="overflow-y-auto p-4 whitespace-pre-wrap break-all flex flex-col"
+        className="overflow-hidden p-4 whitespace-pre-wrap break-all flex flex-col"
         style={{
           height: `${dimensions.height - 80}px`,
           width: '100%',
-          minHeight: '0',
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-          maxHeight: 'none'
+          minHeight: '0'
         }}
       >
-        {lines.length === 0 ? (
-          <div className="flex items-center justify-center h-full italic" style={{ color: placeholderTextClass }}>
-            Нет вывода...
-          </div>
-        ) : (
-          <>
-            {lines.map((line) => (
-              <div
-                key={line.id}
-                className={line.type === 'stderr' ? stderrTextClass : terminalTextClass}
-              >
-                <Ansi>{line.content}</Ansi>
-              </div>
-            ))}
-          </>
-        )}
+        <div
+          ref={outputContainerRef}
+          className="overflow-y-auto h-full w-full"
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            width: '100%',
+            minHeight: '0',
+            padding: '0',
+            margin: '0'
+          }}
+        >
+          {lines.length === 0 ? (
+            <div className="flex items-center justify-center h-full italic" style={{ color: placeholderTextClass }}>
+              Нет вывода...
+            </div>
+          ) : (
+            <>
+              {lines.map((line) => (
+                <div
+                  key={line.id}
+                  className={line.type === 'stderr' ? stderrTextClass : terminalTextClass}
+                  style={{ lineHeight: '1.2' }}
+                >
+                  <Ansi>{line.content}</Ansi>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Элемент для изменения размера */}
