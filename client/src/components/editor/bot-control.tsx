@@ -538,6 +538,7 @@ export function BotControl({}: BotControlProps) {
   // Ref для управления терминалом
   const terminalRef = useRef<TerminalHandle>(null);
 
+
   /**
    * Обработчик переключения логов генератора
    * @param enabled - Включить или выключить логи
@@ -697,6 +698,18 @@ export function BotControl({}: BotControlProps) {
 
   // Объединяем статусы ботов
   const allBotStatuses = botStatusQueries.map(query => query.data).filter(Boolean) as BotStatusResponse[];
+
+  // Состояние для отслеживания выбранного токена
+  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+
+  // Обновляем выбранный токен при изменении статусов ботов
+  useEffect(() => {
+    // Находим запущенный бот и устанавливаем его токен как выбранный
+    const runningBot = allBotStatuses.find(status => status.status === 'running' && status.instance);
+    if (runningBot && runningBot.instance) {
+      setSelectedTokenId(runningBot.instance.tokenId);
+    }
+  }, [allBotStatuses]);
 
   // Timer effect - обновляем таймер каждую секунду если какой-либо бот запущен
   useEffect(() => {
@@ -974,6 +987,9 @@ export function BotControl({}: BotControlProps) {
       // Обновляем список токенов чтобы показать актуальное имя бота
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/tokens`] });
 
+      // Устанавливаем запущенный токен как активный для WebSocket
+      setSelectedTokenId(variables.tokenId);
+
       // Отправляем сообщение в терминал
       if (terminalRef.current) {
         terminalRef.current.addLine(`Бот запущен (ID токена: ${variables.tokenId}, ID проекта: ${variables.projectId})`, 'stdout');
@@ -999,6 +1015,11 @@ export function BotControl({}: BotControlProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot`] });
       // Сразу обновляем статус на фронтенде
       queryClient.invalidateQueries({ queryKey: ['/api/projects/bot'] });
+
+      // Если останавливаем текущий активный токен, сбрасываем его
+      if (selectedTokenId === variables.tokenId) {
+        setSelectedTokenId(null);
+      }
 
       // Отправляем сообщение в терминал
       if (terminalRef.current) {
@@ -1184,18 +1205,28 @@ function renderBotControlPanel(
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-2">
-        <Button
-          onClick={() => setTerminalVisible(!terminalVisible)}
-          className={`flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto font-semibold transition-all duration-200 h-10 sm:h-auto px-3 sm:px-4 py-2 sm:py-2 text-sm sm:text-base ${
-            terminalVisible
-              ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40'
-              : 'bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white shadow-lg shadow-gray-500/30 hover:shadow-xl hover:shadow-gray-500/40'
-          }`}
-          data-testid="button-toggle-terminal"
-        >
-          <Code className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span>{terminalVisible ? 'Скрыть терминал' : 'Показать терминал'}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setTerminalVisible(!terminalVisible)}
+            className={`flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto font-semibold transition-all duration-200 h-10 sm:h-auto px-3 sm:px-4 py-2 sm:py-2 text-sm sm:text-base ${
+              terminalVisible
+                ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40'
+                : 'bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white shadow-lg shadow-gray-500/30 hover:shadow-xl hover:shadow-gray-500/40'
+            }`}
+            data-testid="button-toggle-terminal"
+          >
+            <Code className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>{terminalVisible ? 'Скрыть терминал' : 'Показать терминал'}</span>
+          </Button>
+
+          {/* Индикатор статуса подключения к WebSocket */}
+          {terminalVisible && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-secondary text-xs font-medium">
+              <div className="w-2 h-2 rounded-full bg-gray-500" />
+              <span>Статус: Подключение...</span>
+            </div>
+          )}
+        </div>
         <Button
           onClick={() => setShowAddBot(true)}
           className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 h-10 sm:h-auto px-3 sm:px-4 py-2 sm:py-2 text-sm sm:text-base"

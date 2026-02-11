@@ -4,7 +4,7 @@ import PostgresStore from "connect-pg-simple";
 import type { Express } from "express";
 import session from "express-session";
 import { existsSync, mkdirSync, unlinkSync } from "fs";
-import { createServer, type Server } from "http";
+import { type Server } from "http";
 import multer from "multer";
 import { join } from "path";
 import { Pool } from "pg";
@@ -331,7 +331,7 @@ async function initializeComponents() {
  * });
  * ```
  */
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, httpServer?: Server): Promise<Server> {
   // Инициализируем session middleware с PostgreSQL store
   const pgPool = new (await import('pg')).Pool({
     connectionString: process.env.DATABASE_URL
@@ -2410,8 +2410,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GitHub push endpoint
   setupGithubPushRoute(app);
 
-  const httpServer = createServer(app);
-  return httpServer;
+  // Если сервер передан извне, используем его, иначе создаем новый
+  if (httpServer) {
+    return httpServer;
+  } else {
+    const { createServer } = await import('http');
+    const newHttpServer = createServer(app);
+    return newHttpServer;
+  }
 }
 
 

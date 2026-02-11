@@ -1,10 +1,12 @@
 import dotenv from "dotenv";
 dotenv.config({ debug: false });
 import express, { type Request, Response, NextFunction } from "express";
+import { createServer } from "http";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { stopCleanup } from "./cache";
 import { shutdownAllBots } from "./graceful-shutdown";
+import { initializeTerminalWebSocket } from "./terminal-websocket";
 
 /**
  * Основное приложение Express
@@ -78,7 +80,8 @@ app.use((req, res, next) => {
  * Также настраивает корректное завершение работы сервера при получении сигнала SIGTERM.
  */
 (async () => {
-  const server = await registerRoutes(app);
+  const httpServer = createServer(app);
+  await registerRoutes(app, httpServer);
 
   /**
    * Глобальный обработчик ошибок
@@ -102,11 +105,14 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Инициализируем WebSocket-сервер для терминала
+  initializeTerminalWebSocket(httpServer);
+
   // Важно настраивать Vite только в режиме разработки и после
   // настройки всех остальных маршрутов, чтобы маршрут catch-all
   // не мешал работе других маршрутов
   if (app.get("env") === "development") {
-    await setupVite(app, server);
+    await setupVite(app, httpServer);
   } else {
     serveStatic(app);
   }
@@ -116,7 +122,7 @@ app.use((req, res, next) => {
   // Это единственный порт, который не заблокирован брандмауэром.
   const port = process.env.PORT || 5000;
   const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
-  server.listen(Number(port), host, () => {
+  httpServer.listen(Number(port), host, () => {
     // Отображаем localhost в логах даже при привязке к 0.0.0.0 для внешних подключений
     const displayHost = host === '0.0.0.0' ? 'localhost' : host;
     log(`сервер запущен на http://${displayHost}:${port}`);
@@ -127,7 +133,7 @@ app.use((req, res, next) => {
     log('получен сигнал SIGTERM: закрытие HTTP-сервера');
     await shutdownAllBots();
     stopCleanup();
-    server.close(() => {
+    httpServer.close(() => {
       log('HTTP-сервер закрыт');
     });
   });
@@ -136,7 +142,7 @@ app.use((req, res, next) => {
     log('получен сигнал SIGINT (Ctrl+C): закрытие HTTP-сервера');
     await shutdownAllBots();
     stopCleanup();
-    server.close(() => {
+    httpServer.close(() => {
       log('HTTP-сервер закрыт');
       process.exit(0);
     });
@@ -147,7 +153,7 @@ app.use((req, res, next) => {
     log('получен сигнал SIGHUP: закрытие HTTP-сервера');
     await shutdownAllBots();
     stopCleanup();
-    server.close(() => {
+    httpServer.close(() => {
       log('HTTP-сервер закрыт');
       process.exit(0);
     });
