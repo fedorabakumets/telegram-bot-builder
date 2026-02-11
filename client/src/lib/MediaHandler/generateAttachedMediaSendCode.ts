@@ -322,7 +322,7 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
   codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, user_vars)`);
   codeLines.push(`${indentLevel}        # Проверяем, является ли медиа относительным путем к локальному файлу`);
-  codeLines.push(`${indentLevel}        if str(attached_media).startswith('/uploads/'):`);
+  codeLines.push(`${indentLevel}        if str(attached_media).startswith('/uploads/') or str(attached_media).startswith('/uploads\\\\') or '\\\\uploads\\\\' in str(attached_media):`);
   codeLines.push(`${indentLevel}            attached_media_path = get_upload_file_path(attached_media)`);
   codeLines.push(`${indentLevel}            attached_media_url = FSInputFile(attached_media_path)`);
   codeLines.push(`${indentLevel}        else:`);
