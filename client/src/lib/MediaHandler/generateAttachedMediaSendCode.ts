@@ -294,7 +294,11 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}if "${mediaVariable}" in all_user_vars:`);
   codeLines.push(`${indentLevel}    media_data = all_user_vars["${mediaVariable}"]`);
   codeLines.push(`${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:`);
-  codeLines.push(`${indentLevel}        attached_media = media_data["value"]`);
+  codeLines.push(`${indentLevel}        # Проверяем, есть ли photoUrl в данных медиа`);
+  codeLines.push(`${indentLevel}        if "photoUrl" in media_data and media_data["photoUrl"]:`);
+  codeLines.push(`${indentLevel}            attached_media = media_data["photoUrl"]  # Используем URL вместо file_id`);
+  codeLines.push(`${indentLevel}        else:`);
+  codeLines.push(`${indentLevel}            attached_media = media_data["value"]  # Используем file_id только если URL недоступен`);
   codeLines.push(`${indentLevel}    elif isinstance(media_data, str):`);
   codeLines.push(`${indentLevel}        attached_media = media_data`);
 
