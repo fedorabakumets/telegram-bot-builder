@@ -195,28 +195,22 @@ function setupProcessOutputListener(processKey: string, botProcess: any) {
     return;
   }
 
-  console.log(`setupProcessOutputListener вызван для ${processKey}, уже подписан: ${!!botProcess.__terminal_subscribed}`);
-
   // Проверяем, есть ли уже подписка на этот процесс
   if (botProcess.__terminal_subscribed) {
-    console.log(`Процесс ${processKey} уже подписан, выходим`);
     return; // Уже подписаны, выходим
   }
 
   // Помечаем процесс как подписанный
   botProcess.__terminal_subscribed = true;
-  console.log(`Установлена подписка на процесс ${processKey}`);
 
   // Подписываемся на stdout
   botProcess.stdout?.on('data', (data: Buffer) => {
-    console.log(`Получены данные в stdout для ${processKey}: ${data.toString().substring(0, 50)}...`);
     const content = data.toString();
     sendOutputToTerminals(content, 'stdout', projectId, tokenId);
   });
 
   // Подписываемся на stderr
   botProcess.stderr?.on('data', (data: Buffer) => {
-    console.log(`Получены данные в stderr для ${processKey}: ${data.toString().substring(0, 50)}...`);
     const content = data.toString();
     sendOutputToTerminals(content, 'stderr', projectId, tokenId);
   });
@@ -247,8 +241,6 @@ export function sendOutputToTerminals(content: string, type: 'stdout' | 'stderr'
   const connections = activeConnections.get(connectionKey);
 
   if (connections) {
-    console.log(`Отправка сообщения '${content.substring(0, 50)}...' (${type}) для ${connectionKey}, количество соединений: ${connections.size}`);
-
     const message: TerminalMessage = {
       type,
       content,
