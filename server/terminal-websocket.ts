@@ -195,13 +195,17 @@ function setupProcessOutputListener(processKey: string, botProcess: any) {
     return;
   }
 
+  console.log(`setupProcessOutputListener вызван для ${processKey}, уже подписан: ${!!botProcess.__terminal_subscribed}`);
+
   // Проверяем, есть ли уже подписка на этот процесс
   if (botProcess.__terminal_subscribed) {
+    console.log(`Процесс ${processKey} уже подписан, выходим`);
     return; // Уже подписаны, выходим
   }
 
   // Помечаем процесс как подписанный
   botProcess.__terminal_subscribed = true;
+  console.log(`Установлена подписка на процесс ${processKey}`);
 
   // Подписываемся на stdout
   botProcess.stdout?.on('data', (data: Buffer) => {
