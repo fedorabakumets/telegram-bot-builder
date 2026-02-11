@@ -324,7 +324,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '                            chat_instance="",\n';
     code += '                            data=skip_target,\n';
     code += '                            message=message,\n';
-    code += '                            answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+    code += '                            answer=lambda *args, **kwargs: asyncio.sleep(0)\n';
     code += '                        )\n';
 
     // Добавляем навигацию для skip_buttons медиа-узлов
@@ -428,7 +428,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '                                chat_instance="",\n';
     code += '                                data=skip_target,\n';
     code += '                                message=message,\n';
-    code += '                                answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+    code += '                                answer=lambda *args, **kwargs: asyncio.sleep(0)\n';
     code += '                            )\n';
 
     // Добавляем навигацию для кнопок skipDataCollection

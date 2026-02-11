@@ -577,7 +577,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   code += '            chat_instance="",\n';
                   code += `            data="${autoTargetNode.id}",\n`;
                   code += '            message=message,\n';
-                  code += '            answer=lambda text="", show_alert=False: None\n';
+                  code += '            answer=lambda *args, **kwargs: None\n';
                   code += '        )\n';
 
                   // Генерируем вызов обработчика для целевого узла

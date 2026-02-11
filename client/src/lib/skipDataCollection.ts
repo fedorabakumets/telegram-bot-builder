@@ -27,7 +27,7 @@ export function skip_button_target(code: string) {
     code += '                    chat_instance="",\n';
     code += '                    data=skip_button_target,\n';
     code += '                    message=message,\n';
-    code += '                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+    code += '                    answer=lambda *args, **kwargs: asyncio.sleep(0)\n';
     code += '                )\n';
     return code;
 }

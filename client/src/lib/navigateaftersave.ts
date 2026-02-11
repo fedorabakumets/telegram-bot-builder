@@ -23,7 +23,7 @@ export function navigateaftersave(code: string) {
     code += '                        chat_instance="",\n';
     code += '                        data=next_node_id,\n';
     code += '                        message=message,\n';
-    code += '                        answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+    code += '                        answer=lambda *args, **kwargs: asyncio.sleep(0)\n';
     code += '                    )\n';
     code += '                    \n';
     return code;
