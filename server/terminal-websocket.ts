@@ -195,6 +195,14 @@ function setupProcessOutputListener(processKey: string, botProcess: any) {
     return;
   }
 
+  // Проверяем, есть ли уже подписка на этот процесс
+  if (botProcess.__terminal_subscribed) {
+    return; // Уже подписаны, выходим
+  }
+
+  // Помечаем процесс как подписанный
+  botProcess.__terminal_subscribed = true;
+
   // Подписываемся на stdout
   botProcess.stdout?.on('data', (data: Buffer) => {
     const content = data.toString();
