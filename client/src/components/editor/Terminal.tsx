@@ -110,13 +110,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
     setLines([]);
   };
 
-  // Если терминал не видим, ничего не отображаем
-  if (!isVisible) {
-    return null;
-  }
-
   return (
-    <div className="border rounded-lg overflow-hidden bg-black text-green-400 font-mono text-sm">
+    <div className={`border rounded-lg overflow-hidden bg-black text-green-400 font-mono text-sm ${!isVisible ? 'hidden' : ''}`}>
       {/* Заголовок терминала */}
       <div className="bg-gray-800 px-4 py-2 flex justify-between items-center">
         <h3 className="font-semibold">Терминал</h3>
