@@ -508,9 +508,9 @@ export function BotControl({ projectId }: BotControlProps) {
   /** Значение редактируемого поля */
   const [editValue, setEditValue] = useState('');
 
-  // Состояние таймера для работающего бота
-  /** Текущее время работы бота в секундах */
-  const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState(0);
+  // Состояние таймеров для работающих ботов (по одному на каждый токен)
+  /** Текущее время работы ботов в секундах (по ключу tokenId) */
+  const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState<Record<number, number>>({});
 
   // Состояние логгера - читается из localStorage
   /** Включены ли логи генератора */
@@ -702,27 +702,49 @@ export function BotControl({ projectId }: BotControlProps) {
   }, [allBotStatuses]);
 
 
-  // Timer effect - обновляем таймер каждую секунду если какой-либо бот запущен
+  // Timer effect - обновляем таймеры для каждого запущенного бота
   useEffect(() => {
     // Находим запущенные боты
     const runningBots = allBotStatuses.filter(status => status.status === 'running' && status.instance?.startedAt);
 
-    if (runningBots.length === 0) {
-      setCurrentElapsedSeconds(0);
-      return;
-    }
-
+    // Обновляем таймеры для каждого запущенного бота
     const interval = setInterval(() => {
-      // Для простоты будем отслеживать время самого длительного запуска
-      const earliestStartTime = Math.min(...runningBots.map(bot => new Date(bot.instance!.startedAt).getTime()));
-      const now = Date.now();
-      const elapsedMs = now - earliestStartTime;
-      const elapsedSeconds = Math.floor(elapsedMs / 1000);
-      setCurrentElapsedSeconds(elapsedSeconds);
+      const newElapsedSeconds: Record<number, number> = {};
+
+      runningBots.forEach(bot => {
+        if (bot.instance) {
+          const startTime = new Date(bot.instance.startedAt).getTime();
+          const now = Date.now();
+          const elapsedMs = now - startTime;
+          const elapsedSeconds = Math.floor(elapsedMs / 1000);
+
+          newElapsedSeconds[bot.instance.tokenId] = elapsedSeconds;
+        }
+      });
+
+      setCurrentElapsedSeconds(prev => ({
+        ...prev,
+        ...newElapsedSeconds
+      }));
     }, 1000); // Обновляем каждую секунду
 
+    // Очищаем таймеры для остановленных ботов
+    const stoppedBotIds = Object.keys(currentElapsedSeconds)
+      .map(Number)
+      .filter(tokenId => !runningBots.some(bot =>
+        bot.instance && bot.instance.tokenId === tokenId
+      ));
+
+    if (stoppedBotIds.length > 0) {
+      setCurrentElapsedSeconds(prev => {
+        const newState = {...prev};
+        stoppedBotIds.forEach(id => delete newState[id]);
+        return newState;
+      });
+    }
+
     return () => clearInterval(interval);
-  }, [allBotStatuses]);
+  }, [allBotStatuses, currentElapsedSeconds]);
 
   // Эффект для обновления статуса при возвращении на вкладку
   useEffect(() => {
@@ -1421,10 +1443,10 @@ function renderBotTokenManagementSection(editingToken: { id: number; name: strin
  * @param handleToggleGeneratorLogs - Обработчик переключения логов генератора
  * @param commentsGenerationEnabled - Состояние включения генерации комментариев
  * @param handleToggleCommentsGeneration - Обработчик переключения генерации комментариев
- * @param currentElapsedSeconds - Текущее количество прошедших секунд
+ * @param currentElapsedSeconds - Текущее количество прошедших секунд (по ключу tokenId)
  * @returns JSX элемент основного интерфейса управления ботами
  */
-function renderBotManagementInterface(projects: { data: unknown; id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null; }[], allTokens: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }[][], allBotInfos: BotInfo[], setProjectForNewBot: (projectId: number | null) => void, setShowAddBot: (show: boolean) => void, allBotStatuses: BotStatusResponse[], editingField: { tokenId: number; field: string; } | null, editValue: string, setEditValue: (value: string) => void, handleSaveEdit: () => void, handleCancelEdit: () => void, handleStartEdit: (tokenId: number, field: string, currentValue: string) => void, getStatusBadge: (token: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }) => JSX.Element, queryClient: any, startBotMutation: any, stopBotMutation: any, deleteBotMutation: any, toggleDatabaseMutation: any, generatorLogsEnabled: boolean, handleToggleGeneratorLogs: (enabled: boolean) => void, commentsGenerationEnabled: boolean, handleToggleCommentsGeneration: (enabled: boolean) => void, currentElapsedSeconds: number) {
+function renderBotManagementInterface(projects: { data: unknown; id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null; }[], allTokens: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }[][], allBotInfos: BotInfo[], setProjectForNewBot: (projectId: number | null) => void, setShowAddBot: (show: boolean) => void, allBotStatuses: BotStatusResponse[], editingField: { tokenId: number; field: string; } | null, editValue: string, setEditValue: (value: string) => void, handleSaveEdit: () => void, handleCancelEdit: () => void, handleStartEdit: (tokenId: number, field: string, currentValue: string) => void, getStatusBadge: (token: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }) => JSX.Element, queryClient: any, startBotMutation: any, stopBotMutation: any, deleteBotMutation: any, toggleDatabaseMutation: any, generatorLogsEnabled: boolean, handleToggleGeneratorLogs: (enabled: boolean) => void, commentsGenerationEnabled: boolean, handleToggleCommentsGeneration: (enabled: boolean) => void, currentElapsedSeconds: Record<number, number>) {
   return <div className="space-y-8">
     {projects.map((project, projectIndex) => {
       const projectTokens = allTokens[projectIndex] || [];
@@ -1698,7 +1720,7 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
                                 Запущен
                               </p>
                               <p className="text-sm sm:text-base font-mono font-bold text-amber-600 dark:text-amber-300">
-                                {formatExecutionTime(currentElapsedSeconds)}
+                                {formatExecutionTime(currentElapsedSeconds[token.id] || 0)}
                               </p>
                             </div>
                           </div>
