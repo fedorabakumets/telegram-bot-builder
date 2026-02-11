@@ -470,9 +470,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }));
 
       res.json(safeTokens);
+      return; // Явно указываем, что функция завершается
     } catch (error) {
       console.error("Failed to fetch tokens:", error);
       res.status(500).json({ message: "Failed to fetch tokens", error: (error as any).message });
+      return; // Явно указываем, что функция завершается
     }
   });
 

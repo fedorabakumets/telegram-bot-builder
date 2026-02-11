@@ -36,12 +36,12 @@ type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 /**
  * Параметры для хука
  * @typedef {Object} UseTerminalWebSocketParams
- * @property {TerminalHandle | null} terminalRef - Ссылка на компонент терминала
+ * @property {React.RefObject<TerminalHandle> | null} terminalRef - Ссылка на компонент терминала
  * @property {number | null} projectId - Идентификатор проекта
  * @property {number | null} tokenId - Идентификатор токена
  */
 interface UseTerminalWebSocketParams {
-  terminalRef: TerminalHandle | null;
+  terminalRef: React.RefObject<TerminalHandle> | null;
   projectId: number | null;
   tokenId: number | null;
 }
@@ -90,27 +90,27 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       ws.onopen = () => {
         console.log('Соединение с терминалом установлено');
         setStatus('connected');
-        
+
         // Отправляем сообщение в терминал о подключении
-        if (terminalRef) {
-          terminalRef.addLine(`[Система] Подключено к терминалу бота (ID проекта: ${projectId}, ID токена: ${tokenId})`, 'stdout');
+        if (terminalRef?.current) {
+          terminalRef.current.addLine(`[Система] Подключено к терминалу бота (ID проекта: ${projectId}, ID токена: ${tokenId})`, 'stdout');
         }
       };
 
       ws.onmessage = (event) => {
         try {
           const message: TerminalWebSocketMessage = JSON.parse(event.data);
-          
+
           // Отправляем сообщение в терминал
-          if (terminalRef) {
+          if (terminalRef?.current) {
             // Для типа 'status' используем 'stdout', так как TerminalHandle.addLine принимает только 'stdout' или 'stderr'
             const outputType = message.type === 'status' ? 'stdout' : message.type;
-            terminalRef.addLine(`[PID:${message.projectId}/${message.tokenId}] ${message.content}`, outputType);
+            terminalRef.current.addLine(`[PID:${message.projectId}/${message.tokenId}] ${message.content}`, outputType);
           }
         } catch (error) {
           console.error('Ошибка при обработке сообщения от терминала:', error);
-          if (terminalRef) {
-            terminalRef.addLine(`[Ошибка] Некорректное сообщение от сервера: ${event.data}`, 'stderr');
+          if (terminalRef?.current) {
+            terminalRef.current.addLine(`[Ошибка] Некорректное сообщение от сервера: ${event.data}`, 'stderr');
           }
         }
       };
@@ -118,12 +118,12 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       ws.onclose = (event) => {
         console.log(`Соединение с терминалом закрыто: код ${event.code}, причина: ${event.reason}`);
         setStatus('disconnected');
-        
+
         // Пытаемся переподключиться через 3 секунды
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
         }
-        
+
         reconnectTimeoutRef.current = setTimeout(() => {
           if (projectId && tokenId) {
             connect();
@@ -134,9 +134,9 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       ws.onerror = (error) => {
         console.error('Ошибка WebSocket-соединения с терминалом:', error);
         setStatus('error');
-        
-        if (terminalRef) {
-          terminalRef.addLine('[Ошибка] Соединение с терминалом потеряно', 'stderr');
+
+        if (terminalRef?.current) {
+          terminalRef.current.addLine('[Ошибка] Соединение с терминалом потеряно', 'stderr');
         }
       };
     } catch (error) {
@@ -161,8 +161,8 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
     
     setStatus('disconnected');
     
-    if (terminalRef) {
-      terminalRef.addLine('[Система] Отключено от терминала', 'stdout');
+    if (terminalRef?.current) {
+      terminalRef.current.addLine('[Система] Отключено от терминала', 'stdout');
     }
   };
 

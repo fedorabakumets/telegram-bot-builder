@@ -28,6 +28,7 @@ import { BotToken, type BotProject } from '@shared/schema';
 import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal, Database, Terminal as TerminalIcon, Code } from 'lucide-react';
 import { setCommentsEnabled, areCommentsEnabled } from '@/lib/utils/generateGeneratedComment';
 import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';
+import { useTerminalWebSocket } from '@/hooks/use-terminal-websocket';
 
 // Типы для функции renderBotControlPanel
 type ProjectTokenType = { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; };
@@ -478,7 +479,7 @@ function BotProfileEditor({
  * @param projectId - Идентификатор проекта
  * @param projectName - Название проекта
  */
-export function BotControl({}: BotControlProps) {
+export function BotControl({ projectId }: BotControlProps) {
   // Состояние компонента
   /** Показывать ли форму добавления бота */
   const [showAddBot, setShowAddBot] = useState(false);
@@ -710,6 +711,14 @@ export function BotControl({}: BotControlProps) {
       setSelectedTokenId(runningBot.instance.tokenId);
     }
   }, [allBotStatuses]);
+
+  // WebSocket для получения вывода бота
+  // @ts-ignore
+  const { status: wsStatus } = useTerminalWebSocket({
+    terminalRef,
+    projectId: projectId || null,
+    tokenId: selectedTokenId
+  });
 
   // Timer effect - обновляем таймер каждую секунду если какой-либо бот запущен
   useEffect(() => {
@@ -1093,7 +1102,7 @@ export function BotControl({}: BotControlProps) {
 
   return (
     <>
-      {renderBotControlPanel(setShowAddBot, projectsLoading, projects, allTokens, allBotInfos, setProjectForNewBot, allBotStatuses, editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit, handleStartEdit, getStatusBadge, queryClient, startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation, generatorLogsEnabled, handleToggleGeneratorLogs, commentsGenerationEnabled, handleToggleCommentsGeneration, currentElapsedSeconds, showAddBot, projectForNewBot, newBotToken, setNewBotToken, isParsingBot, createBotMutation, handleAddBot, editingToken, setEditingToken, editName, setEditName, updateTokenMutation, editDescription, setEditDescription, terminalVisible, setTerminalVisible)}
+      {renderBotControlPanel(setShowAddBot, projectsLoading, projects, allTokens, allBotInfos, setProjectForNewBot, allBotStatuses, editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit, handleStartEdit, getStatusBadge, queryClient, startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation, generatorLogsEnabled, handleToggleGeneratorLogs, commentsGenerationEnabled, handleToggleCommentsGeneration, currentElapsedSeconds, showAddBot, projectForNewBot, newBotToken, setNewBotToken, isParsingBot, createBotMutation, handleAddBot, editingToken, setEditingToken, editName, setEditName, updateTokenMutation, editDescription, setEditDescription, terminalVisible, setTerminalVisible, wsStatus)}
       <TerminalComponent
         ref={terminalRef}
         isVisible={terminalVisible}
@@ -1186,7 +1195,8 @@ function renderBotControlPanel(
   editDescription: string,
   setEditDescription: (desc: string) => void,
   terminalVisible: boolean,
-  setTerminalVisible: (visible: boolean) => void
+  setTerminalVisible: (visible: boolean) => void,
+  wsStatus: string
 ) {
   return <div className="space-y-4 sm:space-y-6">
     {/* Header */}
@@ -1222,8 +1232,18 @@ function renderBotControlPanel(
           {/* Индикатор статуса подключения к WebSocket */}
           {terminalVisible && (
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-secondary text-xs font-medium">
-              <div className="w-2 h-2 rounded-full bg-gray-500" />
-              <span>Статус: Подключение...</span>
+              <div className={`w-2 h-2 rounded-full ${
+                wsStatus === 'connected' ? 'bg-green-500' :
+                wsStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
+                wsStatus === 'error' ? 'bg-red-500' :
+                'bg-gray-500'
+              }`} />
+              <span className="capitalize">
+                {wsStatus === 'connected' ? 'Подключен' :
+                 wsStatus === 'connecting' ? 'Подключение...' :
+                 wsStatus === 'error' ? 'Ошибка' :
+                 'Отключен'}
+              </span>
             </div>
           )}
         </div>
@@ -1318,7 +1338,7 @@ function renderBotProjectCard(showAddBot: boolean, setShowAddBot: (show: boolean
               onChange={(e) => setProjectForNewBot(Number(e.target.value))}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">Выберите проект...</option>
+              <option value="">��ыберите проект...</option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
