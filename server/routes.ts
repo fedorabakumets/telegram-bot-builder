@@ -744,6 +744,52 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Update a token by project and token ID
+  app.put("/api/projects/:id/tokens/:tokenId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const tokenId = parseInt(req.params.tokenId);
+
+      // Check project ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const project = await storage.getBotProject(projectId);
+        if (!project) {
+          return res.status(404).json({ message: "Project not found" });
+        }
+        if (project.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to modify tokens in this project" });
+        }
+
+        // Also verify that the token belongs to this project
+        const token = await storage.getBotToken(tokenId);
+        if (!token || token.projectId !== projectId) {
+          return res.status(404).json({ message: "Token not found in this project" });
+        }
+      }
+
+      const updateData = insertBotTokenSchema.partial().parse(req.body);
+
+      const updatedToken = await storage.updateBotToken(tokenId, updateData);
+      if (!updatedToken) {
+        return res.status(404).json({ message: "Token not found" });
+      }
+
+      // Hide actual token value for security
+      const safeToken = {
+        ...updatedToken,
+        token: `${updatedToken.token.substring(0, 10)}...`
+      };
+
+      res.json(safeToken);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update token" });
+    }
+  });
+
   // Delete a token
   app.delete("/api/tokens/:id", async (req, res) => {
     try {

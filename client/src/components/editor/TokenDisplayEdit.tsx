@@ -65,8 +65,29 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
   const validateBotToken = async (token: string): Promise<boolean> => {
     try {
       const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
-      const data = await response.json();
-      return data.ok;
+
+      // Проверяем статус ответа
+      if (!response.ok) {
+        console.error(`Ошибка HTTP: ${response.status} ${response.statusText}`);
+        return false;
+      }
+
+      // Получаем текст ответа
+      const responseText = await response.text();
+
+      // Проверяем, начинается ли ответ с JSON объекта
+      if (!responseText.trim().startsWith('{')) {
+        console.error('Ответ не является JSON:', responseText);
+        return false;
+      }
+
+      try {
+        const data = JSON.parse(responseText);
+        return data.ok;
+      } catch (jsonError) {
+        console.error('Ошибка парсинга JSON:', jsonError);
+        return false;
+      }
     } catch (error) {
       console.error('Ошибка при проверке токена:', error);
       return false;
@@ -184,7 +205,7 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
           onDoubleClick={handleDoubleClick}
           title="Double-click to edit token"
         >
-          Токен: {token}
+          Токен: {maskToken(token)}
         </p>
       )}
     </div>
