@@ -4,7 +4,7 @@ import { handleNodeNavigationAndInputProcessing } from './handleNodeNavigationAn
 import { generateReplyHideAfterClickHandler } from './Keyboard/generateReplyHideAfterClickHandler';
 import { mediafiles } from './MediaHandler/mediafiles';
 import { multiselectcheck } from './multiselectcheck';
-import { navigateaftersave } from './navigateaftersave.1';
+import { navigateaftersave } from './navigateaftersave';
 import { processUserInputWithValidationAndSave } from './processUserInputWithValidationAndSave';
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
