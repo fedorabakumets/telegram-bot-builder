@@ -78,7 +78,7 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
    */
   const handleDoubleClick = () => {
     setIsEditing(true);
-    setTokenValue(token);
+    setTokenValue(token); // Отображаем полный токен при редактировании
     setValidationError(null);
   };
 
