@@ -1074,7 +1074,7 @@ export function BotControl({ projectId }: BotControlProps) {
  * @param handleToggleGeneratorLogs - Обработчик переключения логов генератора
  * @param commentsGenerationEnabled - Состояние включения генерации комментариев
  * @param handleToggleCommentsGeneration - Обработчик переключения генерации комментариев
- * @param currentElapsedSeconds - Текущее количество прошедших секунд
+ * @param currentElapsedSeconds - Текущее количество прошедших секунд (по ключу tokenId)
  * @param showAddBot - Состояние отображения формы добавления бота
  * @param projectForNewBot - Проект для нового бота
  * @param newBotToken - Токен нового бота
@@ -1115,7 +1115,7 @@ function renderBotControlPanel(
   handleToggleGeneratorLogs: (enabled: boolean) => void,
   commentsGenerationEnabled: boolean,
   handleToggleCommentsGeneration: (enabled: boolean) => void,
-  currentElapsedSeconds: number,
+  currentElapsedSeconds: Record<number, number>,
   showAddBot: boolean,
   projectForNewBot: number | null,
   newBotToken: string,
