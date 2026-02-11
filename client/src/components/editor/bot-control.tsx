@@ -28,6 +28,7 @@ import { BotToken, type BotProject } from '@shared/schema';
 import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal, Database, Terminal as TerminalIcon, Code } from 'lucide-react';
 import { setCommentsEnabled, areCommentsEnabled } from '@/lib/utils/generateGeneratedComment';
 import { BotTerminal } from './BotTerminal';
+import { TokenDisplayEdit } from './TokenDisplayEdit';
 
 // Типы для функции renderBotControlPanel
 type ProjectTokenType = { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; };
@@ -1562,6 +1563,16 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
                               </p>
                             )
                           )}
+
+                          <TokenDisplayEdit
+                            token={token.token}
+                            tokenId={token.id}
+                            projectId={project.id}
+                            onTokenUpdate={() => {
+                              // Обновляем информацию о боте
+                              queryClient.invalidateQueries({ queryKey: [`/api/projects/${project.id}/bot/info`] });
+                            }}
+                          />
 
                           {token.botShortDescription && token.botShortDescription !== token.botDescription && (
                             editingField?.tokenId === token.id && editingField?.field === 'shortDescription' ? (
