@@ -249,8 +249,6 @@ export function sendOutputToTerminals(content: string, type: 'stdout' | 'stderr'
     }
   }
 
-  // Также логируем в консоль сервера
-  console.log(`[${projectId}/${tokenId}] ${type.toUpperCase()}: ${content.trim()}`);
 }
 
 // Глобальная переменная для хранения WebSocket-сервера

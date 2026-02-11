@@ -225,15 +225,11 @@ export async function startBot(projectId: number, token: string, tokenId: number
     // Используем глобальную функцию для отправки вывода в терминал
     // Подписываемся на вывод процесса и отправляем в терминал
     botProcess.stdout?.on('data', (data) => {
-      console.log(`Бот ${projectId} stdout:`, data.toString());
-
       // Отправляем в терминал
       sendOutputToTerminals(data.toString(), 'stdout', projectId, tokenId);
     });
 
     botProcess.stderr?.on('data', (data) => {
-      console.error(`Бот ${projectId} stderr:`, data.toString());
-
       // Отправляем в терминал
       sendOutputToTerminals(data.toString(), 'stderr', projectId, tokenId);
     });
