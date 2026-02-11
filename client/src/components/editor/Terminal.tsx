@@ -172,19 +172,23 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
       {/* Контейнер для вывода */}
       <div
         ref={outputContainerRef}
-        className="h-64 overflow-y-auto p-4 whitespace-pre-wrap break-all"
+        className="h-64 overflow-y-auto p-4 whitespace-pre-wrap break-all flex flex-col"
       >
-        {lines.map((line) => (
-          <div
-            key={line.id}
-            className={line.type === 'stderr' ? 'text-red-400' : 'text-green-400'}
-          >
-            <Ansi>{line.content}</Ansi>
+        {lines.length === 0 ? (
+          <div className="flex-grow flex items-center justify-center text-gray-500 italic">
+            Нет вывода...
           </div>
-        ))}
-
-        {lines.length === 0 && (
-          <div className="text-gray-500 italic">Нет вывода...</div>
+        ) : (
+          <>
+            {lines.map((line) => (
+              <div
+                key={line.id}
+                className={line.type === 'stderr' ? 'text-red-400' : 'text-green-400'}
+              >
+                <Ansi>{line.content}</Ansi>
+              </div>
+            ))}
+          </>
         )}
       </div>
     </div>
