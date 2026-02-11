@@ -116,6 +116,9 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
   // Подписываемся на вывод процессов ботов
   setupBotProcessListeners();
 
+  // Устанавливаем сервер в глобальную переменную
+  setTerminalWss(wss);
+
   console.log('WebSocket-сервер для терминала инициализирован на /api/terminal');
   return wss;
 }
@@ -162,14 +165,14 @@ function setupBotProcessListeners() {
   // При добавлении нового процесса в botProcesses, подписываемся на его вывод
   // Обертываем методы Map для отслеживания изменений
   const originalSet = botProcesses.set.bind(botProcesses);
-  
+
   botProcesses.set = function(key: string, value: any) {
     // Подписываемся на вывод процесса
     setupProcessOutputListener(key, value);
-    
+
     return originalSet(key, value);
   };
-  
+
   // Также проверяем уже существующие процессы
   for (const [key, process] of botProcesses) {
     setupProcessOutputListener(key, process);
@@ -225,7 +228,7 @@ function setupProcessOutputListener(processKey: string, botProcess: any) {
  * @param {number} projectId - Идентификатор проекта
  * @param {number} tokenId - Идентификатор токена
  */
-function sendOutputToTerminals(content: string, type: 'stdout' | 'stderr' | 'status', projectId: number, tokenId: number) {
+export function sendOutputToTerminals(content: string, type: 'stdout' | 'stderr' | 'status', projectId: number, tokenId: number) {
   const connectionKey = `${projectId}_${tokenId}`;
   const connections = activeConnections.get(connectionKey);
 
@@ -248,4 +251,23 @@ function sendOutputToTerminals(content: string, type: 'stdout' | 'stderr' | 'sta
 
   // Также логируем в консоль сервера
   console.log(`[${projectId}/${tokenId}] ${type.toUpperCase()}: ${content.trim()}`);
+}
+
+// Глобальная переменная для хранения WebSocket-сервера
+let globalWss: WebSocketServer | null = null;
+
+/**
+ * Возвращает глобальный экземпляр WebSocket-сервера терминала
+ * @returns {WebSocketServer | null} - Экземпляр WebSocket-сервера или null
+ */
+export function getTerminalWss(): WebSocketServer | null {
+  return globalWss;
+}
+
+/**
+ * Устанавливает глобальный экземпляр WebSocket-сервера терминала
+ * @param {WebSocketServer} wss - Экземпляр WebSocket-сервера
+ */
+export function setTerminalWss(wss: WebSocketServer): void {
+  globalWss = wss;
 }
