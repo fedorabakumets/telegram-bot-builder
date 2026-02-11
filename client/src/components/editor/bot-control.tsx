@@ -1718,7 +1718,26 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
                                 Запущен
                               </p>
                               <p className="text-sm sm:text-base font-mono font-bold text-amber-600 dark:text-amber-300">
-                                {formatExecutionTime(currentElapsedSeconds[token.id] || 0)}
+                                {(() => {
+                                  // Найдем статус бота для этого токена
+                                  const botStatusForToken = allBotStatuses.find(status =>
+                                    status.instance && status.instance.tokenId === token.id
+                                  );
+
+                                  if (botStatusForToken && botStatusForToken.instance?.startedAt) {
+                                    // Если у нас есть время запуска, вычислим текущее время выполнения
+                                    const startTime = new Date(botStatusForToken.instance.startedAt).getTime();
+                                    const now = Date.now();
+                                    const elapsedMs = now - startTime;
+                                    const elapsedSeconds = Math.floor(elapsedMs / 1000);
+
+                                    // Используем вычисленное значение, если оно больше, чем из состояния
+                                    return formatExecutionTime(Math.max(elapsedSeconds, currentElapsedSeconds[token.id] || 0));
+                                  }
+
+                                  // В противном случае используем значение из состояния
+                                  return formatExecutionTime(currentElapsedSeconds[token.id] || 0);
+                                })()}
                               </p>
                             </div>
                           </div>
