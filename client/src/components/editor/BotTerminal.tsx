@@ -48,7 +48,7 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
         <div className="flex items-center gap-2">
           <Button
             onClick={() => setTerminalVisible(!terminalVisible)}
-            className={`flex items-center justify-center gap-2 w-[140px] h-9 text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap overflow-hidden ${
+            className={`flex items-center justify-center gap-2 w-[160px] h-9 text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
               terminalVisible
                 ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40'
                 : 'bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white shadow-lg shadow-gray-500/30 hover:shadow-xl hover:shadow-gray-500/40'
@@ -56,7 +56,7 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
             data-testid={`button-toggle-terminal-${tokenId}`}
           >
             <Code className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline truncate">{terminalVisible ? 'Скрыть терминал' : 'Показать терминал'}</span>
+            <span className="hidden sm:inline">{terminalVisible ? 'Скрыть терминал' : 'Показать терминал'}</span>
             <span className="sm:hidden">{terminalVisible ? 'Скрыть' : 'Терм'}</span>
           </Button>
 
