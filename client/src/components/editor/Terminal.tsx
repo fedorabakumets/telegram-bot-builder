@@ -111,7 +111,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
   };
 
   return (
-    <div className={`border rounded-lg overflow-hidden bg-black text-green-400 font-mono text-sm transition-all duration-200 w-full ${isVisible ? 'max-h-[320px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+    <div className={`border rounded-lg overflow-hidden bg-black text-green-400 font-mono text-sm transition-all duration-200 w-full ${isVisible ? 'max-h-[320px] opacity-100' : 'max-h-[320px] opacity-0 overflow-hidden'}`}>
       {/* Заголовок терминала */}
       <div className="bg-gray-800 px-4 py-2 flex justify-between items-center">
         <h3 className="font-semibold">Терминал</h3>
