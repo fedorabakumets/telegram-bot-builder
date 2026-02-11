@@ -184,7 +184,7 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
           onDoubleClick={handleDoubleClick}
           title="Double-click to edit token"
         >
-          Токен: {maskToken(token)}
+          Токен: {token}
         </p>
       )}
     </div>
