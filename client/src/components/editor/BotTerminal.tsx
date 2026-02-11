@@ -77,7 +77,7 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
           </div>
         </div>
 
-        <div className={`transition-all duration-200 ${terminalVisible ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none'}`}>
+        <div className={`transition-all duration-200 ${terminalVisible ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none'}`} style={{ overflow: 'auto' }}>
           <TerminalComponent
             ref={terminalRef}
             isVisible={terminalVisible}

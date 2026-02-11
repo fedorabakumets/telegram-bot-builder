@@ -305,7 +305,12 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
                 <div
                   key={line.id}
                   className={line.type === 'stderr' ? stderrTextClass : terminalTextClass}
-                  style={{ lineHeight: '1.2' }}
+                  style={{
+                    lineHeight: '1.2',
+                    wordWrap: 'break-word',
+                    wordBreak: 'break-word',
+                    whiteSpace: 'pre-wrap'
+                  }}
                 >
                   <Ansi>{line.content}</Ansi>
                 </div>
