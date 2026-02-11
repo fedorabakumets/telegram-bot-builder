@@ -16,6 +16,7 @@ import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './genera
 import { generateMessageLoggingCode } from './generate/generate-message-logging';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateInlineKeyboardCode } from './Keyboard';
+import { generateGlobalCheckUserVariableFunction } from './utils/generateUniversalVariableReplacement';
 import { filterInlineNodes } from './Keyboard/filterInlineNodes';
 import { generateReplyButtonHandlers } from './Keyboard/generate-reply-button-handlers';
 import { generateTransitionLogicForMultiSelectCompletion } from './Keyboard/generate-transition-logic-multi-select';
@@ -344,7 +345,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
 
 
-  // Добавляем утилитарные функции
+  // Добавляем глобальные утилитарные функции
+  code += generateGlobalCheckUserVariableFunction(); // Добавляем глобальное определение функции
   code += generateUtilityFunctions(userDatabaseEnabled);
 
   // Функции для работы с файлами - если есть медиа или узлы с изображениями из папки uploads
@@ -993,7 +995,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 
    * Эта функция анализирует все узлы бота и извлекает информацию о кнопках,
    * которые связаны с выполнением команд. Она является ключевым компонентом
-   * системы обнаружения и регистрации командных кнопок.
+   * системы обнаружения и ре��истрации командных кнопок.
    * 
    * **Функциональность анализа узлов:**
    * - Перебор всех узлов бота для поиска командных кнопок
