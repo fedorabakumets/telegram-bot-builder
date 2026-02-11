@@ -209,12 +209,14 @@ function setupProcessOutputListener(processKey: string, botProcess: any) {
 
   // Подписываемся на stdout
   botProcess.stdout?.on('data', (data: Buffer) => {
+    console.log(`Получены данные в stdout для ${processKey}: ${data.toString().substring(0, 50)}...`);
     const content = data.toString();
     sendOutputToTerminals(content, 'stdout', projectId, tokenId);
   });
 
   // Подписываемся на stderr
   botProcess.stderr?.on('data', (data: Buffer) => {
+    console.log(`Получены данные в stderr для ${processKey}: ${data.toString().substring(0, 50)}...`);
     const content = data.toString();
     sendOutputToTerminals(content, 'stderr', projectId, tokenId);
   });
