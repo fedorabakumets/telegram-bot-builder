@@ -175,7 +175,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
         className="h-64 overflow-y-auto p-4 whitespace-pre-wrap break-all flex flex-col"
       >
         {lines.length === 0 ? (
-          <div className="flex-grow flex items-center justify-center text-gray-500 italic">
+          <div className="flex items-center justify-center h-full text-gray-500 italic">
             Нет вывода...
           </div>
         ) : (
