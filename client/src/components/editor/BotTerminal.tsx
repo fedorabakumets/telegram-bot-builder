@@ -40,12 +40,7 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
     tokenId: isBotRunning ? tokenId : null
   });
 
-  // При остановке бота автоматически скрываем терминал
-  useEffect(() => {
-    if (!isBotRunning && terminalVisible) {
-      setTerminalVisible(false);
-    }
-  }, [isBotRunning, terminalVisible]);
+  // При остановке бота не скрываем терминал, чтобы пользователь мог видеть последние сообщения
 
   return (
     <>
@@ -66,22 +61,20 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
           </Button>
 
           {/* Индикатор статуса подключения к WebSocket */}
-          {terminalVisible && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-secondary text-xs font-medium">
-              <div className={`w-2 h-2 rounded-full ${
-                wsStatus === 'connected' ? 'bg-green-500' :
-                wsStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
-                wsStatus === 'error' ? 'bg-red-500' :
-                'bg-gray-500'
-              }`} />
-              <span className="capitalize">
-                {wsStatus === 'connected' ? 'Подключен' :
-                 wsStatus === 'connecting' ? 'Подключение...' :
-                 wsStatus === 'error' ? 'Ошибка' :
-                 'Отключен'}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-secondary text-xs font-medium">
+            <div className={`w-2 h-2 rounded-full ${
+              wsStatus === 'connected' ? 'bg-green-500' :
+              wsStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
+              wsStatus === 'error' ? 'bg-red-500' :
+              'bg-gray-500'
+            }`} />
+            <span className="capitalize">
+              {wsStatus === 'connected' ? 'Подключен' :
+               wsStatus === 'connecting' ? 'Подключение...' :
+               wsStatus === 'error' ? 'Ошибка' :
+               'Отключен'}
+            </span>
+          </div>
         </div>
 
         <TerminalComponent
