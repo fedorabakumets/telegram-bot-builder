@@ -271,8 +271,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     node.type === 'group_event' // Обработчики событий в группах могут использовать datetime для логирования
   );
 
+  // Также проверяем, есть ли узлы, требующие timezone (например, для временных меток с UTC)
+  const hasNodesRequiringTimezone = (nodes || []).some(node =>
+    node.type === 'photo' || // Обработчик фото использует datetime.now(timezone.utc)
+    node.type === 'group_event' || // Обработчики групп могут использовать timezone для временных меток
+    (node.data && node.data.enablePhotoInput) // Узлы с включенным вводом фото также используют datetime.now(timezone.utc)
+  );
+
   if (hasNodesRequiringDatetime || userDatabaseEnabled) {
-    code += 'from datetime import datetime\n';
+    if (hasNodesRequiringTimezone) {
+      code += 'from datetime import datetime, timezone\n'; // Добавляем timezone, если он нужен
+    } else {
+      code += 'from datetime import datetime\n';
+    }
   }
 
   // Проверяем, есть ли узлы, которые требуют импорт ParseMode
@@ -951,7 +962,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * **Функциональность рендеринга сообщений:**
    * - Поддержка inline клавиатур с различными типами кнопок
    * - Поддержка reply клавиатур с настройками размера
-   * - Обработка условных сообщений на основе данных пользователя
+   * - Обработка условных сообщений на основе ��анных пользователя
    * - Поддержка различных режимов форматирования (Markdown, HTML)
    * - Обработка прикрепленных медиафайлов
    * 
@@ -981,7 +992,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 
    * @example
    * // Сгенерированный код обеспечит:
-   * // - Переходы между узлами по условиям
+   * // - Переходы между узлами по усло��иям
    * // - Создание интерактивных клавиатур
    * // - Обработку пользовательского ввода
    * // - Условное отображение сообщений
