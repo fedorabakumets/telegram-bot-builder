@@ -11,7 +11,7 @@
  * @module BotControl
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,8 +25,15 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotToken, type BotProject } from '@shared/schema';
-import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal, Database, Terminal, Code } from 'lucide-react';
+import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal, Database, Terminal as TerminalIcon, Code } from 'lucide-react';
 import { setCommentsEnabled, areCommentsEnabled } from '@/lib/utils/generateGeneratedComment';
+import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';
+
+// Типы для функции renderBotControlPanel
+type ProjectTokenType = { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; };
+type BotTokenType = { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; };
+type EditingFieldType = { tokenId: number; field: string; } | null;
+type TokenInfoType = { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; } | null;
 
 /**
  * Свойства компонента управления ботом
@@ -507,6 +514,10 @@ export function BotControl({}: BotControlProps) {
     return false;
   });
 
+  // Состояние для отображения терминала
+  /** Видимость терминала */
+  const [terminalVisible, setTerminalVisible] = useState(false);
+
   // Состояние для переключения генерации комментариев
   /** Включена ли генерация комментариев */
   const [commentsGenerationEnabled, setCommentsGenerationEnabled] = useState(() => {
@@ -523,6 +534,9 @@ export function BotControl({}: BotControlProps) {
     }
     return true; // По умолчанию включено
   });
+
+  // Ref для управления терминалом
+  const terminalRef = useRef<TerminalHandle>(null);
 
   /**
    * Обработчик переключения логов генератора
@@ -611,15 +625,25 @@ export function BotControl({}: BotControlProps) {
       const response = await apiRequest('PUT', `/api/projects/${token.projectId}/tokens/${tokenId}/bot-info`, { field, value });
       return response;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       // Инвалидируем все токены
       queryClient.invalidateQueries({ queryKey: ['/api/projects/tokens'] });
       queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
       setEditingField(null);
       toast({ title: 'Информация о боте обновлена', variant: 'default' });
+
+      // Отправляем сообщение в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Информация о боте обновлена (ID токена: ${variables.tokenId}, поле: ${variables.field}, значение: ${variables.value})`, 'stdout');
+      }
     },
     onError: (error: any) => {
       toast({ title: 'Ошибка обновления', description: error.message || 'Не удалось обновить информацию о боте', variant: 'destructive' });
+
+      // Отправляем сообщение об ошибке в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Ошибка при обновлении информации о боте: ${error.message || 'Не удалось обновить информацию о боте'}`, 'stderr');
+      }
     }
   });
 
@@ -733,21 +757,31 @@ export function BotControl({}: BotControlProps) {
   const toggleDatabaseMutation = useMutation({
     mutationFn: ({ projectId, enabled }: { projectId: number; enabled: boolean }) =>
       apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
-    onSuccess: ({ projectId, enabled }) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}`] });
       toast({
-        title: enabled ? "База данных включена" : "База данных выключена",
-        description: enabled
+        title: variables.enabled ? "База данных включена" : "База данных выключена",
+        description: variables.enabled
           ? "Функции работы с базой данных пользователей будут генерироваться в коде бота."
           : "Функции работы с базой данных НЕ будут генерироваться в коде бота.",
       });
+
+      // Отправляем сообщение в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`База данных ${variables.enabled ? 'включена' : 'выключена'} для проекта ${variables.projectId}`, 'stdout');
+      }
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Ошибка",
         description: "Не удалось изменить настройку базы данных",
         variant: "destructive",
       });
+
+      // Отправляем сообщение об ошибке в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Ошибка при изменении настройки базы данных: ${error.message}`, 'stderr');
+      }
     }
   });
 
@@ -821,9 +855,19 @@ export function BotControl({}: BotControlProps) {
       setShowAddBot(false);
       setNewBotToken('');
       setProjectForNewBot(null);
+
+      // Отправляем сообщение в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Бот добавлен: ${variables.name} (ID проекта: ${variables.projectId})`, 'stdout');
+      }
     },
     onError: (error: any) => {
       toast({ title: 'Ошибка при добавлении бота', description: error.message, variant: 'destructive' });
+
+      // Отправляем сообщение об ошибке в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Ошибка при добавлении бота: ${error.message}`, 'stderr');
+      }
     }
   });
 
@@ -849,14 +893,24 @@ export function BotControl({}: BotControlProps) {
 
       return apiRequest('DELETE', `/api/projects/${token.projectId}/tokens/${tokenId}`);
     },
-    onSuccess: () => {
+    onSuccess: (_, tokenId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects/tokens'] });
       // Инвалидируем bot/info cache т.к. может измениться токен по умолчанию
       queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
       toast({ title: 'Бот удален' });
+
+      // Отправляем сообщение в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Бот удален (ID токена: ${tokenId})`, 'stdout');
+      }
     },
     onError: (error: any) => {
       toast({ title: 'Ошибка при удалении бота', description: error.message, variant: 'destructive' });
+
+      // Отправляем сообщение об ошибке в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Ошибка при удалении бота: ${error.message}`, 'stderr');
+      }
     }
   });
 
@@ -882,13 +936,26 @@ export function BotControl({}: BotControlProps) {
 
       return apiRequest('PUT', `/api/projects/${token.projectId}/tokens/${tokenId}`, data);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects/tokens'] });
       toast({ title: 'Информация о боте обновлена' });
       setEditingToken(null);
+
+      // Отправляем сообщение в терминал
+      if (terminalRef.current) {
+        const updates = Object.entries(variables.data)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ');
+        terminalRef.current.addLine(`Информация о токене обновлена (ID: ${variables.tokenId}): ${updates}`, 'stdout');
+      }
     },
     onError: (error: any) => {
       toast({ title: 'Ошибка при обновлении', description: error.message, variant: 'destructive' });
+
+      // Отправляем сообщение об ошибке в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Ошибка при обновлении токена: ${error.message}`, 'stderr');
+      }
     }
   });
 
@@ -906,9 +973,19 @@ export function BotControl({}: BotControlProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot/info`] });
       // Обновляем список токенов чтобы показать актуальное имя бота
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/tokens`] });
+
+      // Отправляем сообщение в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Бот запущен (ID токена: ${variables.tokenId}, ID проекта: ${variables.projectId})`, 'stdout');
+      }
     },
     onError: (error: any) => {
       toast({ title: "Ошибка запуска", description: error.message || "Не удалось запустить бота.", variant: "destructive" });
+
+      // Отправляем сообщение об ошибке в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Ошибка запуска бота: ${error.message || "Не удалось запустить бота."}`, 'stderr');
+      }
     },
   });
 
@@ -922,9 +999,19 @@ export function BotControl({}: BotControlProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot`] });
       // Сразу обновляем статус на фронтенде
       queryClient.invalidateQueries({ queryKey: ['/api/projects/bot'] });
+
+      // Отправляем сообщение в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Бот остановлен (ID токена: ${variables.tokenId}, ID проекта: ${variables.projectId})`, 'stdout');
+      }
     },
     onError: (error: any) => {
       toast({ title: "Ошибка остановки", description: error.message || "Не удалось остановить бота.", variant: "destructive" });
+
+      // Отправляем сообщение об ошибке в терминал
+      if (terminalRef.current) {
+        terminalRef.current.addLine(`Ошибка остановки бота: ${error.message || "Не удалось остановить бота."}`, 'stderr');
+      }
     },
   });
 
@@ -984,7 +1071,14 @@ export function BotControl({}: BotControlProps) {
   };
 
   return (
-    renderBotControlPanel(setShowAddBot, projectsLoading, projects, allTokens, allBotInfos, setProjectForNewBot, allBotStatuses, editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit, handleStartEdit, getStatusBadge, queryClient, startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation, generatorLogsEnabled, handleToggleGeneratorLogs, commentsGenerationEnabled, handleToggleCommentsGeneration, currentElapsedSeconds, showAddBot, projectForNewBot, newBotToken, setNewBotToken, isParsingBot, createBotMutation, handleAddBot, editingToken, setEditingToken, editName, setEditName, updateTokenMutation, editDescription, setEditDescription)
+    <>
+      {renderBotControlPanel(setShowAddBot, projectsLoading, projects, allTokens, allBotInfos, setProjectForNewBot, allBotStatuses, editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit, handleStartEdit, getStatusBadge, queryClient, startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation, generatorLogsEnabled, handleToggleGeneratorLogs, commentsGenerationEnabled, handleToggleCommentsGeneration, currentElapsedSeconds, showAddBot, projectForNewBot, newBotToken, setNewBotToken, isParsingBot, createBotMutation, handleAddBot, editingToken, setEditingToken, editName, setEditName, updateTokenMutation, editDescription, setEditDescription, terminalVisible, setTerminalVisible)}
+      <TerminalComponent
+        ref={terminalRef}
+        isVisible={terminalVisible}
+        onToggleVisibility={() => setTerminalVisible(!terminalVisible)}
+      />
+    </>
   );
 }
 
@@ -1031,7 +1125,48 @@ export function BotControl({}: BotControlProps) {
  * @param setEditDescription - Функция для установки редактируемого описания
  * @returns JSX элемент панели управления ботами
  */
-function renderBotControlPanel(setShowAddBot: (show: boolean) => void, projectsLoading: boolean, projects: { data: unknown; id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null; }[], allTokens: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }[][], allBotInfos: BotInfo[], setProjectForNewBot: (projectId: number | null) => void, allBotStatuses: BotStatusResponse[], editingField: { tokenId: number; field: string; } | null, editValue: string, setEditValue: (value: string) => void, handleSaveEdit: () => void, handleCancelEdit: () => void, handleStartEdit: (tokenId: number, field: string, currentValue: string) => void, getStatusBadge: (token: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }) => JSX.Element, queryClient: any, startBotMutation: any, stopBotMutation: any, deleteBotMutation: any, toggleDatabaseMutation: any, generatorLogsEnabled: boolean, handleToggleGeneratorLogs: (enabled: boolean) => void, commentsGenerationEnabled: boolean, handleToggleCommentsGeneration: (enabled: boolean) => void, currentElapsedSeconds: number, showAddBot: boolean, projectForNewBot: number | null, newBotToken: string, setNewBotToken: (token: string) => void, isParsingBot: boolean, createBotMutation: any, handleAddBot: () => void, editingToken: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; } | null, setEditingToken: (token: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; } | null) => void, editName: string, setEditName: (name: string) => void, updateTokenMutation: any, editDescription: string, setEditDescription: (desc: string) => void) {
+function renderBotControlPanel(
+  setShowAddBot: (show: boolean) => void,
+  projectsLoading: boolean,
+  projects: { data: unknown; id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null; }[],
+  allTokens: ProjectTokenType[][],
+  allBotInfos: BotInfo[],
+  setProjectForNewBot: (projectId: number | null) => void,
+  allBotStatuses: BotStatusResponse[],
+  editingField: EditingFieldType,
+  editValue: string,
+  setEditValue: (value: string) => void,
+  handleSaveEdit: () => void,
+  handleCancelEdit: () => void,
+  handleStartEdit: (tokenId: number, field: string, currentValue: string) => void,
+  getStatusBadge: (token: BotTokenType) => JSX.Element,
+  queryClient: any,
+  startBotMutation: any,
+  stopBotMutation: any,
+  deleteBotMutation: any,
+  toggleDatabaseMutation: any,
+  generatorLogsEnabled: boolean,
+  handleToggleGeneratorLogs: (enabled: boolean) => void,
+  commentsGenerationEnabled: boolean,
+  handleToggleCommentsGeneration: (enabled: boolean) => void,
+  currentElapsedSeconds: number,
+  showAddBot: boolean,
+  projectForNewBot: number | null,
+  newBotToken: string,
+  setNewBotToken: (token: string) => void,
+  isParsingBot: boolean,
+  createBotMutation: any,
+  handleAddBot: () => void,
+  editingToken: TokenInfoType,
+  setEditingToken: (token: TokenInfoType) => void,
+  editName: string,
+  setEditName: (name: string) => void,
+  updateTokenMutation: any,
+  editDescription: string,
+  setEditDescription: (desc: string) => void,
+  terminalVisible: boolean,
+  setTerminalVisible: (visible: boolean) => void
+) {
   return <div className="space-y-4 sm:space-y-6">
     {/* Header */}
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -1048,14 +1183,28 @@ function renderBotControlPanel(setShowAddBot: (show: boolean) => void, projectsL
           Управление ботами из всех проектов
         </p>
       </div>
-      <Button
-        onClick={() => setShowAddBot(true)}
-        className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 h-10 sm:h-auto px-3 sm:px-4 py-2 sm:py-2 text-sm sm:text-base"
-        data-testid="button-connect-bot"
-      >
-        <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-        <span>Подключить бот</span>
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button
+          onClick={() => setTerminalVisible(!terminalVisible)}
+          className={`flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto font-semibold transition-all duration-200 h-10 sm:h-auto px-3 sm:px-4 py-2 sm:py-2 text-sm sm:text-base ${
+            terminalVisible
+              ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40'
+              : 'bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white shadow-lg shadow-gray-500/30 hover:shadow-xl hover:shadow-gray-500/40'
+          }`}
+          data-testid="button-toggle-terminal"
+        >
+          <Code className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>{terminalVisible ? 'Скрыть терминал' : 'Показать терминал'}</span>
+        </Button>
+        <Button
+          onClick={() => setShowAddBot(true)}
+          className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 h-10 sm:h-auto px-3 sm:px-4 py-2 sm:py-2 text-sm sm:text-base"
+          data-testid="button-connect-bot"
+        >
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>Подключить бот</span>
+        </Button>
+      </div>
     </div>
     {projectsLoading ? (
       <div className="grid gap-4">
@@ -1222,13 +1371,13 @@ function renderBotProjectCard(showAddBot: boolean, setShowAddBot: (show: boolean
  * Функция для рендеринга диалога редактирования токена бота
  *
  * @param editingToken - Токен, который в данный момент редактируется
- * @param setEditingToken - Функция для установки редактируемого токена
+ * @param setEditingToken - Функция для установки редакти��уемого токена
  * @param editName - Редактируемое имя
  * @param setEditName - Функция для установки редактируемого имени
  * @param updateTokenMutation - Мутация для обновления токена
  * @param editDescription - Редактируемое описание
  * @param setEditDescription - Функция для установки редактируемого описания
- * @returns JSX элемент диалога редактирования токена бота
+ * @returns JSX элемент д��алога редактирования токена бота
  */
 function renderBotTokenManagementSection(editingToken: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; } | null, setEditingToken: (token: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; } | null) => void, editName: string, setEditName: (name: string) => void, updateTokenMutation: any, editDescription: string, setEditDescription: (desc: string) => void) {
   return <Dialog open={!!editingToken} onOpenChange={() => setEditingToken(null)}>
@@ -1584,7 +1733,7 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
                         <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${generatorLogsEnabled
                           ? 'bg-purple-500/8 border-purple-500/30 dark:bg-purple-500/10 dark:border-purple-500/40'
                           : 'bg-gray-500/8 border-gray-500/30 dark:bg-gray-500/10 dark:border-gray-500/40'}`} data-testid="generator-logs-toggle-container-bot-card">
-                          <Terminal className={`w-4 h-4 flex-shrink-0 ${generatorLogsEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'}`} />
+                          <TerminalIcon className={`w-4 h-4 flex-shrink-0 ${generatorLogsEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'}`} />
                           <Label htmlFor="generator-logs-toggle" className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${generatorLogsEnabled
                             ? 'text-purple-700 dark:text-purple-300'
                             : 'text-gray-700 dark:text-gray-300'}`}>Логи генератора</Label>
