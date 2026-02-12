@@ -13,10 +13,8 @@ import {
 } from './format';
 import { generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
-import { generateMessageLoggingCode } from './generate/generate-message-logging';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateGlobalCheckUserVariableFunction } from './utils/generateUniversalVariableReplacement';
 import { filterInlineNodes } from './Keyboard/filterInlineNodes';
 import { generateReplyButtonHandlers } from './Keyboard/generate-reply-button-handlers';
 import { generateTransitionLogicForMultiSelectCompletion } from './Keyboard/generate-transition-logic-multi-select';
@@ -27,9 +25,11 @@ import { generateMultiSelectReplyHandler } from './Keyboard/generateMultiSelectR
 import { hasInlineButtons } from './Keyboard/hasInlineButtons';
 import { identifyNodesRequiringMultiSelectLogic } from './Keyboard/identifyNodesRequiringMultiSelectLogic';
 import { processInlineButtonNodes } from './Keyboard/processInlineButtonNodes';
+import { generateMessageLoggingCode } from './logging/generate-message-logging';
 import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';
 import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
 import { hasMediaNodes } from './MediaHandler/hasMediaNodes';
+import { hasUploadImageUrls } from './MediaHandler/hasUploadImageUrls';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
 import { newgenerateStateTransitionAndRenderLogic } from './newgenerateStateTransitionAndRenderLogic';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation';
@@ -40,10 +40,9 @@ import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './utils/addInputTargetNodes';
 import { collectInputTargetNodes } from './utils/collectInputTargetNodes';
 import { extractNodeData } from './utils/extractNodeData';
-import { generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
+import { generateGlobalCheckUserVariableFunction, generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
 import { hasAutoTransitions } from './utils/hasAutoTransitions';
 import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
-import { hasUploadImageUrls } from './MediaHandler/hasUploadImageUrls';
 import { processConnectionTargets } from './utils/processConnectionTargets';
 
 
