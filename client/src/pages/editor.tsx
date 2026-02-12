@@ -1589,7 +1589,6 @@ export default function Editor() {
                 <FileExplorerPanel
                   botData={botDataWithSheets ? (botDataWithSheets as any).data as BotData : getBotData()}
                   projectName={activeProject.name}
-                  groups={[]}
                   userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
                   projectId={activeProject.id}
                 />
