@@ -47,15 +47,27 @@ interface UseTerminalWebSocketParams {
 }
 
 /**
+ * Тип возвращаемого значения хука
+ * @typedef {Object} UseTerminalWebSocketResult
+ * @property {ConnectionStatus} status - Состояние соединения
+ * @property {WebSocket | null} wsConnection - WebSocket-соединение
+ * @property {() => void} connect - Метод для подключения
+ * @property {() => void} disconnect - Метод для отключения
+ */
+interface UseTerminalWebSocketResult {
+  status: ConnectionStatus;
+  wsConnection: WebSocket | null;
+  connect: () => void;
+  disconnect: () => void;
+}
+
+/**
  * Хук для управления WebSocket-соединением с терминалом
  *
  * @param {UseTerminalWebSocketParams} params - Параметры хука
- * @returns {Object} Объект с состоянием соединения и методами управления
- * @returns {ConnectionStatus} return.status - Состояние соединения
- * @returns {() => void} return.connect - Метод для подключения
- * @returns {() => void} return.disconnect - Метод для отключения
+ * @returns {UseTerminalWebSocketResult} Объект с состоянием соединения и методами управления
  */
-export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTerminalWebSocketParams) => {
+export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTerminalWebSocketParams): UseTerminalWebSocketResult => {
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -93,7 +105,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
 
         // Отправляем сообщение в терминал о подключении
         if (terminalRef?.current) {
-          terminalRef.current.addLine(`[Система] Подключено к терминалу бота (ID проекта: ${projectId}, ID токена: ${tokenId})`, 'stdout');
+          terminalRef.current.addLineLocal(`[Система] Подключено к терминалу бота (ID проекта: ${projectId}, ID токена: ${tokenId})`, 'stdout');
         }
       };
 
@@ -101,16 +113,16 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
         try {
           const message: TerminalWebSocketMessage = JSON.parse(event.data);
 
-          // Отправляем сообщение в терминал
+          // Отправляем сообщение в терминал без отправки обратно на сервер
           if (terminalRef?.current) {
             // Для типа 'status' используем 'stdout', так как TerminalHandle.addLine принимает только 'stdout' или 'stderr'
             const outputType = message.type === 'status' ? 'stdout' : message.type;
-            terminalRef.current.addLine(`[PID:${message.projectId}/${message.tokenId}] ${message.content}`, outputType);
+            terminalRef.current.addLineLocal(`[PID:${message.projectId}/${message.tokenId}] ${message.content}`, outputType);
           }
         } catch (error) {
           console.error('Ошибка при обработке сообщения от терминала:', error);
           if (terminalRef?.current) {
-            terminalRef.current.addLine(`[Ошибка] Некорректное сообщение от сервера: ${event.data}`, 'stderr');
+            terminalRef.current.addLineLocal(`[Ошибка] Некорректное сообщение от сервера: ${event.data}`, 'stderr');
           }
         }
       };
@@ -136,7 +148,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
         setStatus('error');
 
         if (terminalRef?.current) {
-          terminalRef.current.addLine('[Ошибка] Соединение с терминалом потеряно', 'stderr');
+          terminalRef.current.addLineLocal('[Ошибка] Соединение с терминалом потеряно', 'stderr');
         }
       };
     } catch (error) {
@@ -162,7 +174,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
     setStatus('disconnected');
     
     if (terminalRef?.current) {
-      terminalRef.current.addLine('[Система] Отключено от терминала', 'stdout');
+      terminalRef.current.addLineLocal('[Система] Отключено от терминала', 'stdout');
     }
   };
 
@@ -186,6 +198,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
 
   return {
     status,
+    wsConnection: wsRef.current,
     connect,
     disconnect
   };

@@ -33,8 +33,7 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
   const terminalRef = useRef<TerminalHandle>(null);
 
   // WebSocket для получения вывода бота
-  // @ts-ignore
-  const { status: wsStatus } = useTerminalWebSocket({
+  const { status: wsStatus, wsConnection } = useTerminalWebSocket({
     terminalRef,
     projectId: projectId || null,
     tokenId: isBotRunning ? tokenId : null
@@ -81,6 +80,9 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
           <TerminalComponent
             ref={terminalRef}
             isVisible={terminalVisible}
+            wsConnection={wsConnection}
+            projectId={projectId}
+            tokenId={tokenId}
           />
         </div>
       </div>

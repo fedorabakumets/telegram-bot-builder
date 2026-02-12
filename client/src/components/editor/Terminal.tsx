@@ -38,6 +38,12 @@ interface TerminalProps {
   isVisible?: boolean;
   /** Функция для переключения видимости терминала */
   onToggleVisibility?: () => void;
+  /** WebSocket-соединение для отправки логов на сервер */
+  wsConnection?: WebSocket | null;
+  /** Идентификатор проекта для отправки логов */
+  projectId?: number;
+  /** Идентификатор токена для отправки логов */
+  tokenId?: number;
 }
 
 /**
@@ -46,7 +52,11 @@ interface TerminalProps {
  */
 export interface TerminalHandle {
   /** Добавить новую строку в терминал */
-  addLine: (content: string, type?: 'stdout' | 'stderr') => void;
+  addLine: (content: string, type?: 'stdout' | 'stderr', sendToServer?: boolean) => void;
+  /** Добавить новую строку в терминал без отправки на сервер */
+  addLineLocal: (content: string, type?: 'stdout' | 'stderr') => void;
+  /** Отправить строку в серверный терминал */
+  sendToServer: (content: string, type?: 'stdout' | 'stderr') => void;
 }
 
 /**
@@ -55,13 +65,41 @@ export interface TerminalHandle {
  * @param ref - Ссылка для доступа к методам компонента
  * @returns JSX.Element
  */
-export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
-  maxLines = 1000,
-  isVisible = true,
-  onToggleVisibility
-}, ref) => {
+export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) => {
+  const {
+    maxLines = 1000,
+    isVisible = true,
+    onToggleVisibility,
+    wsConnection,
+    projectId,
+    tokenId
+  } = props;
   // Состояние для хранения строк терминала
   const [lines, setLines] = useState<TerminalLine[]>([]);
+
+  // Функция для отправки логов на сервер
+  const sendToServer = (content: string, type: 'stdout' | 'stderr' = 'stdout') => {
+    // Проверяем, есть ли WebSocket-соединение и идентификаторы
+    if (props.wsConnection && props.projectId !== undefined && props.tokenId !== undefined) {
+      // Формируем сообщение для отправки на сервер
+      const message = {
+        type,
+        content,
+        projectId: props.projectId,
+        tokenId: props.tokenId,
+        timestamp: new Date().toISOString()
+      };
+
+      // Отправляем сообщение на сервер через WebSocket
+      if (props.wsConnection.readyState === WebSocket.OPEN) {
+        props.wsConnection.send(JSON.stringify(message));
+      } else {
+        console.warn('WebSocket-соединение недоступно для отправки лога:', content);
+      }
+    } else {
+      console.warn('Недостаточно данных для отправки лога на сервер:', content);
+    }
+  };
 
   // Состояние для хранения уровня масштабирования
   const [scale, setScale] = useState<number>(1);
@@ -94,8 +132,35 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
    * Добавить новую строку в терминал
    * @param content - Содержимое строки
    * @param type - Тип вывода (stdout/stderr)
+   * @param sendToServerFlag - Флаг, указывающий, нужно ли отправить строку на сервер
    */
-  const addLine = (content: string, type: 'stdout' | 'stderr' = 'stdout') => {
+  const addLine = (content: string, type: 'stdout' | 'stderr' = 'stdout', sendToServerFlag: boolean = true) => {
+    const newLine: TerminalLine = {
+      id: Date.now().toString(),
+      content,
+      type,
+      timestamp: new Date()
+    };
+
+    setLines(prev => {
+      const updatedLines = [...prev, newLine];
+
+      // Ограничиваем количество строк до maxLines
+      if (updatedLines.length > maxLines) {
+        return updatedLines.slice(-maxLines);
+      }
+
+      return updatedLines;
+    });
+
+    // Отправляем строку на сервер, если флаг установлен
+    if (sendToServerFlag) {
+      sendToServer(content, type);
+    }
+  };
+
+  // Функция для добавления строки без отправки на сервер
+  const addLineLocal = (content: string, type: 'stdout' | 'stderr' = 'stdout') => {
     const newLine: TerminalLine = {
       id: Date.now().toString(),
       content,
@@ -117,7 +182,9 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(({
 
   // Предоставляем методы через ref
   useImperativeHandle(ref, () => ({
-    addLine
+    addLine,
+    addLineLocal,
+    sendToServer
   }));
 
   /**
