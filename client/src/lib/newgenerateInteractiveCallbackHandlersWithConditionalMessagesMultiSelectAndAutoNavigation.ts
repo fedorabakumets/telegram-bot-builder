@@ -856,7 +856,14 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             code += '    else:\n';
             code += `        # ⚡ Автопереход к узлу ${autoTransitionTarget}\n`;
             code += `        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTarget}")\n`;
-            code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
+            // Проверяем, существует ли целевой узел перед вызовом обработчика
+            const targetExists = nodes.some(n => n.id === autoTransitionTarget);
+            if (targetExists) {
+              code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
+            } else {
+              code += `        logging.warning(f"⚠️ Узел автоперехода не найден: {autoTransitionTarget}, завершаем переход")\n`;
+              code += `        await callback_query.message.edit_text("Переход завершен")\n`;
+            }
             code += `        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTarget}")\n`;
             code += `        return\n`;
             code += '    \n';
@@ -1184,7 +1191,14 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += '            else:\n';
                         code += `                # ⚡ Автопереход к узлу ${autoTargetId}\n`;
                         code += `                logging.info(f"⚡ Автопереход от узла ${navTargetNode.id} к узлу ${autoTargetId}")\n`;
-                        code += `                await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+                        // Проверяем, существует ли целевой узел перед вызовом обработчика
+                        const targetExists = nodes.some(n => n.id === autoTargetId);
+                        if (targetExists) {
+                          code += `                await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+                        } else {
+                          code += `                logging.warning(f"⚠️ Узел автоперехода не найден: {autoTargetId}, завершаем переход")\n`;
+                          code += `                await callback_query.message.edit_text("Переход завершен")\n`;
+                        }
                         code += `                logging.info(f"✅ Автопереход выполнен: ${navTargetNode.id} -> ${autoTargetId}")\n`;
                         code += '                return\n';
                       }

@@ -207,7 +207,14 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                             code += '                    message=message,\n';
                             code += '                    answer=lambda *args, **kwargs: None\n';
                             code += '                )\n';
-                            code += `                await handle_callback_${button.target.replace(/[^a-zA-Z0-9_]/g, '_')}(fake_callback)\n`;
+                            // Проверяем, существует ли целевой узел перед вызовом обработчика
+                            const targetExists = nodes.some(n => n.id === button.target);
+                            if (targetExists) {
+                              code += `                await handle_callback_${button.target.replace(/[^a-zA-Z0-9_]/g, '_')}(fake_callback)\n`;
+                            } else {
+                              code += `                logging.warning(f"⚠️ Целевой узел не найден: {button.target}, завершаем переход")\n`;
+                              code += `                await message.answer("Переход завершен")\n`;
+                            }
                         }
                         code += `                return\n`;
                     }

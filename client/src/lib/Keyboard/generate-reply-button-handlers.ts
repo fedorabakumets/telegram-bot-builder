@@ -144,7 +144,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               code += '                return await self.message.answer(text, **kwargs)\n';
               code += '    \n';
               code += `    mock_callback = MockCallback("${targetNode.id}", message.from_user, message)\n`;
-              code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
+              // Проверяем, существует ли целевой узел перед вызовом обработчика
+              const targetExists = (nodes || []).some(n => n.id === targetNode.id);
+              if (targetExists) {
+                code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
+              } else {
+                code += `    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
+                code += `    await message.answer("Переход завершен")\n`;
+              }
             } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               // Проверяем, есть ли статическое изображение в целевом узле
               if (targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '' && targetNode.data.imageUrl !== 'undefined') {
@@ -322,7 +329,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 code += '                return await self.message.answer(text, **kwargs)\n';
                 code += '    \n';
                 code += `    mock_callback = MockCallback("${targetNode.id}", message.from_user, message)\n`;
-                code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
+                // Проверяем, существует ли целевой узел перед вызовом обработчика
+                const targetExists = (nodes || []).some(n => n.id === targetNode.id);
+                if (targetExists) {
+                  code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
+                } else {
+                  code += `    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
+                  code += `    await message.answer("Переход завершен")\n`;
+                }
               } else {
                 // Устанавливаем переменные из attachedMedia для целевого узла
                 if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
@@ -454,7 +468,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 code += '                return await self.message.answer(text, **kwargs)\n';
                 code += '    \n';
                 code += `    mock_callback = MockCallback("${targetNode.id}", message.from_user, message)\n`;
-                code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
+                // Проверяем, существует ли целевой узел перед вызовом обработчика
+                const targetExists = (nodes || []).some(n => n.id === targetNode.id);
+                if (targetExists) {
+                  code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
+                } else {
+                  code += `    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
+                  code += `    await message.answer("Переход завершен")\n`;
+                }
               } else {
                 // Устанавливаем переменные из attachedMedia для целевого узла
                 if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
@@ -584,7 +605,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   code += '        )\n';
 
                   // Генерируем вызов обработчика для целевого узла
-                  code += `        await handle_callback_${autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(fake_callback)\n`;
+                  // Проверяем, существует ли целевой узел перед вызовом обработчика
+                  const targetExists = (nodes || []).some(n => n.id === autoTargetNode.id);
+                  if (targetExists) {
+                    code += `        await handle_callback_${autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(fake_callback)\n`;
+                  } else {
+                    code += `        logging.warning(f"⚠️ Целевой узел автоперехода не найден: {autoTargetNode.id}, завершаем переход")\n`;
+                    code += `        await message.answer("Переход завершен")\n`;
+                  }
                 }
                 code += `        logging.info(f"✅ Автопереход выполнен: ${targetNode.id} -> ${autoTargetNode.id}")\n`;
               }

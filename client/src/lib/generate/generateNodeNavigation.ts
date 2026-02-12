@@ -68,7 +68,7 @@ export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNod
           code += `${baseIndent}        answer=lambda: None\n`;
           code += `${baseIndent}    )\n`;
 
-          // Вызываем callback-обработчик вместо инлайн-отправки
+          // Проверяем, существует ли целевой узел автоперехода среди всех узлов
           const autoTargetNode = nodes.find(n => n.id === targetNode.data.autoTransitionTo);
           if (autoTargetNode) {
             const safeFuncName = autoTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -76,7 +76,8 @@ export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNod
           } else {
             // Добавляем безопасный код, если целевой узел автоперехода не найден
             code += `${baseIndent}    logging.warning(f"⚠️ Узел автоперехода не найден: {targetNode.data.autoTransitionTo}")\n`;
-            code += `${baseIndent}    await fake_callback.message.edit_text("Переход завершен")\n`;
+            code += `${baseIndent}    # Целевой узел автоперехода не существует, пропускаем вызов обработчика\n`;
+            code += `${baseIndent}    await fake_callback.message.answer("Переход завершен")\n`;
           }
           code += `${baseIndent}    logging.info(f"✅ Автопереход выполнен: {${nextNodeIdVar}} -> {auto_next_node_id}")\n`;
         } else {

@@ -123,7 +123,14 @@ export function generateButtonResponseHandlers(code: string, userInputNodes: Nod
           const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
           const condition = btnIndex === 0 ? 'if' : 'elif';
           code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
-          code += `                            await handle_callback_${safeFunctionName}(callback_query)\n`;
+          // Проверяем, существует ли целевой узел перед вызовом обработчика
+          const targetExists = nodes.some(n => n.id === btnNode.id);
+          if (targetExists) {
+            code += `                            await handle_callback_${safeFunctionName}(callback_query)\n`;
+          } else {
+            code += `                            logging.warning(f"⚠️ Целевой узел не найден: {btnNode.id}, завершаем переход")\n`;
+            code += `                            await callback_query.message.edit_text("Переход завершен")\n`;
+          }
         });
 
         code += '                        else:\n';
@@ -253,7 +260,14 @@ export function generateButtonResponseHandlers(code: string, userInputNodes: Nod
           const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
           const condition = btnIndex === 0 ? 'if' : 'elif';
           code += `                ${condition} target_node_id == "${btnNode.id}":\n`;
-          code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
+          // Проверяем, существует ли целевой узел перед вызовом обработчика
+          const targetExists = nodes.some(n => n.id === btnNode.id);
+          if (targetExists) {
+            code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
+          } else {
+            code += `                    logging.warning(f"⚠️ Целевой узел не найден: {btnNode.id}, завершаем переход")\n`;
+            code += `                    await callback_query.message.edit_text("Переход завершен")\n`;
+          }
         });
         code += '                else:\n';
         code += '                    logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
@@ -274,7 +288,14 @@ export function generateButtonResponseHandlers(code: string, userInputNodes: Nod
           const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
           const condition = btnIndex === 0 ? 'if' : 'elif';
           code += `                ${condition} next_node_id == "${btnNode.id}":\n`;
-          code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
+          // Проверяем, существует ли целевой узел перед вызовом обработчика
+          const targetExists = nodes.some(n => n.id === btnNode.id);
+          if (targetExists) {
+            code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
+          } else {
+            code += `                    logging.warning(f"⚠️ Целевой узел не найден: {btnNode.id}, завершаем переход")\n`;
+            code += `                    await callback_query.message.edit_text("Переход завершен")\n`;
+          }
         });
         code += '                else:\n';
         code += '                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
