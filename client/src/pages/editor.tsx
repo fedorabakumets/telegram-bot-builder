@@ -22,6 +22,7 @@ import { UserDatabasePanel } from '@/components/editor/user-database-panel';
 import { DialogPanel } from '@/components/editor/dialog-panel';
 import { UserDetailsPanel } from '@/components/editor/user-details-panel';
 import { GroupsPanel } from '@/components/editor/groups-panel';
+import { FileExplorerPanel } from '@/components/editor/file-explorer-panel';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
@@ -62,7 +63,7 @@ export default function Editor() {
    * Текущая выбранная вкладка в интерфейсе редактора
    * @type {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'}
    */
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
+  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'files'>('editor');
 
   /**
    * Флаг отображения модального окна сохранения шаблона
@@ -834,7 +835,7 @@ export default function Editor() {
    *
    * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} tab - Выбранная вкладка
    */
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
+  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'files') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
@@ -1452,6 +1453,16 @@ export default function Editor() {
             projectId={activeProject.id}
             userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
           />
+        ) : currentTab === 'files' ? (
+          <div className="h-full">
+            <FileExplorerPanel
+              botData={botDataWithSheets ? (botDataWithSheets as any).data as BotData : getBotData()}
+              projectName={activeProject.name}
+              groups={[]}
+              userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
+              projectId={activeProject.id}
+            />
+          </div>
         ) : null}
       </div>
     );
@@ -1523,6 +1534,17 @@ export default function Editor() {
                   onOpenDialog={handleOpenDialogPanel}
                 />
               )
+            }
+            fileExplorerContent={
+              currentTab === 'files' && activeProject ? (
+                <FileExplorerPanel
+                  botData={botDataWithSheets ? (botDataWithSheets as any).data as BotData : getBotData()}
+                  projectName={activeProject.name}
+                  groups={[]}
+                  userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
+                  projectId={activeProject.id}
+                />
+              ) : null
             }
             onConfigChange={setFlexibleLayoutConfig}
             hideOnMobile={isMobile}
@@ -1669,6 +1691,16 @@ export default function Editor() {
                   projectId={activeProject.id}
                   userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
                 />
+              ) : currentTab === 'files' ? (
+                <div className="h-full">
+                  <FileExplorerPanel
+                    botData={botDataWithSheets ? (botDataWithSheets as any).data as BotData : getBotData()}
+                    projectName={activeProject.name}
+                    groups={[]}
+                    userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
+                    projectId={activeProject.id}
+                  />
+                </div>
               ) : null}
             </div>
           }

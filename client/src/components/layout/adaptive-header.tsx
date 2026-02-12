@@ -53,8 +53,8 @@ interface AdaptiveHeaderProps {
   config: LayoutConfig;
   projectName: string;
   botInfo?: BotInfo | null;
-  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups';
-  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => void;
+  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'files';
+  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'files') => void;
   onExport: () => void;
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
@@ -174,7 +174,8 @@ export function AdaptiveHeader({
         { key: 'export', label: 'Экспорт' },
         { key: 'bot', label: 'Бот' },
         { key: 'users', label: 'Пользователи' },
-        { key: 'groups', label: 'Группы' }
+        { key: 'groups', label: 'Группы' },
+        { key: 'files', label: 'Файлы' }
       ].map((tab) => (
         <button 
           key={tab.key}
@@ -200,7 +201,8 @@ export function AdaptiveHeader({
           { key: 'export', label: 'Экспорт' },
           { key: 'bot', label: 'Бот' },
           { key: 'users', label: 'Пользователи' },
-          { key: 'groups', label: 'Группы' }
+          { key: 'groups', label: 'Группы' },
+          { key: 'files', label: 'Файлы' }
         ].map((tab) => (
           <button 
             key={tab.key}

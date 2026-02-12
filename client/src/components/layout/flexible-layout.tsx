@@ -15,6 +15,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
  * @property {React.ReactNode} [codeContent] - Контент панели кода
  * @property {React.ReactNode} [dialogContent] - Контент диалогового окна
  * @property {React.ReactNode} [userDetailsContent] - Контент информации о пользователе
+ * @property {React.ReactNode} [fileExplorerContent] - Контент панели проводника файлов
  * @property {(newConfig: SimpleLayoutConfig) => void} [onConfigChange] - Функция обратного вызова при изменении конфигурации
  * @property {boolean} [hideOnMobile] - Скрывать боковые панели на маленьких устройствах
  * @property {string} [currentTab] - Текущая активная вкладка
@@ -28,6 +29,7 @@ interface FlexibleLayoutProps {
   codeContent?: React.ReactNode;
   dialogContent?: React.ReactNode;
   userDetailsContent?: React.ReactNode;
+  fileExplorerContent?: React.ReactNode;
   onConfigChange?: (newConfig: SimpleLayoutConfig) => void;
   hideOnMobile?: boolean; // Скрывать боковые панели на маленьких устройствах
   currentTab?: string; // Текущая активная вкладка
@@ -49,6 +51,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   codeContent,
   dialogContent,
   userDetailsContent,
+  fileExplorerContent,
   onConfigChange,
   hideOnMobile = false}) => {
   // Определяем мобильное устройство (экраны меньше 1200px для тестирования)
@@ -77,6 +80,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         return dialogContent;
       case 'userDetails':
         return userDetailsContent;
+      case 'fileExplorer':
+        return fileExplorerContent;
       default:
         return null;
     }
