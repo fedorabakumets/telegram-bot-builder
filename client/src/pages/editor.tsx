@@ -63,7 +63,7 @@ export default function Editor() {
    * Текущая выбранная вкладка в интерфейсе редактора
    * @type {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'}
    */
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'files'>('editor');
+  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
 
   /**
    * Флаг отображения модального окна сохранения шаблона
@@ -94,6 +94,12 @@ export default function Editor() {
    * @type {UserBotData|null}
    */
   const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
+
+  /**
+   * Флаг отображения панели проводника файлов
+   * @type {boolean}
+   */
+  const [showFileExplorer, setShowFileExplorer] = useState(false);
 
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
@@ -407,6 +413,50 @@ export default function Editor() {
   }, []);
 
   /**
+   * Обработчик открытия панели проводника файлов
+   */
+  const handleOpenFileExplorerPanel = useCallback(() => {
+    const isAlreadyOpen = showFileExplorer;
+
+    if (isAlreadyOpen) {
+      handleCloseFileExplorerPanel();
+    } else {
+      setShowFileExplorer(true);
+      setFlexibleLayoutConfig(prev => ({
+        ...prev,
+        elements: prev.elements.map(element => {
+          if (element.id === 'fileExplorer') {
+            return { ...element, visible: true };
+          }
+          if (element.id === 'sidebar') {
+            return { ...element, visible: false };
+          }
+          return element;
+        })
+      }));
+    }
+  }, [showFileExplorer]);
+
+  /**
+   * Обработчик закрытия панели проводника файлов
+   */
+  const handleCloseFileExplorerPanel = useCallback(() => {
+    setShowFileExplorer(false);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element => {
+        if (element.id === 'fileExplorer') {
+          return { ...element, visible: false };
+        }
+        if (element.id === 'sidebar') {
+          return { ...element, visible: true };
+        }
+        return element;
+      })
+    }));
+  }, []);
+
+  /**
    * Обработчик открытия мобильного сайдбара
    */
   const handleOpenMobileSidebar = useCallback(() => {
@@ -483,6 +533,14 @@ export default function Editor() {
           id: 'userDetails',
           type: 'userDetails',
           name: 'Детали пользователя',
+          position: 'left',
+          size: 25,
+          visible: false
+        },
+        {
+          id: 'fileExplorer',
+          type: 'fileExplorer',
+          name: 'Проводник файлов',
           position: 'left',
           size: 25,
           visible: false
@@ -835,7 +893,7 @@ export default function Editor() {
    *
    * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} tab - Выбранная вкладка
    */
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'files') => {
+  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
@@ -1367,6 +1425,7 @@ export default function Editor() {
         onToggleProperties={handleToggleProperties}
         onToggleCanvas={handleToggleCanvas}
         onToggleCode={handleToggleCode}
+        onOpenFileExplorer={handleOpenFileExplorerPanel}
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
         sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
         propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
@@ -1453,16 +1512,6 @@ export default function Editor() {
             projectId={activeProject.id}
             userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
           />
-        ) : currentTab === 'files' ? (
-          <div className="h-full">
-            <FileExplorerPanel
-              botData={botDataWithSheets ? (botDataWithSheets as any).data as BotData : getBotData()}
-              projectName={activeProject.name}
-              groups={[]}
-              userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
-              projectId={activeProject.id}
-            />
-          </div>
         ) : null}
       </div>
     );
@@ -1691,16 +1740,6 @@ export default function Editor() {
                   projectId={activeProject.id}
                   userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
                 />
-              ) : currentTab === 'files' ? (
-                <div className="h-full">
-                  <FileExplorerPanel
-                    botData={botDataWithSheets ? (botDataWithSheets as any).data as BotData : getBotData()}
-                    projectName={activeProject.name}
-                    groups={[]}
-                    userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
-                    projectId={activeProject.id}
-                  />
-                </div>
               ) : null}
             </div>
           }

@@ -53,8 +53,8 @@ interface AdaptiveHeaderProps {
   config: LayoutConfig;
   projectName: string;
   botInfo?: BotInfo | null;
-  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'files';
-  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'files') => void;
+  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups';
+  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => void;
   onExport: () => void;
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
@@ -65,6 +65,7 @@ interface AdaptiveHeaderProps {
   onToggleProperties?: () => void;
   onToggleCanvas?: () => void;
   onToggleCode?: () => void;
+  onOpenFileExplorer?: () => void;
   headerVisible?: boolean;
   sidebarVisible?: boolean;
   propertiesVisible?: boolean;
@@ -174,8 +175,7 @@ export function AdaptiveHeader({
         { key: 'export', label: 'Экспорт' },
         { key: 'bot', label: 'Бот' },
         { key: 'users', label: 'Пользователи' },
-        { key: 'groups', label: 'Группы' },
-        { key: 'files', label: 'Файлы' }
+        { key: 'groups', label: 'Группы' }
       ].map((tab) => (
         <button 
           key={tab.key}
@@ -201,8 +201,7 @@ export function AdaptiveHeader({
           { key: 'export', label: 'Экспорт' },
           { key: 'bot', label: 'Бот' },
           { key: 'users', label: 'Пользователи' },
-          { key: 'groups', label: 'Группы' },
-          { key: 'files', label: 'Файлы' }
+          { key: 'groups', label: 'Группы' }
         ].map((tab) => (
           <button 
             key={tab.key}
@@ -344,6 +343,24 @@ export function AdaptiveHeader({
               <span className="sm:hidden">{codeVisible ? 'Скрыть' : 'Показать'} код</span>
             </Button>
           )}
+          
+          {onOpenFileExplorer && (
+            <Button
+              size="sm"
+              onClick={() => {
+                onOpenFileExplorer();
+                setIsMobileMenuOpen(false);
+              }}
+              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
+                'bg-blue-600 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40'
+              }`}
+              title="Открыть проводник файлов"
+              data-testid="button-mobile-open-file-explorer"
+            >
+              <i className="fas fa-folder sm:w-4 sm:h-4 w-0 sm:flex-shrink-0"></i>
+              <span className="sm:hidden">Файлы</span>
+            </Button>
+          )}
         </div>
       )}
 
@@ -472,6 +489,19 @@ export function AdaptiveHeader({
           data-testid="button-toggle-code"
         >
           <Code className="w-3.5 h-3.5" />
+        </Button>
+      )}
+
+      {onOpenFileExplorer && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onOpenFileExplorer}
+          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40'}`}
+          title="Открыть проводник файлов"
+          data-testid="button-open-file-explorer"
+        >
+          <i className="fas fa-folder w-3.5 h-3.5" />
         </Button>
       )}
       
