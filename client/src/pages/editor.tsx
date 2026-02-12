@@ -22,7 +22,6 @@ import { UserDatabasePanel } from '@/components/editor/user-database-panel';
 import { DialogPanel } from '@/components/editor/dialog-panel';
 import { UserDetailsPanel } from '@/components/editor/user-details-panel';
 import { GroupsPanel } from '@/components/editor/groups-panel';
-import { FileExplorerPanel } from '@/components/editor/file-explorer-panel';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
@@ -94,12 +93,6 @@ export default function Editor() {
    * @type {UserBotData|null}
    */
   const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
-
-  /**
-   * Флаг отображения панели проводника файлов
-   * @type {boolean}
-   */
-  const [showFileExplorer, setShowFileExplorer] = useState(false);
 
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
@@ -435,49 +428,6 @@ export default function Editor() {
     }));
   }, []);
 
-  /**
-   * Обработчик открытия панели проводника файлов
-   */
-  const handleOpenFileExplorerPanel = useCallback(() => {
-    const isAlreadyOpen = showFileExplorer;
-
-    if (isAlreadyOpen) {
-      handleCloseFileExplorerPanel();
-    } else {
-      setShowFileExplorer(true);
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(element => {
-          if (element.id === 'fileExplorer') {
-            return { ...element, visible: true };
-          }
-          if (element.id === 'sidebar') {
-            return { ...element, visible: false };
-          }
-          return element;
-        })
-      }));
-    }
-  }, [showFileExplorer]);
-
-  /**
-   * Обработчик закрытия панели проводника файлов
-   */
-  const handleCloseFileExplorerPanel = useCallback(() => {
-    setShowFileExplorer(false);
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element => {
-        if (element.id === 'fileExplorer') {
-          return { ...element, visible: false };
-        }
-        if (element.id === 'sidebar') {
-          return { ...element, visible: true };
-        }
-        return element;
-      })
-    }));
-  }, []);
 
   /**
    * Обработчик открытия мобильного сайдбара
@@ -1448,7 +1398,6 @@ export default function Editor() {
         onToggleProperties={handleToggleProperties}
         onToggleCanvas={handleToggleCanvas}
         onToggleCode={handleOpenCodePanel}
-        onOpenFileExplorer={handleOpenFileExplorerPanel}
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
         sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
         propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
@@ -1606,16 +1555,6 @@ export default function Editor() {
                   onOpenDialog={handleOpenDialogPanel}
                 />
               )
-            }
-            fileExplorerContent={
-              showFileExplorer ? (
-                <FileExplorerPanel
-                  botData={botDataWithSheets ? (botDataWithSheets as any).data as BotData : getBotData()}
-                  projectName={activeProject.name}
-                  userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
-                  projectId={activeProject.id}
-                />
-              ) : null
             }
             onConfigChange={setFlexibleLayoutConfig}
             hideOnMobile={isMobile}
