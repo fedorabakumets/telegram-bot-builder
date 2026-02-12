@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Утилита для генерации кода глобальной функции проверки пользовательских переменных
+ *
+ * Этот модуль предоставляет функцию для генерации Python-кода,
+ * реализующего глобальную функцию проверки пользовательских переменных.
+ *
+ * @module generateGlobalCheckUserVariableFunction
+ */
+
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 
 /**
@@ -9,7 +18,12 @@ import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 export function generateGlobalCheckUserVariableFunction(indentLevel: string = ''): string {
     const checkUserCodeLines: string[] = [];
 
-    // Функция для проверки переменных пользователя (глобально)
+    // Функция проверки пользовательских переменных (глобально)
+    checkUserCodeLines.push('# ┌─────────────────────────────────────────┐');
+    checkUserCodeLines.push('# │  Функция проверки пользовательских       │');
+    checkUserCodeLines.push('# │           переменных (глобально)         │');
+    checkUserCodeLines.push('# └─────────────────────────────────────────┘');
+
     checkUserCodeLines.push(`${indentLevel}def check_user_variable_inline(var_name, user_data_dict):`);
     checkUserCodeLines.push(`${indentLevel}    if "user_data" in user_data_dict and user_data_dict["user_data"]:`);
     checkUserCodeLines.push(`${indentLevel}        try:`);
@@ -36,7 +50,7 @@ export function generateGlobalCheckUserVariableFunction(indentLevel: string = ''
     checkUserCodeLines.push(`${indentLevel}    return False, None`);
 
     // Применяем автоматическое добавление комментариев ко всему коду
-    const commentedCodeLines = processCodeWithAutoComments(checkUserCodeLines, 'generateUniversalVariableReplacement.ts');
+    const commentedCodeLines = processCodeWithAutoComments(checkUserCodeLines, 'generateGlobalCheckUserVariableFunction.ts');
 
     // Возвращаем обработанные строки
     return commentedCodeLines.join('\n');

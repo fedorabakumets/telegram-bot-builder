@@ -6,6 +6,7 @@
  *
  * @module generateVariableReplacement
  */
+
 /**
  * Генерирует строку замены для переменной
  * @param {any} value - Значение переменной
