@@ -80,19 +80,19 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   // Функция для отправки логов на сервер
   const sendToServer = (content: string, type: 'stdout' | 'stderr' = 'stdout') => {
     // Проверяем, есть ли WebSocket-соединение и идентификаторы
-    if (props.wsConnection && props.projectId !== undefined && props.tokenId !== undefined) {
+    if (wsConnection && projectId !== undefined && tokenId !== undefined) {
       // Формируем сообщение для отправки на сервер
       const message = {
         type,
         content,
-        projectId: props.projectId,
-        tokenId: props.tokenId,
+        projectId,
+        tokenId,
         timestamp: new Date().toISOString()
       };
 
       // Отправляем сообщение на сервер через WebSocket
-      if (props.wsConnection.readyState === WebSocket.OPEN) {
-        props.wsConnection.send(JSON.stringify(message));
+      if (wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send(JSON.stringify(message));
       } else {
         console.warn('WebSocket-соединение недоступно для отправки лога:', content);
       }
