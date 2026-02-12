@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Утилита для удаления HTML тегов из текста
+ * 
+ * Этот модуль предоставляет функции для очистки текста
+ * от HTML тегов перед отправкой через Telegram API.
+ * 
+ * @module stripHtmlTags
+ */
+
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**

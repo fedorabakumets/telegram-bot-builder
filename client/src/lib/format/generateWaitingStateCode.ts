@@ -1,9 +1,39 @@
-// ============================================================================
-// ГЕНЕРАТОРЫ СОСТОЯНИЙ И ИДЕНТИФИКАТОРОВ
-// ============================================================================
-// Функция для генерации кода установки состояния ожидания ввода
-// Автоматически определяет правильное состояние (waiting_for_photo, waiting_for_video и т.д.)
+/**
+ * @fileoverview Утилита для генерации кода установки состояния ожидания ввода
+ * 
+ * Этот модуль предоставляет функции для генерации Python-кода,
+ * устанавливающего состояние ожидания ввода от пользователя
+ * с автоматическим определением типа ввода.
+ * 
+ * @module generateWaitingStateCode
+ */
 
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+
+
+/**
+ * Генерирует код установки состояния ожидания ввода
+ * 
+ * Функция автоматически определяет правильное состояние ожидания
+ * (waiting_for_photo, waiting_for_video и т.д.) в зависимости от
+ * настроек узла и генерирует соответствующий Python-код.
+ * 
+ * @param node - Узел с настройками ввода
+ * @param indentLevel - Уровень отступа для генерируемого кода (по умолчанию '    ')
+ * @param userIdSource - Источник идентификатора пользователя (по умолчанию 'message.from_user.id')
+ * @returns Сгенерированный Python-код для установки состояния ожидания ввода
+ * 
+ * @example
+ * // Генерация кода для узла с ожиданием фото
+ * const code = generateWaitingStateCode({
+ *   id: 'node_123',
+ *   data: {
+ *     enablePhotoInput: true,
+ *     photoInputVariable: 'user_avatar'
+ *   }
+ * });
+ * // Возвращает Python-код, устанавливающий состояние ожидания фото
+ */
 export function generateWaitingStateCode(node: any, indentLevel: string = '    ', userIdSource: string = 'message.from_user.id'): string {
   // Проверяем, что node и node.data существуют
   if (!node || !node.data) {
@@ -66,21 +96,26 @@ export function generateWaitingStateCode(node: any, indentLevel: string = '    '
   const modesRepr = modes.map(m => `'${m}'`).join(', '); // Для вывода в логи - с одинарными кавычками
   const primaryType = modes[0]; // Первый тип для обратной совместимости
 
-  let code = '';
-  code += `${indentLevel}user_data[${userIdSource}] = user_data.get(${userIdSource}, {})\n`;
-  code += `${indentLevel}user_data[${userIdSource}]["${waitingStateKey}"] = {\n`;
-  code += `${indentLevel}    "type": "${primaryType}",\n`;
-  code += `${indentLevel}    "modes": [${modesStr}],\n`;
-  code += `${indentLevel}    "variable": "${inputVariable}",\n`;
-  code += `${indentLevel}    "save_to_database": True,\n`;
-  code += `${indentLevel}    "node_id": "${node.id}",\n`;
-  code += `${indentLevel}    "next_node_id": "${inputTargetNodeId}",\n`;
-  code += `${indentLevel}    "min_length": ${node.data.minLength || 0},\n`;
-  code += `${indentLevel}    "max_length": ${node.data.maxLength || 0},\n`;
-  code += `${indentLevel}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
-  code += `${indentLevel}    "success_message": ""\n`;
-  code += `${indentLevel}}\n`;
-  code += `${indentLevel}logging.info(f"✅ Состояние ожидания настроено: modes=[${modesRepr}] для переменной ${inputVariable} (узел ${node.id})")\n`;
+  // Собираем весь код в массив строк для автоматической обработки
+  const codeLines: string[] = [];
+  
+  codeLines.push(`${indentLevel}user_data[${userIdSource}] = user_data.get(${userIdSource}, {})`);
+  codeLines.push(`${indentLevel}user_data[${userIdSource}]["${waitingStateKey}"] = {`);
+  codeLines.push(`${indentLevel}    "type": "${primaryType}",`);
+  codeLines.push(`${indentLevel}    "modes": [${modesStr}],`);
+  codeLines.push(`${indentLevel}    "variable": "${inputVariable}",`);
+  codeLines.push(`${indentLevel}    "save_to_database": True,`);
+  codeLines.push(`${indentLevel}    "node_id": "${node.id}",`);
+  codeLines.push(`${indentLevel}    "next_node_id": "${inputTargetNodeId}",`);
+  codeLines.push(`${indentLevel}    "min_length": ${node.data.minLength || 0},`);
+  codeLines.push(`${indentLevel}    "max_length": ${node.data.maxLength || 0},`);
+  codeLines.push(`${indentLevel}    "retry_message": "Пожалуйста, попробуйте еще раз.",`);
+  codeLines.push(`${indentLevel}    "success_message": ""`);
+  codeLines.push(`${indentLevel}}`);
+  codeLines.push(`${indentLevel}logging.info(f"✅ Состояние ожидания настроено: modes=[${modesRepr}] для переменной ${inputVariable} (узел ${node.id})")`);
 
-  return code;
+  // Применяем автоматическое добавление комментариев ко всему коду
+  const commentedCodeLines = processCodeWithAutoComments(codeLines, 'generateWaitingStateCode.ts');
+  
+  return commentedCodeLines.join('\n');
 }

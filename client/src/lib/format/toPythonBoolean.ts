@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Утилита для конвертации JavaScript boolean в Python boolean
+ * 
+ * Этот модуль предоставляет функции для преобразования JavaScript
+ * булевых значений в строковое представление Python ('True' или 'False').
+ * 
+ * @module toPythonBoolean
+ */
+
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**

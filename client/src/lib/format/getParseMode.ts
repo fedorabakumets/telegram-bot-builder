@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Утилита для получения параметра parse_mode для Telegram бота
+ * 
+ * Этот модуль предоставляет функции для преобразования формата сообщения
+ * в соответствующий параметр parse_mode, используемый при отправке
+ * сообщений через Telegram API.
+ * 
+ * @module getParseMode
+ */
+
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
