@@ -12,6 +12,7 @@ import { isLoggingEnabled } from '../bot-generator';
 import { formatTextForPython, generateAttachedMediaSendCode, generateWaitingStateCode, getParseMode, stripHtmlTags } from '../format';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует обработчик для узла сообщения с поддержкой условной логики и медиафайлов
@@ -25,21 +26,32 @@ import { generateUniversalVariableReplacement } from '../utils';
  * @returns {string} Обновленный код с добавленной логикой обработки узла сообщения
  */
 export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(targetNode: any, code: string, allNodeIds: any[], connections: any[], mediaVariablesMap: Map<string, { type: string; variable: string; }>, actualNodeId: any) {
+    // Собираем весь код в массив строк для автоматической обработки
+    const codeLines: string[] = [];
+    
+    // Добавляем начальный код, переданный в функцию
+    if (code) {
+        const initialCodeLines = code.split('\n');
+        codeLines.push(...initialCodeLines);
+    }
+    
     const messageText = targetNode.data.messageText || "Сообщение";
     const cleanedMessageText = stripHtmlTags(messageText);
     const formattedText = formatTextForPython(cleanedMessageText);
     const parseMode = getParseMode(targetNode.data.formatMode);
 
-    code += `    # Отправляем сообщение для узла ${targetNode.id}\n`;
-    code += `    text = ${formattedText}\n`;
+    codeLines.push(`    # Отправляем сообщение для узла ${targetNode.id}`);
+    codeLines.push(`    text = ${formattedText}`);
 
     // Применяем универсальную замену переменных
-    code += '    \n';
-    code += generateUniversalVariableReplacement('    ');
+    codeLines.push('    ');
+    const universalVarCode = generateUniversalVariableReplacement('    ');
+    const universalVarLines = universalVarCode.split('\n').filter(line => line.trim());
+    codeLines.push(...universalVarLines);
 
     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-    code += '    # Заменяем все переменные в тексте\n';
-    code += '    text = replace_variables_in_text(text, user_vars)\n';
+    codeLines.push('    # Заменяем все переменные в тексте');
+    codeLines.push('    text = replace_variables_in_text(text, user_vars)');
 
     /**
      * БЛОК 4: Поддержка условных сообщений
@@ -48,36 +60,40 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
      */
     // Добавляем поддержку условных сообщений
     if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-        code += '    \n';
-        code += '    # Проверка условных сообщений\n';
-        code += '    conditional_parse_mode = None\n';
-        code += '    conditional_keyboard = None\n';
-        code += '    user_record = await get_user_from_db(user_id)\n';
-        code += '    if not user_record:\n';
-        code += '        user_record = user_data.get(user_id, {})\n';
-        code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-        code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
-        code += '    \n';
+        codeLines.push('    ');
+        codeLines.push('    # Проверка условных сообщений');
+        codeLines.push('    conditional_parse_mode = None');
+        codeLines.push('    conditional_keyboard = None');
+        codeLines.push('    user_record = await get_user_from_db(user_id)');
+        codeLines.push('    if not user_record:');
+        codeLines.push('        user_record = user_data.get(user_id, {})');
+        codeLines.push('    user_data_dict = user_record if user_record else user_data.get(user_id, {})');
+        
+        const conditionalLogicCode = generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+        const conditionalLogicLines = conditionalLogicCode.split('\n').filter(line => line.trim());
+        codeLines.push(...conditionalLogicLines);
+        
+        codeLines.push('    ');
 
         // Используем условное сообщение, если доступно, иначе используем стандартное
-        code += '    # Используем условное сообщение если есть подходящее условие\n';
-        code += '    if "text" not in locals():\n';
-        code += `        text = ${formattedText}\n`;
-        code += '        # Заменяем переменные в основном тексте, если условие не сработало\n';
-        code += '        text = replace_variables_in_text(text, user_vars)\n';
-        code += '    \n';
-        code += '    # Используем условную клавиатуру если есть\n';
-        code += '    # Инициализируем переменную conditional_keyboard, если она не была определена\n';
-        code += '    if "conditional_keyboard" not in locals():\n';
-        code += '        conditional_keyboard = None\n';
-        code += '    if conditional_keyboard is not None:\n';
-        code += '        keyboard = conditional_keyboard\n';
-        code += '    else:\n';
-        code += '        keyboard = None\n';
+        codeLines.push('    # Используем условное сообщение если есть подходящее условие');
+        codeLines.push('    if "text" not in locals():');
+        codeLines.push(`        text = ${formattedText}`);
+        codeLines.push('        # Заменяем переменные в основном тексте, если условие не сработало');
+        codeLines.push('        text = replace_variables_in_text(text, user_vars)');
+        codeLines.push('    ');
+        codeLines.push('    # Используем условную клавиатуру если есть');
+        codeLines.push('    # Инициализируем переменную conditional_keyboard, если она не была определена');
+        codeLines.push('    if "conditional_keyboard" not in locals():');
+        codeLines.push('        conditional_keyboard = None');
+        codeLines.push('    if conditional_keyboard is not None:');
+        codeLines.push('        keyboard = conditional_keyboard');
+        codeLines.push('    else:');
+        codeLines.push('        keyboard = None');
     } else {
-        code += '    \n';
-        code += '    # Без условных сообщений - используем обычную клавиатуру\n';
-        code += '    keyboard = None\n';
+        codeLines.push('    ');
+        codeLines.push('    # Без условных сообщений - используем обычную клавиатуру');
+        codeLines.push('    keyboard = None');
     }
 
     /**
@@ -91,18 +107,20 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
     if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} - кнопок: ${targetNode.data.buttons?.length}, keyboardType: ${keyboardType}`);
 
     if (hasButtons) {
-        code += '    # Проверяем, есть ли условная клавиатура\n';
-        code += '    if keyboard is None:\n';
+        codeLines.push('    # Проверяем, есть ли условная клавиатура');
+        codeLines.push('    if keyboard is None:');
         if (keyboardType === "inline") {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ INLINE клавиатуру для узла ${targetNode.id}`);
-            code += '        # Создаем inline клавиатуру\n';
+            codeLines.push('        # Создаем inline клавиатуру');
             const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
-            code += keyboardCode;
+            const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+            codeLines.push(...keyboardLines);
         } else if (keyboardType === "reply") {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ REPLY клавиатуру для узла ${targetNode.id}`);
-            code += '        # Создаем reply клавяатуру\n';
+            codeLines.push('        # Создаем reply клавяатуру');
             const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
-            code += keyboardCode;
+            const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
+            codeLines.push(...keyboardLines);
         }
     }
 
@@ -111,41 +129,41 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
      * Если включены условные сообщения, настраиваем ожидание ввода от пользователя
      */
     if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-        code += '    # Настраиваем ожидание текстового ввода для условных сообщений\n';
-        code += '    if "conditional_message_config" in locals():\n';
-        code += '        # Проверяем, включено ли ожидание текстового ввода\n';
-        code += '        wait_for_input = conditional_message_config.get("wait_for_input", False)\n';
-        code += '        if wait_for_input:\n';
-        code += '            # Получаем следующий узел из условного сообщения или подключений\n';
-        code += '            conditional_next_node = conditional_message_config.get("next_node_id")\n';
-        code += '            if conditional_next_node:\n';
-        code += '                next_node_id = conditional_next_node\n';
-        code += '            else:\n';
+        codeLines.push('    # Настраиваем ожидание текстового ввода для условных сообщений');
+        codeLines.push('    if "conditional_message_config" in locals():');
+        codeLines.push('        # Проверяем, включено ли ожидание текстового ввода');
+        codeLines.push('        wait_for_input = conditional_message_config.get("wait_for_input", False)');
+        codeLines.push('        if wait_for_input:');
+        codeLines.push('            # Получаем следующий узел из условного сообщения или подключений');
+        codeLines.push('            conditional_next_node = conditional_message_config.get("next_node_id")');
+        codeLines.push('            if conditional_next_node:');
+        codeLines.push('                next_node_id = conditional_next_node');
+        codeLines.push('            else:');
         const currentNodeConnections = connections.filter(conn => conn.source === targetNode.id);
         if (currentNodeConnections.length > 0) {
             const nextNodeId = currentNodeConnections[0].target;
-            code += `                next_node_id = "${nextNodeId}"\n`;
+            codeLines.push(`                next_node_id = "${nextNodeId}"`);
         } else {
-            code += '                next_node_id = None\n';
+            codeLines.push('                next_node_id = None');
         }
-        code += '            \n';
-        code += '            # Получаем переменную яля сохранения ввода\n';
-        code += '            input_variable = conditional_message_config.get("input_variable")\n';
-        code += '            if not input_variable:\n';
-        code += '                input_variable = f"conditional_response_{conditional_message_config.get(\'condition_id\', \'unknown\')}"\n';
-        code += '            \n';
-        code += '            # ястанавливаем сястояние ожидания текстового ввода\n';
-        code += '            if user_id not in user_data:\n';
-        code += '                user_data[user_id] = {}\n';
-        code += '            user_data[user_id]["waiting_for_conditional_input"] = {\n';
-        code += '                "node_id": callback_query.data,\n';
-        code += '                "condition_id": conditional_message_config.get("condition_id"),\n';
-        code += '                "next_node_id": next_node_id,\n';
-        code += '                "input_variable": input_variable,\n';
-        code += '                "source_type": "conditional_message"\n';
-        code += '            }\n';
-        code += '            logging.info(f"Установлено ожидание ввода для условного сообщения: {conditional_message_config}")\n';
-        code += '    \n';
+        codeLines.push('            ');
+        codeLines.push('            # Получаем переменную яля сохранения ввода');
+        codeLines.push('            input_variable = conditional_message_config.get("input_variable")');
+        codeLines.push('            if not input_variable:');
+        codeLines.push('                input_variable = f"conditional_response_{conditional_message_config.get(\'condition_id\', \'unknown\')}"');
+        codeLines.push('            ');
+        codeLines.push('            # ястанавливаем сястояние ожидания текстового ввода');
+        codeLines.push('            if user_id not in user_data:');
+        codeLines.push('                user_data[user_id] = {}');
+        codeLines.push('            user_data[user_id]["waiting_for_conditional_input"] = {');
+        codeLines.push('                "node_id": callback_query.data,');
+        codeLines.push('                "condition_id": conditional_message_config.get("condition_id"),');
+        codeLines.push('                "next_node_id": next_node_id,');
+        codeLines.push('                "input_variable": input_variable,');
+        codeLines.push('                "source_type": "conditional_message"');
+        codeLines.push('            }');
+        codeLines.push('            logging.info(f"Установлено ожидание ввода для условного сообщения: {conditional_message_config}")');
+        codeLines.push('    ');
     }
 
     /**
@@ -183,47 +201,48 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
         );
 
         if (mediaCode) {
-            code += '    # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового\n';
-            code += '    if user_id in user_data and "_delete_reply_message_id" in user_data[user_id]:\n';
-            code += '        try:\n';
-            code += '            await bot.delete_message(user_id, user_data[user_id]["_delete_reply_message_id"])\n';
-            code += '            logging.info(f"🗑️ Reply сообщение удалено перед отправкой новогя")\n';
-            code += '            del user_data[user_id]["_delete_reply_message_id"]\n';
-            code += '        except Exception as e:\n';
-            code += '            logging.debug(f"Не удалось удалить reply сообщение: {e}")\n';
-            code += '    \n';
-            code += '    # Отправляем сообщение (с пяяоверкой прякрепленного медиа)\n';
-            code += mediaCode;
+            codeLines.push('    # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового');
+            codeLines.push('    if user_id in user_data and "_delete_reply_message_id" in user_data[user_id]:');
+            codeLines.push('        try:');
+            codeLines.push('            await bot.delete_message(user_id, user_data[user_id]["_delete_reply_message_id"])');
+            codeLines.push('            logging.info(f"🗑️ Reply сообщение удалено перед отправкой новогя")');
+            codeLines.push('            del user_data[user_id]["_delete_reply_message_id"]');
+            codeLines.push('        except Exception as e:');
+            codeLines.push('            logging.debug(f"Не удалось удалить reply сообщение: {e}")');
+            codeLines.push('    ');
+            codeLines.push('    # Отправляем сообщение (с пяяоверкой прякрепленного медиа)');
+            const mediaCodeLines = mediaCode.split('\n').filter(line => line.trim());
+            codeLines.push(...mediaCodeLines);
         } else {
             // Резервный вариант яясли не удалось сгенерировать код медиа
-            code += '    # Отправляем сообщение (обычное)\n';
+            codeLines.push('    # Отправляем сообщение (обычное)');
             const autoFlag1 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
-            code += `    await safe_edit_or_send(callback_query, text, node_id="${actualNodeId}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag1}${parseMode})\n`;
+            codeLines.push(`    await safe_edit_or_send(callback_query, text, node_id="${actualNodeId}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag1}${parseMode})`);
 
             // АВТОПЕРЕХОД для fallback случая
             if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
                 const autoTargetId = targetNode.data.autoTransitionTo;
                 const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
-                code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `    await handle_node_${safeAutoTargetId}(callback_query.message)\n`;
-                code += `    return\n`;
+                codeLines.push(`    # ⚡ Автопереход к узлу ${autoTargetId}`);
+                codeLines.push(`    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")`);
+                codeLines.push(`    await handle_node_${safeAutoTargetId}(callback_query.message)`);
+                codeLines.push(`    return`);
             }
         }
     } else {
         // Обычное сообщение без медиа
-        code += '    # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового\n';
-        code += '    if user_id in user_data and "_delete_reply_message_id" in user_data[user_id]:\n';
-        code += '        try:\n';
-        code += '            await bot.delete_message(user_id, user_data[user_id]["_delete_reply_message_id"])\n';
-        code += '            logging.info(f"🗑️ Reply сообщение удалено перед отправкой нового")\n';
-        code += '            del user_data[user_id]["_delete_reply_message_id"]\n';
-        code += '        except Exception as e:\n';
-        code += '            logging.debug(f"Не удалось удалить reply сообщение: {e}")\n';
-        code += '    \n';
-        code += '    # Отправляем сообщение\n';
+        codeLines.push('    # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового');
+        codeLines.push('    if user_id in user_data and "_delete_reply_message_id" in user_data[user_id]:');
+        codeLines.push('        try:');
+        codeLines.push('            await bot.delete_message(user_id, user_data[user_id]["_delete_reply_message_id"])');
+        codeLines.push('            logging.info(f"🗑️ Reply сообщение удалено перед отправкой нового")');
+        codeLines.push('            del user_data[user_id]["_delete_reply_message_id"]');
+        codeLines.push('        except Exception as e:');
+        codeLines.push('            logging.debug(f"Не удалось удалить reply сообщение: {e}")');
+        codeLines.push('    ');
+        codeLines.push('    # Отправляем сообщение');
         const autoFlag2 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
-        code += `    await safe_edit_or_send(callback_query, text, node_id="${actualNodeId}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag2}${parseMode})\n`;
+        codeLines.push(`    await safe_edit_or_send(callback_query, text, node_id="${actualNodeId}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag2}${parseMode})`);
 
         // АВяОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
         // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
@@ -233,18 +252,18 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
             if (targetNode.data.collectUserInput !== false) {
                 const autoTargetId = targetNode.data.autoTransitionTo;
                 const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
-                code += '    \n';
-                code += '    # Пяоверяем, не ждем ли мы условный ввод перед автопереходом\n';
-                code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
-                code += '        logging.info(f"⏸️ Автопяреход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
-                code += '    else:\n';
-                code += `        # ⚡ Автопереход к узлу ${autoTargetId} (только если collectUserInput=true)\n`;
-                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `        await handle_node_${safeAutoTargetId}(callback_query.message)\n`;
-                code += `        return\n`;
+                codeLines.push('    ');
+                codeLines.push('    # Пяоверяем, не ждем ли мы условный ввод перед автопереходом');
+                codeLines.push('    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:');
+                codeLines.push('        logging.info(f"⏸️ Автопяреход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")');
+                codeLines.push('    else:');
+                codeLines.push(`        # ⚡ Автопереход к узлу ${autoTargetId} (только если collectUserInput=true)`);
+                codeLines.push(`        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")`);
+                codeLines.push(`        await handle_node_${safeAutoTargetId}(callback_query.message)`);
+                codeLines.push(`        return`);
             } else {
-                code += '    # Автопереход пропущен: collectUserInput=false\n';
-                code += `    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")\n`;
+                codeLines.push('    # Автопереход пропущен: collectUserInput=false');
+                codeLines.push(`    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")`);
             }
         }
     }
@@ -259,24 +278,30 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
             targetNode.data.enableDocumentInput;
 
         if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0 && !hasInputEnabled) {
-            code += '    \n';
-            code += `    logging.info(f"✅ Узел ${targetNode.id} имеет inline кнопки БЕЗ текстового/медиа ввода - яяЕ настяяаиваем ожидание ввода")\n`;
-            code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового/медиа ввода\n`;
+            codeLines.push('    ');
+            codeLines.push(`    logging.info(f"✅ Узел ${targetNode.id} имеет inline кнопки БЕЗ текстового/медиа ввода - яяЕ настяяаиваем ожидание ввода")`);
+            codeLines.push(`    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового/медиа ввода`);
         } else {
-            code += '    \n';
+            codeLines.push('    ');
             /**
              * БЛОК 6: Управление состоянием ожидания пользовательского ввода
              * Активирует сбор данных от пользователя после отправки сообщения
              * Поддерживает различные типы ввода: текст, фото, видео, аудио, документы
              * Использует универсальную функцию generateWaitingStateCode для настройки
              */
-            code += '    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput\n';
-            code += '    # Используем универсальную функцию для определения правильного типа ввода (text/photo/video/audio/document)\n';
+            codeLines.push('    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput');
+            codeLines.push('    # Используем универсальную функцию для определения правильного типа ввода (text/photo/video/audio/document)');
             // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode с правильным контекстом callback_query
             if (targetNode && targetNode.data) {
-                code += generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
+                const waitingStateCode = generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
+                const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
+                codeLines.push(...waitingStateLines);
             }
         }
     }
-    return code;
+    
+    // Применяем автоматическое добавление комментариев ко всему коду
+    const commentedCodeLines = processCodeWithAutoComments(codeLines, 'generateMessageNodeHandlerWithConditionalLogicAndMediaSupport.ts');
+    
+    return commentedCodeLines.join('\n');
 }

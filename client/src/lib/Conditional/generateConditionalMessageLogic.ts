@@ -1,23 +1,20 @@
-import { getParseMode } from '../format/getParseMode';
-import { stripHtmlTags } from '../format/stripHtmlTags';
-import { formatTextForPython } from '../format/formatTextForPython';
-import { generateConditionalKeyboard } from "./generateConditionalKeyboard";
-import { toPythonBoolean } from "../format/toPythonBoolean";
 import { generateCheckUserVariableFunction } from "../utils/generateUniversalVariableReplacement";
+import { processConditionalMessages } from './processConditionalMessages';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует Python код логики условных сообщений для Telegram бота.
- * 
+ *
  * Эта функция создает комплексную Python логику для обработки условных сообщений,
  * которая включает в себя:
- * 
+ *
  * Основные возможности:
  * - Создание функции проверки переменных пользователя (check_user_variable)
  * - Функцию замены переменных в тексте (replace_variables_in_text)
  * - Инициализацию пользовательских переменных и данных
  * - Поддержку различных типов условий:
  *   * user_data_exists - проверка существования переменных
- *   * user_data_not_exists - проверка отсутствия переменных  
+ *   * user_data_not_exists - проверка отсутствия переменных
  *   * user_data_equals - проверка равенства значения переменной
  *   * user_data_contains - проверка содержания подстроки в переменной
  * - Поддержку множественных переменных с логическими операторами (AND/OR)
@@ -26,15 +23,15 @@ import { generateCheckUserVariableFunction } from "../utils/generateUniversalVar
  * - Поддержку кнопок с пропуском сбора данных (skipDataCollection)
  * - Логирование выполнения условий для отладки
  * - Обработку приоритетов условий (сортировка по убыванию приоритета)
- * 
+ *
  * Функция создает if/elif структуру для последовательной проверки условий
  * и возвращает Python код, который интегрируется в обработчики команд.
- * 
+ *
  * @param conditionalMessages - Массив условных сообщений для обработки
  * @param indentLevel - Уровень отступа для генерируемого Python кода (по умолчанию '    ')
  * @param nodeData - Дополнительные данные узла для контекста (опционально)
  * @returns Строку с Python кодом логики условных сообщений
- * 
+ *
  * @example
  * const conditionalMessages = [
  *   {
@@ -48,7 +45,7 @@ import { generateCheckUserVariableFunction } from "../utils/generateUniversalVar
  *     priority: 1
  *   },
  *   {
- *     condition: "user_data_not_exists", 
+ *     condition: "user_data_not_exists",
  *     variableNames: ["user_age"],
  *     messageText: "Пожалуйста, укажите ваш возраст",
  *     waitForTextInput: true,
@@ -56,7 +53,7 @@ import { generateCheckUserVariableFunction } from "../utils/generateUniversalVar
  *     priority: 2
  *   }
  * ];
- * 
+ *
  * const logicCode = generateConditionalMessageLogic(conditionalMessages, '    ', nodeData);
  * // Генерирует Python код с проверками условий и соответствующими действиями
  */
@@ -67,432 +64,72 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
     return '';
   }
 
-  let code = '';
+  // Собираем весь код в массив строк для автоматической обработки
+  const codeLines: string[] = [];
+  
   const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
 
   // НЕ инициализируем conditional_parse_mode и conditional_keyboard здесь
   // Они должны быть инициализированы вызывающей функцией ПЕРЕД вызовом generateConditionalMessageLogic
   // Получаем user_vars для подстановки в кнопки условных сообщений
-  code += `${indentLevel}# Инициализируем базовые переменные пользователя если их нет\n`;
-  code += `${indentLevel}# Получаем объект пользователя из сообщения или callback\n`;
-  code += `${indentLevel}user_obj = None\n`;
-  code += `${indentLevel}# Безопасно проверяем наличие message (для message handlers)\n`;
-  code += `${indentLevel}if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):\n`;
-  code += `${indentLevel}    user_obj = locals().get('message').from_user\n`;
-  code += `${indentLevel}# Безопасно проверяем наличие callback_query (для callback handlers)\n`;
-  code += `${indentLevel}elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):\n`;
-  code += `${indentLevel}    user_obj = locals().get('callback_query').from_user\n`;
-  code += `\n`;
-  code += `${indentLevel}if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):\n`;
-  code += `${indentLevel}    # Проверяем, что user_obj определен и инициализируем переменные пользователя\n`;
-  code += `${indentLevel}    if user_obj is not None:\n`;
-  code += `${indentLevel}        init_user_variables(user_id, user_obj)\n`;
-  code += `${indentLevel}\n`;
-  code += `${indentLevel}# Подставляем все доступные переменные пользователя в текст кнопок\n`;
-  code += `${indentLevel}user_vars = await get_user_from_db(user_id)\n`;
-  code += `${indentLevel}if not user_vars:\n`;
-  code += `${indentLevel}    user_vars = user_data.get(user_id, {})\n`;
-  code += `${indentLevel}\n`;
-  code += `${indentLevel}# get_user_from_db теперь возвращает уже обработанные user_data\n`;
-  code += `${indentLevel}if not isinstance(user_vars, dict):\n`;
-  code += `${indentLevel}    user_vars = {}\n`;
-  code += `${indentLevel}\n`;
-  code += `${indentLevel}# Заменяем все переменные в тексте\n`;
-  code += `${indentLevel}import re\n`;
-  code += `${indentLevel}def replace_variables_in_text(text_content, variables_dict):\n`;
-  code += `${indentLevel}    if not text_content or not variables_dict:\n`;
-  code += `${indentLevel}        return text_content\n`;
-  code += `${indentLevel}    \n`;
-  code += `${indentLevel}    for var_name, var_data in variables_dict.items():\n`;
-  code += `${indentLevel}        placeholder = "{" + var_name + "}"\n`;
-  code += `${indentLevel}        if placeholder in text_content:\n`;
-  code += `${indentLevel}            if isinstance(var_data, dict) and "value" in var_data:\n`;
-  code += `${indentLevel}                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name\n`;
-  code += `${indentLevel}            elif var_data is not None:\n`;
-  code += `${indentLevel}                var_value = str(var_data)\n`;
-  code += `${indentLevel}            else:\n`;
-  code += `${indentLevel}                var_value = var_name  # Показываем имя переменной если значения нет\n`;
-  code += `${indentLevel}            text_content = text_content.replace(placeholder, var_value)\n`;
-  code += `${indentLevel}    return text_content\n`;
-  code += `${indentLevel}\n`;
+  codeLines.push(`${indentLevel}# Инициализируем базовые переменные пользователя если их нет`);
+  codeLines.push(`${indentLevel}# Получаем объект пользователя из сообщения или callback`);
+  codeLines.push(`${indentLevel}user_obj = None`);
+  codeLines.push(`${indentLevel}# Безопасно проверяем наличие message (для message handlers)`);
+  codeLines.push(`${indentLevel}if 'message' in locals() and hasattr(locals().get('message'), 'from_user'):`);
+  codeLines.push(`${indentLevel}    user_obj = locals().get('message').from_user`);
+  codeLines.push(`${indentLevel}# Безопасно проверяем наличие callback_query (для callback handlers)`);
+  codeLines.push(`${indentLevel}elif 'callback_query' in locals() and hasattr(locals().get('callback_query'), 'from_user'):`);
+  codeLines.push(`${indentLevel}    user_obj = locals().get('callback_query').from_user`);
+  codeLines.push(``);
+  codeLines.push(`${indentLevel}if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):`);
+  codeLines.push(`${indentLevel}    # Проверяем, что user_obj определен и инициализируем переменные пользователя`);
+  codeLines.push(`${indentLevel}    if user_obj is not None:`);
+  codeLines.push(`${indentLevel}        init_user_variables(user_id, user_obj)`);
+  codeLines.push(`${indentLevel}`);
+  codeLines.push(`${indentLevel}# Подставляем все доступные переменные пользователя в текст кнопок`);
+  codeLines.push(`${indentLevel}user_vars = await get_user_from_db(user_id)`);
+  codeLines.push(`${indentLevel}if not user_vars:`);
+  codeLines.push(`${indentLevel}    user_vars = user_data.get(user_id, {})`);
+  codeLines.push(`${indentLevel}`);
+  codeLines.push(`${indentLevel}# get_user_from_db теперь возвращает уже обработанные user_data`);
+  codeLines.push(`${indentLevel}if not isinstance(user_vars, dict):`);
+  codeLines.push(`${indentLevel}    user_vars = {}`);
+  codeLines.push(`${indentLevel}`);
+  codeLines.push(`${indentLevel}# Заменяем все переменные в тексте`);
+  codeLines.push(`${indentLevel}import re`);
+  codeLines.push(`${indentLevel}def replace_variables_in_text(text_content, variables_dict):`);
+  codeLines.push(`${indentLevel}    if not text_content or not variables_dict:`);
+  codeLines.push(`${indentLevel}        return text_content`);
+  codeLines.push(`${indentLevel}    `);
+  codeLines.push(`${indentLevel}    for var_name, var_data in variables_dict.items():`);
+  codeLines.push(`${indentLevel}        placeholder = "{" + var_name + "}"`);
+  codeLines.push(`${indentLevel}        if placeholder in text_content:`);
+  codeLines.push(`${indentLevel}            if isinstance(var_data, dict) and "value" in var_data:`);
+  codeLines.push(`${indentLevel}                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name`);
+  codeLines.push(`${indentLevel}            elif var_data is not None:`);
+  codeLines.push(`${indentLevel}                var_value = str(var_data)`);
+  codeLines.push(`${indentLevel}            else:`);
+  codeLines.push(`${indentLevel}                var_value = var_name  # Показываем имя переменной если значения нет`);
+  codeLines.push(`${indentLevel}            text_content = text_content.replace(placeholder, var_value)`);
+  codeLines.push(`${indentLevel}    return text_content`);
+  codeLines.push(`${indentLevel}`);
 
   // Добавляем определение функции check_user_variable_inline
-  code += generateCheckUserVariableFunction(indentLevel);
+  const checkUserVariableCode = generateCheckUserVariableFunction(indentLevel);
+  const checkUserVariableLines = checkUserVariableCode.split('\n').filter(line => line.trim());
+  codeLines.push(...checkUserVariableLines);
 
   // Создаем единую if/elif/else структуру для всех условий
-  for (let i = 0; i < sortedConditions.length; i++) {
-    const condition = sortedConditions[i];
-    // Если текст условного сообщения не указан или пустой, используем основной текст узла
-    let messageToUse = condition.messageText || '';
-    const cleanedConditionText = stripHtmlTags(messageToUse).trim();
-    // Если после очистки текст пустой, используем основной текст узла
-    let finalMessageText = '';
-    if (!cleanedConditionText) {
-      // Используем основной текст узла если условное сообщение пустое
-      finalMessageText = nodeData?.messageText || '';
-    } else {
-      finalMessageText = cleanedConditionText;
-    }
-    const conditionText = formatTextForPython(finalMessageText);
-    const conditionKeyword = i === 0 ? 'if' : 'elif';
+  const processedCode = processConditionalMessages(sortedConditions, nodeData, codeLines.join('\n'), indentLevel);
+  
+  // Разбиваем обработанный код обратно на строки для дальнейшей обработки
+  const allCodeLines = processedCode.split('\n');
 
-    // Get variable names - support both new array format and legacy single variable
-    const variableNames = condition.variableNames && condition.variableNames.length > 0
-      ? condition.variableNames
-      : (condition.variableName ? [condition.variableName] : []);
-
-    const logicOperator = condition.logicOperator || 'AND';
-
-    code += `${indentLevel}# Условие ${i + 1}: ${condition.condition} для переменных: ${variableNames.join(', ')}\n`;
-
-    switch (condition.condition) {
-      case 'user_data_exists':
-        if (variableNames.length === 0) {
-          code += `${indentLevel}${conditionKeyword} False:  # Нет переменных для проверки\n`;
-          code += `${indentLevel}    pass\n`;
-          break;
-        }
-
-        // Создаем единый блок условия с проверками ВНУТРИ
-        code += `${indentLevel}${conditionKeyword} (\n`;
-        for (let j = 0; j < variableNames.length; j++) {
-          const varName = variableNames[j];
-          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-          code += `${indentLevel}    check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
-        }
-        code += `${indentLevel}):\n`;
-
-        // Внутри блока условия собираем значения переменных
-        code += `${indentLevel}    # Собираем значения переменных\n`;
-        code += `${indentLevel}    variable_values = {}\n`;
-        for (const varName of variableNames) {
-          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable_inline("${varName}", user_data_dict)\n`;
-        }
-
-        // Только переопределяем text если условное сообщение не пустое
-        const conditionTextValue = finalMessageText.trim();
-        if (conditionTextValue) {
-          code += `${indentLevel}    text = ${conditionText}\n`;
-        } else {
-          code += `${indentLevel}    # Условное сообщение пустое, используем основной текст узла (text уже инициализирован)\n`;
-        }
-
-        // Устанавливаем parse_mode для условного сообщения
-        const parseMode1 = getParseMode(condition.formatMode || 'text');
-        if (parseMode1) {
-          code += `${indentLevel}    conditional_parse_mode = "${parseMode1}"\n`;
-        } else {
-          code += `${indentLevel}    conditional_parse_mode = None\n`;
-        }
-
-        // Заменяем переменные в тексте
-        for (const varName of variableNames) {
-          code += `${indentLevel}    if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
-          code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
-        }
-
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также заменяем все остальные переменные из user_vars
-        code += `${indentLevel}    # Заменяем все остальные переменные в тексте\n`;
-        code += `${indentLevel}    text = replace_variables_in_text(text, user_vars)\n`;
-
-        // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
-        code += `${indentLevel}    # ВАЖНО: Логируем состояние условной клавиатуры для отладки\n`;
-        // code += `${indentLevel}    logging.info(f"🎹 Условная клавиатура для user_data_exists: conditional_keyboard={'установлена' if conditional_keyboard else 'не установлена'}")\n`;
-
-        // Добавляем логику для настройки ожидания текстового ввода
-        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-
-        // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
-        const skipButtons = (condition.buttons || [])
-          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
-          .map((btn: any) => ({ text: btn.text, target: btn.target }));
-        const skipButtonsJson = JSON.stringify(skipButtons);
-
-        code += `${indentLevel}    conditional_message_config = {\n`;
-        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
-        code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
-        code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
-        code += `${indentLevel}        "source_type": "conditional_message",\n`;
-        code += `${indentLevel}        "skip_buttons": ${skipButtonsJson}\n`;
-        code += `${indentLevel}    }\n`;
-
-        // ИСПРАВЛЕНИЕ: Проверяем, нужно ли ждать ввода ДАЖЕ ЕСЛИ переменная существует
-        code += `${indentLevel}    # Настраиваем ожидание ввода для условного сообщения с waitForTextInput\n`;
-        if (condition.waitForTextInput) {
-          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
-          code += `${indentLevel}        if user_id not in user_data:\n`;
-          code += `${indentLevel}            user_data[user_id] = {}\n`;
-          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-          // code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")\n`;
-          code += `${indentLevel}        # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход\n`;
-          code += `${indentLevel}        # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода\n`;
-          code += `${indentLevel}        # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break\n`;
-        }
-
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
-        // Это нужно чтобы текстовый обработчик мог обработать кнопки даже когда ожидается фото/видео
-        if (skipButtons.length > 0) {
-          code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
-          code += `${indentLevel}    if user_id not in user_data:\n`;
-          code += `${indentLevel}        user_data[user_id] = {}\n`;
-          code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson}\n`;
-          code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
-        }
-
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} (${logicOperator})")\n`;
-        break;
-
-      case 'user_data_not_exists':
-        if (variableNames.length === 0) {
-          code += `${indentLevel}${conditionKeyword} False:  # Нет переменных для проверки\n`;
-          code += `${indentLevel}    pass\n`;
-          break;
-        }
-
-        // Создаем единый блок условия с проверками ВНУТРИ (инвертированными)
-        code += `${indentLevel}${conditionKeyword} (\n`;
-        for (let j = 0; j < variableNames.length; j++) {
-          const varName = variableNames[j];
-          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-          if (logicOperator === 'AND') {
-            code += `${indentLevel}    not check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
-          } else {
-            code += `${indentLevel}    not check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
-          }
-        }
-        code += `${indentLevel}):\n`;
-
-        code += `${indentLevel}    text = ${conditionText}\n`;
-        // Устанавливаем parse_mode для условного сообщения
-        const parseMode2 = getParseMode(condition.formatMode || 'text');
-        if (parseMode2) {
-          code += `${indentLevel}    conditional_parse_mode = "${parseMode2}"\n`;
-        } else {
-          code += `${indentLevel}    conditional_parse_mode = None\n`;
-        }
-
-        // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
-
-        // Добавляем логику для настройки ожидания текстового ввода
-        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-
-        // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
-        const skipButtons2 = (condition.buttons || [])
-          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
-          .map((btn: any) => ({ text: btn.text, target: btn.target }));
-        const skipButtonsJson2 = JSON.stringify(skipButtons2);
-
-        code += `${indentLevel}    conditional_message_config = {\n`;
-        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
-        code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
-        code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
-        code += `${indentLevel}        "source_type": "conditional_message",\n`;
-        code += `${indentLevel}        "skip_buttons": ${skipButtonsJson2}\n`;
-        code += `${indentLevel}    }\n`;
-
-        // Добавляем код для активации состояния условного ввода для user_data_not_exists
-        if (condition.waitForTextInput) {
-          code += `${indentLevel}    \n`;
-          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
-          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
-          code += `${indentLevel}        if user_id not in user_data:\n`;
-          code += `${indentLevel}            user_data[user_id] = {}\n`;
-          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-        }
-
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
-        if (skipButtons2.length > 0) {
-          code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
-          code += `${indentLevel}    if user_id not in user_data:\n`;
-          code += `${indentLevel}        user_data[user_id] = {}\n`;
-          code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson2}\n`;
-          code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
-        }
-
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
-        break;
-
-      case 'user_data_equals':
-        if (variableNames.length === 0) {
-          code += `${indentLevel}${conditionKeyword} False:  # Нет переменных для проверки\n`;
-          code += `${indentLevel}    pass\n`;
-          break;
-        }
-
-        // Создаем единый блок условия с проверками равенства ВНУТРИ
-        code += `${indentLevel}${conditionKeyword} (\n`;
-        for (let j = 0; j < variableNames.length; j++) {
-          const varName = variableNames[j];
-          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-          code += `${indentLevel}    check_user_variable_inline("${varName}", user_data_dict)[1] == "${condition.expectedValue || ''}"${operator}\n`;
-        }
-        code += `${indentLevel}):\n`;
-
-        // Внутри блока условия собираем значения переменных
-        code += `${indentLevel}    # Собираем значения переменных\n`;
-        code += `${indentLevel}    variable_values = {}\n`;
-        for (const varName of variableNames) {
-          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable_inline("${varName}", user_data_dict)\n`;
-        }
-
-        code += `${indentLevel}    text = ${conditionText}\n`;
-        // Устанавливаем parse_mode для условного сообщения
-        const parseMode3 = getParseMode(condition.formatMode || 'text');
-        if (parseMode3) {
-          code += `${indentLevel}    conditional_parse_mode = "${parseMode3}"\n`;
-        } else {
-          code += `${indentLevel}    conditional_parse_mode = None\n`;
-        }
-
-        // Заменяем переменные в тексте
-        for (const varName of variableNames) {
-          code += `${indentLevel}    if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
-          code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
-        }
-
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также заменяем все остальные переменные из user_vars
-        code += `${indentLevel}    # Заменяем все остальные переменные в тексте\n`;
-        code += `${indentLevel}    text = replace_variables_in_text(text, user_vars)\n`;
-
-        // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
-
-        // Добавляем логику для настройки ожидания текстового ввода
-        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-
-        // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
-        const skipButtons3 = (condition.buttons || [])
-          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
-          .map((btn: any) => ({ text: btn.text, target: btn.target }));
-        const skipButtonsJson3 = JSON.stringify(skipButtons3);
-
-        code += `${indentLevel}    conditional_message_config = {\n`;
-        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
-        code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
-        code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
-        code += `${indentLevel}        "source_type": "conditional_message",\n`;
-        code += `${indentLevel}        "skip_buttons": ${skipButtonsJson3}\n`;
-        code += `${indentLevel}    }\n`;
-
-        // Добавляем код для активации состояния условного ввода для user_data_equals
-        if (condition.waitForTextInput) {
-          code += `${indentLevel}    \n`;
-          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
-          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
-          code += `${indentLevel}        if user_id not in user_data:\n`;
-          code += `${indentLevel}            user_data[user_id] = {}\n`;
-          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-        }
-
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
-        if (skipButtons3.length > 0) {
-          code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
-          code += `${indentLevel}    if user_id not in user_data:\n`;
-          code += `${indentLevel}        user_data[user_id] = {}\n`;
-          code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson3}\n`;
-          code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
-        }
-
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} равны '${condition.expectedValue || ''}' (${logicOperator})")\n`;
-        break;
-
-      case 'user_data_contains':
-        if (variableNames.length === 0) {
-          code += `${indentLevel}${conditionKeyword} False:  # Нет переменных для проверки\n`;
-          code += `${indentLevel}    pass\n`;
-          break;
-        }
-
-        // Создаем единый блок условия с проверками содержания ВНУТРИ
-        code += `${indentLevel}${conditionKeyword} (\n`;
-        for (let j = 0; j < variableNames.length; j++) {
-          const varName = variableNames[j];
-          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-          code += `${indentLevel}    (check_user_variable_inline("${varName}", user_data_dict)[1] is not None and "${condition.expectedValue || ''}" in str(check_user_variable_inline("${varName}", user_data_dict)[1]))${operator}\n`;
-        }
-        code += `${indentLevel}):\n`;
-
-        // Внутри блока условия собираем значения переменных
-        code += `${indentLevel}    # Собираем значения переменных\n`;
-        code += `${indentLevel}    variable_values = {}\n`;
-        for (const varName of variableNames) {
-          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable_inline("${varName}", user_data_dict)\n`;
-        }
-
-        code += `${indentLevel}    text = ${conditionText}\n`;
-        // Устанавливаем parse_mode для условного сообщения
-        const parseMode4 = getParseMode(condition.formatMode || 'text');
-        if (parseMode4) {
-          code += `${indentLevel}    conditional_parse_mode = "${parseMode4}"\n`;
-        } else {
-          code += `${indentLevel}    conditional_parse_mode = None\n`;
-        }
-
-        // Заменяем переменные в тексте
-        for (const varName of variableNames) {
-          code += `${indentLevel}    if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
-          code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
-        }
-
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также заменяем все остальные переменные из user_vars
-        code += `${indentLevel}    # Заменяем все остальные переменные в тексте\n`;
-        code += `${indentLevel}    text = replace_variables_in_text(text, user_vars)\n`;
-
-        // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
-
-        // Добавляем логику для настройки ожидания текстового ввода
-        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-
-        // ИСПРАВЛЕНИЕ: Собираем кнопки с skipDataCollection=true для пропуска сбора данных
-        const skipButtons4 = (condition.buttons || [])
-          .filter((btn: any) => btn.skipDataCollection === true && btn.target)
-          .map((btn: any) => ({ text: btn.text, target: btn.target }));
-        const skipButtonsJson4 = JSON.stringify(skipButtons4);
-
-        code += `${indentLevel}    conditional_message_config = {\n`;
-        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
-        code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
-        code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
-        code += `${indentLevel}        "source_type": "conditional_message",\n`;
-        code += `${indentLevel}        "skip_buttons": ${skipButtonsJson4}\n`;
-        code += `${indentLevel}    }\n`;
-
-        // Добавляем код для активации состояния условного ввода для user_data_contains
-        if (condition.waitForTextInput) {
-          code += `${indentLevel}    \n`;
-          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
-          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
-          code += `${indentLevel}        if user_id not in user_data:\n`;
-          code += `${indentLevel}            user_data[user_id] = {}\n`;
-          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-        }
-
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем pending_skip_buttons для медиа-узлов
-        if (skipButtons4.length > 0) {
-          code += `${indentLevel}    # Сохраняем skip_buttons для проверки в текстовом обработчике (для медиа-узлов)\n`;
-          code += `${indentLevel}    if user_id not in user_data:\n`;
-          code += `${indentLevel}        user_data[user_id] = {}\n`;
-          code += `${indentLevel}    user_data[user_id]["pending_skip_buttons"] = ${skipButtonsJson4}\n`;
-          code += `${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")\n`;
-        }
-
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} содержат '${condition.expectedValue || ''}' (${logicOperator})")\n`;
-        break;
-
-      default:
-        code += `${indentLevel}${conditionKeyword} False:  # Неизвестное условие: ${condition.condition}\n`;
-        code += `${indentLevel}    pass\n`;
-        break;
-    }
-  }
+  // Применяем автоматическое добавление комментариев ко всему коду
+  const commentedCodeLines = processCodeWithAutoComments(allCodeLines, 'generateConditionalMessageLogic.ts');
 
   // НЕ добавляем else блок здесь - он будет добавлен основной функцией
-  return code;
+  return commentedCodeLines.join('\n');
 }
+

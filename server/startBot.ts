@@ -38,12 +38,6 @@ import { createCompleteBotFiles } from "./createBotFile";
 import { storage } from "./storage";
 
 
-/**
- * Функция для отправки вывода в терминал
- * @external sendOutputToTerminals
- * @see {@link ./terminal-websocket}
- */
-import { sendOutputToTerminals } from './terminal-websocket';
 
 /**
  * Запускает новый экземпляр Telegram-бота по идентификатору проекта и токену
