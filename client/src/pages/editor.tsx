@@ -307,18 +307,41 @@ export default function Editor() {
   }, []);
 
   /**
-   * Функция переключения видимости панели кода
+   * Обработчик открытия панели кода
    */
-  const handleToggleCode = useCallback(() => {
+  const handleOpenCodePanel = useCallback(() => {
     setFlexibleLayoutConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'code'
-          ? { ...element, visible: !element.visible }
-          : element
-      )
+      elements: prev.elements.map(element => {
+        if (element.id === 'code') {
+          return { ...element, visible: true };
+        }
+        if (element.id === 'sidebar') {
+          return { ...element, visible: false };
+        }
+        return { ...element, visible: element.visible ?? true }; // Убедиться, что visible имеет значение по умолчанию
+      })
     }));
   }, []);
+
+  /**
+   * Обработчик закрытия панели кода
+   */
+  const handleCloseCodePanel = useCallback(() => {
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element => {
+        if (element.id === 'code') {
+          return { ...element, visible: false };
+        }
+        if (element.id === 'sidebar') {
+          return { ...element, visible: true };
+        }
+        return { ...element, visible: element.visible ?? true }; // Убедиться, что visible имеет значение по умолчанию
+      })
+    }));
+  }, []);
+
 
   /**
    * Обработчик открытия панели диалога
@@ -517,7 +540,7 @@ export default function Editor() {
           id: 'code',
           type: 'code',
           name: 'Код',
-          position: 'right',
+          position: 'left',
           size: 25,
           visible: false
         },
@@ -1391,7 +1414,7 @@ export default function Editor() {
     <CodePanel
       botData={(botDataWithSheets || getBotData()) as any}
       projectName={activeProject.name}
-      onClose={handleToggleCode}
+      onClose={handleCloseCodePanel}
     />
   ) : null;
 
@@ -1424,7 +1447,7 @@ export default function Editor() {
         onToggleSidebar={handleToggleSidebar}
         onToggleProperties={handleToggleProperties}
         onToggleCanvas={handleToggleCanvas}
-        onToggleCode={handleToggleCode}
+        onToggleCode={handleOpenCodePanel}
         onOpenFileExplorer={handleOpenFileExplorerPanel}
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
         sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
@@ -1626,7 +1649,7 @@ export default function Editor() {
               onToggleSidebar={handleToggleSidebar}
               onToggleProperties={handleToggleProperties}
               onToggleCanvas={handleToggleCanvas}
-              onToggleCode={handleToggleCode}
+              onToggleCode={handleOpenCodePanel}
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
               sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
               propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
@@ -1781,7 +1804,7 @@ export default function Editor() {
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
-              onToggleCode={handleToggleCode}
+              onToggleCode={handleOpenCodePanel}
               codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
               onOpenMobileSidebar={() => setShowMobileSidebar(true)}
               onOpenMobileProperties={() => setShowMobileProperties(true)}
@@ -1803,7 +1826,7 @@ export default function Editor() {
                   onSaveAsTemplate={handleSaveAsTemplate}
                   onLoadTemplate={handleLoadTemplate}
                   onLayoutSettings={() => setShowLayoutManager(true)}
-                  onToggleCode={handleToggleCode}
+                  onToggleCode={handleOpenCodePanel}
                   codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
                   onOpenMobileSidebar={() => setShowMobileSidebar(true)}
                   onOpenMobileProperties={() => setShowMobileProperties(true)}
