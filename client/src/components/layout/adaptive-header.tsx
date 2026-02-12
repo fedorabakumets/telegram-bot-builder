@@ -96,6 +96,7 @@ export function AdaptiveHeader({
   onToggleProperties,
   onToggleCanvas,
   onToggleCode,
+  onOpenFileExplorer,
   headerVisible,
   sidebarVisible,
   propertiesVisible,

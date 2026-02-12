@@ -1585,7 +1585,7 @@ export default function Editor() {
               )
             }
             fileExplorerContent={
-              currentTab === 'files' && activeProject ? (
+              showFileExplorer ? (
                 <FileExplorerPanel
                   botData={botDataWithSheets ? (botDataWithSheets as any).data as BotData : getBotData()}
                   projectName={activeProject.name}

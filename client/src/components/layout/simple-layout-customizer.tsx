@@ -42,7 +42,7 @@ import {
  */
 export interface SimpleLayoutElement {
   id: string;
-  type: 'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'dialog' | 'userDetails';
+  type: 'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'dialog' | 'userDetails' | 'fileExplorer';
   name: string;
   position: 'top' | 'bottom' | 'left' | 'right' | 'center';
   size: number;
