@@ -1,3 +1,14 @@
+/**
+ * @fileoverview Утилита для генерации обработчиков узлов Telegram-бота
+ *
+ * Этот модуль предоставляет функции для генерации Python-кода,
+ * реализующего обработчики для различных типов узлов в графе
+ * Telegram-бота. Поддерживает команды, медиа-сообщения, действия
+ * с пользователями и сообщениями.
+ *
+ * @module generateNodeHandlers
+ */
+
 import { Node } from '@shared/schema';
 import { generateStartHandler, generateCommandHandler } from '../CommandHandler';
 import { generateStickerHandler, generateVoiceHandler, generateAnimationHandler, generateLocationHandler, generateContactHandler } from '../MediaHandler';
