@@ -8,7 +8,6 @@
  */
 
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
-import { init_user_variables } from './init_user_variables'; // Импортируем функцию инициализации пользовательских переменных
 import { replace_variables_in_text } from "./replace_variables_in_text";
 
 /**
@@ -54,8 +53,8 @@ export function generateUniversalVariableReplacement(
   universalVarCodeLines.push(`${indentLevel}    # Проверяем, что user_obj определен и инициализируем переменные пользователя`);
   universalVarCodeLines.push(`${indentLevel}    if user_obj is not None:`);
 
-  // Вызываем функцию инициализации пользовательских переменных
-  init_user_variables(universalVarCodeLines, `${indentLevel}    `);
+  // Вызываем уже определенную функцию инициализации пользовательских переменных
+  universalVarCodeLines.push(`${indentLevel}        user_name = init_user_variables(user_id, user_obj)`);
 
   universalVarCodeLines.push(`${indentLevel}# Подставляем все доступные переменные пользователя в текст`);
   universalVarCodeLines.push(`${indentLevel}user_vars = await get_user_from_db(user_id)`);
@@ -82,6 +81,9 @@ export function generateUniversalVariableReplacement(
   replace_variables_in_text(universalVarCodeLines, indentLevel);
 
   universalVarCodeLines.push(`${indentLevel}text = replace_variables_in_text(text, all_user_vars)`);
+
+  // Добавляем символ новой строки для разделения вызовов
+  universalVarCodeLines.push('');
 
   // Применяем автоматическое добавление комментариев ко всему коду
   const commentedCodeLines = processCodeWithAutoComments(universalVarCodeLines, 'generateUniversalVariableReplacement.ts');

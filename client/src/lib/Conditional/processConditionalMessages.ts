@@ -163,7 +163,7 @@ export function processConditionalMessages(sortedConditions: any[], nodeData: an
                     codeLines.push(`${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")`);
                 }
 
-                codeLines.push(`${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} (${logicOperator})"`);
+                codeLines.push(`${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} ('${logicOperator}')")`);
                 break;
 
             case 'user_data_not_exists':
@@ -237,7 +237,7 @@ export function processConditionalMessages(sortedConditions: any[], nodeData: an
                     codeLines.push(`${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")`);
                 }
 
-                codeLines.push(`${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})"`);
+                codeLines.push(`${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют ('${logicOperator}')")`);
                 break;
 
             case 'user_data_equals':
@@ -324,7 +324,7 @@ export function processConditionalMessages(sortedConditions: any[], nodeData: an
                     codeLines.push(`${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")`);
                 }
 
-                codeLines.push(`${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} равны '${condition.expectedValue || ''}' (${logicOperator})"`);
+                codeLines.push(`${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} равны '{condition.expectedValue || ''}' ('${logicOperator}')")`);
                 break;
 
             case 'user_data_contains':
@@ -411,7 +411,7 @@ export function processConditionalMessages(sortedConditions: any[], nodeData: an
                     codeLines.push(`${indentLevel}    logging.info(f"📌 Сохранены pending_skip_buttons для медиа-узла: {user_data[user_id]['pending_skip_buttons']}")`);
                 }
 
-                codeLines.push(`${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} содержат '${condition.expectedValue || ''}' (${logicOperator})"`);
+                codeLines.push(`${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} содержат '{condition.expectedValue || ''}' ('${logicOperator}')")`);
                 break;
 
             default:

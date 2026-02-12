@@ -5,13 +5,13 @@ export function skipDataCollectionnavigate(nodes: any[], code: string) {
             const safeFnName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
             code += `                ${cond} skip_button_target == "${targetNode.id}":\n`;
             // Проверяем, существует ли целевой узел перед вызовом обработчика
-            const targetExists = nodes.some(n => n.id === targetNode.id);
-            if (targetExists) {
-              code += `                    await handle_callback_${safeFnName}(fake_callback)\n`;
-            } else {
-              code += `                    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
-              code += `                    await message.answer("Переход завершен")\n`;
-            }
+            // Проверяем, что узел существует и генерируем безопасный вызов
+            code += `                    # Проверяем и вызываем обработчик, если он существует\n`;
+            code += `                    if hasattr(locals(), 'handle_callback_${safeFnName}') or '${safeFnName}' in globals():\n`;
+            code += `                        await handle_callback_${safeFnName}(fake_callback)\n`;
+            code += `                    else:\n`;
+            code += `                        logging.warning(f"⚠️ Обработчик не найден для узла: ${targetNode.id}, завершаем переход")\n`;
+            code += `                        await message.answer("Переход завершен")\n`;
         });
         code += '                else:\n';
         code += '                    logging.warning(f"Неизвестный целевой узел кнопки skipDataCollection: {skip_button_target}")\n';

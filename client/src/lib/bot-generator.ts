@@ -991,7 +991,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Навигацию между узлами с обработкой ошибок
    * 
    * @remarks
-   * Функ��ия генерирует код, который обеспечивает плавную навигацию
+   * Функ����ия генерирует код, который обеспечивает плавную навигацию
    * и интерактивность в Telegram боте, поддерживая сложные сценарии диалогов
    * 
    * @example
@@ -1449,6 +1449,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '        \n';
     code += '        # Закрываем сессию бота\n';
     code += '        await bot.session.close()\n';
+    code += '\n';
   }
 
   /**
