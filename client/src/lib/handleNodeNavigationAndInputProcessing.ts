@@ -1,5 +1,6 @@
 import { Button } from './bot-generator';
-import { calculateOptimalColumns, formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './format';
+import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './format';
+import { calculateOptimalColumns } from './Keyboard';
 import { generateInlineKeyboardCode } from './Keyboard';
 import { generateUniversalVariableReplacement } from './utils';
 
@@ -21,7 +22,9 @@ export function handleNodeNavigationAndInputProcessing(nodes: any[], code: strin
 
                     // Замена переменных
                     code += `${bodyIndent}user_data[user_id] = user_data.get(user_id, {})\n`;
-                    code += generateUniversalVariableReplacement(bodyIndent);
+                    const universalVarCodeLines1: string[] = [];
+                    generateUniversalVariableReplacement(universalVarCodeLines1, bodyIndent);
+                    code += universalVarCodeLines1.join('\n');
 
                     // Инициализируем состояние множественного выбора
                     code += `${bodyIndent}# Инициализируем состояние множественного выбора\n`;
@@ -48,7 +51,9 @@ export function handleNodeNavigationAndInputProcessing(nodes: any[], code: strin
 
                     // Применяем замену переменных
                     code += `${bodyIndent}# Замена переменных в тексте\n`;
-                    code += generateUniversalVariableReplacement(bodyIndent);
+                    const universalVarCodeLines2: string[] = [];
+                    generateUniversalVariableReplacement(universalVarCodeLines2, bodyIndent);
+                    code += universalVarCodeLines2.join('\n');
 
                     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                     code += `${bodyIndent}# Заменяем все переменные в тексте\n`;

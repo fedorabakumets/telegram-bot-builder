@@ -16,6 +16,12 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function update_user_variable_in_db(codeLines: string[]) {
     const updateCodeLines: string[] = [];
 
+    // Обновление переменной пользователя в базе данных
+    codeLines.push('# ┌─────────────────────────────────────────┐');
+    codeLines.push('# │ Обновление переменной пользователя в    │');
+    codeLines.push('# │           базе данных                   │');
+    codeLines.push('# └─────────────────────────────────────────┘');
+
     updateCodeLines.push('async def update_user_variable_in_db(user_id: int, variable_name: str, variable_value: str):');
     updateCodeLines.push('    """Сохраняет переменную пользователя в базу данных"""');
     updateCodeLines.push('    if not db_pool:');

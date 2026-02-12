@@ -1,5 +1,6 @@
 import { Button } from './bot-generator';
-import { calculateOptimalColumns, formatTextForPython, generateButtonText, toPythonBoolean } from './format';
+import { formatTextForPython, generateButtonText, toPythonBoolean } from './format';
+import { calculateOptimalColumns } from './Keyboard';
 import { generateInlineKeyboardCode } from './Keyboard';
 
 export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) {

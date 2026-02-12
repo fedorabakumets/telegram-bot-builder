@@ -16,6 +16,11 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function replace_variables_in_text(codeLines: string[], indentLevel: string = '') {
   const replaceCodeLines: string[] = [];
 
+  // Замена переменных в тексте
+  codeLines.push('# ┌─────────────────────────────────────────┐');
+  codeLines.push('# │      Замена переменных в тексте         │');
+  codeLines.push('# └─────────────────────────────────────────┘');
+
   replaceCodeLines.push(`${indentLevel}def replace_variables_in_text(text_content, variables_dict):`);
   replaceCodeLines.push(`${indentLevel}    """Заменяет переменные формата {variable_name} в тексте на их значения`);
   replaceCodeLines.push(`${indentLevel}    `);

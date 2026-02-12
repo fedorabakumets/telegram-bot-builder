@@ -11,3 +11,8 @@ export * from './generateVoiceHandler';
 export * from './generateAnimationHandler';
 export * from './generateLocationHandler';
 export * from './generateContactHandler';
+export * from './hasMediaNodes';
+export * from './hasUploadImageUrls';
+export * from './extractNodesAndConnections';
+export * from './mediafiles';
+export * from './generateAttachedMediaSendCode';

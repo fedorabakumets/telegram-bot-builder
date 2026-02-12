@@ -17,9 +17,9 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function init_database(codeLines: string[]) {
     const initDbCodeLines: string[] = [];
 
-    // Функции для работы с базой данных
+    // Инициализация базы данных
     codeLines.push('# ┌─────────────────────────────────────────┐');
-    codeLines.push('# │        Функции для работы с базой данных│');
+    codeLines.push('# │      Инициализация базы данных          │');
     codeLines.push('# └─────────────────────────────────────────┘');
     
     initDbCodeLines.push('async def init_database():');

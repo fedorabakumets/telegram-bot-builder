@@ -1,4 +1,5 @@
 export { AliasNodes } from './AliasNodes';
+export { generateCheckUserVariableFunction } from './generateCheckUserVariableFunction';
 export { generateDatabaseCode } from './generateDatabaseCode';
 export { generateUniversalVariableReplacement } from './generateUniversalVariableReplacement';
 export { generateVariableReplacement } from './generateVariableReplacement';

@@ -16,6 +16,12 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function update_user_data_in_db(codeLines: string[]) {
     const updateCodeLines: string[] = [];
 
+    // Обновление данных пользователя в базе данных
+    codeLines.push('# ┌─────────────────────────────────────────┐');
+    codeLines.push('# │ Обновление данных пользователя в базе   │');
+    codeLines.push('# │             данных                      │');
+    codeLines.push('# └─────────────────────────────────────────┘');
+
     updateCodeLines.push('async def update_user_data_in_db(user_id: int, data_key: str, data_value):');
     updateCodeLines.push('    """Обновляет пользовательские данные в базе данных"""');
     updateCodeLines.push('    if not db_pool:');

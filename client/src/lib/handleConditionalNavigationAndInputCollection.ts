@@ -1,7 +1,8 @@
 import { Button } from './bot-generator';
 import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateCheckUserVariableFunction, generateUniversalVariableReplacement } from './utils';
+import { generateUniversalVariableReplacement } from './utils';
+import { generateCheckUserVariableFunction } from './database';
 
 export function handleConditionalNavigationAndInputCollection(nodes: any[], code: string, allNodeIds: any[]) {
     if (nodes.length > 0) {
@@ -20,7 +21,9 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
 
                 // Замена переменных
                 code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
-                code += generateUniversalVariableReplacement('                        ');
+                const universalVarCodeLines1: string[] = [];
+                generateUniversalVariableReplacement(universalVarCodeLines1, '                        ');
+                code += universalVarCodeLines1.join('\n');
 
                 // Инициализируем состояние множественного выбора
                 code += `                        # Инициализируем состояние множественного выбора\n`;
@@ -285,9 +288,11 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput=true")\n`;
                             code += `                        text = ${formattedText}\n`;
 
-                            // Дояяяяавляем замену переменных
+                            // Добавляем замену переменных
                             code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
-                            code += generateUniversalVariableReplacement('                        ');
+                            const universalVarCodeLines2: string[] = [];
+                            generateUniversalVariableReplacement(universalVarCodeLines2, '                        ');
+                            code += universalVarCodeLines2.join('\n');
 
                             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в завясимости от keyboardType
                             if (targetNode.data.keyboardType === 'reply') {
@@ -359,7 +364,9 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
 
                     // Добавляем замену переменных
                     code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
-                    code += generateUniversalVariableReplacement('                        ');
+                    const universalVarCodeLines3: string[] = [];
+                    generateUniversalVariableReplacement(universalVarCodeLines3, '                        ');
+                    code += universalVarCodeLines3.join('\n');
 
                     // Проверяем, есть ли reply кнопки
                     if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {

@@ -1,11 +1,11 @@
+import { Node } from '@shared/schema';
 import { Button } from "../bot-generator";
-import { generateButtonText } from '../format/generateButtonText';
-import { calculateOptimalColumns } from './calculateOptimalColumns';
-import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
+import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
+import { generateButtonText } from '../format/generateButtonText';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';
-import { Node } from '@shared/schema';
+import { calculateOptimalColumns } from './calculateOptimalColumns';
 
 
 export function generateKeyboard(node: Node): string {
@@ -18,7 +18,9 @@ export function generateKeyboard(node: Node): string {
   const indent3 = hasConditionalMessages ? '        ' : '    ';
 
   // ИСПРАВЛЕНИЕ: Добавляем замену переменных для ВСЕХ узлов, не только с условными сообщениями
-  code += generateUniversalVariableReplacement('    ');
+  const universalVarCodeLines1: string[] = [];
+  generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
+  code += universalVarCodeLines1.join('\n');
   code += '    text = replace_variables_in_text(text, user_vars)\n';
   code += '    \n';
 
@@ -140,7 +142,7 @@ export function generateKeyboard(node: Node): string {
       const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
       const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
       code += `${indent4}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-      
+
       // Проверяем наличие изображения
       if (hasImage) {
         code += `${indent4}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
@@ -165,7 +167,7 @@ export function generateKeyboard(node: Node): string {
 
       code += `${indent4}builder.adjust(2)  # Используем 2 колонки для консистентности\n`;
       code += `${indent4}keyboard = builder.as_markup()\n`;
-      
+
       // Проверяем наличие изображения
       if (hasImage) {
         code += `${indent4}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
@@ -209,7 +211,7 @@ export function generateKeyboard(node: Node): string {
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        
+
         // Проверяем наличие изображения
         if (hasImage) {
           code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
@@ -231,7 +233,7 @@ export function generateKeyboard(node: Node): string {
         const columns = calculateOptimalColumns(node.data.responseOptions, node.data);
         code += `    builder.adjust(${columns})\n`;
         code += '    keyboard = builder.as_markup()\n';
-        
+
         // Проверяем наличие изображения
         if (hasImage) {
           code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
@@ -248,7 +250,7 @@ export function generateKeyboard(node: Node): string {
         code += '    if use_conditional_keyboard:\n';
         code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
         code += '    else:\n';
-        
+
         // Проверяем наличие изображения для условной клавиатуры
         if (hasImage) {
           code += '        await bot.send_photo(message.chat.id, image_url, caption=text, parse_mode=current_parse_mode if current_parse_mode else None)\n';
@@ -257,7 +259,7 @@ export function generateKeyboard(node: Node): string {
         }
       } else {
         code += '    \n';
-        
+
         // Проверяем наличие изображения
         if (hasImage) {
           code += `    await bot.send_photo(message.chat.id, image_url, caption=text${parseMode}, node_id="${node.id}")\n`;
@@ -330,7 +332,7 @@ export function generateKeyboard(node: Node): string {
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        
+
         // Проверяем наличие изображения
         if (hasImage) {
           code += `${indent3}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
@@ -365,7 +367,7 @@ export function generateKeyboard(node: Node): string {
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        
+
         // Проверяем наличие изображения
         if (hasImage) {
           code += `${indent3}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
@@ -377,7 +379,9 @@ export function generateKeyboard(node: Node): string {
       // Проверяем, есть ли множественный выбор
       if (node.data.allowMultipleSelection) {
         // Добавляем универсальную функцию замены переменных для доступа к user_vars
-        code += generateUniversalVariableReplacement(indent3);
+        const universalVarCodeLines2: string[] = [];
+        generateUniversalVariableReplacement(universalVarCodeLines2, indent3);
+        code += universalVarCodeLines2.join('\n');
 
         // Добавляем логику загрузки ранее выбранных интересов
         const multiSelectVariable = node.data.multiSelectVariable || 'user_interests';
@@ -466,7 +470,7 @@ export function generateKeyboard(node: Node): string {
         const columns = calculateOptimalColumns(allButtons, node.data);
         code += `${indent3}builder.adjust(${columns})\n`;
         code += `${indent3}keyboard = builder.as_markup()\n`;
-        
+
         // Проверяем наличие изображения
         if (hasImage) {
           code += `${indent3}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;
@@ -498,7 +502,7 @@ export function generateKeyboard(node: Node): string {
         const columns = calculateOptimalColumns(node.data.buttons, node.data);
         code += `${indent3}builder.adjust(${columns})\n`;
         code += `${indent3}keyboard = builder.as_markup()\n`;
-        
+
         // Проверяем наличие изображения
         if (hasImage) {
           code += `${indent3}await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseMode}, node_id="${node.id}")\n`;

@@ -17,6 +17,11 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function init_user_variables(codeLines: string[], indentLevel: string = '') {
   const initUserCodeLines: string[] = [];
 
+  // Инициализация пользовательских переменных
+  codeLines.push('# ┌─────────────────────────────────────────┐');
+  codeLines.push('# │  Инициализация пользовательских переменных│');
+  codeLines.push('# └─────────────────────────────────────────┘');
+
   initUserCodeLines.push(`${indentLevel}def init_user_variables(user_id, user_obj):`);
   initUserCodeLines.push(`${indentLevel}    """Инициализирует базовые переменные пользователя из Telegram API`);
   initUserCodeLines.push(`${indentLevel}    `);

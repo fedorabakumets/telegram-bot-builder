@@ -17,6 +17,12 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function save_user_data_to_db(codeLines: string[]) {
     const saveUserDataCodeLines: string[] = [];
 
+    // Алиас для сохранения пользовательских данных (обратная совместимость)
+    codeLines.push('# ┌─────────────────────────────────────────┐');
+    codeLines.push('# │ Алиас для сохранения пользовательских   │');
+    codeLines.push('# │    данных (обратная совместимость)      │');
+    codeLines.push('# └─────────────────────────────────────────┘');
+
     saveUserDataCodeLines.push('async def save_user_data_to_db(user_id: int, data_key: str, data_value):');
     saveUserDataCodeLines.push('    """Алиас для update_user_data_in_db для обратной совместимости"""');
     saveUserDataCodeLines.push('    return await update_user_data_in_db(user_id, data_key, data_value)');

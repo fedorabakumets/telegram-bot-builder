@@ -75,7 +75,9 @@ export function processInputTargetNavigation(node: any, code: string, nodes: any
 
                     // Замена переменных
                     code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-                    code += generateUniversalVariableReplacement('                ');
+                    const universalVarCodeLines1: string[] = [];
+                    generateUniversalVariableReplacement(universalVarCodeLines1, '                ');
+                    code += universalVarCodeLines1.join('\n');
 
                     // Инициализируем состояние множественного выбора
                     code += `                # Инициализируем состояние множественного выбора\n`;
@@ -109,7 +111,9 @@ export function processInputTargetNavigation(node: any, code: string, nodes: any
 
                     // Добавляем замену переменных
                     code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-                    code += generateUniversalVariableReplacement('                ');
+                    const universalVarCodeLines2: string[] = [];
+                    generateUniversalVariableReplacement(universalVarCodeLines2, '                ');
+                    code += universalVarCodeLines2.join('\n');
 
                     // Создаем inline клавиатуру если есть кнопки
                     if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {

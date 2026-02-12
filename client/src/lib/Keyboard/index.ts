@@ -1,6 +1,7 @@
 // Keyboard Module
 // Модуль для генерации клавиатур и обработчиков кнопок в Telegram ботах
 
+export * from './calculateOptimalColumns';
 export * from './generateKeyboard';
 export * from './generateButtonResponseHandlers';
 export * from './filterInlineNodes';

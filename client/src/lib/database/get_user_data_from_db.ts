@@ -16,6 +16,12 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function get_user_data_from_db(codeLines: string[]) {
     const getUserDataCodeLines: string[] = [];
 
+    // Получение данных пользователя из базы данных
+    codeLines.push('# ┌─────────────────────────────────────────┐');
+    codeLines.push('# │ Получение данных пользователя из базы   │');
+    codeLines.push('# │             данных                      │');
+    codeLines.push('# └─────────────────────────────────────────┘');
+
     getUserDataCodeLines.push('async def get_user_data_from_db(user_id: int, data_key: str):');
     getUserDataCodeLines.push('    """Получает конкретное значение из поля user_data пользователя"""');
     getUserDataCodeLines.push('    if not db_pool:');

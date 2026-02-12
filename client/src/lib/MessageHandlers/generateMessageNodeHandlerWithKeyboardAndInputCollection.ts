@@ -9,7 +9,8 @@
 
 import { Button } from '../bot-generator';
 import { generateConditionalMessageLogic } from '../Conditional';
-import { calculateOptimalColumns, formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
+import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
+import { calculateOptimalColumns } from '../Keyboard';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 
@@ -38,7 +39,9 @@ export function generateMessageNodeHandlerWithKeyboardAndInputCollection(code: s
         code += `    text = ${formattedTargetText}\n`;
 
         // Добавляем замену переменных в тексте
-        code += generateUniversalVariableReplacement('    ');
+        const universalVarCodeLines: string[] = [];
+        generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+        code += universalVarCodeLines.join('\n');
 
         /**
          * Поддержка условных сообщений

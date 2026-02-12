@@ -6,12 +6,12 @@
  *
  * @module generateVariableReplacement
  */
-
 /**
  * Генерирует строку замены для переменной
  * @param {any} value - Значение переменной
  * @returns {string} Строка замены для переменной
  */
+
 export function generateVariableReplacement(value: any): string {
     // Генерирует строку замены для переменной
     return String(value);

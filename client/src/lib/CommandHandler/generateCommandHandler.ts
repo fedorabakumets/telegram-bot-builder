@@ -1,11 +1,11 @@
-import { stripHtmlTags } from '../format/stripHtmlTags';
-import { formatTextForPython } from '../format/formatTextForPython';
-import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
-import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
-import { generateKeyboard } from '../Keyboard/generateKeyboard';
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
-import { generateAttachedMediaSendCode } from '../MediaHandler/generateAttachedMediaSendCode';
 import { Node } from '@shared/schema';
+import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
+import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
+import { formatTextForPython } from '../format/formatTextForPython';
+import { stripHtmlTags } from '../format/stripHtmlTags';
+import { generateKeyboard } from '../Keyboard/generateKeyboard';
+import { generateAttachedMediaSendCode } from '../MediaHandler/generateAttachedMediaSendCode';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует Python код обработчика команды для Telegram бота на основе конфигурации узла.
@@ -39,7 +39,7 @@ import { Node } from '@shared/schema';
 export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean, mediaVariablesMap?: Map<string, { type: string; variable: string; }>): string {
   // Извлекаем команду из узла или используем значение по умолчанию
   const command = node.data.command || "/help";
-  
+
   // Генерируем имя функции на основе команды, заменяя недопустимые символы
   const functionName = command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
 
@@ -192,9 +192,9 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean,
     codeLines.push(`    # Универсальная замена переменных`);
 
     // Добавляем универсальную замену переменных
-    const variableReplacementCode = generateUniversalVariableReplacement('    ');
-    const variableLines = variableReplacementCode.split('\n').filter(line => line.trim());
-    codeLines.push(...variableLines);
+    const universalVarCodeLines: string[] = [];
+    generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+    codeLines.push(...universalVarCodeLines);
 
   } else {
     codeLines.push(``);
@@ -203,9 +203,9 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean,
     codeLines.push(`    # Универсальная замена переменных`);
 
     // Добавляем универсальную замену переменных
-    const variableReplacementCode = generateUniversalVariableReplacement('    ');
-    const variableLines = variableReplacementCode.split('\n').filter(line => line.trim());
-    codeLines.push(...variableLines);
+    const universalVarCodeLines: string[] = [];
+    generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+    codeLines.push(...universalVarCodeLines);
   }
 
   // Проверяем, есть ли прикрепленные медиафайлы

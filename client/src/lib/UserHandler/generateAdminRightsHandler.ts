@@ -1,8 +1,8 @@
+import { Node } from '@shared/schema';
+import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 import { createSafeFunctionName } from '../format/createSafeFunctionName';
 import { formatTextForPython } from '../format/formatTextForPython';
-import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { generateAdminRightsToggleHandlers } from './generateAdminRightsToggleHandlers';
-import { Node } from '@shared/schema';
 
 export function generateAdminRightsHandler(node: Node): string {
   let code = `\n# Interactive Admin Rights Handler for ${node.id}\n`;
@@ -115,7 +115,9 @@ export function generateAdminRightsHandler(node: Node): string {
   code += `    # Создаем и отправляем интерактивную клавиатуру\n`;
   code += `    keyboard = await create_admin_rights_keyboard_${safeFunctionName}(bot, chat_id, target_user_id)\n`;
   code += `    text = ${formattedText}\n`;
-  code += generateUniversalVariableReplacement('    ');
+  const universalVarCodeLines1: string[] = [];
+  generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
+  code += universalVarCodeLines1.join('\n');
   code += `    \n`;
   code += `    await message.answer(text, reply_markup=keyboard)\n`;
   code += `\n`;
@@ -241,7 +243,9 @@ export function generateAdminRightsHandler(node: Node): string {
   code += `    text = ${formattedText}\n`;
 
   // Добавляем универсальную замену переменных
-  code += generateUniversalVariableReplacement('    ');
+  const universalVarCodeLines2: string[] = [];
+  generateUniversalVariableReplacement(universalVarCodeLines2, '    ');
+  code += universalVarCodeLines2.join('\n');
   code += `    \n`;
   code += `    # Создаем интерактивную клавиатуру\n`;
   code += `    keyboard = await create_admin_rights_keyboard_${safeFunctionName}(bot, chat_id, target_user_id)\n`;

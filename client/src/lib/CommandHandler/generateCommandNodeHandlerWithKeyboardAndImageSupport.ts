@@ -12,7 +12,8 @@
  */
 
 import { Button } from '../bot-generator';
-import { calculateOptimalColumns, formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../format';
+import { formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../format';
+import { calculateOptimalColumns } from '../Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
@@ -60,7 +61,9 @@ export function generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode
 
     // Применяем универсальную замену переменных
     code += '    \n';
-    code += generateUniversalVariableReplacement('    ');
+    const universalVarCodeLines: string[] = [];
+    generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+    code += universalVarCodeLines.join('\n');
 
     // Создаем inline клавиатуру для command узла если есть кнопки
     if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {

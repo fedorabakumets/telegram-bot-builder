@@ -1,6 +1,6 @@
-import { generateCheckUserVariableFunction } from "../utils/generateUniversalVariableReplacement";
-import { processConditionalMessages } from './processConditionalMessages';
+import { generateCheckUserVariableFunction } from "../database/generateCheckUserVariableFunction";
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { processConditionalMessages } from './processConditionalMessages';
 
 /**
  * Генерирует Python код логики условных сообщений для Telegram бота.
@@ -66,7 +66,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
 
   // Собираем весь код в массив строк для автоматической обработки
   const codeLines: string[] = [];
-  
+
   const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
 
   // НЕ инициализируем conditional_parse_mode и conditional_keyboard здесь
@@ -122,7 +122,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
 
   // Создаем единую if/elif/else структуру для всех условий
   const processedCode = processConditionalMessages(sortedConditions, nodeData, codeLines.join('\n'), indentLevel);
-  
+
   // Разбиваем обработанный код обратно на строки для дальнейшей обработки
   const allCodeLines = processedCode.split('\n');
 

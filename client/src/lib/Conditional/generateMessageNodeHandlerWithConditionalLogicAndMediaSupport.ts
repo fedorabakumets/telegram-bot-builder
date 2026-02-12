@@ -9,7 +9,8 @@
 
 import { generateConditionalMessageLogic } from '.';
 import { isLoggingEnabled } from '../bot-generator';
-import { formatTextForPython, generateAttachedMediaSendCode, generateWaitingStateCode, getParseMode, stripHtmlTags } from '../format';
+import { formatTextForPython, generateWaitingStateCode, getParseMode, stripHtmlTags } from '../format';
+import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
@@ -45,9 +46,9 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
 
     // Применяем универсальную замену переменных
     codeLines.push('    ');
-    const universalVarCode = generateUniversalVariableReplacement('    ');
-    const universalVarLines = universalVarCode.split('\n').filter(line => line.trim());
-    codeLines.push(...universalVarLines);
+    const universalVarCodeLines: string[] = [];
+    generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+    codeLines.push(...universalVarCodeLines);
 
     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
     codeLines.push('    # Заменяем все переменные в тексте');

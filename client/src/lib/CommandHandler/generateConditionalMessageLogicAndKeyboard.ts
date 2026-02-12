@@ -10,7 +10,8 @@
  * @module generateConditionalMessageLogicAndKeyboard
  */
 
-import { generateAttachedMediaSendCode, generateButtonText, toPythonBoolean } from '../format';
+import { generateButtonText, toPythonBoolean } from '../format';
+import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**

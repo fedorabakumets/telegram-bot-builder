@@ -1,7 +1,8 @@
 import { isLoggingEnabled } from '../bot-generator';
 import { generateConditionalMessageLogic } from '../Conditional';
-import { stripHtmlTags, formatTextForPython, getParseMode, generateAttachedMediaSendCode } from '../format';
-import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
+import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
+import { formatTextForPython, getParseMode, stripHtmlTags } from '../format';
+import { generateAttachedMediaSendCode } from '../MediaHandler';
 
 /**
  * Генерирует функции handle_node_* для узлов с условными сообщениями
@@ -11,7 +12,7 @@ import { generateUniversalVariableReplacement } from '../utils/generateUniversal
  */
 export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map<string, { type: string; variable: string; }>): string {
   let code = '';
-  
+
   // Находим узлы, которые имеют условные сообщения и collectUserInput = true
   const conditionalNodes = nodes.filter(node =>
     node &&
@@ -20,34 +21,34 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
     node.data?.conditionalMessages.length > 0 &&
     node.data?.collectUserInput === true
   );
-  
+
   if (conditionalNodes.length === 0) {
     if (isLoggingEnabled()) console.log('🔍 Нет узлов, требующих функций handle_node_*');
     return code;
   }
-  
+
   if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: Создаем функции handle_node_* для ${conditionalNodes.length} узлов`);
-  
+
   conditionalNodes.forEach(node => {
     if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: Создаем handle_node_${node.id} для узла с условными сообщениями`);
-    
+
     const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
     const messageText = node.data.messageText || "Сообщение";
     const cleanedMessageText = stripHtmlTags(messageText);
     const formattedText = formatTextForPython(cleanedMessageText);
     const parseMode = getParseMode(node.data.formatMode);
-    
+
     code += `\nasync def handle_node_${safeFunctionName}(message: types.Message):\n`;
     code += '    # Обработчик узла с условными сообщениями\n';
     code += '    user_id = message.from_user.id\n';
     code += `    logging.info(f"🔧 Вызван обработчик узла с условными сообщениями: ${node.id} для пользователя {user_id}")\n`;
     code += '    \n';
-    
+
     // Инициализируем переменные пользователя
     code += '    # Инициализируем базовые переменные пользователя\n';
     code += '    user_name = init_user_variables(user_id, message.from_user)\n';
     code += '    \n';
-    
+
     // Подставляем все доступные переменные пользователя в текст
     code += '    # Подставляем все доступные переменные пользователя в текст\n';
     code += '    user_vars = await get_user_from_db(user_id)\n';
@@ -56,7 +57,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
     code += '    if not isinstance(user_vars, dict):\n';
     code += '        user_vars = user_data.get(user_id, {})\n';
     code += '    \n';
-    
+
     // Создаем объединенный словарь переменных
     code += '    # Создаем объединенный словарь переменных из базы данных и локального хранилища\n';
     code += '    all_user_vars = {}\n';
@@ -68,10 +69,12 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
     code += '    if isinstance(local_user_vars, dict):\n';
     code += '        all_user_vars.update(local_user_vars)\n';
     code += '    \n';
-    
+
     // Применяем универсальную замену переменных
-    code += generateUniversalVariableReplacement('    ');
-    
+    const universalVarCodeLines: string[] = [];
+    generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+    code += universalVarCodeLines.join('\n');
+
     // Обработка условных сообщений
     if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
       code += '    # Проверка условных сообщений для навигации\n';
@@ -83,7 +86,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
       code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
       code += '    \n';
-      
+
       // Используем условное сообщение, если доступно, иначе используем стандартное
       code += '    # Используем условное сообщение если есть подходящее условие\n';
       code += '    if "text" not in locals():\n';
@@ -106,7 +109,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += `    text = ${formattedText}\n`;
       code += '    keyboard = None\n';
     }
-    
+
     // Устанавливаем переменную изображения для узла
     code += '    # Устанавливаем переменную изображения для узла\n';
     code += '    user_id = message.from_user.id\n';
@@ -118,7 +121,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += `    logging.info(f"✅ Переменная image_url_${node.id} установлена: ${node.data.imageUrl}")\n`;
     }
     code += '    \n';
-    
+
     // Устанавливаем переменные из attachedMedia
     if (node.data.attachedMedia && node.data.attachedMedia.length > 0) {
       code += '    # Устанавливаем переменные из attachedMedia\n';
@@ -127,12 +130,12 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += '        user_data[user_id] = {}\n';
       code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${node.id}")\n`;
     }
-    
+
     // Отправляем сообщение с учетом прикрепленных медиа
     const attachedMedia = node.data.attachedMedia || [];
     if (attachedMedia.length > 0) {
       if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: Узел ${node.id} имеет attachedMedia:`, attachedMedia);
-      
+
       const mediaCode = generateAttachedMediaSendCode(
         attachedMedia,
         mediaVariablesMap,
@@ -145,7 +148,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
         node.data.collectUserInput === true,
         node.data // передаем данные узла для проверки статических изображений
       );
-      
+
       if (mediaCode) {
         code += '    # Отправляем сообщение (с проверкой прикрепленного медиа)\n';
         // Заменяем callback_query на message в сгенерированном коде
@@ -162,7 +165,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       const autoFlag = (node.data.enableAutoTransition && node.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
       code += `    await safe_edit_or_send(None, text, node_id="${node.id}", reply_markup=keyboard if keyboard is not None else None${parseMode}${autoFlag}, message=message)\n`;
     }
-    
+
     // Обработка автоперехода
     if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
       const autoTargetId = node.data.autoTransitionTo;
@@ -192,7 +195,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += '            logging.error(f"Ошибка при автопереходе к узлу {next_node_id}: {e}")\n';
       code += `        return\n`;
     }
-    
+
     // Устанавливаем waiting_for_input, так как автопереход не выполнен
     if (node.data.collectUserInput === true) {
       code += '    # Устанавливаем waiting_for_input, так как автопереход не выполнен\n';
@@ -211,9 +214,9 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += '    }\n';
       code += `    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${node.data.inputVariable || 'input'} (узел ${node.id})")\n`;
     }
-    
+
     code += '    return\n\n';
   });
-  
+
   return code;
 }

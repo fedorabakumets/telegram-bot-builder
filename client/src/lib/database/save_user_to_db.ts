@@ -16,6 +16,11 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function save_user_to_db(codeLines: string[]) {
     const saveUserCodeLines: string[] = [];
 
+    // Сохранение пользователя в базу данных
+    codeLines.push('# ┌─────────────────────────────────────────┐');
+    codeLines.push('# │    Сохранение пользователя в базу данных│');
+    codeLines.push('# └─────────────────────────────────────────┘');
+
     saveUserCodeLines.push('async def save_user_to_db(user_id: int, username: Optional[str] = None, first_name: Optional[str] = None, last_name: Optional[str] = None):');
     saveUserCodeLines.push('    """Сохраняет пользователя в базу данных"""');
     saveUserCodeLines.push('    if not db_pool:');

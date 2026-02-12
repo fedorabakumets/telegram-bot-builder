@@ -17,20 +17,15 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function AliasNodes(codeLines: string[], nodes: any[]) {
     const aliasCodeLines: string[] = [];
 
-    // Алиас функции для callback обработчиков
+    // Алиасы для обработчиков команд
     codeLines.push('# ┌─────────────────────────────────────────┐');
-    codeLines.push('# │    Алиас функции для callback обработчиков│');
+    codeLines.push('# │      Алиасы для обработчиков команд     │');
     codeLines.push('# └─────────────────────────────────────────┘');
-    
+
     aliasCodeLines.push('async def handle_command_start(message):');
     aliasCodeLines.push('    """Алиас для start_handler, используется в callback обработчиках"""');
     aliasCodeLines.push('    await start_handler(message)');
     aliasCodeLines.push('');
-
-    // Добавляем алиасы для всех команд
-    codeLines.push('# ┌─────────────────────────────────────────┐');
-    codeLines.push('# │        Алиасы для всех команд           │');
-    codeLines.push('# └─────────────────────────────────────────┘');
     
     const commandAliasNodes = (nodes || []).filter(node => node.type === 'command' && node.data.command);
     commandAliasNodes.forEach(node => {

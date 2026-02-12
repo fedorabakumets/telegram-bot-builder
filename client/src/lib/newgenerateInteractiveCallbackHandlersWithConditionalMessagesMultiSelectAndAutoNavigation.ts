@@ -1,9 +1,12 @@
 import { isLoggingEnabled, Button } from './bot-generator';
 import { generateConditionalMessageLogic } from './Conditional';
-import { stripHtmlTags, formatTextForPython, generateButtonText, toPythonBoolean, generateUniqueShortId, calculateOptimalColumns, generateAttachedMediaSendCode, generateWaitingStateCode } from './format';
+import { stripHtmlTags, formatTextForPython, generateButtonText, toPythonBoolean, generateUniqueShortId, generateWaitingStateCode } from './format';
+import { calculateOptimalColumns } from './Keyboard';
+import { generateAttachedMediaSendCode } from './MediaHandler';
 import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateUniversalVariableReplacement, generateCheckUserVariableFunction } from './utils';
+import { generateUniversalVariableReplacement } from './utils';
+import { generateCheckUserVariableFunction } from './database';
 import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
 
 export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes: any[], allReferencedNodeIds: Set<string>, allConditionalButtons: Set<string>, code: string, processNodeButtonsAndGenerateHandlers: (processedCallbacks: Set<string>) => void, nodes: any[], allNodeIds: any[], connections: any[], userDatabaseEnabled: boolean, mediaVariablesMap: Map<string, { type: string; variable: string; }>) {
@@ -192,7 +195,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           const formattedText = formatTextForPython(messageText);
           code += `    text = ${formattedText}\n`;
           code += '    \n';
-          code += generateUniversalVariableReplacement('    ');
+          const universalVarCodeLines1: string[] = [];
+          generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
+          code += universalVarCodeLines1.join('\n');
 
           // ============================================================================
           // ОБРАБОТКА УСЛОВНЫХ СООБЩЕНИЙ
@@ -1346,7 +1351,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
                       // Замена переменных
                       code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-                      code += generateUniversalVariableReplacement('                ');
+                      const universalVarCodeLines2: string[] = [];
+                      generateUniversalVariableReplacement(universalVarCodeLines2, '                ');
+                      code += universalVarCodeLines2.join('\n');
 
                       // Инициализируем состояние множественного выбора
                       code += `                # Инициализируем состояние множественного выбора\n`;
@@ -1413,7 +1420,9 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
                       // Замена переменных
                       code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
-                      code += generateUniversalVariableReplacement('            ');
+                      const universalVarCodeLines3: string[] = [];
+                      generateUniversalVariableReplacement(universalVarCodeLines3, '            ');
+                      code += universalVarCodeLines3.join('\n');
 
                       // Инициализируем состояние множественного выбора
                       code += `            # Инициализируем состояние множественного выбора\n`;

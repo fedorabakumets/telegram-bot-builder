@@ -1,7 +1,8 @@
-import { Node, Button } from '@shared/schema';
-import { formatTextForPython, toPythonBoolean, generateButtonText, calculateOptimalColumns, generateWaitingStateCode } from "../format";
-import { generateUniversalVariableReplacement } from "../utils/generateUniversalVariableReplacement";
+import { Button, Node } from '@shared/schema';
 import { generateConditionalMessageLogic } from "../Conditional";
+import { generateUniversalVariableReplacement } from "../database/generateUniversalVariableReplacement";
+import { formatTextForPython, generateButtonText, generateWaitingStateCode, toPythonBoolean } from "../format";
+import { calculateOptimalColumns } from "../Keyboard";
 import { checkAutoTransition } from "../utils/checkAutoTransition";
 
 export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
@@ -94,7 +95,9 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
             code += `        logging.info(f"⏭️ Кнопка имеет skipDataCollection=true, пропускаем сохранение")\n`;
             code += '    \n';
 
-            code += generateUniversalVariableReplacement('    ');
+            const universalVarCodeLines1: string[] = [];
+            generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
+            code += universalVarCodeLines1.join('\n');
 
             // Устанавливаем переменные из attachedMedia для целевого узла
             if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
@@ -628,9 +631,11 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
           code += '        if user_obj is not None:\n';
           code += '            init_user_variables(user_id, user_obj)\n';
           code += '    \n';
-          
-          code += generateUniversalVariableReplacement('    ');
-          
+
+          const universalVarCodeLines2: string[] = [];
+          generateUniversalVariableReplacement(universalVarCodeLines2, '    ');
+          code += universalVarCodeLines2.join('\n');
+
           // Отправляем ответ и убираем клавиатуру
           code += '    await message.answer(text, reply_markup=ReplyKeyboardRemove())\n';
         }
@@ -670,4 +675,3 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
   }
   return code;
 }
-  

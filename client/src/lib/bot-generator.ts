@@ -7,10 +7,10 @@ import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateBotFatherCommands } from './commands';
 import { collectConditionalMessageButtons } from './Conditional/collectConditionalMessageButtons';
 import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './Conditional/conditional-button-handler';
-import {
-  extractNodesAndConnections,
-  formatTextForPython
-} from './format';
+import { generateGlobalCheckUserVariableFunction } from "./database/generateGlobalCheckUserVariableFunction";
+import { generateUniversalVariableReplacement } from './database/generateUniversalVariableReplacement';
+import { formatTextForPython } from './format';
+import { extractNodesAndConnections } from './MediaHandler';
 import { generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
@@ -40,7 +40,6 @@ import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './utils/addInputTargetNodes';
 import { collectInputTargetNodes } from './utils/collectInputTargetNodes';
 import { extractNodeData } from './utils/extractNodeData';
-import { generateGlobalCheckUserVariableFunction, generateUniversalVariableReplacement } from './utils/generateUniversalVariableReplacement';
 import { hasAutoTransitions } from './utils/hasAutoTransitions';
 import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
 import { processConnectionTargets } from './utils/processConnectionTargets';
@@ -734,7 +733,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
         // Замена переменных
         code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-        code += generateUniversalVariableReplacement('                ');
+        const universalVarCodeLines: string[] = [];
+        generateUniversalVariableReplacement(universalVarCodeLines, '                ');
+        code += universalVarCodeLines.join('\n');
 
         // Отправляем сообщение с кнопками если есть
         if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
@@ -753,7 +754,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
         // Замена переменных
         code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-        code += generateUniversalVariableReplacement('                ');
+        const universalVarCodeLines: string[] = [];
+        generateUniversalVariableReplacement(universalVarCodeLines, '                ');
+        code += universalVarCodeLines.join('\n');
 
         // Инициализируем состояние множественного выбора
         code += `                # Инициализируем состояние множественного выбора\n`;
@@ -781,7 +784,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
         // Замена переменных
         code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-        code += generateUniversalVariableReplacement('                ');
+        const universalVarCodeLines: string[] = [];
+        generateUniversalVariableReplacement(universalVarCodeLines, '                ');
+        code += universalVarCodeLines.join('\n');
 
         if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
           code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
@@ -986,7 +991,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Навигацию между узлами с обработкой ошибок
    * 
    * @remarks
-   * Функция генерирует код, который обеспечивает плавную навигацию
+   * Функ��ия генерирует код, который обеспечивает плавную навигацию
    * и интерактивность в Telegram боте, поддерживая сложные сценарии диалогов
    * 
    * @example

@@ -9,7 +9,8 @@
 
 import { Button } from '../bot-generator';
 import { generateConditionalMessageLogic } from '../Conditional';
-import { calculateOptimalColumns, formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../format';
+import { formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../format';
+import { calculateOptimalColumns } from '../Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
@@ -34,9 +35,9 @@ export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode
 
     // Применяем универсальную замену переменных
     codeLines.push('    ');
-    const universalVarReplacement = generateUniversalVariableReplacement('    ');
-    const universalVarLines = universalVarReplacement.split('\n');
-    codeLines.push(...universalVarLines);
+    const universalVarCodeLines: string[] = [];
+    generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+    codeLines.push(...universalVarCodeLines);
 
     /**
      * Обработка условных сообщений

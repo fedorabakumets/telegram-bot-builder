@@ -1,7 +1,7 @@
 import { Node } from '@shared/schema';
+import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
-import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 import { generateConditionalMessageLogicAndKeyboard } from './generateConditionalMessageLogicAndKeyboard';
 import { generateKeyboardAndProcessAttachedMedia } from './generateKeyboardAndProcessAttachedMedia';
 import { initializeAndRestoreMultipleSelectionState } from './initializeAndRestoreMultipleSelectionState';
@@ -131,9 +131,9 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   }
 
   // Используем универсальную замену переменных для инициализации
-  const variableReplacementCode = generateUniversalVariableReplacement('    ');
-  const variableLines = variableReplacementCode.split('\n').filter(line => line.trim());
-  codeLines.push(...variableLines);
+  const universalVarCodeLines: string[] = [];
+  generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+  codeLines.push(...universalVarCodeLines);
 
   // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
   if (node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined') {

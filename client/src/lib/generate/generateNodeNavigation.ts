@@ -1,5 +1,5 @@
+import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 import { formatTextForPython } from '../format/formatTextForPython';
-import { generateUniversalVariableReplacement } from '../utils/generateUniversalVariableReplacement';
 
 /**
  * Функция для генерации кода навигации по узлам
@@ -26,7 +26,9 @@ export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNod
 
       // Добавляем замену переменных
       code += `${baseIndent}    # Замена переменных\n`;
-      code += generateUniversalVariableReplacement(`${baseIndent}    `);
+      const universalVarCodeLines: string[] = [];
+      generateUniversalVariableReplacement(universalVarCodeLines, `${baseIndent}    `);
+      code += universalVarCodeLines.join('\n');
 
       // Проверяем attachedMedia
       const attachedMedia = targetNode.data.attachedMedia || [];

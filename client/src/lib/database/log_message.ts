@@ -16,6 +16,11 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function log_message(codeLines: string[]) {
     const logMessageCodeLines: string[] = [];
 
+    // Логирование сообщений
+    codeLines.push('# ┌─────────────────────────────────────────┐');
+    codeLines.push('# │            Логирование сообщений        │');
+    codeLines.push('# └─────────────────────────────────────────┘');
+
     logMessageCodeLines.push('async def log_message(user_id: int, message_type: str, message_text: str = None, message_data: dict = None, node_id: str = None):');
     logMessageCodeLines.push('    """Логирует сообщение в базу данных"""');
     logMessageCodeLines.push('    if not db_pool:');
