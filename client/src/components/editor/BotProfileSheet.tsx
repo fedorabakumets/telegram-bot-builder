@@ -1,10 +1,10 @@
 /**
- * @fileoverview Компонент для редактирования профиля бота
+ * @fileoverview Компонент для редактирования профиля бота в виде боковой панели
  *
  * Этот компонент предоставляет интерфейс для редактирования
- * имени, описания и краткого описания бота.
+ * имени, описания и краткого описания бота в виде боковой панели.
  *
- * @module BotProfileEditor
+ * @module BotProfileSheet
  */
 
 import { useState, useEffect } from 'react';
@@ -12,7 +12,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -39,21 +39,26 @@ export type BotInfo = {
 };
 
 /**
- * Компонент для редактирования профиля бота
+ * Компонент для редактирования профиля бота в виде боковой панели
  * @param projectId - Идентификатор проекта
  * @param botInfo - Информация о боте
  * @param onProfileUpdated - Колбэк при обновлении профиля
+ * @param isOpen - Состояние открытия панели
+ * @param onClose - Функция закрытия панели
  */
-export function BotProfileEditor({
+export function BotProfileSheet({
   projectId,
   botInfo,
-  onProfileUpdated
+  onProfileUpdated,
+  isOpen,
+  onClose
 }: {
   projectId: number;
   botInfo?: BotInfo | null;
   onProfileUpdated: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [shortDescription, setShortDescription] = useState('');
@@ -65,7 +70,7 @@ export function BotProfileEditor({
       setDescription(botInfo.description || '');
       setShortDescription(botInfo.short_description || '');
     }
-  }, [botInfo]);
+  }, [botInfo, isOpen]); // Обновляем при изменении isOpen, чтобы сбросить значения при открытии
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -178,10 +183,11 @@ export function BotProfileEditor({
         await updateShortDescriptionMutation.mutateAsync(shortDescription);
       }
 
-      setIsOpen(false);
       // Принудительно обновляем данные после сохранения всех изменений
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+      
+      onClose(); // Закрываем панель после сохранения
     } catch (error) {
       // Ошибки уже обработаны в мутациях
     }
@@ -192,29 +198,17 @@ export function BotProfileEditor({
     setName(botInfo?.first_name || '');
     setDescription(botInfo?.description || '');
     setShortDescription(botInfo?.short_description || '');
-    setIsOpen(false);
+    onClose(); // Закрываем панель
   };
 
   const isLoading = updateNameMutation.isPending || updateDescriptionMutation.isPending || updateShortDescriptionMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0"
-          data-testid="button-edit-bot-profile"
-          disabled={!botInfo}
-          title={!botInfo ? "Загрузка информации о боте..." : "Редактировать профиль бота"}
-        >
-          <Edit2 className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Редактировать профиль бота</DialogTitle>
-        </DialogHeader>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent side="left" className="sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Редактировать профиль бота</SheetTitle>
+        </SheetHeader>
 
         {/* Предупреждение о тестовом режиме */}
         <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
@@ -229,7 +223,7 @@ export function BotProfileEditor({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 pt-4">
 
           <div className="space-y-2">
             <Label htmlFor="bot-name">Имя бота</Label>
@@ -292,7 +286,7 @@ export function BotProfileEditor({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

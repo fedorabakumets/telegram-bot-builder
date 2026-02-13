@@ -29,7 +29,8 @@ import { Play, Square, Clock, Trash2, Edit2, Bot, Plus, MoreHorizontal, Database
 import { setCommentsEnabled, areCommentsEnabled } from '@/lib/utils/generateGeneratedComment';
 import { BotTerminal } from './BotTerminal';
 import { TokenDisplayEdit } from './TokenDisplayEdit';
-import { type BotInfo, BotProfileEditor } from './BotProfileEditor';
+import { type BotInfo } from './BotProfileEditor';
+import { BotProfileSheet } from './BotProfileSheet';
 
 // Типы для функции renderBotControlPanel
 type ProjectTokenType = { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; };
@@ -225,6 +226,16 @@ export function BotControl({ projectId }: BotControlProps) {
   const [editingField, setEditingField] = useState<{ tokenId: number, field: string } | null>(null);
   /** Значение редактируемого поля */
   const [editValue, setEditValue] = useState('');
+
+  // Состояние для управления боковой панелью профиля бота
+  /** Состояние открытия боковой панели редактирования профиля бота */
+  const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
+  
+  /** Выбранный проект для редактирования профиля бота */
+  const [selectedProject, setSelectedProject] = useState<{ id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null; } | null>(null);
+  
+  /** Информация о боте для редактирования */
+  const [selectedBotInfo, setSelectedBotInfo] = useState<BotInfo | null>(null);
 
   // Состояние таймеров для работающих ботов (по одному на каждый токен)
   /** Текущее время работы ботов в секундах (по ключу tokenId) */
@@ -761,7 +772,19 @@ export function BotControl({ projectId }: BotControlProps) {
 
   return (
     <>
-      {renderBotControlPanel(setShowAddBot, projectsLoading, projects, allTokens, allBotInfos, setProjectForNewBot, allBotStatuses, editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit, handleStartEdit, getStatusBadge, queryClient, startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation, generatorLogsEnabled, handleToggleGeneratorLogs, commentsGenerationEnabled, handleToggleCommentsGeneration, currentElapsedSeconds, showAddBot, projectForNewBot, newBotToken, setNewBotToken, isParsingBot, createBotMutation, handleAddBot, editingToken, setEditingToken, editName, setEditName, updateTokenMutation, editDescription, setEditDescription)}
+      {renderBotControlPanel(setShowAddBot, projectsLoading, projects, allTokens, allBotInfos, setProjectForNewBot, allBotStatuses, editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit, handleStartEdit, getStatusBadge, queryClient, startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation, generatorLogsEnabled, handleToggleGeneratorLogs, commentsGenerationEnabled, handleToggleCommentsGeneration, currentElapsedSeconds, showAddBot, projectForNewBot, newBotToken, setNewBotToken, isParsingBot, createBotMutation, handleAddBot, editingToken, setEditingToken, editName, setEditName, updateTokenMutation, editDescription, setEditDescription, setSelectedProject, setSelectedBotInfo, setIsProfileSheetOpen)}
+      
+      {/* Боковая панель редактирования профиля бота */}
+      <BotProfileSheet
+        projectId={selectedProject?.id || 0} // Используем выбранный проект или 0 по умолчанию
+        botInfo={selectedBotInfo} // Используем выбранную информацию о боте
+        onProfileUpdated={() => {
+          // Обновляем информацию о боте для всех проектов
+          queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
+        }}
+        isOpen={isProfileSheetOpen}
+        onClose={() => setIsProfileSheetOpen(false)}
+      />
     </>
   );
 }
@@ -847,7 +870,10 @@ function renderBotControlPanel(
   setEditName: (name: string) => void,
   updateTokenMutation: any,
   editDescription: string,
-  setEditDescription: (desc: string) => void
+  setEditDescription: (desc: string) => void,
+  setSelectedProject: (project: { data: unknown; id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null; } | null) => void,
+  setSelectedBotInfo: (info: BotInfo | null) => void,
+  setIsProfileSheetOpen: (open: boolean) => void
 ) {
   return <div className="space-y-4 sm:space-y-6">
     {/* Header */}
@@ -1185,7 +1211,7 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
             <Card className="border-2 border-dashed border-border/50">
               <CardContent className="flex flex-col items-center justify-center py-8 px-4">
                 <Bot className="w-10 h-10 text-muted-foreground mb-2" />
-                <h4 className="font-medium text-foreground mb-1">Нет подключенных ботов</h4>
+                <h4 className="font-medium text-foreground mb-1">Нет подк��юченных ботов</h4>
                 <p className="text-sm text-muted-foreground text-center mb-4">
                   Добавьте бота к этому проекту
                 </p>
@@ -1331,13 +1357,21 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
 
                         {/* Actions - Responsive */}
                         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                          <BotProfileEditor
-                            projectId={project.id}
-                            botInfo={projectBotInfo}
-                            onProfileUpdated={() => {
-                              // Обновляем информацию о боте для всех проектов
-                              queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
-                            } } />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              setSelectedProject(project);
+                              setSelectedBotInfo(projectBotInfo);
+                              setIsProfileSheetOpen(true);
+                            }}
+                            disabled={!projectBotInfo}
+                            title={!projectBotInfo ? "Загрузка информации о боте..." : "Редактировать профиль бота"}
+                            data-testid="button-edit-bot-profile"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
 
                           {(() => {
                             if (!isThisTokenRunning) {
