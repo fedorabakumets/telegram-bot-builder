@@ -64,7 +64,7 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
               data: jsonData,
               createdAt: new Date(),
               updatedAt: new Date(),
-              ownerId: null // или можно использовать владельца по умолчанию
+              ownerId: null // Проекты, импортируемые из файлов, не имеют владельца
             });
             
             importedProjects.push(newProject);
