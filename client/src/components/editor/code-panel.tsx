@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SyncFromFileButton } from './sync-from-file-button';
 import { TokenInfo } from './token-info';
 import { useToast } from '@/hooks/use-toast';
-import { BotData, BotGroup, BotToken } from '@shared/schema';
+import { BotData, BotGroup } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
