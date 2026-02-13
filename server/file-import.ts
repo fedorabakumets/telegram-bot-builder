@@ -30,28 +30,37 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
   const importedProjects: BotProject[] = [];
 
   for (const subdir of subdirs) {
+    console.log(`Проверяем подкаталог: ${subdir}`);
+    
     // Проверяем, является ли это каталогом с ботом (имя в формате bot_{ID_проекта}_{ID_токена})
     const botDirPattern = /^bot_(\d+)_(\d+)$/;
     const match = subdir.match(botDirPattern);
 
     if (match) {
+      console.log(`Найдено совпадение для папки: ${subdir}, ID проекта: ${match[1]}, ID токена: ${match[2]}`);
       const projectId = parseInt(match[1]); // ID проекта
 
       try {
         // Пытаемся найти файл project.json в подкаталоге
         const projectJsonPath = path.join(botsDir, subdir, 'project.json');
+        console.log(`Проверяем наличие файла: ${projectJsonPath}`);
 
         if (fs.existsSync(projectJsonPath)) {
+          console.log(`Файл найден, читаем содержимое...`);
           const content = fs.readFileSync(projectJsonPath, 'utf-8');
           const jsonData = JSON.parse(content);
 
           // Проверяем, что это действительный проект бота
           if (jsonData.nodes && jsonData.connections) {
+            console.log(`Данные проекта валидны, обрабатываем проект ID: ${projectId}`);
+            
             // Пытаемся получить существующий проект по ID
             let existingProject = await storage.getBotProject(projectId);
+            console.log(`Существующий проект найден: ${!!existingProject}`);
 
             // Определяем имя проекта из данных, если оно есть
             const projectName = jsonData.settings?.name || jsonData.name || `project_${projectId}`;
+            console.log(`Имя проекта: ${projectName}`);
 
             if (existingProject) {
               // Обновляем существующий проект, даже если он уже существует
@@ -79,11 +88,17 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
               importedProjects.push(newProject);
               console.log(`Создан новый проект с именем ${projectName} из файла`);
             }
+          } else {
+            console.log(`Данные проекта не валидны (нет nodes или connections) для папки ${subdir}`);
           }
+        } else {
+          console.log(`Файл project.json не найден в папке ${subdir}`);
         }
       } catch (error) {
         console.error(`Ошибка при импорте проекта из подкаталога ${subdir}:`, error);
       }
+    } else {
+      console.log(`Папка ${subdir} не соответствует формату bot_{ID_проекта}_{ID_токена}`);
     }
   }
 
