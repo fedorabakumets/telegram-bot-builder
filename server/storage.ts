@@ -624,6 +624,12 @@ export interface IStorage {
    * @returns Массив медиафайлов сообщения
    */
   getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>>;
+
+  /**
+   * Импортировать проекты из файлов в директории bots/
+   * @returns Массив импортированных проектов
+   */
+  importProjectsFromFiles(): Promise<BotProject[]>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

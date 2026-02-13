@@ -7,6 +7,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { stopCleanup } from "./cache";
 import { shutdownAllBots } from "./graceful-shutdown";
 import { initializeTerminalWebSocket } from "./terminal-websocket";
+import { startFileMonitoring } from "./file-monitoring";
+import { storage } from "./storage";
 
 /**
  * Основное приложение Express
@@ -116,6 +118,52 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
+
+  // Запускаем мониторинг файлов
+  startFileMonitoring(storage).then(stopMonitoring => {
+    log('Мониторинг файлов запущен');
+    
+    // Функция остановки мониторинга при завершении работы
+    const stopMonitoringOnExit = async () => {
+      log('Остановка мониторинга файлов...');
+      stopMonitoring();
+    };
+    
+    process.on('SIGTERM', async () => {
+      await stopMonitoringOnExit();
+      log('получен сигнал SIGTERM: закрытие HTTP-сервера');
+      await shutdownAllBots();
+      stopCleanup();
+      httpServer.close(() => {
+        log('HTTP-сервер закрыт');
+      });
+    });
+
+    process.on('SIGINT', async () => {
+      await stopMonitoringOnExit();
+      log('получен сигнал SIGINT (Ctrl+C): закрытие HTTP-сервера');
+      await shutdownAllBots();
+      stopCleanup();
+      httpServer.close(() => {
+        log('HTTP-сервер закрыт');
+        process.exit(0);
+      });
+    });
+
+    // Обработка SIGHUP (часто используется в терминалах)
+    process.on('SIGHUP', async () => {
+      await stopMonitoringOnExit();
+      log('получен сигнал SIGHUP: закрытие HTTP-сервера');
+      await shutdownAllBots();
+      stopCleanup();
+      httpServer.close(() => {
+        log('HTTP-сервер закрыт');
+        process.exit(0);
+      });
+    });
+  }).catch(error => {
+    log(`Ошибка при запуске мониторинга файлов: ${error.message}`);
+  });
 
   // ВСЕГДА запускаем приложение на порту 5000
   // это обслуживает как API, так и клиент.

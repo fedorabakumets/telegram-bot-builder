@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SyncFromFileButton } from './sync-from-file-button';
 import { useToast } from '@/hooks/use-toast';
 import { BotData, BotGroup } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
@@ -254,6 +255,11 @@ export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: 
                 <div><strong>Ctrl + F</strong>: Поиск</div>
                 <div><strong>Ctrl + G</strong>: Перейти к строке</div>
               </div>
+            </div>
+
+            {/* Sync Button */}
+            <div className="flex justify-end">
+              <SyncFromFileButton onSyncComplete={() => window.location.reload()} />
             </div>
           </div>
 

@@ -1,4 +1,5 @@
 import { type BotProject, type BotTemplate, type InsertBotProject, type InsertBotTemplate, type BotToken, type BotGroup, botGroups, type InsertBotGroup, type BotMessage, type MediaFile, botMessages, mediaFiles, botMessageMedia, type TelegramUserDB, telegramUsers, type InsertTelegramUser, type BotInstance, botInstances } from "@shared/schema";
+import { importProjectsFromFiles } from "./file-import";
 import { eq, desc, and, asc } from "drizzle-orm";
 import { cachedOps } from "./db-cache";
 import { dbManager } from "./db-utils";
@@ -296,5 +297,9 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
       // Для других ошибок пробрасываем исключение
       throw error;
     }
+  }
+
+  async importProjectsFromFiles(): Promise<BotProject[]> {
+    return await importProjectsFromFiles(this);
   }
 }
