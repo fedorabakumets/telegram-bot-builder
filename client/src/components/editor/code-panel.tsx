@@ -32,6 +32,12 @@ interface CodePanelProps {
  * @param projectName - Название проекта
  * @param onClose - Функция закрытия панели
  * @returns JSX элемент панели кода
+ *
+ * Горячие клавиши:
+ * - Ctrl+Alt+C / Cmd+Alt+C: Скопировать код в буфер обмена
+ * - Ctrl+Alt+S / Cmd+Alt+S: Скачать файл с кодом
+ * - Ctrl+Alt+F / Cmd+Alt+F: Переключить сворачивание всех функций/блоков
+ * - Esc: Закрыть панель кода (если доступно)
  */
 export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
   // Состояние для управления форматом и отображением кода
