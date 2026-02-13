@@ -10,6 +10,7 @@ import { BotData, BotGroup } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
+import { useUpdateProjectName } from '@/hooks/use-update-project-name';
 
 /**
  * Свойства компонента панели кода
@@ -36,16 +37,26 @@ interface CodePanelProps {
   showFullCode?: boolean;
   /** Функция для изменения состояния отображения полного кода */
   onShowFullCodeChange?: (showFull: boolean) => void;
+  /** Функция для обновления данных ботов */
+  onBotDataUpdate?: (updatedBotDataArray: BotData[], index: number, newName: string) => void;
 }
 
 /**
  * [CONTAINER] CodePanel - Основной контейнер для панели кода
  * Управляет состоянием и данными для дочерних компонентов
  */
-export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange }: CodePanelProps) {
+export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate }: CodePanelProps) {
   // Состояние для управления форматом и отображением кода
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
+  
+  // Состояние для хранения имен проектов
+  const [projectNames, setProjectNames] = useState<string[]>(() => 
+    botDataArray.map((_, index) => projectName || `Проект ${index + 1}`)
+  );
+  
+  // Хук для обновления имени проекта
+  const updateProjectNameMutation = useUpdateProjectName();
 
   // Используем внешнее состояние, если оно предоставлено, иначе локальное
   const selectedFormat = externalSelectedFormat !== undefined ? externalSelectedFormat : localSelectedFormat;
@@ -267,12 +278,11 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
           </div>
 
           {/* Render each project separately */}
-          {botDataArray.map((botData, index) => {
+          {botDataArray.map((_botData, index) => {
             const { content, lineCount, codeStats } = getContentAndStats(index);
             
-            // Получаем имя проекта из данных, если оно доступно
-            // Проверяем наличие поля name в botData
-            const projectName = (botData as any).name || `Проект ${index + 1}`;
+            // Используем локальное состояние для имени проекта
+            const currentProjectName = projectNames[index] || projectName || `Проект ${index + 1}`;
             
             // Получаем ID проекта, если доступен
             const projectIdSuffix = projectIds && projectIds[index] ? ` (ID: ${projectIds[index]})` : '';
@@ -286,8 +296,37 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                         <i className={`${getFormatIcon(selectedFormat)} text-xs xs:text-sm`}></i>
                       </div>
                       <div className="min-w-0">
-                        <CardTitle className="text-sm xs:text-base font-semibold truncate">{projectName}{projectIdSuffix}: {getFormatLabel(selectedFormat)}</CardTitle>
-                        <CardDescription className="text-xs xs:text-sm mt-0.5">Файлы проекта {projectName}{projectIdSuffix}</CardDescription>
+                        <CardTitle 
+                          className="text-sm xs:text-base font-semibold truncate cursor-pointer"
+                          onDoubleClick={() => {
+                            const newName = prompt('Введите новое название файла:', currentProjectName);
+                            if (newName !== null && newName.trim() !== '') {
+                              // Обновляем имя проекта в локальном состоянии
+                              setProjectNames(prevNames => {
+                                const updatedNames = [...prevNames];
+                                updatedNames[index] = newName.trim();
+                                return updatedNames;
+                              });
+                              
+                              // Обновляем имя проекта в базе данных
+                              const projectId = projectIds?.[index];
+                              if (projectId) {
+                                updateProjectNameMutation.mutate({
+                                  projectId,
+                                  name: newName.trim()
+                                });
+                              }
+                              
+                              // Передаем обновленное имя проекта через callback
+                              if (onBotDataUpdate) {
+                                onBotDataUpdate(botDataArray, index, newName.trim());
+                              }
+                            }
+                          }}
+                        >
+                          {currentProjectName}{projectIdSuffix}: {getFormatLabel(selectedFormat)}
+                        </CardTitle>
+                        <CardDescription className="text-xs xs:text-sm mt-0.5">Файлы проекта {currentProjectName}{projectIdSuffix}</CardDescription>
                       </div>
                     </div>
                   </div>

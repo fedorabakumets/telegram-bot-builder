@@ -2,7 +2,7 @@ import { BotData } from '@shared/schema';
 import { generateBotFatherCommands } from "../commands";
 
 
-export function generateReadme(botData: BotData, botName: string): string {
+export function generateReadme(botData: BotData, botName: string, projectId?: number, tokenId?: number): string {
   const rawNodes = botData?.nodes || [];
   const nodes = rawNodes.filter(node => node !== null && node !== undefined); // Фильтруем null/undefined
   const rawConnections = botData?.connections || [];
@@ -48,9 +48,14 @@ export function generateReadme(botData: BotData, botName: string): string {
   readme += '   - Обновите DATABASE_URL в .env файле\n';
   readme += '   - Бот автоматически создаст необходимые таблицы при запуске\n';
   readme += '   - Если БД недоступна, бот будет использовать локальное хранилище\n\n';
+  // Определяем имя файла в зависимости от доступных данных
+  const fileName = projectId !== undefined && tokenId !== undefined 
+    ? `bot_${projectId}_${tokenId}.py` 
+    : 'bot.py';
+    
   readme += '5. Запустите бота:\n';
   readme += '   ```bash\n';
-  readme += '   python bot.py\n';
+  readme += '   python ' + fileName + '\n';
   readme += '   ```\n\n';
 
   readme += '## Настройка\n\n';
@@ -70,7 +75,7 @@ export function generateReadme(botData: BotData, botName: string): string {
   readme += '\n```\n\n';
 
   readme += '## Структура проекта\n\n';
-  readme += '- `bot.py` - Основной файл бота\n';
+  readme += '- `' + fileName + '` - Основной файл бота\n';
   readme += '- `requirements.txt` - Зависимости Python\n';
   readme += '- `config.yaml` - Конфигурационный файл\n';
   readme += '- `README.md` - Документация\n';

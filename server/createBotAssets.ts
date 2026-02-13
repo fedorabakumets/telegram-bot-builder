@@ -36,6 +36,7 @@ export async function createBotAssets(
     generateConfigYaml
   } = await import("../client/src/lib/scaffolding");
 
+  // TODO: В будущем можно добавить поддержку кастомных имен файлов
   const baseFileName = `bot_${projectId}_${tokenId}`;
   const botDir = join(botsDir, baseFileName);
 
@@ -54,7 +55,7 @@ export async function createBotAssets(
   assetsPaths.push(requirementsPath);
 
   // 2. README.md
-  const readmeContent = generateReadme(botData, botName);
+  const readmeContent = generateReadme(botData, botName, projectId, tokenId);
   const readmePath = join(botsDir, `README_${projectId}_${tokenId}.md`);
   writeFileSync(readmePath, readmeContent);
   assetsPaths.push(readmePath);

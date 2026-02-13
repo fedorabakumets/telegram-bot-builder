@@ -14,15 +14,24 @@ import { join } from "node:path";
  * @param botCode - Код бота на Python
  * @param projectId - Идентификатор проекта
  * @param tokenId - Необязательный идентификатор токена (если указан, используется в имени файла)
+ * @param customFileName - Необязательное кастомное имя файла (без расширения .py)
  * @returns Путь к созданному файлу бота
  */
-export function createBotFile(botCode: string, projectId: number, tokenId?: number): string {
+export function createBotFile(botCode: string, projectId: number, tokenId?: number, customFileName?: string): string {
   const botsDir = join(process.cwd(), 'bots');
   if (!existsSync(botsDir)) {
     mkdirSync(botsDir, { recursive: true });
   }
 
-  const fileName = tokenId ? `bot_${projectId}_${tokenId}.py` : `bot_${projectId}.py`;
+  let fileName: string;
+  if (customFileName) {
+    // Используем кастомное имя файла
+    fileName = `${customFileName}.py`;
+  } else {
+    // Используем стандартное имя файла
+    fileName = tokenId ? `bot_${projectId}_${tokenId}.py` : `bot_${projectId}.py`;
+  }
+  
   const filePath = join(botsDir, fileName);
   writeFileSync(filePath, botCode);
   return filePath;
@@ -36,6 +45,7 @@ export function createBotFile(botCode: string, projectId: number, tokenId?: numb
  * @param botData - Данные проекта бота
  * @param projectId - Идентификатор проекта
  * @param tokenId - Идентификатор токена
+ * @param customFileName - Необязательное кастомное имя файла (без расширения .py)
  * @returns Объект с путем к основному файлу и массивом путей к сопутствующим файлам
  */
 export async function createCompleteBotFiles(
@@ -43,12 +53,14 @@ export async function createCompleteBotFiles(
   botName: string,
   botData: any,
   projectId: number,
-  tokenId: number
+  tokenId: number,
+  customFileName?: string
 ): Promise<{ mainFile: string; assets: string[] }> {
   const botsDir = join(process.cwd(), 'bots');
 
   // Создаем отдельную папку для бота
-  const botDir = join(botsDir, `bot_${projectId}_${tokenId}`);
+  const folderName = customFileName ? `${customFileName}_${projectId}_${tokenId}` : `bot_${projectId}_${tokenId}`;
+  const botDir = join(botsDir, folderName);
   if (!existsSync(botDir)) {
     mkdirSync(botDir, { recursive: true });
   }
@@ -66,7 +78,7 @@ export async function createCompleteBotFiles(
   }
 
   // Создаем основной файл бота в его папке
-  const fileName = `bot_${projectId}_${tokenId}.py`;
+  const fileName = customFileName ? `${customFileName}.py` : `bot_${projectId}_${tokenId}.py`;
   const mainFile = join(botDir, fileName);
   writeFileSync(mainFile, botCode);
 
@@ -88,7 +100,7 @@ export async function createCompleteBotFiles(
   assets.push(requirementsPath);
 
   // 2. README.md
-  const readmeContent = generateReadme(normalizedBotData, botName);
+  const readmeContent = generateReadme(normalizedBotData, botName, projectId, tokenId);
   const readmePath = join(botDir, 'README.md');
   writeFileSync(readmePath, readmeContent);
   assets.push(readmePath);

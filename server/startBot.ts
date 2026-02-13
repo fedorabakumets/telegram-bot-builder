@@ -29,6 +29,7 @@ import { botProcesses } from "./routes";
  * @see {@link ./createBotFile}
  */
 import { createCompleteBotFiles } from "./createBotFile";
+import { normalizeProjectNameToFile } from "./normalizeFileName";
 
 /**
  * Модуль для взаимодействия с хранилищем данных
@@ -83,41 +84,57 @@ export async function startBot(projectId: number, token: string, tokenId: number
     console.log(`🔍 Проверяем наличие старых процессов для бота ${projectId} (токен ${tokenId})...`);
     try {
       const { execSync } = await import('child_process');
-      const botFileName = `bot_${projectId}_${tokenId}.py`;
-
-      // Находим все Python процессы с этим файлом
+      
+      // Находим все Python процессы, содержащие идентификаторы проекта и токена
+      // Это позволяет находить процессы даже с кастомными именами файлов
       try {
+        const searchPattern = `PROJECT_ID=${projectId}`;
         const psCommand = process.platform === 'win32'
-          ? `tasklist /FI "IMAGENAME eq python.exe" /FO CSV | findstr "${botFileName}"`
-          : `ps aux | grep python | grep "${botFileName}" | grep -v grep`;
+          ? `tasklist /FI "IMAGENAME eq python.exe" /FO CSV`
+          : `ps aux | grep python`;
         const allPythonProcesses = execSync(psCommand, { encoding: 'utf8' }).trim();
 
         if (allPythonProcesses) {
-          const lines = allPythonProcesses.split('\n').filter((line: string) => line.trim());
-          console.log(`⚠️ Найдено ${lines.length} старых процессов для токена ${tokenId}. Останавливаем...`);
+          const lines = allPythonProcesses.split('\n').filter((line: string) => line.trim() && line.includes(searchPattern));
+          
+          if (lines.length > 0) {
+            console.log(`⚠️ Найдено ${lines.length} старых процессов для проекта ${projectId}. Останавливаем...`);
 
-          for (const line of lines) {
-            const parts = line.trim().split(/\s+/);
-            const pid = parseInt(parts[1]);
-            if (pid && !isNaN(pid)) {
-              try {
-                console.log(`💀 Убиваем старый процесс ${pid} для токена ${tokenId}`);
-                execSync(`kill -9 ${pid}`, { encoding: 'utf8' });
-                await new Promise(resolve => setTimeout(resolve, 100)); // Даем время процессу завершиться
-              } catch (killError) {
-                console.log(`Процесс ${pid} уже завершен`);
+            for (const line of lines) {
+              const parts = line.trim().split(/\s+/);
+              // На разных платформах PID может быть на разных позициях
+              let pid: number | null = null;
+              
+              if (process.platform === 'win32') {
+                // В Windows PID обычно во втором столбце
+                pid = parseInt(parts[1]);
+              } else {
+                // В Unix-подобных системах PID обычно во втором столбце (после USER)
+                pid = parseInt(parts[1]);
+              }
+              
+              if (pid && !isNaN(pid)) {
+                try {
+                  console.log(`💀 Убиваем старый процесс ${pid} для проекта ${projectId}`);
+                  execSync(`kill -9 ${pid}`, { encoding: 'utf8' });
+                  await new Promise(resolve => setTimeout(resolve, 100)); // Даем время процессу завершиться
+                } catch (killError) {
+                  console.log(`Процесс ${pid} уже завершен`);
+                }
               }
             }
-          }
 
-          // Ждем немного чтобы процессы точно завершились
-          await new Promise(resolve => setTimeout(resolve, 500));
+            // Ждем немного чтобы процессы точно завершились
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } else {
+            console.log(`✅ Старых процессов для проекта ${projectId} не найдено`);
+          }
         } else {
-          console.log(`✅ Старых процессов для токена ${tokenId} не найдено`);
+          console.log(`✅ Старых процессов для проекта ${projectId} не найдено`);
         }
       } catch (grepError) {
         // Процессы не найдены - это хорошо
-        console.log(`✅ Старых процессов для токена ${tokenId} не найдено`);
+        console.log(`✅ Старых процессов для проекта ${projectId} не найдено`);
       }
     } catch (error) {
       console.log(`Ошибка при поиске старых процессов:`, error);
@@ -192,8 +209,11 @@ export async function startBot(projectId: number, token: string, tokenId: number
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
     const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false).replace('YOUR_BOT_TOKEN_HERE', token);
 
+    // Нормализуем имя проекта для использования в качестве имени файла
+    const customFileName = normalizeProjectNameToFile(project.name);
+    
     // Создаем все файлы бота (основной файл + сопутствующие)
-    const { mainFile, assets } = await createCompleteBotFiles(botCode, project.name, project.data, projectId, tokenId);
+    const { mainFile, assets } = await createCompleteBotFiles(botCode, project.name, project.data, projectId, tokenId, customFileName);
 
     console.log(`📁 Созданы файлы бота:`);
     console.log(`   - Основной файл: ${mainFile}`);

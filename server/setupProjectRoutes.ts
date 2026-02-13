@@ -15,6 +15,7 @@ import { getOwnerIdFromRequest } from "./auth-middleware";
 import { getCachedOrExecute } from "./cache";
 import { normalizeProjectData } from "./normalizeProjectData";
 import { restartBotIfRunning } from "./restartBotIfRunning";
+import { recreateBotFiles } from "./recreateBotFiles";
 import { setupBotManagementRoutes } from "./setupBotManagementRoutes";
 import { setupDeleteProjectRoute } from "./setupDeleteProjectRoute";
 import { storage } from "./storage";
@@ -286,6 +287,15 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
                 const restartResult = await restartBotIfRunning(projectId);
                 if (!restartResult.success) {
                     console.error(`Ошибка перезапуска бота ${projectId}:`, restartResult.error);
+                }
+            }
+
+            // Если обновляется имя проекта или явно указан флаг recreateFiles, пересоздаем файлы бота
+            if (validatedData.name || req.body.recreateFiles) {
+                console.log(`Проект ${projectId} обновлен, пересоздаем файлы бота...`);
+                const recreateResult = await recreateBotFiles(projectId);
+                if (!recreateResult) {
+                    console.error(`Ошибка пересоздания файлов бота ${projectId}`);
                 }
             }
 
