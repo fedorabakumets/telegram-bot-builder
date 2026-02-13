@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -18,10 +18,6 @@ interface CodePanelProps {
   botDataArray: BotData[];
   /** Название проекта */
   projectName: string;
-  /** Индекс выбранного проекта */
-  selectedProjectIndex?: number;
-  /** Колбэк для изменения выбранного проекта */
-  onProjectChange?: (index: number) => void;
   /** Колбэк для закрытия панели */
   onClose?: () => void;
   /** Выбранный формат кода */
@@ -42,7 +38,7 @@ interface CodePanelProps {
  * [CONTAINER] CodePanel - Основной контейнер для панели кода
  * Управляет состоянием и данными для дочерних компонентов
  */
-export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onProjectChange, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange }: CodePanelProps) {
+export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange }: CodePanelProps) {
   // Состояние для управления форматом и отображением кода
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
@@ -50,10 +46,6 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
   // Используем внешнее состояние, если оно предоставлено, иначе локальное
   const selectedFormat = externalSelectedFormat !== undefined ? externalSelectedFormat : localSelectedFormat;
   const collapseState = areAllCollapsed !== undefined ? areAllCollapsed : localAreAllCollapsed;
-  const currentProjectIndex = selectedProjectIndex !== undefined ? selectedProjectIndex : 0;
-  const botData = botDataArray[currentProjectIndex];
-
-  
 
   // Функция для изменения формата
   const handleFormatChange = (format: CodeFormat) => {
@@ -85,24 +77,26 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
   /**
    * Использование хука генератора кода для всех форматов
    */
-  const { codeContent, loadContent } = useCodeGenerator(botData, projectName, groups);
+  const codeGenerators = botDataArray.map((botData, index) => useCodeGenerator(botData, `${projectName}_project_${index}`, groups));
 
   /**
    * Загрузка контента при изменении выбранного формата
    */
   useEffect(() => {
-    loadContent(selectedFormat);
-  }, [selectedFormat, loadContent]);
+    codeGenerators.forEach(({ loadContent }) => {
+      loadContent(selectedFormat);
+    });
+  }, [selectedFormat, codeGenerators]);
 
   // [FUNCTIONS] Вспомогательные функции для взаимодействия с кодом
 
   // [FUNCTIONS] Функции для взаимодействия с кодом (относятся к верхней части)
-  
+
   /**
    * Функция для сворачивания/разворачивания всех блоков кода в редакторе
    * Переключает состояние всех функций и классов между свернутым и развернутым
    */
-  const toggleAllFunctions = () => {
+  const toggleAllFunctions = (_index: number) => {
     handleCollapseChange(!collapseState);
   };
 
@@ -110,8 +104,8 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
    * Копирование кода в буфер обмена
    * Использует Clipboard API для копирования текущего содержимого
    */
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(getCurrentContent());
+  const copyToClipboard = (content: string) => {
+    navigator.clipboard.writeText(content);
     toast({
       title: "Скопировано!",
       description: "Код скопирован в буфер обмена",
@@ -122,7 +116,7 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
    * Скачивание файла с кодом
    * Создает и автоматически скачивает файл с соответствующим расширением
    */
-  const downloadFile = async () => {
+  const downloadFile = async (content: string, projectIndex: number) => {
     const fileExtensions: Record<CodeFormat, string> = {
       python: '.py',
       json: '.json',
@@ -133,15 +127,15 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
     };
 
     const fileNames: Record<CodeFormat, string> = {
-      python: 'bot',
-      json: 'bot_data',
-      requirements: 'requirements',
-      readme: 'README',
-      dockerfile: 'Dockerfile',
-      config: 'config'
+      python: `bot_project_${projectIndex}`,
+      json: `bot_data_project_${projectIndex}`,
+      requirements: `requirements_project_${projectIndex}`,
+      readme: `README_project_${projectIndex}`,
+      dockerfile: `Dockerfile_project_${projectIndex}`,
+      config: `config_project_${projectIndex}`
     };
 
-    const blob = new Blob([getCurrentContent()], { type: 'text/plain' });
+    const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -161,27 +155,25 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
    * Получение текущего содержимого кода для выбранного формата
    * @returns Строка с кодом или пустая строка если контент не загружен
    */
-  const getCurrentContent = () => codeContent[selectedFormat] || '';
+  const getCurrentContent = (index: number) => codeGenerators[index].codeContent[selectedFormat] || '';
 
   // [CALCULATIONS] Расчеты для отображения кода и статистики
-  
-  const content = getCurrentContent();
-  const lines = content.split('\n');
-  const lineCount = lines.length;
 
-  /**
-   * Статистика кода для отображения информации о структуре
-   * Подсчитывает функции, классы, комментарии и другие метрики
-   */
-  const codeStats = useMemo(() => {
-    return {
+  const getContentAndStats = (index: number) => {
+    const content = getCurrentContent(index);
+    const lines = content.split('\n');
+    const lineCount = lines.length;
+
+    const codeStats = {
       totalLines: lineCount,
       truncated: !(showFullCode !== undefined ? showFullCode : false) && lineCount > 1000,
       functions: (content.match(/^def |^async def /gm) || []).length,
       classes: (content.match(/^class /gm) || []).length,
       comments: (content.match(/^[^#]*#/gm) || []).length
     };
-  }, [content, showFullCode]);
+
+    return { content, lineCount, codeStats };
+  };
 
   /**
    * Получение CSS классов иконки для формата файла
@@ -221,7 +213,7 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
     <div className="h-full bg-background overflow-auto">
       <div className="p-2.5 xs:p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-3 xs:space-y-4 sm:space-y-5 md:space-y-6">
-          
+
           {/* [COMPONENT] CodePanelHeader - Верхняя часть с вкладками и действиями */}
           {/* Header Section */}
           <div className="space-y-1.5 xs:space-y-2">
@@ -248,24 +240,6 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
                 </Button>
               )}
             </div>
-            
-            {/* Project Selector */}
-            {botDataArray.length > 1 && (
-              <div className="flex items-center gap-2">
-                <label className="text-xs font-semibold text-foreground">Проект:</label>
-                <select
-                  value={currentProjectIndex}
-                  onChange={(e) => onProjectChange && onProjectChange(Number(e.target.value))}
-                  className="flex-1 bg-background border border-input rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  {botDataArray.map((_, index) => (
-                    <option key={index} value={index}>
-                      Проект {index + 1}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             {/* Hotkeys Info */}
             <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 text-xs text-blue-800 dark:text-blue-200">
@@ -283,159 +257,165 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
             </div>
           </div>
 
-          {/* Format & Actions Card */}
-          <Card className="border border-border/50 shadow-sm">
-            <CardHeader className="pb-3 xs:pb-4 sm:pb-5">
-              <div className="flex items-start gap-2 xs:gap-2.5 justify-between min-w-0">
-                <div className="flex items-center gap-1.5 xs:gap-2 min-w-0">
-                  <div className="w-6 xs:w-7 h-6 xs:h-7 rounded-md flex items-center justify-center flex-shrink-0 bg-muted/50">
-                    <i className={`${getFormatIcon(selectedFormat)} text-xs xs:text-sm`}></i>
-                  </div>
-                  <div className="min-w-0">
-                    <CardTitle className="text-sm xs:text-base font-semibold truncate">{getFormatLabel(selectedFormat)}</CardTitle>
-                    <CardDescription className="text-xs xs:text-sm mt-0.5">Выберите формат</CardDescription>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 xs:space-y-3.5 sm:space-y-4">
-              {/* Format Selection */}
-              <div className="space-y-1.5 xs:space-y-2">
-                <label className="text-xs xs:text-sm font-semibold text-foreground block">Форматы:</label>
-                <Tabs value={selectedFormat} onValueChange={(value) => handleFormatChange(value as CodeFormat)} className="w-full">
-                  <TabsList className="flex flex-col h-auto p-0 bg-transparent border-none">
-                    <TabsTrigger
-                      value="python"
-                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
-                    >
-                      <i className="fas fa-file-code text-blue-500 text-xs"></i>
-                      <span className="text-xs">bot.py</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="json"
-                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
-                    >
-                      <i className="fas fa-file-code text-green-500 text-xs"></i>
-                      <span className="text-xs">bot_data.json</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="requirements"
-                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
-                    >
-                      <i className="fas fa-file-alt text-orange-500 text-xs"></i>
-                      <span className="text-xs">requirements.txt</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="readme"
-                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
-                    >
-                      <i className="fas fa-file-alt text-purple-500 text-xs"></i>
-                      <span className="text-xs">README.md</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="dockerfile"
-                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
-                    >
-                      <i className="fab fa-docker text-cyan-500 text-xs"></i>
-                      <span className="text-xs">Dockerfile</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="config"
-                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
-                    >
-                      <i className="fas fa-file-code text-yellow-500 text-xs"></i>
-                      <span className="text-xs">config.yaml</span>
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 xs:gap-2.5">
-                <Button
-                  onClick={copyToClipboard}
-                  variant="outline"
-                  size="sm"
-                  className="w-full h-9 xs:h-10 text-xs xs:text-sm"
-                  data-testid="button-copy-code"
-                >
-                  <i className="fas fa-copy text-xs xs:text-sm"></i>
-                  <span className="hidden xs:inline ml-1.5">Копировать</span>
-                </Button>
-                <Button
-                  onClick={downloadFile}
-                  size="sm"
-                  className="w-full h-9 xs:h-10 text-xs xs:text-sm"
-                  data-testid="button-download-code"
-                >
-                  <i className="fas fa-download text-xs xs:text-sm"></i>
-                  <span className="hidden xs:inline ml-1.5">Скачать</span>
-                </Button>
-              </div>
-
-              {/* Code Statistics */}
-              {lineCount > 0 && (
-                <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 gap-2 xs:gap-2.5">
-                  <div className="bg-blue-50/50 dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/50 rounded-md p-2 xs:p-2.5 text-center">
-                    <div className="text-sm xs:text-base font-bold text-blue-600 dark:text-blue-400">{codeStats.totalLines}</div>
-                    <div className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">Строк</div>
-                  </div>
-                  {selectedFormat === 'python' && codeStats.functions > 0 && (
-                    <div className="bg-green-50/50 dark:bg-green-900/25 border border-green-200/50 dark:border-green-800/50 rounded-md p-2 xs:p-2.5 text-center">
-                      <div className="text-sm xs:text-base font-bold text-green-600 dark:text-green-400">{codeStats.functions}</div>
-                      <div className="text-xs text-green-700 dark:text-green-300 mt-0.5">Функции</div>
+          {/* Render each project separately */}
+          {botDataArray.map((_, index) => {
+            const { content, lineCount, codeStats } = getContentAndStats(index);
+            
+            return (
+              <Card key={index} className="border border-border/50 shadow-sm">
+                <CardHeader className="pb-3 xs:pb-4 sm:pb-5">
+                  <div className="flex items-start gap-2 xs:gap-2.5 justify-between min-w-0">
+                    <div className="flex items-center gap-1.5 xs:gap-2 min-w-0">
+                      <div className="w-6 xs:w-7 h-6 xs:h-7 rounded-md flex items-center justify-center flex-shrink-0 bg-muted/50">
+                        <i className={`${getFormatIcon(selectedFormat)} text-xs xs:text-sm`}></i>
+                      </div>
+                      <div className="min-w-0">
+                        <CardTitle className="text-sm xs:text-base font-semibold truncate">Проект {index + 1}: {getFormatLabel(selectedFormat)}</CardTitle>
+                        <CardDescription className="text-xs xs:text-sm mt-0.5">Файлы проекта {index + 1}</CardDescription>
+                      </div>
                     </div>
-                  )}
-                  {selectedFormat === 'python' && codeStats.classes > 0 && (
-                    <div className="bg-purple-50/50 dark:bg-purple-900/25 border border-purple-200/50 dark:border-purple-800/50 rounded-md p-2 xs:p-2.5 text-center">
-                      <div className="text-sm xs:text-base font-bold text-purple-600 dark:text-purple-400">{codeStats.classes}</div>
-                      <div className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">Классы</div>
-                    </div>
-                  )}
-                  {selectedFormat === 'json' && (
-                    <div className="bg-cyan-50/50 dark:bg-cyan-900/25 border border-cyan-200/50 dark:border-cyan-800/50 rounded-md p-2 xs:p-2.5 text-center">
-                      <div className="text-sm xs:text-base font-bold text-cyan-600 dark:text-cyan-400">{(content.match(/"/g) || []).length / 2}</div>
-                      <div className="text-xs text-cyan-700 dark:text-cyan-300 mt-0.5">Ключей</div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <Separator className="my-2 xs:my-3" />
-
-              {/* Code Info & Controls */}
-              {codeStats.totalLines > 0 && (
-                <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-3 text-xs xs:text-sm">
-                  <div className="flex items-center gap-1.5 xs:gap-2 flex-wrap">
-                    <span className="text-muted-foreground whitespace-nowrap">Размер: {Math.round(content.length / 1024)} KB</span>
-                    {(selectedFormat === 'python' || selectedFormat === 'json') && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={toggleAllFunctions}
-                        className="h-7 xs:h-8 px-1.5 xs:px-2 text-xs"
-                        data-testid="button-toggle-all-functions"
-                      >
-                        <i className={`fas ${areAllCollapsed ? 'fa-expand' : 'fa-compress'} text-xs`}></i>
-                        <span className="hidden xs:inline ml-1">{areAllCollapsed ? 'Развернуть' : 'Свернуть'}</span>
-                      </Button>
-                    )}
                   </div>
-                  {codeStats.truncated && (
+                </CardHeader>
+                <CardContent className="space-y-3 xs:space-y-3.5 sm:space-y-4">
+                  {/* Format Selection */}
+                  <div className="space-y-1.5 xs:space-y-2">
+                    <label className="text-xs xs:text-sm font-semibold text-foreground block">Форматы:</label>
+                    <Tabs value={selectedFormat} onValueChange={(value) => handleFormatChange(value as CodeFormat)} className="w-full">
+                      <TabsList className="flex flex-col h-auto p-0 bg-transparent border-none justify-start">
+                        <TabsTrigger
+                          value="python"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                        >
+                          <i className="fas fa-file-code text-blue-500 text-xs"></i>
+                          <span className="text-xs">bot.py</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="json"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                        >
+                          <i className="fas fa-file-code text-green-500 text-xs"></i>
+                          <span className="text-xs">bot_data.json</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="requirements"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                        >
+                          <i className="fas fa-file-alt text-orange-500 text-xs"></i>
+                          <span className="text-xs">requirements.txt</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="readme"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                        >
+                          <i className="fas fa-file-alt text-purple-500 text-xs"></i>
+                          <span className="text-xs">README.md</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="dockerfile"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                        >
+                          <i className="fab fa-docker text-cyan-500 text-xs"></i>
+                          <span className="text-xs">Dockerfile</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="config"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                        >
+                          <i className="fas fa-file-code text-yellow-500 text-xs"></i>
+                          <span className="text-xs">config.yaml</span>
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-2 xs:gap-2.5">
                     <Button
-                      size="sm"
+                      onClick={() => copyToClipboard(content)}
                       variant="outline"
-                      onClick={() => onShowFullCodeChange && onShowFullCodeChange(true)}
-                      className="h-7 xs:h-8 px-2 text-xs xs:text-sm whitespace-nowrap"
-                      data-testid="button-show-full-code"
+                      size="sm"
+                      className="w-full h-9 xs:h-10 text-xs xs:text-sm"
+                      data-testid="button-copy-code"
                     >
-                      Показать всё ({codeStats.totalLines})
+                      <i className="fas fa-copy text-xs xs:text-sm"></i>
+                      <span className="hidden xs:inline ml-1.5">Копировать</span>
                     </Button>
+                    <Button
+                      onClick={() => downloadFile(content, index)}
+                      size="sm"
+                      className="w-full h-9 xs:h-10 text-xs xs:text-sm"
+                      data-testid="button-download-code"
+                    >
+                      <i className="fas fa-download text-xs xs:text-sm"></i>
+                      <span className="hidden xs:inline ml-1.5">Скачать</span>
+                    </Button>
+                  </div>
+
+                  {/* Code Statistics */}
+                  {lineCount > 0 && (
+                    <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 gap-2 xs:gap-2.5">
+                      <div className="bg-blue-50/50 dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/50 rounded-md p-2 xs:p-2.5 text-center">
+                        <div className="text-sm xs:text-base font-bold text-blue-600 dark:text-blue-400">{codeStats.totalLines}</div>
+                        <div className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">Строк</div>
+                      </div>
+                      {selectedFormat === 'python' && codeStats.functions > 0 && (
+                        <div className="bg-green-50/50 dark:bg-green-900/25 border border-green-200/50 dark:border-green-800/50 rounded-md p-2 xs:p-2.5 text-center">
+                          <div className="text-sm xs:text-base font-bold text-green-600 dark:text-green-400">{codeStats.functions}</div>
+                          <div className="text-xs text-green-700 dark:text-green-300 mt-0.5">Функции</div>
+                        </div>
+                      )}
+                      {selectedFormat === 'python' && codeStats.classes > 0 && (
+                        <div className="bg-purple-50/50 dark:bg-purple-900/25 border border-purple-200/50 dark:border-purple-800/50 rounded-md p-2 xs:p-2.5 text-center">
+                          <div className="text-sm xs:text-base font-bold text-purple-600 dark:text-purple-400">{codeStats.classes}</div>
+                          <div className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">Классы</div>
+                        </div>
+                      )}
+                      {selectedFormat === 'json' && (
+                        <div className="bg-cyan-50/50 dark:bg-cyan-900/25 border border-cyan-200/50 dark:border-cyan-800/50 rounded-md p-2 xs:p-2.5 text-center">
+                          <div className="text-sm xs:text-base font-bold text-cyan-600 dark:text-cyan-400">{(content.match(/"/g) || []).length / 2}</div>
+                          <div className="text-xs text-cyan-700 dark:text-cyan-300 mt-0.5">Ключей</div>
+                        </div>
+                      )}
+                    </div>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+
+                  <Separator className="my-2 xs:my-3" />
+
+                  {/* Code Info & Controls */}
+                  {codeStats.totalLines > 0 && (
+                    <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-3 text-xs xs:text-sm">
+                      <div className="flex items-center gap-1.5 xs:gap-2 flex-wrap">
+                        <span className="text-muted-foreground whitespace-nowrap">Размер: {Math.round(content.length / 1024)} KB</span>
+                        {(selectedFormat === 'python' || selectedFormat === 'json') && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleAllFunctions(index)}
+                            className="h-7 xs:h-8 px-1.5 xs:px-2 text-xs"
+                            data-testid="button-toggle-all-functions"
+                          >
+                            <i className={`fas ${collapseState ? 'fa-expand' : 'fa-compress'} text-xs`}></i>
+                            <span className="hidden xs:inline ml-1">{collapseState ? 'Развернуть' : 'Свернуть'}</span>
+                          </Button>
+                        )}
+                      </div>
+                      {codeStats.truncated && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onShowFullCodeChange && onShowFullCodeChange(true)}
+                          className="h-7 xs:h-8 px-2 text-xs xs:text-sm whitespace-nowrap"
+                          data-testid="button-show-full-code"
+                        >
+                          Показать всё ({codeStats.totalLines})
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
           {/* [/COMPONENT] CodePanelHeader */}
 
         </div>

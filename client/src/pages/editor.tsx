@@ -1495,13 +1495,6 @@ export default function Editor() {
     <CodePanel
       botDataArray={allProjects.map(project => project.data as BotData)}
       projectName={activeProject.name}
-      selectedProjectIndex={allProjects.findIndex(project => project.id === activeProject.id)}
-      onProjectChange={(index) => {
-        const project = allProjects[index];
-        if (project) {
-          setLocation(`/editor/${project.id}`);
-        }
-      }}
       onClose={handleCloseCodePanel}
       selectedFormat={selectedFormat}
       onFormatChange={setSelectedFormat}
