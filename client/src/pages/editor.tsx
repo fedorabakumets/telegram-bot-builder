@@ -1484,11 +1484,24 @@ export default function Editor() {
     />
   ) : null;
 
+  // Загрузка всех проектов для передачи в CodePanel
+  const { data: allProjects = [] } = useQuery<BotProject[]>({
+    queryKey: ['/api/projects'],
+    staleTime: 30000,
+  });
+
   // Определяем содержимое панели кода
   const codeContent = activeProject ? (
     <CodePanel
-      botDataArray={[(botDataWithSheets || getBotData()) as BotData]}
+      botDataArray={allProjects.map(project => project.data as BotData)}
       projectName={activeProject.name}
+      selectedProjectIndex={allProjects.findIndex(project => project.id === activeProject.id)}
+      onProjectChange={(index) => {
+        const project = allProjects[index];
+        if (project) {
+          setLocation(`/editor/${project.id}`);
+        }
+      }}
       onClose={handleCloseCodePanel}
       selectedFormat={selectedFormat}
       onFormatChange={setSelectedFormat}
