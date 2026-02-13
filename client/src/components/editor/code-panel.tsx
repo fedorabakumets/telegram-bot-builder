@@ -274,7 +274,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
             const projectName = (botData as any).name || `Проект ${index + 1}`;
             
             // Получаем ID проекта, если доступен
-            const projectIdSuffix = props.projectIds && props.projectIds[index] ? ` (ID: ${props.projectIds[index]})` : '';
+            const projectIdSuffix = projectIds && projectIds[index] ? ` (ID: ${projectIds[index]})` : '';
             
             return (
               <Card key={index} className="border border-border/50 shadow-sm">
