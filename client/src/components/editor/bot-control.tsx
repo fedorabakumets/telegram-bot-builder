@@ -960,9 +960,6 @@ export function BotControl({ projectId, onBotStarted }: BotControlProps) {
 
       // Устанавливаем запущенный токен как активный для WebSocket
       setSelectedTokenId(variables.tokenId);
-
-      // Вызываем callback для открытия панели кода
-      onBotStarted?.();
     },
     onError: (error: any) => {
       toast({ title: "Ошибка запуска", description: error.message || "Не удалось запустить бота.", variant: "destructive" });
