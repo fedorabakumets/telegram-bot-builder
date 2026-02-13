@@ -740,7 +740,7 @@ export default function Editor() {
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [areAllCollapsed, setAreAllCollapsed] = useState(true);
-  const [showFullCode] = useState(false);
+  const [showFullCode, setShowFullCode] = useState(false);
 
   // Ссылка на редактор Monaco для управления сворачиванием
   const editorRef = useRef<any>(null);
@@ -1507,6 +1507,8 @@ export default function Editor() {
       onFormatChange={setSelectedFormat}
       areAllCollapsed={areAllCollapsed}
       onCollapseChange={setAreAllCollapsed}
+      showFullCode={showFullCode}
+      onShowFullCodeChange={setShowFullCode}
     />
   ) : null;
 

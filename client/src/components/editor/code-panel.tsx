@@ -32,6 +32,10 @@ interface CodePanelProps {
   areAllCollapsed?: boolean;
   /** Функция для изменения состояния свернутости */
   onCollapseChange?: (collapsed: boolean) => void;
+  /** Текущее состояние отображения полного кода */
+  showFullCode?: boolean;
+  /** Функция для изменения состояния отображения полного кода */
+  onShowFullCodeChange?: (showFull: boolean) => void;
 }
 
 /**
@@ -42,13 +46,16 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
   // Состояние для управления форматом и отображением кода
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
-  
+
   // Используем внешнее состояние, если оно предоставлено, иначе локальное
   const selectedFormat = externalSelectedFormat !== undefined ? externalSelectedFormat : localSelectedFormat;
   const collapseState = areAllCollapsed !== undefined ? areAllCollapsed : localAreAllCollapsed;
   const currentProjectIndex = selectedProjectIndex !== undefined ? selectedProjectIndex : 0;
   const botData = botDataArray[currentProjectIndex];
-  
+
+  // Используем внешнее состояние для отображения полного кода, если оно предоставлено
+  const showFullCodeState = showFullCode !== undefined ? showFullCode : false;
+
   // Функция для изменения формата
   const handleFormatChange = (format: CodeFormat) => {
     if (onFormatChange) {
@@ -57,7 +64,7 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
       setLocalSelectedFormat(format);
     }
   };
-  
+
   // Функция для изменения состояния сворачивания
   const handleCollapseChange = (collapsed: boolean) => {
     if (onCollapseChange) {
@@ -66,7 +73,6 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
       setLocalAreAllCollapsed(collapsed);
     }
   };
-  const [showFullCode, setShowFullCode] = useState(false);
 
   const { toast } = useToast();
 
@@ -171,12 +177,12 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
   const codeStats = useMemo(() => {
     return {
       totalLines: lineCount,
-      truncated: !showFullCode && lineCount > 1000,
+      truncated: !showFullCodeState && lineCount > 1000,
       functions: (content.match(/^def |^async def /gm) || []).length,
       classes: (content.match(/^class /gm) || []).length,
       comments: (content.match(/^[^#]*#/gm) || []).length
     };
-  }, [content, showFullCode]);
+  }, [content, showFullCodeState]);
 
   /**
    * Получение CSS классов иконки для формата файла
@@ -420,7 +426,7 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setShowFullCode(true)}
+                      onClick={() => onShowFullCodeChange ? onShowFullCodeChange(true) : {}}
                       className="h-7 xs:h-8 px-2 text-xs xs:text-sm whitespace-nowrap"
                       data-testid="button-show-full-code"
                     >
