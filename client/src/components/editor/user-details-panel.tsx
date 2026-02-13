@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import {
@@ -427,136 +428,140 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                     {Object.keys(user.userData as Record<string, unknown>).length}
                   </Badge>
                 </div>
-                <div className="space-y-3 pl-6">
-                  {Object.entries(user.userData as Record<string, unknown>).map(([key, value]: [string, unknown]) => {
-                    let responseData: any = value;
-                    if (typeof value === 'string') {
-                      try {
-                        responseData = JSON.parse(value);
-                      } catch {
-                        responseData = { value: value, type: 'text' };
-                      }
-                    } else if (typeof value === 'object' && value !== null) {
-                      responseData = value;
-                    } else {
-                      responseData = { value: String(value), type: 'text' };
-                    }
-
-                    const getQuestionText = (questionKey: string, data: any) => {
-                      if (variableToQuestionMap[questionKey]) {
-                        return variableToQuestionMap[questionKey];
-                      }
-                      if (data?.prompt && data.prompt.trim()) {
-                        return data.prompt;
-                      }
-                      return questionKey;
-                    };
-
-                    const questionText: string = String(getQuestionText(key, responseData));
-                    const answerValue: string = String(responseData?.value !== undefined ? responseData.value :
-                      (typeof value === 'object' && value !== null ? JSON.stringify(value as object) : String(value as string)));
-
-                    return (
-                      <div key={key} className="border rounded-lg p-3 bg-muted/30 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground">
-                            {key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key}
-                          </span>
-                          {responseData?.type && (
-                            <Badge variant="outline" className="text-xs">
-                              {responseData.type === 'text' ? 'Текст' :
-                                responseData.type === 'number' ? 'Число' :
-                                  responseData.type === 'email' ? 'Email' :
-                                    responseData.type === 'phone' ? 'Телефон' :
-                                      String(responseData.type)}
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Question */}
-                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-2 border border-blue-200 dark:border-blue-800">
-                          <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 mb-1">
-                            <MessageSquare className="w-3 h-3" />
-                            <span>Вопрос:</span>
-                          </div>
-                          <p className="text-sm text-blue-800 dark:text-blue-200">{questionText}</p>
-                        </div>
-
-                        {/* Answer */}
-                        <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-2 border border-green-200 dark:border-green-800">
-                          <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 mb-1">
-                            <Edit className="w-3 h-3" />
-                            <span>Ответ:</span>
-                          </div>
-                          {(() => {
-                            if (responseData?.photoUrl) {
-                              return (
-                                <div className="rounded-lg overflow-hidden max-w-[150px]">
-                                  <img
-                                    src={responseData.photoUrl}
-                                    alt="Фото ответ"
-                                    className="w-full h-auto rounded-lg"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).style.display = 'none';
-                                    }}
-                                  />
-                                </div>
-                              );
+                <div className="pl-6">
+                  {Object.keys(user.userData as Record<string, unknown>).length > 48 && (
+                    <div className="text-xs text-muted-foreground mb-2">
+                      Отображены первые 48 ответов из {Object.keys(user.userData as Record<string, unknown>).length}
+                    </div>
+                  )}
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="w-1/4 font-semibold">Переменная</TableHead>
+                          <TableHead className="w-1/3 font-semibold">Вопрос</TableHead>
+                          <TableHead className="w-1/3 font-semibold">Ответ</TableHead>
+                          <TableHead className="w-1/6 font-semibold">Тип</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(user.userData as Record<string, unknown>).slice(0, 48).map(([key, value]: [string, unknown]) => {
+                          let responseData: any = value;
+                          if (typeof value === 'string') {
+                            try {
+                              responseData = JSON.parse(value);
+                            } catch {
+                              responseData = { value: value, type: 'text' };
                             }
+                          } else if (typeof value === 'object' && value !== null) {
+                            responseData = value;
+                          } else {
+                            responseData = { value: String(value), type: 'text' };
+                          }
 
-                            if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
-                              return (
-                                <div className="rounded-lg overflow-hidden max-w-[150px] space-y-1">
-                                  {responseData.media.map((m: any, idx: number) => (
-                                    <img
-                                      key={idx}
-                                      src={m.url || m}
-                                      alt="Ответ фото"
-                                      className="w-full h-auto rounded-lg"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                              );
+                          const getQuestionText = (questionKey: string, data: any) => {
+                            if (variableToQuestionMap[questionKey]) {
+                              return variableToQuestionMap[questionKey];
                             }
-
-                            const valueStr = String(answerValue);
-                            const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
-
-                            if (isImageUrl) {
-                              return (
-                                <div className="rounded-lg overflow-hidden max-w-[150px]">
-                                  <img
-                                    src={valueStr}
-                                    alt="Ответ"
-                                    className="w-full h-auto rounded-lg"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).style.display = 'none';
-                                    }}
-                                  />
-                                </div>
-                              );
+                            if (data?.prompt && data.prompt.trim()) {
+                              return data.prompt;
                             }
+                            return questionKey;
+                          };
 
-                            return (
-                              <p className="text-sm text-green-800 dark:text-green-200 font-medium">
-                                {valueStr}
-                              </p>
-                            );
-                          })()}
-                        </div>
+                          const questionText: string = String(getQuestionText(key, responseData));
+                          const answerValue: string = String(responseData?.value !== undefined ? responseData.value :
+                            (typeof value === 'object' && value !== null ? JSON.stringify(value as object) : String(value as string)));
 
-                        {responseData?.timestamp && (
-                          <div className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {formatDate(responseData.timestamp as Date | string | null | undefined)}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                          return (
+                            <TableRow key={key}>
+                              <TableCell className="align-top">
+                                <div className="font-medium text-sm">
+                                  {key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key}
+                                </div>
+                              </TableCell>
+                              <TableCell className="align-top">
+                                <div className="text-sm text-blue-800 dark:text-blue-200">
+                                  {questionText}
+                                </div>
+                              </TableCell>
+                              <TableCell className="align-top">
+                                {(() => {
+                                  if (responseData?.photoUrl) {
+                                    return (
+                                      <div className="rounded-lg overflow-hidden max-w-[150px]">
+                                        <img
+                                          src={responseData.photoUrl}
+                                          alt="Фото ответ"
+                                          className="w-full h-auto rounded-lg"
+                                          onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                          }}
+                                        />
+                                      </div>
+                                    );
+                                  }
+
+                                  if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
+                                    return (
+                                      <div className="rounded-lg overflow-hidden max-w-[150px] space-y-1">
+                                        {responseData.media.map((m: any, idx: number) => (
+                                          <img
+                                            key={idx}
+                                            src={m.url || m}
+                                            alt="Ответ фото"
+                                            className="w-full h-auto rounded-lg"
+                                            onError={(e) => {
+                                              (e.target as HTMLImageElement).style.display = 'none';
+                                            }}
+                                          />
+                                        ))}
+                                      </div>
+                                    );
+                                  }
+
+                                  const valueStr = String(answerValue);
+                                  const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
+
+                                  if (isImageUrl) {
+                                    return (
+                                      <div className="rounded-lg overflow-hidden max-w-[150px]">
+                                        <img
+                                          src={valueStr}
+                                          alt="Ответ"
+                                          className="w-full h-auto rounded-lg"
+                                          onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                          }}
+                                        />
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <p className="text-sm text-green-800 dark:text-green-200 font-medium">
+                                      {valueStr}
+                                    </p>
+                                  );
+                                })()}
+                              </TableCell>
+                              <TableCell className="align-top">
+                                {responseData?.type && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {responseData.type === 'text' ? 'Текст' :
+                                      responseData.type === 'number' ? 'Число' :
+                                        responseData.type === 'email' ? 'Email' :
+                                          responseData.type === 'phone' ? 'Телефон' :
+                                            String(responseData.type)}
+                                  </Badge>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               </div>
             </>
