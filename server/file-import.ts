@@ -30,14 +30,14 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
   const importedProjects: BotProject[] = [];
 
   for (const subdir of subdirs) {
-    console.log(`Проверяем подкаталог: ${subdir}`);
-    
-    // Проверяем, является ли это каталогом с ботом (имя в формате bot_{ID_проекта}_{ID_токена})
+    // console.log(`Проверяем подкаталог: ${subdir}`);
+
+    // Проверяем, является ли это каталогом с бота (имя в формате bot_{ID_проекта}_{ID_токена})
     const botDirPattern = /^bot_(\d+)_(\d+)$/;
     const match = subdir.match(botDirPattern);
 
     if (match) {
-      console.log(`Найдено совпадение для папки: ${subdir}, ID проекта: ${match[1]}, ID токена: ${match[2]}`);
+      // console.log(`Найдено совпадение для папки: ${subdir}, ID проекта: ${match[1]}, ID токена: ${match[2]}`);
       const projectId = parseInt(match[1]); // ID проекта
 
       try {
@@ -98,7 +98,7 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
         console.error(`Ошибка при импорте проекта из подкаталога ${subdir}:`, error);
       }
     } else {
-      console.log(`Папка ${subdir} не соответствует формату bot_{ID_проекта}_{ID_токена}`);
+      // console.log(`Папка ${subdir} не соответствует формату bot_{ID_проекта}_{ID_токена}`);
     }
   }
 
