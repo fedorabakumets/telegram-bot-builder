@@ -47,6 +47,14 @@ export function SyncFromFileButton({ onSyncComplete }: SyncFromFileButtonProps) 
 
       // Обновляем кэш запросов
       await queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
+      // Также инвалидируем все запросы, связанные с конкретными проектами
+      const projectKeys = queryClient.getQueryCache().findAll().map(query => query.queryKey).filter(key => 
+        Array.isArray(key) && key[0]?.toString().startsWith('/api/projects/')
+      );
+      for (const key of projectKeys) {
+        await queryClient.invalidateQueries({ queryKey: key });
+      }
       
       // Вызываем колбэк, если он передан
       if (onSyncComplete) {

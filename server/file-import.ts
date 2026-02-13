@@ -54,7 +54,7 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
             const projectName = jsonData.settings?.name || jsonData.name || `project_${projectId}`;
 
             if (existingProject) {
-              // Обновляем существующий проект
+              // Обновляем существующий проект, даже если он уже существует
               const updatedProject = await storage.updateBotProject(projectId, {
                 data: jsonData,
                 name: projectName, // Обновляем имя проекта
