@@ -309,10 +309,10 @@ export default function Editor() {
         if (element.id === 'code') {
           return { ...element, visible: true };
         }
-        if (element.id === 'sidebar') {
+        if (element.id === 'canvas') {
           return { ...element, visible: false };
         }
-        return { ...element, visible: element.visible ?? true }; // Убедиться, что visible имеет значение по умолчанию
+        return { ...element, visible: element.visible ?? true };
       })
     }));
   }, []);
@@ -327,10 +327,10 @@ export default function Editor() {
         if (element.id === 'code') {
           return { ...element, visible: false };
         }
-        if (element.id === 'sidebar') {
+        if (element.id === 'canvas') {
           return { ...element, visible: true };
         }
-        return { ...element, visible: element.visible ?? true }; // Убедиться, что visible имеет значение по умолчанию
+        return { ...element, visible: element.visible ?? true };
       })
     }));
   }, []);
@@ -490,8 +490,8 @@ export default function Editor() {
           id: 'code',
           type: 'code',
           name: 'Код',
-          position: 'left',
-          size: 25,
+          position: 'center',
+          size: 35,
           visible: false
         },
         {
