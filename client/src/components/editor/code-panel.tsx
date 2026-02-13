@@ -1,14 +1,12 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { BotData, BotGroup } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import Editor from '@monaco-editor/react';
-import { Loader2, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 
 /**
@@ -22,34 +20,49 @@ interface CodePanelProps {
   projectName: string;
   /** Колбэк для закрытия панели */
   onClose?: () => void;
+  /** Выбранный формат кода */
+  selectedFormat?: CodeFormat;
+  /** Функция для изменения выбранного формата */
+  onFormatChange?: (format: CodeFormat) => void;
+  /** Текущее состояние свернутости */
+  areAllCollapsed?: boolean;
+  /** Функция для изменения состояния свернутости */
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 
 /**
- * Компонент панели просмотра и экспорта кода бота
- * Предоставляет интерфейс для просмотра сгенерированного кода в различных форматах,
- * копирования в буфер обмена и скачивания файлов
- * @param botData - Данные бота для генерации кода
- * @param projectName - Название проекта
- * @param onClose - Функция закрытия панели
- * @returns JSX элемент панели кода
- *
- * Горячие клавиши:
- * - Ctrl+Alt+C / Cmd+Alt+C: Скопировать код в буфер обмена
- * - Ctrl+Alt+S / Cmd+Alt+S: Скачать файл с кодом
- * - Ctrl+Alt+F / Cmd+Alt+F: Переключить сворачивание всех функций/блоков
- * - Esc: Закрыть панель кода (если доступно)
+ * [CONTAINER] CodePanel - Основной контейнер для панели кода
+ * Управляет состоянием и данными для дочерних компонентов
  */
-export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
+export function CodePanel({ botData, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange }: CodePanelProps) {
   // Состояние для управления форматом и отображением кода
-  const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [areAllCollapsed, setAreAllCollapsed] = useState(true);
-  const [showFullCode, setShowFullCode] = useState(false);
+  const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
+  const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
   
-  // Ссылка на редактор Monaco для управления сворачиванием
-  const editorRef = useRef<any>(null);
+  // Используем внешнее состояние, если оно предоставлено, иначе локальное
+  const selectedFormat = externalSelectedFormat !== undefined ? externalSelectedFormat : localSelectedFormat;
+  const collapseState = areAllCollapsed !== undefined ? areAllCollapsed : localAreAllCollapsed;
+  
+  // Функция для изменения формата
+  const handleFormatChange = (format: CodeFormat) => {
+    if (onFormatChange) {
+      onFormatChange(format);
+    } else {
+      setLocalSelectedFormat(format);
+    }
+  };
+  
+  // Функция для изменения состояния сворачивания
+  const handleCollapseChange = (collapsed: boolean) => {
+    if (onCollapseChange) {
+      onCollapseChange(collapsed);
+    } else {
+      setLocalAreAllCollapsed(collapsed);
+    }
+  };
+  const [showFullCode, setShowFullCode] = useState(false);
+
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   /**
    * Загрузка списка групп для включения в генерацию кода
@@ -61,28 +74,7 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
   /**
    * Использование хука генератора кода для всех форматов
    */
-  const { codeContent, isLoading, loadContent } = useCodeGenerator(botData, projectName, groups);
-
-  /**
-   * Определение и отслеживание темы приложения
-   * Автоматически переключает тему редактора при изменении темы приложения
-   */
-  useEffect(() => {
-    const checkTheme = () => {
-      const isDark = document.documentElement.classList.contains('dark');
-      setTheme(isDark ? 'dark' : 'light');
-    };
-    
-    checkTheme();
-    
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, []);
+  const { codeContent, loadContent } = useCodeGenerator(botData, projectName, groups);
 
   /**
    * Загрузка контента при изменении выбранного формата
@@ -91,21 +83,16 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
     loadContent(selectedFormat);
   }, [selectedFormat, loadContent]);
 
+  // [FUNCTIONS] Вспомогательные функции для взаимодействия с кодом
+
+  // [FUNCTIONS] Функции для взаимодействия с кодом (относятся к верхней части)
+  
   /**
    * Функция для сворачивания/разворачивания всех блоков кода в редакторе
    * Переключает состояние всех функций и классов между свернутым и развернутым
    */
   const toggleAllFunctions = () => {
-    if (editorRef.current) {
-      const editor = editorRef.current;
-      if (areAllCollapsed) {
-        editor.getAction('editor.unfoldAll')?.run();
-        setAreAllCollapsed(false);
-      } else {
-        editor.getAction('editor.foldAll')?.run();
-        setAreAllCollapsed(true);
-      }
-    }
+    handleCollapseChange(!collapseState);
   };
 
   /**
@@ -165,21 +152,11 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
    */
   const getCurrentContent = () => codeContent[selectedFormat] || '';
 
+  // [CALCULATIONS] Расчеты для отображения кода и статистики
+  
   const content = getCurrentContent();
   const lines = content.split('\n');
   const lineCount = lines.length;
-  const MAX_VISIBLE_LINES = 1000;
-  
-  /**
-   * Отображаемый контент с учетом ограничения по количеству строк
-   * Обрезает код если он слишком длинный для улучшения производительности
-   */
-  const displayContent = useMemo(() => {
-    if (!showFullCode && lines.length > MAX_VISIBLE_LINES) {
-      return lines.slice(0, MAX_VISIBLE_LINES).join('\n');
-    }
-    return content;
-  }, [content, showFullCode]);
 
   /**
    * Статистика кода для отображения информации о структуре
@@ -233,6 +210,8 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
     <div className="h-full bg-background overflow-auto">
       <div className="p-2.5 xs:p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-3 xs:space-y-4 sm:space-y-5 md:space-y-6">
+          
+          {/* [COMPONENT] CodePanelHeader - Верхняя часть с вкладками и действиями */}
           {/* Header Section */}
           <div className="space-y-1.5 xs:space-y-2">
             <div className="flex items-start justify-between gap-2 xs:gap-2.5 sm:gap-3">
@@ -246,10 +225,10 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
                 </div>
               </div>
               {onClose && (
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  className="h-8 w-8 flex-shrink-0" 
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 flex-shrink-0"
                   onClick={onClose}
                   title="Закрыть панель кода"
                   data-testid="button-close-code-panel"
@@ -258,7 +237,7 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
                 </Button>
               )}
             </div>
-            
+
             {/* Hotkeys Info */}
             <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 text-xs text-blue-800 dark:text-blue-200">
               <h3 className="font-semibold mb-1">Горячие клавиши:</h3>
@@ -294,49 +273,49 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
               {/* Format Selection */}
               <div className="space-y-1.5 xs:space-y-2">
                 <label className="text-xs xs:text-sm font-semibold text-foreground block">Форматы:</label>
-                <Tabs value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as CodeFormat)} className="w-full">
-                  <TabsList className="flex flex-col h-auto p-1 bg-muted/50 min-h-[200px]">
-                    <TabsTrigger 
-                      value="python" 
-                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                <Tabs value={selectedFormat} onValueChange={(value) => handleFormatChange(value as CodeFormat)} className="w-full">
+                  <TabsList className="flex flex-col h-auto p-0 bg-transparent border-none">
+                    <TabsTrigger
+                      value="python"
+                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
                     >
-                      <i className="fab fa-python mr-2 text-blue-500"></i>
-                      Python (.py)
+                      <i className="fas fa-file-code text-blue-500 text-xs"></i>
+                      <span className="text-xs">bot.py</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="json" 
-                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    <TabsTrigger
+                      value="json"
+                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
                     >
-                      <i className="fas fa-database mr-2 text-green-500"></i>
-                      JSON (.json)
+                      <i className="fas fa-file-code text-green-500 text-xs"></i>
+                      <span className="text-xs">bot_data.json</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="requirements" 
-                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    <TabsTrigger
+                      value="requirements"
+                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
                     >
-                      <i className="fas fa-list mr-2 text-orange-500"></i>
-                      Requirements (.txt)
+                      <i className="fas fa-file-alt text-orange-500 text-xs"></i>
+                      <span className="text-xs">requirements.txt</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="readme" 
-                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    <TabsTrigger
+                      value="readme"
+                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
                     >
-                      <i className="fas fa-file-alt mr-2 text-purple-500"></i>
-                      README (.md)
+                      <i className="fas fa-file-alt text-purple-500 text-xs"></i>
+                      <span className="text-xs">README.md</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="dockerfile" 
-                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    <TabsTrigger
+                      value="dockerfile"
+                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
                     >
-                      <i className="fab fa-docker mr-2 text-cyan-500"></i>
-                      Dockerfile
+                      <i className="fab fa-docker text-cyan-500 text-xs"></i>
+                      <span className="text-xs">Dockerfile</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="config" 
-                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    <TabsTrigger
+                      value="config"
+                      className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20"
                     >
-                      <i className="fas fa-cog mr-2 text-yellow-500"></i>
-                      Config (.yaml)
+                      <i className="fas fa-file-code text-yellow-500 text-xs"></i>
+                      <span className="text-xs">config.yaml</span>
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
@@ -401,8 +380,8 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
                   <div className="flex items-center gap-1.5 xs:gap-2 flex-wrap">
                     <span className="text-muted-foreground whitespace-nowrap">Размер: {Math.round(content.length / 1024)} KB</span>
                     {(selectedFormat === 'python' || selectedFormat === 'json') && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="ghost"
                         onClick={toggleAllFunctions}
                         className="h-7 xs:h-8 px-1.5 xs:px-2 text-xs"
@@ -414,8 +393,8 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
                     )}
                   </div>
                   {codeStats.truncated && (
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => setShowFullCode(true)}
                       className="h-7 xs:h-8 px-2 text-xs xs:text-sm whitespace-nowrap"
@@ -428,67 +407,12 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
               )}
             </CardContent>
           </Card>
+          {/* [/COMPONENT] CodePanelHeader */}
 
-          {/* Code Editor */}
-          <Card className="border border-border/50 shadow-sm overflow-hidden">
-            <CardContent className={`p-0 ${isMobile ? 'h-40 xs:h-48 sm:h-64' : 'h-64 xs:h-80 sm:h-96 md:h-[500px]'}`}>
-              {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">Генерация кода...</p>
-                  </div>
-                </div>
-              ) : (
-                <Editor
-                  value={displayContent}
-                  language={
-                    selectedFormat === 'python' ? 'python' :
-                    selectedFormat === 'json' ? 'json' :
-                    selectedFormat === 'readme' ? 'markdown' :
-                    selectedFormat === 'dockerfile' ? 'dockerfile' :
-                    selectedFormat === 'config' ? 'yaml' :
-                    'plaintext'
-                  }
-                  theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
-                  onMount={(editor) => {
-                    editorRef.current = editor;
-                    if ((selectedFormat === 'python' || selectedFormat === 'json') && codeStats.totalLines > 0) {
-                      setTimeout(() => {
-                        editor.getAction('editor.foldAll')?.run();
-                        setAreAllCollapsed(true);
-                      }, 100);
-                    }
-                  }}
-                  options={{
-                    readOnly: true,
-                    lineNumbers: 'on',
-                    wordWrap: 'on',
-                    fontSize: 12,
-                    lineHeight: 1.5,
-                    minimap: { enabled: codeStats.totalLines > 500 },
-                    folding: true,
-                    foldingHighlight: true,
-                    foldingStrategy: 'auto',
-                    showFoldingControls: 'always',
-                    glyphMargin: true,
-                    scrollBeyondLastLine: false,
-                    padding: { top: 8, bottom: 8 },
-                    automaticLayout: true,
-                    contextmenu: false,
-                    bracketPairColorization: {
-                      enabled: selectedFormat === 'json'
-                    },
-                    formatOnPaste: false,
-                    formatOnType: false
-                  }}
-                  data-testid={`monaco-editor-code-${selectedFormat}`}
-                />
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
   );
 }
+
+

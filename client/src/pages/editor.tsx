@@ -7,13 +7,14 @@
  * @module Editor
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
 import { PropertiesPanel } from '@/components/editor/properties-panel';
 import { CodePanel } from '@/components/editor/code-panel';
+import { CodeEditorArea } from '@/components/editor/code-editor-area';
 import { ExportPanel } from '@/components/editor/export-panel';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
@@ -32,8 +33,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 import { apiRequest } from '@/lib/queryClient';
-import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets, Node, UserBotData } from '@shared/schema';
+import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets, Node, UserBotData, BotGroup } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { nanoid } from 'nanoid';
 
@@ -300,7 +302,33 @@ export default function Editor() {
   }, []);
 
   /**
-   * Обработчик открытия панели кода
+   * Обработчик переключения видимости панели кода
+   */
+  const handleToggleCodePanel = useCallback(() => {
+    setFlexibleLayoutConfig(prev => {
+      // Проверяем, видима ли одна из панелей кода
+      const isCodeVisible = prev.elements.some(el => (el.id === 'code' || el.id === 'codeEditor') && el.visible);
+      
+      return {
+        ...prev,
+        elements: prev.elements.map(element => {
+          if (element.id === 'code' || element.id === 'codeEditor') {
+            return { ...element, visible: !isCodeVisible };
+          }
+          if (element.id === 'canvas') {
+            return { ...element, visible: isCodeVisible }; // Если панель кода была видна, то показываем холст
+          }
+          if (element.id === 'sidebar' || element.id === 'properties') {
+            return { ...element, visible: isCodeVisible }; // Если панель кода была видна, то показываем боковые панели
+          }
+          return { ...element, visible: element.visible ?? true };
+        })
+      };
+    });
+  }, []);
+
+  /**
+   * Обработчик открытия панели кода (открывает обе панели - левую и центральную)
    */
   const handleOpenCodePanel = useCallback(() => {
     setFlexibleLayoutConfig(prev => ({
@@ -309,7 +337,16 @@ export default function Editor() {
         if (element.id === 'code') {
           return { ...element, visible: true };
         }
+        if (element.id === 'codeEditor') {
+          return { ...element, visible: true };
+        }
         if (element.id === 'canvas') {
+          return { ...element, visible: false };
+        }
+        if (element.id === 'sidebar') {
+          return { ...element, visible: false };
+        }
+        if (element.id === 'properties') {
           return { ...element, visible: false };
         }
         return { ...element, visible: element.visible ?? true };
@@ -327,7 +364,16 @@ export default function Editor() {
         if (element.id === 'code') {
           return { ...element, visible: false };
         }
+        if (element.id === 'codeEditor') {
+          return { ...element, visible: false };
+        }
         if (element.id === 'canvas') {
+          return { ...element, visible: true };
+        }
+        if (element.id === 'sidebar') {
+          return { ...element, visible: true };
+        }
+        if (element.id === 'properties') {
           return { ...element, visible: true };
         }
         return { ...element, visible: element.visible ?? true };
@@ -490,8 +536,16 @@ export default function Editor() {
           id: 'code',
           type: 'code',
           name: 'Код',
+          position: 'left',
+          size: 25,
+          visible: false
+        },
+        {
+          id: 'codeEditor',
+          type: 'codeEditor',
+          name: 'Редактор кода',
           position: 'center',
-          size: 35,
+          size: 40,
           visible: false
         },
         {
@@ -681,6 +735,77 @@ export default function Editor() {
 
   // Use the appropriate project
   const activeProject = projectId ? currentProject : firstProject;
+
+  // Состояние для управления форматом кода
+  const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [areAllCollapsed, setAreAllCollapsed] = useState(true);
+  const [showFullCode] = useState(false);
+
+  // Ссылка на редактор Monaco для управления сворачиванием
+  const editorRef = useRef<any>(null);
+
+  // Загрузка списка групп для генерации кода
+  const { data: groups = [] } = useQuery<BotGroup[]>({
+    queryKey: ['/api/groups'],
+  });
+
+  // Использование хука генератора кода
+  const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent } = useCodeGenerator(
+    activeProject?.data as BotData || { nodes: [], connections: [] },
+    activeProject?.name || 'project',
+    groups
+  );
+
+  // Определение и отслеживание темы приложения
+  useEffect(() => {
+    const checkTheme = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setTheme(isDark ? 'dark' : 'light');
+    };
+
+    checkTheme();
+
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Загрузка контента при изменении выбранного формата
+  useEffect(() => {
+    loadContent(selectedFormat);
+  }, [selectedFormat, loadContent]);
+
+  // Получение текущего содержимого кода для выбранного формата
+  const getCurrentContent = () => generatedCodeContent[selectedFormat] || '';
+
+  const content = getCurrentContent();
+  const lines = content.split('\n');
+  const lineCount = lines.length;
+  const MAX_VISIBLE_LINES = 1000;
+
+  // Отображаемый контент с учетом ограничения по количеству строк
+  const displayContent = useMemo(() => {
+    if (!showFullCode && lines.length > MAX_VISIBLE_LINES) {
+      return lines.slice(0, MAX_VISIBLE_LINES).join('\n');
+    }
+    return content;
+  }, [content, showFullCode]);
+
+  // Статистика кода для отображения информации о структуре
+  const codeStats = useMemo(() => {
+    return {
+      totalLines: lineCount,
+      truncated: !showFullCode && lineCount > 1000,
+      functions: (content.match(/^def |^async def /gm) || []).length,
+      classes: (content.match(/^class /gm) || []).length,
+      comments: (content.match(/^[^#]*#/gm) || []).length
+    };
+  }, [content, showFullCode]);
 
   // Determine if we're still loading
 
@@ -1365,6 +1490,10 @@ export default function Editor() {
       botData={(botDataWithSheets || getBotData()) as any}
       projectName={activeProject.name}
       onClose={handleCloseCodePanel}
+      selectedFormat={selectedFormat}
+      onFormatChange={setSelectedFormat}
+      areAllCollapsed={areAllCollapsed}
+      onCollapseChange={setAreAllCollapsed}
     />
   ) : null;
 
@@ -1397,7 +1526,7 @@ export default function Editor() {
         onToggleSidebar={handleToggleSidebar}
         onToggleProperties={handleToggleProperties}
         onToggleCanvas={handleToggleCanvas}
-        onToggleCode={handleOpenCodePanel}
+        onToggleCode={handleToggleCodePanel}
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
         sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
         propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
@@ -1538,6 +1667,23 @@ export default function Editor() {
             canvasContent={canvasContent}
             propertiesContent={propertiesContent}
             codeContent={codeContent}
+            codeEditorContent={
+              activeProject && (
+                <div className="h-full flex flex-col">
+                  <CodeEditorArea
+                    isMobile={false}
+                    isLoading={isCodeLoading}
+                    displayContent={displayContent}
+                    selectedFormat={selectedFormat}
+                    theme={theme}
+                    editorRef={editorRef}
+                    codeStats={codeStats}
+                    setAreAllCollapsed={setAreAllCollapsed}
+                    areAllCollapsed={areAllCollapsed}
+                  />
+                </div>
+              )
+            }
             dialogContent={
               selectedDialogUser && activeProject && (
                 <DialogPanel
@@ -1589,7 +1735,7 @@ export default function Editor() {
               onToggleSidebar={handleToggleSidebar}
               onToggleProperties={handleToggleProperties}
               onToggleCanvas={handleToggleCanvas}
-              onToggleCode={handleOpenCodePanel}
+              onToggleCode={handleToggleCodePanel}
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
               sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
               propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
@@ -1745,7 +1891,7 @@ export default function Editor() {
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
-              onToggleCode={handleOpenCodePanel}
+              onToggleCode={handleToggleCodePanel}
               codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
               onOpenMobileSidebar={() => setShowMobileSidebar(true)}
               onOpenMobileProperties={() => setShowMobileProperties(true)}
@@ -1767,7 +1913,7 @@ export default function Editor() {
                   onSaveAsTemplate={handleSaveAsTemplate}
                   onLoadTemplate={handleLoadTemplate}
                   onLayoutSettings={() => setShowLayoutManager(true)}
-                  onToggleCode={handleOpenCodePanel}
+                  onToggleCode={handleToggleCodePanel}
                   codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
                   onOpenMobileSidebar={() => setShowMobileSidebar(true)}
                   onOpenMobileProperties={() => setShowMobileProperties(true)}

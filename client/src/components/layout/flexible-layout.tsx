@@ -13,6 +13,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
  * @property {React.ReactNode} canvasContent - Контент холста
  * @property {React.ReactNode} propertiesContent - Контент панели свойств
  * @property {React.ReactNode} [codeContent] - Контент панели кода
+ * @property {React.ReactNode} [codeEditorContent] - Контент редактора кода
  * @property {React.ReactNode} [dialogContent] - Контент диалогового окна
  * @property {React.ReactNode} [userDetailsContent] - Контент информации о пользователе
  * @property {React.ReactNode} [fileExplorerContent] - Контент панели проводника файлов
@@ -27,6 +28,7 @@ interface FlexibleLayoutProps {
   canvasContent: React.ReactNode;
   propertiesContent: React.ReactNode;
   codeContent?: React.ReactNode;
+  codeEditorContent?: React.ReactNode;
   dialogContent?: React.ReactNode;
   userDetailsContent?: React.ReactNode;
   fileExplorerContent?: React.ReactNode;
@@ -49,6 +51,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   canvasContent,
   propertiesContent,
   codeContent,
+  codeEditorContent,
   dialogContent,
   userDetailsContent,
   fileExplorerContent,
@@ -61,7 +64,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   /**
    * @function getElementContent
    * @description Возвращает контент элемента по его типу
-   * @param {string} type - Тип элемента ('header', 'sidebar', 'canvas', 'properties', 'code', 'dialog', 'userDetails')
+   * @param {string} type - Тип элемента ('header', 'sidebar', 'canvas', 'properties', 'code', 'codeEditor', 'dialog', 'userDetails', 'fileExplorer')
    * @returns {React.ReactNode | null} Контент элемента или null
    */
   const getElementContent = (type: string) => {
@@ -76,6 +79,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         return propertiesContent;
       case 'code':
         return codeContent;
+      case 'codeEditor':
+        return codeEditorContent;
       case 'dialog':
         return dialogContent;
       case 'userDetails':

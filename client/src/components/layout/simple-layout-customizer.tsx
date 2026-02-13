@@ -34,7 +34,7 @@ import {
  * @interface SimpleLayoutElement
  * @description Описывает элемент макета интерфейса
  * @property {string} id - Уникальный идентификатор элемента
- * @property {'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'dialog' | 'userDetails'} type - Тип элемента интерфейса
+ * @property {'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'codeEditor' | 'dialog' | 'userDetails' | 'fileExplorer'} type - Тип элемента интерфейса
  * @property {string} name - Отображаемое имя элемента
  * @property {'top' | 'bottom' | 'left' | 'right' | 'center'} position - Позиция элемента в макете
  * @property {number} size - Размер элемента в процентах
@@ -42,7 +42,7 @@ import {
  */
 export interface SimpleLayoutElement {
   id: string;
-  type: 'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'dialog' | 'userDetails' | 'fileExplorer';
+  type: 'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'codeEditor' | 'dialog' | 'userDetails' | 'fileExplorer';
   name: string;
   position: 'top' | 'bottom' | 'left' | 'right' | 'center';
   size: number;
