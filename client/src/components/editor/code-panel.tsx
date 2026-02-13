@@ -14,10 +14,14 @@ import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
  * @interface CodePanelProps
  */
 interface CodePanelProps {
-  /** Данные бота для генерации кода */
-  botData: BotData;
+  /** Массив данных ботов для генерации кода */
+  botDataArray: BotData[];
   /** Название проекта */
   projectName: string;
+  /** Индекс выбранного проекта */
+  selectedProjectIndex?: number;
+  /** Колбэк для изменения выбранного проекта */
+  onProjectChange?: (index: number) => void;
   /** Колбэк для закрытия панели */
   onClose?: () => void;
   /** Выбранный формат кода */
@@ -34,7 +38,7 @@ interface CodePanelProps {
  * [CONTAINER] CodePanel - Основной контейнер для панели кода
  * Управляет состоянием и данными для дочерних компонентов
  */
-export function CodePanel({ botData, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange }: CodePanelProps) {
+export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onProjectChange, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange }: CodePanelProps) {
   // Состояние для управления форматом и отображением кода
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
@@ -42,6 +46,8 @@ export function CodePanel({ botData, projectName, onClose, selectedFormat: exter
   // Используем внешнее состояние, если оно предоставлено, иначе локальное
   const selectedFormat = externalSelectedFormat !== undefined ? externalSelectedFormat : localSelectedFormat;
   const collapseState = areAllCollapsed !== undefined ? areAllCollapsed : localAreAllCollapsed;
+  const currentProjectIndex = selectedProjectIndex !== undefined ? selectedProjectIndex : 0;
+  const botData = botDataArray[currentProjectIndex];
   
   // Функция для изменения формата
   const handleFormatChange = (format: CodeFormat) => {
@@ -237,6 +243,24 @@ export function CodePanel({ botData, projectName, onClose, selectedFormat: exter
                 </Button>
               )}
             </div>
+            
+            {/* Project Selector */}
+            {botDataArray.length > 1 && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-semibold text-foreground">Проект:</label>
+                <select
+                  value={currentProjectIndex}
+                  onChange={(e) => onProjectChange && onProjectChange(Number(e.target.value))}
+                  className="flex-1 bg-background border border-input rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  {botDataArray.map((_, index) => (
+                    <option key={index} value={index}>
+                      Проект {index + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Hotkeys Info */}
             <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 text-xs text-blue-800 dark:text-blue-200">

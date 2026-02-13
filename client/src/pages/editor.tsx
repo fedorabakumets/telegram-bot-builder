@@ -1487,7 +1487,7 @@ export default function Editor() {
   // Определяем содержимое панели кода
   const codeContent = activeProject ? (
     <CodePanel
-      botData={(botDataWithSheets || getBotData()) as any}
+      botDataArray={[(botDataWithSheets || getBotData()) as BotData]}
       projectName={activeProject.name}
       onClose={handleCloseCodePanel}
       selectedFormat={selectedFormat}
