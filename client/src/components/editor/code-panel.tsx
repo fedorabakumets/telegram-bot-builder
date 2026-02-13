@@ -259,7 +259,7 @@ export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: 
 
             {/* Sync Button */}
             <div className="flex justify-end">
-              <SyncFromFileButton onSyncComplete={() => window.location.reload()} />
+              <SyncFromFileButton onSyncComplete={() => {}} />
             </div>
           </div>
 

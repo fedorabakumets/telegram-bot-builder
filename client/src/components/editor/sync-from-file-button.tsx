@@ -6,6 +6,7 @@
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { RotateCcw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface SyncFromFileButtonProps {
   /** Функция для обновления списка проектов после синхронизации */
@@ -14,7 +15,7 @@ interface SyncFromFileButtonProps {
 
 /**
  * Кнопка для синхронизации проектов из файлов в директории bots/
- * 
+ *
  * @component
  * @param {SyncFromFileButtonProps} props - Свойства компонента
  * @param {function} props.onSyncComplete - Функция, вызываемая после успешной синхронизации
@@ -22,6 +23,7 @@ interface SyncFromFileButtonProps {
  */
 export function SyncFromFileButton({ onSyncComplete }: SyncFromFileButtonProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSync = async () => {
     try {
@@ -36,13 +38,16 @@ export function SyncFromFileButton({ onSyncComplete }: SyncFromFileButtonProps) 
       }
 
       const result = await response.json();
-      
+
       // Показываем уведомление о результате
       toast({
         title: "Синхронизация завершена",
         description: `Импортировано ${result.length} проектов из файлов`,
       });
 
+      // Обновляем кэш запросов
+      await queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
       // Вызываем колбэк, если он передан
       if (onSyncComplete) {
         onSyncComplete();
@@ -58,8 +63,8 @@ export function SyncFromFileButton({ onSyncComplete }: SyncFromFileButtonProps) 
   };
 
   return (
-    <Button 
-      variant="outline" 
+    <Button
+      variant="outline"
       size="sm"
       onClick={handleSync}
       title="Синхронизировать проекты из файлов"
