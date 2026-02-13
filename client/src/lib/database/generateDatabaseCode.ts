@@ -6,7 +6,9 @@
  */
 
 import { AliasNodes } from './AliasNodes';
-import { init_user_variables, replace_variables_in_text } from '../utils';
+import { init_user_variables } from '../utils';
+import { replace_variables_in_text } from './replace_variables_in_text';
+import { hasComponentBeenGenerated, markComponentAsGenerated } from '../utils/generation-state';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { get_moscow_time } from './get_moscow_time';
 import { get_user_data_from_db } from './get_user_data_from_db';
@@ -52,8 +54,11 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
   // Получение московского времени
   get_moscow_time(codeLines);
 
-  // Инициализация переменных пользователя
-  replace_variables_in_text(codeLines);
+  // Инициализация переменных пользователя (только если функция еще не была сгенерирована)
+  if (!hasComponentBeenGenerated('replace_variables_in_text')) {
+    replace_variables_in_text(codeLines);
+    markComponentAsGenerated('replace_variables_in_text');
+  }
 
   // Инициализация пользовательских переменных
   init_user_variables(codeLines);

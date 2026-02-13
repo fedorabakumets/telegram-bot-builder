@@ -9,6 +9,7 @@
 
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 import { replace_variables_in_text } from "./replace_variables_in_text";
+import { hasComponentBeenGenerated, markComponentAsGenerated } from "../utils/generation-state";
 
 /**
  * Генерирует код универсальной замены переменных с инициализацией.
@@ -73,14 +74,24 @@ export function generateUniversalVariableReplacement(
   universalVarCodeLines.push(`${indentLevel}if isinstance(local_user_vars, dict):`);
   universalVarCodeLines.push(`${indentLevel}    all_user_vars.update(local_user_vars)`);
 
-  // Добавляем функцию замены переменных
+  // Добавляем функцию замены переменных (только если она еще не была сгенерирована)
   universalVarCodeLines.push(`${indentLevel}# Заменяем все переменные в тексте`);
   universalVarCodeLines.push(`${indentLevel}import re`);
 
-  // Вызываем replace_variables_in_text с новой сигнатурой
-  replace_variables_in_text(universalVarCodeLines, indentLevel);
+  // Проверяем, была ли уже сгенерирована функция replace_variables_in_text
+  if (!hasComponentBeenGenerated('replace_variables_in_text')) {
+    // Вызываем replace_variables_in_text с новой сигнатурой
+    replace_variables_in_text(universalVarCodeLines, indentLevel);
+    // Отмечаем, что функция была сгенерирована
+    markComponentAsGenerated('replace_variables_in_text');
+  }
 
-  universalVarCodeLines.push(`${indentLevel}text = replace_variables_in_text(text, all_user_vars)`);
+  // Проверяем, что переменная text определена перед использованием
+  universalVarCodeLines.push(`${indentLevel}if 'text' in locals() or 'text' in globals():`);
+  universalVarCodeLines.push(`${indentLevel}    text = replace_variables_in_text(text, all_user_vars)`);
+  universalVarCodeLines.push(`${indentLevel}else:`);
+  universalVarCodeLines.push(`${indentLevel}    logging.warning("⚠️ Переменная text не определена при попытке замены переменных")`);
+  universalVarCodeLines.push(`${indentLevel}    text = ""  # Устанавливаем пустой текст по умолчанию`);
 
   // Добавляем символ новой строки для разделения вызовов
   universalVarCodeLines.push('');

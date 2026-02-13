@@ -150,7 +150,7 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean,
   if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
     codeLines.push(``);
     codeLines.push(`    # Проверяем условные сообщения`);
-    codeLines.push(`    text = None`);
+    codeLines.push(`    text = ${formattedText}  # Инициализируем текст по умолчанию`);
     codeLines.push(``);
     codeLines.push(`    # Получаем данные пользователя для проверки условий`);
     if (userDatabaseEnabled) {

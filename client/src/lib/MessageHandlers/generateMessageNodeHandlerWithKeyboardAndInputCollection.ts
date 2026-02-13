@@ -61,8 +61,13 @@ export function generateMessageNodeHandlerWithKeyboardAndInputCollection(code: s
             code += '    # Используем условное сообщение если есть подходящее условие\n';
             code += '    if "text" not in locals():\n';
             code += `        text = ${formattedTargetText}\n`;
-            code += '        # Заменяем переменные в основном тексте, если условие не сработало\n';
+            code += '    \n';
+            code += '    # Заменяем переменные в тексте, если текст определен\n';
+            code += '    if "text" in locals():\n';
             code += '        text = replace_variables_in_text(text, user_vars)\n';
+            code += '    else:\n';
+            code += '        logging.warning("⚠️ Переменная text не определена при попытке замены переменных")\n';
+            code += '        text = ""  # Устанавливаем пустой текст по умолчанию\n';
             code += '    \n';
             code += '    # Используем условную клавиатуру если есть\n';
             code += '    if conditional_keyboard is not None:\n';

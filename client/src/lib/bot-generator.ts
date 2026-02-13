@@ -43,6 +43,7 @@ import { extractNodeData } from './utils/extractNodeData';
 import { hasAutoTransitions } from './utils/hasAutoTransitions';
 import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
 import { processConnectionTargets } from './utils/processConnectionTargets';
+import { resetGenerationState } from './utils/generation-state';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -196,6 +197,9 @@ const logFlowAnalysis = (nodes: any[], connections: any[]) => {
  * @returns {string} Сгенерированный Python-код для бота
  */
 export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false, enableGroupHandlers: boolean = false): string {
+  // Сбрасываем состояние генерации перед началом
+  resetGenerationState();
+  
   // Устанавливаем флаг глобального логирования для этого запуска генерации
   globalLoggingEnabled = enableLogging;
 
@@ -987,8 +991,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Создание inline и reply клавиатур
    * - Обработку callback_data для кнопок
    * - Валидацию и сохранение пользовательского ввода
-   * - Условную логику отображения сообщений
-   * - Навигацию между узлами с обработкой ошибок
+   * - Усло��ную логику отображения сообщений
+   * - Навигацию между узлами с об��аботкой ошибок
    * 
    * @remarks
    * Функ����ия генерирует код, который обеспечивает плавную навигацию
