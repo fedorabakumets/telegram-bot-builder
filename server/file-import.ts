@@ -50,10 +50,14 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
             // Пытаемся получить существующий проект по ID
             let existingProject = await storage.getBotProject(projectId);
 
+            // Определяем имя проекта из данных, если оно есть
+            const projectName = jsonData.settings?.name || jsonData.name || `project_${projectId}`;
+
             if (existingProject) {
               // Обновляем существующий проект
               const updatedProject = await storage.updateBotProject(projectId, {
                 data: jsonData,
+                name: projectName, // Обновляем имя проекта
                 updatedAt: new Date()
               });
 
@@ -65,7 +69,7 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
               // Если проект с таким ID не существует, создаем новый
               // Используем имя в формате project_{ID} для связи с файлом
               const newProject = await storage.createBotProject({
-                name: `project_${projectId}`, // Используем имя, соответствующее ID
+                name: projectName, // Используем имя из данных или сгенерированное
                 data: jsonData,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -73,7 +77,7 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
               });
 
               importedProjects.push(newProject);
-              console.log(`Создан новый проект с именем project_${projectId} из файла`);
+              console.log(`Создан новый проект с именем ${projectName} из файла`);
             }
           }
         }

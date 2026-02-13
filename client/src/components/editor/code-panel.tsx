@@ -264,8 +264,11 @@ export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: 
           </div>
 
           {/* Render each project separately */}
-          {botDataArray.map((_, index) => {
+          {botDataArray.map((botData, index) => {
             const { content, lineCount, codeStats } = getContentAndStats(index);
+            
+            // Получаем имя проекта из данных, если оно доступно
+            const projectName = botData.name || `Проект ${index + 1}`;
             
             return (
               <Card key={index} className="border border-border/50 shadow-sm">
@@ -276,8 +279,8 @@ export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: 
                         <i className={`${getFormatIcon(selectedFormat)} text-xs xs:text-sm`}></i>
                       </div>
                       <div className="min-w-0">
-                        <CardTitle className="text-sm xs:text-base font-semibold truncate">Проект {index + 1}: {getFormatLabel(selectedFormat)}</CardTitle>
-                        <CardDescription className="text-xs xs:text-sm mt-0.5">Файлы проекта {index + 1}</CardDescription>
+                        <CardTitle className="text-sm xs:text-base font-semibold truncate">{projectName}: {getFormatLabel(selectedFormat)}</CardTitle>
+                        <CardDescription className="text-xs xs:text-sm mt-0.5">Файлы проекта {projectName}</CardDescription>
                       </div>
                     </div>
                   </div>
