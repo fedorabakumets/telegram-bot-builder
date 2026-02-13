@@ -6,7 +6,6 @@
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { RotateCcw } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
 
 interface SyncFromFileButtonProps {
   /** Функция для обновления списка проектов после синхронизации */
@@ -27,7 +26,16 @@ export function SyncFromFileButton({ onSyncComplete }: SyncFromFileButtonProps) 
   const handleSync = async () => {
     try {
       // Выполняем запрос на синхронизацию
-      const result = await apiRequest('GET', '/api/projects/import-from-files');
+      const response = await fetch('/api/projects/import-from-files', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
       
       // Показываем уведомление о результате
       toast({
