@@ -41,7 +41,7 @@ interface CodePanelProps {
  * [CONTAINER] CodePanel - Основной контейнер для панели кода
  * Управляет состоянием и данными для дочерних компонентов
  */
-export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange }: CodePanelProps) {
+export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange }: CodePanelProps) {
   // Состояние для управления форматом и отображением кода
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
@@ -274,7 +274,7 @@ export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: 
             const projectName = (botData as any).name || `Проект ${index + 1}`;
             
             // Получаем ID проекта, если доступен
-            const projectId = projectIds && projectIds[index] ? ` (ID: ${projectIds[index]})` : '';
+            const projectIdSuffix = props.projectIds && props.projectIds[index] ? ` (ID: ${props.projectIds[index]})` : '';
             
             return (
               <Card key={index} className="border border-border/50 shadow-sm">
@@ -285,8 +285,8 @@ export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: 
                         <i className={`${getFormatIcon(selectedFormat)} text-xs xs:text-sm`}></i>
                       </div>
                       <div className="min-w-0">
-                        <CardTitle className="text-sm xs:text-base font-semibold truncate">{projectName}{projectId}: {getFormatLabel(selectedFormat)}</CardTitle>
-                        <CardDescription className="text-xs xs:text-sm mt-0.5">Файлы проекта {projectName}{projectId}</CardDescription>
+                        <CardTitle className="text-sm xs:text-base font-semibold truncate">{projectName}{projectIdSuffix}: {getFormatLabel(selectedFormat)}</CardTitle>
+                        <CardDescription className="text-xs xs:text-sm mt-0.5">Файлы проекта {projectName}{projectIdSuffix}</CardDescription>
                       </div>
                     </div>
                   </div>
