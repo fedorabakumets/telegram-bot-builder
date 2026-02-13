@@ -74,8 +74,9 @@ export async function recreateBotFiles(projectId: number): Promise<boolean> {
       
       const simpleBotData = convertSheetsToSimpleBotData(project.data);
       const userDatabaseEnabled = project.userDatabaseEnabled === 1;
-      // Заменяем токен плейсхолдером, так как при пересоздании файлов токен неизвестен
-      const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false).replace('YOUR_BOT_TOKEN_HERE', 'YOUR_BOT_TOKEN_HERE');
+      // Получаем актуальный токен для этого токена
+      const token = tokenRecord.token;
+      const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false).replace('YOUR_BOT_TOKEN_HERE', token);
 
       // TODO: В будущем можно добавить поддержку кастомных имен файлов
       // Нормализуем имя проекта для использования в качестве имени файла
