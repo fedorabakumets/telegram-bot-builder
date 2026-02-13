@@ -12,7 +12,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -198,8 +198,8 @@ export function BotProfileEditor({
   const isLoading = updateNameMutation.isPending || updateDescriptionMutation.isPending || updateShortDescriptionMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
@@ -210,11 +210,11 @@ export function BotProfileEditor({
         >
           <Edit2 className="h-4 w-4" />
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Редактировать профиль бота</DialogTitle>
-        </DialogHeader>
+      </SheetTrigger>
+      <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Редактировать профиль бота</SheetTitle>
+        </SheetHeader>
 
         {/* Предупреждение о тестовом режиме */}
         <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
@@ -229,7 +229,7 @@ export function BotProfileEditor({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 pt-4">
 
           <div className="space-y-2">
             <Label htmlFor="bot-name">Имя бота</Label>
@@ -292,7 +292,7 @@ export function BotProfileEditor({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
