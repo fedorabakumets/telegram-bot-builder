@@ -17,6 +17,8 @@ import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 interface CodePanelProps {
   /** Массив данных ботов для генерации кода */
   botDataArray: BotData[];
+  /** Массив ID проектов */
+  projectIds?: number[];
   /** Название проекта */
   projectName: string;
   /** Колбэк для закрытия панели */
@@ -271,6 +273,9 @@ export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: 
             // Проверяем наличие поля name в botData
             const projectName = (botData as any).name || `Проект ${index + 1}`;
             
+            // Получаем ID проекта, если доступен
+            const projectId = projectIds && projectIds[index] ? ` (ID: ${projectIds[index]})` : '';
+            
             return (
               <Card key={index} className="border border-border/50 shadow-sm">
                 <CardHeader className="pb-3 xs:pb-4 sm:pb-5">
@@ -280,8 +285,8 @@ export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: 
                         <i className={`${getFormatIcon(selectedFormat)} text-xs xs:text-sm`}></i>
                       </div>
                       <div className="min-w-0">
-                        <CardTitle className="text-sm xs:text-base font-semibold truncate">{projectName}: {getFormatLabel(selectedFormat)}</CardTitle>
-                        <CardDescription className="text-xs xs:text-sm mt-0.5">Файлы проекта {projectName}</CardDescription>
+                        <CardTitle className="text-sm xs:text-base font-semibold truncate">{projectName}{projectId}: {getFormatLabel(selectedFormat)}</CardTitle>
+                        <CardDescription className="text-xs xs:text-sm mt-0.5">Файлы проекта {projectName}{projectId}</CardDescription>
                       </div>
                     </div>
                   </div>

@@ -1494,6 +1494,7 @@ export default function Editor() {
   const codeContent = activeProject ? (
     <CodePanel
       botDataArray={allProjects.map(project => project.data as BotData)}
+      projectIds={allProjects.map(project => project.id)}
       projectName={activeProject.name}
       onClose={handleCloseCodePanel}
       selectedFormat={selectedFormat}
