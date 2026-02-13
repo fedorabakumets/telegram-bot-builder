@@ -18,17 +18,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotToken, type BotProject } from '@shared/schema';
-import { Play, Square, Clock, Trash2, Edit2, Bot, Check, X, Plus, MoreHorizontal, Database, Terminal as TerminalIcon, Code } from 'lucide-react';
+import { Play, Square, Clock, Trash2, Edit2, Bot, Plus, MoreHorizontal, Database, Terminal as TerminalIcon, Code } from 'lucide-react';
 import { setCommentsEnabled, areCommentsEnabled } from '@/lib/utils/generateGeneratedComment';
 import { BotTerminal } from './BotTerminal';
 import { TokenDisplayEdit } from './TokenDisplayEdit';
+import { type BotInfo, BotProfileEditor } from './BotProfileEditor';
 
 // Типы для функции renderBotControlPanel
 type ProjectTokenType = { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; };
@@ -85,39 +86,6 @@ interface BotStatusResponse {
 // Используем тип BotToken из shared/schema.ts
 
 
-/**
- * Информация о боте из Telegram API
- * @interface BotInfo
- */
-interface BotInfo {
-  /** Идентификатор бота */
-  id: number;
-  /** Является ли ботом */
-  is_bot: boolean;
-  /** Имя бота */
-  first_name: string;
-  /** Имя пользователя бота */
-  username: string;
-  /** Может ли присоединяться к группам */
-  can_join_groups: boolean;
-  /** Может ли читать все сообщения в группах */
-  can_read_all_group_messages: boolean;
-  /** Поддерживает ли inline запросы */
-  supports_inline_queries: boolean;
-  /** Описание бота */
-  description?: string;
-  /** Краткое описание бота */
-  short_description?: string;
-  /** URL фотографии профиля */
-  photoUrl?: string;
-  /** Информация о фотографии профиля */
-  photo?: {
-    small_file_id: string;
-    small_file_unique_id: string;
-    big_file_id: string;
-    big_file_unique_id: string;
-  };
-}
 
 /**
  * Функция для форматирования времени выполнения
@@ -217,258 +185,7 @@ function BotAvatar({
  * @param botInfo - Информация о боте
  * @param onProfileUpdated - Колбэк при обновлении профиля
  */
-function BotProfileEditor({
-  projectId,
-  botInfo,
-  onProfileUpdated
-}: {
-  projectId: number;
-  botInfo?: BotInfo | null;
-  onProfileUpdated: () => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [shortDescription, setShortDescription] = useState('');
 
-  // Обновляем состояние когда botInfo загружается
-  useEffect(() => {
-    if (botInfo) {
-      setName(botInfo.first_name || '');
-      setDescription(botInfo.description || '');
-      setShortDescription(botInfo.short_description || '');
-    }
-  }, [botInfo]);
-
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  // Мутация для обновления имени бота
-  const updateNameMutation = useMutation({
-    mutationFn: async (newName: string) => {
-      const response = await apiRequest('PUT', `/api/projects/${projectId}/bot/name`, { name: newName });
-      return response;
-    },
-    onSuccess: async () => {
-      toast({
-        title: "Успешно",
-        description: "Имя бота обновлено. Перезапускаем бота для применения изменений...",
-      });
-
-      try {
-        // Перезапускаем бота для применения нового имени
-        await apiRequest('POST', `/api/projects/${projectId}/bot/restart`);
-
-        toast({
-          title: "Готово!",
-          description: "Бот перезапущен с новым именем",
-        });
-      } catch (error) {
-        // Если перезапуск не удался, просто обновляем данные
-        console.warn('Не удалось перезапустить бота:', error);
-      }
-
-      // Инвалидируем кэш и сразу перезагружаем данные
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      onProfileUpdated();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Ошибка",
-        description: error.message || "Не удалось обновить имя бота",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Мутация для обновления описания бота
-  const updateDescriptionMutation = useMutation({
-    mutationFn: async (newDescription: string) => {
-      const response = await apiRequest('PUT', `/api/projects/${projectId}/bot/description`, { description: newDescription });
-      return response;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Успешно",
-        description: "Описание бота обновлено",
-      });
-      // Инвалидируем кэш и сразу перезагружаем данные
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      onProfileUpdated();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Ошибка",
-        description: error.message || "Не удалось обновить описание бота",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Мутация для обновления краткого описания бота
-  const updateShortDescriptionMutation = useMutation({
-    mutationFn: async (newShortDescription: string) => {
-      const response = await apiRequest('PUT', `/api/projects/${projectId}/bot/short-description`, { short_description: newShortDescription });
-      return response;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Успешно",
-        description: "Краткое описание бота обновлено",
-      });
-      // Инвалидируем кэш и сразу перезагружаем данные
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      onProfileUpdated();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Ошибка",
-        description: error.message || "Не удалось обновить краткое описание бота",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const handleSave = async () => {
-    if (!botInfo) {
-      toast({
-        title: "Ошибка",
-        description: "Информация о боте не загружена",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Обновляем только те поля, которые изменились
-      if (name !== botInfo.first_name) {
-        await updateNameMutation.mutateAsync(name);
-      }
-      if (description !== (botInfo.description || '')) {
-        await updateDescriptionMutation.mutateAsync(description);
-      }
-      if (shortDescription !== (botInfo.short_description || '')) {
-        await updateShortDescriptionMutation.mutateAsync(shortDescription);
-      }
-
-      setIsOpen(false);
-      // Принудительно обновляем данные после сохранения всех изменений
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-    } catch (error) {
-      // Ошибки уже обработаны в мутациях
-    }
-  };
-
-  const handleCancel = () => {
-    // Сбрасываем значения к исходным
-    setName(botInfo?.first_name || '');
-    setDescription(botInfo?.description || '');
-    setShortDescription(botInfo?.short_description || '');
-    setIsOpen(false);
-  };
-
-  const isLoading = updateNameMutation.isPending || updateDescriptionMutation.isPending || updateShortDescriptionMutation.isPending;
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0"
-          data-testid="button-edit-bot-profile"
-          disabled={!botInfo}
-          title={!botInfo ? "Загрузка информации о боте..." : "Редактировать профиль бота"}
-        >
-          <Edit2 className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Редактировать профиль бота</DialogTitle>
-        </DialogHeader>
-
-        {/* Предупреждение о тестовом режиме */}
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
-          <i className="fas fa-flask text-amber-600 dark:text-amber-400 text-sm mt-0.5 flex-shrink-0"></i>
-          <div>
-            <p className="text-sm text-amber-700 dark:text-amber-300 leading-relaxed font-medium">
-              Функция находится в тестовом режиме
-            </p>
-            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 leading-relaxed">
-              Редактирование профиля может временно не работать
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-
-          <div className="space-y-2">
-            <Label htmlFor="bot-name">Имя бота</Label>
-            <Input
-              id="bot-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Введите имя бота"
-              maxLength={64}
-            />
-            <p className="text-sm text-muted-foreground">
-              Максимум 64 символа. Это имя будет отображаться в Telegram.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bot-short-description">Краткое описание</Label>
-            <Input
-              id="bot-short-description"
-              value={shortDescription}
-              onChange={(e) => setShortDescription(e.target.value)}
-              placeholder="Краткое описание бота"
-              maxLength={120}
-            />
-            <p className="text-sm text-muted-foreground">
-              Максимум 120 символов. Отображается в профиле и предпросмотрах ссылок.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bot-description">Полное описание</Label>
-            <Textarea
-              id="bot-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Полное описание бота"
-              maxLength={512}
-              rows={4}
-            />
-            <p className="text-sm text-muted-foreground">
-              Максимум 512 символов. Отображается в пустых чатах с ботом.
-            </p>
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Отмена
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isLoading}
-            >
-              <Check className="h-4 w-4 mr-2" />
-              {isLoading ? 'Сохранение...' : 'Сохранить'}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 
 /**
@@ -479,7 +196,7 @@ function BotProfileEditor({
  * @param projectName - Название проекта
  * @param onBotStarted - Callback при успешном запуске бота
  */
-export function BotControl({ projectId, onBotStarted }: BotControlProps) {
+export function BotControl({ projectId }: BotControlProps) {
   // Используем projectId в BotTerminal компоненте
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _projectId = projectId;
@@ -1324,13 +1041,13 @@ function renderBotProjectCard(showAddBot: boolean, setShowAddBot: (show: boolean
  * Функция для рендеринга диалога редактирования токена бота
  *
  * @param editingToken - Токен, который в данный момент редактируется
- * @param setEditingToken - Функция для установки ре��акти��уемого токена
+ * @param setEditingToken - Функция для установки редактируемого токена
  * @param editName - Редактируемое имя
  * @param setEditName - Функция для установки редактируемого имени
  * @param updateTokenMutation - Мутация для обновления токена
  * @param editDescription - Редактируемое описание
  * @param setEditDescription - Функция для установки редактируемого описания
- * @returns JSX элемент д��алога редактирования токена бота
+ * @returns JSX элемент диалога редактирования токена бота
  */
 function renderBotTokenManagementSection(editingToken: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; } | null, setEditingToken: (token: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; } | null) => void, editName: string, setEditName: (name: string) => void, updateTokenMutation: any, editDescription: string, setEditDescription: (desc: string) => void) {
   return <Dialog open={!!editingToken} onOpenChange={() => setEditingToken(null)}>
