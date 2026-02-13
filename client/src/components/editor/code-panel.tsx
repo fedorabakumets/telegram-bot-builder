@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SyncFromFileButton } from './sync-from-file-button';
+import { TokenInfo } from './token-info';
 import { useToast } from '@/hooks/use-toast';
-import { BotData, BotGroup } from '@shared/schema';
+import { BotData, BotGroup, BotToken } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
@@ -292,6 +293,11 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 xs:space-y-3.5 sm:space-y-4">
+                  {/* Информация о токенах проекта */}
+                  {projectIds && projectIds[index] && (
+                    <TokenInfo projectId={projectIds[index]} />
+                  )}
+                  
                   {/* Format Selection */}
                   <div className="space-y-1.5 xs:space-y-2">
                     <label className="text-xs xs:text-sm font-semibold text-foreground block">Форматы:</label>
