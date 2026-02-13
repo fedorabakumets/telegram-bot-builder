@@ -3,8 +3,7 @@
  * Реализует функциональность синхронизации между файловой системой и базой данных
  */
 
-import { type BotProject, type InsertBotProject, botProjects } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { type BotProject, type InsertBotProject } from "@shared/schema";
 import { DatabaseStorage } from "./DatabaseStorage";
 
 /**
@@ -16,77 +15,73 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
   // Импортируем fs и path для работы с файловой системой
   const fs = await import('fs');
   const path = await import('path');
-  
+
   const botsDir = path.join(process.cwd(), 'bots');
-  
+
   // Проверяем, существует ли директория
   if (!fs.existsSync(botsDir)) {
     console.log('Директория bots не найдена');
     return [];
   }
-  
-  // Читаем все файлы в директории
-  const files = fs.readdirSync(botsDir);
-  
+
+  // Читаем все подкаталоги в директории
+  const subdirs = fs.readdirSync(botsDir);
+
   const importedProjects: BotProject[] = [];
-  
-  for (const file of files) {
-    // Обрабатываем только JSON-файлы
-    if (file.endsWith('.json')) {
+
+  for (const subdir of subdirs) {
+    // Проверяем, является ли это каталогом с ботом (имя в формате bot_{ID_проекта}_{ID_токена})
+    const botDirPattern = /^bot_(\d+)_(\d+)$/;
+    const match = subdir.match(botDirPattern);
+
+    if (match) {
+      const projectId = parseInt(match[1]); // ID проекта
+
       try {
-        const filePath = path.join(botsDir, file);
-        const content = fs.readFileSync(filePath, 'utf-8');
-        const jsonData = JSON.parse(content);
-        
-        // Проверяем, что это действительный проект бота
-        if (jsonData.nodes && jsonData.connections) {
-          // Генерируем уникальное имя проекта на основе имени файла
-          const projectName = file.replace('.json', '');
-          
-          // Проверяем, существует ли уже проект с таким именем
-          let existingProject = await getBotProjectByName(storage, projectName);
-          
-          if (existingProject) {
-            // Обновляем существующий проект
-            existingProject = await storage.updateBotProject(existingProject.id, {
-              data: jsonData,
-              name: projectName,
-              updatedAt: new Date()
-            });
-            
+        // Пытаемся найти файл project.json в подкаталоге
+        const projectJsonPath = path.join(botsDir, subdir, 'project.json');
+
+        if (fs.existsSync(projectJsonPath)) {
+          const content = fs.readFileSync(projectJsonPath, 'utf-8');
+          const jsonData = JSON.parse(content);
+
+          // Проверяем, что это действительный проект бота
+          if (jsonData.nodes && jsonData.connections) {
+            // Пытаемся получить существующий проект по ID
+            let existingProject = await storage.getBotProject(projectId);
+
             if (existingProject) {
-              importedProjects.push(existingProject);
+              // Обновляем существующий проект
+              const updatedProject = await storage.updateBotProject(projectId, {
+                data: jsonData,
+                updatedAt: new Date()
+              });
+
+              if (updatedProject) {
+                importedProjects.push(updatedProject);
+                console.log(`Проект с ID ${projectId} обновлен из файла`);
+              }
+            } else {
+              // Если проект с таким ID не существует, создаем новый
+              // Используем имя в формате project_{ID} для связи с файлом
+              const newProject = await storage.createBotProject({
+                name: `project_${projectId}`, // Используем имя, соответствующее ID
+                data: jsonData,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                ownerId: null // Проекты, импортируемые из файлов, не имеют владельца
+              });
+
+              importedProjects.push(newProject);
+              console.log(`Создан новый проект с именем project_${projectId} из файла`);
             }
-          } else {
-            // Создаем новый проект
-            const newProject = await storage.createBotProject({
-              name: projectName,
-              data: jsonData,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              ownerId: null // Проекты, импортируемые из файлов, не имеют владельца
-            });
-            
-            importedProjects.push(newProject);
           }
         }
       } catch (error) {
-        console.error(`Ошибка при импорте файла ${file}:`, error);
+        console.error(`Ошибка при импорте проекта из подкаталога ${subdir}:`, error);
       }
     }
   }
-  
-  return importedProjects;
-}
 
-/**
- * Вспомогательная функция для получения проекта по имени
- * @param storage - Экземпляр хранилища
- * @param name - Имя проекта
- * @returns Найденный проект или undefined
- */
-async function getBotProjectByName(storage: DatabaseStorage, name: string): Promise<BotProject | undefined> {
-  // Получаем все проекты и фильтруем по имени
-  const allProjects = await storage.getAllBotProjects();
-  return allProjects.find(project => project.name === name);
+  return importedProjects;
 }
