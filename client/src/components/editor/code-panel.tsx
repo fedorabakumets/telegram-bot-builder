@@ -42,7 +42,7 @@ interface CodePanelProps {
  * [CONTAINER] CodePanel - Основной контейнер для панели кода
  * Управляет состоянием и данными для дочерних компонентов
  */
-export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onProjectChange, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange }: CodePanelProps) {
+export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onProjectChange, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange }: CodePanelProps) {
   // Состояние для управления форматом и отображением кода
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
@@ -53,8 +53,7 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
   const currentProjectIndex = selectedProjectIndex !== undefined ? selectedProjectIndex : 0;
   const botData = botDataArray[currentProjectIndex];
 
-  // Используем внешнее состояние для отображения полного кода, если оно предоставлено
-  const showFullCodeState = showFullCode !== undefined ? showFullCode : false;
+  
 
   // Функция для изменения формата
   const handleFormatChange = (format: CodeFormat) => {
@@ -177,12 +176,12 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
   const codeStats = useMemo(() => {
     return {
       totalLines: lineCount,
-      truncated: !showFullCodeState && lineCount > 1000,
+      truncated: !(showFullCode !== undefined ? showFullCode : false) && lineCount > 1000,
       functions: (content.match(/^def |^async def /gm) || []).length,
       classes: (content.match(/^class /gm) || []).length,
       comments: (content.match(/^[^#]*#/gm) || []).length
     };
-  }, [content, showFullCodeState]);
+  }, [content, showFullCode]);
 
   /**
    * Получение CSS классов иконки для формата файла
@@ -426,7 +425,7 @@ export function CodePanel({ botDataArray, projectName, selectedProjectIndex, onP
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onShowFullCodeChange ? onShowFullCodeChange(true) : {}}
+                      onClick={() => onShowFullCodeChange && onShowFullCodeChange(true)}
                       className="h-7 xs:h-8 px-2 text-xs xs:text-sm whitespace-nowrap"
                       data-testid="button-show-full-code"
                     >
