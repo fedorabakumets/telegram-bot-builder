@@ -43,6 +43,7 @@ type TokenInfoType = { id: number; name: string; createdAt: Date | null; updated
 interface BotControlProps {
   projectId?: number;
   projectName?: string;
+  onBotStarted?: () => void;
 }
 
 /**
@@ -476,8 +477,9 @@ function BotProfileEditor({
  * редактирования профиля и настройки базы данных
  * @param projectId - Идентификатор проекта
  * @param projectName - Название проекта
+ * @param onBotStarted - Callback при успешном запуске бота
  */
-export function BotControl({ projectId }: BotControlProps) {
+export function BotControl({ projectId, onBotStarted }: BotControlProps) {
   // Используем projectId в BotTerminal компоненте
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _projectId = projectId;
@@ -958,6 +960,9 @@ export function BotControl({ projectId }: BotControlProps) {
 
       // Устанавливаем запущенный токен как активный для WebSocket
       setSelectedTokenId(variables.tokenId);
+
+      // Вызываем callback для открытия панели кода
+      onBotStarted?.();
     },
     onError: (error: any) => {
       toast({ title: "Ошибка запуска", description: error.message || "Не удалось запустить бота.", variant: "destructive" });

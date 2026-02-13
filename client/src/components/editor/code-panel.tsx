@@ -258,6 +258,21 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
                 </Button>
               )}
             </div>
+            
+            {/* Hotkeys Info */}
+            <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 text-xs text-blue-800 dark:text-blue-200">
+              <h3 className="font-semibold mb-1">Горячие клавиши:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                <div><strong>Ctrl+Alt+C / Cmd+Alt+C:</strong> Копировать код</div>
+                <div><strong>Ctrl+Alt+F / Cmd+Alt+F:</strong> Переключить сворачивание</div>
+                <div><strong>Ctrl+Shift+[</strong>: Сворачивание блока</div>
+                <div><strong>Ctrl+Shift+]</strong>: Разворачивание блока</div>
+                <div><strong>Ctrl + K, затем Ctrl + 0</strong>: Свернуть всё</div>
+                <div><strong>Ctrl + K, затем Ctrl + J</strong>: Развернуть всё</div>
+                <div><strong>Ctrl + F</strong>: Поиск</div>
+                <div><strong>Ctrl + G</strong>: Перейти к строке</div>
+              </div>
+            </div>
           </div>
 
           {/* Format & Actions Card */}

@@ -1465,6 +1465,7 @@ export default function Editor() {
               <BotControl
                 projectId={activeProject.id}
                 projectName={activeProject.name}
+                onBotStarted={handleOpenCodePanel}
               />
             </div>
           </div>
@@ -1675,6 +1676,7 @@ export default function Editor() {
                     <BotControl
                       projectId={activeProject.id}
                       projectName={activeProject.name}
+                      onBotStarted={handleOpenCodePanel}
                     />
                   </div>
                 </div>
