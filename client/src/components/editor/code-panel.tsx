@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { BotData, BotGroup } from '@shared/schema';
@@ -272,50 +272,53 @@ export function CodePanel({ botData, projectName, onClose }: CodePanelProps) {
             <CardContent className="space-y-3 xs:space-y-3.5 sm:space-y-4">
               {/* Format Selection */}
               <div className="space-y-1.5 xs:space-y-2">
-                <label className="text-xs xs:text-sm font-semibold text-foreground block">Формат:</label>
-                <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as CodeFormat)}>
-                  <SelectTrigger className="text-xs xs:text-sm h-9 xs:h-10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="python">
-                      <div className="flex items-center">
-                        <i className="fab fa-python mr-2 text-blue-500"></i>
-                        Python код (.py)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="json">
-                      <div className="flex items-center">
-                        <i className="fas fa-database mr-2 text-green-500"></i>
-                        JSON данные (.json)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="requirements">
-                      <div className="flex items-center">
-                        <i className="fas fa-list mr-2 text-orange-500"></i>
-                        Requirements.txt
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="readme">
-                      <div className="flex items-center">
-                        <i className="fas fa-file-alt mr-2 text-purple-500"></i>
-                        README.md
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="dockerfile">
-                      <div className="flex items-center">
-                        <i className="fab fa-docker mr-2 text-cyan-500"></i>
-                        Dockerfile
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="config">
-                      <div className="flex items-center">
-                        <i className="fas fa-cog mr-2 text-yellow-500"></i>
-                        Config YAML (.yaml)
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-xs xs:text-sm font-semibold text-foreground block">Форматы:</label>
+                <Tabs value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as CodeFormat)} className="w-full">
+                  <TabsList className="flex flex-col h-auto p-1 bg-muted/50 min-h-[200px]">
+                    <TabsTrigger 
+                      value="python" 
+                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    >
+                      <i className="fab fa-python mr-2 text-blue-500"></i>
+                      Python (.py)
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="json" 
+                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    >
+                      <i className="fas fa-database mr-2 text-green-500"></i>
+                      JSON (.json)
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="requirements" 
+                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    >
+                      <i className="fas fa-list mr-2 text-orange-500"></i>
+                      Requirements (.txt)
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="readme" 
+                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    >
+                      <i className="fas fa-file-alt mr-2 text-purple-500"></i>
+                      README (.md)
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="dockerfile" 
+                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    >
+                      <i className="fab fa-docker mr-2 text-cyan-500"></i>
+                      Dockerfile
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="config" 
+                      className="h-9 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 flex items-center justify-start pl-2 pr-3"
+                    >
+                      <i className="fas fa-cog mr-2 text-yellow-500"></i>
+                      Config (.yaml)
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
 
               {/* Action Buttons */}
