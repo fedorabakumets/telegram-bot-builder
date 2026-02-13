@@ -240,6 +240,9 @@ export function sendOutputToTerminals(content: string, type: 'stdout' | 'stderr'
   const connectionKey = `${projectId}_${tokenId}`;
   const connections = activeConnections.get(connectionKey);
 
+  // Выводим лог в консоль сервера
+  console.log(`[PID:${projectId}/${tokenId}] ${content.trim()}`);
+
   if (connections) {
     const message: TerminalMessage = {
       type,
