@@ -268,7 +268,8 @@ export function CodePanel({ botDataArray, projectName, onClose, selectedFormat: 
             const { content, lineCount, codeStats } = getContentAndStats(index);
             
             // Получаем имя проекта из данных, если оно доступно
-            const projectName = botData.name || `Проект ${index + 1}`;
+            // Проверяем наличие поля name в botData
+            const projectName = (botData as any).name || `Проект ${index + 1}`;
             
             return (
               <Card key={index} className="border border-border/50 shadow-sm">
