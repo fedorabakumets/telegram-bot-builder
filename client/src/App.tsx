@@ -27,7 +27,6 @@ import { Loader2 } from "lucide-react";
 const Home = lazy(() => import("@/pages/home"));
 const Editor = lazy(() => import("@/pages/editor"));
 const TemplatesPage = lazy(() => import("@/pages/templates-wrapper"));
-const DatabaseManager = lazy(() => import("@/pages/DatabaseManager"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 /**
@@ -76,9 +75,7 @@ function Router() {
     <Suspense fallback={<LoadingSpinner />}>
       <Switch>
         <Route path="/projects" component={Home} />
-        <Route path="/templates" component={TemplatesPage} />
-        <Route path="/database" component={DatabaseManager} />
-        <Route path="/editor/:id" component={Editor} />
+        <Route path="/templates" component={TemplatesPage} />        <Route path="/editor/:id" component={Editor} />
         <Route path="/projects/:id" component={Editor} />
         <Route path="/" component={Editor} />
         <Route component={NotFound} />

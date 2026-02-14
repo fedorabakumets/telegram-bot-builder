@@ -31,7 +31,11 @@
     "shared",
     "server",
     "types",
-    "client/types"
-, "scripts/check-env.ts", "archive/auto-transition-connections.ts", "archive/auto-connection.ts"  ],
+    "client/types",
+    "scripts/check-env.ts",
+    "archive/auto-transition-connections.ts",
+    "archive/auto-connection.ts",
+    "archive/header.tsx"
+  ],
   "exclude": ["node_modules", "dist"]
 }

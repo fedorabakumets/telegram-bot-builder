@@ -438,10 +438,9 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                     <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent">
-                          <TableHead className="w-1/4 font-semibold">Переменная</TableHead>
-                          <TableHead className="w-1/3 font-semibold">Вопрос</TableHead>
+                          <TableHead className="w-1/3 font-semibold">Переменная</TableHead>
                           <TableHead className="w-1/3 font-semibold">Ответ</TableHead>
-                          <TableHead className="w-1/6 font-semibold">Тип</TableHead>
+                          <TableHead className="w-1/3 font-semibold">Тип</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -459,17 +458,6 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                             responseData = { value: String(value), type: 'text' };
                           }
 
-                          const getQuestionText = (questionKey: string, data: any) => {
-                            if (variableToQuestionMap[questionKey]) {
-                              return variableToQuestionMap[questionKey];
-                            }
-                            if (data?.prompt && data.prompt.trim()) {
-                              return data.prompt;
-                            }
-                            return questionKey;
-                          };
-
-                          const questionText: string = String(getQuestionText(key, responseData));
                           const answerValue: string = String(responseData?.value !== undefined ? responseData.value :
                             (typeof value === 'object' && value !== null ? JSON.stringify(value as object) : String(value as string)));
 
@@ -478,11 +466,6 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
                               <TableCell className="align-top">
                                 <div className="font-medium text-sm">
                                   {key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key}
-                                </div>
-                              </TableCell>
-                              <TableCell className="align-top">
-                                <div className="text-sm text-blue-800 dark:text-blue-200">
-                                  {questionText}
                                 </div>
                               </TableCell>
                               <TableCell className="align-top">
