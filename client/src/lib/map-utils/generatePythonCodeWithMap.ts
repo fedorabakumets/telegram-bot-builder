@@ -1,5 +1,6 @@
 import { BotData, BotGroup } from '@shared/schema';
-import { CodeWithMap, generatePythonCode } from "../bot-generator";
+import { CodeWithMap } from "../bot-generator";
+import { generatePythonCode } from '../generatePythonCode';
 import { parseCodeMap } from './parseCodeMap';
 
 // Обновленная функция генерации с картой

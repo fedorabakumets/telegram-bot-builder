@@ -32,7 +32,7 @@ import { hasMediaNodes } from './MediaHandler/hasMediaNodes';
 import { hasUploadImageUrls } from './MediaHandler/hasUploadImageUrls';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
 import { newgenerateStateTransitionAndRenderLogic } from './newgenerateStateTransitionAndRenderLogic';
-import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation';
+import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './handle_user_input';
 import { createProcessNodeButtonsFunction } from './newprocessNodeButtonsAndGenerateHandlers';
 import { generateConfigYaml, generateDockerfile, generateReadme, generateRequirementsTxt } from './scaffolding';
 import { generateSynonymHandlers } from './Synonyms';
@@ -476,7 +476,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // ВАЖНО: Добавляем только если база данных включена
   generateFallbackHandlers();
 
-  generateMainFunctionScaffoldWithSignalHandlers();
+  signal_handler();
   generateBotInitializationAndMiddlewareSetup();
   generateMainPollingLoopWithGracefulShutdown();
 
@@ -484,7 +484,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes, isLoggingEnabled);
 
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
-  generateMultiSelectCallbackDispatcherHandle();
+  handle_multi_select_callback();
 
   return generateCompleteBotScriptFromNodeGraphWithDependencies(
     code,
@@ -1341,10 +1341,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    */
   function generateFallbackHandlers() {
     if (userDatabaseEnabled) {
-      generateFallbackTextMessageHandler();
+      fallback_text_handler();
 
       // Добавляем универсальный обработчик для фотографий
-      generateFallbackPhotoMessageHandler();
+      handle_unhandled_photo();
     }
   }
 
@@ -1352,7 +1352,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * Генерирует fallback обработчик для необработанных текстовых сообщений
    * Создает Python функцию для обработки всех текстовых сообщений, которые не были обработаны основными обработчиками
    */
-  function generateFallbackTextMessageHandler() {
+  function fallback_text_handler() {
     code += '\n# Универсальный fallback-обработчик для всех необработанных текстовых сообщений\n';
     code += '@dp.message(F.text)\n';
     code += 'async def fallback_text_handler(message: types.Message):\n';
@@ -1370,7 +1370,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * Генерирует fallback обработчик для необработанных фотографий
    * Создает Python функцию для обработки всех фотографий, которые не были обработаны основными обработчиками
    */
-  function generateFallbackPhotoMessageHandler() {
+  function handle_unhandled_photo() {
     code += '\n# Универсальный обработчик для необработанных фото\n';
     code += '@dp.message(F.photo)\n';
     code += 'async def handle_unhandled_photo(message: types.Message):\n';
@@ -1387,7 +1387,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * Генерирует каркас основной функции с обработчиками сигналов
    * Создает Python функцию main() с обработчиками сигналов для корректного завершения работы бота
    */
-  function generateMainFunctionScaffoldWithSignalHandlers() {
+  function signal_handler() {
     code += '\n\n# Запуск бота\n';
     code += 'async def main():\n';
     if (userDatabaseEnabled) {
@@ -1466,7 +1466,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * Генерирует обработчик callback-запросов для множественного выбора
    * Создает Python функцию для обработки inline кнопок множественного выбора, включая кнопки "Готово"
    */
-  function generateMultiSelectCallbackDispatcherHandle() {
+  function handle_multi_select_callback() {
     if (multiSelectNodes.length > 0) {
       code += '\n# Обработчики для множественного выбора\n';
 

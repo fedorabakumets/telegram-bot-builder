@@ -107,7 +107,7 @@ const startHandlerCode = generateStartHandler(startNode, userDatabaseEnabled);
 Для обработки узла команды с клавиатурой и изображениями:
 
 ```typescript
-const commandNodeHandlerCode = generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode, code, actualNodeId);
+const commandNodeHandlerCode = generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode, actualNodeId);
 ```
 
 Для инициализации и восстановления состояния множественного выбора:

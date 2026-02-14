@@ -456,7 +456,7 @@ export function newprocessNodeButtonsAndGenerateHandlers(inlineNodes: any[], pro
              */
           } else if (targetNode.type === 'command') {
             // Обрабатываем узла команд в запросах обратного вызова
-            code = generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode, code, actualNodeId);
+            code += generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode, actualNodeId);
 
             /**
              * БЛОК 11: Универсальный обработчик для остальных типов узлов
