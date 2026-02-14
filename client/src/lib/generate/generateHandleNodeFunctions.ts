@@ -212,7 +212,8 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
       code += '        "success_message": ""\n';
       code += '    }\n';
-      code += `    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${node.data.inputVariable || 'input'} (узел ${node.id})")\n`;
+      code += `    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${node.data.inputVariable || 'input'} (узел ${node.id})")`;
+      code += '\n';
     }
 
     code += '    return\n\n';

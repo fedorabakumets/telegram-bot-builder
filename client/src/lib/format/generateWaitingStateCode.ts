@@ -98,7 +98,7 @@ export function generateWaitingStateCode(node: any, indentLevel: string = '    '
 
   // Собираем весь код в массив строк для автоматической обработки
   const codeLines: string[] = [];
-  
+
   codeLines.push(`${indentLevel}user_data[${userIdSource}] = user_data.get(${userIdSource}, {})`);
   codeLines.push(`${indentLevel}user_data[${userIdSource}]["${waitingStateKey}"] = {`);
   codeLines.push(`${indentLevel}    "type": "${primaryType}",`);
@@ -113,9 +113,12 @@ export function generateWaitingStateCode(node: any, indentLevel: string = '    '
   codeLines.push(`${indentLevel}    "success_message": ""`);
   codeLines.push(`${indentLevel}}`);
   codeLines.push(`${indentLevel}logging.info(f"✅ Состояние ожидания настроено: modes=[${modesRepr}] для переменной ${inputVariable} (узел ${node.id})")`);
+  // Добавим дополнительную защиту от проблем с форматированием
+  codeLines.push(''); // Пустая строка для разделения
 
   // Применяем автоматическое добавление комментариев ко всему коду
   const commentedCodeLines = processCodeWithAutoComments(codeLines, 'generateWaitingStateCode.ts');
-  
+
+  // Убедимся, что каждая строка кода отделена переводом строки
   return commentedCodeLines.join('\n');
 }

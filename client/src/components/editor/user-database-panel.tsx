@@ -1,46 +1,45 @@
 // @ts-nocheck
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { BotMessage, BotProject, UserBotData } from '@shared/schema';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity,
-  ArrowUpDown,
-  BarChart3,
-  Bot,
-  Calendar,
-  Crown,
-  Database,
-  Edit,
-  Eye,
-  MessageSquare,
-  RefreshCw,
-  Search,
-  Send,
-  Shield,
-  Trash2,
-  User,
-  UserCheck,
   Users,
-  UserX
+  Search,
+  Trash2,
+  BarChart3,
+  Activity,
+  Shield,
+  Crown,
+  MessageSquare,
+  Calendar,
+  RefreshCw,
+  Eye,
+  UserCheck,
+  UserX,
+  Edit,
+  Send,
+  Bot,
+  User,
+  Database,
+  ArrowUpDown
 } from 'lucide-react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { newFunction_3 } from './newFunction_3';
+import { UserBotData, BotProject, BotMessage } from '@shared/schema';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type BotMessageWithMedia = BotMessage & {
   media?: Array<{
@@ -90,7 +89,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
    * @type {UserBotData | null}
    * @description Выбранный пользователь для просмотра деталей
    */
-  const [selectedUser, setSelectedUser] = newFunction_3();
+  const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
 
   /**
    * @type {boolean}

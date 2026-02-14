@@ -199,7 +199,8 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                                         code += `                                "node_id": "${targetNode.id}",\n`;
                                         code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
                                         code += `                            }\n`;
-                                        code += `                            logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (условное сообщение, узел ${targetNode.id})")\n`;
+                                        code += `                            logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (условное сообщение, узел ${targetNode.id})")`;
+                                        code += '\n';
                                     }
                                 } else {
                                     // ИСПРАВЛЕНИЕ: Проверяем, есть ли кнопки в условном сообщении
@@ -277,7 +278,8 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                         code += `                                "node_id": "${targetNode.id}",\n`;
                         code += `                                "next_node_id": "${inputTargetNodeId || ''}"\n`;
                         code += `                            }\n`;
-                        code += `                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                        code += `                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")`;
+                        code += '\n';
                     } else {
                         const messageText = targetNode.data.messageText || 'Сообщение';
                         const formattedText = formatTextForPython(messageText);
@@ -352,7 +354,8 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             code += `                            "node_id": "${targetNode.id}",\n`;
                             code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
                             code += `                        }\n`;
-                            code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                            code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")`;
+                            code += '\n';
                         }
                     }
                 } else {

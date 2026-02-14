@@ -222,7 +222,8 @@ export function handleNodeNavigationAndInputProcessing(nodes: any[], code: strin
                                     code += `${bodyIndent}        "success_message": ""\n`;
                                     code += `${bodyIndent}    }\n`;
                                     const modesForLog = modes.map(m => `'${m}'`).join(', ');
-                                    code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesForLog}] для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                                    code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: modes=[${modesForLog}] для переменной ${inputVariable} (узел ${targetNode.id})")`;
+                                    code += '\n';
                                 }
                             } else {
                                 // Нет условных сообщений - стандартная обработка

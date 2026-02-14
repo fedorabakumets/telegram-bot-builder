@@ -219,7 +219,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   code += `        "node_id": "${targetNode.id}",\n`;
                   code += `        "skip_buttons": ${skipButtonsJson}\n`;
                   code += `    }\n`;
-                  code += `    logging.info(f"✅ Состояние ожидания настроено: type='${primaryInputType}', modes=[${modesStr}] для переменной ${targetVarName} (узел ${targetNode.id})")\n`;
+                  code += `    logging.info(f"✅ Состояние ожидания настроено: type='${primaryInputType}', modes=[${modesStr}] для переменной ${targetVarName} (узел ${targetNode.id})")`;
+                  code += '\n';
                 } else {
                   code += '    \n';
                   code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
@@ -290,7 +291,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   code += `        "node_id": "${targetNode.id}",\n`;
                   code += `        "skip_buttons": ${skipButtonsJson}\n`;
                   code += `    }\n`;
-                  code += `    logging.info(f"✅ Состояние ожидания настроено: type='${primaryInputType}', modes=[${modesStr}] для переменной ${targetVarName} (узел ${targetNode.id})")\n`;
+                  code += `    logging.info(f"✅ Состояние ожидания настроено: type='${primaryInputType}', modes=[${modesStr}] для переменной ${targetVarName} (узел ${targetNode.id})")`;
+                  code += '\n';
                 } else {
                   code += '    \n';
                   code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
