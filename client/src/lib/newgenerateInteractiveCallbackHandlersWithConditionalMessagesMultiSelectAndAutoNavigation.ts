@@ -880,7 +880,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           if (collectInputAfterTransitionCheck) {
             code += '    # Устанавливаем waiting_for_input, так как автопереход не выполнен\n';
             if (targetNode && targetNode.data) {
-              code += generateWaitingStateCode(targetNode, '    ', 'user_id');
+              code += generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
             }
           }
 

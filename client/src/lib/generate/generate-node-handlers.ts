@@ -39,14 +39,16 @@ import { collectMediaVariables } from '../utils/collectMediaVariables';
  *
  * @example
  * const nodes = [{ id: 'start', type: 'start' }, { id: 'help', type: 'command' }];
- * const code = generateNodeHandlers(nodes, true);
+ * const code = generateNodeHandlers(nodes, true, true);
  */
-export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean): string {
+export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean, enableComments: boolean = true): string {
   // Собираем код в массив строк для автоматической обработки
   const codeLines: string[] = [];
 
-  // Добавляем комментарий о генерации
-  codeLines.push('# Код сгенерирован в generate-node-handlers.ts');
+  // Добавляем комментарий о генерации, если включена генерация комментариев
+  if (enableComments) {
+    codeLines.push('# Код сгенерирован в generate-node-handlers.ts');
+  }
 
   // Создаем mediaVariablesMap для всех узлов
   const mediaVariablesMap = collectMediaVariables(nodes);
@@ -94,9 +96,11 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     codeLines.push(`# @@NODE_END:${node.id}@@`);
   });
 
-  // Применяем автоматическое добавление комментариев ко всему коду
-  const processedCode = processCodeWithAutoComments(codeLines, 'generate-node-handlers.ts');
-  
+  // Применяем автоматическое добавление комментариев ко всему коду, если включена генерация комментариев
+  const processedCode = enableComments 
+    ? processCodeWithAutoComments(codeLines, 'generate-node-handlers.ts')
+    : codeLines;
+
   // Собираем финальный код из обработанных строк
   return processedCode.join('\n');
 }

@@ -391,7 +391,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += generateBotCommandsSetup(menuCommands);
 
   // Генерируем обработчики для каждого узла
-  code += generateNodeHandlers(nodes || [], userDatabaseEnabled);
+  code += generateNodeHandlers(nodes || [], userDatabaseEnabled, enableComments);
 
   // Генерируем обработчики синонимов для всех узлов
   code += generateSynonymHandlers(nodes || []);
