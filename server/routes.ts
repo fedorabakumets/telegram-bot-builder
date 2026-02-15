@@ -24,6 +24,7 @@ import { setupGithubPushRoute } from './setupGithubPushRoute';
 import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
 import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
+import { setupGoogleAuthRoutes } from "./setupGoogleAuthRoutes";
 import { storage } from "./storage";
 import { initializeTelegramManager, telegramClientManager } from "./telegram-client";
 
@@ -2867,5 +2868,8 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
       res.status(500).json({ message: "Failed to toggle bookmark" });
     }
   });
+
+  // Setup Google Auth routes
+  setupGoogleAuthRoutes(app);
 }
 

@@ -457,7 +457,7 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
     app.post("/api/settings/comments-generation", async (req, res) => {
         try {
             const { enabled } = req.body;
-            
+
             if (typeof enabled !== 'boolean') {
                 return res.status(400).json({ message: "Invalid enabled value" });
             }
@@ -469,6 +469,68 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
         } catch (error) {
             console.error("❌ Ошибка обновления настроек генерации комментариев:", error);
             return res.status(500).json({ message: "Failed to update comments generation settings", error: String(error) });
+        }
+    });
+
+    /**
+     * Обработчик маршрута POST /api/projects/:id/export-to-google-sheets
+     *
+     * Экспортирует данные пользователей проекта в Google Таблицы
+     *
+     * @route POST /api/projects/:id/export-to-google-sheets
+     * @param {Object} req - Объект запроса
+     * @param {Object} req.params - Параметры запроса
+     * @param {string} req.params.id - Идентификатор проекта
+     * @param {Object} req.body - Тело запроса
+     * @param {Array} req.body.data - Подготовленные данные для экспорта
+     * @param {string} req.body.projectName - Название проекта
+     * @param {Object} res - Объект ответа
+     * @returns {void}
+     *
+     * @description
+     * Выполняет экспорт данных пользователей проекта в Google Таблицы.
+     * Использует OAuth-аутентификацию для доступа к Google Sheets API.
+     * Создает новую таблицу или обновляет существующую с данными пользователей.
+     */
+    app.post("/api/projects/:id/export-to-google-sheets", requireDbReady, async (req, res) => {
+        try {
+            const projectId = parseInt(req.params.id);
+            
+            // Проверяем, существует ли проект
+            const project = await storage.getBotProject(projectId);
+            if (!project) {
+                return res.status(404).json({ message: "Project not found" });
+            }
+
+            // Проверяем права доступа
+            const ownerId = getOwnerIdFromRequest(req);
+            if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
+                return res.status(403).json({ message: "You don't have permission to access this project" });
+            }
+
+            // Получаем данные из тела запроса
+            const { data: exportData, projectName } = req.body;
+
+            if (!exportData || !Array.isArray(exportData)) {
+                return res.status(400).json({ message: "Invalid export data provided" });
+            }
+
+            // Импортируем функцию экспорта в Google Таблицы
+            const { exportToGoogleSheets } = await import("./google-sheets-export");
+            
+            // Выполняем экспорт в Google Таблицы
+            await exportToGoogleSheets(exportData, projectName, projectId);
+
+            return res.json({ 
+                success: true, 
+                message: "Data exported to Google Sheets successfully" 
+            });
+        } catch (error) {
+            console.error("❌ Ошибка экспорта в Google Таблицы:", error);
+            return res.status(500).json({ 
+                message: "Failed to export data to Google Sheets", 
+                error: (error as Error).message 
+            });
         }
     });
 }

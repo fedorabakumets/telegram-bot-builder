@@ -34,17 +34,22 @@ interface GoogleSheetsExportButtonProps {
  * @param {number} props.projectId - Идентификатор проекта, из которого будут экспортироваться данные
  * @param {string} props.projectName - Название проекта, используется для идентификации в процессе экспорта
  * @returns {JSX.Element} Кнопка экспорта в Google Таблицы с диалогом подтверждения и индикатором прогресса
- * 
+ *
  * @example
  * <GoogleSheetsExportButton projectId={123} projectName="Мой проект" />
- * 
+ *
  * @remarks
  * Компонент использует OAuth 2.0 для аутентификации с Google API.
  * Для работы компонента должен быть настроен файл credentials.json.
- * 
+ *
  * @see {@link https://developers.google.com/sheets/api|Google Sheets API Documentation}
  */
 export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheetsExportButtonProps) {
+  // Проверяем, что обязательные параметры переданы
+  if (!projectId || !projectName) {
+    console.error('GoogleSheetsExportButton: Missing required props - projectId and projectName are required');
+    return null;
+  }
   /**
    * @type {boolean}
    * @description Флаг, указывающий на то, выполняется ли в данный момент экспорт
@@ -77,48 +82,33 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
    * 1. Устанавливает состояние экспорта
    * 2. Получает данные пользователей через API
    * 3. Подготавливает данные для экспорта
-   * 4. Отправляет данные в Google Таблицы (в будущей реализации)
+   * 4. Отправляет данные в Google Таблицы через серверный маршрут
    * 5. Обрабатывает результат операции и отображает уведомление
    * @returns {Promise<void>} Промис, который разрешается после завершения экспорта
-   * 
+   *
    * @throws {Error} Если возникает ошибка при получении данных или в процессе экспорта
-   * 
-   * @todo Реализовать интеграцию с Google Sheets API для фактической отправки данных
    */
   const handleExport = async () => {
     setIsExporting(true);
     setProgress(0); // Сбросить прогресс перед началом
 
+    let errorMessage = ''; // Объявляем переменную вне блока catch
+    
     try {
-      // Здесь будет логика экспорта в Google Sheets
       // 1. Получить данные пользователей
-      // Для демонстрации прогресса, я буду искусственно увеличивать прогресс
-      // В реальной реализации прогресс будет зависеть от фактического состояния загрузки данных в Google Sheets
       setProgress(10);
       const usersData = await apiRequest('GET', `/api/projects/${projectId}/users`);
 
       // 2. Подготовить данные для экспорта
-      // Преобразовать данные в формат, подходящий для Google Sheets
-      setProgress(50);
+      setProgress(30);
       const preparedData = prepareDataForExport(usersData);
 
-      // 3. Отправить данные в Google Sheets
-      // Для этого потребуется вызвать API-эндпоинт, который реализует интеграцию с Google Sheets
-      // Пока что я просто выведу сообщение об успехе
-      setProgress(90);
-      console.log('Данные для экспорта:', preparedData);
-
-      // В реальной реализации здесь будет вызов API для экспорта в Google Sheets
-      // await apiRequest('POST', `/api/projects/${projectId}/export-to-google-sheets`, {
-      //   data: preparedData,
-      //   projectName: projectName,
-      // });
-
-      // Используем projectName для отслеживания в консоли
-      console.log('Экспорт для проекта:', projectName);
-
-      // Имитация задержки перед завершением
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 3. Отправить данные в Google Таблицы через серверный маршрут
+      setProgress(60);
+      await apiRequest('POST', `/api/projects/${projectId}/export-to-google-sheets`, {
+        data: preparedData,
+        projectName: projectName,
+      });
 
       setProgress(100);
       toast({
@@ -126,16 +116,92 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
         description: 'Данные успешно экспортированы в Google Таблицы.',
       });
     } catch (error) {
-      console.error('Ошибка экспорта в Google Таблицы:', error);
-      toast({
-        title: 'Ошибка экспорта',
-        description: 'Произошла ошибка при экспорте данных в Google Таблицы. Проверьте консоль для подробностей.',
-        variant: 'destructive',
-      });
+      // Проверяем, является ли ошибка связанной с аутентификацией
+      errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      
+      if (errorMessage.includes('OAuth token not found') || errorMessage.includes('invalid or expired')) {
+        // Если ошибка связана с аутентификацией, предлагаем пользователю пройти аутентификацию
+        const shouldAuthenticate = window.confirm(
+          'Для экспорта в Google Таблицы требуется аутентификация. Перейти к процессу аутентификации?'
+        );
+        
+        if (shouldAuthenticate) {
+          try {
+            // Запрашиваем URL аутентификации
+            const authResponse = await apiRequest('GET', '/api/google-auth/start');
+            const authUrl = authResponse.authUrl;
+            
+            // Открываем окно аутентификации
+            const popup = window.open(authUrl, 'google-auth', 'width=600,height=700');
+            
+            // Проверяем, закрыто ли окно аутентификации
+            const checkPopupClosed = setInterval(() => {
+              if (popup?.closed) {
+                clearInterval(checkPopupClosed);
+                
+                // После аутентификации пробуем снова экспортировать
+                setTimeout(async () => {
+                  try {
+                    // Повторно получаем данные, так как preparedData недоступна в этой области видимости
+                    const usersData = await apiRequest('GET', `/api/projects/${projectId}/users`);
+                    const retryPreparedData = prepareDataForExport(usersData);
+                    
+                    await apiRequest('POST', `/api/projects/${projectId}/export-to-google-sheets`, {
+                      data: retryPreparedData,
+                      projectName: projectName,
+                    });
+                    
+                    toast({
+                      title: 'Экспорт в Google Таблицы',
+                      description: 'Данные успешно экспортированы в Google Таблицы.',
+                    });
+                  } catch (retryError) {
+                    console.error('Ошибка повторного экспорта в Google Таблицы:', retryError);
+                    toast({
+                      title: 'Ошибка экспорта',
+                      description: retryError instanceof Error ? retryError.message : 'Произошла ошибка при экспорте данных в Google Таблицы. Проверьте консоль для подробностей.',
+                      variant: 'destructive',
+                    });
+                  } finally {
+                    setIsExporting(false);
+                    // Сбросить прогресс после завершения
+                    setTimeout(() => setProgress(0), 1000);
+                  }
+                }, 2000); // Ждем 2 секунды перед повторной попыткой
+              }
+            }, 1000);
+          } catch (authError) {
+            console.error('Ошибка аутентификации Google:', authError);
+            toast({
+              title: 'Ошибка аутентификации',
+              description: 'Не удалось инициировать процесс аутентификации Google. Проверьте консоль для подробностей.',
+              variant: 'destructive',
+            });
+          }
+        } else {
+          // Если пользователь отказался от аутентификации, просто покажем сообщение
+          toast({
+            title: 'Экспорт отменен',
+            description: 'Для экспорта в Google Таблицы необходимо пройти аутентификацию.',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        // Для других ошибок просто выводим сообщение
+        console.error('Ошибка экспорта в Google Таблицы:', error);
+        toast({
+          title: 'Ошибка экспорта',
+          description: error instanceof Error ? error.message : 'Произошла ошибка при экспорта данных в Google Таблицы. Проверьте консоль для подробностей.',
+          variant: 'destructive',
+        });
+      }
     } finally {
-      setIsExporting(false);
-      // Сбросить прогресс после завершения
-      setTimeout(() => setProgress(0), 1000);
+      if (!(errorMessage && (errorMessage.includes('OAuth token not found') || errorMessage.includes('invalid or expired')))) {
+        // Не сбрасываем состояние, если это ошибка аутентификации, т.к. далее идет повторная попытка
+        setIsExporting(false);
+        // Сбросить прогресс после завершения
+        setTimeout(() => setProgress(0), 1000);
+      }
     }
   };
 
