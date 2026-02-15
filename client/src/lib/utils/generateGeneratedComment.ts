@@ -195,7 +195,8 @@ export function processCodeWithAutoComments(
   generatorFile: string
 ): string[] {
   if (!areCommentsEnabled()) {
-    return codeLines;
+    // При отключённых комментариях возвращаем код без изменений
+    return [...codeLines];
   }
 
   const result: string[] = [];
