@@ -4,8 +4,6 @@
 
 import { storage } from "./storage";
 import { createCompleteBotFiles } from "./createBotFile";
-import { botProcesses } from "./routes";
-import { killBotProcess } from "./stopBot";
 import { normalizeProjectNameToFile } from "./normalizeFileName";
 
 /**
@@ -26,7 +24,7 @@ export async function recreateBotFiles(projectId: number): Promise<boolean> {
     }
 
     // Получаем все токены для этого проекта
-    const tokens = await storage.getBotTokensByProjectId(projectId);
+    const tokens = await storage.getBotTokensByProject(projectId);
     
     // Для каждого токена пересоздаем файлы
     for (const tokenRecord of tokens) {
@@ -91,7 +89,7 @@ export async function recreateBotFiles(projectId: number): Promise<boolean> {
         
         // Импортируем функцию остановки бота
         const { stopBot } = await import('./stopBot');
-        await stopBot(projectId);
+        await stopBot(projectId, tokenRecord.id);
       }
       
       // Пересоздаем все файлы бота с кастомным именем
