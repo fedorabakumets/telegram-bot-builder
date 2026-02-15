@@ -8,7 +8,7 @@
  */
 
 import { Express } from "express";
-import { getAuthUrl, getToken } from "./google-sheets-export";
+import { getAuthUrl, getToken } from "./google-sheets";
 
 /**
  * Настраивает маршруты для OAuth аутентификации Google

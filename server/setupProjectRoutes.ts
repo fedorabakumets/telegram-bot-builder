@@ -516,7 +516,7 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             }
 
             // Импортируем функцию экспорта в Google Таблицы
-            const { exportToGoogleSheets } = await import("./google-sheets-export");
+            const { exportToGoogleSheets } = await import("./google-sheets");
             
             // Выполняем экспорт в Google Таблицы
             await exportToGoogleSheets(exportData, projectName, projectId);
