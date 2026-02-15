@@ -2869,6 +2869,23 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
     }
   });
 
+  // Callback route for Google OAuth - redirects to proper API endpoint
+  app.get('/callback', async (req, res) => {
+    const { code, error } = req.query;
+    
+    if (error) {
+      console.error('Google OAuth error:', error);
+      return res.status(400).json({ error: 'Authentication failed', details: error });
+    }
+    
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ error: 'Missing authorization code' });
+    }
+    
+    // Redirect to the proper API endpoint to handle the code
+    res.redirect(`/api/google-auth/callback?code=${encodeURIComponent(code)}`);
+  });
+
   // Setup Google Auth routes
   setupGoogleAuthRoutes(app);
 }
