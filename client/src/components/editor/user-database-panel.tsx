@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { GoogleSheetsExportButton } from './GoogleSheetsExportButton';
 import {
   Users,
   Search,
@@ -768,6 +769,7 @@ function newFunction_2(projectName: string, isDatabaseEnabled: boolean, toggleDa
                       <RefreshCw className="w-4 h-4" />
                       <span className="hidden sm:inline ml-2">Обновить</span>
                     </Button>
+                    <GoogleSheetsExportButton projectId={projectId} projectName={projectName} />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
