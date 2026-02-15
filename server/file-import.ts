@@ -3,7 +3,7 @@
  * Реализует функциональность синхронизации между файловой системой и базой данных
  */
 
-import { type BotProject, type InsertBotProject } from "@shared/schema";
+import { type BotProject } from "@shared/schema";
 import { DatabaseStorage } from "./DatabaseStorage";
 
 /**
@@ -67,7 +67,7 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
               const updatedProject = await storage.updateBotProject(projectId, {
                 data: jsonData,
                 name: projectName, // Обновляем имя проекта
-                updatedAt: new Date()
+                userDatabaseEnabled: existingProject.userDatabaseEnabled ?? 0 // Сохраняем текущее значение или устанавливаем 0 по умолчанию
               });
 
               if (updatedProject) {
@@ -80,8 +80,7 @@ export async function importProjectsFromFiles(storage: DatabaseStorage): Promise
               const newProject = await storage.createBotProject({
                 name: projectName, // Используем имя из данных или сгенерированное
                 data: jsonData,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                userDatabaseEnabled: 0, // Значение по умолчанию
                 ownerId: null // Проекты, импортируемые из файлов, не имеют владельца
               });
 

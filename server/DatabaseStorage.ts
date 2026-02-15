@@ -1198,4 +1198,15 @@ export class DatabaseStorage implements IStorage {
 
     return messagesWithMedia;
   }
+
+  /**
+   * Импортировать проекты из файлов в директории bots/
+   * @returns Массив импортированных проектов
+   */
+  async importProjectsFromFiles(): Promise<BotProject[]> {
+    // TODO: Реализовать импорт проектов из файлов в директории bots/
+    // Этот метод должен читать файлы проектов из директории bots/ и сохранять их в базе данных
+    // Пока что возвращаем пустой массив
+    return [];
+  }
 }
