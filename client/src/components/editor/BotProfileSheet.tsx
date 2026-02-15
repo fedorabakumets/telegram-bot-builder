@@ -16,7 +16,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Edit2, X, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 
 // Типы, определенные в основном файле bot-control.tsx
 export type BotInfo = {
