@@ -378,7 +378,9 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             const { generatePythonCode } = await import(modUrl.href);
             const simpleBotData = convertSheetsToSimpleBotData(project.data);
             const userDatabaseEnabled = project.userDatabaseEnabled === 1;
-            const pythonCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, null, false);
+            // Получаем настройки генерации комментариев из localStorage или используем значение по умолчанию
+            const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION !== 'false';
+            const pythonCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, null, false, false, enableComments);
             return res.json({ code: pythonCode });
         } catch (error) {
             console.error("❌ Ошибка генерации кода:", error);
@@ -448,6 +450,25 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             return res.json({ message: "Token cleared successfully" });
         } catch (error) {
             return res.status(500).json({ message: "Failed to clear token" });
+        }
+    });
+
+    // Endpoint для обновления настроек генерации комментариев
+    app.post("/api/settings/comments-generation", async (req, res) => {
+        try {
+            const { enabled } = req.body;
+            
+            if (typeof enabled !== 'boolean') {
+                return res.status(400).json({ message: "Invalid enabled value" });
+            }
+
+            // Устанавливаем переменную окружения для всей сессии
+            process.env.BOTCRAFT_COMMENTS_GENERATION = enabled ? 'true' : 'false';
+
+            return res.json({ success: true, message: `Comments generation ${enabled ? 'enabled' : 'disabled'}` });
+        } catch (error) {
+            console.error("❌ Ошибка обновления настроек генерации комментариев:", error);
+            return res.status(500).json({ message: "Failed to update comments generation settings", error: String(error) });
         }
     });
 }

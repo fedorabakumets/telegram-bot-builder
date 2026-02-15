@@ -207,7 +207,9 @@ export async function startBot(projectId: number, token: string, tokenId: number
     const { generatePythonCode } = await import(modUrl.href);
     const simpleBotData = convertSheetsToSimpleBotData(project.data);
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
-    const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false).replace('YOUR_BOT_TOKEN_HERE', token);
+    // Получаем настройки генерации комментариев из localStorage или используем значение по умолчанию
+    const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION !== 'false';
+    const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false, false, enableComments).replace('YOUR_BOT_TOKEN_HERE', token);
 
     // Нормализуем имя проекта для использования в качестве имени файла
     const customFileName = normalizeProjectNameToFile(project.name);

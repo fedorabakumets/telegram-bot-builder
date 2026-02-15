@@ -100,7 +100,10 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
         case 'python':
           // Получаем настройки проекта для определения, включать ли обработчики групп
           const enableGroupHandlers = botData?.settings?.enableGroupHandlers ?? false;
-          return botGenerator.generatePythonCode(botData, projectName, groups, userDatabaseEnabled, projectId, isLoggingEnabled(), enableGroupHandlers);
+          // Получаем настройки генерации комментариев из localStorage
+          const enableComments = typeof window !== 'undefined' ? 
+            localStorage.getItem('botcraft-comments-generation') !== 'false' : true;
+          return botGenerator.generatePythonCode(botData, projectName, groups, userDatabaseEnabled, projectId, isLoggingEnabled(), enableGroupHandlers, enableComments);
         case 'json':
           return JSON.stringify(botData, null, 2);
         case 'requirements':

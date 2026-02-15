@@ -285,12 +285,29 @@ export function BotControl({ projectId }: BotControlProps) {
    * Обработчик переключения генерации комментариев
    * @param enabled - Включить или выключить генерацию комментариев
    */
-  const handleToggleCommentsGeneration = (enabled: boolean) => {
+  const handleToggleCommentsGeneration = async (enabled: boolean) => {
     setCommentsGenerationEnabled(enabled);
     localStorage.setItem('botcraft-comments-generation', String(enabled));
 
     // Обновляем глобальный переключатель в utils
     setCommentsEnabled(enabled);
+
+    // Отправляем обновление на сервер
+    try {
+      await apiRequest('POST', '/api/settings/comments-generation', { enabled });
+    } catch (error) {
+      console.error('Ошибка обновления настроек генерации комментариев на сервере:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось обновить настройки генерации комментариев на сервере',
+        variant: 'destructive'
+      });
+      // Восстанавливаем предыдущее значение
+      setCommentsGenerationEnabled(!enabled);
+      localStorage.setItem('botcraft-comments-generation', String(!enabled));
+      setCommentsEnabled(!enabled);
+      return;
+    }
 
     toast({
       title: enabled ? 'Генерация комментариев включена' : 'Генерация комментариев отключена',

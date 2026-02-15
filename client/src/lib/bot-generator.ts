@@ -44,6 +44,7 @@ import { hasAutoTransitions } from './utils/hasAutoTransitions';
 import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
 import { processConnectionTargets } from './utils/processConnectionTargets';
 import { resetGenerationState } from './utils/generation-state';
+import { setCommentsEnabled } from './utils/generateGeneratedComment';
 
 
 export type Button = z.infer<typeof buttonSchema>;
@@ -196,12 +197,15 @@ const logFlowAnalysis = (nodes: any[], connections: any[]) => {
  * @param {boolean} enableGroupHandlers - Флаг включения обработчиков для работы с группами (по умолчанию false)
  * @returns {string} Сгенерированный Python-код для бота
  */
-export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false, enableGroupHandlers: boolean = false): string {
+export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false, enableGroupHandlers: boolean = false, enableComments: boolean = true): string {
   // Сбрасываем состояние генерации перед началом
   resetGenerationState();
-  
+
   // Устанавливаем флаг глобального логирования для этого запуска генерации
   globalLoggingEnabled = enableLogging;
+  
+  // Устанавливаем флаг генерации комментариев для этого запуска генерации
+  setCommentsEnabled(enableComments);
 
   const { nodes, connections } = extractNodesAndConnections(botData);
 
@@ -989,10 +993,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 
    * **Генерируемые обработчики включают:**
    * - Создание inline и reply клавиатур
-   * - Обработку callback_data для кнопок
+   * - Обр��ботку callback_data для кнопок
    * - Валидацию и сохранение пользовательского ввода
    * - Усло��ную логику отображения сообщений
-   * - Навигацию между узлами с об��аботкой ошибок
+   * - Навигаци�� между узлами с об��аботкой ошибок
    * 
    * @remarks
    * Функ����ия генерирует код, который обеспечивает плавную навигацию
