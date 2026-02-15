@@ -65,16 +65,16 @@ export async function writeHeaders(sheets: sheets_v4.Sheets, spreadsheetId: stri
   try {
     const headers = [
       'ID',
-      'Telegram ID',
+      'Telegram\nID',
       'Имя',
       'Фамилия',
       'Username',
       'Язык',
       'Premium',
-      'Последняя активность',
-      'Количество взаимодействий',
-      'Дата создания',
-      'Данные пользователя (JSON)',
+      'Последняя\nактивность',
+      'Кол-во\nвзаимодействий',
+      'Дата\nсоздания',
+      'Данные\nпользователя\n(JSON)',
       'URL фото',
       'URL медиа'
     ];
