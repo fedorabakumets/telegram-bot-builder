@@ -29,6 +29,8 @@ export function AliasNodes(codeLines: string[], nodes: any[]) {
         aliasCodeLines.push('# Проверяем, что start_handler существует перед вызовом');
         aliasCodeLines.push('async def handle_command_start(message):');
         aliasCodeLines.push('    """Алиас для start_handler, используется в callback обработчиках"""');
+        aliasCodeLines.push('    # Определяем user_id для использования в обработчике');
+        aliasCodeLines.push('    user_id = message.from_user.id');
         aliasCodeLines.push('    if "start_handler" in globals():');
         aliasCodeLines.push('        await start_handler(message)');
         aliasCodeLines.push('    else:');
@@ -46,6 +48,8 @@ export function AliasNodes(codeLines: string[], nodes: any[]) {
         aliasCodeLines.push(`# Проверяем, что ${functionName}_handler существует перед вызовом`);
         aliasCodeLines.push(`async def handle_command_${functionName}(message):`);
         aliasCodeLines.push(`    """Алиас для ${functionName}_handler, используется в callback обработчиках"""`);
+        aliasCodeLines.push('    # Определяем user_id для использования в обработчике');
+        aliasCodeLines.push('    user_id = message.from_user.id');
         aliasCodeLines.push(`    if "${functionName}_handler" in globals():`);
         aliasCodeLines.push(`        await ${functionName}_handler(message)`);
         aliasCodeLines.push('    else:');

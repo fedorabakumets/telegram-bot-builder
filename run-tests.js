@@ -36,7 +36,8 @@ const tests = [
   'client/src/lib/tests/validateBotStructureInputValidation.test.js',
   'client/src/lib/tests/hasMediaNodesInputValidation.test.js',
   'client/src/lib/tests/findMediaVariablesInTextInputValidation.test.js',
-  'client/src/lib/tests/generateUtilityFunctionsInputValidation.test.js'
+  'client/src/lib/tests/generateUtilityFunctionsInputValidation.test.js',
+  'client/src/lib/tests/test-user-id-definition.node_test.js'
 ];
 
 async function runTests() {
