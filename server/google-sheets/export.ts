@@ -11,7 +11,9 @@ import { sheets_v4 } from 'googleapis';
 import { authenticate } from './auth';
 import { createSpreadsheet, writeHeaders, writeData, UserDataForExport } from './data-writer';
 import { formatHeaders } from './header-formatter';
-import { formatData } from './data-formatter';
+import { formatColumnWidths } from './column-width-formatter';
+import { formatNumericData } from './numeric-data-formatter';
+import { formatRowStyles } from './row-style-formatter';
 import { freezeHeaders, addFilters } from './structure-formatter';
 
 /**
@@ -51,7 +53,9 @@ export async function exportToGoogleSheets(data: any[], projectName: string, pro
 
     // Применение форматирования
     await formatHeaders(sheets, spreadsheetId);
-    await formatData(sheets, spreadsheetId, data.length);
+    await formatColumnWidths(sheets, spreadsheetId);
+    await formatNumericData(sheets, spreadsheetId, data.length);
+    await formatRowStyles(sheets, spreadsheetId, data.length);
     await freezeHeaders(sheets, spreadsheetId);
     await addFilters(sheets, spreadsheetId);
 
