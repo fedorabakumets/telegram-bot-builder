@@ -295,6 +295,11 @@ export function BotControl({ projectId }: BotControlProps) {
     // Отправляем обновление на сервер
     try {
       await apiRequest('POST', '/api/settings/comments-generation', { enabled });
+      
+      toast({
+        title: enabled ? 'Генерация комментариев включена' : 'Генерация комментариев отключена',
+        description: enabled ? 'Теперь в сгенерированном коде будут добавляться комментарии' : 'Комментарии больше не будут добавляться в сгенерированный код',
+      });
     } catch (error) {
       console.error('Ошибка обновления настроек генерации комментариев на сервере:', error);
       toast({
@@ -302,17 +307,10 @@ export function BotControl({ projectId }: BotControlProps) {
         description: 'Не удалось обновить настройки генерации комментариев на сервере',
         variant: 'destructive'
       });
-      // Восстанавливаем предыдущее значение
+      // Восстанавливаем предыдущее значение только в UI и localStorage, но не в глобальном состоянии
       setCommentsGenerationEnabled(!enabled);
       localStorage.setItem('botcraft-comments-generation', String(!enabled));
-      setCommentsEnabled(!enabled);
-      return;
     }
-
-    toast({
-      title: enabled ? 'Генерация комментариев включена' : 'Генерация комментариев отключена',
-      description: enabled ? 'Теперь в сгенерированном коде будут добавляться комментарии' : 'Комментарии больше не будут добавляться в сгенерированный код',
-    });
   };
 
   const { toast } = useToast();
