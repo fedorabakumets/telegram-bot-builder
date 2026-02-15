@@ -769,7 +769,9 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                       <RefreshCw className="w-4 h-4" />
                       <span className="hidden sm:inline ml-2">Обновить</span>
                     </Button>
-                    <GoogleSheetsExportButton projectId={projectId} projectName={projectName} />
+                    {projectId && projectName ? (
+                      <GoogleSheetsExportButton projectId={projectId} projectName={projectName} />
+                    ) : null}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
