@@ -69,10 +69,11 @@ async function authenticate(): Promise<sheets_v4.Sheets> {
       // Проверяем, действителен ли токен
       const accessToken = await oAuth2Client.getAccessToken();
       if (!accessToken.token) {
+        console.log('Токен доступа недействителен или истек срок действия. Требуется повторная аутентификация...');
         throw new Error('Access token is invalid or expired');
       }
     } catch (tokenError) {
-      console.log('Требуется аутентификация OAuth. Запускаем процесс получения токена...');
+      console.log('Требуется аутентификация OAuth. Файл токена не найден или недействителен...');
       throw new Error('OAuth token not found or invalid. Please authenticate first.');
     }
     
@@ -82,6 +83,10 @@ async function authenticate(): Promise<sheets_v4.Sheets> {
     return sheets;
   } catch (error) {
     console.error('Ошибка аутентификации Google Sheets API:', error);
+    // Не оборачиваем ошибку в другую ошибку, а передаем оригинальное сообщение
+    if ((error as Error).message.includes('OAuth token not found or invalid')) {
+      throw error; // Перебрасываем оригинальную ошибку
+    }
     throw new Error(`Authentication failed: ${(error as Error).message}`);
   }
 }
@@ -252,6 +257,13 @@ export async function exportToGoogleSheets(data: any[], projectName: string, pro
     console.log(`Экспорт завершен успешно. Таблица: https://docs.google.com/spreadsheets/d/${spreadsheetId}`);
   } catch (error) {
     console.error(`Ошибка экспорта данных проекта ${projectName} (ID: ${projectId}):`, error);
+    
+    // Если ошибка связана с аутентификацией, выбрасываем специальное сообщение
+    if ((error as Error).message.includes('OAuth token not found or invalid') || 
+        (error as Error).message.includes('Access token is invalid or expired')) {
+      throw new Error('OAuth token not found or invalid. Please authenticate first.');
+    }
+    
     throw error;
   }
 }

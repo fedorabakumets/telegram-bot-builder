@@ -527,9 +527,21 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             });
         } catch (error) {
             console.error("❌ Ошибка экспорта в Google Таблицы:", error);
+            
+            // Проверяем, является ли ошибка связанной с аутентификацией
+            const errorMessage = (error as Error).message;
+            if (errorMessage.includes('OAuth token not found or invalid') || 
+                errorMessage.includes('Access token is invalid or expired')) {
+                return res.status(401).json({ 
+                    message: "Authentication required", 
+                    error: errorMessage,
+                    requiresAuth: true
+                });
+            }
+            
             return res.status(500).json({ 
                 message: "Failed to export data to Google Sheets", 
-                error: (error as Error).message 
+                error: errorMessage 
             });
         }
     });

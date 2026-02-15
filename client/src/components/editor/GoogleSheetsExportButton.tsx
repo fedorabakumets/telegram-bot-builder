@@ -117,9 +117,21 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
       });
     } catch (error) {
       // Проверяем, является ли ошибка связанной с аутентификацией
-      errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      let errorResponse: any = {};
+      if (error instanceof Error) {
+        errorResponse = { message: error.message };
+      } else if (typeof error === 'object' && error !== null) {
+        errorResponse = error;
+      } else {
+        errorResponse = { message: String(error) };
+      }
       
-      if (errorMessage.includes('OAuth token not found') || errorMessage.includes('invalid or expired')) {
+      errorMessage = errorResponse.message || 'Неизвестная ошибка';
+      
+      // Проверяем, требует ли ошибка аутентификации (по новому полю requiresAuth)
+      const requiresAuth = typeof errorResponse === 'object' && errorResponse !== null && 'requiresAuth' in errorResponse && errorResponse.requiresAuth === true;
+      
+      if (errorMessage.includes('OAuth token not found') || errorMessage.includes('invalid or expired') || requiresAuth) {
         // Если ошибка связана с аутентификацией, предлагаем пользователю пройти аутентификацию
         const shouldAuthenticate = window.confirm(
           'Для экспорта в Google Таблицы требуется аутентификация. Перейти к процессу аутентификации?'
@@ -157,9 +169,15 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
                     });
                   } catch (retryError) {
                     console.error('Ошибка повторного экспорта в Google Таблицы:', retryError);
+                    let retryErrorMessage = 'Произошла ошибка при экспорте данных в Google Таблицы. Проверьте консоль для подробностей.';
+                    if (retryError instanceof Error) {
+                      retryErrorMessage = (retryError as any).message || retryError.message;
+                    } else if (typeof retryError === 'object' && retryError !== null && 'message' in retryError) {
+                      retryErrorMessage = (retryError as any).message;
+                    }
                     toast({
                       title: 'Ошибка экспорта',
-                      description: retryError instanceof Error ? retryError.message : 'Произошла ошибка при экспорте данных в Google Таблицы. Проверьте консоль для подробностей.',
+                      description: retryErrorMessage,
                       variant: 'destructive',
                     });
                   } finally {
@@ -189,9 +207,15 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
       } else {
         // Для других ошибок просто выводим сообщение
         console.error('Ошибка экспорта в Google Таблицы:', error);
+        let errorDescription = 'Произошла ошибка при экспорте данных в Google Таблицы. Проверьте консоль для подробностей.';
+        if (error instanceof Error) {
+          errorDescription = errorResponse.message || error.message;
+        } else if (typeof error === 'object' && error !== null && 'message' in error) {
+          errorDescription = (error as any).message;
+        }
         toast({
           title: 'Ошибка экспорта',
-          description: error instanceof Error ? error.message : 'Произошла ошибка при экспорта данных в Google Таблицы. Проверьте консоль для подробностей.',
+          description: errorDescription,
           variant: 'destructive',
         });
       }
