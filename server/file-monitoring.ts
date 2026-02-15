@@ -3,7 +3,7 @@
  * Автоматически синхронизирует изменения из файловой системы в базу данных
  */
 
-import { EnhancedDatabaseStorage } from '../EnhancedDatabaseStorage';
+import { EnhancedDatabaseStorage } from './EnhancedDatabaseStorage';
 import { importProjectsFromFiles } from './file-import';
 
 /**
