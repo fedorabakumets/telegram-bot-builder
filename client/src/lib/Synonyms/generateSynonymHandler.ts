@@ -14,9 +14,17 @@ export function generateSynonymHandler(node: Node, synonym: string): string {
   code += `    # Синоним для команды ${originalCommand}\n`;
 
   if (node.type === 'start') {
-    code += '    await start_handler(message)\n';
+    code += '    # Проверяем, что start_handler существует перед вызовом\n';
+    code += '    if "start_handler" in globals():\n';
+    code += '        await start_handler(message)\n';
+    code += '    else:\n';
+    code += '        await message.answer("Команда /start временно недоступна")\n';
   } else {
-    code += `    await ${functionName}_handler(message)\n`;
+    code += `    # Проверяем, что ${functionName}_handler существует перед вызовом\n`;
+    code += `    if "${functionName}_handler" in globals():\n`;
+    code += `        await ${functionName}_handler(message)\n`;
+    code += '    else:\n';
+    code += `        await message.answer("Команда ${originalCommand} временно недоступна")\n`;
   }
 
   return code;

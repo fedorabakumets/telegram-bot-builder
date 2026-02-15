@@ -25,19 +25,32 @@ export function AliasNodes(codeLines: string[], nodes: any[]) {
     // Проверяем, есть ли узел типа 'start', чтобы избежать создания алиаса для несуществующего обработчика
     const hasStartNode = nodes.some(node => node.type === 'start');
     if (hasStartNode) {
+        // Добавляем комментарий, что алиас будет создан только если обработчик существует
+        aliasCodeLines.push('# Проверяем, что start_handler существует перед вызовом');
         aliasCodeLines.push('async def handle_command_start(message):');
         aliasCodeLines.push('    """Алиас для start_handler, используется в callback обработчиках"""');
-        aliasCodeLines.push('    await start_handler(message)');
+        aliasCodeLines.push('    if "start_handler" in globals():');
+        aliasCodeLines.push('        await start_handler(message)');
+        aliasCodeLines.push('    else:');
+        aliasCodeLines.push('        # Если start_handler не определен, просто выводим сообщение');
+        aliasCodeLines.push('        await message.answer("Команда /start временно недоступна")');
         aliasCodeLines.push('');
     }
-    
+
     const commandAliasNodes = (nodes || []).filter(node => node.type === 'command' && node.data.command);
     commandAliasNodes.forEach(node => {
         const command = node.data.command.replace('/', '');
         const functionName = command.replace(/[^a-zA-Z0-9_]/g, '_');
+        
+        // Проверяем, что соответствующий обработчик существует перед вызовом
+        aliasCodeLines.push(`# Проверяем, что ${functionName}_handler существует перед вызовом`);
         aliasCodeLines.push(`async def handle_command_${functionName}(message):`);
         aliasCodeLines.push(`    """Алиас для ${functionName}_handler, используется в callback обработчиках"""`);
-        aliasCodeLines.push(`    await ${functionName}_handler(message)`);
+        aliasCodeLines.push(`    if "${functionName}_handler" in globals():`);
+        aliasCodeLines.push(`        await ${functionName}_handler(message)`);
+        aliasCodeLines.push('    else:');
+        aliasCodeLines.push(`        # Если ${functionName}_handler не определен, просто выводим сообщение`);
+        aliasCodeLines.push(`        await message.answer("Команда /${command} временно недоступна")`);
         aliasCodeLines.push('');
     });
 
