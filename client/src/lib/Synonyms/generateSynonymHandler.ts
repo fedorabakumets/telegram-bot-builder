@@ -37,7 +37,16 @@ export function generateSynonymHandlers(nodes: Node[]): string {
   const nodesWithSynonyms = nodes
     .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
     .filter(node => node.data?.synonyms && node.data?.synonyms.length > 0
-  );
+  )
+  // Исключаем синонимы для узлов типа 'start', если нет самого узла типа 'start' в списке
+  .filter(node => {
+    if (node.type === 'start') {
+      // Проверяем, есть ли в общем списке узлов хотя бы один узел типа 'start'
+      const hasStartNode = nodes.some(n => n.type === 'start');
+      return hasStartNode; // Создаем синоним только если есть узел типа 'start'
+    }
+    return true; // Для других типов узлов оставляем без изменений
+  });
 
   // Если нет узлов с синонимами, возвращаем пустую строку
   if (nodesWithSynonyms.length === 0) return '';

@@ -74,7 +74,33 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     admin_rights: generateAdminRightsHandler,
   };
 
+  // Проверяем, есть ли узлы типа 'start' или синонимы для них
+  const hasStartNodeType = nodes.some((node: Node) => node.type === 'start');
+  const hasStartSynonyms = nodes.some((node: Node) => 
+    node.type === 'start' && node.data?.synonyms && node.data.synonyms.length > 0
+  );
+  
+  // Если есть узел типа 'start' или синонимы для него, обязательно генерируем start_handler
+  if (hasStartNodeType || hasStartSynonyms) {
+    const startNode = nodes.find((node: Node) => node.type === 'start') || { id: 'start', type: 'start', data: {} };
+    codeLines.push(`\n# @@NODE_START:${startNode.id}@@\n`);
+    
+    const startHandler = nodeHandlers['start'];
+    if (startHandler) {
+      const handlerCode = startHandler(startNode);
+      // Разбиваем код обработчика на строки и добавляем в codeLines
+      handlerCode.split('\n').forEach(line => codeLines.push(line));
+    }
+    
+    codeLines.push(`# @@NODE_END:${startNode.id}@@`);
+  }
+
   nodes.forEach((node: Node) => {
+    // Пропускаем узлы типа 'start', так как они уже обработаны выше
+    if (node.type === 'start') {
+      return;
+    }
+    
     codeLines.push(`\n# @@NODE_START:${node.id}@@\n`);
 
     const handler = nodeHandlers[node.type];

@@ -22,10 +22,14 @@ export function AliasNodes(codeLines: string[], nodes: any[]) {
     codeLines.push('# │      Алиасы для обработчиков команд     │');
     codeLines.push('# └─────────────────────────────────────────┘');
 
-    aliasCodeLines.push('async def handle_command_start(message):');
-    aliasCodeLines.push('    """Алиас для start_handler, используется в callback обработчиках"""');
-    aliasCodeLines.push('    await start_handler(message)');
-    aliasCodeLines.push('');
+    // Проверяем, есть ли узел типа 'start', чтобы избежать создания алиаса для несуществующего обработчика
+    const hasStartNode = nodes.some(node => node.type === 'start');
+    if (hasStartNode) {
+        aliasCodeLines.push('async def handle_command_start(message):');
+        aliasCodeLines.push('    """Алиас для start_handler, используется в callback обработчиках"""');
+        aliasCodeLines.push('    await start_handler(message)');
+        aliasCodeLines.push('');
+    }
     
     const commandAliasNodes = (nodes || []).filter(node => node.type === 'command' && node.data.command);
     commandAliasNodes.forEach(node => {
