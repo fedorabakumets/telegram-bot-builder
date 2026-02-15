@@ -55,4 +55,8 @@ Thumbs.db
 # VSCode settings
 .vscode/settings.json
 
+# Test files - exclude all files except README.md
+client/src/lib/tests/*
+!client/src/lib/tests/README.md
+
 
