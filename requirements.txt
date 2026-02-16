@@ -3,5 +3,5 @@ aiohttp>=3.12.13
 asyncpg>=0.30.0
 nanoid>=2.0.0
 requests>=2.32.4
-google-auth-library>=1.0.0
+google-auth>=2.0.0
 gspread>=6.0.0

@@ -16,7 +16,7 @@ export function generateRequirementsTxt(): string {
     'aiofiles>=23.2.1',
     'asyncpg>=0.29.0',
     'certifi>=2024.8.30',
-    'google-auth-library>=1.0.0',
+    'google-auth>=2.0.0',
     'gspread>=6.0.0',
     '',
     '# Note: These versions have pre-compiled wheels and do not require Rust',
