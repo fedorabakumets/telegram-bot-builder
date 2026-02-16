@@ -44,9 +44,10 @@ export async function freezeHeaders(sheets: sheets_v4.Sheets, spreadsheetId: str
  * @function addFilters
  * @param {sheets_v4.Sheets} sheets - Экземпляр клиента Google Sheets API
  * @param {string} spreadsheetId - ID таблицы
+ * @param {number} columnCount - Количество столбцов
  * @returns {Promise<void>}
  */
-export async function addFilters(sheets: sheets_v4.Sheets, spreadsheetId: string): Promise<void> {
+export async function addFilters(sheets: sheets_v4.Sheets, spreadsheetId: string, columnCount: number = 100): Promise<void> {
   try {
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId,
@@ -58,7 +59,7 @@ export async function addFilters(sheets: sheets_v4.Sheets, spreadsheetId: string
                 sheetId: 0,
                 startRowIndex: 0, // Начиная с заголовков
                 startColumnIndex: 0,
-                endColumnIndex: 13 // A до M
+                endColumnIndex: columnCount // Используем переданное количество столбцов
                 // endRowIndex не указан, чтобы охватить все строки
               }
             }

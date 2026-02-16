@@ -15,6 +15,7 @@ import { formatColumnWidths } from './column-width-formatter';
 import { formatNumericData } from './numeric-data-formatter';
 import { formatRowStyles } from './row-style-formatter';
 import { freezeHeaders, addFilters } from './structure-formatter';
+import { extractUniqueVariables, createDynamicHeaders, writeDynamicHeaders } from './dynamic-header-formatter';
 
 /**
  * Экспорт данных пользователей в Google Таблицы
@@ -45,19 +46,25 @@ export async function exportToGoogleSheets(data: any[], projectName: string, pro
     // Создание новой таблицы
     const spreadsheetId = await createSpreadsheet(sheets, projectName, projectId);
 
-    // Запись заголовков
-    await writeHeaders(sheets, spreadsheetId);
+    // Извлечение уникальных переменных для динамических заголовков
+    const uniqueVariables = extractUniqueVariables(data as UserDataForExport[]);
+    
+    // Создание динамических заголовков
+    const dynamicHeaders = createDynamicHeaders(uniqueVariables);
+    
+    // Запись динамических заголовков
+    await writeDynamicHeaders(sheets, spreadsheetId, dynamicHeaders);
 
     // Запись данных
     await writeData(sheets, spreadsheetId, data as UserDataForExport[]);
 
     // Применение форматирования
     await formatHeaders(sheets, spreadsheetId);
-    await formatColumnWidths(sheets, spreadsheetId);
+    await formatColumnWidths(sheets, spreadsheetId, dynamicHeaders);
     await formatNumericData(sheets, spreadsheetId, data.length);
-    await formatRowStyles(sheets, spreadsheetId, data.length);
+    await formatRowStyles(sheets, spreadsheetId, data.length, dynamicHeaders.length);
     await freezeHeaders(sheets, spreadsheetId);
-    await addFilters(sheets, spreadsheetId);
+    await addFilters(sheets, spreadsheetId, dynamicHeaders.length);
 
     console.log(`Экспорт завершен успешно. Таблица: https://docs.google.com/spreadsheets/d/${spreadsheetId}`);
   } catch (error) {

@@ -11,13 +11,15 @@ import { sheets_v4 } from 'googleapis';
  * @param {sheets_v4.Sheets} sheets - Экземпляр клиента Google Sheets API
  * @param {string} spreadsheetId - ID таблицы
  * @param {number} rowCount - Количество строк с данными
+ * @param {number} columnCount - Количество столбцов с данными
  * @returns {Promise<void>}
  */
-export async function formatRowStyles(sheets: sheets_v4.Sheets, spreadsheetId: string, rowCount: number): Promise<void> {
+export async function formatRowStyles(sheets: sheets_v4.Sheets, spreadsheetId: string, rowCount: number, columnCount: number = 50): Promise<void> {
   try {
     const requests = [];
 
     // Чередование цветов строк
+    // Используем реальное количество столбцов
     for (let rowIndex = 1; rowIndex < rowCount + 1; rowIndex += 2) { // Начиная со второй строки (индекс 1)
       requests.push({
         repeatCell: {
@@ -26,7 +28,7 @@ export async function formatRowStyles(sheets: sheets_v4.Sheets, spreadsheetId: s
             startRowIndex: rowIndex,
             endRowIndex: rowIndex + 1,
             startColumnIndex: 0,
-            endColumnIndex: 13
+            endColumnIndex: columnCount // Используем реальное количество столбцов
           },
           cell: {
             userEnteredFormat: {
@@ -44,7 +46,8 @@ export async function formatRowStyles(sheets: sheets_v4.Sheets, spreadsheetId: s
     }
 
     // Автоматическая настройка ширины столбцов по содержимому
-    for (let i = 0; i < 13; i++) {
+    // Используем реальное количество столбцов
+    for (let i = 0; i < columnCount; i++) {
       requests.push({
         autoResizeDimensions: {
           dimensions: {

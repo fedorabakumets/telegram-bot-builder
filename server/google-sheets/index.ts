@@ -12,3 +12,4 @@ export * from './structure-formatter';
 export * from './column-width-formatter';
 export * from './numeric-data-formatter';
 export * from './row-style-formatter';
+export * from './dynamic-header-formatter';

@@ -17,7 +17,22 @@ export async function formatNumericData(sheets: sheets_v4.Sheets, spreadsheetId:
   try {
     const requests = [];
 
-    // Установка формата для столбца дат
+    // В динамической структуре:
+    // 0: ID
+    // 1: Telegram ID
+    // 2: Имя
+    // 3: Фамилия
+    // 4: Username
+    // 5: Язык
+    // 6: Премиум
+    // 7: Последняя активность
+    // 8: Кол-во взаимодействий
+    // 9: Дата создания
+    // 10: URL фото
+    // 11: URL медиа
+    // 12+: Переменные (динамические столбцы)
+    
+    // Установка формата для столбцов дат
     for (let colIndex of [7, 9]) { // lastInteraction и createdAt
       requests.push({
         repeatCell: {
