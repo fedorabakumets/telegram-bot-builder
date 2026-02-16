@@ -1,4 +1,0 @@
-# Nixpacks configuration for Node.js
-NODE_VERSION=20
-BUILD_CMD=npm run build
-START_CMD=npm run start

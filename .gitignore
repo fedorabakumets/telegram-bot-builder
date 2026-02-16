@@ -63,4 +63,15 @@ client/src/lib/tests/*
 client/src/components/editor/token.json
 client/src/components/editor/credentials.json
 
+# AI/IDE assistant folders
+.gigaide/
+.kiro/
+.local/
+
+# Deployment configs
+.nixpacks/
+
+# Python virtual environment
+.venv/
+
 
