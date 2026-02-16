@@ -45,20 +45,8 @@ export async function formatRowStyles(sheets: sheets_v4.Sheets, spreadsheetId: s
       });
     }
 
-    // Автоматическая настройка ширины столбцов по содержимому
-    // Используем реальное количество столбцов
-    for (let i = 0; i < columnCount; i++) {
-      requests.push({
-        autoResizeDimensions: {
-          dimensions: {
-            sheetId: 0,
-            dimension: 'COLUMNS',
-            startIndex: i,
-            endIndex: i + 1
-          }
-        }
-      });
-    }
+    // Примечание: Автоматическое уравнивание ширины столбцов теперь выполняется в отдельной функции
+    // чтобы избежать конфликтов и обеспечить правильную синхронизацию
 
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId,

@@ -34,51 +34,51 @@ function getColumnWidthByHeader(header: string): number {
   const cleanHeader = header.replace(/\n/g, ' ');
   
   // Базовая ширина зависит от длины заголовка
-  // Увеличиваем коэффициент с 8 до 10 для лучшего вместимости
-  let width = cleanHeader.length * 10; // примерно 10 пикселей на символ для лучшего вместимости
+  // Увеличиваем коэффициент до 12 для лучшего вместимости с учетом размера шрифта
+  let width = cleanHeader.length * 12; // примерно 12 пикселей на символ для лучшего вместимости
   
   // Минимальная ширина
-  width = Math.max(width, 80);
+  width = Math.max(width, 100);
   
   // Максимальная ширина
-  width = Math.min(width, 500);
+  width = Math.min(width, 600);
   
   // Если есть переносы строк, увеличиваем ширину, учитывая самую длинную строку
   if (header.includes('\n')) {
     const lines = header.split('\n');
     const maxLineLength = Math.max(...lines.map(line => line.length));
-    // Умножаем на 12 для лучшего вместимости многострочных заголовков
-    const calculatedWidth = maxLineLength * 14; // Увеличил с 12 до 14 для лучшего вместимости
+    // Умножаем на 16 для лучшего вместимости многострочных заголовков с учетом размера шрифта
+    const calculatedWidth = maxLineLength * 16;
     width = Math.max(width, calculatedWidth);
     
     // Добавляем дополнительный отступ для многострочных заголовков
-    width += 20;
+    width += 30;
   }
   
   // Для некоторых специфических заголовков устанавливаем фиксированную ширину
   switch(cleanHeader) {
     case 'ID':
-      return 100; // Увеличил с 80
+      return 120; // Увеличил с 100
     case 'Telegram ID':
-      return 140; // Увеличил с 120
+      return 160; // Увеличил с 140
     case 'Username':
-      return 160; // Увеличил с 140
-    case 'Последняя активность':
       return 180; // Увеличил с 160
+    case 'Последняя активность':
+      return 200; // Увеличил с 180
     case 'Кол-во взаимодействий':
-      return 200; // Увеличил с 180
+      return 220; // Увеличил с 200
     case 'Дата создания':
-      return 160; // Увеличил с 140
+      return 180; // Увеличил с 160
     case 'Премиум':
-      return 120; // Увеличил с 80
+      return 140; // Увеличил с 120
     case 'URL фото':
-      return 200; // Увеличил с 180
+      return 220; // Увеличил с 200
     case 'URL медиа':
-      return 200; // Увеличил с 180
+      return 220; // Увеличил с 200
     default:
       // Для переменных используем ширину, основанную на длине названия
       // Но ограничиваем максимальную ширину
-      return Math.min(width, 250);
+      return Math.min(width, 300);
   }
 }
 
@@ -95,22 +95,19 @@ export async function formatColumnWidths(sheets: sheets_v4.Sheets, spreadsheetId
   try {
     const requests = [];
 
-    // Для каждого столбца вычисляем ширину на основе заголовка
-    for (let i = 0; i < headers.length; i++) {
-      const width = getColumnWidthByHeader(headers[i]);
-      
+    // Автоматическая настройка ширины столбцов по содержимому (аналог двойного клика на границе столбца)
+    // Убедимся, что не пытаемся изменить размер несуществующих столбцов
+    const columnCount = headers.length;
+    const actualColumnCount = Math.min(columnCount, 100); // Ограничиваем максимальное количество столбцов
+    for (let i = 0; i < actualColumnCount; i++) {
       requests.push({
-        updateDimensionProperties: {
-          range: {
+        autoResizeDimensions: {
+          dimensions: {
             sheetId: 0,
             dimension: 'COLUMNS',
             startIndex: i,
             endIndex: i + 1
-          },
-          properties: {
-            pixelSize: width
-          },
-          fields: 'pixelSize'
+          }
         }
       });
     }

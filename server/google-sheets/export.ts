@@ -60,11 +60,12 @@ export async function exportToGoogleSheets(data: any[], projectName: string, pro
 
     // Применение форматирования
     await formatHeaders(sheets, spreadsheetId);
-    await formatColumnWidths(sheets, spreadsheetId, dynamicHeaders);
     await formatNumericData(sheets, spreadsheetId, data.length);
     await formatRowStyles(sheets, spreadsheetId, data.length, dynamicHeaders.length);
     await freezeHeaders(sheets, spreadsheetId);
     await addFilters(sheets, spreadsheetId, dynamicHeaders.length);
+    // Форматирование ширины столбцов (автоуравнивание) вызывается последним
+    await formatColumnWidths(sheets, spreadsheetId, dynamicHeaders);
 
     console.log(`Экспорт завершен успешно. Таблица: https://docs.google.com/spreadsheets/d/${spreadsheetId}`);
   } catch (error) {
