@@ -82,7 +82,49 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   // Если есть узел типа 'start' или синонимы для него, обязательно генерируем start_handler
   if (hasStartNodeType || hasStartSynonyms) {
-    const startNode = nodes.find((node: Node) => node.type === 'start') || { id: 'start', type: 'start', data: {} };
+    const startNode = nodes.find((node: Node) => node.type === 'start') || {
+      id: 'start',
+      type: 'start',
+      position: { x: 0, y: 0 },
+      data: {
+        options: [],
+        keyboardType: 'none',
+        buttons: [],
+        oneTimeKeyboard: false,
+        resizeKeyboard: true,
+        markdown: false,
+        formatMode: 'none',
+        synonyms: [],
+        isPrivateOnly: false,
+        adminOnly: false,
+        requiresAuth: false,
+        showInMenu: true,
+        enableStatistics: true,
+        customParameters: [],
+        messageIdSource: 'last_message',
+        disableNotification: false,
+        userIdSource: 'last_message',
+        mapService: 'custom',
+        mapZoom: 15,
+        showDirections: false,
+        generateMapPreview: true,
+        inputType: 'text',
+        responseType: 'text',
+        responseOptions: [],
+        allowMultipleSelection: false,
+        allowsMultipleAnswers: false,
+        anonymousVoting: true,
+        inputRequired: true,
+        enableConditionalMessages: false,
+        conditionalMessages: [],
+        collectUserInput: false,
+        inputButtonType: 'inline',
+        enableAutoTransition: false,
+        enableUserActions: false,
+        saveToDatabase: false,
+        allowSkip: false,
+      }
+    } as unknown as Node;
     codeLines.push(`\n# @@NODE_START:${startNode.id}@@\n`);
 
     const startHandler = nodeHandlers['start'];

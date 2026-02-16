@@ -93,7 +93,8 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
     setProgress(0); // Сбросить прогресс перед началом
 
     let errorMessage = ''; // Объявляем переменную вне блока catch
-    
+    let errorResponse: any = {}; // Объявляем переменную для ответа об ошибке
+
     try {
       // 1. Получить данные пользователей
       setProgress(10);
@@ -140,7 +141,6 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
     } catch (error) {
       console.log('Полная ошибка при экспорте:', error); // Отладочный лог
       // Проверяем, является ли ошибка связанной с аутентификацией
-      let errorResponse: any = {};
       if (error instanceof Error) {
         errorResponse = { message: error.message };
       } else if (typeof error === 'object' && error !== null) {
@@ -235,9 +235,9 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
       }
     } finally {
       // Сбрасываем состояние только если это не ошибка аутентификации
-      if (!(errorMessage && (errorMessage.includes('OAuth token not found') || 
-                             errorMessage.includes('invalid or expired') || 
-                             (error as any)?.requiresAuth))) {
+      if (!(errorMessage && (errorMessage.includes('OAuth token not found') ||
+                             errorMessage.includes('invalid or expired') ||
+                             errorResponse?.requiresAuth))) {
         setIsExporting(false);
         // Сбросить прогресс после завершения
         setTimeout(() => setProgress(0), 1000);
