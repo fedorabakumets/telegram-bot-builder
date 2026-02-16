@@ -362,8 +362,11 @@ cd telegram-bot-builder
 # Установите нужные файлы
 npm install
 
+# Соберите проект
+npm run build
+
 # Запустите приложение
-npm run dev
+npm run start
 ```
 
 Если возникает ошибка подключения к базе данных, смотрите подробное руководство по устранению неполадок в файле [docs/development/TROUBLESHOOTING_RU.md](docs/development/TROUBLESHOOTING_RU.md).
