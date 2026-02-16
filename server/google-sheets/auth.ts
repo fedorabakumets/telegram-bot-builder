@@ -6,8 +6,30 @@ import fs from 'fs/promises';
 import path from 'path';
 import { google } from 'googleapis';
 
-// Путь к файлу учетных данных
-const CREDENTIALS_PATH = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'credentials.json');
+/**
+ * Проверяет существование файла
+ * @param filePath - путь к файлу
+ * @returns Promise<boolean> - true если файл существует
+ */
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Путь к файлу учетных данных может быть в разных местах, пробуем стандартные расположения
+let CREDENTIALS_PATH = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'credentials.json');
+
+// Если файл не найден в стандартном месте, пробуем другие возможные пути
+if (!await fileExists(CREDENTIALS_PATH)) {
+  CREDENTIALS_PATH = path.resolve(process.cwd(), 'server', 'google-sheets', 'credentials.json');
+}
+if (!await fileExists(CREDENTIALS_PATH)) {
+  CREDENTIALS_PATH = path.resolve(process.cwd(), 'credentials.json');
+}
 
 /**
  * Аутентификация с использованием OAuth 2.0
@@ -31,7 +53,16 @@ export async function authenticate() {
     );
 
     // Проверка наличия токена доступа в файле
-    const tokenPath = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'token.json');
+    // Путь к токену может быть в разных местах, пробуем стандартные расположения
+    let tokenPath = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'token.json');
+    
+    // Если файл не найден в стандартном месте, пробуем другие возможные пути
+    if (!await fileExists(tokenPath)) {
+      tokenPath = path.resolve(process.cwd(), 'server', 'google-sheets', 'token.json');
+    }
+    if (!await fileExists(tokenPath)) {
+      tokenPath = path.resolve(process.cwd(), 'token.json');
+    }
 
     try {
       const tokenContent = await fs.readFile(tokenPath, 'utf8');
@@ -46,7 +77,9 @@ export async function authenticate() {
       }
     } catch (tokenError) {
       console.log('Требуется аутентификация OAuth. Файл токена не найден или недействителен...');
-      throw new Error('OAuth token not found or invalid. Please authenticate first.');
+      const authError = new Error('OAuth token not found or invalid. Please authenticate first.');
+      (authError as any).requiresAuth = true;
+      throw authError;
     }
 
     // Создание клиента Google Sheets API

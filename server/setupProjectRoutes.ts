@@ -531,12 +531,15 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             console.error("❌ Ошибка экспорта в Google Таблицы:", error);
             
             // Проверяем, является ли ошибка связанной с аутентификацией
-            const errorMessage = (error as Error).message;
-            if (errorMessage.includes('OAuth token not found or invalid') || 
-                errorMessage.includes('Access token is invalid or expired')) {
-                return res.status(401).json({ 
-                    message: "Authentication required", 
-                    error: errorMessage,
+            const errorObj = error as Error;
+            const errorAsAny = error as any;
+            if (errorObj.message.includes('OAuth token not found or invalid') ||
+                errorObj.message.includes('Access token is invalid or expired') ||
+                errorAsAny.requiresAuth === true) {
+                console.log('Обнаружена ошибка аутентификации, отправляем requiresAuth=true');
+                return res.status(401).json({
+                    message: "Authentication required",
+                    error: errorObj.message,
                     requiresAuth: true
                 });
             }

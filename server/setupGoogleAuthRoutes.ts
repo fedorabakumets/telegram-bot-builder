@@ -69,18 +69,148 @@ export function setupGoogleAuthRoutes(app: Express) {
             const { code } = req.query;
 
             if (!code || typeof code !== 'string') {
-                return res.status(400).json({ message: "Authorization code is required" });
+                // Возвращаем HTML с ошибкой
+                return res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ошибка аутентификации</title>
+    <meta charset="UTF-8">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background-color: #f5f5f5; 
+        }
+        .container { 
+            text-align: center; 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .error { 
+            color: #d32f2f; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="error">Ошибка аутентификации</h2>
+        <p>Код авторизации не предоставлен или недействителен</p>
+        <button onclick="window.close()">Закрыть вкладку</button>
+    </div>
+    <script>
+        // Пытаемся сообщить родительскому окну об ошибке
+        if (window.opener) {
+            window.opener.postMessage({ type: 'auth-error', message: 'Authorization code is required' }, '*');
+        }
+    </script>
+</body>
+</html>`);
             }
 
             const token = await getToken(code);
-            res.json({ 
-                success: true, 
-                message: "Authentication successful", 
-                token 
-            });
+            
+            // Возвращаем HTML-страницу с успехом и автоматическим закрытием
+            res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Аутентификация успешна</title>
+    <meta charset="UTF-8">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background-color: #f5f5f5; 
+        }
+        .container { 
+            text-align: center; 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .success { 
+            color: #388e3c; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="success">Аутентификация успешна!</h2>
+        <p>Вы успешно вошли в систему через Google</p>
+        <p>Эта вкладка закроется автоматически</p>
+        <button onclick="window.close()">Закрыть вкладку</button>
+    </div>
+    <script>
+        // Сообщаем родительскому окну об успешной аутентификации
+        if (window.opener) {
+            window.opener.postMessage({ type: 'auth-success', token: ${JSON.stringify(token)} }, '*');
+        }
+        
+        // Автоматически закрываем вкладку через 2 секунды
+        setTimeout(function() {
+            window.close();
+        }, 2000);
+    </script>
+</body>
+</html>`);
         } catch (error) {
+            // Возвращаем HTML с ошибкой
             console.error("Ошибка обработки callback Google:", error);
-            res.status(500).json({ message: "Failed to handle Google authentication callback", error: (error as Error).message });
+            res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ошибка аутентификации</title>
+    <meta charset="UTF-8">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background-color: #f5f5f5; 
+        }
+        .container { 
+            text-align: center; 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .error { 
+            color: #d32f2f; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="error">Ошибка аутентификации</h2>
+        <p>Произошла ошибка при обработке аутентификации</p>
+        <p>${error instanceof Error ? error.message : 'Неизвестная ошибка'}</p>
+        <button onclick="window.close()">Закрыть вкладку</button>
+    </div>
+    <script>
+        // Пытаемся сообщить родительскому окну об ошибке
+        if (window.opener) {
+            window.opener.postMessage({ type: 'auth-error', message: '${error instanceof Error ? error.message.replace(/'/g, "\\'") : 'Неизвестная ошибка'}' }, '*');
+        }
+    </script>
+</body>
+</html>`);
         }
     });
 }

@@ -138,6 +138,7 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
         ),
       });
     } catch (error) {
+      console.log('Полная ошибка при экспорте:', error); // Отладочный лог
       // Проверяем, является ли ошибка связанной с аутентификацией
       let errorResponse: any = {};
       if (error instanceof Error) {
@@ -148,102 +149,72 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
         errorResponse = { message: String(error) };
       }
       
+      console.log('errorResponse объект:', errorResponse); // Отладочный лог
       errorMessage = errorResponse.message || 'Неизвестная ошибка';
-      
-      // Проверяем, требует ли ошибка аутентификации (по новому полю requiresAuth)
-      const requiresAuth = typeof errorResponse === 'object' && errorResponse !== null && 'requiresAuth' in errorResponse && errorResponse.requiresAuth === true;
-      
-      if (errorMessage.includes('OAuth token not found') || errorMessage.includes('invalid or expired') || requiresAuth) {
-        // Если ошибка связана с аутентификацией, предлагаем пользователю пройти аутентификацию
-        const shouldAuthenticate = window.confirm(
-          'Для экспорта в Google Таблицы требуется аутентификация. Перейти к процессу аутентификации?'
-        );
-        
-        if (shouldAuthenticate) {
-          try {
-            // Запрашиваем URL аутентификации
-            const authResponse = await apiRequest('GET', '/api/google-auth/start');
-            const authUrl = authResponse.authUrl;
-            
-            // Открываем окно аутентификации
-            const popup = window.open(authUrl, 'google-auth', 'width=600,height=700');
-            
-            // Проверяем, закрыто ли окно аутентификации
-            const checkPopupClosed = setInterval(() => {
-              if (popup?.closed) {
-                clearInterval(checkPopupClosed);
-                
-                // После аутентификации пробуем снова экспортировать
-                setTimeout(async () => {
-                  try {
-                    // Повторно получаем данные, так как preparedData недоступна в этой области видимости
-                    const usersData = await apiRequest('GET', `/api/projects/${projectId}/users`);
-                    const retryPreparedData = prepareDataForExport(usersData);
-                    
-                    const retryExportResult = await apiRequest('POST', `/api/projects/${projectId}/export-to-google-sheets`, {
-                      data: retryPreparedData,
-                      projectName: projectName,
-                    });
 
-                    // Создаем уведомление с возможностью копирования всей информации
-                    const retryFullMessage = `Данные успешно экспортированы в Google Таблицы.\nСсылка на таблицу: ${retryExportResult.spreadsheetUrl}`;
-                    
-                    toast({
-                      title: 'Экспорт в Google Таблицы',
-                      description: (
-                        <div className="space-y-2">
-                          <p>Данные успешно экспортированы в Google Таблицы.</p>
-                          <a 
-                            href={retryExportResult.spreadsheetUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:underline break-all"
-                          >
-                            {retryExportResult.spreadsheetUrl}
-                          </a>
-                          <button
-                            onClick={() => navigator.clipboard.writeText(retryFullMessage)}
-                            className="text-xs text-gray-500 hover:text-gray-700 underline"
-                          >
-                            Копировать текст
-                          </button>
-                        </div>
-                      ),
-                    });
-                  } catch (retryError) {
-                    console.error('Ошибка повторного экспорта в Google Таблицы:', retryError);
-                    let retryErrorMessage = 'Произошла ошибка при экспорте данных в Google Таблицы. Проверьте консоль для подробностей.';
-                    if (retryError instanceof Error) {
-                      retryErrorMessage = (retryError as any).message || retryError.message;
-                    } else if (typeof retryError === 'object' && retryError !== null && 'message' in retryError) {
-                      retryErrorMessage = (retryError as any).message;
-                    }
-                    toast({
-                      title: 'Ошибка экспорта',
-                      description: retryErrorMessage,
-                      variant: 'destructive',
-                    });
-                  } finally {
-                    setIsExporting(false);
-                    // Сбросить прогресс после завершения
-                    setTimeout(() => setProgress(0), 1000);
-                  }
-                }, 2000); // Ждем 2 секунды перед повторной попыткой
-              }
-            }, 1000);
-          } catch (authError) {
-            console.error('Ошибка аутентификации Google:', authError);
-            toast({
-              title: 'Ошибка аутентификации',
-              description: 'Не удалось инициировать процесс аутентификации Google. Проверьте консоль для подробностей.',
-              variant: 'destructive',
-            });
-          }
-        } else {
-          // Если пользователь отказался от аутентификации, просто покажем сообщение
+      // Проверяем, требует ли ошибка аутентификации (по новому полю requiresAuth)
+      const requiresAuth = (error as any).requiresAuth === true;
+      const requiresAuthInResponse = typeof errorResponse === 'object' && errorResponse !== null && 'requiresAuth' in errorResponse && errorResponse.requiresAuth === true;
+      console.log('requiresAuth флаг в ошибке:', requiresAuth); // Отладочный лог
+      console.log('requiresAuth флаг в errorResponse:', requiresAuthInResponse); // Отладочный лог
+
+      if (errorMessage.includes('OAuth token not found') || errorMessage.includes('invalid or expired') || requiresAuth || requiresAuthInResponse) {
+        // Если ошибка связана с аутентификацией, сразу перенаправляем пользователя на процесс аутентификации
+        try {
+          // Запрашиваем URL аутентификации
+          const authResponse = await apiRequest('GET', '/api/google-auth/start');
+          const authUrl = authResponse.authUrl;
+
+          // Показываем уведомление о необходимости аутентификации
           toast({
-            title: 'Экспорт отменен',
-            description: 'Для экспорта в Google Таблицы необходимо пройти аутентификацию.',
+            title: 'Требуется аутентификация',
+            description: 'Для экспорта в Google Таблицы требуется пройти аутентификацию. Пожалуйста, завершите процесс в открывшейся вкладке.',
+          });
+
+          // Открываем URL аутентификации в новой вкладке
+          const authWindow = window.open(authUrl, '_blank');
+
+          // Функция для обработки сообщений от вкладки аутентификации
+          const handleMessage = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+
+            if (event.data.type === 'auth-success') {
+              // Успешная аутентификация, закрываем вкладку и повторяем экспорт
+              if (authWindow) {
+                authWindow.close();
+              }
+              
+              // Убираем обработчик
+              window.removeEventListener('message', handleMessage);
+
+              // Повторяем экспорт
+              setTimeout(() => {
+                handleExport(); // Повторный вызов функции экспорта
+              }, 1000);
+            } else if (event.data.type === 'auth-error') {
+              // Ошибка аутентификации
+              if (authWindow) {
+                authWindow.close();
+              }
+              
+              // Убираем обработчик
+              window.removeEventListener('message', handleMessage);
+
+              toast({
+                title: 'Ошибка аутентификации',
+                description: event.data.message || 'Произошла ошибка при аутентификации',
+                variant: 'destructive',
+              });
+            }
+          };
+
+          // Добавляем обработчик сообщений
+          window.addEventListener('message', handleMessage);
+        } catch (authError) {
+          console.error('Ошибка аутентификации Google:', authError);
+          toast({
+            title: 'Ошибка аутентификации',
+            description: 'Не удалось инициировать процесс аутентификации Google. Проверьте консоль для подробностей.',
             variant: 'destructive',
           });
         }
@@ -263,8 +234,10 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
         });
       }
     } finally {
-      if (!(errorMessage && (errorMessage.includes('OAuth token not found') || errorMessage.includes('invalid or expired')))) {
-        // Не сбрасываем состояние, если это ошибка аутентификации, т.к. далее идет повторная попытка
+      // Сбрасываем состояние только если это не ошибка аутентификации
+      if (!(errorMessage && (errorMessage.includes('OAuth token not found') || 
+                             errorMessage.includes('invalid or expired') || 
+                             (error as any)?.requiresAuth))) {
         setIsExporting(false);
         // Сбросить прогресс после завершения
         setTimeout(() => setProgress(0), 1000);
