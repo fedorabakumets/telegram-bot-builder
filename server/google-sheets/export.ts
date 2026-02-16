@@ -7,9 +7,8 @@
  * @module google-sheets-export
  */
 
-import { sheets_v4 } from 'googleapis';
 import { authenticate } from './auth';
-import { createSpreadsheet, writeHeaders, writeData, UserDataForExport } from './data-writer';
+import { createSpreadsheet, writeData, UserDataForExport } from './data-writer';
 import { formatHeaders } from './header-formatter';
 import { formatColumnWidths } from './column-width-formatter';
 import { formatNumericData } from './numeric-data-formatter';

@@ -1,14 +1,14 @@
 import dotenv from "dotenv";
-dotenv.config({ debug: false });
-import express, { type Request, Response, NextFunction } from "express";
+import express, { NextFunction, type Request, Response } from "express";
 import { createServer } from "http";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
-import { stopCleanup } from "./cache";
-import { shutdownAllBots } from "./graceful-shutdown";
-import { initializeTerminalWebSocket } from "./terminal-websocket";
-import { startFileMonitoring } from "./file-monitoring";
-import { storage } from "./storage";
+import { startFileMonitoring } from "./files/file-monitoring";
+import { registerRoutes } from "./routes/routes";
+import { log, serveStatic, setupVite } from "./routes/vite";
+import { storage } from "./storages/storage";
+import { initializeTerminalWebSocket } from './terminal/initializeTerminalWebSocket';
+import { stopCleanup } from "./utils/cache";
+import { shutdownAllBots } from "./utils/graceful-shutdown";
+dotenv.config({ debug: false });
 
 /**
  * Основное приложение Express
@@ -122,13 +122,13 @@ app.use((req, res, next) => {
   // Запускаем мониторинг файлов
   startFileMonitoring(storage).then(stopMonitoring => {
     log('Мониторинг файлов запущен');
-    
+
     // Функция остановки мониторинга при завершении работы
     const stopMonitoringOnExit = async () => {
       log('Остановка мониторинга файлов...');
       stopMonitoring();
     };
-    
+
     process.on('SIGTERM', async () => {
       await stopMonitoringOnExit();
       log('получен сигнал SIGTERM: закрытие HTTP-сервера');
