@@ -519,11 +519,13 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             const { exportToGoogleSheets } = await import("./google-sheets");
             
             // Выполняем экспорт в Google Таблицы
-            await exportToGoogleSheets(exportData, projectName, projectId);
+            const spreadsheetId = await exportToGoogleSheets(exportData, projectName, projectId);
 
-            return res.json({ 
-                success: true, 
-                message: "Data exported to Google Sheets successfully" 
+            return res.json({
+                success: true,
+                message: "Data exported to Google Sheets successfully",
+                spreadsheetId: spreadsheetId,
+                spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
             });
         } catch (error) {
             console.error("❌ Ошибка экспорта в Google Таблицы:", error);

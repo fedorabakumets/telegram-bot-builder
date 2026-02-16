@@ -24,7 +24,7 @@ import { extractUniqueVariables, createDynamicHeaders, writeDynamicHeaders } fro
  * @param {any[]} data - Массив данных пользователей для экспорта
  * @param {string} projectName - Название проекта
  * @param {number} projectId - ID проекта
- * @returns {Promise<void>}
+ * @returns {Promise<string>} ID созданной таблицы
  *
  * @description
  * Основная функция для экспорта данных пользователей в Google Таблицы.
@@ -33,10 +33,10 @@ import { extractUniqueVariables, createDynamicHeaders, writeDynamicHeaders } fro
  *
  * @example
  * ```typescript
- * await exportToGoogleSheets(userData, "Мой проект", 123);
+ * const spreadsheetId = await exportToGoogleSheets(userData, "Мой проект", 123);
  * ```
  */
-export async function exportToGoogleSheets(data: any[], projectName: string, projectId: number): Promise<void> {
+export async function exportToGoogleSheets(data: any[], projectName: string, projectId: number): Promise<string> {
   console.log(`Начинаем экспорт данных для проекта: ${projectName} (ID: ${projectId})`);
 
   try {
@@ -68,6 +68,8 @@ export async function exportToGoogleSheets(data: any[], projectName: string, pro
     await formatColumnWidths(sheets, spreadsheetId, dynamicHeaders);
 
     console.log(`Экспорт завершен успешно. Таблица: https://docs.google.com/spreadsheets/d/${spreadsheetId}`);
+    
+    return spreadsheetId;
   } catch (error) {
     console.error(`Ошибка экспорта данных проекта ${projectName} (ID: ${projectId}):`, error);
 

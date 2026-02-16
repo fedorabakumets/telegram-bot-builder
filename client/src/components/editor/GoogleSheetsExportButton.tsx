@@ -105,15 +105,37 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
 
       // 3. Отправить данные в Google Таблицы через серверный маршрут
       setProgress(60);
-      await apiRequest('POST', `/api/projects/${projectId}/export-to-google-sheets`, {
+      const exportResult = await apiRequest('POST', `/api/projects/${projectId}/export-to-google-sheets`, {
         data: preparedData,
         projectName: projectName,
       });
 
       setProgress(100);
+      
+      // Создаем уведомление с возможностью копирования всей информации
+      const fullMessage = `Данные успешно экспортированы в Google Таблицы.\nСсылка на таблицу: ${exportResult.spreadsheetUrl}`;
+      
       toast({
         title: 'Экспорт в Google Таблицы',
-        description: 'Данные успешно экспортированы в Google Таблицы.',
+        description: (
+          <div className="space-y-2">
+            <p>Данные успешно экспортированы в Google Таблицы.</p>
+            <a 
+              href={exportResult.spreadsheetUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline break-all"
+            >
+              {exportResult.spreadsheetUrl}
+            </a>
+            <button
+              onClick={() => navigator.clipboard.writeText(fullMessage)}
+              className="text-xs text-gray-500 hover:text-gray-700 underline"
+            >
+              Копировать текст
+            </button>
+          </div>
+        ),
       });
     } catch (error) {
       // Проверяем, является ли ошибка связанной с аутентификацией
@@ -158,14 +180,35 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
                     const usersData = await apiRequest('GET', `/api/projects/${projectId}/users`);
                     const retryPreparedData = prepareDataForExport(usersData);
                     
-                    await apiRequest('POST', `/api/projects/${projectId}/export-to-google-sheets`, {
+                    const retryExportResult = await apiRequest('POST', `/api/projects/${projectId}/export-to-google-sheets`, {
                       data: retryPreparedData,
                       projectName: projectName,
                     });
+
+                    // Создаем уведомление с возможностью копирования всей информации
+                    const retryFullMessage = `Данные успешно экспортированы в Google Таблицы.\nСсылка на таблицу: ${retryExportResult.spreadsheetUrl}`;
                     
                     toast({
                       title: 'Экспорт в Google Таблицы',
-                      description: 'Данные успешно экспортированы в Google Таблицы.',
+                      description: (
+                        <div className="space-y-2">
+                          <p>Данные успешно экспортированы в Google Таблицы.</p>
+                          <a 
+                            href={retryExportResult.spreadsheetUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline break-all"
+                          >
+                            {retryExportResult.spreadsheetUrl}
+                          </a>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(retryFullMessage)}
+                            className="text-xs text-gray-500 hover:text-gray-700 underline"
+                          >
+                            Копировать текст
+                          </button>
+                        </div>
+                      ),
                     });
                   } catch (retryError) {
                     console.error('Ошибка повторного экспорта в Google Таблицы:', retryError);
