@@ -59,4 +59,8 @@ Thumbs.db
 client/src/lib/tests/*
 !client/src/lib/tests/README.md
 
+# Editor credentials and token files
+client/src/components/editor/token.json
+client/src/components/editor/credentials.json
+
 
