@@ -1,76 +1,54 @@
 /**
- * @fileoverview Модуль для форматирования структуры Google Таблиц
+ * @fileoverview Модуль для форматирования таблицы структуры
+ *
+ * Форматирует заголовки, закрепляет строки, настраивает ширину столбцов.
+ *
+ * @version 1.0.0
  */
 
 import { sheets_v4 } from 'googleapis';
 
 /**
- * Закрепление строки заголовков
+ * Форматирование таблицы структуры
  *
- * @function freezeHeaders
+ * @function formatStructureSheets
  * @param {sheets_v4.Sheets} sheets - Экземпляр клиента Google Sheets API
  * @param {string} spreadsheetId - ID таблицы
- * @returns {Promise<void>}
  */
-export async function freezeHeaders(sheets: sheets_v4.Sheets, spreadsheetId: string): Promise<void> {
-  try {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: {
-        requests: [{
-          updateSheetProperties: {
-            properties: {
-              sheetId: 0,
-              gridProperties: {
-                frozenRowCount: 1
-              }
-            },
-            fields: 'gridProperties.frozenRowCount'
+export async function formatStructureSheets(
+  sheets: sheets_v4.Sheets,
+  spreadsheetId: string
+): Promise<void> {
+  const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId });
+  const firstSheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId || 0;
+
+  const requests = [
+    {
+      repeatCell: {
+        range: { sheetId: firstSheetId, startRowIndex: 0, endRowIndex: 1 },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: { red: 0.2, green: 0.4, blue: 0.6 },
+            textFormat: { bold: true, fontSize: 12 },
+            horizontalAlignment: 'CENTER'
           }
-        }]
+        },
+        fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
       }
-    });
-
-    console.log('Заголовки закреплены');
-  } catch (error) {
-    console.error('Ошибка закрепления заголовков:', error);
-    throw new Error(`Failed to freeze headers: ${(error as Error).message}`);
-  }
-}
-
-/**
- * Добавление фильтров к таблице
- *
- * @function addFilters
- * @param {sheets_v4.Sheets} sheets - Экземпляр клиента Google Sheets API
- * @param {string} spreadsheetId - ID таблицы
- * @param {number} columnCount - Количество столбцов
- * @returns {Promise<void>}
- */
-export async function addFilters(sheets: sheets_v4.Sheets, spreadsheetId: string, columnCount: number = 100): Promise<void> {
-  try {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: {
-        requests: [{
-          setBasicFilter: {
-            filter: {
-              range: {
-                sheetId: 0,
-                startRowIndex: 0, // Начиная с заголовков
-                startColumnIndex: 0,
-                endColumnIndex: columnCount // Используем переданное количество столбцов
-                // endRowIndex не указан, чтобы охватить все строки
-              }
-            }
-          }
-        }]
+    },
+    {
+      updateSheetProperties: {
+        properties: { sheetId: firstSheetId, gridProperties: { frozenRowCount: 1 } },
+        fields: 'gridProperties.frozenRowCount'
       }
-    });
+    },
+    {
+      autoResizeDimensions: {
+        dimensions: { sheetId: firstSheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 6 }
+      }
+    }
+  ];
 
-    console.log('Фильтры добавлены');
-  } catch (error) {
-    console.error('Ошибка добавления фильтров:', error);
-    throw new Error(`Failed to add filters: ${(error as Error).message}`);
-  }
+  await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests } });
+  console.log('🎨 Форматирование завершено');
 }
