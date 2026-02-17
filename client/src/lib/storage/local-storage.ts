@@ -17,7 +17,12 @@ const STORAGE_KEYS = {
 } as const;
 
 // Stored types with ISO date strings
-type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt' | 'restartOnUpdate'> & { createdAt: string; updatedAt: string; restartOnUpdate?: boolean };
+type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt' | 'restartOnUpdate' | 'lastExportedAt'> & { 
+  createdAt: string; 
+  updatedAt: string; 
+  restartOnUpdate?: boolean;
+  lastExportedAt: string | null;
+};
 type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
 type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
 
@@ -100,6 +105,9 @@ export class LocalStorageService {
       ...stored,
       createdAt: new Date(stored.createdAt),
       updatedAt: new Date(stored.updatedAt),
+      lastExportedAt: stored.lastExportedAt ? new Date(stored.lastExportedAt) : null,
+      lastExportedGoogleSheetId: stored.lastExportedGoogleSheetId ?? null,
+      lastExportedGoogleSheetUrl: stored.lastExportedGoogleSheetUrl ?? null,
     };
   }
 
@@ -135,7 +143,7 @@ export class LocalStorageService {
   static saveProject(data: InsertBotProject): BotProject {
     const storedProjects = this.safeGetItem<StoredProject[]>(STORAGE_KEYS.PROJECTS, []);
     const now = new Date().toISOString();
-    
+
     const stored: StoredProject = {
       id: this.getNextId(STORAGE_KEYS.NEXT_PROJECT_ID),
       ownerId: null,
@@ -144,10 +152,13 @@ export class LocalStorageService {
       data: data.data,
       botToken: data.botToken || null,
       userDatabaseEnabled: data.userDatabaseEnabled ?? 1,
+      lastExportedGoogleSheetId: null,
+      lastExportedGoogleSheetUrl: null,
+      lastExportedAt: null,
       createdAt: now,
       updatedAt: now,
     };
-    
+
     storedProjects.push(stored);
     this.safeSetItem(STORAGE_KEYS.PROJECTS, storedProjects);
     return this.reviveProject(stored);

@@ -90,10 +90,11 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
    */
   const handleExport = async () => {
     setIsExporting(true);
-    setProgress(0); // Сбросить прогресс перед началом
+    setProgress(0);
 
-    let errorMessage = ''; // Объявляем переменную вне блока catch
-    let errorResponse: any = {}; // Объявляем переменную для ответа об ошибке
+    // Переменные для обработки ошибок (объявляем вне try/catch для использования в finally)
+    let requiresAuth = false;
+    let errorMessage = '';
 
     try {
       // 1. Получить данные пользователей
@@ -112,18 +113,18 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
       });
 
       setProgress(100);
-      
+
       // Создаем уведомление с возможностью копирования всей информации
       const fullMessage = `Данные успешно экспортированы в Google Таблицы.\nСсылка на таблицу: ${exportResult.spreadsheetUrl}`;
-      
+
       toast({
         title: 'Экспорт в Google Таблицы',
         description: (
           <div className="space-y-2">
             <p>Данные успешно экспортированы в Google Таблицы.</p>
-            <a 
-              href={exportResult.spreadsheetUrl} 
-              target="_blank" 
+            <a
+              href={exportResult.spreadsheetUrl}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:underline break-all"
             >
@@ -139,27 +140,29 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
         ),
       });
     } catch (error) {
-      console.log('Полная ошибка при экспорте:', error); // Отладочный лог
-      // Проверяем, является ли ошибка связанной с аутентификацией
+      console.log('Полная ошибка при экспорте:', error);
+
+      // Извлекаем данные об ошибке
       if (error instanceof Error) {
-        errorResponse = { message: error.message };
+        errorMessage = error.message;
+        requiresAuth = (error as any).requiresAuth === true;
       } else if (typeof error === 'object' && error !== null) {
-        errorResponse = error;
+        errorMessage = (error as any).message || 'Неизвестная ошибка';
+        requiresAuth = (error as any).requiresAuth === true;
       } else {
-        errorResponse = { message: String(error) };
+        errorMessage = String(error);
       }
-      
-      console.log('errorResponse объект:', errorResponse); // Отладочный лог
-      errorMessage = errorResponse.message || 'Неизвестная ошибка';
 
-      // Проверяем, требует ли ошибка аутентификации (по новому полю requiresAuth)
-      const requiresAuth = (error as any).requiresAuth === true;
-      const requiresAuthInResponse = typeof errorResponse === 'object' && errorResponse !== null && 'requiresAuth' in errorResponse && errorResponse.requiresAuth === true;
-      console.log('requiresAuth флаг в ошибке:', requiresAuth); // Отладочный лог
-      console.log('requiresAuth флаг в errorResponse:', requiresAuthInResponse); // Отладочный лог
+      console.log('Ошибка:', errorMessage);
+      console.log('Требуется аутентификация:', requiresAuth);
 
-      if (errorMessage.includes('OAuth token not found') || errorMessage.includes('invalid or expired') || requiresAuth || requiresAuthInResponse) {
-        // Если ошибка связана с аутентификацией, сразу перенаправляем пользователя на процесс аутентификации
+      // Если ошибка аутентификации - запускаем процесс OAuth
+      if (errorMessage.includes('OAuth token not found') ||
+          errorMessage.includes('invalid or expired') ||
+          errorMessage.includes('Authentication required') ||
+          errorMessage.includes('Credentials file not found') ||
+          requiresAuth) {
+
         try {
           // Запрашиваем URL аутентификации
           const authResponse = await apiRequest('GET', '/api/google-auth/start');
@@ -183,20 +186,20 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
               if (authWindow) {
                 authWindow.close();
               }
-              
+
               // Убираем обработчик
               window.removeEventListener('message', handleMessage);
 
               // Повторяем экспорт
               setTimeout(() => {
-                handleExport(); // Повторный вызов функции экспорта
+                handleExport();
               }, 1000);
             } else if (event.data.type === 'auth-error') {
               // Ошибка аутентификации
               if (authWindow) {
                 authWindow.close();
               }
-              
+
               // Убираем обработчик
               window.removeEventListener('message', handleMessage);
 
@@ -221,23 +224,15 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
       } else {
         // Для других ошибок просто выводим сообщение
         console.error('Ошибка экспорта в Google Таблицы:', error);
-        let errorDescription = 'Произошла ошибка при экспорте данных в Google Таблицы. Проверьте консоль для подробностей.';
-        if (error instanceof Error) {
-          errorDescription = errorResponse.message || error.message;
-        } else if (typeof error === 'object' && error !== null && 'message' in error) {
-          errorDescription = (error as any).message;
-        }
         toast({
           title: 'Ошибка экспорта',
-          description: errorDescription,
+          description: errorMessage,
           variant: 'destructive',
         });
       }
     } finally {
       // Сбрасываем состояние только если это не ошибка аутентификации
-      if (!(errorMessage && (errorMessage.includes('OAuth token not found') ||
-                             errorMessage.includes('invalid or expired') ||
-                             errorResponse?.requiresAuth))) {
+      if (!requiresAuth) {
         setIsExporting(false);
         // Сбросить прогресс после завершения
         setTimeout(() => setProgress(0), 1000);

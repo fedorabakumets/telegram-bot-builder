@@ -1,0 +1,7 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "id": "0001_add_google_sheet_export_fields",
+  "prevId": "0000_brainy_wildside",
+  "tables": {}
+}
