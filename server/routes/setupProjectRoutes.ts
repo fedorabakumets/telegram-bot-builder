@@ -517,9 +517,13 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
             // Импортируем функцию экспорта в Google Таблицы
             const { exportToGoogleSheets } = await import("../google-sheets");
+            const { saveExportMetadata } = await import("../google-sheets/export-metadata");
 
             // Выполняем экспорт в Google Таблицы
             const spreadsheetId = await exportToGoogleSheets(exportData, projectName, projectId);
+
+            // Сохраняем метаданные экспорта в базу данных
+            await saveExportMetadata(projectId, spreadsheetId);
 
             return res.json({
                 success: true,

@@ -42,6 +42,12 @@ export const botProjects = pgTable("bot_projects", {
   botToken: text("bot_token"),
   /** Флаг включения пользовательской базы данных (0 = выключена, 1 = включена) */
   userDatabaseEnabled: integer("user_database_enabled").default(1),
+  /** ID последней экспортированной Google Таблицы */
+  lastExportedGoogleSheetId: text("last_exported_google_sheet_id"),
+  /** URL последней экспортированной Google Таблицы */
+  lastExportedGoogleSheetUrl: text("last_exported_google_sheet_url"),
+  /** Дата последнего экспорта в Google Таблицы */
+  lastExportedAt: timestamp("last_exported_at"),
   /** Дата создания проекта */
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления проекта */
@@ -1141,7 +1147,7 @@ export const nodeSchema = z.object({
     adminChatIdSource: z.enum(['manual', 'variable', 'current_chat']).default('current_chat'), // Источник ID чата
     adminChatVariableName: z.string().optional(), // Имя переменной с ID чата
     
-    // Прикрепленные медиапеременные (для отправки медиафайлов)
+    // Прикрепленные медиапеременные (для отпра��ки медиафайлов)
     attachedMedia: z.array(z.string()).default([]), // Список имен медиапеременных для прикрепления к сообщению
     
     // Дополнительные поля для совместимости
