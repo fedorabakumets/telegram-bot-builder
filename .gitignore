@@ -63,6 +63,10 @@ client/src/lib/tests/*
 client/src/components/editor/token.json
 client/src/components/editor/credentials.json
 
+# Google OAuth credentials (new location)
+config/google-auth/credentials.json
+config/google-auth/token.json
+
 # AI/IDE assistant folders
 .gigaide/
 .kiro/

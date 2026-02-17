@@ -20,15 +20,37 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-// Путь к файлу учетных данных может быть в разных местах, пробуем стандартные расположения
-let CREDENTIALS_PATH = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'credentials.json');
+/**
+ * Папка для конфигурационных файлов Google OAuth
+ */
+const GOOGLE_AUTH_DIR = path.resolve(process.cwd(), 'config', 'google-auth');
 
-// Если файл не найден в стандартном месте, пробуем другие возможные пути
+// Путь к файлу учетных данных - основное расположение в config/google-auth/
+let CREDENTIALS_PATH = path.resolve(GOOGLE_AUTH_DIR, 'credentials.json');
+
+// Если файл не найден, пробуем старые расположения для обратной совместимости
+if (!await fileExists(CREDENTIALS_PATH)) {
+  CREDENTIALS_PATH = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'credentials.json');
+}
 if (!await fileExists(CREDENTIALS_PATH)) {
   CREDENTIALS_PATH = path.resolve(process.cwd(), 'server', 'google-sheets', 'credentials.json');
 }
 if (!await fileExists(CREDENTIALS_PATH)) {
   CREDENTIALS_PATH = path.resolve(process.cwd(), 'credentials.json');
+}
+
+// Путь к файлу токена - основное расположение в config/google-auth/
+let TOKEN_PATH = path.resolve(GOOGLE_AUTH_DIR, 'token.json');
+
+// Если файл не найден, пробуем старые расположения для обратной совместимости
+if (!await fileExists(TOKEN_PATH)) {
+  TOKEN_PATH = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'token.json');
+}
+if (!await fileExists(TOKEN_PATH)) {
+  TOKEN_PATH = path.resolve(process.cwd(), 'server', 'google-sheets', 'token.json');
+}
+if (!await fileExists(TOKEN_PATH)) {
+  TOKEN_PATH = path.resolve(process.cwd(), 'token.json');
 }
 
 /**
@@ -53,16 +75,14 @@ export async function authenticate() {
         console.error('Путь поиска:', CREDENTIALS_PATH);
         console.error('\n📋 Для решения проблемы:');
         console.error('   1. Скачайте credentials.json из Google Cloud Console');
-        console.error('   2. Поместите файл в одну из папок:');
-        console.error('      - client/src/components/editor/credentials.json');
-        console.error('      - server/google-sheets/credentials.json');
-        console.error('      - credentials.json (в корне проекта)');
+        console.error('   2. Поместите файл в папку:');
+        console.error('      config/google-auth/credentials.json');
         console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
         throw new Error('Credentials file not found. Please configure Google OAuth credentials first.');
       }
       throw fileError;
     }
-    
+
     const credentials = JSON.parse(credentialsContent);
 
     const { client_secret, client_id, redirect_uris } = credentials.web;
@@ -75,16 +95,7 @@ export async function authenticate() {
     );
 
     // Проверка наличия токена доступа в файле
-    // Путь к токену может быть в разных местах, пробуем стандартные расположения
-    let tokenPath = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'token.json');
-
-    // Если файл не найден в стандартном месте, пробуем другие возможные пути
-    if (!await fileExists(tokenPath)) {
-      tokenPath = path.resolve(process.cwd(), 'server', 'google-sheets', 'token.json');
-    }
-    if (!await fileExists(tokenPath)) {
-      tokenPath = path.resolve(process.cwd(), 'token.json');
-    }
+    const tokenPath = TOKEN_PATH;
 
     try {
       const tokenContent = await fs.readFile(tokenPath, 'utf8');
