@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SyncFromFileButton } from './sync-from-file-button';
 import { TokenInfo } from './token-info';
 import { useToast } from '@/hooks/use-toast';
-import { BotData, BotGroup } from '@shared/schema';
+import { BotData, BotGroup, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
@@ -92,7 +92,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
   /**
    * Загрузка данных проекта для отображения последнего экспорта
    */
-  const { data: project } = useQuery({
+  const { data: project } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectIds?.[0]}`],
     enabled: !!projectIds?.[0],
   });
