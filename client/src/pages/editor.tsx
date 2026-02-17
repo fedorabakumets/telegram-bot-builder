@@ -302,42 +302,12 @@ export default function Editor() {
   }, []);
 
   /**
-   * Обработчик переключения видимости панели кода
+   * Обработчик переключения видимости CodePanel
+   * Управляет видимостью только CodePanel (левая панель с проектами)
    */
   const handleToggleCodePanel = useCallback(() => {
-    setFlexibleLayoutConfig(prev => {
-      // Проверяем, видима ли одна из панелей кода
-      const isCodeVisible = prev.elements.some(el => (el.id === 'code' || el.id === 'codeEditor') && el.visible);
-      
-      // Сохраняем состояние для использования после обновления
-      codePanelVisibleRef.current = isCodeVisible;
-
-      return {
-        ...prev,
-        elements: prev.elements.map(element => {
-          if (element.id === 'code' || element.id === 'codeEditor') {
-            return { ...element, visible: !isCodeVisible };
-          }
-          if (element.id === 'canvas') {
-            return { ...element, visible: isCodeVisible }; // Показываем холст при закрытии панелей кода
-          }
-          if (element.id === 'sidebar' || element.id === 'properties') {
-            return { ...element, visible: isCodeVisible }; // Показываем боковые панели при закрытии панелей кода
-          }
-          return { ...element, visible: element.visible ?? true };
-        })
-      };
-    });
-
-    // Переключаем вкладку на export или предыдущую (используем ref)
-    if (codePanelVisibleRef.current) {
-      // Если панели кода были видны, значит закрываем их и возвращаемся на предыдущую вкладку
-      setCurrentTab(previousTab);
-    } else {
-      // Если панели кода были скрыты, значит открываем их и переключаемся на export
-      setCurrentTab('export');
-    }
-  }, [previousTab]);
+    setCodePanelVisible(prev => !prev);
+  }, []);
 
   /**
    * Обработчик открытия панели кода (открывает обе панели - левую и центральную)
@@ -758,10 +728,12 @@ export default function Editor() {
 
   // Ссылка на редактор Monaco для управления сворачиванием
   const editorRef = useRef<any>(null);
-  const codePanelVisibleRef = useRef(false);
 
   // Состояние для управления видимостью редактора кода
   const [codeEditorVisible, setCodeEditorVisible] = useState(false);
+
+  // Состояние для управления видимостью CodePanel
+  const [codePanelVisible, setCodePanelVisible] = useState(false);
 
   /**
    * Обработчик переключения видимости редактора кода
@@ -1693,7 +1665,23 @@ export default function Editor() {
       </div>
     );
 
-    const sidebarContent = (
+    const sidebarContent = codePanelVisible ? (
+      // Показываем CodePanel поверх sidebar
+      <div className="h-full w-[350px] border-r bg-background">
+        <CodePanel
+          botDataArray={allProjects.map(project => project.data as BotData)}
+          projectIds={allProjects.map(project => project.id)}
+          projectName={activeProject.name}
+          onClose={handleToggleCodePanel}
+          selectedFormat={selectedFormat}
+          onFormatChange={setSelectedFormat}
+          areAllCollapsed={areAllCollapsed}
+          onCollapseChange={setAreAllCollapsed}
+          showFullCode={showFullCode}
+          onShowFullCodeChange={setShowFullCode}
+        />
+      </div>
+    ) : (
       <ComponentsSidebar
         onComponentDrag={handleComponentDrag}
         onComponentAdd={handleComponentAdd}
