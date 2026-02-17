@@ -30,7 +30,6 @@ import { LayoutManager, useLayoutManager } from '@/components/layout/layout-mana
 import { SimpleLayoutConfig, SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -1606,7 +1605,22 @@ export default function Editor() {
       />
     );
 
-    const canvasContent = (
+    const canvasContent = codeEditorVisible ? (
+      // Показываем редактор кода поверх canvas
+      <div className="h-full flex flex-col">
+        <CodeEditorArea
+          isMobile={false}
+          isLoading={isCodeLoading}
+          displayContent={displayContent}
+          selectedFormat={selectedFormat}
+          theme={theme}
+          editorRef={editorRef}
+          codeStats={codeStats}
+          setAreAllCollapsed={setAreAllCollapsed}
+          areAllCollapsed={areAllCollapsed}
+        />
+      </div>
+    ) : (
       <div className="h-full">
         {currentTab === 'groups' ? (
           <GroupsPanel
@@ -2182,56 +2196,6 @@ export default function Editor() {
           </div>
         </SheetContent>
       </Sheet>
-
-      {/* Плавающая панель редактора кода - занимает центральную область */}
-      {codeEditorVisible && activeProject && (
-        <div className="fixed inset-0 z-40 bg-background">
-          <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between p-3 border-b bg-background">
-              <h2 className="text-sm font-semibold flex items-center gap-2">
-                <i className="fas fa-file-code text-blue-500"></i>
-                Редактор кода
-              </h2>
-              <div className="flex items-center gap-2">
-                <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as CodeFormat)}>
-                  <SelectTrigger className="w-[180px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="python">Python (.py)</SelectItem>
-                    <SelectItem value="json">JSON (.json)</SelectItem>
-                    <SelectItem value="requirements">Requirements (.txt)</SelectItem>
-                    <SelectItem value="readme">README (.md)</SelectItem>
-                    <SelectItem value="dockerfile">Dockerfile</SelectItem>
-                    <SelectItem value="config">Config (.yaml)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleToggleCodeEditor}
-                  className="h-7 w-7 p-0"
-                >
-                  <i className="fas fa-times"></i>
-                </Button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <CodeEditorArea
-                isMobile={false}
-                isLoading={isCodeLoading}
-                displayContent={displayContent}
-                selectedFormat={selectedFormat}
-                theme={theme}
-                editorRef={editorRef}
-                codeStats={codeStats}
-                setAreAllCollapsed={setAreAllCollapsed}
-                areAllCollapsed={areAllCollapsed}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
     </>
   );
