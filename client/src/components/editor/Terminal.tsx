@@ -11,6 +11,7 @@ import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 're
 import { Button } from '@/components/ui/button';
 import Ansi from 'ansi-to-react';
 import { useTheme } from '@/components/theme-provider';
+import { useBotLogs } from '@/contexts/bot-logs-context';
 
 /**
  * Тип для одной строки в терминале
@@ -32,8 +33,6 @@ interface TerminalLine {
  * @interface TerminalProps
  */
 interface TerminalProps {
-  /** Максимальное количество строк для отображения */
-  maxLines?: number;
   /** Состояние видимости терминала */
   isVisible?: boolean;
   /** Функция для переключения видимости терминала */
@@ -67,15 +66,27 @@ export interface TerminalHandle {
  */
 export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) => {
   const {
-    maxLines = 1000,
     isVisible = true,
     onToggleVisibility,
     wsConnection,
     projectId,
     tokenId
   } = props;
-  // Состояние для хранения строк терминала
-  const [lines, setLines] = useState<TerminalLine[]>([]);
+
+  // Используем контекст для хранения логов
+  const { addLog, getLogs, clearLogs } = useBotLogs();
+  const logKey = projectId && tokenId ? `${projectId}-${tokenId}` : null;
+
+  // Получаем логи из контекста при монтировании
+  const storedLines = logKey ? getLogs(logKey) : [];
+  const [lines, setLines] = useState<TerminalLine[]>(storedLines);
+
+  // Синхронизируем состояние при изменении storedLines
+  useEffect(() => {
+    if (logKey) {
+      setLines(getLogs(logKey));
+    }
+  }, [logKey, getLogs]);
 
   // Функция для отправки логов на сервер
   const sendToServer = (content: string, type: 'stdout' | 'stderr' = 'stdout') => {
@@ -142,16 +153,10 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
       timestamp: new Date()
     };
 
-    setLines(prev => {
-      const updatedLines = [...prev, newLine];
-
-      // Ограничиваем количество строк до maxLines
-      if (updatedLines.length > maxLines) {
-        return updatedLines.slice(-maxLines);
-      }
-
-      return updatedLines;
-    });
+    // Сохраняем в контекст для глобального хранения
+    if (logKey) {
+      addLog(logKey, newLine);
+    }
 
     // Отправляем строку на сервер, если флаг установлен
     if (sendToServerFlag) {
@@ -168,16 +173,10 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
       timestamp: new Date()
     };
 
-    setLines(prev => {
-      const updatedLines = [...prev, newLine];
-
-      // Ограничиваем количество строк до maxLines
-      if (updatedLines.length > maxLines) {
-        return updatedLines.slice(-maxLines);
-      }
-
-      return updatedLines;
-    });
+    // Сохраняем в контекст для глобального хранения
+    if (logKey) {
+      addLog(logKey, newLine);
+    }
   };
 
   // Предоставляем методы через ref
@@ -251,6 +250,9 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
    */
   const clearTerminal = () => {
     setLines([]);
+    if (logKey) {
+      clearLogs(logKey);
+    }
   };
 
   // Определяем классы для стилей в зависимости от темы

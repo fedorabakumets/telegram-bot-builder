@@ -22,6 +22,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ServerStatus } from "@/components/server-status";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { BotLogsProvider } from "./contexts/bot-logs-context";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
@@ -165,9 +166,11 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="telegram-bot-builder-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <ServerStatus />
-          <Toaster />
-          <Router />
+          <BotLogsProvider>
+            <ServerStatus />
+            <Toaster />
+            <Router />
+          </BotLogsProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
