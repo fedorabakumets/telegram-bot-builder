@@ -90,10 +90,11 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
    */
   const handleExport = async () => {
     setIsExporting(true);
-    setProgress(0); // Сбросить прогресс перед началом
+    setProgress(0);
 
-    let errorMessage = ''; // Объявляем переменную вне блока catch
-    let errorResponse: any = {}; // Объявляем переменную для ответа об ошибке
+    // Переменные для обработки ошибок (объявляем вне try/catch для использования в finally)
+    let requiresAuth = false;
+    let errorMessage = '';
 
     try {
       // 1. Получить данные пользователей
@@ -112,18 +113,18 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
       });
 
       setProgress(100);
-      
+
       // Создаем уведомление с возможностью копирования всей информации
       const fullMessage = `Данные успешно экспортированы в Google Таблицы.\nСсылка на таблицу: ${exportResult.spreadsheetUrl}`;
-      
+
       toast({
         title: 'Экспорт в Google Таблицы',
         description: (
           <div className="space-y-2">
             <p>Данные успешно экспортированы в Google Таблицы.</p>
-            <a 
-              href={exportResult.spreadsheetUrl} 
-              target="_blank" 
+            <a
+              href={exportResult.spreadsheetUrl}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:underline break-all"
             >
@@ -142,9 +143,6 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
       console.log('Полная ошибка при экспорте:', error);
 
       // Извлекаем данные об ошибке
-      let errorMessage = '';
-      let requiresAuth = false;
-
       if (error instanceof Error) {
         errorMessage = error.message;
         requiresAuth = (error as any).requiresAuth === true;
