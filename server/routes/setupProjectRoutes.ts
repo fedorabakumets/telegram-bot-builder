@@ -174,6 +174,13 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
                 return res.status(404).json({ message: "Project not found" });
             }
 
+            // Логирование для отладки экспорта структуры
+            console.log(`📦 Project ${id} export fields:`, {
+                structureSheetId: (project as any).lastExportedStructureSheetId,
+                structureSheetUrl: (project as any).lastExportedStructureSheetUrl,
+                structureAt: (project as any).lastExportedStructureAt,
+            });
+
             // Check ownership if user is authenticated
             const ownerId = getOwnerIdFromRequest(req);
             // Разрешаем доступ: если проект принадлежит пользователю ИЛИ это гостевой проект (ownerId=null)

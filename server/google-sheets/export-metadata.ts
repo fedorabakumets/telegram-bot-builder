@@ -59,25 +59,32 @@ export async function saveExportMetadata(
   type: ExportType = 'userDatabase'
 ): Promise<void> {
   const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
+  const now = new Date();
 
   if (type === 'structure') {
+    console.log(`🔍 Сохранение метаданных экспорта структуры:`);
+    console.log(`   Project ID: ${projectId}`);
+    console.log(`   Spreadsheet ID: ${spreadsheetId}`);
+    console.log(`   URL: ${spreadsheetUrl}`);
+    console.log(`   Time: ${now.toISOString()}`);
+    
     await db
       .update(botProjects)
       .set({
         lastExportedStructureSheetId: spreadsheetId,
         lastExportedStructureSheetUrl: spreadsheetUrl,
-        lastExportedStructureAt: new Date(),
+        lastExportedStructureAt: now,
       })
       .where(eq(botProjects.id, projectId));
 
-    console.log(`💾 Сохранены метаданные экспорта структуры для проекта ${projectId}: ${spreadsheetUrl}`);
+    console.log(`✅ Методанные экспорта структуры сохранены в БД`);
   } else {
     await db
       .update(botProjects)
       .set({
         lastExportedGoogleSheetId: spreadsheetId,
         lastExportedGoogleSheetUrl: spreadsheetUrl,
-        lastExportedAt: new Date(),
+        lastExportedAt: now,
       })
       .where(eq(botProjects.id, projectId));
 
