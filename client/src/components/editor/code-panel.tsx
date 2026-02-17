@@ -90,6 +90,14 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
   });
 
   /**
+   * Загрузка данных проекта для отображения последнего экспорта
+   */
+  const { data: project } = useQuery({
+    queryKey: [`/api/projects/${projectIds?.[0]}`],
+    enabled: !!projectIds?.[0],
+  });
+
+  /**
    * Использование хука генератора кода для всех форматов
    */
   const codeGenerators = botDataArray.map((botData, index) => useCodeGenerator(botData, `${projectName}_project_${index}`, groups));
@@ -475,6 +483,32 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                       <i className="fas fa-file-export text-xs xs:text-sm"></i>
                       <span className="hidden xs:inline ml-1.5">📊 Экспорт структуры</span>
                     </Button>
+                  )}
+
+                  {/* Last Export Link */}
+                  {projectIds?.[index] && project?.lastExportedGoogleSheetUrl && (
+                    <div className="flex items-center gap-2 text-sm bg-green-50 dark:bg-green-950/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-800">
+                      <span className="text-green-600 dark:text-green-400">📊</span>
+                      <span className="text-muted-foreground">Последний экспорт:</span>
+                      <a
+                        href={project.lastExportedGoogleSheetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-600 dark:text-green-400 hover:underline font-medium"
+                      >
+                        Открыть Google Таблицу
+                      </a>
+                      {project.lastExportedAt && (
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {new Date(project.lastExportedAt).toLocaleString('ru-RU', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      )}
+                    </div>
                   )}
 
                   {/* Code Statistics */}
