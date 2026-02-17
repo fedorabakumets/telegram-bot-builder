@@ -169,6 +169,11 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
                 });
             }
 
+            // Отключаем HTTP кэширование для этого запроса
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+
             const project = await storage.getBotProject(id);
             if (!project) {
                 return res.status(404).json({ message: "Project not found" });

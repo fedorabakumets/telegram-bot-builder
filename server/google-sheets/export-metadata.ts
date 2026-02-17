@@ -79,7 +79,7 @@ export async function saveExportMetadata(
       .where(eq(botProjects.id, projectId));
 
     // Инвалидация кэша проекта чтобы новые данные сразу были доступны
-    dbCache.clearByPattern(`project:${projectId}:.*`);
+    dbCache.delete(`project:${projectId}`);
     console.log(`✅ Методанные экспорта структуры сохранены в БД (кэш инвалидирован)`);
   } else {
     await db
@@ -92,7 +92,7 @@ export async function saveExportMetadata(
       .where(eq(botProjects.id, projectId));
 
     // Инвалидация кэша проекта
-    dbCache.clearByPattern(`project:${projectId}:.*`);
+    dbCache.delete(`project:${projectId}`);
     console.log(`💾 Сохранены метаданные экспорта пользователей для проекта ${projectId}: ${spreadsheetUrl} (кэш инвалидирован)`);
   }
 }
