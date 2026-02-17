@@ -105,7 +105,13 @@ async function createStructureSpreadsheet(
     requestBody: {
       properties: {
         title: `${projectName} - Structure Export (Project ${projectId}) - ${new Date().toISOString().split('T')[0]}`
-      }
+      },
+      sheets: [
+        { properties: { title: 'Nodes', gridProperties: { rowCount: 100, columnCount: 10 } } },
+        { properties: { title: 'Connections', gridProperties: { rowCount: 100, columnCount: 10 } } },
+        { properties: { title: 'Variables', gridProperties: { rowCount: 100, columnCount: 10 } } },
+        { properties: { title: 'Statistics', gridProperties: { rowCount: 100, columnCount: 10 } } }
+      ]
     },
     fields: 'spreadsheetId'
   });
