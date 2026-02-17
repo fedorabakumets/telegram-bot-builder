@@ -607,7 +607,7 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
             const spreadsheetId = await exportStructureToGoogleSheets(project.data, project.name, projectId);
-            await saveExportMetadata(projectId, spreadsheetId);
+            await saveExportMetadata(projectId, spreadsheetId, 'structure');
 
             console.log('✅ Экспорт структуры завершён!');
             console.log('📋 URL:', `https://docs.google.com/spreadsheets/d/${spreadsheetId}`);

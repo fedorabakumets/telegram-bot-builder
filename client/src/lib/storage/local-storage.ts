@@ -17,11 +17,12 @@ const STORAGE_KEYS = {
 } as const;
 
 // Stored types with ISO date strings
-type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt' | 'restartOnUpdate' | 'lastExportedAt'> & { 
+type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt' | 'restartOnUpdate' | 'lastExportedAt' | 'lastExportedStructureAt'> & { 
   createdAt: string; 
   updatedAt: string; 
   restartOnUpdate?: boolean;
   lastExportedAt: string | null;
+  lastExportedStructureAt: string | null;
 };
 type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
 type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
@@ -108,6 +109,9 @@ export class LocalStorageService {
       lastExportedAt: stored.lastExportedAt ? new Date(stored.lastExportedAt) : null,
       lastExportedGoogleSheetId: stored.lastExportedGoogleSheetId ?? null,
       lastExportedGoogleSheetUrl: stored.lastExportedGoogleSheetUrl ?? null,
+      lastExportedStructureAt: stored.lastExportedStructureAt ? new Date(stored.lastExportedStructureAt) : null,
+      lastExportedStructureSheetId: stored.lastExportedStructureSheetId ?? null,
+      lastExportedStructureSheetUrl: stored.lastExportedStructureSheetUrl ?? null,
     };
   }
 
@@ -155,6 +159,9 @@ export class LocalStorageService {
       lastExportedGoogleSheetId: null,
       lastExportedGoogleSheetUrl: null,
       lastExportedAt: null,
+      lastExportedStructureSheetId: null,
+      lastExportedStructureSheetUrl: null,
+      lastExportedStructureAt: null,
       createdAt: now,
       updatedAt: now,
     };

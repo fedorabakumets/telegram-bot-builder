@@ -1,11 +1,15 @@
 /**
  * @fileoverview Модуль для управления метаданными экспорта в Google Таблицы
- * 
+ *
  * Предоставляет функции для сохранения и получения информации о последнем экспорте:
  * - ID таблицы
  * - URL таблицы
  * - Время последнего экспорта
- * 
+ *
+ * Поддерживает два типа экспорта:
+ * - Экспорт данных пользователей (userDatabase)
+ * - Экспорт структуры проекта (structure)
+ *
  * @version 1.0.0
  */
 
@@ -27,74 +31,111 @@ export interface GoogleSheetExportMetadata {
 }
 
 /**
+ * Тип экспорта для метаданных
+ */
+export type ExportType = 'userDatabase' | 'structure';
+
+/**
  * Сохранить метаданные экспорта в базу данных
- * 
+ *
  * @function saveExportMetadata
  * @param {number} projectId - ID проекта бота
  * @param {string} spreadsheetId - ID созданной Google Таблицы
+ * @param {ExportType} type - Тип экспорта ('userDatabase' или 'structure')
  * @returns {Promise<void>}
- * 
+ *
  * @description
- * Обновляет поля bot_projects таблицей:
- * - lastExportedGoogleSheetId
- * - lastExportedGoogleSheetUrl
- * - lastExportedAt
- * 
+ * Обновляет поля bot_projects в зависимости от типа экспорта:
+ * - userDatabase: lastExportedGoogleSheetId, lastExportedGoogleSheetUrl, lastExportedAt
+ * - structure: lastExportedStructureSheetId, lastExportedStructureSheetUrl, lastExportedStructureAt
+ *
  * @example
- * await saveExportMetadata(123, "abc123xyz");
+ * await saveExportMetadata(123, "abc123xyz", 'userDatabase');
+ * await saveExportMetadata(123, "abc456xyz", 'structure');
  */
 export async function saveExportMetadata(
   projectId: number,
-  spreadsheetId: string
+  spreadsheetId: string,
+  type: ExportType = 'userDatabase'
 ): Promise<void> {
   const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
-  
-  await db
-    .update(botProjects)
-    .set({
-      lastExportedGoogleSheetId: spreadsheetId,
-      lastExportedGoogleSheetUrl: spreadsheetUrl,
-      lastExportedAt: new Date(),
-    })
-    .where(eq(botProjects.id, projectId));
-  
-  console.log(`💾 Сохранены метаданные экспорта для проекта ${projectId}: ${spreadsheetUrl}`);
+
+  if (type === 'structure') {
+    await db
+      .update(botProjects)
+      .set({
+        lastExportedStructureSheetId: spreadsheetId,
+        lastExportedStructureSheetUrl: spreadsheetUrl,
+        lastExportedStructureAt: new Date(),
+      })
+      .where(eq(botProjects.id, projectId));
+
+    console.log(`💾 Сохранены метаданные экспорта структуры для проекта ${projectId}: ${spreadsheetUrl}`);
+  } else {
+    await db
+      .update(botProjects)
+      .set({
+        lastExportedGoogleSheetId: spreadsheetId,
+        lastExportedGoogleSheetUrl: spreadsheetUrl,
+        lastExportedAt: new Date(),
+      })
+      .where(eq(botProjects.id, projectId));
+
+    console.log(`💾 Сохранены метаданные экспорта пользователей для проекта ${projectId}: ${spreadsheetUrl}`);
+  }
 }
 
 /**
  * Получить метаданные последнего экспорта
- * 
+ *
  * @function getExportMetadata
  * @param {number} projectId - ID проекта бота
+ * @param {ExportType} type - Тип экспорта ('userDatabase' или 'structure')
  * @returns {Promise<GoogleSheetExportMetadata | null>} Метаданные экспорта или null, если экспорт не выполнялся
- * 
+ *
  * @example
- * const metadata = await getExportMetadata(123);
- * if (metadata) {
- *   console.log(`Последний экспорт: ${metadata.exportedAt}`);
- * }
+ * const metadata = await getExportMetadata(123, 'userDatabase');
+ * const structureMetadata = await getExportMetadata(123, 'structure');
  */
 export async function getExportMetadata(
-  projectId: number
+  projectId: number,
+  type: ExportType = 'userDatabase'
 ): Promise<GoogleSheetExportMetadata | null> {
-  const projects = await db
+  const [project] = await db
     .select({
       lastExportedGoogleSheetId: botProjects.lastExportedGoogleSheetId,
       lastExportedGoogleSheetUrl: botProjects.lastExportedGoogleSheetUrl,
       lastExportedAt: botProjects.lastExportedAt,
+      lastExportedStructureSheetId: botProjects.lastExportedStructureSheetId,
+      lastExportedStructureSheetUrl: botProjects.lastExportedStructureSheetUrl,
+      lastExportedStructureAt: botProjects.lastExportedStructureAt,
     })
     .from(botProjects)
     .where(eq(botProjects.id, projectId));
 
-  const [project] = projects;
-
-  if (!project || !project.lastExportedGoogleSheetId) {
+  if (!project) {
     return null;
   }
 
-  return {
-    spreadsheetId: project.lastExportedGoogleSheetId,
-    spreadsheetUrl: project.lastExportedGoogleSheetUrl!,
-    exportedAt: project.lastExportedAt!,
-  };
+  if (type === 'structure') {
+    if (!project.lastExportedStructureSheetId) {
+      return null;
+    }
+
+    return {
+      spreadsheetId: project.lastExportedStructureSheetId,
+      spreadsheetUrl: project.lastExportedStructureSheetUrl!,
+      exportedAt: project.lastExportedStructureAt!,
+    };
+  } else {
+    if (!project.lastExportedGoogleSheetId) {
+      return null;
+    }
+
+    return {
+      spreadsheetId: project.lastExportedGoogleSheetId,
+      spreadsheetUrl: project.lastExportedGoogleSheetUrl!,
+      exportedAt: project.lastExportedAt!,
+    };
+  }
 }

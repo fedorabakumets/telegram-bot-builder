@@ -42,12 +42,18 @@ export const botProjects = pgTable("bot_projects", {
   botToken: text("bot_token"),
   /** Флаг включения пользовательской базы данных (0 = выключена, 1 = включена) */
   userDatabaseEnabled: integer("user_database_enabled").default(1),
-  /** ID последней экспортированной Google Таблицы */
+  /** ID последней экспортированной Google Таблицы пользователей */
   lastExportedGoogleSheetId: text("last_exported_google_sheet_id"),
-  /** URL последней экспортированной Google Таблицы */
+  /** URL последней экспортированной Google Таблицы пользователей */
   lastExportedGoogleSheetUrl: text("last_exported_google_sheet_url"),
-  /** Дата последнего экспорта в Google Таблицы */
+  /** Дата последнего экспорта пользователей в Google Таблицы */
   lastExportedAt: timestamp("last_exported_at"),
+  /** ID последней экспортированной Google Таблицы структуры проекта */
+  lastExportedStructureSheetId: text("last_exported_structure_sheet_id"),
+  /** URL последней экспортированной Google Таблицы структуры проекта */
+  lastExportedStructureSheetUrl: text("last_exported_structure_sheet_url"),
+  /** Дата последнего экспорта структуры проекта в Google Таблицы */
+  lastExportedStructureAt: timestamp("last_exported_structure_at"),
   /** Дата создания проекта */
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления проекта */
