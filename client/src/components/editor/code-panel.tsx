@@ -412,7 +412,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                   </div>
 
                   {/* Export Structure Button */}
-                  {selectedFormat === 'json' && projectIds?.[index] && (
+                  {projectIds?.[index] && (
                     <Button
                       onClick={async (e) => {
                         e.stopPropagation();
@@ -434,14 +434,13 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                               const authData = await authRes.json();
                               if (authData.authUrl) {
                                 const authWindow = window.open(authData.authUrl, '_blank');
-                                
+
                                 // Обработка сообщений от окна аутентификации
                                 const handleMessage = (event: MessageEvent) => {
                                   if (event.origin !== window.location.origin) return;
                                   if (event.data.type === 'auth-success') {
                                     authWindow?.close();
                                     window.removeEventListener('message', handleMessage);
-                                    // Повторить экспорт после аутентификации
                                     setTimeout(() => {
                                       btn.click();
                                     }, 1000);
@@ -451,7 +450,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                                     alert('Ошибка аутентификации: ' + (event.data.message || 'Неизвестная ошибка'));
                                   }
                                 };
-                                
+
                                 window.addEventListener('message', handleMessage);
                               }
                             } else {
