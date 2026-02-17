@@ -414,22 +414,40 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                   {/* Export Structure Button */}
                   {selectedFormat === 'json' && projectIds?.[index] && (
                     <Button
-                      onClick={async () => {
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const btn = e.currentTarget;
+                        const originalText = btn.innerHTML;
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="animate-spin">⏳</span> Экспорт...';
+                        
                         try {
                           const res = await fetch(`/api/projects/${projectIds[index]}/export-structure-to-google-sheets`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' }
                           });
                           const data = await res.json();
-                          if (data.requiresAuth) {
-                            const authRes = await fetch('/api/google-auth/start');
-                            const authData = await authRes.json();
-                            window.open(authData.authUrl, '_blank');
+                          
+                          if (!res.ok) {
+                            if (data.requiresAuth) {
+                              const authRes = await fetch('/api/google-auth/start');
+                              const authData = await authRes.json();
+                              if (authData.authUrl) {
+                                const authWindow = window.open(authData.authUrl, '_blank');
+                                setTimeout(() => authWindow?.close(), 5000);
+                              }
+                            } else {
+                              alert('Ошибка экспорта: ' + (data.error || data.message));
+                            }
                           } else if (data.spreadsheetUrl) {
                             window.open(data.spreadsheetUrl, '_blank');
                           }
                         } catch (err) {
                           console.error('Export error:', err);
+                          alert('Ошибка при экспорте структуры');
+                        } finally {
+                          btn.disabled = false;
+                          btn.innerHTML = originalText;
                         }
                       }}
                       variant="outline"
