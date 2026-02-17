@@ -975,7 +975,7 @@ export default function Editor() {
    * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} tab - Выбранная вкладка
    */
   const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
-    const prevTab = currentTab;
+    const prevTab = currentTab as string;
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
