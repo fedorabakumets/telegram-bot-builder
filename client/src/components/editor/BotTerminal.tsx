@@ -32,6 +32,14 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
   const [terminalVisible, setTerminalVisible] = useState(false);
   const terminalRef = useRef<TerminalHandle>(null);
 
+  // Логирование монтирования/размонтирования для отладки
+  useEffect(() => {
+    console.log('BotTerminal: монтирование, isBotRunning:', isBotRunning);
+    return () => {
+      console.log('BotTerminal: размонтирование');
+    };
+  }, []);
+
   // WebSocket для получения вывода бота
   const { status: wsStatus, wsConnection, connect } = useTerminalWebSocket({
     terminalRef,
