@@ -95,7 +95,18 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
   const { data: project } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectIds?.[0]}`],
     enabled: !!projectIds?.[0],
+    staleTime: 1000 * 60 * 5, // 5 минут
   });
+
+  // Логирование для отладки
+  useEffect(() => {
+    if (project) {
+      console.log('📊 Project export data:', {
+        url: project.lastExportedStructureSheetUrl,
+        at: project.lastExportedStructureAt,
+      });
+    }
+  }, [project]);
 
   /**
    * Использование хука генератора кода для всех форматов
@@ -486,7 +497,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                   )}
 
                   {/* Last Export Link */}
-                  {projectIds?.[index] && project?.lastExportedStructureSheetUrl && (
+                  {projectIds?.[0] && project?.lastExportedStructureSheetUrl && (
                     <div className="flex items-center gap-2 text-sm bg-green-50 dark:bg-green-950/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-800">
                       <span className="text-green-600 dark:text-green-400">📊</span>
                       <span className="text-muted-foreground">Последний экспорт структуры:</span>
