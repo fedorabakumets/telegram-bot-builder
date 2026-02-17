@@ -2181,6 +2181,42 @@ export default function Editor() {
         </SheetContent>
       </Sheet>
 
+      {/* Плавающая панель редактора кода - отображается поверх всех вкладок */}
+      {codeEditorVisible && activeProject && (
+        <div className="fixed inset-0 z-40 bg-background/95 backdrop-blur-sm">
+          <div className="h-full flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b bg-background">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <i className="fas fa-file-code text-blue-500"></i>
+                Редактор кода
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleToggleCodeEditor}
+                className="h-8"
+              >
+                <i className="fas fa-times mr-2"></i>
+                Закрыть
+              </Button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <CodeEditorArea
+                isMobile={false}
+                isLoading={isCodeLoading}
+                displayContent={displayContent}
+                selectedFormat={selectedFormat}
+                theme={theme}
+                editorRef={editorRef}
+                codeStats={codeStats}
+                setAreAllCollapsed={setAreAllCollapsed}
+                areAllCollapsed={areAllCollapsed}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   );
 }
