@@ -7,7 +7,7 @@ import { SyncFromFileButton } from './sync-from-file-button';
 import { TokenInfo } from './token-info';
 import { useToast } from '@/hooks/use-toast';
 import { BotData, BotGroup, BotProject } from '@shared/schema';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 import { useUpdateProjectName } from '@/hooks/use-update-project-name';
@@ -46,6 +46,8 @@ interface CodePanelProps {
  * Управляет состоянием и данными для дочерних компонентов
  */
 export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate }: CodePanelProps) {
+  const queryClient = useQueryClient();
+  
   // Состояние для управления форматом и отображением кода
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
@@ -484,6 +486,12 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                         } finally {
                           btn.disabled = false;
                           btn.innerHTML = originalText;
+                          // Обновляем данные проекта для отображения актуального времени экспорта
+                          if (projectIds?.[0]) {
+                            queryClient.invalidateQueries({
+                              queryKey: [`/api/projects/${projectIds[0]}`],
+                            });
+                          }
                         }
                       }}
                       variant="outline"
