@@ -626,20 +626,18 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
                 errorObj.message.includes('invalid or expired') ||
                 errorAsAny.requiresAuth === true) {
 
-                console.warn('\n⚠️  Требуется аутентификация Google');
-                console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                console.warn('Необходимо пройти аутентификацию для доступа к Google Таблицам');
-                console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
+                // Это нормальная ситуация - токен не найден или истёк
+                // Не логируем как ошибку, просто возвращаем 401
                 return res.status(401).json({
                     message: "Authentication required",
-                    error: errorObj.message,
+                    error: "Please complete Google OAuth authentication",
                     requiresAuth: true
                 });
             }
 
             console.error('\n❌ Ошибка экспорта структуры');
             console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.error('Проект:', project.name, '(ID:', projectId + ')');
             console.error('Ошибка:', errorObj.message);
             console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 

@@ -105,11 +105,11 @@ export async function authenticate() {
       // Проверяем, действителен ли токен
       const accessToken = await oAuth2Client.getAccessToken();
       if (!accessToken.token) {
-        console.log('🔄 Токен доступа недействителен или истек срок действия. Требуется повторная аутентификация...');
+        console.log('🔄 Токен доступа истёк. Требуется повторная аутентификация...');
         throw new Error('Access token is invalid or expired');
       }
     } catch (tokenError) {
-      console.log('🔐 Требуется аутентификация OAuth. Файл токена не найден или недействителен...');
+      // Тихая ошибка - это нормальная ситуация при первой аутентификации
       const authError = new Error('OAuth token not found or invalid. Please authenticate first.');
       (authError as any).requiresAuth = true;
       throw authError;
