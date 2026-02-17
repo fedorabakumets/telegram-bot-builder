@@ -12,7 +12,6 @@ import { Canvas } from '@/components/editor/canvas/canvas';
 import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
 import { ComponentsSidebar } from '@/components/editor/properties/components-sidebar';
-import { ExportPanel } from '@/components/editor/export/export-panel';
 import { PropertiesPanel } from '@/components/editor/properties/properties-panel';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -1006,6 +1005,8 @@ export default function Editor() {
       if (activeProject?.id) {
         updateProjectMutation.mutate({});
       }
+      // Открываем панель кода и редактор при экспорте
+      handleOpenCodePanel();
     } else if (tab === 'bot') {
       // Auto-save before showing bot controls
       if (activeProject?.id) {
@@ -1017,7 +1018,7 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
     }
-  }, [updateProjectMutation, activeProject, setLocation]);
+  }, [updateProjectMutation, activeProject, setLocation, handleOpenCodePanel]);
 
   // Функции управления листами
   /**
@@ -1616,14 +1617,7 @@ export default function Editor() {
               onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
             />
           </div>
-        ) : currentTab === 'export' ? (
-          <ExportPanel
-            botData={(botDataWithSheets || getBotData()) as any}
-            projectName={activeProject.name}
-            projectId={activeProject.id}
-            userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
-          />
-        ) : null}
+        ) : currentTab === 'export' ? null : null}
       </div>
     );
 
@@ -1851,14 +1845,7 @@ export default function Editor() {
                     projectName={activeProject.name}
                   />
                 </div>
-              ) : currentTab === 'export' ? (
-                <ExportPanel
-                  botData={(botDataWithSheets || getBotData()) as any}
-                  projectName={activeProject.name}
-                  projectId={activeProject.id}
-                  userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
-                />
-              ) : null}
+              ) : currentTab === 'export' ? null : null}
             </div>
           }
           properties={
