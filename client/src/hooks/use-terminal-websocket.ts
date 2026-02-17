@@ -85,7 +85,15 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
 
     // Закрываем предыдущее соединение, если оно существует
     if (wsRef.current) {
+      console.log('Закрываем старое WebSocket-соединение перед новым подключением');
       wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    // Сбрасываем таймер переподключения если есть
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
     }
 
     // Формируем URL для подключения
@@ -95,7 +103,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
     try {
       console.log(`Подключение к WebSocket: ${wsUrl}`);
       setStatus('connecting');
-      
+
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
@@ -183,7 +191,8 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
   useEffect(() => {
     if (projectId && tokenId) {
       // Если соединение ещё не установлено или закрыто - подключаемся
-      if (status === 'disconnected' || !wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+      if (status === 'disconnected') {
+        console.log('Автоматическое подключение к терминалу, projectId:', projectId, 'tokenId:', tokenId);
         connect();
       }
     }
@@ -194,7 +203,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       // Сохраняем соединение при размонтировании
       // Переподключение произойдёт автоматически при монтировании если нужно
     };
-  }, [projectId, tokenId]);
+  }, [projectId, tokenId]); // Убрали status из зависимостей чтобы избежать цикла
 
   return {
     status,
