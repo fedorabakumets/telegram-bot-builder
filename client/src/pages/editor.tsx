@@ -339,15 +339,7 @@ export default function Editor() {
         if (element.id === 'codeEditor') {
           return { ...element, visible: true };
         }
-        if (element.id === 'canvas') {
-          return { ...element, visible: false };
-        }
-        if (element.id === 'sidebar') {
-          return { ...element, visible: false };
-        }
-        if (element.id === 'properties') {
-          return { ...element, visible: false };
-        }
+        // Не скрываем canvas, sidebar и properties - они управляются через currentTab
         return { ...element, visible: element.visible ?? true };
       })
     }));
@@ -366,15 +358,7 @@ export default function Editor() {
         if (element.id === 'codeEditor') {
           return { ...element, visible: false };
         }
-        if (element.id === 'canvas') {
-          return { ...element, visible: true };
-        }
-        if (element.id === 'sidebar') {
-          return { ...element, visible: true };
-        }
-        if (element.id === 'properties') {
-          return { ...element, visible: true };
-        }
+        // Не показываем canvas, sidebar и properties - они управляются через currentTab
         return { ...element, visible: element.visible ?? true };
       })
     }));
@@ -991,6 +975,7 @@ export default function Editor() {
    * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} tab - Выбранная вкладка
    */
   const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
+    const prevTab = currentTab;
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
@@ -1001,12 +986,23 @@ export default function Editor() {
       setLocation(`/preview/${activeProject?.id}`);
       return;
     } else if (tab === 'export') {
-      // Auto-save before showing export page
+      // Auto-save before showing export page и открываем панель кода
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({}, {
+          onSuccess: () => {
+            // Открываем панель кода после успешного сохранения
+            handleOpenCodePanel();
+          }
+        });
+      } else {
+        handleOpenCodePanel();
+      }
+    } else if (prevTab === 'export' && tab !== 'export') {
+      // Закрываем панель кода при переключении с вкладки экспорт
+      handleCloseCodePanel();
       if (activeProject?.id) {
         updateProjectMutation.mutate({});
       }
-      // Открываем панель кода и редактор при экспорте
-      handleOpenCodePanel();
     } else if (tab === 'bot') {
       // Auto-save before showing bot controls
       if (activeProject?.id) {
@@ -1018,7 +1014,7 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
     }
-  }, [updateProjectMutation, activeProject, setLocation, handleOpenCodePanel]);
+  }, [updateProjectMutation, activeProject, setLocation, handleOpenCodePanel, handleCloseCodePanel, currentTab]);
 
   // Функции управления листами
   /**
@@ -1492,7 +1488,7 @@ export default function Editor() {
   });
 
   // Определяем содержимое панели кода
-  const codeContent = activeProject ? (
+  const codeContent = activeProject && currentTab === 'export' ? (
     <CodePanel
       botDataArray={allProjects.map(project => project.data as BotData)}
       projectIds={allProjects.map(project => project.id)}
@@ -1671,7 +1667,7 @@ export default function Editor() {
             propertiesContent={propertiesContent}
             codeContent={codeContent}
             codeEditorContent={
-              activeProject && (
+              activeProject && currentTab === 'export' ? (
                 <div className="h-full flex flex-col">
                   <CodeEditorArea
                     isMobile={false}
@@ -1685,7 +1681,7 @@ export default function Editor() {
                     areAllCollapsed={areAllCollapsed}
                   />
                 </div>
-              )
+              ) : null
             }
             dialogContent={
               selectedDialogUser && activeProject && (
