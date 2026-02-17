@@ -308,6 +308,9 @@ export default function Editor() {
     setFlexibleLayoutConfig(prev => {
       // Проверяем, видима ли одна из панелей кода
       const isCodeVisible = prev.elements.some(el => (el.id === 'code' || el.id === 'codeEditor') && el.visible);
+      
+      // Сохраняем состояние для использования после обновления
+      codePanelVisibleRef.current = isCodeVisible;
 
       return {
         ...prev,
@@ -316,28 +319,24 @@ export default function Editor() {
             return { ...element, visible: !isCodeVisible };
           }
           if (element.id === 'canvas') {
-            return { ...element, visible: isCodeVisible };
+            return { ...element, visible: isCodeVisible }; // Показываем холст при закрытии панелей кода
           }
           if (element.id === 'sidebar' || element.id === 'properties') {
-            return { ...element, visible: isCodeVisible };
+            return { ...element, visible: isCodeVisible }; // Показываем боковые панели при закрытии панелей кода
           }
           return { ...element, visible: element.visible ?? true };
         })
       };
     });
 
-    // Переключаем вкладку на export или предыдущую
-    setFlexibleLayoutConfig(prev => {
-      const isCodeVisible = prev.elements.some(el => (el.id === 'code' || el.id === 'codeEditor') && el.visible);
-      if (isCodeVisible) {
-        // Если панели кода были видны, возвращаемся на предыдущую вкладку
-        setCurrentTab(previousTab);
-      } else {
-        // Если панели кода были скрыты, переключаемся на export
-        setCurrentTab('export');
-      }
-      return prev;
-    });
+    // Переключаем вкладку на export или предыдущую (используем ref)
+    if (codePanelVisibleRef.current) {
+      // Если панели кода были видны, значит закрываем их и возвращаемся на предыдущую вкладку
+      setCurrentTab(previousTab);
+    } else {
+      // Если панели кода были скрыты, значит открываем их и переключаемся на export
+      setCurrentTab('export');
+    }
   }, [previousTab]);
 
   /**
@@ -759,6 +758,7 @@ export default function Editor() {
 
   // Ссылка на редактор Monaco для управления сворачиванием
   const editorRef = useRef<any>(null);
+  const codePanelVisibleRef = useRef(false);
 
   // Загрузка списка групп для генерации кода
   const { data: groups = [] } = useQuery<BotGroup[]>({
