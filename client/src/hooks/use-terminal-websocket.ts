@@ -70,7 +70,6 @@ interface UseTerminalWebSocketResult {
 export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTerminalWebSocketParams): UseTerminalWebSocketResult => {
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * Подключается к WebSocket-серверу терминала
@@ -88,12 +87,6 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       console.log('Закрываем старое WebSocket-соединение перед новым подключением');
       wsRef.current.close();
       wsRef.current = null;
-    }
-
-    // Сбрасываем таймер переподключения если есть
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
     }
 
     // Формируем URL для подключения
@@ -139,16 +132,9 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
         console.log(`Соединение с терминалом закрыто: код ${event.code}, причина: ${event.reason}`);
         setStatus('disconnected');
 
-        // Пытаемся переподключиться через 3 секунды
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-        }
-
-        reconnectTimeoutRef.current = setTimeout(() => {
-          if (projectId && tokenId) {
-            connect();
-          }
-        }, 3000);
+        // НЕ пытаемся переподключиться автоматически
+        // Переподключение будет инициировано через useEffect в BotTerminal
+        // при изменении статуса на 'disconnected'
       };
 
       ws.onerror = (error) => {
@@ -173,14 +159,9 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       wsRef.current.close();
       wsRef.current = null;
     }
-    
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-    
+
     setStatus('disconnected');
-    
+
     if (terminalRef?.current) {
       terminalRef.current.addLineLocal('[Система] Отключено от терминала', 'stdout');
     }
