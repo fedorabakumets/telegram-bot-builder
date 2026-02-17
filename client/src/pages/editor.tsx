@@ -326,9 +326,12 @@ export default function Editor() {
     });
     
     // Переключаем вкладку на export или editor
-    const isCodeVisible = flexibleLayoutConfig.elements.some(el => (el.id === 'code' || el.id === 'codeEditor') && el.visible);
-    setCurrentTab(isCodeVisible ? 'editor' : 'export');
-  }, [flexibleLayoutConfig]);
+    setFlexibleLayoutConfig(prev => {
+      const isCodeVisible = prev.elements.some(el => (el.id === 'code' || el.id === 'codeEditor') && el.visible);
+      setCurrentTab(isCodeVisible ? 'editor' : 'export');
+      return prev;
+    });
+  }, []);
 
   /**
    * Обработчик открытия панели кода (открывает обе панели - левую и центральную)
@@ -997,7 +1000,6 @@ export default function Editor() {
    * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} tab - Выбранная вкладка
    */
   const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
-    const prevTab = currentTab as string;
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
@@ -1019,7 +1021,7 @@ export default function Editor() {
       } else {
         handleOpenCodePanel();
       }
-    } else if ((prevTab as string) === 'export' && tab !== 'export') {
+    } else if (currentTab === 'export' && tab !== 'export') {
       // Закрываем панель кода при переключении с вкладки экспорт
       handleCloseCodePanel();
       if (activeProject?.id) {
