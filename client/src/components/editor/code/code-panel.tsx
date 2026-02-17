@@ -13,6 +13,7 @@ import { SyncFromFileButton } from './sync-from-file-button';
 import { TokenInfo } from './token-info';
 import { BotFatherCommands } from './botfather-commands';
 import { BotValidation } from './bot-validation';
+import { BotStats } from './bot-stats';
 
 /**
  * Свойства компонента панели кода
@@ -365,6 +366,9 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
 
                   {/* Валидация структуры бота */}
                   <BotValidation botData={botDataArray[index]} />
+
+                  {/* Статистика бота */}
+                  <BotStats botData={botDataArray[index]} />
 
                   {/* Format Selection */}
                   <div className="space-y-1.5 xs:space-y-2">
