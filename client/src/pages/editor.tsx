@@ -64,6 +64,7 @@ export default function Editor() {
    * @type {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'}
    */
   const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
+  const [previousTab, setPreviousTab] = useState<'editor' | 'preview' | 'bot' | 'users' | 'groups'>('editor');
 
   /**
    * Флаг отображения модального окна сохранения шаблона
@@ -315,23 +316,29 @@ export default function Editor() {
             return { ...element, visible: !isCodeVisible };
           }
           if (element.id === 'canvas') {
-            return { ...element, visible: isCodeVisible }; // Если панель кода была видна, то показываем холст
+            return { ...element, visible: isCodeVisible };
           }
           if (element.id === 'sidebar' || element.id === 'properties') {
-            return { ...element, visible: isCodeVisible }; // Если панель кода была видна, то показываем боковые панели
+            return { ...element, visible: isCodeVisible };
           }
           return { ...element, visible: element.visible ?? true };
         })
       };
     });
-    
-    // Переключаем вкладку на export или editor
+
+    // Переключаем вкладку на export или предыдущую
     setFlexibleLayoutConfig(prev => {
       const isCodeVisible = prev.elements.some(el => (el.id === 'code' || el.id === 'codeEditor') && el.visible);
-      setCurrentTab(isCodeVisible ? 'editor' : 'export');
+      if (isCodeVisible) {
+        // Если панели кода были видны, возвращаемся на предыдущую вкладку
+        setCurrentTab(previousTab);
+      } else {
+        // Если панели кода были скрыты, переключаемся на export
+        setCurrentTab('export');
+      }
       return prev;
     });
-  }, []);
+  }, [previousTab]);
 
   /**
    * Обработчик открытия панели кода (открывает обе панели - левую и центральную)
@@ -1000,6 +1007,11 @@ export default function Editor() {
    * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} tab - Выбранная вкладка
    */
   const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
+    // Сохраняем предыдущую вкладку (если не переключались на 'export')
+    if (currentTab !== 'export' && tab !== 'export') {
+      setPreviousTab(currentTab as 'editor' | 'preview' | 'bot' | 'users' | 'groups');
+    }
+    
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
@@ -1038,7 +1050,7 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
     }
-  }, [updateProjectMutation, activeProject, setLocation, handleOpenCodePanel, handleCloseCodePanel, currentTab]);
+  }, [updateProjectMutation, activeProject, setLocation, handleOpenCodePanel, handleCloseCodePanel, currentTab, previousTab, setPreviousTab]);
 
   // Функции управления листами
   /**
