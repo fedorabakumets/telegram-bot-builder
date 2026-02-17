@@ -420,21 +420,39 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                         const originalText = btn.innerHTML;
                         btn.disabled = true;
                         btn.innerHTML = '<span class="animate-spin">⏳</span> Экспорт...';
-                        
+
                         try {
                           const res = await fetch(`/api/projects/${projectIds[index]}/export-structure-to-google-sheets`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' }
                           });
                           const data = await res.json();
-                          
+
                           if (!res.ok) {
                             if (data.requiresAuth) {
                               const authRes = await fetch('/api/google-auth/start');
                               const authData = await authRes.json();
                               if (authData.authUrl) {
                                 const authWindow = window.open(authData.authUrl, '_blank');
-                                setTimeout(() => authWindow?.close(), 5000);
+                                
+                                // Обработка сообщений от окна аутентификации
+                                const handleMessage = (event: MessageEvent) => {
+                                  if (event.origin !== window.location.origin) return;
+                                  if (event.data.type === 'auth-success') {
+                                    authWindow?.close();
+                                    window.removeEventListener('message', handleMessage);
+                                    // Повторить экспорт после аутентификации
+                                    setTimeout(() => {
+                                      btn.click();
+                                    }, 1000);
+                                  } else if (event.data.type === 'auth-error') {
+                                    authWindow?.close();
+                                    window.removeEventListener('message', handleMessage);
+                                    alert('Ошибка аутентификации: ' + (event.data.message || 'Неизвестная ошибка'));
+                                  }
+                                };
+                                
+                                window.addEventListener('message', handleMessage);
                               }
                             } else {
                               alert('Ошибка экспорта: ' + (data.error || data.message));
