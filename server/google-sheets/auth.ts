@@ -189,11 +189,11 @@ export async function getToken(code: string): Promise<object> {
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
 
-    // Сохраняем токены в файл
-    const tokenPath = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'token.json');
+    // Сохраняем токены в файл в новой папке config/google-auth/
+    const tokenPath = TOKEN_PATH;
     await fs.writeFile(tokenPath, JSON.stringify(tokens));
 
-    console.log('Токен успешно получен и сохранен');
+    console.log('Токен успешно получен и сохранен:', tokenPath);
 
     return tokens;
   } catch (error) {
