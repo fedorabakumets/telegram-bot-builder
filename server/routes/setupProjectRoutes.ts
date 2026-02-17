@@ -575,4 +575,78 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             });
         }
     });
+
+    /**
+     * Обработчик маршрута POST /api/projects/:id/export-structure-to-google-sheets
+     *
+     * Экспортирует структуру проекта (узлы, связи, переменные) в Google Таблицы
+     *
+     * @route POST /api/projects/:id/export-structure-to-google-sheets
+     */
+    app.post("/api/projects/:id/export-structure-to-google-sheets", requireDbReady, async (req, res) => {
+        try {
+            const projectId = parseInt(req.params.id);
+            const project = await storage.getBotProject(projectId);
+            
+            if (!project) {
+                return res.status(404).json({ message: "Project not found" });
+            }
+
+            const ownerId = getOwnerIdFromRequest(req);
+            if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
+                return res.status(403).json({ message: "You don't have permission to access this project" });
+            }
+
+            const { exportStructureToGoogleSheets } = await import("../google-sheets/export-structure");
+            const { saveExportMetadata } = await import("../google-sheets/export-metadata");
+
+            console.log('\n📊 Экспорт структуры проекта');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('Проект:', project.name);
+            console.log('ID проекта:', projectId);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+            const spreadsheetId = await exportStructureToGoogleSheets(project.data, project.name, projectId);
+            await saveExportMetadata(projectId, spreadsheetId);
+
+            console.log('✅ Экспорт структуры завершён!');
+            console.log('📋 URL:', `https://docs.google.com/spreadsheets/d/${spreadsheetId}`);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+            return res.json({
+                success: true,
+                spreadsheetId,
+                spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
+            });
+        } catch (error) {
+            const errorObj = error as Error;
+            const errorAsAny = error as any;
+
+            if (errorObj.message.includes('OAuth token not found') ||
+                errorObj.message.includes('invalid or expired') ||
+                errorAsAny.requiresAuth === true) {
+
+                console.warn('\n⚠️  Требуется аутентификация Google');
+                console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.warn('Необходимо пройти аутентификацию для доступа к Google Таблицам');
+                console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+                return res.status(401).json({
+                    message: "Authentication required",
+                    error: errorObj.message,
+                    requiresAuth: true
+                });
+            }
+
+            console.error('\n❌ Ошибка экспорта структуры');
+            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.error('Ошибка:', errorObj.message);
+            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+            return res.status(500).json({
+                message: "Failed to export structure to Google Sheets",
+                error: errorObj.message
+            });
+        }
+    });
 }

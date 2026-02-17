@@ -411,6 +411,37 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                     </Button>
                   </div>
 
+                  {/* Export Structure Button */}
+                  {selectedFormat === 'json' && projectIds?.[index] && (
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`/api/projects/${projectIds[index]}/export-structure-to-google-sheets`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                          });
+                          const data = await res.json();
+                          if (data.requiresAuth) {
+                            const authRes = await fetch('/api/google-auth/start');
+                            const authData = await authRes.json();
+                            window.open(authData.authUrl, '_blank');
+                          } else if (data.spreadsheetUrl) {
+                            window.open(data.spreadsheetUrl, '_blank');
+                          }
+                        } catch (err) {
+                          console.error('Export error:', err);
+                        }
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="w-full h-9 xs:h-10 text-xs xs:text-sm border-2 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/50"
+                      data-testid="button-export-structure"
+                    >
+                      <i className="fas fa-file-export text-xs xs:text-sm"></i>
+                      <span className="hidden xs:inline ml-1.5">📊 Экспорт структуры</span>
+                    </Button>
+                  )}
+
                   {/* Code Statistics */}
                   {lineCount > 0 && (
                     <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 gap-2 xs:gap-2.5">
