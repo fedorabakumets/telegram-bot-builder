@@ -16,6 +16,7 @@
 import { db } from '../database/db';
 import { botProjects } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { dbCache } from '../database/db-cache';
 
 /**
  * @interface GoogleSheetExportMetadata
@@ -77,7 +78,9 @@ export async function saveExportMetadata(
       })
       .where(eq(botProjects.id, projectId));
 
-    console.log(`✅ Методанные экспорта структуры сохранены в БД`);
+    // Инвалидация кэша проекта чтобы новые данные сразу были доступны
+    dbCache.clearByPattern(`project:${projectId}:.*`);
+    console.log(`✅ Методанные экспорта структуры сохранены в БД (кэш инвалидирован)`);
   } else {
     await db
       .update(botProjects)
@@ -88,7 +91,9 @@ export async function saveExportMetadata(
       })
       .where(eq(botProjects.id, projectId));
 
-    console.log(`💾 Сохранены метаданные экспорта пользователей для проекта ${projectId}: ${spreadsheetUrl}`);
+    // Инвалидация кэша проекта
+    dbCache.clearByPattern(`project:${projectId}:.*`);
+    console.log(`💾 Сохранены метаданные экспорта пользователей для проекта ${projectId}: ${spreadsheetUrl} (кэш инвалидирован)`);
   }
 }
 
