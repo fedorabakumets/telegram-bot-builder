@@ -324,7 +324,11 @@ export default function Editor() {
         })
       };
     });
-  }, []);
+    
+    // Переключаем вкладку на export или editor
+    const isCodeVisible = flexibleLayoutConfig.elements.some(el => (el.id === 'code' || el.id === 'codeEditor') && el.visible);
+    setCurrentTab(isCodeVisible ? 'editor' : 'export');
+  }, [flexibleLayoutConfig]);
 
   /**
    * Обработчик открытия панели кода (открывает обе панели - левую и центральную)
