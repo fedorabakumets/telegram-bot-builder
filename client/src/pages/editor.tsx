@@ -1021,7 +1021,7 @@ export default function Editor() {
       } else {
         handleOpenCodePanel();
       }
-    } else if (currentTab === 'export' && tab !== 'export') {
+    } else if ((currentTab as string) === 'export' && tab !== 'export') {
       // Закрываем панель кода при переключении с вкладки экспорт
       handleCloseCodePanel();
       if (activeProject?.id) {
@@ -1512,7 +1512,7 @@ export default function Editor() {
   });
 
   // Определяем содержимое панели кода
-  const codeContent = activeProject && currentTab === 'export' ? (
+  const codeContent = activeProject ? (
     <CodePanel
       botDataArray={allProjects.map(project => project.data as BotData)}
       projectIds={allProjects.map(project => project.id)}
@@ -1691,7 +1691,7 @@ export default function Editor() {
             propertiesContent={propertiesContent}
             codeContent={codeContent}
             codeEditorContent={
-              activeProject && currentTab === 'export' ? (
+              activeProject ? (
                 <div className="h-full flex flex-col">
                   <CodeEditorArea
                     isMobile={false}
