@@ -7,7 +7,7 @@
  * - Индикатор статуса подключения к WebSocket
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Code } from 'lucide-react';
 import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';
@@ -33,13 +33,21 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
   const terminalRef = useRef<TerminalHandle>(null);
 
   // WebSocket для получения вывода бота
-  const { status: wsStatus, wsConnection } = useTerminalWebSocket({
+  const { status: wsStatus, wsConnection, connect } = useTerminalWebSocket({
     terminalRef,
     projectId: projectId || null,
     tokenId: isBotRunning ? tokenId : null
   });
 
   // При остановке бота не скрываем терминал, чтобы пользователь мог видеть последние сообщения
+
+  // Переподключаемся при возврате на вкладку если бот запущен
+  useEffect(() => {
+    if (isBotRunning && (!wsConnection || wsConnection.readyState === WebSocket.CLOSED)) {
+      console.log('Переподключение к терминалу при возврате на вкладку');
+      connect();
+    }
+  }, [isBotRunning, wsConnection, connect]);
 
   return (
     <>

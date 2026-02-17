@@ -179,20 +179,20 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
   };
 
   // Автоматически подключаемся при изменении projectId или tokenId
+  // А также при монтировании если projectId и tokenId доступны
   useEffect(() => {
-    if (projectId && tokenId && status === 'disconnected') {
-      connect();
+    if (projectId && tokenId) {
+      // Если соединение ещё не установлено или закрыто - подключаемся
+      if (status === 'disconnected' || !wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+        connect();
+      }
     }
-    
-    // При размонтировании компонента отключаемся
+
+    // При размонтировании компонента НЕ закрываем соединение
+    // Оно будет закрыто только при остановке бота или явном вызове disconnect
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-      
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
+      // Сохраняем соединение при размонтировании
+      // Переподключение произойдёт автоматически при монтировании если нужно
     };
   }, [projectId, tokenId]);
 
