@@ -760,6 +760,29 @@ export default function Editor() {
   const editorRef = useRef<any>(null);
   const codePanelVisibleRef = useRef(false);
 
+  // Состояние для управления видимостью редактора кода
+  const [codeEditorVisible, setCodeEditorVisible] = useState(false);
+
+  /**
+   * Обработчик переключения видимости редактора кода
+   * Управляет видимостью только CodeEditorArea (панели с Monaco Editor)
+   */
+  const handleToggleCodeEditor = useCallback(() => {
+    const isVisible = !codeEditorVisible;
+    setCodeEditorVisible(isVisible);
+    
+    // Обновляем видимость элемента в конфигурации макета
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element => {
+        if (element.id === 'codeEditor') {
+          return { ...element, visible: isVisible };
+        }
+        return { ...element, visible: element.visible ?? true };
+      })
+    }));
+  }, [codeEditorVisible]);
+
   // Загрузка списка групп для генерации кода
   const { data: groups = [] } = useQuery<BotGroup[]>({
     queryKey: ['/api/groups'],
@@ -1569,11 +1592,13 @@ export default function Editor() {
         onToggleProperties={handleToggleProperties}
         onToggleCanvas={handleToggleCanvas}
         onToggleCode={handleToggleCodePanel}
+        onToggleCodeEditor={handleToggleCodeEditor}
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
         sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
         propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
         canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
         codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
+        codeEditorVisible={codeEditorVisible}
         onOpenMobileSidebar={() => setShowMobileSidebar(true)}
         onOpenMobileProperties={() => setShowMobileProperties(true)}
       />
@@ -1771,11 +1796,13 @@ export default function Editor() {
               onToggleProperties={handleToggleProperties}
               onToggleCanvas={handleToggleCanvas}
               onToggleCode={handleToggleCodePanel}
+              onToggleCodeEditor={handleToggleCodeEditor}
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
               sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
               propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
               canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
               codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
+              codeEditorVisible={codeEditorVisible}
               onOpenMobileSidebar={() => setShowMobileSidebar(true)}
               onOpenMobileProperties={() => setShowMobileProperties(true)}
             />
@@ -1920,7 +1947,9 @@ export default function Editor() {
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
               onToggleCode={handleToggleCodePanel}
+              onToggleCodeEditor={handleToggleCodeEditor}
               codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
+              codeEditorVisible={codeEditorVisible}
               onOpenMobileSidebar={() => setShowMobileSidebar(true)}
               onOpenMobileProperties={() => setShowMobileProperties(true)}
             />
@@ -1942,7 +1971,9 @@ export default function Editor() {
                   onLoadTemplate={handleLoadTemplate}
                   onLayoutSettings={() => setShowLayoutManager(true)}
                   onToggleCode={handleToggleCodePanel}
+                  onToggleCodeEditor={handleToggleCodeEditor}
                   codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
+                  codeEditorVisible={codeEditorVisible}
                   onOpenMobileSidebar={() => setShowMobileSidebar(true)}
                   onOpenMobileProperties={() => setShowMobileProperties(true)}
                 />

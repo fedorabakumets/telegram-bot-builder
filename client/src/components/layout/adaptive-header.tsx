@@ -40,11 +40,13 @@ interface BotInfo {
  * @property {() => void} [onToggleProperties] - Функция переключения видимости панели свойств
  * @property {() => void} [onToggleCanvas] - Функция переключения видимости холста
  * @property {() => void} [onToggleCode] - Функция переключения видимости панели кода
+ * @property {() => void} [onToggleCodeEditor] - Функция переключения видимости редактора кода
  * @property {boolean} [headerVisible] - Видимость заголовка
  * @property {boolean} [sidebarVisible] - Видимость боковой панели
  * @property {boolean} [propertiesVisible] - Видимость панели свойств
  * @property {boolean} [canvasVisible] - Видимость холста
  * @property {boolean} [codeVisible] - Видимость панели кода
+ * @property {boolean} [codeEditorVisible] - Видимость редактора кода
  * @property {() => void} [onOpenMobileSidebar] - Функция открытия мобильной боковой панели
  * @property {() => void} [onOpenMobileProperties] - Функция открытия мобильной панели свойств
  */
@@ -65,12 +67,14 @@ interface AdaptiveHeaderProps {
   onToggleProperties?: () => void;
   onToggleCanvas?: () => void;
   onToggleCode?: () => void;
+  onToggleCodeEditor?: () => void;
   onOpenFileExplorer?: () => void;
   headerVisible?: boolean;
   sidebarVisible?: boolean;
   propertiesVisible?: boolean;
   canvasVisible?: boolean;
   codeVisible?: boolean;
+  codeEditorVisible?: boolean;
   // Мобильные функции
   onOpenMobileSidebar?: () => void;
   onOpenMobileProperties?: () => void;
@@ -96,12 +100,14 @@ export function AdaptiveHeader({
   onToggleProperties,
   onToggleCanvas,
   onToggleCode,
+  onToggleCodeEditor,
   onOpenFileExplorer,
   headerVisible,
   sidebarVisible,
   propertiesVisible,
   canvasVisible,
   codeVisible,
+  codeEditorVisible,
   onOpenMobileSidebar,
   onOpenMobileProperties
 }: AdaptiveHeaderProps) {
@@ -344,6 +350,26 @@ export function AdaptiveHeader({
               <span className="sm:hidden">{codeVisible ? 'Скрыть' : 'Показать'} код</span>
             </Button>
           )}
+
+          {onToggleCodeEditor && (
+            <Button
+              size="sm"
+              onClick={() => {
+                onToggleCodeEditor();
+                setIsMobileMenuOpen(false);
+              }}
+              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
+                codeEditorVisible
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+              title={`${codeEditorVisible ? 'Скрыть' : 'Показать'} редактор кода`}
+              data-testid="button-mobile-toggle-code-editor"
+            >
+              <i className="fas fa-file-code sm:w-4 sm:h-4 w-0 sm:flex-shrink-0"></i>
+              <span className="sm:hidden">{codeEditorVisible ? 'Скрыть' : 'Показать'} редактор</span>
+            </Button>
+          )}
           
           {onOpenFileExplorer && (
             <Button
@@ -490,6 +516,19 @@ export function AdaptiveHeader({
           data-testid="button-toggle-code"
         >
           <Code className="w-3.5 h-3.5" />
+        </Button>
+      )}
+
+      {onToggleCodeEditor && (
+        <Button
+          variant={codeEditorVisible ? "default" : "outline"}
+          size="sm"
+          onClick={onToggleCodeEditor}
+          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${codeEditorVisible ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
+          title={`${codeEditorVisible ? 'Скрыть' : 'Показать'} редактор кода`}
+          data-testid="button-toggle-code-editor"
+        >
+          <i className="fas fa-file-code w-3.5 h-3.5"></i>
         </Button>
       )}
 
