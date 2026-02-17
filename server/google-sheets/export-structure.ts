@@ -260,11 +260,16 @@ async function formatStructureSheets(
   sheets: sheets_v4.Sheets,
   spreadsheetId: string
 ): Promise<void> {
+  // Получаем информацию о таблице для получения ID листов
+  const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId });
+  const firstSheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId || 0;
+
   const requests = [
-    // Форматирование заголовков на всех листах
+    // Форматирование заголовков на первом листе
     {
       repeatCell: {
         range: {
+          sheetId: firstSheetId,
           startRowIndex: 0,
           endRowIndex: 1
         },
@@ -278,17 +283,18 @@ async function formatStructureSheets(
         fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
       }
     },
-    // Закрепление заголовков
+    // Закрепление заголовков на первом листе
     {
       updateSheetProperties: {
-        properties: { gridProperties: { frozenRowCount: 1 } },
+        properties: { sheetId: firstSheetId, gridProperties: { frozenRowCount: 1 } },
         fields: 'gridProperties.frozenRowCount'
       }
     },
-    // Автоширина столбцов
+    // Автоширина столбцов на первом листе
     {
       autoResizeDimensions: {
         dimensions: {
+          sheetId: firstSheetId,
           dimension: 'COLUMNS',
           startIndex: 0,
           endIndex: 6
