@@ -2184,10 +2184,10 @@ export default function Editor() {
 
       {/* Плавающая панель редактора кода - отображается поверх всех вкладок */}
       {codeEditorVisible && activeProject && (
-        <div className="fixed inset-0 z-40 bg-background/95 backdrop-blur-sm">
+        <div className="fixed top-0 right-0 h-full w-[40%] z-40 bg-background border-l shadow-lg">
           <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b bg-background">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
+            <div className="flex items-center justify-between p-3 border-b bg-background">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
                 <i className="fas fa-file-code text-blue-500"></i>
                 Редактор кода
               </h2>
@@ -2195,10 +2195,9 @@ export default function Editor() {
                 variant="ghost"
                 size="sm"
                 onClick={handleToggleCodeEditor}
-                className="h-8"
+                className="h-7 w-7 p-0"
               >
-                <i className="fas fa-times mr-2"></i>
-                Закрыть
+                <i className="fas fa-times"></i>
               </Button>
             </div>
             <div className="flex-1 overflow-hidden">
