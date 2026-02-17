@@ -7,7 +7,7 @@
  * @module useTerminalWebSocket
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { TerminalHandle } from '../components/editor/Terminal'; // Импортируем тип из компонента Terminal
 
 /**
@@ -71,12 +71,23 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
 
+  // Используем ref для хранения актуальных значений чтобы избежать пересоздания connect
+  const projectIdRef = useRef(projectId);
+  const tokenIdRef = useRef(tokenId);
+  const terminalRefRef = useRef(terminalRef);
+
+  useEffect(() => {
+    projectIdRef.current = projectId;
+    tokenIdRef.current = tokenId;
+    terminalRefRef.current = terminalRef;
+  }, [projectId, tokenId, terminalRef]);
+
   /**
    * Подключается к WebSocket-серверу терминала
    */
-  const connect = () => {
+  const connect = useCallback(() => {
     // Проверяем, что у нас есть все необходимые параметры
-    if (!projectId || !tokenId) {
+    if (!projectIdRef.current || !tokenIdRef.current) {
       console.error('Необходимы projectId и tokenId для подключения к терминалу');
       setStatus('error');
       return;
@@ -91,7 +102,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
 
     // Формируем URL для подключения
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/api/terminal?projectId=${projectId}&tokenId=${tokenId}`;
+    const wsUrl = `${protocol}//${window.location.host}/api/terminal?projectId=${projectIdRef.current}&tokenId=${tokenIdRef.current}`;
 
     try {
       console.log(`Подключение к WebSocket: ${wsUrl}`);
@@ -105,8 +116,8 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
         setStatus('connected');
 
         // Отправляем сообщение в терминал о подключении
-        if (terminalRef?.current) {
-          terminalRef.current.addLineLocal(`[Система] Подключено к терминалу бота (ID проекта: ${projectId}, ID токена: ${tokenId})`, 'stdout');
+        if (terminalRefRef.current?.current) {
+          terminalRefRef.current.current.addLineLocal(`[Система] Подключено к терминалу бота (ID проекта: ${projectIdRef.current}, ID токена: ${tokenIdRef.current})`, 'stdout');
         }
       };
 
@@ -115,15 +126,15 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
           const message: TerminalWebSocketMessage = JSON.parse(event.data);
 
           // Отправляем сообщение в терминал без отправки обратно на сервер
-          if (terminalRef?.current) {
+          if (terminalRefRef.current?.current) {
             // Для типа 'status' используем 'stdout', так как TerminalHandle.addLine принимает только 'stdout' или 'stderr'
             const outputType = message.type === 'status' ? 'stdout' : message.type;
-            terminalRef.current.addLineLocal(`[PID:${message.projectId}/${message.tokenId}] ${message.content}`, outputType);
+            terminalRefRef.current.current.addLineLocal(`[PID:${message.projectId}/${message.tokenId}] ${message.content}`, outputType);
           }
         } catch (error) {
           console.error('Ошибка при обработке сообщения от терминала:', error);
-          if (terminalRef?.current) {
-            terminalRef.current.addLineLocal(`[Ошибка] Некорректное сообщение от сервера: ${event.data}`, 'stderr');
+          if (terminalRefRef.current?.current) {
+            terminalRefRef.current.current.addLineLocal(`[Ошибка] Некорректное сообщение от сервера: ${event.data}`, 'stderr');
           }
         }
       };
@@ -141,15 +152,15 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
         console.error('Ошибка WebSocket-соединения с терминалом:', error);
         setStatus('error');
 
-        if (terminalRef?.current) {
-          terminalRef.current.addLineLocal('[Ошибка] Соединение с терминалом потеряно', 'stderr');
+        if (terminalRefRef.current?.current) {
+          terminalRefRef.current.current.addLineLocal('[Ошибка] Соединение с терминалом потеряно', 'stderr');
         }
       };
     } catch (error) {
       console.error('Ошибка при создании WebSocket-соединения:', error);
       setStatus('error');
     }
-  };
+  }, []);
 
   /**
    * Отключается от WebSocket-сервера терминала

@@ -47,7 +47,7 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
       console.log('Переподключение к терминалу, статус:', wsStatus);
       connect();
     }
-  }, [wsStatus, isBotRunning]);
+  }, [wsStatus, isBotRunning, connect]);
 
   return (
     <>
