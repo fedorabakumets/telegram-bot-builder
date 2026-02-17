@@ -178,24 +178,8 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
     }
   };
 
-  // Автоматически подключаемся при изменении projectId или tokenId
-  // А также при монтировании если projectId и tokenId доступны
-  useEffect(() => {
-    if (projectId && tokenId) {
-      // Если соединение ещё не установлено или закрыто - подключаемся
-      if (status === 'disconnected') {
-        console.log('Автоматическое подключение к терминалу, projectId:', projectId, 'tokenId:', tokenId);
-        connect();
-      }
-    }
-
-    // При размонтировании компонента НЕ закрываем соединение
-    // Оно будет закрыто только при остановке бота или явном вызове disconnect
-    return () => {
-      // Сохраняем соединение при размонтировании
-      // Переподключение произойдёт автоматически при монтировании если нужно
-    };
-  }, [projectId, tokenId]); // Убрали status из зависимостей чтобы избежать цикла
+  // Автоматическое подключение НЕ выполняется
+  // Подключение инициируется из компонента BotTerminal через useEffect
 
   return {
     status,

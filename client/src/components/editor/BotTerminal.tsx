@@ -41,10 +41,10 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
 
   // При остановке бота не скрываем терминал, чтобы пользователь мог видеть последние сообщения
 
-  // Переподключаемся при изменении статуса на disconnected если бот запущен
+  // Подключаемся при монтировании и переподключаемся при изменении статуса на disconnected
   useEffect(() => {
     if (isBotRunning && wsStatus === 'disconnected') {
-      console.log('Переподключение к терминалу, статус:', wsStatus);
+      console.log('Подключение к терминалу, статус:', wsStatus);
       connect();
     }
   }, [wsStatus, isBotRunning, connect]);
