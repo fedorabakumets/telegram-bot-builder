@@ -534,8 +534,8 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             // Выполняем экспорт в Google Таблицы
             const spreadsheetId = await exportToGoogleSheets(exportData, projectName, projectId);
 
-            // Сохраняем метаданные экспорта в базу данных
-            await saveExportMetadata(projectId, spreadsheetId);
+            // Сохраняем метаданные экспорта в базу данных (type='userDatabase' по умолчанию)
+            await saveExportMetadata(projectId, spreadsheetId, 'userDatabase');
 
             console.log('✅ Экспорт завершён успешно!');
             console.log('📋 URL:', `https://docs.google.com/spreadsheets/d/${spreadsheetId}`);

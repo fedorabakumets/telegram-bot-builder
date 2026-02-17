@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { prepareDataForExport } from './prepareDataForExport';
 
@@ -45,6 +46,8 @@ interface GoogleSheetsExportButtonProps {
  * @see {@link https://developers.google.com/sheets/api|Google Sheets API Documentation}
  */
 export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheetsExportButtonProps) {
+  const queryClient = useQueryClient();
+  
   // Проверяем, что обязательные параметры переданы
   if (!projectId || !projectName) {
     console.error('GoogleSheetsExportButton: Missing required props - projectId and projectName are required');
@@ -236,6 +239,10 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
         setIsExporting(false);
         // Сбросить прогресс после завершения
         setTimeout(() => setProgress(0), 1000);
+        // Обновляем данные проекта для отображения актуального времени экспорта
+        queryClient.invalidateQueries({
+          queryKey: [`/api/projects/${projectId}`],
+        });
       }
     }
   };
