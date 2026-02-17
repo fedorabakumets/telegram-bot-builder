@@ -11,6 +11,8 @@ import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { SyncFromFileButton } from './sync-from-file-button';
 import { TokenInfo } from './token-info';
+import { BotFatherCommands } from './botfather-commands';
+import { BotValidation } from './bot-validation';
 
 /**
  * Свойства компонента панели кода
@@ -357,6 +359,12 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                   {projectIds && projectIds[index] && (
                     <TokenInfo projectId={projectIds[index]} />
                   )}
+
+                  {/* Команды BotFather */}
+                  <BotFatherCommands botData={botDataArray[index]} />
+
+                  {/* Валидация структуры бота */}
+                  <BotValidation botData={botDataArray[index]} />
 
                   {/* Format Selection */}
                   <div className="space-y-1.5 xs:space-y-2">
