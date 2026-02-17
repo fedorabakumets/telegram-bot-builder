@@ -29,7 +29,6 @@ import { LayoutCustomizer } from '@/components/layout/layout-customizer';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
 import { SimpleLayoutConfig, SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 import { useIsMobile } from '@/hooks/use-mobile';
