@@ -339,7 +339,16 @@ export default function Editor() {
         if (element.id === 'codeEditor') {
           return { ...element, visible: true };
         }
-        // Не скрываем canvas, sidebar и properties - они управляются через currentTab
+        // Скрываем canvas, sidebar и properties при открытии панели кода
+        if (element.id === 'canvas') {
+          return { ...element, visible: false };
+        }
+        if (element.id === 'sidebar') {
+          return { ...element, visible: false };
+        }
+        if (element.id === 'properties') {
+          return { ...element, visible: false };
+        }
         return { ...element, visible: element.visible ?? true };
       })
     }));
@@ -358,7 +367,16 @@ export default function Editor() {
         if (element.id === 'codeEditor') {
           return { ...element, visible: false };
         }
-        // Не показываем canvas, sidebar и properties - они управляются через currentTab
+        // Восстанавливаем видимость canvas, sidebar и properties
+        if (element.id === 'canvas') {
+          return { ...element, visible: true };
+        }
+        if (element.id === 'sidebar') {
+          return { ...element, visible: true };
+        }
+        if (element.id === 'properties') {
+          return { ...element, visible: true };
+        }
         return { ...element, visible: element.visible ?? true };
       })
     }));
