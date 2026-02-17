@@ -47,7 +47,7 @@ interface VariableExportData {
  * Экспорт структуры проекта в Google Таблицы
  *
  * @function exportStructureToGoogleSheets
- * @param {any} botData - Данные проекта (nodes, connections)
+ * @param {any} botData - Данные проекта (sheets[].nodes, sheets[].connections)
  * @param {string} projectName - Название проекта
  * @param {number} projectId - ID проекта
  * @returns {Promise<string>} ID созданной таблицы
@@ -72,15 +72,26 @@ export async function exportStructureToGoogleSheets(
     // Создание таблицы
     const spreadsheetId = await createStructureSpreadsheet(sheets, projectName, projectId);
 
-    // Подготовка данных
-    const nodes = botData.nodes || [];
-    const connections = botData.connections || [];
+    // Подготовка данных из структуры sheets
+    const sheetsArray = botData.sheets || [];
+    const allNodes: any[] = [];
+    const allConnections: any[] = [];
+
+    sheetsArray.forEach((sheet: any) => {
+      const sheetName = sheet.name || sheet.id || 'Unknown';
+      (sheet.nodes || []).forEach((node: any) => {
+        allNodes.push({ ...node, _sheetName: sheetName });
+      });
+      (sheet.connections || []).forEach((conn: any) => {
+        allConnections.push({ ...conn, _sheetName: sheetName });
+      });
+    });
 
     // Экспорт листов
-    await exportNodesSheet(sheets, spreadsheetId, nodes);
-    await exportConnectionsSheet(sheets, spreadsheetId, connections);
-    await exportVariablesSheet(sheets, spreadsheetId, nodes);
-    await exportStatisticsSheet(sheets, spreadsheetId, nodes, connections);
+    await exportNodesSheet(sheets, spreadsheetId, allNodes);
+    await exportConnectionsSheet(sheets, spreadsheetId, allConnections);
+    await exportVariablesSheet(sheets, spreadsheetId, allNodes);
+    await exportStatisticsSheet(sheets, spreadsheetId, allNodes, allConnections, sheetsArray.length);
 
     // Форматирование
     await formatStructureSheets(sheets, spreadsheetId);
@@ -128,14 +139,15 @@ async function exportNodesSheet(
   spreadsheetId: string,
   nodes: any[]
 ): Promise<void> {
-  const headers = [['ID', 'Type', 'X', 'Y', 'Description', 'Variables']];
+  const headers = [['Sheet', 'ID', 'Type', 'X', 'Y', 'Description', 'Variable']];
   const rows = nodes.map(node => [
+    node._sheetName || '',
     node.id || '',
     node.type || 'unknown',
-    node.x || 0,
-    node.y || 0,
+    node.position?.x || node.x || 0,
+    node.position?.y || node.y || 0,
     node.data?.messageText || node.data?.description || '',
-    node.data?.userVariableName || ''
+    node.data?.inputVariable || ''
   ]);
 
   await sheets.spreadsheets.values.update({
@@ -158,9 +170,9 @@ async function exportConnectionsSheet(
   spreadsheetId: string,
   connections: any[]
 ): Promise<void> {
-  const headers = [['ID', 'From Node', 'To Node', 'Condition', 'Label']];
-  const rows = connections.map((conn, idx) => [
-    idx + 1,
+  const headers = [['Sheet', 'From Node', 'To Node', 'Condition', 'Label']];
+  const rows = connections.map((conn) => [
+    conn._sheetName || '',
     conn.fromNodeId || '',
     conn.toNodeId || '',
     conn.condition || '',
@@ -225,7 +237,8 @@ async function exportStatisticsSheet(
   sheets: sheets_v4.Sheets,
   spreadsheetId: string,
   nodes: any[],
-  connections: any[]
+  connections: any[],
+  sheetsCount: number
 ): Promise<void> {
   const nodeTypes = nodes.reduce((acc, node) => {
     const type = node.type || 'unknown';
@@ -235,6 +248,7 @@ async function exportStatisticsSheet(
 
   const headers = [['Metric', 'Value']];
   const rows = [
+    ['Total Sheets', sheetsCount],
     ['Total Nodes', nodes.length],
     ['Total Connections', connections.length],
     ['Node Types', Object.keys(nodeTypes).length],
