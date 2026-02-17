@@ -29,7 +29,7 @@ export async function exportNodesSheet(
     node.position?.x || node.x || 0,
     node.position?.y || node.y || 0,
     node.data?.messageText || node.data?.description || '',
-    node.data?.inputVariable || ''
+    node.data?.multiSelectVariable || node.data?.inputVariable || ''
   ]);
 
   await sheets.spreadsheets.values.update({

@@ -24,7 +24,8 @@ export async function exportVariablesSheet(
   const variablesMap = new Map<string, { type: string; nodes: string[] }>();
 
   nodes.forEach(node => {
-    const varName = node.data?.inputVariable;
+    // Поддержка как inputVariable, так и multiSelectVariable
+    const varName = node.data?.multiSelectVariable || node.data?.inputVariable;
     if (varName) {
       if (!variablesMap.has(varName)) {
         variablesMap.set(varName, { type: node.type, nodes: [] });
