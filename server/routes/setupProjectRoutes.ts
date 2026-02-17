@@ -519,11 +519,22 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             const { exportToGoogleSheets } = await import("../google-sheets");
             const { saveExportMetadata } = await import("../google-sheets/export-metadata");
 
+            console.log('\n📊 Экспорт в Google Таблицы');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('Проект:', projectName);
+            console.log('ID проекта:', projectId);
+            console.log('Записей на экспорт:', exportData.length);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
             // Выполняем экспорт в Google Таблицы
             const spreadsheetId = await exportToGoogleSheets(exportData, projectName, projectId);
 
             // Сохраняем метаданные экспорта в базу данных
             await saveExportMetadata(projectId, spreadsheetId);
+
+            console.log('✅ Экспорт завершён успешно!');
+            console.log('📋 URL:', `https://docs.google.com/spreadsheets/d/${spreadsheetId}`);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
             return res.json({
                 success: true,
@@ -532,21 +543,31 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
                 spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
             });
         } catch (error) {
-            console.error("❌ Ошибка экспорта в Google Таблицы:", error);
-
-            // Проверяем, является ли ошибка связанной с аутентификацией
             const errorObj = error as Error;
             const errorAsAny = error as any;
+            
+            // Проверяем, является ли ошибка связанной с аутентификацией
             if (errorObj.message.includes('OAuth token not found or invalid') ||
                 errorObj.message.includes('Access token is invalid or expired') ||
                 errorAsAny.requiresAuth === true) {
-                console.log('Обнаружена ошибка аутентификации, отправляем requiresAuth=true');
+                
+                console.warn('\n⚠️  Требуется аутентификация Google');
+                console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.warn('Необходимо пройти аутентификацию для доступа к Google Таблицам');
+                console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+                
                 return res.status(401).json({
                     message: "Authentication required",
                     error: errorObj.message,
                     requiresAuth: true
                 });
             }
+
+            console.error('\n❌ Ошибка экспорта в Google Таблицы');
+            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.error('Проект:', projectName, '(ID:', projectId + ')');
+            console.error('Ошибка:', errorObj.message);
+            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
             return res.status(500).json({
                 message: "Failed to export data to Google Sheets",

@@ -40,7 +40,29 @@ if (!await fileExists(CREDENTIALS_PATH)) {
 export async function authenticate() {
   try {
     // Чтение учетных данных
-    const credentialsContent = await fs.readFile(CREDENTIALS_PATH, 'utf8');
+    let credentialsContent;
+    try {
+      credentialsContent = await fs.readFile(CREDENTIALS_PATH, 'utf8');
+    } catch (fileError) {
+      const error = fileError as NodeJS.ErrnoException;
+      if (error.code === 'ENOENT') {
+        console.error('\n❌ Ошибка аутентификации Google Sheets API');
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.error('Файл credentials.json не найден!');
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.error('Путь поиска:', CREDENTIALS_PATH);
+        console.error('\n📋 Для решения проблемы:');
+        console.error('   1. Скачайте credentials.json из Google Cloud Console');
+        console.error('   2. Поместите файл в одну из папок:');
+        console.error('      - client/src/components/editor/credentials.json');
+        console.error('      - server/google-sheets/credentials.json');
+        console.error('      - credentials.json (в корне проекта)');
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        throw new Error('Credentials file not found. Please configure Google OAuth credentials first.');
+      }
+      throw fileError;
+    }
+    
     const credentials = JSON.parse(credentialsContent);
 
     const { client_secret, client_id, redirect_uris } = credentials.web;
@@ -55,7 +77,7 @@ export async function authenticate() {
     // Проверка наличия токена доступа в файле
     // Путь к токену может быть в разных местах, пробуем стандартные расположения
     let tokenPath = path.resolve(process.cwd(), 'client', 'src', 'components', 'editor', 'token.json');
-    
+
     // Если файл не найден в стандартном месте, пробуем другие возможные пути
     if (!await fileExists(tokenPath)) {
       tokenPath = path.resolve(process.cwd(), 'server', 'google-sheets', 'token.json');
@@ -72,11 +94,11 @@ export async function authenticate() {
       // Проверяем, действителен ли токен
       const accessToken = await oAuth2Client.getAccessToken();
       if (!accessToken.token) {
-        console.log('Токен доступа недействителен или истек срок действия. Требуется повторная аутентификация...');
+        console.log('🔄 Токен доступа недействителен или истек срок действия. Требуется повторная аутентификация...');
         throw new Error('Access token is invalid or expired');
       }
     } catch (tokenError) {
-      console.log('Требуется аутентификация OAuth. Файл токена не найден или недействителен...');
+      console.log('🔐 Требуется аутентификация OAuth. Файл токена не найден или недействителен...');
       const authError = new Error('OAuth token not found or invalid. Please authenticate first.');
       (authError as any).requiresAuth = true;
       throw authError;
@@ -87,11 +109,14 @@ export async function authenticate() {
 
     return sheets;
   } catch (error) {
-    console.error('Ошибка аутентификации Google Sheets API:', error);
     // Не оборачиваем ошибку в другую ошибку, а передаем оригинальное сообщение
     if ((error as Error).message.includes('OAuth token not found or invalid')) {
       throw error; // Перебрасываем оригинальную ошибку
     }
+    if ((error as Error).message.includes('Credentials file not found')) {
+      throw error; // Уже обработано
+    }
+    console.error('❌ Неожиданная ошибка аутентификации:', error);
     throw new Error(`Authentication failed: ${(error as Error).message}`);
   }
 }
