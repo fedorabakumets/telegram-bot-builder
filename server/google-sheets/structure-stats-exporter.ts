@@ -57,14 +57,12 @@ export async function exportVariablesSheet(
  * @param {sheets_v4.Sheets} sheets - Экземпляр клиента Google Sheets API
  * @param {string} spreadsheetId - ID таблицы
  * @param {any[]} nodes - Массив узлов
- * @param {any[]} connections - Массив связей
  * @param {number} sheetsCount - Количество листов в проекте
  */
 export async function exportStatisticsSheet(
   sheets: sheets_v4.Sheets,
   spreadsheetId: string,
   nodes: any[],
-  connections: any[],
   sheetsCount: number
 ): Promise<void> {
   const nodeTypes = nodes.reduce((acc, node) => {
@@ -77,7 +75,6 @@ export async function exportStatisticsSheet(
   const rows = [
     ['Total Sheets', sheetsCount],
     ['Total Nodes', nodes.length],
-    ['Total Connections', connections.length],
     ['Node Types', Object.keys(nodeTypes).length],
     ...Object.entries(nodeTypes).map(([type, count]) => [`  ${type}`, count])
   ];

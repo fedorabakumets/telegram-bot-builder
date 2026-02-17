@@ -34,5 +34,5 @@ export * from './dynamic-header-formatter';
 // Модули экспорта структуры (детальные)
 export * from './structure-exporter';
 export * from './structure-creator';
-export * from './structure-data-exporter';
+export * from './structure-nodes-exporter';
 export * from './structure-stats-exporter';

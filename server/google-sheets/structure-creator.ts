@@ -1,7 +1,7 @@
 /**
  * @fileoverview Модуль для создания Google Таблицы структуры проекта
  *
- * Создаёт таблицу с 4 листами: Nodes, Connections, Variables, Statistics.
+ * Создаёт таблицу с 3 листами: Nodes, Variables, Statistics.
  *
  * @version 1.0.0
  */
@@ -29,7 +29,6 @@ export async function createStructureSpreadsheet(
       },
       sheets: [
         { properties: { title: 'Nodes', gridProperties: { rowCount: 100, columnCount: 10 } } },
-        { properties: { title: 'Connections', gridProperties: { rowCount: 100, columnCount: 10 } } },
         { properties: { title: 'Variables', gridProperties: { rowCount: 100, columnCount: 10 } } },
         { properties: { title: 'Statistics', gridProperties: { rowCount: 100, columnCount: 10 } } }
       ]
