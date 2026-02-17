@@ -9,6 +9,29 @@
 import { sheets_v4 } from 'googleapis';
 
 /**
+ * Закрепление строки заголовков (для совместимости)
+ *
+ * @function freezeHeaders
+ * @param {sheets_v4.Sheets} sheets - Экземпляр клиента Google Sheets API
+ * @param {string} spreadsheetId - ID таблицы
+ */
+export async function freezeHeaders(sheets: sheets_v4.Sheets, spreadsheetId: string): Promise<void> {
+  await formatStructureSheets(sheets, spreadsheetId);
+}
+
+/**
+ * Добавление фильтров к таблице (для совместимости)
+ *
+ * @function addFilters
+ * @param {sheets_v4.Sheets} sheets - Экземпляр клиента Google Sheets API
+ * @param {string} spreadsheetId - ID таблицы
+ * @param {number} _columnCount - Количество столбцов (не используется)
+ */
+export async function addFilters(sheets: sheets_v4.Sheets, spreadsheetId: string, _columnCount?: number): Promise<void> {
+  await formatStructureSheets(sheets, spreadsheetId);
+}
+
+/**
  * Форматирование таблицы структуры
  *
  * @function formatStructureSheets
