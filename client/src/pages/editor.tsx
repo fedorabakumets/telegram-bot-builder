@@ -997,7 +997,7 @@ export default function Editor() {
       } else {
         handleOpenCodePanel();
       }
-    } else if (prevTab === 'export' && tab !== 'export') {
+    } else if ((prevTab as string) === 'export' && tab !== 'export') {
       // Закрываем панель кода при переключении с вкладки экспорт
       handleCloseCodePanel();
       if (activeProject?.id) {
