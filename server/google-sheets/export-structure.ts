@@ -11,39 +11,6 @@ import { authenticate } from './auth';
 import { sheets_v4 } from 'googleapis';
 
 /**
- * Интерфейс данных узла для экспорта
- */
-interface NodeExportData {
-  id: string;
-  type: string;
-  x: number;
-  y: number;
-  description: string;
-  variables: string;
-}
-
-/**
- * Интерфейс данных связи для экспорта
- */
-interface ConnectionExportData {
-  id: string;
-  fromNode: string;
-  toNode: string;
-  condition: string;
-  label: string;
-}
-
-/**
- * Интерфейс данных переменной для экспорта
- */
-interface VariableExportData {
-  name: string;
-  type: string;
-  defaultValue: string;
-  usedInNodes: string;
-}
-
-/**
  * Экспорт структуры проекта в Google Таблицы
  *
  * @function exportStructureToGoogleSheets
