@@ -13,6 +13,11 @@ import type { Express } from "express";
 import { storage } from "../storages/storage";
 import { telegramClientManager } from "../telegram/telegram-client";
 import { downloadTelegramAudio, downloadTelegramDocument, downloadTelegramPhoto, downloadTelegramVideo } from "../telegram/telegram-media";
+import {
+  analyzeTelegramError,
+  fetchWithTelegramErrorHandling,
+  getErrorStatusCode
+} from "../utils/telegram-error-handler";
 
 /**
  * Настраивает маршруты интеграции с ботами
@@ -151,8 +156,15 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             return res.json({ message: "Message sent successfully", result });
         } catch (error) {
-            console.error("Failed to send message:", error);
-            return res.status(500).json({ message: "Failed to send message" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to send message:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            return res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -512,8 +524,15 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             res.json(responseData);
         } catch (error) {
-            console.error("Failed to get bot info:", error);
-            res.status(500).json({ message: "Failed to get bot info" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to get bot info:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -559,8 +578,15 @@ export function setupBotIntegrationRoutes(app: Express) {
             console.log('✅ Имя бота успешно обновлено через Telegram API');
             res.json({ message: "Bot name updated successfully" });
         } catch (error) {
-            console.error("Failed to update bot name:", error);
-            res.status(500).json({ message: "Failed to update bot name" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to update bot name:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -604,8 +630,15 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             res.json({ message: "Bot description updated successfully" });
         } catch (error) {
-            console.error("Failed to update bot description:", error);
-            res.status(500).json({ message: "Failed to update bot description" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to update bot description:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -642,8 +675,15 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             res.json({ message: "Bot short description updated successfully" });
         } catch (error) {
-            console.error("Failed to update bot short description:", error);
-            res.status(500).json({ message: "Failed to update bot short description" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to update bot short description:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -692,8 +732,15 @@ export function setupBotIntegrationRoutes(app: Express) {
                 messageId: result.result.message_id
             });
         } catch (error) {
-            console.error("Failed to send group message:", error);
-            res.status(500).json({ message: "Failed to send message" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to send group message:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -775,8 +822,15 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             res.json(responseData);
         } catch (error) {
-            console.error("Failed to get group info:", error);
-            res.status(500).json({ message: "Failed to get group info" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to get group info:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -823,8 +877,15 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             res.json({ count: result.result });
         } catch (error) {
-            console.error("Failed to get members count:", error);
-            res.status(500).json({ message: "Failed to get members count" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to get members count:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -888,8 +949,15 @@ export function setupBotIntegrationRoutes(app: Express) {
                 permissions: result.result
             });
         } catch (error) {
-            console.error("Failed to get admin status:", error);
-            res.status(500).json({ message: "Failed to get admin status" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to get admin status:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -957,8 +1025,15 @@ export function setupBotIntegrationRoutes(app: Express) {
                 botAdminRights: botAdminRights
             });
         } catch (error) {
-            console.error("Failed to get administrators:", error);
-            res.status(500).json({ message: "Failed to get administrators" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to get administrators:", errorInfo);
+            
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -1041,13 +1116,25 @@ export function setupBotIntegrationRoutes(app: Express) {
                 });
 
             } catch (error) {
-                console.error("Error getting members:", error);
-                res.status(500).json({ message: "Failed to get group members" });
+                const errorInfo = analyzeTelegramError(error);
+                console.error("Error getting members:", errorInfo);
+                const statusCode = getErrorStatusCode(errorInfo.type);
+                res.status(statusCode).json({
+                    message: errorInfo.userFriendlyMessage,
+                    errorType: errorInfo.type,
+                    details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+                });
             }
 
         } catch (error) {
-            console.error("Failed to get group members:", error);
-            res.status(500).json({ message: "Failed to get group members" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to get group members:", errorInfo);
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -1195,8 +1282,14 @@ export function setupBotIntegrationRoutes(app: Express) {
             console.log("Sending response:", responseData);
             res.json(responseData);
         } catch (error) {
-            console.error("Failed to check member status:", error);
-            res.status(500).json({ message: "Failed to check member status" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to check member status:", errorInfo);
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -1248,8 +1341,14 @@ export function setupBotIntegrationRoutes(app: Express) {
             res.json({ members });
 
         } catch (error) {
-            console.error("Failed to get saved group members:", error);
-            res.status(500).json({ message: "Failed to get saved group members" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to get saved group members:", errorInfo);
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -1292,8 +1391,14 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             res.json({ success: true, message: "Member banned successfully" });
         } catch (error) {
-            console.error("Failed to ban member:", error);
-            res.status(500).json({ message: "Failed to ban member" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to ban member:", errorInfo);
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -1336,8 +1441,14 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             res.json({ success: true, message: "Member unbanned successfully" });
         } catch (error) {
-            console.error("Failed to unban member:", error);
-            res.status(500).json({ message: "Failed to unban member" });
+            const errorInfo = analyzeTelegramError(error);
+            console.error("Failed to unban member:", errorInfo);
+            const statusCode = getErrorStatusCode(errorInfo.type);
+            res.status(statusCode).json({
+                message: errorInfo.userFriendlyMessage,
+                errorType: errorInfo.type,
+                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+            });
         }
     });
 
@@ -1358,7 +1469,7 @@ export function setupBotIntegrationRoutes(app: Express) {
                 return res.status(400).json({ message: "Bot token not found for this project" });
             }
 
-            // Сначала проверяем, является ли пользователь участником группы
+            // С��ачала проверяем, является ли пользователь участником группы
             const memberCheckUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatMember`;
             const memberCheckResponse = await fetch(memberCheckUrl, {
                 method: 'POST',
