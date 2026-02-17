@@ -7,11 +7,11 @@
  * - Индикатор статуса подключения к WebSocket
  */
 
-import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Code } from 'lucide-react';
-import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';
 import { useTerminalWebSocket } from '@/hooks/use-terminal-websocket';
+import { Code } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';
 
 interface BotTerminalProps {
   /** Идентификатор проекта */
@@ -63,11 +63,10 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
         <div className="flex items-center gap-2">
           <Button
             onClick={() => setTerminalVisible(!terminalVisible)}
-            className={`flex items-center justify-center gap-2 w-[160px] h-9 text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
-              terminalVisible
+            className={`flex items-center justify-center gap-2 w-[160px] h-9 text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${terminalVisible
                 ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40'
                 : 'bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white shadow-lg shadow-gray-500/30 hover:shadow-xl hover:shadow-gray-500/40'
-            }`}
+              }`}
             data-testid={`button-toggle-terminal-${tokenId}`}
           >
             <Code className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -77,17 +76,16 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
 
           {/* Индикатор статуса подключения к WebSocket */}
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-secondary text-xs font-medium">
-            <div className={`w-2 h-2 rounded-full ${
-              wsStatus === 'connected' ? 'bg-green-500' :
-              wsStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
-              wsStatus === 'error' ? 'bg-red-500' :
-              'bg-gray-500'
-            }`} />
+            <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' :
+                wsStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
+                  wsStatus === 'error' ? 'bg-red-500' :
+                    'bg-gray-500'
+              }`} />
             <span className="capitalize">
               {wsStatus === 'connected' ? 'Подключен' :
-               wsStatus === 'connecting' ? 'Подключение...' :
-               wsStatus === 'error' ? 'Ошибка' :
-               'Отключен'}
+                wsStatus === 'connecting' ? 'Подключение...' :
+                  wsStatus === 'error' ? 'Ошибка' :
+                    'Отключен'}
             </span>
           </div>
         </div>

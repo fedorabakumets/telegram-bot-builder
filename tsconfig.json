@@ -36,6 +36,6 @@
     "archive/auto-transition-connections.ts",
     "archive/auto-connection.ts",
     "archive/header.tsx"
-  ],
+, "client/src/components/editor/emoji-picker.tsx"  ],
   "exclude": ["node_modules", "dist"]
 }

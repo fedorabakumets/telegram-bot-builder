@@ -570,7 +570,7 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
             console.error('\n❌ Ошибка экспорта в Google Таблицы');
             console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.error('Проект:', projectName, '(ID:', projectId + ')');
+            console.error('Проект:', req.body.projectName, '(ID:', req.params.id + ')');
             console.error('Ошибка:', errorObj.message);
             console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
@@ -642,7 +642,7 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
             console.error('\n❌ Ошибка экспорта структуры');
             console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.error('Проект:', project.name, '(ID:', projectId + ')');
+            console.error('Проект:', req.body.projectName || req.params.id, '(ID:', req.params.id + ')');
             console.error('Ошибка:', errorObj.message);
             console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 

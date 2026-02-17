@@ -1,46 +1,46 @@
 // @ts-nocheck
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { GoogleSheetsExportButton } from './GoogleSheetsExportButton';
+import { BotMessage, BotProject, UserBotData } from '@shared/schema';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Users,
-  Search,
-  Trash2,
-  BarChart3,
   Activity,
-  Shield,
-  Crown,
-  MessageSquare,
-  Calendar,
-  RefreshCw,
-  Eye,
-  UserCheck,
-  UserX,
-  Edit,
-  Send,
+  ArrowUpDown,
+  BarChart3,
   Bot,
-  User,
+  Calendar,
+  Crown,
   Database,
-  ArrowUpDown
+  Edit,
+  Eye,
+  MessageSquare,
+  RefreshCw,
+  Search,
+  Send,
+  Shield,
+  Trash2,
+  User,
+  UserCheck,
+  Users,
+  UserX
 } from 'lucide-react';
-import { UserBotData, BotProject, BotMessage } from '@shared/schema';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { GoogleSheetsExportButton } from '../google-sheets/GoogleSheetsExportButton';
 
 type BotMessageWithMedia = BotMessage & {
   media?: Array<{
@@ -647,9 +647,9 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     if (!date) return 'Никогда';
     try {
       const dateObj = typeof date === 'string' ? new Date(date) :
-                     date instanceof Date ? date :
-                     typeof date === 'number' ? new Date(date) :
-                     null;
+        date instanceof Date ? date :
+          typeof date === 'number' ? new Date(date) :
+            null;
 
       if (!dateObj) return 'Никогда';
 
@@ -996,7 +996,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                   const [field, direction] = value.split('-') as [SortField, SortDirection];
                   setSortField(field);
                   setSortDirection(direction);
-                } }>
+                }}>
                   <SelectTrigger className="h-10 sm:h-11 text-sm rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 transition-all" data-testid="select-sort-filter">
                     <div className="flex items-center gap-2.5">
                       <div className="w-6 h-6 rounded-md bg-indigo-500/10 flex items-center justify-center">
@@ -1091,7 +1091,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                                     setSelectedUser(user);
                                     setShowUserDetails(true);
                                   }
-                                } }
+                                }}
                               >
                                 <Eye className="w-3 h-3" />
                               </Button>
@@ -1109,7 +1109,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                                     setShowDialog(true);
                                     setTimeout(() => scrollToBottom(), 200);
                                   }
-                                } }
+                                }}
                               >
                                 <MessageSquare className="w-3 h-3" />
                               </Button>
@@ -1241,7 +1241,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                                   onOpenUserDetailsPanel(user);
                                   onOpenDialogPanel(user);
                                 }
-                              } }
+                              }}
                             >
                               <TableCell className="py-2">
                                 <div className="flex items-center gap-2 min-w-0">
@@ -1318,7 +1318,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                                         setSelectedUser(user);
                                         setShowUserDetails(true);
                                       }
-                                    } }
+                                    }}
                                     title="Подробно"
                                   >
                                     <Eye className="w-3.5 h-3.5" />
@@ -1337,7 +1337,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                                         setShowDialog(true);
                                         setTimeout(() => scrollToBottom(), 200);
                                       }
-                                    } }
+                                    }}
                                     title="Чат"
                                   >
                                     <MessageSquare className="w-3.5 h-3.5" />
@@ -1350,7 +1350,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleUserStatusToggle(user, 'isActive');
-                                    } }
+                                    }}
                                     title={user.isActive === 1 ? "Деактивировать" : "Активировать"}
                                   >
                                     {user.isActive === 1 ?
@@ -1463,7 +1463,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                                             className="w-full h-auto rounded-lg"
                                             onError={(e) => {
                                               (e.target as HTMLImageElement).style.display = 'none';
-                                            } } />
+                                            }} />
                                         </div>
                                       );
                                     }
@@ -1479,7 +1479,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                                               className="w-full h-auto rounded-lg"
                                               onError={(e) => {
                                                 (e.target as HTMLImageElement).style.display = 'none';
-                                              } } />
+                                              }} />
                                           ))}
                                         </div>
                                       );
@@ -1497,7 +1497,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                                             className="w-full h-auto rounded-lg"
                                             onError={(e) => {
                                               (e.target as HTMLImageElement).style.display = 'none';
-                                            } } />
+                                            }} />
                                         </div>
                                       );
                                     }
@@ -1592,7 +1592,7 @@ function newFunction_1(showDialog: boolean, setShowDialog: React.Dispatch<React.
                                 data-testid={`photo-${message.id}-${idx}`}
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display = 'none';
-                                } } />
+                                }} />
                             ))}
                           </div>
                         )}
@@ -1668,7 +1668,7 @@ function newFunction_1(showDialog: boolean, setShowDialog: React.Dispatch<React.
                     sendMessageMutation.mutate({ messageText: messageText.trim() });
                   }
                 }
-              } }
+              }}
               rows={3}
               disabled={sendMessageMutation.isPending}
               className="flex-1 resize-none" />
@@ -1683,7 +1683,7 @@ function newFunction_1(showDialog: boolean, setShowDialog: React.Dispatch<React.
                 if (messageText.trim() && !sendMessageMutation.isPending) {
                   sendMessageMutation.mutate({ messageText: messageText.trim() });
                 }
-              } }
+              }}
               disabled={!messageText.trim() || sendMessageMutation.isPending}
               size="sm"
             >
@@ -1885,7 +1885,7 @@ function newFunction(showUserDetails: boolean, setShowUserDetails: React.Dispatc
                                             className="w-full h-auto rounded-lg"
                                             onError={(e) => {
                                               (e.target as HTMLImageElement).style.display = 'none';
-                                            } } />
+                                            }} />
                                         ))}
                                       </div>
                                     );
@@ -1907,7 +1907,7 @@ function newFunction(showUserDetails: boolean, setShowUserDetails: React.Dispatc
                                             fallback.className = 'inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800';
                                             fallback.innerHTML = '<span class="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Фото (не удалось загрузить)</span>';
                                             img.parentNode?.appendChild(fallback);
-                                          } } />
+                                          }} />
                                       </div>
                                     );
                                   }
@@ -1925,7 +1925,7 @@ function newFunction(showUserDetails: boolean, setShowUserDetails: React.Dispatc
                                             className="w-full h-auto rounded-lg border border-border"
                                             onError={(e) => {
                                               (e.target as HTMLImageElement).style.display = 'none';
-                                            } } />
+                                            }} />
                                         </div>
                                       );
                                     }
@@ -1941,7 +1941,7 @@ function newFunction(showUserDetails: boolean, setShowUserDetails: React.Dispatc
                                             data-testid={`photo-from-messages-${key}`}
                                             onError={(e) => {
                                               (e.target as HTMLImageElement).style.display = 'none';
-                                            } } />
+                                            }} />
                                         </div>
                                       );
                                     }
@@ -1970,7 +1970,7 @@ function newFunction(showUserDetails: boolean, setShowUserDetails: React.Dispatc
                                             data-testid={`photo-fileid-${key}`}
                                             onError={(e) => {
                                               (e.target as HTMLImageElement).style.display = 'none';
-                                            } } />
+                                            }} />
                                         </div>
                                       );
                                     }
@@ -1988,7 +1988,7 @@ function newFunction(showUserDetails: boolean, setShowUserDetails: React.Dispatc
                                           className="w-full h-auto rounded-lg"
                                           onError={(e) => {
                                             (e.target as HTMLImageElement).style.display = 'none';
-                                          } } />
+                                          }} />
                                       </div>
                                     );
                                   }
