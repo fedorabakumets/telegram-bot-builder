@@ -55,7 +55,7 @@ export default defineConfig(async () => {
     ].flat(),
     resolve: {
       alias: {
-        "@": path.resolve(process.cwd(), "client", "src"),
+        "@": path.resolve(process.cwd(), "client"),
         "@shared": path.resolve(process.cwd(), "shared"),
         "@assets": path.resolve(process.cwd(), "attached_assets"),
       },

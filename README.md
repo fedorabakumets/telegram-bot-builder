@@ -177,19 +177,24 @@
 ```
 📦 telegram-bot-builder/
 ┣ 📂 client/                     # 🎨 React Frontend
-┃ ┣ 📂 src/components/editor/    # Визуальный редактор
-┃ ┣ 📂 src/lib/bot-generator.ts  # 🔴 Генерация Python кода
-┃ ┗ 📂 src/pages/               # Страницы интерфейса
-┣ 📂 server/                     # 🖥️ Express Backend  
-┃ ┣ 📄 routes.ts                # API маршруты
-┃ ┣ 📄 telegram-client.ts       # Управление ботами
-┃ ┗ 📄 storage.ts               # Работа с БД
+┃ ┣ 📂 components/editor/        # Визуальный редактор
+┃ ┣ 📂 lib/bot-generator.ts      # 🔴 Генерация Python кода
+┃ ┣ 📂 pages/                    # Страницы интерфейса
+┃ ┣ 📂 hooks/                    # React хуки
+┃ ┣ 📂 utils/                    # Утилиты
+┃ ┣ 📂 types/                    # TypeScript типы
+┃ ┣ 📄 App.tsx                   # Главный компонент
+┃ ┗ 📄 main.tsx                  # Точка входа
+┣ 📂 server/                     # 🖥️ Express Backend
+┃ ┣ 📄 routes.ts                 # API маршруты
+┃ ┣ 📄 telegram-client.ts        # Управление ботами
+┃ ┗ 📄 storage.ts                # Работа с БД
 ┣ 📂 shared/                     # 🔗 Общие типы
-┃ ┗ 📄 schema.ts                # Drizzle ORM схемы
+┃ ┗ 📄 schema.ts                 # Drizzle ORM схемы
 ┣ 📂 bots/                       # 🤖 Готовые боты
-┃ ┗ 📄 *.py                     # Сгенерированные Python боты
+┃ ┗ 📄 *.py                      # Сгенерированные Python боты
 ┗ 📂 docs/                       # 📚 Документация
-  ┗ 📄 *.md                     # Руководства и гайды
+  ┗ 📄 *.md                      # Руководства и гайды
 ```
 
 #### 📡 API Endpoints

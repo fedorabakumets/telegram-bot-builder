@@ -16,7 +16,7 @@
     "noEmitOnError": false,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["client/src/*"],
+      "@/*": ["client/*"],
       "@shared/*": [
         "./shared/*"
       ],

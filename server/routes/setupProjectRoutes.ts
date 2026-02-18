@@ -378,7 +378,7 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
             };
 
             // Generate Python code using dynamic import with cache busting
-            const modUrl = new URL("../client/src/lib/bot-generator.ts", import.meta.url);
+            const modUrl = new URL("../client/lib/bot-generator.ts", import.meta.url);
             modUrl.searchParams.set("t", Date.now().toString());
             const { generatePythonCode } = await import(modUrl.href);
             const simpleBotData = convertSheetsToSimpleBotData(project.data);

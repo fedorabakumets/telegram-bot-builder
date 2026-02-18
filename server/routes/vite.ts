@@ -87,8 +87,8 @@ export async function setupVite(app: Express, server: Server) {
 
       // обновляем путь к главному скрипту с уникальным параметром для предотвращения кэширования
       template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
+        `src="/main.tsx"`,
+        `src="/main.tsx?v=${nanoid()}"`,
       );
 
       // трансформируем HTML с помощью Vite для вставки необходимых скриптов

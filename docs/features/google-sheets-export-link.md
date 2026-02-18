@@ -20,10 +20,10 @@
 ### 3. `server/routes/setupProjectRoutes.ts`
 Обновлён маршрут экспорта для сохранения метаданных после успешного экспорта.
 
-### 4. `client/src/components/editor/user-database-panel.tsx`
+### 4. `client/components/editor/user-database-panel.tsx`
 Добавлено отображение ссылки на последнюю экспортированную таблицу с датой экспорта.
 
-### 5. `client/src/lib/storage/local-storage.ts`
+### 5. `client/lib/storage/local-storage.ts`
 Обновлены типы и функции для работы с новыми полями проекта в localStorage.
 
 ### 6. `migrations/0001_add_google_sheet_export_fields.sql`

@@ -313,56 +313,18 @@ export default function Editor() {
    * Обработчик открытия панели кода (открывает обе панели - левую и центральную)
    */
   const handleOpenCodePanel = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element => {
-        if (element.id === 'code') {
-          return { ...element, visible: true };
-        }
-        if (element.id === 'codeEditor') {
-          return { ...element, visible: true };
-        }
-        // Скрываем canvas, sidebar и properties при открытии панели кода
-        if (element.id === 'canvas') {
-          return { ...element, visible: false };
-        }
-        if (element.id === 'sidebar') {
-          return { ...element, visible: false };
-        }
-        if (element.id === 'properties') {
-          return { ...element, visible: false };
-        }
-        return { ...element, visible: element.visible ?? true };
-      })
-    }));
+    setCodePanelVisible(true);
+    setCodeEditorVisible(true);
+    // Скрываем панель свойств при открытии панелей кода
+    handleToggleProperties();
   }, []);
 
   /**
    * Обработчик закрытия панели кода
    */
   const handleCloseCodePanel = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element => {
-        if (element.id === 'code') {
-          return { ...element, visible: false };
-        }
-        if (element.id === 'codeEditor') {
-          return { ...element, visible: false };
-        }
-        // Восстанавливаем видимость canvas, sidebar и properties
-        if (element.id === 'canvas') {
-          return { ...element, visible: true };
-        }
-        if (element.id === 'sidebar') {
-          return { ...element, visible: true };
-        }
-        if (element.id === 'properties') {
-          return { ...element, visible: true };
-        }
-        return { ...element, visible: element.visible ?? true };
-      })
-    }));
+    setCodePanelVisible(false);
+    setCodeEditorVisible(false);
   }, []);
 
 

@@ -66,7 +66,7 @@ export async function recreateBotFiles(projectId: number): Promise<boolean> {
       };
 
       // Импортируем генератор кода
-      const modUrl = new URL("../client/src/lib/bot-generator.ts", import.meta.url);
+      const modUrl = new URL("../client/lib/bot-generator.ts", import.meta.url);
       modUrl.searchParams.set("t", Date.now().toString());
       const { generatePythonCode } = await import(modUrl.href);
 

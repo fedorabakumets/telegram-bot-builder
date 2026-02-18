@@ -1,4 +1,4 @@
-// import { generatePythonCode } from "../client/src/lib/bot-generator"; // Убрано - используем динамический импорт с очисткой кеша
+// import { generatePythonCode } from "../client/lib/bot-generator"; // Убрано - используем динамический импорт с очисткой кеша
 
 /**
  * Нормализует данные узла, добавляя недостающие поля со значениями по умолчанию

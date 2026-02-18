@@ -43,7 +43,7 @@
 
 **Проблема:**
 ```typescript
-client/src/lib/bot-generator.ts  // 11,942 строки кода!
+client/lib/bot-generator.ts  // 11,942 строки кода!
 ```
 
 **Последствия:**
@@ -104,7 +104,7 @@ server/
 bots/
 └── *.py.backup
 
-client/src/components/_archive/
+client/components/_archive/
 ```
 
 **Последствия:**
@@ -124,9 +124,9 @@ client/src/components/_archive/
 **Проблема:**
 Судя по git status, все компоненты были удалены:
 ```
-D client/src/App.tsx
-D client/src/components/...
-D client/src/pages/...
+D client/App.tsx
+D client/components/...
+D client/pages/...
 ```
 
 **Последствия:**

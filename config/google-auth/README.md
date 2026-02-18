@@ -38,7 +38,7 @@ config/
 ## Старые расположения (для обратной совместимости)
 
 Система также ищет файлы в старых папках:
-- `client/src/components/editor/`
+- `client/components/editor/`
 - `server/google-sheets/`
 - Корень проекта
 

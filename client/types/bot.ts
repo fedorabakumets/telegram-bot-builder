@@ -1,4 +1,4 @@
-// client/src/types/bot.ts
+// client/types/bot.ts
 // Экспортируем типы из shared/schema для использования в клиентском коде
 
 import {

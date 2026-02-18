@@ -202,7 +202,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
     };
 
     // Генерируем код бота через клиентский генератор (с cache busting)
-    const modUrl = new URL("../../client/src/lib/bot-generator.ts", import.meta.url);
+    const modUrl = new URL("../../client/lib/bot-generator.ts", import.meta.url);
     modUrl.searchParams.set("t", Date.now().toString());
     const { generatePythonCode } = await import(modUrl.href);
     const simpleBotData = convertSheetsToSimpleBotData(project.data);

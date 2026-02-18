@@ -21,21 +21,20 @@
     "exactOptionalPropertyTypes": false,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["client/src/*"],
+      "@/*": ["client/*"],
       "@shared/*": ["shared/*"],
       "@assets/*": ["attached_assets/*"]
     }
   },
   "include": [
-    "client/src",
+    "client",
     "shared",
     "server",
     "types",
-    "client/types",
     "scripts/check-env.ts",
     "archive/auto-transition-connections.ts",
     "archive/auto-connection.ts",
     "archive/header.tsx"
-, "client/src/components/editor/emoji-picker.tsx"  ],
+  ],
   "exclude": ["node_modules", "dist"]
 }

@@ -57,8 +57,8 @@ server/google-sheets/
 - `shared/schema.ts` — добавлены 3 новых поля
 - `server/google-sheets/export-metadata.ts` — поддержка двух типов экспорта
 - `server/routes/setupProjectRoutes.ts` — маршрут экспорта структуры
-- `client/src/components/editor/code-panel.tsx` — кнопка и UI экспорта
-- `client/src/lib/storage/local-storage.ts` — обновлены типы
+- `client/components/editor/code-panel.tsx` — кнопка и UI экспорта
+- `client/lib/storage/local-storage.ts` — обновлены типы
 
 ### Миграции
 

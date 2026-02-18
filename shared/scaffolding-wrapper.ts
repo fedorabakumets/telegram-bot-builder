@@ -11,8 +11,8 @@ export {
   generateReadme,
   generateDockerfile,
   generateConfigYaml
-} from '../client/src/lib/scaffolding';
+} from '../client/lib/scaffolding';
 
 export {
   normalizeProjectData
-} from '../client/src/utils/normalize-project-data';
+} from '../client/utils/normalize-project-data';

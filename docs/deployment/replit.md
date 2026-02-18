@@ -74,7 +74,7 @@ All CRUD endpoints now enforce tenant isolation with 403 responses for unauthori
 - Migration completed and applied successfully
 
 ### **Task 2: LocalStorageService Implementation** ✅
-**File:** `client/src/lib/local-storage.ts`
+**File:** `client/lib/local-storage.ts`
 - Safe error handling for restricted storage (Safari private mode, quota errors)
 - Type-safe with ISO string date persistence
 - Full CRUD operations: projects, tokens, templates
@@ -103,7 +103,7 @@ All CRUD endpoints now enforce tenant isolation with 403 responses for unauthori
 - Implementations: MemStorage, DatabaseStorage, EnhancedDatabaseStorage
 
 ### **Task 6: Frontend Hook System** ✅
-**File:** `client/src/hooks/use-user-data.ts`
+**File:** `client/hooks/use-user-data.ts`
 - Hook family for dual-mode operation:
   - **Query Hooks:** `useProjects()`, `useTokens()`, `useTemplates()`
   - **Mutation Hooks:** `useCreateProject()`, `useUpdateProject()`, `useDeleteProject()`, etc.
@@ -112,8 +112,8 @@ All CRUD endpoints now enforce tenant isolation with 403 responses for unauthori
 
 ### **Task 7: UI Component Updates** ✅
 **Files Modified:**
-- `client/src/components/editor/token-manager.tsx`
-- `client/src/components/editor/templates-modal.tsx`
+- `client/components/editor/token-manager.tsx`
+- `client/components/editor/templates-modal.tsx`
 
 **Changes:**
 - Integrated `useTelegramAuth()` hook for authentication detection
@@ -130,7 +130,7 @@ All CRUD endpoints now enforce tenant isolation with 403 responses for unauthori
 
 ### Frontend Structure
 ```
-client/src/
+client/
 ├── lib/
 │   ├── local-storage.ts (localStorage service)
 │   └── queryClient.ts
@@ -249,13 +249,13 @@ const { data: projects } = useProjects({
 | File | Purpose | Status |
 |------|---------|--------|
 | `shared/schema.ts` | Type definitions & DB schema | ✅ |
-| `client/src/lib/local-storage.ts` | localStorage service | ✅ NEW |
-| `client/src/hooks/use-user-data.ts` | Dual-mode hook system | ✅ NEW |
-| `client/src/hooks/use-telegram-auth.ts` | Auth detection | ✅ |
+| `client/lib/local-storage.ts` | localStorage service | ✅ NEW |
+| `client/hooks/use-user-data.ts` | Dual-mode hook system | ✅ NEW |
+| `client/hooks/use-telegram-auth.ts` | Auth detection | ✅ |
 | `server/routes.ts` | API endpoints (250+ new lines) | ✅ |
 | `server/storage.ts` | Storage layer with filtering | ✅ |
-| `client/src/components/editor/token-manager.tsx` | Token UI (updated) | ✅ |
-| `client/src/components/editor/templates-modal.tsx` | Template UI (updated) | ✅ |
+| `client/components/editor/token-manager.tsx` | Token UI (updated) | ✅ |
+| `client/components/editor/templates-modal.tsx` | Template UI (updated) | ✅ |
 
 ---
 

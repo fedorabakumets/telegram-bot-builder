@@ -37,8 +37,8 @@
 - `server/google-sheets/auth.ts` — новые пути для credentials/token
 - `server/google-sheets/export-metadata.ts` — инвалидация кэша
 - `server/routes/setupProjectRoutes.ts` — HTTP заголовки, type='userDatabase'
-- `client/src/components/editor/GoogleSheetsExportButton.tsx` — invalidateQueries
-- `client/src/components/editor/code-panel.tsx` — invalidateQueries
+- `client/components/editor/GoogleSheetsExportButton.tsx` — invalidateQueries
+- `client/components/editor/code-panel.tsx` — invalidateQueries
 - `.gitignore` — новые пути для конфигов
 - `config/google-auth/README.md` — документация
 
@@ -62,8 +62,8 @@ git pull origin main
 
 ```bash
 # Старые расположения (можно удалить после проверки)
-client/src/components/editor/credentials.json
-client/src/components/editor/token.json
+client/components/editor/credentials.json
+client/components/editor/token.json
 
 # Новое расположение
 config/google-auth/credentials.json

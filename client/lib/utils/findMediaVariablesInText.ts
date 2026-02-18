@@ -1,4 +1,4 @@
-// client/src/lib/variable/findMediaVariablesInText.ts
+// client/lib/variable/findMediaVariablesInText.ts
 // Функция для поиска переменных медиа в тексте
 
 export function findMediaVariablesInText(text: string): string[] {

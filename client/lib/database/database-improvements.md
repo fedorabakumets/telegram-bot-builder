@@ -1,4 +1,4 @@
-# Этапы улучшения папки `client/src/lib/database`
+# Этапы улучшения папки `client/lib/database`
 
 ## Общие требования
 

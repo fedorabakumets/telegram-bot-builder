@@ -1,4 +1,4 @@
-// client/src/types/ansi-to-react.d.ts
+// client/types/ansi-to-react.d.ts
 declare module 'ansi-to-react' {
   import { Component } from 'react';
 
