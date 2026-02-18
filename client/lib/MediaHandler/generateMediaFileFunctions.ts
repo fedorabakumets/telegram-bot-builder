@@ -23,7 +23,7 @@ def get_upload_file_path(file_path):
     return os.path.join(project_root, relative_path)
 
 async def register_telegram_photo(message_id: int, file_id: str, bot_token: str, media_type: str = "photo"):
-    """Регистр��рует фото из Telegram в системе
+    """Регистр??рует фото из Telegram в системе
 
     Args:
         message_id: ID сообщения в базе данных
@@ -78,7 +78,7 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
         return None
 
 async def download_and_save_photo(file_id: str, bot_token: str, filename: str = None):
-    """Скачивает фото из Telegram и сохраняет его локальн��
+    """Скачивает фото из Telegram и сохраняет его локальн??
 
     Args:
         file_id: ID файла в Telegram
@@ -86,7 +86,7 @@ async def download_and_save_photo(file_id: str, bot_token: str, filename: str = 
         filename: Имя файла для сохранения (опционально)
 
     Returns:
-        П��ть к сохраненному файлу или None в случае ошибки
+        П??ть к сохраненному файлу или None в случае ошибки
     """
     try:
         import tempfile
@@ -97,7 +97,7 @@ async def download_and_save_photo(file_id: str, bot_token: str, filename: str = 
         async with aiohttp.ClientSession() as session:
             async with session.get(file_info_url) as response:
                 if response.status != 200:
-                    logging.error(f"❌ Не уда��ось получить информацию о файле: {response.status}")
+                    logging.error(f"❌ Не уда??ось получить информацию о файле: {response.status}")
                     return None
 
                 file_info = await response.json()
@@ -110,7 +110,7 @@ async def download_and_save_photo(file_id: str, bot_token: str, filename: str = 
                 # Формируем URL для скачивания файла
                 download_url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
 
-                # Определ���ем имя файла, если не задано
+                # Определ???ем имя файла, если не задано
                 if not filename:
                     filename = os.path.basename(file_path)
 
@@ -127,7 +127,7 @@ async def download_and_save_photo(file_id: str, bot_token: str, filename: str = 
                             async for chunk in file_response.content.iter_chunked(8192):
                                 f.write(chunk)
 
-                        logging.info(f"📷 Фото успешно скача��о и сохранено: {file_path_full}")
+                        logging.info(f"📷 Фото успешно скача??о и сохранено: {file_path_full}")
                         return file_path_full
                     else:
                         logging.error(f"❌ Не удалось скачать фото: {file_response.status}")
@@ -178,7 +178,7 @@ async def send_photo_with_caption(chat_id: int, photo_source, caption: str = Non
 
         return result
     except Exception as e:
-        logging.error(f"Ошибка при отправк�� фото: {e}")
+        logging.error(f"Ошибка при отправк?? фото: {e}")
         # Если отправка с фото не удалась, пробуем отправить просто текст
         if caption:
             return await bot.send_message(chat_id, caption, **kwargs)

@@ -800,7 +800,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           }
 
           // ============================================================================
-          // СИСТЕМА АВТО��ЕРЕХОДОВ
+          // СИСТЕМА АВТО??ЕРЕХОДОВ
           // ============================================================================
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем автопереход сразу после отправки сообщения
           const currentNodeForAutoTransition = nodes.find(n => n.id === nodeId);
@@ -808,7 +808,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // Для узлов без кнопок проверяем автопереход либо по флагу enableAutoTransition, либо по единственному соединению
           let autoTransitionTarget: string | null = null;
 
-          // Сначаля проверяем явный автоп��реход через флаг
+          // Сначаля проверяем явный автоп??реход через флаг
           if (currentNodeForAutoTransition?.data?.enableAutoTransition && currentNodeForAutoTransition?.data?.autoTransitionTo) {
             autoTransitionTarget = currentNodeForAutoTransition.data.autoTransitionTo;
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} имеет явный автопереход к ${autoTransitionTarget}`);
@@ -819,7 +819,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           // Если узел не имеет кнопок и имеет ровно одно исходящее соединение, делаем автопереход
           else if (currentNodeForAutoTransition && (!currentNodeForAutoTransition.data?.buttons || currentNodeForAutoTransition.data?.buttons.length === 0)) {
             const outgoingConnections = connections.filter(conn => conn && conn.source === nodeId);
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Узел ${nodeId} без кнопок, про��ер��ем соединения: ${outgoingConnections.length}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Узел ${nodeId} без кнопок, про??ер??ем соединения: ${outgoingConnections.length}`);
             if (outgoingConnections.length === 1) {
               autoTransitionTarget = outgoingConnections[0].target;
               if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Узел ${nodeId} без кнопок имеет одно соединение к ${autoTransitionTarget}, делаем автопереход`);
@@ -828,7 +828,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
           if (autoTransitionTarget) {
             const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем кяд ��втоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем кяд ??втоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
             code += '    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла\n';
             code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура\n';
             code += '    user_id = callback_query.from_user.id\n';

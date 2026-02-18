@@ -2286,9 +2286,9 @@ export function PropertiesPanel({
                     title="Альтернативные команды"
                     description={
                       selectedNode.type === 'pin_message' ? "Команды для закрепления сообщения" :
-                        selectedNode.type === 'unpin_message' ? "Команды для откреплен��я сообщения" :
+                        selectedNode.type === 'unpin_message' ? "Команды для откреплен??я сообщения" :
                           selectedNode.type === 'delete_message' ? "Команды для удаления сообщения" :
-                            "Альтернатив��ые команды для этого действия"
+                            "Альтернатив??ые команды для этого действия"
                     }
                     placeholder={
                       selectedNode.type === 'pin_message' ? "закрепить, прикрепить, зафиксировать" :
@@ -3871,7 +3871,7 @@ export function PropertiesPanel({
                                         <div className="flex items-center gap-2 mb-2.5">
                                           <i className="fas fa-shield-exclamation text-red-600 dark:text-red-400 text-sm"></i>
                                           <span className="text-xs sm:text-sm font-semibold text-red-700 dark:text-red-300">
-                                            {ruleConflicts.length} {ruleConflicts.length === 1 ? 'оши��������ка' : 'ошибок'} в условиях
+                                            {ruleConflicts.length} {ruleConflicts.length === 1 ? 'оши????????ка' : 'ошибок'} в условиях
                                           </span>
                                         </div>
 

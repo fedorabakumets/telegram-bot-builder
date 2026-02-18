@@ -2051,7 +2051,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
 
       try {
-        // Удаляем в��ех поль��ова��ел����й из таблицы bot_users для данного проекта
+        // Удаляем в??ех поль??ова??ел????й из таблицы bot_users для данного проекта
         const deleteResult = await pool.query(
           `DELETE FROM bot_users WHERE project_id = $1`,
           [projectId]

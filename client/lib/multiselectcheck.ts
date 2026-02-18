@@ -139,7 +139,7 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                     const formattedText = formatTextForPython(messageText);
                     code += `                text = ${formattedText}\n`;
 
-                    // Заменяем пе��еменные в тексте
+                    // Заменяем пе??еменные в тексте
                     code += '                user_vars = await get_user_from_db(user_id)\n';
                     code += '                if not user_vars:\n';
                     code += '                    user_vars = user_data.get(user_id, {})\n';

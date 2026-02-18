@@ -1226,7 +1226,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                             <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                               <div className="flex flex-col items-center gap-2">
                                 <Users className="w-8 h-8 opacity-30" />
-                                <span>{searchQuery ? 'П��льзователи не найдены' : 'Нет пользователей'}</span>
+                                <span>{searchQuery ? 'П??льзователи не найдены' : 'Нет пользователей'}</span>
                               </div>
                             </TableCell>
                           </TableRow>

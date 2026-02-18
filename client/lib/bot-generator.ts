@@ -1,8 +1,8 @@
-// Внешние зависимости
+// Р’РЅРµС€РЅРёРµ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё
 import { BotData, BotGroup, buttonSchema, Node } from '@shared/schema';
 import { z } from 'zod';
 
-// Внутренние модули - использование экспорта бочек
+// Р’РЅСѓС‚СЂРµРЅРЅРёРµ РјРѕРґСѓР»Рё - РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ СЌРєСЃРїРѕСЂС‚Р° Р±РѕС‡РµРє
 import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateBotFatherCommands } from './commands';
 import { collectConditionalMessageButtons } from './Conditional/collectConditionalMessageButtons';
@@ -50,102 +50,102 @@ import { setCommentsEnabled } from './utils/generateGeneratedComment';
 export type Button = z.infer<typeof buttonSchema>;
 
 /**
- * Интерфейс для опций ответа (responseOptions)
+ * РРЅС‚РµСЂС„РµР№СЃ РґР»СЏ РѕРїС†РёР№ РѕС‚РІРµС‚Р° (responseOptions)
  */
 export interface ResponseOption {
-  /** Текст опции ответа */
+  /** РўРµРєСЃС‚ РѕРїС†РёРё РѕС‚РІРµС‚Р° */
   text: string;
-  /** Значение, связанное с опцией (необязательно) */
+  /** Р—РЅР°С‡РµРЅРёРµ, СЃРІСЏР·Р°РЅРЅРѕРµ СЃ РѕРїС†РёРµР№ (РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ) */
   value?: string;
-  /** Действие, выполняемое при выборе опции (необязательно) */
+  /** Р”РµР№СЃС‚РІРёРµ, РІС‹РїРѕР»РЅСЏРµРјРѕРµ РїСЂРё РІС‹Р±РѕСЂРµ РѕРїС†РёРё (РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ) */
   action?: string;
-  /** Целевой узел или команда для перехода (необязательно) */
+  /** Р¦РµР»РµРІРѕР№ СѓР·РµР» РёР»Рё РєРѕРјР°РЅРґР° РґР»СЏ РїРµСЂРµС…РѕРґР° (РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ) */
   target?: string;
-  /** URL для внешней ссылки (необязательно) */
+  /** URL РґР»СЏ РІРЅРµС€РЅРµР№ СЃСЃС‹Р»РєРё (РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ) */
   url?: string;
 }
 
 /*
 ============================================================================
-СТРУКТУРА ФАЙЛА - НАВИГАЦИЯ ПО ГРУППАМ ФУНКЦИЙ
+РЎРўР РЈРљРўРЈР Рђ Р¤РђР™Р›Рђ - РќРђР’РР“РђР¦РРЇ РџРћ Р“Р РЈРџРџРђРњ Р¤РЈРќРљР¦РР™
 ============================================================================
 
-1. УТИЛИТЫ ДЛЯ РАБОТЫ С ДАННЫМИ БОТА
+1. РЈРўРР›РРўР« Р”Р›РЇ Р РђР‘РћРўР« РЎ Р”РђРќРќР«РњР Р‘РћРўРђ
    - extractNodesAndConnections()
 
-2. УТИЛИТЫ ДЛЯ ФОРМАТИРОВАНИЯ И ОБРАБОТКИ ТЕКСТА
+2. РЈРўРР›РРўР« Р”Р›РЇ Р¤РћР РњРђРўРР РћР’РђРќРРЇ Р РћР‘Р РђР‘РћРўРљР РўР•РљРЎРўРђ
    - createSafeFunctionName(), escapeForPython(), stripHtmlTags()
    - formatTextForPython(), getParseMode()
 
-3. ФУНКЦИИ АНАЛИЗА ВОЗМОЖНОСТЕЙ БОТА
+3. Р¤РЈРќРљР¦РР РђРќРђР›РР—Рђ Р’РћР—РњРћР–РќРћРЎРўР•Р™ Р‘РћРўРђ
    - hasMultiSelectNodes(), hasAutoTransitions()
    - hasInlineButtons(), hasInputCollection(), hasMediaNodes()
    - hasConditionalButtons(), hasCommandButtons()
 
-4. УТИЛИТЫ ДЛЯ РАБОТЫ С ПЕРЕМЕННЫМИ И МЕДИА
+4. РЈРўРР›РРўР« Р”Р›РЇ Р РђР‘РћРўР« РЎ РџР•Р Р•РњР•РќРќР«РњР Р РњР•Р”РРђ
    - collectMediaVariables(), findMediaVariablesInText()
    - toPythonBoolean()
 
-5. ГЕНЕРАТОРЫ СОСТОЯНИЙ И ИДЕНТИФИКАТОРОВ
+5. Р“Р•РќР•Р РђРўРћР Р« РЎРћРЎРўРћРЇРќРР™ Р РР”Р•РќРўРР¤РРљРђРўРћР РћР’
    - generateWaitingStateCode(), generateUniqueShortId()
    - escapeForJsonString()
 
-6. ГЕНЕРАТОРЫ КЛАВИАТУР И КНОПОК
+6. Р“Р•РќР•Р РђРўРћР Р« РљР›РђР’РРђРўРЈР  Р РљРќРћРџРћРљ
    - calculateOptimalColumns(), generateReplyKeyboardCode()
    - generateInlineKeyboardCode(), generateButtonText()
 
-7. ГЕНЕРАТОРЫ ЗАМЕНЫ ПЕРЕМЕННЫХ
+7. Р“Р•РќР•Р РђРўРћР Р« Р—РђРњР•РќР« РџР•Р Р•РњР•РќРќР«РҐ
    - generateVariableReplacement(), generateUniversalVariableReplacement()
 
-8. ГЕНЕРАТОРЫ МЕДИА И УСЛОВНЫХ СООБЩЕНИЙ
+8. Р“Р•РќР•Р РђРўРћР Р« РњР•Р”РРђ Р РЈРЎР›РћР’РќР«РҐ РЎРћРћР‘Р©Р•РќРР™
    - generateAttachedMediaSendCode(), generateConditionalKeyboard()
    - generateConditionalMessageLogic()
 
-9. ПАРСЕРЫ И ОСНОВНЫЕ ГЕНЕРАТОРЫ
+9. РџРђР РЎР•Р Р« Р РћРЎРќРћР’РќР«Р• Р“Р•РќР•Р РђРўРћР Р«
    - parsePythonCodeToJson(), generatePythonCode()
 
-10. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ КОМАНД И СООБЩЕНИЙ
+10. Р“Р•РќР•Р РђРўРћР Р« РћР‘Р РђР‘РћРўР§РРљРћР’ РљРћРњРђРќР” Р РЎРћРћР‘Р©Р•РќРР™
     - generateStartHandler(), generateCommandHandler()
 
-11. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ МЕДИА
+11. Р“Р•РќР•Р РђРўРћР Р« РћР‘Р РђР‘РћРўР§РРљРћР’ РњР•Р”РРђ
     - generateStickerHandler(), generateVoiceHandler()
     - generateAnimationHandler(), generateLocationHandler()
     - generateContactHandler()
 
-12. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ УПРАВЛЕНИЯ КОНТЕНТОМ
+12. Р“Р•РќР•Р РђРўРћР Р« РћР‘Р РђР‘РћРўР§РРљРћР’ РЈРџР РђР’Р›Р•РќРРЇ РљРћРќРўР•РќРўРћРњ
     - generatePinMessageHandler(), generateUnpinMessageHandler()
     - generateDeleteMessageHandler()
 
-13. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
+13. Р“Р•РќР•Р РђРўРћР Р« РћР‘Р РђР‘РћРўР§РРљРћР’ РЈРџР РђР’Р›Р•РќРРЇ РџРћР›Р¬Р—РћР’РђРўР•Р›РЇРњР
     - generateBanUserHandler(), generateUnbanUserHandler()
     - generateMuteUserHandler(), generateUnmuteUserHandler()
     - generateKickUserHandler(), generatePromoteUserHandler()
     - generateDemoteUserHandler(), generateAdminRightsHandler()
 
-14. ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ СИНОНИМОВ
+14. Р“Р•РќР•Р РђРўРћР Р« РћР‘Р РђР‘РћРўР§РРљРћР’ РЎРРќРћРќРРњРћР’
     - generateSynonymHandler(), generateMessageSynonymHandler()
 
-15. ГЕНЕРАТОРЫ ДОПОЛНИТЕЛЬНЫХ ФАЙЛОВ ПРОЕКТА
+15. Р“Р•РќР•Р РђРўРћР Р« Р”РћРџРћР›РќРРўР•Р›Р¬РќР«РҐ Р¤РђР™Р›РћР’ РџР РћР•РљРўРђ
     - generateRequirementsTxt(), generateReadme()
     - generateDockerfile(), generateConfigYaml()
 
-16. ТИПЫ И ИНТЕРФЕЙСЫ
+16. РўРРџР« Р РРќРўР•Р Р¤Р•Р™РЎР«
     - CodeNodeRange, CodeWithMap
 ============================================================================
 */
 
-// Глобальная переменная для состояния логирования (может быть переопределена параметром)
+// Р“Р»РѕР±Р°Р»СЊРЅР°СЏ РїРµСЂРµРјРµРЅРЅР°СЏ РґР»СЏ СЃРѕСЃС‚РѕСЏРЅРёСЏ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ (РјРѕР¶РµС‚ Р±С‹С‚СЊ РїРµСЂРµРѕРїСЂРµРґРµР»РµРЅР° РїР°СЂР°РјРµС‚СЂРѕРј)
 export let globalLoggingEnabled = false;
 
 /**
- * Утилитарная функция для проверки включения логирования отладки
- * @returns {boolean} Статус включения логирования
+ * РЈС‚РёР»РёС‚Р°СЂРЅР°СЏ С„СѓРЅРєС†РёСЏ РґР»СЏ РїСЂРѕРІРµСЂРєРё РІРєР»СЋС‡РµРЅРёСЏ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ РѕС‚Р»Р°РґРєРё
+ * @returns {boolean} РЎС‚Р°С‚СѓСЃ РІРєР»СЋС‡РµРЅРёСЏ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ
  */
 export const isLoggingEnabled = (): boolean => {
-  // Сначала проверяем, было ли явно установлено глобальное логирование (из параметра enableLogging)
+  // РЎРЅР°С‡Р°Р»Р° РїСЂРѕРІРµСЂСЏРµРј, Р±С‹Р»Рѕ Р»Рё СЏРІРЅРѕ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ РіР»РѕР±Р°Р»СЊРЅРѕРµ Р»РѕРіРёСЂРѕРІР°РЅРёРµ (РёР· РїР°СЂР°РјРµС‚СЂР° enableLogging)
   if (globalLoggingEnabled) return true;
 
-  // В противном случае проверяем localStorage
+  // Р’ РїСЂРѕС‚РёРІРЅРѕРј СЃР»СѓС‡Р°Рµ РїСЂРѕРІРµСЂСЏРµРј localStorage
   if (typeof window !== 'undefined') {
     return localStorage.getItem('botcraft-generator-logs') === 'true';
   }
@@ -153,83 +153,83 @@ export const isLoggingEnabled = (): boolean => {
 };
 
 /**
- * Анализирует и логирует структуру узлов и связей для отладки.
- * @param {any[]} nodes - Массив узлов.
- * @param {any[]} connections - Массив связей.
+ * РђРЅР°Р»РёР·РёСЂСѓРµС‚ Рё Р»РѕРіРёСЂСѓРµС‚ СЃС‚СЂСѓРєС‚СѓСЂСѓ СѓР·Р»РѕРІ Рё СЃРІСЏР·РµР№ РґР»СЏ РѕС‚Р»Р°РґРєРё.
+ * @param {any[]} nodes - РњР°СЃСЃРёРІ СѓР·Р»РѕРІ.
+ * @param {any[]} connections - РњР°СЃСЃРёРІ СЃРІСЏР·РµР№.
  */
 const logFlowAnalysis = (nodes: any[], connections: any[]) => {
   if (!isLoggingEnabled()) return;
 
-  console.log(`?? ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
+  console.log(`?? Р“Р•РќР•Р РђРўРћР  РќРђР§РђР› Р РђР‘РћРўРЈ: СѓР·Р»РѕРІ - ${nodes?.length || 0}, СЃРІСЏР·РµР№ - ${connections?.length || 0}`);
 
   if (nodes && nodes.length > 0) {
-    console.log('?? ГЕНЕРАТОР: Анализируем все узла:');
+    console.log('?? Р“Р•РќР•Р РђРўРћР : РђРЅР°Р»РёР·РёСЂСѓРµРј РІСЃРµ СѓР·Р»Р°:');
     nodes.forEach((node, index) => {
-      console.log(`?? ГЕНЕРАТОР: Узел ${index + 1}: "${node.id}" (тип: ${node.type})`);
-      console.log(`?? ГЕНЕРАТОР:   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
-      console.log(`?? ГЕНЕРАТОР:   - кнопок: ${node.data.buttons?.length || 0}`);
-      console.log(`?? ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
-      console.log(`?? ГЕНЕРАТОР:   - continueButtonTarget: ${node.data.continueButtonTarget || 'нет'}`);
+      console.log(`?? Р“Р•РќР•Р РђРўРћР : РЈР·РµР» ${index + 1}: "${node.id}" (С‚РёРї: ${node.type})`);
+      console.log(`?? Р“Р•РќР•Р РђРўРћР :   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
+      console.log(`?? Р“Р•РќР•Р РђРўРћР :   - РєРЅРѕРїРѕРє: ${node.data.buttons?.length || 0}`);
+      console.log(`?? Р“Р•РќР•Р РђРўРћР :   - keyboardType: ${node.data.keyboardType || 'РЅРµС‚'}`);
+      console.log(`?? Р“Р•РќР•Р РђРўРћР :   - continueButtonTarget: ${node.data.continueButtonTarget || 'РЅРµС‚'}`);
 
       if (node.id === 'interests_result') {
-        console.log(`?? ГЕНЕРАТОР: НАЙДЕН interests_result!`);
-        console.log(`?? ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
+        console.log(`?? Р“Р•РќР•Р РђРўРћР : РќРђР™Р”Р•Рќ interests_result!`);
+        console.log(`?? Р“Р•РќР•Р РђРўРћР : interests_result РїРѕР»РЅС‹Рµ РґР°РЅРЅС‹Рµ:`, JSON.stringify(node.data, null, 2));
       }
     });
   }
 
   if (connections && connections.length > 0) {
-    console.log('?? ГЕНЕРАТОР: Анализируем связи:');
+    console.log('?? Р“Р•РќР•Р РђРўРћР : РђРЅР°Р»РёР·РёСЂСѓРµРј СЃРІСЏР·Рё:');
     connections.forEach((conn, index) => {
-      console.log(`?? ГЕНЕРАТОР: Связь ${index + 1}: ${conn.source} -> ${conn.target}`);
+      console.log(`?? Р“Р•РќР•Р РђРўРћР : РЎРІСЏР·СЊ ${index + 1}: ${conn.source} -> ${conn.target}`);
     });
   }
 };
 
 /**
- * Генерирует Python-код для Telegram бота на основе предоставленных данных
- * @param {BotData} botData - Данные бота для генерации
- * @param {string} botName - Имя бота (по умолчанию "MyBot")
- * @param {BotGroup[]} groups - Массив групп бота (по умолчанию пустой)
- * @param {boolean} userDatabaseEnabled - Флаг включения пользовательской базы данных (по умолчанию false)
- * @param {number | null} projectId - ID проекта (по умолчанию null)
- * @param {boolean} enableLogging - Флаг включения логирования (по умолчанию false)
- * @param {boolean} enableGroupHandlers - Флаг включения обработчиков для работы с группами (по умолчанию false)
- * @returns {string} Сгенерированный Python-код для бота
+ * Р“РµРЅРµСЂРёСЂСѓРµС‚ Python-РєРѕРґ РґР»СЏ Telegram Р±РѕС‚Р° РЅР° РѕСЃРЅРѕРІРµ РїСЂРµРґРѕСЃС‚Р°РІР»РµРЅРЅС‹С… РґР°РЅРЅС‹С…
+ * @param {BotData} botData - Р”Р°РЅРЅС‹Рµ Р±РѕС‚Р° РґР»СЏ РіРµРЅРµСЂР°С†РёРё
+ * @param {string} botName - РРјСЏ Р±РѕС‚Р° (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ "MyBot")
+ * @param {BotGroup[]} groups - РњР°СЃСЃРёРІ РіСЂСѓРїРї Р±РѕС‚Р° (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РїСѓСЃС‚РѕР№)
+ * @param {boolean} userDatabaseEnabled - Р¤Р»Р°Рі РІРєР»СЋС‡РµРЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕР№ Р±Р°Р·С‹ РґР°РЅРЅС‹С… (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ false)
+ * @param {number | null} projectId - ID РїСЂРѕРµРєС‚Р° (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ null)
+ * @param {boolean} enableLogging - Р¤Р»Р°Рі РІРєР»СЋС‡РµРЅРёСЏ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ false)
+ * @param {boolean} enableGroupHandlers - Р¤Р»Р°Рі РІРєР»СЋС‡РµРЅРёСЏ РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ РіСЂСѓРїРїР°РјРё (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ false)
+ * @returns {string} РЎРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ Python-РєРѕРґ РґР»СЏ Р±РѕС‚Р°
  */
 export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false, enableGroupHandlers: boolean = false, enableComments: boolean = true): string {
-  // Сбрасываем состояние генерации перед началом
+  // РЎР±СЂР°СЃС‹РІР°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РіРµРЅРµСЂР°С†РёРё РїРµСЂРµРґ РЅР°С‡Р°Р»РѕРј
   resetGenerationState();
 
-  // Устанавливаем флаг глобального логирования для этого запуска генерации
+  // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј С„Р»Р°Рі РіР»РѕР±Р°Р»СЊРЅРѕРіРѕ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ РґР»СЏ СЌС‚РѕРіРѕ Р·Р°РїСѓСЃРєР° РіРµРЅРµСЂР°С†РёРё
   globalLoggingEnabled = enableLogging;
   
-  // Устанавливаем флаг генерации комментариев для этого запуска генерации
+  // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј С„Р»Р°Рі РіРµРЅРµСЂР°С†РёРё РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ РґР»СЏ СЌС‚РѕРіРѕ Р·Р°РїСѓСЃРєР° РіРµРЅРµСЂР°С†РёРё
   setCommentsEnabled(enableComments);
 
   const { nodes, connections } = extractNodesAndConnections(botData);
 
   const { allNodeIds, mediaVariablesMap } = extractNodeData(nodes || []);
 
-  // Анализируем и логируем поток
+  // РђРЅР°Р»РёР·РёСЂСѓРµРј Рё Р»РѕРіРёСЂСѓРµРј РїРѕС‚РѕРє
   logFlowAnalysis(nodes, connections);
 
   let code = '"""\n';
   code += `${botName} - Telegram Bot\n`;
-  code += 'Сгенерировано с помощью TelegramBot Builder\n';
+  code += 'РЎРіРµРЅРµСЂРёСЂРѕРІР°РЅРѕ СЃ РїРѕРјРѕС‰СЊСЋ TelegramBot Builder\n';
 
   const botFatherCommands = generateBotFatherCommands(nodes);
   if (botFatherCommands) {
-    code += '\nКоманды для @BotFather:\n';
+    code += '\nРљРѕРјР°РЅРґС‹ РґР»СЏ @BotFather:\n';
     code += botFatherCommands;
   }
 
   code += '"""\n\n';
 
-  // Добавляем UTF-8 кодировку и базовые импорты в начало файла
+  // Р”РѕР±Р°РІР»СЏРµРј UTF-8 РєРѕРґРёСЂРѕРІРєСѓ Рё Р±Р°Р·РѕРІС‹Рµ РёРјРїРѕСЂС‚С‹ РІ РЅР°С‡Р°Р»Рѕ С„Р°Р№Р»Р°
   code += generateUtf8EncodingCode();
 
-  // Определяем, нужны ли специфичные импорты
+  // РћРїСЂРµРґРµР»СЏРµРј, РЅСѓР¶РЅС‹ Р»Рё СЃРїРµС†РёС„РёС‡РЅС‹Рµ РёРјРїРѕСЂС‚С‹
   const hasCommandNodes = (nodes || []).some(node => node.type === 'command' ||
     (node.data.buttons && node.data.buttons.some((btn: Button) => btn.action === 'command')));
   const hasStartNodes = (nodes || []).some(node => node.type === 'start');
@@ -240,7 +240,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   const hasContactNodes = (nodes || []).some(node => node.type === 'contact');
 
   if (hasCommandNodes || hasStartNodes) {
-    // Если есть команды или стартовые узлы, добавляем соответствующие импорты
+    // Р•СЃР»Рё РµСЃС‚СЊ РєРѕРјР°РЅРґС‹ РёР»Рё СЃС‚Р°СЂС‚РѕРІС‹Рµ СѓР·Р»С‹, РґРѕР±Р°РІР»СЏРµРј СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРµ РёРјРїРѕСЂС‚С‹
     if (hasStartNodes) {
       code += 'from aiogram.filters import CommandStart\n';
     }
@@ -250,7 +250,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
 
-  // Проверяем, есть ли узлы с URL-изображениями, которые требуют URLInputFile
+  // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё СѓР·Р»С‹ СЃ URL-РёР·РѕР±СЂР°Р¶РµРЅРёСЏРјРё, РєРѕС‚РѕСЂС‹Рµ С‚СЂРµР±СѓСЋС‚ URLInputFile
   const hasUrlImageNodes = (nodes || []).some(node =>
     node.data?.imageUrl && node.data.imageUrl.startsWith('http')
   );
@@ -259,40 +259,40 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += 'from aiogram.types import URLInputFile\n';
   }
 
-  // Проверяем, есть ли узлы, которые требуют импорт datetime
+  // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё СѓР·Р»С‹, РєРѕС‚РѕСЂС‹Рµ С‚СЂРµР±СѓСЋС‚ РёРјРїРѕСЂС‚ datetime
   const hasNodesRequiringDatetime = (nodes || []).some(node =>
-    node.type === 'command' ||  // Команды могут использовать datetime для логирования времени вызова
-    node.type === 'mute_user' || // mute_user использует datetime для вычисления времени окончания
-    node.type === 'ban_user' || // ban_user может использовать datetime для временных банов
-    node.type === 'message' || // Сообщения могут использовать datetime для временных меток
-    node.type === 'sticker' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'voice' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'animation' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'photo' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'video' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'document' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'audio' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'location' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'contact' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'group_event' // Обработчики событий в группах могут использовать datetime для логирования
+    node.type === 'command' ||  // РљРѕРјР°РЅРґС‹ РјРѕРіСѓС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ РІСЂРµРјРµРЅРё РІС‹Р·РѕРІР°
+    node.type === 'mute_user' || // mute_user РёСЃРїРѕР»СЊР·СѓРµС‚ datetime РґР»СЏ РІС‹С‡РёСЃР»РµРЅРёСЏ РІСЂРµРјРµРЅРё РѕРєРѕРЅС‡Р°РЅРёСЏ
+    node.type === 'ban_user' || // ban_user РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… Р±Р°РЅРѕРІ
+    node.type === 'message' || // РЎРѕРѕР±С‰РµРЅРёСЏ РјРѕРіСѓС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'sticker' || // РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'voice' || // РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'animation' || // РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'photo' || // РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'video' || // РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'document' || // РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'audio' || // РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'location' || // РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'contact' || // РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    node.type === 'group_event' // РћР±СЂР°Р±РѕС‚С‡РёРєРё СЃРѕР±С‹С‚РёР№ РІ РіСЂСѓРїРїР°С… РјРѕРіСѓС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ datetime РґР»СЏ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ
   );
 
-  // Также проверяем, есть ли узлы, требующие timezone (например, для временных меток с UTC)
+  // РўР°РєР¶Рµ РїСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё СѓР·Р»С‹, С‚СЂРµР±СѓСЋС‰РёРµ timezone (РЅР°РїСЂРёРјРµСЂ, РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє СЃ UTC)
   const hasNodesRequiringTimezone = (nodes || []).some(node =>
-    node.type === 'photo' || // Обработчик фото использует datetime.now(timezone.utc)
-    node.type === 'group_event' || // Обработчики групп могут использовать timezone для временных меток
-    (node.data && node.data.enablePhotoInput) // Узлы с включенным вводом фото также используют datetime.now(timezone.utc)
+    node.type === 'photo' || // РћР±СЂР°Р±РѕС‚С‡РёРє С„РѕС‚Рѕ РёСЃРїРѕР»СЊР·СѓРµС‚ datetime.now(timezone.utc)
+    node.type === 'group_event' || // РћР±СЂР°Р±РѕС‚С‡РёРєРё РіСЂСѓРїРї РјРѕРіСѓС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ timezone РґР»СЏ РІСЂРµРјРµРЅРЅС‹С… РјРµС‚РѕРє
+    (node.data && node.data.enablePhotoInput) // РЈР·Р»С‹ СЃ РІРєР»СЋС‡РµРЅРЅС‹Рј РІРІРѕРґРѕРј С„РѕС‚Рѕ С‚Р°РєР¶Рµ РёСЃРїРѕР»СЊР·СѓСЋС‚ datetime.now(timezone.utc)
   );
 
   if (hasNodesRequiringDatetime || userDatabaseEnabled) {
     if (hasNodesRequiringTimezone) {
-      code += 'from datetime import datetime, timezone\n'; // Добавляем timezone, если он нужен
+      code += 'from datetime import datetime, timezone\n'; // Р”РѕР±Р°РІР»СЏРµРј timezone, РµСЃР»Рё РѕРЅ РЅСѓР¶РµРЅ
     } else {
       code += 'from datetime import datetime\n';
     }
   }
 
-  // Проверяем, есть ли узлы, которые требуют импорт ParseMode
+  // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё СѓР·Р»С‹, РєРѕС‚РѕСЂС‹Рµ С‚СЂРµР±СѓСЋС‚ РёРјРїРѕСЂС‚ ParseMode
   const hasNodesRequiringParseMode = (nodes || []).some(node =>
     node.data?.formatMode &&
     (node.data.formatMode.toLowerCase() === 'html' ||
@@ -303,8 +303,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += 'from aiogram.enums import ParseMode\n';
   }
 
-  // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
-  // Проверяем, есть ли узлы, которые используют TelegramBadRequest в обработчиках исключений
+  // TelegramBadRequest РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РІ РѕР±СЂР°Р±РѕС‚С‡РёРєР°С… РёСЃРєР»СЋС‡РµРЅРёР№ РїСЂРё СЂР°Р±РѕС‚Рµ СЃ РјРµРґРёР° Рё РґСЂСѓРіРёРјРё РґРµР№СЃС‚РІРёСЏРјРё
+  // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё СѓР·Р»С‹, РєРѕС‚РѕСЂС‹Рµ РёСЃРїРѕР»СЊР·СѓСЋС‚ TelegramBadRequest РІ РѕР±СЂР°Р±РѕС‚С‡РёРєР°С… РёСЃРєР»СЋС‡РµРЅРёР№
   const hasNodesRequiringTelegramBadRequest = (nodes || []).some(node =>
     node.type === 'delete_message' ||
     node.type === 'pin_message' ||
@@ -333,48 +333,48 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += 'from aiogram.exceptions import TelegramBadRequest\n';
   }
 
-  // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
+  // Р”РѕР±Р°РІР»СЏРµРј safe_edit_or_send РµСЃР»Рё РµСЃС‚СЊ inline РєРЅРѕРїРєРё РР›Р Р°РІС‚РѕРїРµСЂРµС…РѕРґС‹ РР›Р РґСЂСѓРіРёРµ СѓР·Р»С‹, С‚СЂРµР±СѓСЋС‰РёРµ СЌС‚РѕР№ С„СѓРЅРєС†РёРё
   const hasInlineButtonsResult = hasInlineButtons(nodes || []);
   const hasAutoTransitionsResult = hasAutoTransitions(nodes || []);
   const hasNodesRequiringSafeEditOrSendResult = hasNodesRequiringSafeEditOrSend(nodes || []);
 
-  // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
-  // ИЛИ если включена база данных пользователей (т.к. callback-обработчики могут использовать эту функцию)
+  // Р”РѕР±Р°РІР»СЏРµРј safe_edit_or_send РµСЃР»Рё РµСЃС‚СЊ inline РєРЅРѕРїРєРё РР›Р Р°РІС‚РѕРїРµСЂРµС…РѕРґС‹ РР›Р РґСЂСѓРіРёРµ СѓР·Р»С‹, С‚СЂРµР±СѓСЋС‰РёРµ СЌС‚РѕР№ С„СѓРЅРєС†РёРё
+  // РР›Р РµСЃР»Рё РІРєР»СЋС‡РµРЅР° Р±Р°Р·Р° РґР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ (С‚.Рє. callback-РѕР±СЂР°Р±РѕС‚С‡РёРєРё РјРѕРіСѓС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЌС‚Сѓ С„СѓРЅРєС†РёСЋ)
   code += generateSafeEditOrSendCode(hasInlineButtonsResult || hasNodesRequiringSafeEditOrSendResult || userDatabaseEnabled, hasAutoTransitionsResult || userDatabaseEnabled);
 
   code += generateBasicBotSetupCode();
 
-  // Импортируем и добавляем код логирования сообщений, если включена БД
+  // РРјРїРѕСЂС‚РёСЂСѓРµРј Рё РґРѕР±Р°РІР»СЏРµРј РєРѕРґ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ СЃРѕРѕР±С‰РµРЅРёР№, РµСЃР»Рё РІРєР»СЋС‡РµРЅР° Р‘Р”
   code += generateMessageLoggingCode(userDatabaseEnabled, projectId, hasInlineButtons(nodes || []));
 
-  // Добавляем конфигурацию групп
+  // Р”РѕР±Р°РІР»СЏРµРј РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ РіСЂСѓРїРї
   code += generateGroupsConfiguration(groups);
 
-  // user_data всегда нужен для временного хранения состояний даже при включенной БД
-  // ИСПРАВЛЕНИЕ: Создаем user_data всегда, так как он используется в callback handlers
-  code += '# Хранилище пользователей (временное состояние)\n';
+  // user_data РІСЃРµРіРґР° РЅСѓР¶РµРЅ РґР»СЏ РІСЂРµРјРµРЅРЅРѕРіРѕ С…СЂР°РЅРµРЅРёСЏ СЃРѕСЃС‚РѕСЏРЅРёР№ РґР°Р¶Рµ РїСЂРё РІРєР»СЋС‡РµРЅРЅРѕР№ Р‘Р”
+  // РРЎРџР РђР’Р›Р•РќРР•: РЎРѕР·РґР°РµРј user_data РІСЃРµРіРґР°, С‚Р°Рє РєР°Рє РѕРЅ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РІ callback handlers
+  code += '# РҐСЂР°РЅРёР»РёС‰Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ (РІСЂРµРјРµРЅРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ)\n';
   code += 'user_data = {}\n\n';
 
-  // Добавляем функции для работы с базой данных
+  // Р”РѕР±Р°РІР»СЏРµРј С„СѓРЅРєС†РёРё РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ Р±Р°Р·РѕР№ РґР°РЅРЅС‹С…
   code += generateDatabaseCode(userDatabaseEnabled, nodes || []);
 
 
 
 
 
-  // Добавляем глобальные утилитарные функции
-  code += generateGlobalCheckUserVariableFunction(); // Добавляем глобальное определение функции
+  // Р”РѕР±Р°РІР»СЏРµРј РіР»РѕР±Р°Р»СЊРЅС‹Рµ СѓС‚РёР»РёС‚Р°СЂРЅС‹Рµ С„СѓРЅРєС†РёРё
+  code += generateGlobalCheckUserVariableFunction(); // Р”РѕР±Р°РІР»СЏРµРј РіР»РѕР±Р°Р»СЊРЅРѕРµ РѕРїСЂРµРґРµР»РµРЅРёРµ С„СѓРЅРєС†РёРё
   code += generateUtilityFunctions(userDatabaseEnabled);
 
-  // Функции для работы с файлами - если есть медиа или узлы с изображениями из папки uploads
-  // ИЛИ если включена база данных пользователей (для функции send_photo_with_logging)
+  // Р¤СѓРЅРєС†РёРё РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ С„Р°Р№Р»Р°РјРё - РµСЃР»Рё РµСЃС‚СЊ РјРµРґРёР° РёР»Рё СѓР·Р»С‹ СЃ РёР·РѕР±СЂР°Р¶РµРЅРёСЏРјРё РёР· РїР°РїРєРё uploads
+  // РР›Р РµСЃР»Рё РІРєР»СЋС‡РµРЅР° Р±Р°Р·Р° РґР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ (РґР»СЏ С„СѓРЅРєС†РёРё send_photo_with_logging)
   if (hasMediaNodes(nodes || []) || hasUploadImageUrls(nodes || []) || userDatabaseEnabled) {
     code += generateMediaFileFunctions();
   }
 
 
 
-  // Определяем команды для меню BotFather
+  // РћРїСЂРµРґРµР»СЏРµРј РєРѕРјР°РЅРґС‹ РґР»СЏ РјРµРЅСЋ BotFather
   const menuCommands = (nodes || []).filter(node =>
     (node.type === 'start' || node.type === 'command') &&
     node.data.showInMenu &&
@@ -382,112 +382,112 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   );
 
   /**
-   * Генерирует код настройки меню команд для BotFather
-   * @param menuCommands - Команды, которые будут отображаться в меню
-   * @returns Сгенерированный код настройки меню команд
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ РЅР°СЃС‚СЂРѕР№РєРё РјРµРЅСЋ РєРѕРјР°РЅРґ РґР»СЏ BotFather
+   * @param menuCommands - РљРѕРјР°РЅРґС‹, РєРѕС‚РѕСЂС‹Рµ Р±СѓРґСѓС‚ РѕС‚РѕР±СЂР°Р¶Р°С‚СЊСЃСЏ РІ РјРµРЅСЋ
+   * @returns РЎРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ РєРѕРґ РЅР°СЃС‚СЂРѕР№РєРё РјРµРЅСЋ РєРѕРјР°РЅРґ
    */
 
-  // Настройка меню команд для BotFather
+  // РќР°СЃС‚СЂРѕР№РєР° РјРµРЅСЋ РєРѕРјР°РЅРґ РґР»СЏ BotFather
   code += generateBotCommandsSetup(menuCommands);
 
-  // Генерируем обработчики для каждого узла
+  // Р“РµРЅРµСЂРёСЂСѓРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РєР°Р¶РґРѕРіРѕ СѓР·Р»Р°
   code += generateNodeHandlers(nodes || [], userDatabaseEnabled, enableComments);
 
-  // Генерируем обработчики синонимов для всех узлов
+  // Р“РµРЅРµСЂРёСЂСѓРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё СЃРёРЅРѕРЅРёРјРѕРІ РґР»СЏ РІСЃРµС… СѓР·Р»РѕРІ
   code += generateSynonymHandlers(nodes || []);
 
-  // Генерируем обработчики обратного вызова для inline кнопок И целевых узлов ввода
+  // Р“РµРЅРµСЂРёСЂСѓРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё РѕР±СЂР°С‚РЅРѕРіРѕ РІС‹Р·РѕРІР° РґР»СЏ inline РєРЅРѕРїРѕРє Р С†РµР»РµРІС‹С… СѓР·Р»РѕРІ РІРІРѕРґР°
   const inlineNodes = filterInlineNodes(nodes || []);
 
-  // Также собираем все целевые узла из коллекций пользовательского ввода
+  // РўР°РєР¶Рµ СЃРѕР±РёСЂР°РµРј РІСЃРµ С†РµР»РµРІС‹Рµ СѓР·Р»Р° РёР· РєРѕР»Р»РµРєС†РёР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР°
   const inputTargetNodeIds = collectInputTargetNodes(nodes || []);
 
-  // Собираем все идентификаторы ссылочных узлов и кнопки условных сообщений
+  // РЎРѕР±РёСЂР°РµРј РІСЃРµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂС‹ СЃСЃС‹Р»РѕС‡РЅС‹С… СѓР·Р»РѕРІ Рё РєРЅРѕРїРєРё СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№
   let allReferencedNodeIds = new Set<string>();
   const allConditionalButtons = new Set<string>();
 
-  // Добавляем узла из inline кнопок
+  // Р”РѕР±Р°РІР»СЏРµРј СѓР·Р»Р° РёР· inline РєРЅРѕРїРѕРє
   processInlineButtonNodes(inlineNodes, allReferencedNodeIds);
 
-  // Собираем кнопки из условных сообщений
+  // РЎРѕР±РёСЂР°РµРј РєРЅРѕРїРєРё РёР· СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№
   collectConditionalMessageButtons(nodes || [], allConditionalButtons);
 
-  // Добавляем целевые узла ввода
+  // Р”РѕР±Р°РІР»СЏРµРј С†РµР»РµРІС‹Рµ СѓР·Р»Р° РІРІРѕРґР°
   addInputTargetNodes(inputTargetNodeIds, allReferencedNodeIds);
 
-  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем узла, которые являются целями автопереходов
+  // РљР РРўРР§Р•РЎРљРћР• РРЎРџР РђР’Р›Р•РќРР•: Р”РѕР±Р°РІР»СЏРµРј СѓР·Р»Р°, РєРѕС‚РѕСЂС‹Рµ СЏРІР»СЏСЋС‚СЃСЏ С†РµР»СЏРјРё Р°РІС‚РѕРїРµСЂРµС…РѕРґРѕРІ
   addAutoTransitionNodes(nodes || [], allReferencedNodeIds);
 
-  // Добавляем все цели подключения, чтобы обеспечить наличие обработчика у каждого подключенного узла
+  // Р”РѕР±Р°РІР»СЏРµРј РІСЃРµ С†РµР»Рё РїРѕРґРєР»СЋС‡РµРЅРёСЏ, С‡С‚РѕР±С‹ РѕР±РµСЃРїРµС‡РёС‚СЊ РЅР°Р»РёС‡РёРµ РѕР±СЂР°Р±РѕС‚С‡РёРєР° Сѓ РєР°Р¶РґРѕРіРѕ РїРѕРґРєР»СЋС‡РµРЅРЅРѕРіРѕ СѓР·Р»Р°
   processConnectionTargets(connections, allReferencedNodeIds);
 
-  // Добавляем все узлы в allReferencedNodeIds, чтобы для каждого узла создавался обработчик
-  // Это необходимо, потому что в разных местах кода генерируются вызовы handle_callback_... для всех узлов
+  // Р”РѕР±Р°РІР»СЏРµРј РІСЃРµ СѓР·Р»С‹ РІ allReferencedNodeIds, С‡С‚РѕР±С‹ РґР»СЏ РєР°Р¶РґРѕРіРѕ СѓР·Р»Р° СЃРѕР·РґР°РІР°Р»СЃСЏ РѕР±СЂР°Р±РѕС‚С‡РёРє
+  // Р­С‚Рѕ РЅРµРѕР±С…РѕРґРёРјРѕ, РїРѕС‚РѕРјСѓ С‡С‚Рѕ РІ СЂР°Р·РЅС‹С… РјРµСЃС‚Р°С… РєРѕРґР° РіРµРЅРµСЂРёСЂСѓСЋС‚СЃСЏ РІС‹Р·РѕРІС‹ handle_callback_... РґР»СЏ РІСЃРµС… СѓР·Р»РѕРІ
   (nodes || []).forEach(node => {
     allReferencedNodeIds.add(node.id);
   });
 
-  // ФИЛЬТРАЦИЯ: Убедимся, что allReferencedNodeIds содержит только реально существующие узлы
-  // Это предотвращает генерацию обработчиков для удаленных или несуществующих узлов
+  // Р¤РР›Р¬РўР РђР¦РРЇ: РЈР±РµРґРёРјСЃСЏ, С‡С‚Рѕ allReferencedNodeIds СЃРѕРґРµСЂР¶РёС‚ С‚РѕР»СЊРєРѕ СЂРµР°Р»СЊРЅРѕ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРµ СѓР·Р»С‹
+  // Р­С‚Рѕ РїСЂРµРґРѕС‚РІСЂР°С‰Р°РµС‚ РіРµРЅРµСЂР°С†РёСЋ РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ РґР»СЏ СѓРґР°Р»РµРЅРЅС‹С… РёР»Рё РЅРµСЃСѓС‰РµСЃС‚РІСѓСЋС‰РёС… СѓР·Р»РѕРІ
   const existingNodeIds = new Set((nodes || []).map(node => node.id));
   const filteredReferencedNodeIds = new Set<string>();
   allReferencedNodeIds.forEach(nodeId => {
     if (existingNodeIds.has(nodeId)) {
       filteredReferencedNodeIds.add(nodeId);
     } else {
-      if (isLoggingEnabled()) console.log(`??? УДАЛЕН узел из allReferencedNodeIds: ${nodeId} (не найден в текущих узлах)`);
+      if (isLoggingEnabled()) console.log(`??? РЈР”РђР›Р•Рќ СѓР·РµР» РёР· allReferencedNodeIds: ${nodeId} (РЅРµ РЅР°Р№РґРµРЅ РІ С‚РµРєСѓС‰РёС… СѓР·Р»Р°С…)`);
     }
   });
   allReferencedNodeIds = filteredReferencedNodeIds;
 
-  // Генерируем обработчики только если есть inline кнопки или условные кнопки
+  // Р“РµРЅРµСЂРёСЂСѓРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё С‚РѕР»СЊРєРѕ РµСЃР»Рё РµСЃС‚СЊ inline РєРЅРѕРїРєРё РёР»Рё СѓСЃР»РѕРІРЅС‹Рµ РєРЅРѕРїРєРё
   generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation();
 
-  // Генерируем обработчики для кнопок клавиатуры ответов
+  // Р“РµРЅРµСЂРёСЂСѓРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РєРЅРѕРїРѕРє РєР»Р°РІРёР°С‚СѓСЂС‹ РѕС‚РІРµС‚РѕРІ
   code += generateReplyButtonHandlers(nodes);
 
-  // Добавляем обработчики кнопочных ответов для узлов сбора ввода
+  // Р”РѕР±Р°РІР»СЏРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё РєРЅРѕРїРѕС‡РЅС‹С… РѕС‚РІРµС‚РѕРІ РґР»СЏ СѓР·Р»РѕРІ СЃР±РѕСЂР° РІРІРѕРґР°
   generateButtonResponseHandlersForUserInputCollectionWithReplyKeyboard();
 
-  // ПРИМЕЧАНИЕ: Дублирующий набор обработчиков reply-кнопок был удален
-  // Теперь логика сохранения данных через waiting_for_input добавлена в первый набор обработчиков выше
-  // Это исправляет проблему когда reply-кнопки не сохраняли данные пользователя
+  // РџР РРњР•Р§РђРќРР•: Р”СѓР±Р»РёСЂСѓСЋС‰РёР№ РЅР°Р±РѕСЂ РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ reply-РєРЅРѕРїРѕРє Р±С‹Р» СѓРґР°Р»РµРЅ
+  // РўРµРїРµСЂСЊ Р»РѕРіРёРєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ РґР°РЅРЅС‹С… С‡РµСЂРµР· waiting_for_input РґРѕР±Р°РІР»РµРЅР° РІ РїРµСЂРІС‹Р№ РЅР°Р±РѕСЂ РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ РІС‹С€Рµ
+  // Р­С‚Рѕ РёСЃРїСЂР°РІР»СЏРµС‚ РїСЂРѕР±Р»РµРјСѓ РєРѕРіРґР° reply-РєРЅРѕРїРєРё РЅРµ СЃРѕС…СЂР°РЅСЏР»Рё РґР°РЅРЅС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
 
-  // Добавляем универсальный обработчик пользовательского ввода только если есть сбор данных
+  // Р”РѕР±Р°РІР»СЏРµРј СѓРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ РѕР±СЂР°Р±РѕС‚С‡РёРє РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР° С‚РѕР»СЊРєРѕ РµСЃР»Рё РµСЃС‚СЊ СЃР±РѕСЂ РґР°РЅРЅС‹С…
   generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation();
 
-  // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
+  // Р”РѕР±Р°РІР»СЏРµРј РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ СѓСЃР»РѕРІРЅС‹С… РєРЅРѕРїРѕРє (conditional_variableName_value) РўРћР›Р¬РљРћ РµСЃР»Рё РµСЃС‚СЊ СѓСЃР»РѕРІРЅС‹Рµ РєРЅРѕРїРєРё
   if (hasConditionalValueButtons(nodes)) {
     code += generateConditionalButtonHandlerCode();
   }
 
-  // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логирояяяяяяяанием
+  // Р”РѕР±Р°РІР»СЏРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РєРЅРѕРїРѕРє РєРѕРјР°РЅРґ (С‚РёРїР° cmd_start) СЃ РїРѕРґСЂРѕР±РЅС‹Рј Р»РѕРіРёСЂРѕСЏСЏСЏСЏСЏСЏСЏР°РЅРёРµРј
   const commandButtons = collectAllCommandCallbacksFromNodes();
 
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`?? ИТОГО найдено кнопок команд: ${commandButtons.size}`);
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log('?? Список найденных кнопок команд:', Array.from(commandButtons));
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`?? РРўРћР“Рћ РЅР°Р№РґРµРЅРѕ РєРЅРѕРїРѕРє РєРѕРјР°РЅРґ: ${commandButtons.size}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log('?? РЎРїРёСЃРѕРє РЅР°Р№РґРµРЅРЅС‹С… РєРЅРѕРїРѕРє РєРѕРјР°РЅРґ:', Array.from(commandButtons));
 
   addCommandCallbackHandlers();
 
-  // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком тттекста
+  // РћР±СЂР°Р±РѕС‚С‡РёРєРё РєРЅРѕРїРѕРє РѕС‚РІРµС‚РѕРІ СѓР¶Рµ РґРѕР±Р°РІР»РµРЅС‹ РІС‹С€Рµ, РїРµСЂРµРґ СѓРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Рј РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРј С‚С‚С‚РµРєСЃС‚Р°
   if (enableGroupHandlers) {
     generateGroupBasedEventHandlers();
   }
 
-  // Добавляем универсальный fallback-обработчик для всех текстовых сообщений
-  // Этот обработчик ОБЯЗАТЕЛЬНО нужен, чтобы middleware сохранял ВСЕ сообщения
-  // Middleware вызывается только для зарегистрированных обработчиков!
-  // ВАЖНО: Добавляем только если база данных включена
+  // Р”РѕР±Р°РІР»СЏРµРј СѓРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ fallback-РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ РІСЃРµС… С‚РµРєСЃС‚РѕРІС‹С… СЃРѕРѕР±С‰РµРЅРёР№
+  // Р­С‚РѕС‚ РѕР±СЂР°Р±РѕС‚С‡РёРє РћР‘РЇР—РђРўР•Р›Р¬РќРћ РЅСѓР¶РµРЅ, С‡С‚РѕР±С‹ middleware СЃРѕС…СЂР°РЅСЏР» Р’РЎР• СЃРѕРѕР±С‰РµРЅРёСЏ
+  // Middleware РІС‹Р·С‹РІР°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РґР»СЏ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅРЅС‹С… РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ!
+  // Р’РђР–РќРћ: Р”РѕР±Р°РІР»СЏРµРј С‚РѕР»СЊРєРѕ РµСЃР»Рё Р±Р°Р·Р° РґР°РЅРЅС‹С… РІРєР»СЋС‡РµРЅР°
   generateFallbackHandlers();
 
   signal_handler();
   generateBotInitializationAndMiddlewareSetup();
   generateMainPollingLoopWithGracefulShutdown();
 
-  // Найдем узла с множественным выбором для использования в обработчиках
+  // РќР°Р№РґРµРј СѓР·Р»Р° СЃ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Рј РІС‹Р±РѕСЂРѕРј РґР»СЏ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ РІ РѕР±СЂР°Р±РѕС‚С‡РёРєР°С…
   const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes, isLoggingEnabled);
 
-  // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
+  // Р”РѕР±Р°РІР»СЏРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР° РўРћР›Р¬РљРћ РµСЃР»Рё РµСЃС‚СЊ СѓР·Р»Р° СЃ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Рј РІС‹Р±РѕСЂРѕРј
   handle_multi_select_callback();
 
   return generateCompleteBotScriptFromNodeGraphWithDependencies(
@@ -502,33 +502,33 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   );
 
   /**
-   * Генерирует обработчики callback'ов для inline кнопок с поддержкой условных сообщений,
-   * множественного выбора и автопереходов
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРєРё callback'РѕРІ РґР»СЏ inline РєРЅРѕРїРѕРє СЃ РїРѕРґРґРµСЂР¶РєРѕР№ СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№,
+   * РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР° Рё Р°РІС‚РѕРїРµСЂРµС…РѕРґРѕРІ
    * 
-   * Функция создает Python код для обработки callback_query от inline кнопок в Telegram боте
-   * с поддержкой следующих возможностей:
+   * Р¤СѓРЅРєС†РёСЏ СЃРѕР·РґР°РµС‚ Python РєРѕРґ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё callback_query РѕС‚ inline РєРЅРѕРїРѕРє РІ Telegram Р±РѕС‚Рµ
+   * СЃ РїРѕРґРґРµСЂР¶РєРѕР№ СЃР»РµРґСѓСЋС‰РёС… РІРѕР·РјРѕР¶РЅРѕСЃС‚РµР№:
    * 
-   * - **Условные сообщения**: Динамическое отображение сообщений на основе данных пользователя
-   * - **Множественный выбор**: Поддержка кнопок с возможностью выбора нескольких вариантов
-   * - **Автоматические переходы**: Автоматическая навигация между узлами без действий пользователя
-   * - **Специальная обработка узлов**: Особая логика для узлов типа interests_result с метро-клавиатурой
-   * - **Различные типы клавиатур**: Поддержка inline и reply клавиатур
-   * - **Медиа-контент**: Отправка изображений, видео и других файлов
-   * - **Валидация ввода**: Проверка и сохранение пользовательских данных
-   * - **Управление состоянием**: Отслеживание состояния ожидания ввода от пользователя
+   * - **РЈСЃР»РѕРІРЅС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ**: Р”РёРЅР°РјРёС‡РµСЃРєРѕРµ РѕС‚РѕР±СЂР°Р¶РµРЅРёРµ СЃРѕРѕР±С‰РµРЅРёР№ РЅР° РѕСЃРЅРѕРІРµ РґР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+   * - **РњРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Р№ РІС‹Р±РѕСЂ**: РџРѕРґРґРµСЂР¶РєР° РєРЅРѕРїРѕРє СЃ РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊСЋ РІС‹Р±РѕСЂР° РЅРµСЃРєРѕР»СЊРєРёС… РІР°СЂРёР°РЅС‚РѕРІ
+   * - **РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРёРµ РїРµСЂРµС…РѕРґС‹**: РђРІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ РЅР°РІРёРіР°С†РёСЏ РјРµР¶РґСѓ СѓР·Р»Р°РјРё Р±РµР· РґРµР№СЃС‚РІРёР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+   * - **РЎРїРµС†РёР°Р»СЊРЅР°СЏ РѕР±СЂР°Р±РѕС‚РєР° СѓР·Р»РѕРІ**: РћСЃРѕР±Р°СЏ Р»РѕРіРёРєР° РґР»СЏ СѓР·Р»РѕРІ С‚РёРїР° interests_result СЃ РјРµС‚СЂРѕ-РєР»Р°РІРёР°С‚СѓСЂРѕР№
+   * - **Р Р°Р·Р»РёС‡РЅС‹Рµ С‚РёРїС‹ РєР»Р°РІРёР°С‚СѓСЂ**: РџРѕРґРґРµСЂР¶РєР° inline Рё reply РєР»Р°РІРёР°С‚СѓСЂ
+   * - **РњРµРґРёР°-РєРѕРЅС‚РµРЅС‚**: РћС‚РїСЂР°РІРєР° РёР·РѕР±СЂР°Р¶РµРЅРёР№, РІРёРґРµРѕ Рё РґСЂСѓРіРёС… С„Р°Р№Р»РѕРІ
+   * - **Р’Р°Р»РёРґР°С†РёСЏ РІРІРѕРґР°**: РџСЂРѕРІРµСЂРєР° Рё СЃРѕС…СЂР°РЅРµРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёС… РґР°РЅРЅС‹С…
+   * - **РЈРїСЂР°РІР»РµРЅРёРµ СЃРѕСЃС‚РѕСЏРЅРёРµРј**: РћС‚СЃР»РµР¶РёРІР°РЅРёРµ СЃРѕСЃС‚РѕСЏРЅРёСЏ РѕР¶РёРґР°РЅРёСЏ РІРІРѕРґР° РѕС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
    * 
-   * Алгоритм работы:
-   * 1. Проверяет наличие inline кнопок или условных кнопок
-   * 2. Обрабатывает специальные узлы (interests_result)
-   * 3. Генерирует обработчики для всех ссылочных узлов
-   * 4. Создает логику навигации и сохранения данных
-   * 5. Добавляет поддержку автопереходов
+   * РђР»РіРѕСЂРёС‚Рј СЂР°Р±РѕС‚С‹:
+   * 1. РџСЂРѕРІРµСЂСЏРµС‚ РЅР°Р»РёС‡РёРµ inline РєРЅРѕРїРѕРє РёР»Рё СѓСЃР»РѕРІРЅС‹С… РєРЅРѕРїРѕРє
+   * 2. РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ СЃРїРµС†РёР°Р»СЊРЅС‹Рµ СѓР·Р»С‹ (interests_result)
+   * 3. Р“РµРЅРµСЂРёСЂСѓРµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РІСЃРµС… СЃСЃС‹Р»РѕС‡РЅС‹С… СѓР·Р»РѕРІ
+   * 4. РЎРѕР·РґР°РµС‚ Р»РѕРіРёРєСѓ РЅР°РІРёРіР°С†РёРё Рё СЃРѕС…СЂР°РЅРµРЅРёСЏ РґР°РЅРЅС‹С…
+   * 5. Р”РѕР±Р°РІР»СЏРµС‚ РїРѕРґРґРµСЂР¶РєСѓ Р°РІС‚РѕРїРµСЂРµС…РѕРґРѕРІ
    * 
    * @remarks
-   * - Избегает дублирования обработчиков для узлов типа 'start', 'interests_result', 'metro_selection'
-   * - Поддерживает условные клавиатуры для динамического отображения кнопок
-   * - Обрабатывает специальные случаи для множественного выбора
-   * - Интегрируется с системой логирования для отладки
+   * - РР·Р±РµРіР°РµС‚ РґСѓР±Р»РёСЂРѕРІР°РЅРёСЏ РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ РґР»СЏ СѓР·Р»РѕРІ С‚РёРїР° 'start', 'interests_result', 'metro_selection'
+   * - РџРѕРґРґРµСЂР¶РёРІР°РµС‚ СѓСЃР»РѕРІРЅС‹Рµ РєР»Р°РІРёР°С‚СѓСЂС‹ РґР»СЏ РґРёРЅР°РјРёС‡РµСЃРєРѕРіРѕ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РєРЅРѕРїРѕРє
+   * - РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ СЃРїРµС†РёР°Р»СЊРЅС‹Рµ СЃР»СѓС‡Р°Рё РґР»СЏ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР°
+   * - РРЅС‚РµРіСЂРёСЂСѓРµС‚СЃСЏ СЃ СЃРёСЃС‚РµРјРѕР№ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ РґР»СЏ РѕС‚Р»Р°РґРєРё
    */
   function generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(): void {
     const processNodeButtonsAndGenerateHandlers = createProcessNodeButtonsFunction(inlineNodes, nodes, code, allNodeIds, connections, mediaVariablesMap);
@@ -536,26 +536,26 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   /**
-   * Генерирует обработчики кнопочных ответов для сбора пользовательского ввода с reply-клавиатурой.
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРєРё РєРЅРѕРїРѕС‡РЅС‹С… РѕС‚РІРµС‚РѕРІ РґР»СЏ СЃР±РѕСЂР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР° СЃ reply-РєР»Р°РІРёР°С‚СѓСЂРѕР№.
    * 
-   * Функция анализирует узлы типа 'message' с типом ответа 'buttons' и опциями ответа,
-   * затем генерирует соответствующие обработчики для Telegram бота на Python.
-   * Генерируемые обработчики позволяют пользователю выбирать варианты ответов
-   * через reply-кнопки вместо ввода текста.
+   * Р¤СѓРЅРєС†РёСЏ Р°РЅР°Р»РёР·РёСЂСѓРµС‚ СѓР·Р»С‹ С‚РёРїР° 'message' СЃ С‚РёРїРѕРј РѕС‚РІРµС‚Р° 'buttons' Рё РѕРїС†РёСЏРјРё РѕС‚РІРµС‚Р°,
+   * Р·Р°С‚РµРј РіРµРЅРµСЂРёСЂСѓРµС‚ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРµ РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ Telegram Р±РѕС‚Р° РЅР° Python.
+   * Р“РµРЅРµСЂРёСЂСѓРµРјС‹Рµ РѕР±СЂР°Р±РѕС‚С‡РёРєРё РїРѕР·РІРѕР»СЏСЋС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ РІС‹Р±РёСЂР°С‚СЊ РІР°СЂРёР°РЅС‚С‹ РѕС‚РІРµС‚РѕРІ
+   * С‡РµСЂРµР· reply-РєРЅРѕРїРєРё РІРјРµСЃС‚Рѕ РІРІРѕРґР° С‚РµРєСЃС‚Р°.
    * 
    * @remarks
-   * Функция работает с глобальными переменными:
-   * - `nodes`: массив узлов для анализа
-   * - `code`: строка для накопления генерируемого кода
+   * Р¤СѓРЅРєС†РёСЏ СЂР°Р±РѕС‚Р°РµС‚ СЃ РіР»РѕР±Р°Р»СЊРЅС‹РјРё РїРµСЂРµРјРµРЅРЅС‹РјРё:
+   * - `nodes`: РјР°СЃСЃРёРІ СѓР·Р»РѕРІ РґР»СЏ Р°РЅР°Р»РёР·Р°
+   * - `code`: СЃС‚СЂРѕРєР° РґР»СЏ РЅР°РєРѕРїР»РµРЅРёСЏ РіРµРЅРµСЂРёСЂСѓРµРјРѕРіРѕ РєРѕРґР°
    * 
    * @example
    * ```typescript
-   * // Пример использования
+   * // РџСЂРёРјРµСЂ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
    * generateButtonResponseHandlersForUserInputCollectionWithReplyKeyboard();
-   * // Генерирует код обработчиков для узлов с кнопочными ответами
+   * // Р“РµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ РґР»СЏ СѓР·Р»РѕРІ СЃ РєРЅРѕРїРѕС‡РЅС‹РјРё РѕС‚РІРµС‚Р°РјРё
    * ```
    * 
-   * @see {@link generateButtonResponseHandlers} - основная функция генерации обработчиков
+   * @see {@link generateButtonResponseHandlers} - РѕСЃРЅРѕРІРЅР°СЏ С„СѓРЅРєС†РёСЏ РіРµРЅРµСЂР°С†РёРё РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ
    */
   function generateButtonResponseHandlersForUserInputCollectionWithReplyKeyboard() {
     const userInputNodes = (nodes || []).filter(node => node.type === 'message' &&
@@ -565,34 +565,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     );
 
     if (userInputNodes.length > 0) {
-      code += '\n# Обработчики кнопочных ответов для сбора пользовательского ввода\n';
+      code += '\n# РћР±СЂР°Р±РѕС‚С‡РёРєРё РєРЅРѕРїРѕС‡РЅС‹С… РѕС‚РІРµС‚РѕРІ РґР»СЏ СЃР±РѕСЂР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР°\n';
       code = generateButtonResponseHandlers(code, userInputNodes, nodes);
     }
   }
 
   /**
-   * Генерирует универсальный обработчик пользовательского ввода с поддержкой условных сообщений,
-   * кнопок пропуска сбора данных, валидации и навигации.
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ СѓРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ РѕР±СЂР°Р±РѕС‚С‡РёРє РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР° СЃ РїРѕРґРґРµСЂР¶РєРѕР№ СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№,
+   * РєРЅРѕРїРѕРє РїСЂРѕРїСѓСЃРєР° СЃР±РѕСЂР° РґР°РЅРЅС‹С…, РІР°Р»РёРґР°С†РёРё Рё РЅР°РІРёРіР°С†РёРё.
    * 
-   * Эта функция создает комплексный обработчик для Telegram бота, который:
-   * - Обрабатывает текстовые сообщения пользователей
-   * - Поддерживает условные сообщения на основе данных пользователя
-   * - Обрабатывает кнопки с флагом skipDataCollection для пропуска сбора данных
-   * - Выполняет валидацию введенных данных (email, телефон, число)
-   * - Управляет навигацией между узлами диалога
-   * - Поддерживает множественные форматы ввода (текст, медиа, кнопки)
-   * - Интегрируется с базой данных для сохранения пользовательских данных
+   * Р­С‚Р° С„СѓРЅРєС†РёСЏ СЃРѕР·РґР°РµС‚ РєРѕРјРїР»РµРєСЃРЅС‹Р№ РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ Telegram Р±РѕС‚Р°, РєРѕС‚РѕСЂС‹Р№:
+   * - РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ С‚РµРєСЃС‚РѕРІС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
+   * - РџРѕРґРґРµСЂР¶РёРІР°РµС‚ СѓСЃР»РѕРІРЅС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ РЅР° РѕСЃРЅРѕРІРµ РґР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+   * - РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ РєРЅРѕРїРєРё СЃ С„Р»Р°РіРѕРј skipDataCollection РґР»СЏ РїСЂРѕРїСѓСЃРєР° СЃР±РѕСЂР° РґР°РЅРЅС‹С…
+   * - Р’С‹РїРѕР»РЅСЏРµС‚ РІР°Р»РёРґР°С†РёСЋ РІРІРµРґРµРЅРЅС‹С… РґР°РЅРЅС‹С… (email, С‚РµР»РµС„РѕРЅ, С‡РёСЃР»Рѕ)
+   * - РЈРїСЂР°РІР»СЏРµС‚ РЅР°РІРёРіР°С†РёРµР№ РјРµР¶РґСѓ СѓР·Р»Р°РјРё РґРёР°Р»РѕРіР°
+   * - РџРѕРґРґРµСЂР¶РёРІР°РµС‚ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Рµ С„РѕСЂРјР°С‚С‹ РІРІРѕРґР° (С‚РµРєСЃС‚, РјРµРґРёР°, РєРЅРѕРїРєРё)
+   * - РРЅС‚РµРіСЂРёСЂСѓРµС‚СЃСЏ СЃ Р±Р°Р·РѕР№ РґР°РЅРЅС‹С… РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёС… РґР°РЅРЅС‹С…
    * 
-   * @returns {string} Сгенерированный Python код обработчика пользовательского ввода
+   * @returns {string} РЎРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ Python РєРѕРґ РѕР±СЂР°Р±РѕС‚С‡РёРєР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР°
    * 
    * @example
-   * // Пример использования
+   * // РџСЂРёРјРµСЂ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
    * const nodes = [
    *   {
    *     id: 'start_node',
    *     type: 'message',
    *     data: {
-   *       messageText: 'Добро пожаловать!',
+   *       messageText: 'Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ!',
    *       collectUserInput: true,
    *       inputVariable: 'user_name'
    *     }
@@ -608,74 +608,74 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   /**
-   * Генерирует Python код для обработки ad-hoc сбора пользовательского ввода в Telegram боте.
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ Python РєРѕРґ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё ad-hoc СЃР±РѕСЂР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР° РІ Telegram Р±РѕС‚Рµ.
    * 
-   * Эта функция создает обработчик для ситуаций, когда боту необходимо собрать дополнительную
-   * информацию от пользователя в процессе диалога. Функция поддерживает два основных сценария:
+   * Р­С‚Р° С„СѓРЅРєС†РёСЏ СЃРѕР·РґР°РµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ СЃРёС‚СѓР°С†РёР№, РєРѕРіРґР° Р±РѕС‚Сѓ РЅРµРѕР±С…РѕРґРёРјРѕ СЃРѕР±СЂР°С‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ
+   * РёРЅС„РѕСЂРјР°С†РёСЋ РѕС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІ РїСЂРѕС†РµСЃСЃРµ РґРёР°Р»РѕРіР°. Р¤СѓРЅРєС†РёСЏ РїРѕРґРґРµСЂР¶РёРІР°РµС‚ РґРІР° РѕСЃРЅРѕРІРЅС‹С… СЃС†РµРЅР°СЂРёСЏ:
    * 
-   * 1. **Основной ввод с переходом**: Когда пользователь вводит данные, которые должны быть
-   *    сохранены и использованны для перехода к следующему узлу бота
-   * 2. **Дополнительный комментарий**: Когда пользователь может оставить дополнительный
-   *    комментарий без перехода к следующему узлу
+   * 1. **РћСЃРЅРѕРІРЅРѕР№ РІРІРѕРґ СЃ РїРµСЂРµС…РѕРґРѕРј**: РљРѕРіРґР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІРІРѕРґРёС‚ РґР°РЅРЅС‹Рµ, РєРѕС‚РѕСЂС‹Рµ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ
+   *    СЃРѕС…СЂР°РЅРµРЅС‹ Рё РёСЃРїРѕР»СЊР·РѕРІР°РЅРЅС‹ РґР»СЏ РїРµСЂРµС…РѕРґР° Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ Р±РѕС‚Р°
+   * 2. **Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РєРѕРјРјРµРЅС‚Р°СЂРёР№**: РљРѕРіРґР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РјРѕР¶РµС‚ РѕСЃС‚Р°РІРёС‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№
+   *    РєРѕРјРјРµРЅС‚Р°СЂРёР№ Р±РµР· РїРµСЂРµС…РѕРґР° Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ
    * 
-   * Основные возможности:
-   * - Проверка существования узла для сбора ввода
-   * - Поддержка дополнительного сбора ответов для обычных кнопок
-   * - Сохранение пользовательских данных в локальное хранилище и базу данных
-   * - Автоматическая очистка состояния сбора ввода после обработки
-   * - Логирование всех операций для отладки
-   * - Навигация к целевому узлу после успешного ввода
+   * РћСЃРЅРѕРІРЅС‹Рµ РІРѕР·РјРѕР¶РЅРѕСЃС‚Рё:
+   * - РџСЂРѕРІРµСЂРєР° СЃСѓС‰РµСЃС‚РІРѕРІР°РЅРёСЏ СѓР·Р»Р° РґР»СЏ СЃР±РѕСЂР° РІРІРѕРґР°
+   * - РџРѕРґРґРµСЂР¶РєР° РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕРіРѕ СЃР±РѕСЂР° РѕС‚РІРµС‚РѕРІ РґР»СЏ РѕР±С‹С‡РЅС‹С… РєРЅРѕРїРѕРє
+   * - РЎРѕС…СЂР°РЅРµРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёС… РґР°РЅРЅС‹С… РІ Р»РѕРєР°Р»СЊРЅРѕРµ С…СЂР°РЅРёР»РёС‰Рµ Рё Р±Р°Р·Сѓ РґР°РЅРЅС‹С…
+   * - РђРІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ РѕС‡РёСЃС‚РєР° СЃРѕСЃС‚РѕСЏРЅРёСЏ СЃР±РѕСЂР° РІРІРѕРґР° РїРѕСЃР»Рµ РѕР±СЂР°Р±РѕС‚РєРё
+   * - Р›РѕРіРёСЂРѕРІР°РЅРёРµ РІСЃРµС… РѕРїРµСЂР°С†РёР№ РґР»СЏ РѕС‚Р»Р°РґРєРё
+   * - РќР°РІРёРіР°С†РёСЏ Рє С†РµР»РµРІРѕРјСѓ СѓР·Р»Сѓ РїРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕРіРѕ РІРІРѕРґР°
    * 
-   * Генерируемый Python код включает:
-   * - Валидацию наличия узла в графе бота
-   * - Проверку флага input_collection_enabled для дополнительного сбора
-   * - Сохранение данных с временными метками
-   * - Обработку ошибок сохранения в базу данных
-   * - Навигационную логику для перехода к следующему узлу
+   * Р“РµРЅРµСЂРёСЂСѓРµРјС‹Р№ Python РєРѕРґ РІРєР»СЋС‡Р°РµС‚:
+   * - Р’Р°Р»РёРґР°С†РёСЋ РЅР°Р»РёС‡РёСЏ СѓР·Р»Р° РІ РіСЂР°С„Рµ Р±РѕС‚Р°
+   * - РџСЂРѕРІРµСЂРєСѓ С„Р»Р°РіР° input_collection_enabled РґР»СЏ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕРіРѕ СЃР±РѕСЂР°
+   * - РЎРѕС…СЂР°РЅРµРЅРёРµ РґР°РЅРЅС‹С… СЃ РІСЂРµРјРµРЅРЅС‹РјРё РјРµС‚РєР°РјРё
+   * - РћР±СЂР°Р±РѕС‚РєСѓ РѕС€РёР±РѕРє СЃРѕС…СЂР°РЅРµРЅРёСЏ РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С…
+   * - РќР°РІРёРіР°С†РёРѕРЅРЅСѓСЋ Р»РѕРіРёРєСѓ РґР»СЏ РїРµСЂРµС…РѕРґР° Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ
    * 
    * @example
-   * // Генерирует код для обработки пользовательского ввода
-   * // когда бот ожидает ответ от пользователя после нажатия кнопки
+   * // Р“РµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР°
+   * // РєРѕРіРґР° Р±РѕС‚ РѕР¶РёРґР°РµС‚ РѕС‚РІРµС‚ РѕС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕСЃР»Рµ РЅР°Р¶Р°С‚РёСЏ РєРЅРѕРїРєРё
    * 
    * @see generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation
    * @see generateButtonResponseHandlersForUserInputCollectionWithReplyKeyboard
    * 
-   * @returns {void} Функция добавляет сгенерированный Python код к глобальной переменной `code`
+   * @returns {void} Р¤СѓРЅРєС†РёСЏ РґРѕР±Р°РІР»СЏРµС‚ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ Python РєРѕРґ Рє РіР»РѕР±Р°Р»СЊРЅРѕР№ РїРµСЂРµРјРµРЅРЅРѕР№ `code`
    */
   function generateAdHocInputCollectionHandler() {
     code += '        \n';
-    code += '        # Если узел не найден\n';
-    code += '        logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")\n';
+    code += '        # Р•СЃР»Рё СѓР·РµР» РЅРµ РЅР°Р№РґРµРЅ\n';
+    code += '        logging.warning(f"РЈР·РµР» РґР»СЏ СЃР±РѕСЂР° РІРІРѕРґР° РЅРµ РЅР°Р№РґРµРЅ: {waiting_node_id}")\n';
     code += '        del user_data[user_id]["waiting_for_input"]\n';
     code += '        return\n';
     code += '    \n';
-    code += '    # НОВАЯ ЛОГИКА: Проверяем, включен ли дополнительный сбор ответов для обычных кнопок\n';
+    code += '    # РќРћР’РђРЇ Р›РћР“РРљРђ: РџСЂРѕРІРµСЂСЏРµРј, РІРєР»СЋС‡РµРЅ Р»Рё РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ СЃР±РѕСЂ РѕС‚РІРµС‚РѕРІ РґР»СЏ РѕР±С‹С‡РЅС‹С… РєРЅРѕРїРѕРє\n';
     code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
     code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
     code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
     code += '        input_target_node_id = user_data[user_id].get("input_target_node_id")\n';
     code += '        user_text = message.text\n';
     code += '        \n';
-    code += '        # Если есть целевой узел для перехода - это основной ввод, а не дополнительный\n';
+    code += '        # Р•СЃР»Рё РµСЃС‚СЊ С†РµР»РµРІРѕР№ СѓР·РµР» РґР»СЏ РїРµСЂРµС…РѕРґР° - СЌС‚Рѕ РѕСЃРЅРѕРІРЅРѕР№ РІРІРѕРґ, Р° РЅРµ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№\n';
     code += '        if input_target_node_id:\n';
-    code += '            # Это основной ввод с переходом к следующему узлу\n';
+    code += '            # Р­С‚Рѕ РѕСЃРЅРѕРІРЅРѕР№ РІРІРѕРґ СЃ РїРµСЂРµС…РѕРґРѕРј Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ\n';
     code += '            timestamp = get_moscow_time()\n';
     code += '            response_data = user_text\n';
     code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
+    code += '            # РЎРѕС…СЂР°РЅСЏРµРј РІ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёРµ РґР°РЅРЅС‹Рµ\n';
     code += '            user_data[user_id][input_variable] = response_data\n';
     code += '            \n';
-    code += '            # Сохраняем в базу данных\n';
+    code += '            # РЎРѕС…СЂР°РЅСЏРµРј РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С…\n';
     code += '            saved_to_db = await update_user_data_in_db(user_id, input_variable, response_data)\n';
     code += '            if saved_to_db:\n';
-    code += '                logging.info(f"? Данные сохранены в БД: {input_variable} = {user_text} (пользователь {user_id})")\n';
+    code += '                logging.info(f"? Р”Р°РЅРЅС‹Рµ СЃРѕС…СЂР°РЅРµРЅС‹ РІ Р‘Р”: {input_variable} = {user_text} (РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ {user_id})")\n';
     code += '            else:\n';
-    code += '                logging.warning(f"?? Не удалось сохранить в БД, данные сохранены локально")\n';
+    code += '                logging.warning(f"?? РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РІ Р‘Р”, РґР°РЅРЅС‹Рµ СЃРѕС…СЂР°РЅРµРЅС‹ Р»РѕРєР°Р»СЊРЅРѕ")\n';
     code += '            \n';
-    code += '            logging.info(f"Получен основной пользовательский ввод: {input_variable} = {user_text}")\n';
+    code += '            logging.info(f"РџРѕР»СѓС‡РµРЅ РѕСЃРЅРѕРІРЅРѕР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёР№ РІРІРѕРґ: {input_variable} = {user_text}")\n';
     code += '            \n';
-    code += '            # Переходим к целевому узлу\n';
-    code += '            # Очищаем состояние сбора ввода\n';
+    code += '            # РџРµСЂРµС…РѕРґРёРј Рє С†РµР»РµРІРѕРјСѓ СѓР·Р»Сѓ\n';
+    code += '            # РћС‡РёС‰Р°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ СЃР±РѕСЂР° РІРІРѕРґР°\n';
     code += '            del user_data[user_id]["input_collection_enabled"]\n';
     code += '            if "input_node_id" in user_data[user_id]:\n';
     code += '                del user_data[user_id]["input_node_id"]\n';
@@ -684,90 +684,90 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '            if "input_target_node_id" in user_data[user_id]:\n';
     code += '                del user_data[user_id]["input_target_node_id"]\n';
     code += '            \n';
-    code += '            # Находим и вызываем обработчик целевого узла\n';
+    code += '            # РќР°С…РѕРґРёРј Рё РІС‹Р·С‹РІР°РµРј РѕР±СЂР°Р±РѕС‚С‡РёРє С†РµР»РµРІРѕРіРѕ СѓР·Р»Р°\n';
   }
 
   /**
-   * Генерирует Python-код для логики продолжения обработки пользовательского ввода через кнопки
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ Python-РєРѕРґ РґР»СЏ Р»РѕРіРёРєРё РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ РѕР±СЂР°Р±РѕС‚РєРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР° С‡РµСЂРµР· РєРЅРѕРїРєРё
    * 
-   * Эта функция создает Python-код, который обрабатывает различные сценарии продолжения
-   * после получения пользовательского ввода через кнопки в Telegram боте. Функция генерирует
-   * обработчики для разных типов узлов и их поведения.
+   * Р­С‚Р° С„СѓРЅРєС†РёСЏ СЃРѕР·РґР°РµС‚ Python-РєРѕРґ, РєРѕС‚РѕСЂС‹Р№ РѕР±СЂР°Р±Р°С‚С‹РІР°РµС‚ СЂР°Р·Р»РёС‡РЅС‹Рµ СЃС†РµРЅР°СЂРёРё РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ
+   * РїРѕСЃР»Рµ РїРѕР»СѓС‡РµРЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР° С‡РµСЂРµР· РєРЅРѕРїРєРё РІ Telegram Р±РѕС‚Рµ. Р¤СѓРЅРєС†РёСЏ РіРµРЅРµСЂРёСЂСѓРµС‚
+   * РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ СЂР°Р·РЅС‹С… С‚РёРїРѕРІ СѓР·Р»РѕРІ Рё РёС… РїРѕРІРµРґРµРЅРёСЏ.
    * 
-   * Основные функции генерируемого кода:
-   * - Обработка переходов к целевым узлам на основе ID ввода
-   * - Поддержка узлов типа 'message' с отправкой текста и клавиатур
-   * - Обработка множественного выбора (allowMultipleSelection)
-   * - Генерация inline и reply клавиатур
-   * - Замена переменных в сообщениях
-   * - Сохранение пользовательских данных
-   * - Логирование операций
-   * - Обработка дополнительных комментариев
+   * РћСЃРЅРѕРІРЅС‹Рµ С„СѓРЅРєС†РёРё РіРµРЅРµСЂРёСЂСѓРµРјРѕРіРѕ РєРѕРґР°:
+   * - РћР±СЂР°Р±РѕС‚РєР° РїРµСЂРµС…РѕРґРѕРІ Рє С†РµР»РµРІС‹Рј СѓР·Р»Р°Рј РЅР° РѕСЃРЅРѕРІРµ ID РІРІРѕРґР°
+   * - РџРѕРґРґРµСЂР¶РєР° СѓР·Р»РѕРІ С‚РёРїР° 'message' СЃ РѕС‚РїСЂР°РІРєРѕР№ С‚РµРєСЃС‚Р° Рё РєР»Р°РІРёР°С‚СѓСЂ
+   * - РћР±СЂР°Р±РѕС‚РєР° РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР° (allowMultipleSelection)
+   * - Р“РµРЅРµСЂР°С†РёСЏ inline Рё reply РєР»Р°РІРёР°С‚СѓСЂ
+   * - Р—Р°РјРµРЅР° РїРµСЂРµРјРµРЅРЅС‹С… РІ СЃРѕРѕР±С‰РµРЅРёСЏС…
+   * - РЎРѕС…СЂР°РЅРµРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёС… РґР°РЅРЅС‹С…
+   * - Р›РѕРіРёСЂРѕРІР°РЅРёРµ РѕРїРµСЂР°С†РёР№
+   * - РћР±СЂР°Р±РѕС‚РєР° РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹С… РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ
    * 
-   * Алгоритм работы:
-   * 1. Перебирает все целевые узлы для обработки
-   * 2. Для каждого узла генерирует условную логику проверки соответствия input_target_node_id
-   * 3. Обрабатывает узлы типа 'message' - отправляет текст с возможными клавиатурами
-   * 4. Обрабатывает узлы с множественным выбором - инициализирует состояние выбора
-   * 5. Обрабатывает обычные узлы - отправляет простые сообщения
-   * 6. Генерирует fallback обработку для дополнительных комментариев
-   * 7. Возвращает код навигации между узлами
+   * РђР»РіРѕСЂРёС‚Рј СЂР°Р±РѕС‚С‹:
+   * 1. РџРµСЂРµР±РёСЂР°РµС‚ РІСЃРµ С†РµР»РµРІС‹Рµ СѓР·Р»С‹ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё
+   * 2. Р”Р»СЏ РєР°Р¶РґРѕРіРѕ СѓР·Р»Р° РіРµРЅРµСЂРёСЂСѓРµС‚ СѓСЃР»РѕРІРЅСѓСЋ Р»РѕРіРёРєСѓ РїСЂРѕРІРµСЂРєРё СЃРѕРѕС‚РІРµС‚СЃС‚РІРёСЏ input_target_node_id
+   * 3. РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ СѓР·Р»С‹ С‚РёРїР° 'message' - РѕС‚РїСЂР°РІР»СЏРµС‚ С‚РµРєСЃС‚ СЃ РІРѕР·РјРѕР¶РЅС‹РјРё РєР»Р°РІРёР°С‚СѓСЂР°РјРё
+   * 4. РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ СѓР·Р»С‹ СЃ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Рј РІС‹Р±РѕСЂРѕРј - РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РІС‹Р±РѕСЂР°
+   * 5. РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ РѕР±С‹С‡РЅС‹Рµ СѓР·Р»С‹ - РѕС‚РїСЂР°РІР»СЏРµС‚ РїСЂРѕСЃС‚С‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ
+   * 6. Р“РµРЅРµСЂРёСЂСѓРµС‚ fallback РѕР±СЂР°Р±РѕС‚РєСѓ РґР»СЏ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹С… РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ
+   * 7. Р’РѕР·РІСЂР°С‰Р°РµС‚ РєРѕРґ РЅР°РІРёРіР°С†РёРё РјРµР¶РґСѓ СѓР·Р»Р°РјРё
    * 
-   * @returns {string} Сгенерированный Python-код для логики продолжения ввода через кнопки
+   * @returns {string} РЎРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ Python-РєРѕРґ РґР»СЏ Р»РѕРіРёРєРё РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ РІРІРѕРґР° С‡РµСЂРµР· РєРЅРѕРїРєРё
    * 
    * @example
-   * // Генерирует код типа:
+   * // Р“РµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ С‚РёРїР°:
    * // if input_target_node_id == "node123":
-   * //     text = "Сообщение"
+   * //     text = "РЎРѕРѕР±С‰РµРЅРёРµ"
    * //     await message.answer(text, reply_markup=keyboard)
-   * //     logging.info("Переход к узлу node123 выполнен")
+   * //     logging.info("РџРµСЂРµС…РѕРґ Рє СѓР·Р»Сѓ node123 РІС‹РїРѕР»РЅРµРЅ")
    * 
    * @remarks
-   * - Использует глобальные переменные: nodes, code, allNodeIds
-   * - Вызывает вспомогательные функции: formatTextForPython, generateUniversalVariableReplacement,
+   * - РСЃРїРѕР»СЊР·СѓРµС‚ РіР»РѕР±Р°Р»СЊРЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ: nodes, code, allNodeIds
+   * - Р’С‹Р·С‹РІР°РµС‚ РІСЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё: formatTextForPython, generateUniversalVariableReplacement,
    *   generateInlineKeyboardCode, generateNodeNavigation
-   * - Поддерживает различные типы клавиатур (inline/reply)
-   * - Включает обработку ошибок и логирование
-   * - Управляет состоянием пользовательских данных в user_data
+   * - РџРѕРґРґРµСЂР¶РёРІР°РµС‚ СЂР°Р·Р»РёС‡РЅС‹Рµ С‚РёРїС‹ РєР»Р°РІРёР°С‚СѓСЂ (inline/reply)
+   * - Р’РєР»СЋС‡Р°РµС‚ РѕР±СЂР°Р±РѕС‚РєСѓ РѕС€РёР±РѕРє Рё Р»РѕРіРёСЂРѕРІР°РЅРёРµ
+   * - РЈРїСЂР°РІР»СЏРµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµРј РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёС… РґР°РЅРЅС‹С… РІ user_data
    */
   function generateContinuationLogicForButtonBasedInput() {
     nodes.forEach((targetNode) => {
       code += `            if input_target_node_id == "${targetNode.id}":\n`;
       if (targetNode.type === 'message') {
-        const messageText = targetNode.data.messageText || 'Сообщение';
+        const messageText = targetNode.data.messageText || 'РЎРѕРѕР±С‰РµРЅРёРµ';
         const formattedText = formatTextForPython(messageText);
-        code += `                # Переход к узлу ${targetNode.id}\n`;
+        code += `                # РџРµСЂРµС…РѕРґ Рє СѓР·Р»Сѓ ${targetNode.id}\n`;
         code += `                text = ${formattedText}\n`;
 
-        // Замена переменных
+        // Р—Р°РјРµРЅР° РїРµСЂРµРјРµРЅРЅС‹С…
         code += '                user_data[user_id] = user_data.get(user_id, {})\n';
         const universalVarCodeLines: string[] = [];
         generateUniversalVariableReplacement(universalVarCodeLines, '                ');
         code += universalVarCodeLines.join('\n');
 
-        // Отправляем сообщение с кнопками если есть
+        // РћС‚РїСЂР°РІР»СЏРµРј СЃРѕРѕР±С‰РµРЅРёРµ СЃ РєРЅРѕРїРєР°РјРё РµСЃР»Рё РµСЃС‚СЊ
         if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
           code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
           code += `                await message.answer(text, reply_markup=keyboard)\n`;
         } else {
           code += `                await message.answer(text)\n`;
         }
-        code += `                logging.info(f"Переход к узлу ${targetNode.id} выполнен")\n`;
+        code += `                logging.info(f"РџРµСЂРµС…РѕРґ Рє СѓР·Р»Сѓ ${targetNode.id} РІС‹РїРѕР»РЅРµРЅ")\n`;
       } else if (targetNode.data.allowMultipleSelection) {
-        // Для узлов с множественным выбором создаем прямую навигацию
-        const messageText = targetNode.data.messageText || 'Сообщение';
+        // Р”Р»СЏ СѓР·Р»РѕРІ СЃ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Рј РІС‹Р±РѕСЂРѕРј СЃРѕР·РґР°РµРј РїСЂСЏРјСѓСЋ РЅР°РІРёРіР°С†РёСЋ
+        const messageText = targetNode.data.messageText || 'РЎРѕРѕР±С‰РµРЅРёРµ';
         const formattedText = formatTextForPython(messageText);
-        code += `                # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
+        code += `                # РџСЂСЏРјР°СЏ РЅР°РІРёРіР°С†РёСЏ Рє СѓР·Р»Сѓ СЃ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Рј РІС‹Р±РѕСЂРѕРј ${targetNode.id}\n`;
         code += `                text = ${formattedText}\n`;
 
-        // Замена переменных
+        // Р—Р°РјРµРЅР° РїРµСЂРµРјРµРЅРЅС‹С…
         code += '                user_data[user_id] = user_data.get(user_id, {})\n';
         const universalVarCodeLines: string[] = [];
         generateUniversalVariableReplacement(universalVarCodeLines, '                ');
         code += universalVarCodeLines.join('\n');
 
-        // Инициализируем состояние множественного выбора
-        code += `                # Инициализируем состояние множественного выбора\n`;
+        // РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР°
+        code += `                # РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР°\n`;
         code += `                user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
         code += `                user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
         code += `                user_data[user_id]["multi_select_type"] = "selection"\n`;
@@ -775,22 +775,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `                user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
         }
 
-        // Создаем inline клавиятуря с кнопками выбора
+        // РЎРѕР·РґР°РµРј inline РєР»Р°РІРёСЏС‚СѓСЂСЏ СЃ РєРЅРѕРїРєР°РјРё РІС‹Р±РѕСЂР°
         if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
           code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
           code += `                await message.answer(text, reply_markup=keyboard)\n`;
         } else {
           code += `                await message.answer(text)\n`;
         }
-        code += `                logging.info(f"? Прямая навигация к узлу множественного выбяра ${targetNode.id} выполнена")\n`;
+        code += `                logging.info(f"? РџСЂСЏРјР°СЏ РЅР°РІРёРіР°С†РёСЏ Рє СѓР·Р»Сѓ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±СЏСЂР° ${targetNode.id} РІС‹РїРѕР»РЅРµРЅР°")\n`;
       } else {
-        // Для обычных узлов отправляем простое сообщение
-        const messageText = targetNode.data.messageText || 'Сообщение';
+        // Р”Р»СЏ РѕР±С‹С‡РЅС‹С… СѓР·Р»РѕРІ РѕС‚РїСЂР°РІР»СЏРµРј РїСЂРѕСЃС‚РѕРµ СЃРѕРѕР±С‰РµРЅРёРµ
+        const messageText = targetNode.data.messageText || 'РЎРѕРѕР±С‰РµРЅРёРµ';
         const formattedText = formatTextForPython(messageText);
-        code += `                # Обычный узел - отправляем сообщение ${targetNode.id}\n`;
+        code += `                # РћР±С‹С‡РЅС‹Р№ СѓР·РµР» - РѕС‚РїСЂР°РІР»СЏРµРј СЃРѕРѕР±С‰РµРЅРёРµ ${targetNode.id}\n`;
         code += `                text = ${formattedText}\n`;
 
-        // Замена переменных
+        // Р—Р°РјРµРЅР° РїРµСЂРµРјРµРЅРЅС‹С…
         code += '                user_data[user_id] = user_data.get(user_id, {})\n';
         const universalVarCodeLines: string[] = [];
         generateUniversalVariableReplacement(universalVarCodeLines, '                ');
@@ -802,25 +802,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         } else {
           code += `                await message.answer(text)\n`;
         }
-        code += `                logging.info(f"? Навигация к обычному узлу ${targetNode.id} выполнена")\n`;
+        code += `                logging.info(f"? РќР°РІРёРіР°С†РёСЏ Рє РѕР±С‹С‡РЅРѕРјСѓ СѓР·Р»Сѓ ${targetNode.id} РІС‹РїРѕР»РЅРµРЅР°")\n`;
       }
     });
     code += '            return\n';
     code += '        else:\n';
-    code += '            # Это дополнительный комментарий (нет целевого узла)\n';
+    code += '            # Р­С‚Рѕ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РєРѕРјРјРµРЅС‚Р°СЂРёР№ (РЅРµС‚ С†РµР»РµРІРѕРіРѕ СѓР·Р»Р°)\n';
     code += '            timestamp = get_moscow_time()\n';
     code += '            response_data = user_text\n';
     code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
+    code += '            # РЎРѕС…СЂР°РЅСЏРµРј РІ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёРµ РґР°РЅРЅС‹Рµ\n';
     code += '            user_data[user_id][f"{input_variable}_additional"] = response_data\n';
     code += '            \n';
-    code += '            # Уведомляем пользователя\n';
-    code += '            await message.answer("? Дополнительный комментарий сохранен!")\n';
+    code += '            # РЈРІРµРґРѕРјР»СЏРµРј РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ\n';
+    code += '            await message.answer("? Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РєРѕРјРјРµРЅС‚Р°СЂРёР№ СЃРѕС…СЂР°РЅРµРЅ!")\n';
     code += '            \n';
-    code += '            logging.info(f"Дополнительный текстовый ввод: {input_variable}_additional = {user_text} (пользователь {user_id})")\n';
+    code += '            logging.info(f"Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ С‚РµРєСЃС‚РѕРІС‹Р№ РІРІРѕРґ: {input_variable}_additional = {user_text} (РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ {user_id})")\n';
     code += '        return\n';
     code += '    \n';
-    code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
+    code += '    # Р•СЃР»Рё РЅРµС‚ Р°РєС‚РёРІРЅРѕРіРѕ РѕР¶РёРґР°РЅРёСЏ РІРІРѕРґР°, РёРіРЅРѕСЂРёСЂСѓРµРј СЃРѕРѕР±С‰РµРЅРёРµ\n';
     code += '    return\n';
 
     const navigationCode = generateNodeNavigation(nodes || [], '            ', 'next_node_id', 'message', 'user_vars');
@@ -828,277 +828,277 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   /**
-   * Генерирует код валидации пользовательского ввода и логики продолжения диалога
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ РІР°Р»РёРґР°С†РёРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР° Рё Р»РѕРіРёРєРё РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ РґРёР°Р»РѕРіР°
    * 
-   * Эта функция создает Python-код для валидации и обработки пользовательского ввода в Telegram боте.
-   * Она является ключевым компонентом системы сбора данных от пользователей и обеспечивает:
+   * Р­С‚Р° С„СѓРЅРєС†РёСЏ СЃРѕР·РґР°РµС‚ Python-РєРѕРґ РґР»СЏ РІР°Р»РёРґР°С†РёРё Рё РѕР±СЂР°Р±РѕС‚РєРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР° РІ Telegram Р±РѕС‚Рµ.
+   * РћРЅР° СЏРІР»СЏРµС‚СЃСЏ РєР»СЋС‡РµРІС‹Рј РєРѕРјРїРѕРЅРµРЅС‚РѕРј СЃРёСЃС‚РµРјС‹ СЃР±РѕСЂР° РґР°РЅРЅС‹С… РѕС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ Рё РѕР±РµСЃРїРµС‡РёРІР°РµС‚:
    * 
-   * **Функциональность валидации:**
-   * - Валидация длины текста (минимум и максимум символов)
-   * - Валидация типа ввода (email, номер телефона, числовые значения)
-   * - Регулярные выражения для проверки форматов email и телефонных номеров
-   * - Обработка ошибок валидации с возможностью повторного ввода
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РІР°Р»РёРґР°С†РёРё:**
+   * - Р’Р°Р»РёРґР°С†РёСЏ РґР»РёРЅС‹ С‚РµРєСЃС‚Р° (РјРёРЅРёРјСѓРј Рё РјР°РєСЃРёРјСѓРј СЃРёРјРІРѕР»РѕРІ)
+   * - Р’Р°Р»РёРґР°С†РёСЏ С‚РёРїР° РІРІРѕРґР° (email, РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°, С‡РёСЃР»РѕРІС‹Рµ Р·РЅР°С‡РµРЅРёСЏ)
+   * - Р РµРіСѓР»СЏСЂРЅС‹Рµ РІС‹СЂР°Р¶РµРЅРёСЏ РґР»СЏ РїСЂРѕРІРµСЂРєРё С„РѕСЂРјР°С‚РѕРІ email Рё С‚РµР»РµС„РѕРЅРЅС‹С… РЅРѕРјРµСЂРѕРІ
+   * - РћР±СЂР°Р±РѕС‚РєР° РѕС€РёР±РѕРє РІР°Р»РёРґР°С†РёРё СЃ РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊСЋ РїРѕРІС‚РѕСЂРЅРѕРіРѕ РІРІРѕРґР°
    * 
-   * **Функциональность сохранения данных:**
-   * - Сохранение в локальное хранилище user_data
-   * - Сохранение в базу данных (если включено)
-   * - Поддержка различных типов данных (текст, числа, email, телефон)
-   * - Логирование всех операций сохранения
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ СЃРѕС…СЂР°РЅРµРЅРёСЏ РґР°РЅРЅС‹С…:**
+   * - РЎРѕС…СЂР°РЅРµРЅРёРµ РІ Р»РѕРєР°Р»СЊРЅРѕРµ С…СЂР°РЅРёР»РёС‰Рµ user_data
+   * - РЎРѕС…СЂР°РЅРµРЅРёРµ РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С… (РµСЃР»Рё РІРєР»СЋС‡РµРЅРѕ)
+   * - РџРѕРґРґРµСЂР¶РєР° СЂР°Р·Р»РёС‡РЅС‹С… С‚РёРїРѕРІ РґР°РЅРЅС‹С… (С‚РµРєСЃС‚, С‡РёСЃР»Р°, email, С‚РµР»РµС„РѕРЅ)
+   * - Р›РѕРіРёСЂРѕРІР°РЅРёРµ РІСЃРµС… РѕРїРµСЂР°С†РёР№ СЃРѕС…СЂР°РЅРµРЅРёСЏ
    * 
-   * **Функциональность навигации:**
-   * - Автоматический переход к следующему узлу после успешного ввода
-   * - Создание фейкового сообщения для навигации
-   * - Поддержка различных типов целевых узлов
-   * - Обработка ошибок навигации
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РЅР°РІРёРіР°С†РёРё:**
+   * - РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРёР№ РїРµСЂРµС…РѕРґ Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ РїРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕРіРѕ РІРІРѕРґР°
+   * - РЎРѕР·РґР°РЅРёРµ С„РµР№РєРѕРІРѕРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ РґР»СЏ РЅР°РІРёРіР°С†РёРё
+   * - РџРѕРґРґРµСЂР¶РєР° СЂР°Р·Р»РёС‡РЅС‹С… С‚РёРїРѕРІ С†РµР»РµРІС‹С… СѓР·Р»РѕРІ
+   * - РћР±СЂР°Р±РѕС‚РєР° РѕС€РёР±РѕРє РЅР°РІРёРіР°С†РёРё
    * 
-   * **Генерируемый код включает:**
-   * - Проверку длины текста с настраиваемыми лимитами
-   * - Регулярные выражения для email и телефонов
-   * - Конструкции try-catch для валидации чисел
-   * - Сохранение в user_data и базу данных
-   * - Логирование всех операций
-   * - Автоматическую навигацию к следующему узлу
-   * - Очистку состояния ожидания ввода
+   * **Р“РµРЅРµСЂРёСЂСѓРµРјС‹Р№ РєРѕРґ РІРєР»СЋС‡Р°РµС‚:**
+   * - РџСЂРѕРІРµСЂРєСѓ РґР»РёРЅС‹ С‚РµРєСЃС‚Р° СЃ РЅР°СЃС‚СЂР°РёРІР°РµРјС‹РјРё Р»РёРјРёС‚Р°РјРё
+   * - Р РµРіСѓР»СЏСЂРЅС‹Рµ РІС‹СЂР°Р¶РµРЅРёСЏ РґР»СЏ email Рё С‚РµР»РµС„РѕРЅРѕРІ
+   * - РљРѕРЅСЃС‚СЂСѓРєС†РёРё try-catch РґР»СЏ РІР°Р»РёРґР°С†РёРё С‡РёСЃРµР»
+   * - РЎРѕС…СЂР°РЅРµРЅРёРµ РІ user_data Рё Р±Р°Р·Сѓ РґР°РЅРЅС‹С…
+   * - Р›РѕРіРёСЂРѕРІР°РЅРёРµ РІСЃРµС… РѕРїРµСЂР°С†РёР№
+   * - РђРІС‚РѕРјР°С‚РёС‡РµСЃРєСѓСЋ РЅР°РІРёРіР°С†РёСЋ Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ
+   * - РћС‡РёСЃС‚РєСѓ СЃРѕСЃС‚РѕСЏРЅРёСЏ РѕР¶РёРґР°РЅРёСЏ РІРІРѕРґР°
    * 
    * @remarks
-   * Функция генерирует код, который интегрируется с системой состояний бота
-   * и обеспечивает надежную валидацию пользовательского ввода
+   * Р¤СѓРЅРєС†РёСЏ РіРµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ, РєРѕС‚РѕСЂС‹Р№ РёРЅС‚РµРіСЂРёСЂСѓРµС‚СЃСЏ СЃ СЃРёСЃС‚РµРјРѕР№ СЃРѕСЃС‚РѕСЏРЅРёР№ Р±РѕС‚Р°
+   * Рё РѕР±РµСЃРїРµС‡РёРІР°РµС‚ РЅР°РґРµР¶РЅСѓСЋ РІР°Р»РёРґР°С†РёСЋ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР°
    * 
    * @example
-   * // Сгенерированный код будет содержать:
-   * // - Валидацию email с регулярным выражением
-   * // - Проверку длины текста
-   * // - Сохранение в БД с логированием
-   * // - Автоматический переход к следующему узлу
+   * // РЎРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ РєРѕРґ Р±СѓРґРµС‚ СЃРѕРґРµСЂР¶Р°С‚СЊ:
+   * // - Р’Р°Р»РёРґР°С†РёСЋ email СЃ СЂРµРіСѓР»СЏСЂРЅС‹Рј РІС‹СЂР°Р¶РµРЅРёРµРј
+   * // - РџСЂРѕРІРµСЂРєСѓ РґР»РёРЅС‹ С‚РµРєСЃС‚Р°
+   * // - РЎРѕС…СЂР°РЅРµРЅРёРµ РІ Р‘Р” СЃ Р»РѕРіРёСЂРѕРІР°РЅРёРµРј
+   * // - РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРёР№ РїРµСЂРµС…РѕРґ Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ
    */
   function generateUserInputValidationAndContinuationLogic() {
-    code += '    # Валидация длины тттекста\n';
+    code += '    # Р’Р°Р»РёРґР°С†РёСЏ РґР»РёРЅС‹ С‚С‚С‚РµРєСЃС‚Р°\n';
     code += '    min_length = input_config.get("min_length", 0)\n';
     code += '    max_length = input_config.get("max_length", 0)\n';
     code += '    \n';
     code += '    if min_length > 0 and len(user_text) < min_length:\n';
-    code += '        retry_message = input_config.get("retry_message", "Пожалуйста, яопробуйте еще раз.")\n';
-    code += '        await message.answer(f"? Слишком короткий ответ (минимум {min_length} символов). {retry_message}")\n';
+    code += '        retry_message = input_config.get("retry_message", "РџРѕР¶Р°Р»СѓР№СЃС‚Р°, СЏРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·.")\n';
+    code += '        await message.answer(f"? РЎР»РёС€РєРѕРј РєРѕСЂРѕС‚РєРёР№ РѕС‚РІРµС‚ (РјРёРЅРёРјСѓРј {min_length} СЃРёРјРІРѕР»РѕРІ). {retry_message}")\n';
     code += '        return\n';
     code += '    \n';
     code += '    if max_length > 0 and len(user_text) > max_length:\n';
-    code += '        retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте ещя раз.")\n';
-    code += '        await message.answer(f"? Слишком длинный ответ (максимум {max_length} символов). {retry_message}")\n';
+    code += '        retry_message = input_config.get("retry_message", "РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰СЏ СЂР°Р·.")\n';
+    code += '        await message.answer(f"? РЎР»РёС€РєРѕРј РґР»РёРЅРЅС‹Р№ РѕС‚РІРµС‚ (РјР°РєСЃРёРјСѓРј {max_length} СЃРёРјРІРѕР»РѕРІ). {retry_message}")\n';
     code += '        return\n';
     code += '    \n';
-    code += '    # Валидация типа ввода\n';
+    code += '    # Р’Р°Р»РёРґР°С†РёСЏ С‚РёРїР° РІРІРѕРґР°\n';
     code += '    input_type = input_config.get("type", "text")\n';
     code += '    \n';
     code += '    if input_type == "email":\n';
     code += '        import re\n';
     code += '        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n';
     code += '        if not re.match(email_pattern, user_text):\n';
-    code += '            retry_message = input_config.get("retry_message", "Пожалуйсяа, яопрояуйте еще ряз.")\n';
-    code += '            await message.answer(f"? Неверный фярмат email. {retry_message}")\n';
+    code += '            retry_message = input_config.get("retry_message", "РџРѕР¶Р°Р»СѓР№СЃСЏР°, СЏРѕРїСЂРѕСЏСѓР№С‚Рµ РµС‰Рµ СЂСЏР·.")\n';
+    code += '            await message.answer(f"? РќРµРІРµСЂРЅС‹Р№ С„СЏСЂРјР°С‚ email. {retry_message}")\n';
     code += '            return\n';
     code += '    \n';
     code += '    elif input_type == "number":\n';
     code += '        try:\n';
     code += '            float(user_text)\n';
     code += '        except ValueError:\n';
-    code += '            retry_message = input_config.get("retry_message", "Пожалуйста, пояробуйтя еще раз.")\n';
-    code += '            await message.answer(f"? Введите корректное чясло. {retry_message}")\n';
+    code += '            retry_message = input_config.get("retry_message", "РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїРѕСЏСЂРѕР±СѓР№С‚СЏ РµС‰Рµ СЂР°Р·.")\n';
+    code += '            await message.answer(f"? Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅРѕРµ С‡СЏСЃР»Рѕ. {retry_message}")\n';
     code += '            return\n';
     code += '    \n';
     code += '    elif input_type == "phone":\n';
     code += '        import re\n';
     code += '        phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n';
     code += '        if not re.match(phone_pattern, user_text):\n';
-    code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще ряз.")\n';
-    code += '            await message.answer(f"? Неверный формат телефона. {retry_message}")\n';
+    code += '            retry_message = input_config.get("retry_message", "РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂСЏР·.")\n';
+    code += '            await message.answer(f"? РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ С‚РµР»РµС„РѕРЅР°. {retry_message}")\n';
     code += '            return\n';
     code += '    \n';
-    code += '    # Сохраняея ответ пользователя простым значением\n';
+    code += '    # РЎРѕС…СЂР°РЅСЏРµСЏ РѕС‚РІРµС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїСЂРѕСЃС‚С‹Рј Р·РЅР°С‡РµРЅРёРµРј\n';
     code += '    variable_name = input_config.get("variable", "user_response")\n';
     code += '    timestamp = get_moscow_time()\n';
     code += '    node_id = input_config.get("node_id", "unknown")\n';
     code += '    \n';
-    code += '    # Простое значение вместо сложного объекта\n';
+    code += '    # РџСЂРѕСЃС‚РѕРµ Р·РЅР°С‡РµРЅРёРµ РІРјРµСЃС‚Рѕ СЃР»РѕР¶РЅРѕРіРѕ РѕР±СЉРµРєС‚Р°\n';
     code += '    response_data = user_text\n';
     code += '    \n';
-    code += '    # Сохраняем в пользовательские данные\n';
+    code += '    # РЎРѕС…СЂР°РЅСЏРµРј РІ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёРµ РґР°РЅРЅС‹Рµ\n';
     code += '    user_data[user_id][variable_name] = response_data\n';
     code += '    \n';
-    code += '    # Сохраняем в базу данных если включено\n';
+    code += '    # РЎРѕС…СЂР°РЅСЏРµРј РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С… РµСЃР»Рё РІРєР»СЋС‡РµРЅРѕ\n';
     code += '    if input_config.get("save_to_database"):\n';
     code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
     code += '        if saved_to_db:\n';
-    code += '            logging.info(f"? Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+    code += '            logging.info(f"? Р”Р°РЅРЅС‹Рµ СЃРѕС…СЂР°РЅРµРЅС‹ РІ Р‘Р”: {variable_name} = {user_text} (РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ {user_id})")\n';
     code += '        else:\n';
-    code += '            logging.warning(f"?? Не удалось сохранить в яД, данные сохранены ляякально")\n';
+    code += '            logging.warning(f"?? РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РІ СЏР”, РґР°РЅРЅС‹Рµ СЃРѕС…СЂР°РЅРµРЅС‹ Р»СЏСЏРєР°Р»СЊРЅРѕ")\n';
     code += '    \n';
-    code += '    # Отправляем сообщение об успехе только если оно задано\n';
+    code += '    # РћС‚РїСЂР°РІР»СЏРµРј СЃРѕРѕР±С‰РµРЅРёРµ РѕР± СѓСЃРїРµС…Рµ С‚РѕР»СЊРєРѕ РµСЃР»Рё РѕРЅРѕ Р·Р°РґР°РЅРѕ\n';
     code += '    success_message = input_config.get("success_message", "")\n';
     code += '    if success_message:\n';
     code += '        await message.answer(success_message)\n';
     code += '    \n';
-    code += '    # Очищаем состояние ожидания ввода\n';
+    code += '    # РћС‡РёС‰Р°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РѕР¶РёРґР°РЅРёСЏ РІРІРѕРґР°\n';
     code += '    del user_data[user_id]["waiting_for_input"]\n';
     code += '    \n';
-    code += '    logging.info(f"Получея пользовательский ввод: {variable_name} = {user_text}")\n';
+    code += '    logging.info(f"РџРѕР»СѓС‡РµСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёР№ РІРІРѕРґ: {variable_name} = {user_text}")\n';
     code += '    \n';
-    code += '    # Автоматическая навигация к следующему узлу после успешного ввода\n';
+    code += '    # РђРІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ РЅР°РІРёРіР°С†РёСЏ Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ РїРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕРіРѕ РІРІРѕРґР°\n';
     code += '    next_node_id = input_config.get("next_node_id")\n';
-    code += '    logging.info(f"?? Проверяям навияяяяацию: next_node_id = {next_node_id}")\n';
+    code += '    logging.info(f"?? РџСЂРѕРІРµСЂСЏСЏРј РЅР°РІРёСЏСЏСЏСЏР°С†РёСЋ: next_node_id = {next_node_id}")\n';
     code += '    if next_node_id:\n';
     code += '        try:\n';
-    code += '            logging.info(f"?? Переходим к следующему узлу: {next_node_id}")\n';
+    code += '            logging.info(f"?? РџРµСЂРµС…РѕРґРёРј Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ: {next_node_id}")\n';
     code += '            \n';
-    code += '            # Создаем фейковое сообщение для навигации\n';
+    code += '            # РЎРѕР·РґР°РµРј С„РµР№РєРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ РґР»СЏ РЅР°РІРёРіР°С†РёРё\n';
     code += '            fake_message = type("FakeMessage", (), {})()\n';
     code += '            fake_message.from_user = message.from_user\n';
     code += '            fake_message.answer = message.answer\n';
     code += '            fake_message.delete = lambda: None\n';
     code += '            \n';
-    code += '            # Находим узел по ID и выполняем соответствующее действие\n';
+    code += '            # РќР°С…РѕРґРёРј СѓР·РµР» РїРѕ ID Рё РІС‹РїРѕР»РЅСЏРµРј СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРµ РґРµР№СЃС‚РІРёРµ\n';
   }
 
   /**
-   * Генерирует код логики переходов состояний и рендеринга сообщений
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ Р»РѕРіРёРєРё РїРµСЂРµС…РѕРґРѕРІ СЃРѕСЃС‚РѕСЏРЅРёР№ Рё СЂРµРЅРґРµСЂРёРЅРіР° СЃРѕРѕР±С‰РµРЅРёР№
    * 
-   * Эта функция создает Python-код для обработки навигации между узлами бота и рендеринга
-   * различных типов сообщений. Она является центральным компонентом системы переходов
-   * и обеспечивает:
+   * Р­С‚Р° С„СѓРЅРєС†РёСЏ СЃРѕР·РґР°РµС‚ Python-РєРѕРґ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё РЅР°РІРёРіР°С†РёРё РјРµР¶РґСѓ СѓР·Р»Р°РјРё Р±РѕС‚Р° Рё СЂРµРЅРґРµСЂРёРЅРіР°
+   * СЂР°Р·Р»РёС‡РЅС‹С… С‚РёРїРѕРІ СЃРѕРѕР±С‰РµРЅРёР№. РћРЅР° СЏРІР»СЏРµС‚СЃСЏ С†РµРЅС‚СЂР°Р»СЊРЅС‹Рј РєРѕРјРїРѕРЅРµРЅС‚РѕРј СЃРёСЃС‚РµРјС‹ РїРµСЂРµС…РѕРґРѕРІ
+   * Рё РѕР±РµСЃРїРµС‡РёРІР°РµС‚:
    * 
-   * **Функциональность переходов состояний:**
-   * - Обработка условных переходов между узлами (if/elif структуры)
-   * - Поддержка различных типов узлов (message, command, start, user-input)
-   * - Автоматическое определение следующего узла на основе конфигурации
-   * - Обработка ошибок при переходах
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РїРµСЂРµС…РѕРґРѕРІ СЃРѕСЃС‚РѕСЏРЅРёР№:**
+   * - РћР±СЂР°Р±РѕС‚РєР° СѓСЃР»РѕРІРЅС‹С… РїРµСЂРµС…РѕРґРѕРІ РјРµР¶РґСѓ СѓР·Р»Р°РјРё (if/elif СЃС‚СЂСѓРєС‚СѓСЂС‹)
+   * - РџРѕРґРґРµСЂР¶РєР° СЂР°Р·Р»РёС‡РЅС‹С… С‚РёРїРѕРІ СѓР·Р»РѕРІ (message, command, start, user-input)
+   * - РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРµ РѕРїСЂРµРґРµР»РµРЅРёРµ СЃР»РµРґСѓСЋС‰РµРіРѕ СѓР·Р»Р° РЅР° РѕСЃРЅРѕРІРµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё
+   * - РћР±СЂР°Р±РѕС‚РєР° РѕС€РёР±РѕРє РїСЂРё РїРµСЂРµС…РѕРґР°С…
    * 
-   * **Функциональность рендеринга сообщений:**
-   * - Поддержка inline клавиатур с различными типами кнопок
-   * - Поддержка reply клавиатур с настройками размера
-   * - Обработка условных сообщений на основе ??анных пользователя
-   * - Поддержка различных режимов форматирования (Markdown, HTML)
-   * - Обработка прикрепленных медиафайлов
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ СЂРµРЅРґРµСЂРёРЅРіР° СЃРѕРѕР±С‰РµРЅРёР№:**
+   * - РџРѕРґРґРµСЂР¶РєР° inline РєР»Р°РІРёР°С‚СѓСЂ СЃ СЂР°Р·Р»РёС‡РЅС‹РјРё С‚РёРїР°РјРё РєРЅРѕРїРѕРє
+   * - РџРѕРґРґРµСЂР¶РєР° reply РєР»Р°РІРёР°С‚СѓСЂ СЃ РЅР°СЃС‚СЂРѕР№РєР°РјРё СЂР°Р·РјРµСЂР°
+   * - РћР±СЂР°Р±РѕС‚РєР° СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№ РЅР° РѕСЃРЅРѕРІРµ ??Р°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+   * - РџРѕРґРґРµСЂР¶РєР° СЂР°Р·Р»РёС‡РЅС‹С… СЂРµР¶РёРјРѕРІ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ (Markdown, HTML)
+   * - РћР±СЂР°Р±РѕС‚РєР° РїСЂРёРєСЂРµРїР»РµРЅРЅС‹С… РјРµРґРёР°С„Р°Р№Р»РѕРІ
    * 
-   * **Функциональность обработки ввода:**
-   * - Настройка состояний ожидания пользовательского ввода
-   * - Поддержка различных типов ввода (текст, фото, видео, аудио, документы)
-   * - Валидация входных данных с настраиваемыми параметрами
-   * - Обработка узлов сбора данных через кнопки
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РѕР±СЂР°Р±РѕС‚РєРё РІРІРѕРґР°:**
+   * - РќР°СЃС‚СЂРѕР№РєР° СЃРѕСЃС‚РѕСЏРЅРёР№ РѕР¶РёРґР°РЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР°
+   * - РџРѕРґРґРµСЂР¶РєР° СЂР°Р·Р»РёС‡РЅС‹С… С‚РёРїРѕРІ РІРІРѕРґР° (С‚РµРєСЃС‚, С„РѕС‚Рѕ, РІРёРґРµРѕ, Р°СѓРґРёРѕ, РґРѕРєСѓРјРµРЅС‚С‹)
+   * - Р’Р°Р»РёРґР°С†РёСЏ РІС…РѕРґРЅС‹С… РґР°РЅРЅС‹С… СЃ РЅР°СЃС‚СЂР°РёРІР°РµРјС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё
+   * - РћР±СЂР°Р±РѕС‚РєР° СѓР·Р»РѕРІ СЃР±РѕСЂР° РґР°РЅРЅС‹С… С‡РµСЂРµР· РєРЅРѕРїРєРё
    * 
-   * **Поддерживаемые типы узлов:**
-   * - Message узлы с различными типами клавиатур
-   * - User-input узлы для сбора данных
-   * - Command узлы для выполнения команд
-   * - Start узлы для инициализации
-   * - Узлы с условной логикой
+   * **РџРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ С‚РёРїС‹ СѓР·Р»РѕРІ:**
+   * - Message СѓР·Р»С‹ СЃ СЂР°Р·Р»РёС‡РЅС‹РјРё С‚РёРїР°РјРё РєР»Р°РІРёР°С‚СѓСЂ
+   * - User-input СѓР·Р»С‹ РґР»СЏ СЃР±РѕСЂР° РґР°РЅРЅС‹С…
+   * - Command СѓР·Р»С‹ РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґ
+   * - Start СѓР·Р»С‹ РґР»СЏ РёРЅРёС†РёР°Р»РёР·Р°С†РёРё
+   * - РЈР·Р»С‹ СЃ СѓСЃР»РѕРІРЅРѕР№ Р»РѕРіРёРєРѕР№
    * 
-   * **Генерируемые обработчики включают:**
-   * - Создание inline и reply клавиатур
-   * - Обр??ботку callback_data для кнопок
-   * - Валидацию и сохранение пользовательского ввода
-   * - Усло??ную логику отображения сообщений
-   * - Навигаци?? между узлами с об??аботкой ошибок
+   * **Р“РµРЅРµСЂРёСЂСѓРµРјС‹Рµ РѕР±СЂР°Р±РѕС‚С‡РёРєРё РІРєР»СЋС‡Р°СЋС‚:**
+   * - РЎРѕР·РґР°РЅРёРµ inline Рё reply РєР»Р°РІРёР°С‚СѓСЂ
+   * - РћР±СЂ??Р±РѕС‚РєСѓ callback_data РґР»СЏ РєРЅРѕРїРѕРє
+   * - Р’Р°Р»РёРґР°С†РёСЋ Рё СЃРѕС…СЂР°РЅРµРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР°
+   * - РЈСЃР»Рѕ??РЅСѓСЋ Р»РѕРіРёРєСѓ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ СЃРѕРѕР±С‰РµРЅРёР№
+   * - РќР°РІРёРіР°С†Рё?? РјРµР¶РґСѓ СѓР·Р»Р°РјРё СЃ РѕР±??Р°Р±РѕС‚РєРѕР№ РѕС€РёР±РѕРє
    * 
    * @remarks
-   * Функ????ия генерирует код, который обеспечивает плавную навигацию
-   * и интерактивность в Telegram боте, поддерживая сложные сценарии диалогов
+   * Р¤СѓРЅРє????РёСЏ РіРµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ, РєРѕС‚РѕСЂС‹Р№ РѕР±РµСЃРїРµС‡РёРІР°РµС‚ РїР»Р°РІРЅСѓСЋ РЅР°РІРёРіР°С†РёСЋ
+   * Рё РёРЅС‚РµСЂР°РєС‚РёРІРЅРѕСЃС‚СЊ РІ Telegram Р±РѕС‚Рµ, РїРѕРґРґРµСЂР¶РёРІР°СЏ СЃР»РѕР¶РЅС‹Рµ СЃС†РµРЅР°СЂРёРё РґРёР°Р»РѕРіРѕРІ
    * 
    * @example
-   * // Сгенерированный код обеспечит:
-   * // - Переходы между узлами по усло??иям
-   * // - Создание интерактивных клавиатур
-   * // - Обработку пользовательского ввода
-   * // - Условное отображение сообщений
+   * // РЎРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ РєРѕРґ РѕР±РµСЃРїРµС‡РёС‚:
+   * // - РџРµСЂРµС…РѕРґС‹ РјРµР¶РґСѓ СѓР·Р»Р°РјРё РїРѕ СѓСЃР»Рѕ??РёСЏРј
+   * // - РЎРѕР·РґР°РЅРёРµ РёРЅС‚РµСЂР°РєС‚РёРІРЅС‹С… РєР»Р°РІРёР°С‚СѓСЂ
+   * // - РћР±СЂР°Р±РѕС‚РєСѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РІРІРѕРґР°
+   * // - РЈСЃР»РѕРІРЅРѕРµ РѕС‚РѕР±СЂР°Р¶РµРЅРёРµ СЃРѕРѕР±С‰РµРЅРёР№
    */
   function generateStateTransitionAndRenderLogic() {
     code = newgenerateStateTransitionAndRenderLogic(nodes, code, allNodeIds, connections);
   }
 
   /**
-   * Собирает все callback-идентификаторы команд из узлов бота
+   * РЎРѕР±РёСЂР°РµС‚ РІСЃРµ callback-РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂС‹ РєРѕРјР°РЅРґ РёР· СѓР·Р»РѕРІ Р±РѕС‚Р°
    * 
-   * Эта функция анализирует все узлы бота и извлекает информацию о кнопках,
-   * которые связаны с выполнением команд. Она является ключевым компонентом
-   * системы обнаружения и ре??истрации командных кнопок.
+   * Р­С‚Р° С„СѓРЅРєС†РёСЏ Р°РЅР°Р»РёР·РёСЂСѓРµС‚ РІСЃРµ СѓР·Р»С‹ Р±РѕС‚Р° Рё РёР·РІР»РµРєР°РµС‚ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РєРЅРѕРїРєР°С…,
+   * РєРѕС‚РѕСЂС‹Рµ СЃРІСЏР·Р°РЅС‹ СЃ РІС‹РїРѕР»РЅРµРЅРёРµРј РєРѕРјР°РЅРґ. РћРЅР° СЏРІР»СЏРµС‚СЃСЏ РєР»СЋС‡РµРІС‹Рј РєРѕРјРїРѕРЅРµРЅС‚РѕРј
+   * СЃРёСЃС‚РµРјС‹ РѕР±РЅР°СЂСѓР¶РµРЅРёСЏ Рё СЂРµ??РёСЃС‚СЂР°С†РёРё РєРѕРјР°РЅРґРЅС‹С… РєРЅРѕРїРѕРє.
    * 
-   * **Функциональность анализа узлов:**
-   * - Перебор всех узлов бота для поиска командных кнопок
-   * - Анализ обычных кнопок узлов
-   * - Анализ кнопок в условных сообщениях
-   * - Проверка различных типов действий кнопок
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ Р°РЅР°Р»РёР·Р° СѓР·Р»РѕРІ:**
+   * - РџРµСЂРµР±РѕСЂ РІСЃРµС… СѓР·Р»РѕРІ Р±РѕС‚Р° РґР»СЏ РїРѕРёСЃРєР° РєРѕРјР°РЅРґРЅС‹С… РєРЅРѕРїРѕРє
+   * - РђРЅР°Р»РёР· РѕР±С‹С‡РЅС‹С… РєРЅРѕРїРѕРє СѓР·Р»РѕРІ
+   * - РђРЅР°Р»РёР· РєРЅРѕРїРѕРє РІ СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёСЏС…
+   * - РџСЂРѕРІРµСЂРєР° СЂР°Р·Р»РёС‡РЅС‹С… С‚РёРїРѕРІ РґРµР№СЃС‚РІРёР№ РєРЅРѕРїРѕРє
    * 
-   * **Функциональность обработки кнопок:**
-   * - Поиск кнопок с action === 'command'
-   * - Извлечение команды из target поля кнопки
-   * - Генерация уникальных callback идентификаторов
-   * - Формирование имен функций обработчиков
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РѕР±СЂР°Р±РѕС‚РєРё РєРЅРѕРїРѕРє:**
+   * - РџРѕРёСЃРє РєРЅРѕРїРѕРє СЃ action === 'command'
+   * - РР·РІР»РµС‡РµРЅРёРµ РєРѕРјР°РЅРґС‹ РёР· target РїРѕР»СЏ РєРЅРѕРїРєРё
+   * - Р“РµРЅРµСЂР°С†РёСЏ СѓРЅРёРєР°Р»СЊРЅС‹С… callback РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРІ
+   * - Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ РёРјРµРЅ С„СѓРЅРєС†РёР№ РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ
    * 
-   * **Поддерживаемые источники команд:**
-   * - Обычные кнопки в узлах сообщений
-   * - Кнопки в условных сообщениях
-   * - Кнопки с различными типами действий
-   * - Команды в различных форматах (/command, command)
+   * **РџРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ РёСЃС‚РѕС‡РЅРёРєРё РєРѕРјР°РЅРґ:**
+   * - РћР±С‹С‡РЅС‹Рµ РєРЅРѕРїРєРё РІ СѓР·Р»Р°С… СЃРѕРѕР±С‰РµРЅРёР№
+   * - РљРЅРѕРїРєРё РІ СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёСЏС…
+   * - РљРЅРѕРїРєРё СЃ СЂР°Р·Р»РёС‡РЅС‹РјРё С‚РёРїР°РјРё РґРµР№СЃС‚РІРёР№
+   * - РљРѕРјР°РЅРґС‹ РІ СЂР°Р·Р»РёС‡РЅС‹С… С„РѕСЂРјР°С‚Р°С… (/command, command)
    * 
-   * **Генерируемые callback идентификаторы:**
-   * - Формат: "cmd_" + command_name (без слеша)
-   * - Уникальные идентификаторы для каждой команды
-   * - Очистка специальных символов из имен команд
-   * - Предотвращение дублирования идентификаторов
+   * **Р“РµРЅРµСЂРёСЂСѓРµРјС‹Рµ callback РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂС‹:**
+   * - Р¤РѕСЂРјР°С‚: "cmd_" + command_name (Р±РµР· СЃР»РµС€Р°)
+   * - РЈРЅРёРєР°Р»СЊРЅС‹Рµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂС‹ РґР»СЏ РєР°Р¶РґРѕР№ РєРѕРјР°РЅРґС‹
+   * - РћС‡РёСЃС‚РєР° СЃРїРµС†РёР°Р»СЊРЅС‹С… СЃРёРјРІРѕР»РѕРІ РёР· РёРјРµРЅ РєРѕРјР°РЅРґ
+   * - РџСЂРµРґРѕС‚РІСЂР°С‰РµРЅРёРµ РґСѓР±Р»РёСЂРѕРІР°РЅРёСЏ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРІ
    * 
-   * **Возвращаемое значение:**
-   * - Set<string> с уникальными callback идентификаторами команд
-   * - Используется для генерации обработчиков команд
-   * - Логирование процесса обнаружения команд (если включено)
+   * **Р’РѕР·РІСЂР°С‰Р°РµРјРѕРµ Р·РЅР°С‡РµРЅРёРµ:**
+   * - Set<string> СЃ СѓРЅРёРєР°Р»СЊРЅС‹РјРё callback РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂР°РјРё РєРѕРјР°РЅРґ
+   * - РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ РіРµРЅРµСЂР°С†РёРё РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ РєРѕРјР°РЅРґ
+   * - Р›РѕРіРёСЂРѕРІР°РЅРёРµ РїСЂРѕС†РµСЃСЃР° РѕР±РЅР°СЂСѓР¶РµРЅРёСЏ РєРѕРјР°РЅРґ (РµСЃР»Рё РІРєР»СЋС‡РµРЅРѕ)
    * 
-   * **Логирование и отладка:**
-   * - Подробное логирование процесса поиска команд
-   * - Информация о количестве найденных кнопок в каждом узле
-   * - Детали о найденных командных кнопках
-   * - Статистика по узлам без кнопок
+   * **Р›РѕРіРёСЂРѕРІР°РЅРёРµ Рё РѕС‚Р»Р°РґРєР°:**
+   * - РџРѕРґСЂРѕР±РЅРѕРµ Р»РѕРіРёСЂРѕРІР°РЅРёРµ РїСЂРѕС†РµСЃСЃР° РїРѕРёСЃРєР° РєРѕРјР°РЅРґ
+   * - РРЅС„РѕСЂРјР°С†РёСЏ Рѕ РєРѕР»РёС‡РµСЃС‚РІРµ РЅР°Р№РґРµРЅРЅС‹С… РєРЅРѕРїРѕРє РІ РєР°Р¶РґРѕРј СѓР·Р»Рµ
+   * - Р”РµС‚Р°Р»Рё Рѕ РЅР°Р№РґРµРЅРЅС‹С… РєРѕРјР°РЅРґРЅС‹С… РєРЅРѕРїРєР°С…
+   * - РЎС‚Р°С‚РёСЃС‚РёРєР° РїРѕ СѓР·Р»Р°Рј Р±РµР· РєРЅРѕРїРѕРє
    * 
-   * @returns Множество уникальных callback идентификаторов для команд
+   * @returns РњРЅРѕР¶РµСЃС‚РІРѕ СѓРЅРёРєР°Р»СЊРЅС‹С… callback РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРІ РґР»СЏ РєРѕРјР°РЅРґ
    * 
    * @remarks
-   * Функция обеспечивает полное обнаружение всех командных кнопок
-   * в боте, что необходимо для корректной генерации обработчиков
+   * Р¤СѓРЅРєС†РёСЏ РѕР±РµСЃРїРµС‡РёРІР°РµС‚ РїРѕР»РЅРѕРµ РѕР±РЅР°СЂСѓР¶РµРЅРёРµ РІСЃРµС… РєРѕРјР°РЅРґРЅС‹С… РєРЅРѕРїРѕРє
+   * РІ Р±РѕС‚Рµ, С‡С‚Рѕ РЅРµРѕР±С…РѕРґРёРјРѕ РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕР№ РіРµРЅРµСЂР°С†РёРё РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ
    * 
    * @example
-   * // Пример найденных командных кнопок:
-   * // - Кнопка "Профиль" с command="/profile" -> "cmd_profile"
-   * // - Кнопка "Настройки" с command="settings" -> "cmd_settings"
-   * // - Условная кнопка "Админ" с command="/admin" -> "cmd_admin"
+   * // РџСЂРёРјРµСЂ РЅР°Р№РґРµРЅРЅС‹С… РєРѕРјР°РЅРґРЅС‹С… РєРЅРѕРїРѕРє:
+   * // - РљРЅРѕРїРєР° "РџСЂРѕС„РёР»СЊ" СЃ command="/profile" -> "cmd_profile"
+   * // - РљРЅРѕРїРєР° "РќР°СЃС‚СЂРѕР№РєРё" СЃ command="settings" -> "cmd_settings"
+   * // - РЈСЃР»РѕРІРЅР°СЏ РєРЅРѕРїРєР° "РђРґРјРёРЅ" СЃ command="/admin" -> "cmd_admin"
    */
   function collectAllCommandCallbacksFromNodes(): Set<string> {
     const commandButtons = new Set<string>();
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log('?? НАЧИНАяМ СБ??Р КНОПОК КОМАНД из', nodes.length, 'узлов');
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log('?? РќРђР§РРќРђСЏРњ РЎР‘??Р  РљРќРћРџРћРљ РљРћРњРђРќР” РёР·', nodes.length, 'СѓР·Р»РѕРІ');
 
     nodes.forEach(node => {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`?? Проверяем узел ${node.id} (тип: ${node.type})`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`?? РџСЂРѕРІРµСЂСЏРµРј СѓР·РµР» ${node.id} (С‚РёРї: ${node.type})`);
 
-      // Обычные кнопки узла
+      // РћР±С‹С‡РЅС‹Рµ РєРЅРѕРїРєРё СѓР·Р»Р°
       if (node.data?.buttons) {
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`?? Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`?? РЈР·РµР» ${node.id} РёРјРµРµС‚ ${node.data.buttons.length} РєРЅРѕРїРѕРє`);
         node.data.buttons.forEach((button: Button, index: number) => {
-          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  ?? Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  ?? РљРЅРѕРїРєР° ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
           if (button.action === 'command' && button.target) {
             const commandCallback = `cmd_${button.target.replace('/', '')}`;
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`? НАЙДЕНА кнопка команды: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`? РќРђР™Р”Р•РќРђ РєРЅРѕРїРєР° РєРѕРјР°РЅРґС‹: ${button.text} -> ${button.target} -> ${commandCallback} РІ СѓР·Р»Рµ ${node.id}`);
             commandButtons.add(commandCallback);
           }
         });
       } else {
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`? Узел ${node.id} не имеет кнопок`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`? РЈР·РµР» ${node.id} РЅРµ РёРјРµРµС‚ РєРЅРѕРїРѕРє`);
       }
 
-      // Кнопки в условных сообщениях
+      // РљРЅРѕРїРєРё РІ СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёСЏС…
       if (node.data?.conditionalMessages) {
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`?? Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`?? РЈР·РµР» ${node.id} РёРјРµРµС‚ ${node.data.conditionalMessages.length} СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№`);
         node.data.conditionalMessages.forEach((condition: any) => {
           if (condition.buttons) {
             condition.buttons.forEach((button: Button) => {
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  ?? Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  ?? РЈСЃР»РѕРІРЅР°СЏ РєРЅРѕРїРєР°: "${button.text}" (action: ${button.action}, target: ${button.target})`);
               if (button.action === 'command' && button.target) {
                 const commandCallback = `cmd_${button.target.replace('/', '')}`;
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`? НАЙДЕНА кнопка команды в условном сообщении: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`? РќРђР™Р”Р•РќРђ РєРЅРѕРїРєР° РєРѕРјР°РЅРґС‹ РІ СѓСЃР»РѕРІРЅРѕРј СЃРѕРѕР±С‰РµРЅРёРё: ${button.text} -> ${button.target} -> ${commandCallback} РІ СѓР·Р»Рµ ${node.id}`);
                 commandButtons.add(commandCallback);
               }
             });
@@ -1110,116 +1110,116 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   /**
-   * Добавляет обработчики callback-запросов для командных кнопок
+   * Р”РѕР±Р°РІР»СЏРµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРєРё callback-Р·Р°РїСЂРѕСЃРѕРІ РґР»СЏ РєРѕРјР°РЅРґРЅС‹С… РєРЅРѕРїРѕРє
    * 
-   * Эта функция генерирует Python-код для обработки callback-запросов
-   * от командных кнопок в Telegram боте. Она создает обработчики,
-   * которые позволяют выполнять команды через нажатие на inline кнопки.
+   * Р­С‚Р° С„СѓРЅРєС†РёСЏ РіРµРЅРµСЂРёСЂСѓРµС‚ Python-РєРѕРґ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё callback-Р·Р°РїСЂРѕСЃРѕРІ
+   * РѕС‚ РєРѕРјР°РЅРґРЅС‹С… РєРЅРѕРїРѕРє РІ Telegram Р±РѕС‚Рµ. РћРЅР° СЃРѕР·РґР°РµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРєРё,
+   * РєРѕС‚РѕСЂС‹Рµ РїРѕР·РІРѕР»СЏСЋС‚ РІС‹РїРѕР»РЅСЏС‚СЊ РєРѕРјР°РЅРґС‹ С‡РµСЂРµР· РЅР°Р¶Р°С‚РёРµ РЅР° inline РєРЅРѕРїРєРё.
    * 
-   * **Функциональност?????? генерации обработчиков:**
-   * - Создание декораторов @dp.callback_query для каждой команды
-   * - Генерация асинхронных функций-обработчиков
-   * - Создание fake message объектов для симуляции команд
-   * - Интеграция с существующими обработчиками команд
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚?????? РіРµРЅРµСЂР°С†РёРё РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ:**
+   * - РЎРѕР·РґР°РЅРёРµ РґРµРєРѕСЂР°С‚РѕСЂРѕРІ @dp.callback_query РґР»СЏ РєР°Р¶РґРѕР№ РєРѕРјР°РЅРґС‹
+   * - Р“РµРЅРµСЂР°С†РёСЏ Р°СЃРёРЅС…СЂРѕРЅРЅС‹С… С„СѓРЅРєС†РёР№-РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ
+   * - РЎРѕР·РґР°РЅРёРµ fake message РѕР±СЉРµРєС‚РѕРІ РґР»СЏ СЃРёРјСѓР»СЏС†РёРё РєРѕРјР°РЅРґ
+   * - РРЅС‚РµРіСЂР°С†РёСЏ СЃ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРјРё РѕР±СЂР°Р±РѕС‚С‡РёРєР°РјРё РєРѕРјР°РЅРґ
    * 
-   * **Функциональность обработки команд:**
-   * - Определение типа узла команды (start, command)
-   * - Вызов соответствующих обработчиков команд
-   * - Обработка команд без соответствующих узлов
-   * - Логирование вып??лнения команд
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РѕР±СЂР°Р±РѕС‚РєРё РєРѕРјР°РЅРґ:**
+   * - РћРїСЂРµРґРµР»РµРЅРёРµ С‚РёРїР° СѓР·Р»Р° РєРѕРјР°РЅРґС‹ (start, command)
+   * - Р’С‹Р·РѕРІ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёС… РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ РєРѕРјР°РЅРґ
+   * - РћР±СЂР°Р±РѕС‚РєР° РєРѕРјР°РЅРґ Р±РµР· СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёС… СѓР·Р»РѕРІ
+   * - Р›РѕРіРёСЂРѕРІР°РЅРёРµ РІС‹Рї??Р»РЅРµРЅРёСЏ РєРѕРјР°РЅРґ
    * 
-   * **Генерируемые обработчики включают:**
-   * - Декораторы для callback_query с фильтрацией по data
-   * - Функции handle_cmd_[command_name] для каждой команды
-   * - Создание FakeMessage объектов для совместимости
-   * - Специальная обработка для start команд
-   * - Обычная обработка для других команд
+   * **Р“РµРЅРµСЂРёСЂСѓРµРјС‹Рµ РѕР±СЂР°Р±РѕС‚С‡РёРєРё РІРєР»СЋС‡Р°СЋС‚:**
+   * - Р”РµРєРѕСЂР°С‚РѕСЂС‹ РґР»СЏ callback_query СЃ С„РёР»СЊС‚СЂР°С†РёРµР№ РїРѕ data
+   * - Р¤СѓРЅРєС†РёРё handle_cmd_[command_name] РґР»СЏ РєР°Р¶РґРѕР№ РєРѕРјР°РЅРґС‹
+   * - РЎРѕР·РґР°РЅРёРµ FakeMessage РѕР±СЉРµРєС‚РѕРІ РґР»СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё
+   * - РЎРїРµС†РёР°Р»СЊРЅР°СЏ РѕР±СЂР°Р±РѕС‚РєР° РґР»СЏ start РєРѕРјР°РЅРґ
+   * - РћР±С‹С‡РЅР°СЏ РѕР±СЂР°Р±РѕС‚РєР° РґР»СЏ РґСЂСѓРіРёС… РєРѕРјР°РЅРґ
    * 
-   * **Поддерживаемые типы команд:**
-   * - Start команды (/start) - специальная обработка
-   * - Обычные команды (/command) - стандартная обработка
-   * - Команды без узлов - базовое уведомление
+   * **РџРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ С‚РёРїС‹ РєРѕРјР°РЅРґ:**
+   * - Start РєРѕРјР°РЅРґС‹ (/start) - СЃРїРµС†РёР°Р»СЊРЅР°СЏ РѕР±СЂР°Р±РѕС‚РєР°
+   * - РћР±С‹С‡РЅС‹Рµ РєРѕРјР°РЅРґС‹ (/command) - СЃС‚Р°РЅРґР°СЂС‚РЅР°СЏ РѕР±СЂР°Р±РѕС‚РєР°
+   * - РљРѕРјР°РЅРґС‹ Р±РµР· СѓР·Р»РѕРІ - Р±Р°Р·РѕРІРѕРµ СѓРІРµРґРѕРјР»РµРЅРёРµ
    * 
-   * **Меха????изм работы:**
-   * 1. Проверка наличия командных кнопок
-   * 2. Генераци???????????? обработчика для каждой команды
-   * 3. Создание fake message для с??муляции
-   * 4. Поиск соответствующего узла команды
-   * 5. Вызов подходящего обработчика
+   * **РњРµС…Р°????РёР·Рј СЂР°Р±РѕС‚С‹:**
+   * 1. РџСЂРѕРІРµСЂРєР° РЅР°Р»РёС‡РёСЏ РєРѕРјР°РЅРґРЅС‹С… РєРЅРѕРїРѕРє
+   * 2. Р“РµРЅРµСЂР°С†Рё???????????? РѕР±СЂР°Р±РѕС‚С‡РёРєР° РґР»СЏ РєР°Р¶РґРѕР№ РєРѕРјР°РЅРґС‹
+   * 3. РЎРѕР·РґР°РЅРёРµ fake message РґР»СЏ СЃ??РјСѓР»СЏС†РёРё
+   * 4. РџРѕРёСЃРє СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРіРѕ СѓР·Р»Р° РєРѕРјР°РЅРґС‹
+   * 5. Р’С‹Р·РѕРІ РїРѕРґС…РѕРґСЏС‰РµРіРѕ РѕР±СЂР°Р±РѕС‚С‡РёРєР°
    * 
-   * **Интеграция с существующ????????и обработчиками:**
-   * - Совместимость с start_handler
-   * - Совместимость с command handlers
-   * - ????оддержка FakeMessageEdit для редактирования сообщ????????ий
-   * - Сохранение контекста callback_query
+   * **РРЅС‚РµРіСЂР°С†РёСЏ СЃ СЃСѓС‰РµСЃС‚РІСѓСЋС‰????????Рё РѕР±СЂР°Р±РѕС‚С‡РёРєР°РјРё:**
+   * - РЎРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ СЃ start_handler
+   * - РЎРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ СЃ command handlers
+   * - ????РѕРґРґРµСЂР¶РєР° FakeMessageEdit РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ СЃРѕРѕР±С‰????????РёР№
+   * - РЎРѕС…СЂР°РЅРµРЅРёРµ РєРѕРЅС‚РµРєСЃС‚Р° callback_query
    * 
    * @remarks
-   * Функция обеспечивает полную функцион??льность выполнения команд
-   * через callback кнопки, что расширяет возможности интерактивности бота
+   * Р¤СѓРЅРєС†РёСЏ РѕР±РµСЃРїРµС‡РёРІР°РµС‚ РїРѕР»РЅСѓСЋ С„СѓРЅРєС†РёРѕРЅ??Р»СЊРЅРѕСЃС‚СЊ РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґ
+   * С‡РµСЂРµР· callback РєРЅРѕРїРєРё, С‡С‚Рѕ СЂР°СЃС€РёСЂСЏРµС‚ РІРѕР·РјРѕР¶РЅРѕСЃС‚Рё РёРЅС‚РµСЂР°РєС‚РёРІРЅРѕСЃС‚Рё Р±РѕС‚Р°
    * 
    * @example
-   * // Пример генерируемого кода:
+   * // РџСЂРёРјРµСЂ РіРµРЅРµСЂРёСЂСѓРµРјРѕРіРѕ РєРѕРґР°:
    * // @dp.callback_query(lambda c: c.data == "cmd_profile")
    * // async def handle_cmd_profile(callback_query: types.CallbackQuery):
    * //     await callback_query.answer()
-   * //     logging.info("Обработка кнопки команды: cmd_profile -> /profile")
+   * //     logging.info("РћР±СЂР°Р±РѕС‚РєР° РєРЅРѕРїРєРё РєРѕРјР°РЅРґС‹: cmd_profile -> /profile")
    * //     fake_message = SimpleNamespace()
    * //     fake_message.from_user = callback_query.from_user
    * //     await profile_handler(fake_message)
    */
   function addCommandCallbackHandlers() {
     if (commandButtons.size > 0) {
-      code += '\n# Обработчики для кнопок команд\n';
-      code += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
+      code += '\n# РћР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РєРЅРѕРїРѕРє РєРѕРјР°РЅРґ\n';
+      code += `# РќР°Р№РґРµРЅРѕ ${commandButtons.size} РєРЅРѕРїРѕРє РєРѕРјР°РЅРґ: ${Array.from(commandButtons).join(', ')}\n`;
 
       commandButtons.forEach(commandCallback => {
         const command = generateCommandCallbackHandlerWithSimulatedMessage(commandCallback);
 
-        // Найти соответствующий обработчик команды
+        // РќР°Р№С‚Рё СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№ РѕР±СЂР°Р±РѕС‚С‡РёРє РєРѕРјР°РЅРґС‹
         generateCommandTriggerFromCallbackWithWrapper(command);
       });
     }
   }
 
   /**
-   * Генерирует обработчик callback-запроса для команды с симуляцией сообщения
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРє callback-Р·Р°РїСЂРѕСЃР° РґР»СЏ РєРѕРјР°РЅРґС‹ СЃ СЃРёРјСѓР»СЏС†РёРµР№ СЃРѕРѕР±С‰РµРЅРёСЏ
    * 
-   * Эта функция создает Python-код для обработки callback-запросов от
-   * командных кнопок и подготавливает среду для выполнения команды.
+   * Р­С‚Р° С„СѓРЅРєС†РёСЏ СЃРѕР·РґР°РµС‚ Python-РєРѕРґ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё callback-Р·Р°РїСЂРѕСЃРѕРІ РѕС‚
+   * РєРѕРјР°РЅРґРЅС‹С… РєРЅРѕРїРѕРє Рё РїРѕРґРіРѕС‚Р°РІР»РёРІР°РµС‚ СЃСЂРµРґСѓ РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹.
    * 
-   * **Функциональность генерации обработчика:**
-   * - Создание декоратора @dp.callback_query для конкретной команды
-   * - Генерация асинхронной функции-обработчика
-   * - Настройка логирования выполнения команды
-   * - Создание fake message объекта для совместимости
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РіРµРЅРµСЂР°С†РёРё РѕР±СЂР°Р±РѕС‚С‡РёРєР°:**
+   * - РЎРѕР·РґР°РЅРёРµ РґРµРєРѕСЂР°С‚РѕСЂР° @dp.callback_query РґР»СЏ РєРѕРЅРєСЂРµС‚РЅРѕР№ РєРѕРјР°РЅРґС‹
+   * - Р“РµРЅРµСЂР°С†РёСЏ Р°СЃРёРЅС…СЂРѕРЅРЅРѕР№ С„СѓРЅРєС†РёРё-РѕР±СЂР°Р±РѕС‚С‡РёРєР°
+   * - РќР°СЃС‚СЂРѕР№РєР° Р»РѕРіРёСЂРѕРІР°РЅРёСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹
+   * - РЎРѕР·РґР°РЅРёРµ fake message РѕР±СЉРµРєС‚Р° РґР»СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё
    * 
-   * **Функциональность симуляции:**
-   * - Создание SimpleNamespace объекта для имитации сообщения
-   * - Копирование необходимых полей из callback_query
-   * - Настройка методов answer и edit_text
-   * - Подготовка контекста для выполнения команды
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ СЃРёРјСѓР»СЏС†РёРё:**
+   * - РЎРѕР·РґР°РЅРёРµ SimpleNamespace РѕР±СЉРµРєС‚Р° РґР»СЏ РёРјРёС‚Р°С†РёРё СЃРѕРѕР±С‰РµРЅРёСЏ
+   * - РљРѕРїРёСЂРѕРІР°РЅРёРµ РЅРµРѕР±С…РѕРґРёРјС‹С… РїРѕР»РµР№ РёР· callback_query
+   * - РќР°СЃС‚СЂРѕР№РєР° РјРµС‚РѕРґРѕРІ answer Рё edit_text
+   * - РџРѕРґРіРѕС‚РѕРІРєР° РєРѕРЅС‚РµРєСЃС‚Р° РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹
    * 
-   * **Генерируемые элементы кода:**
-   * - Декоратор с фильтрацией по конкретному callback_data
-   * - Функция handle_[commandCallback] с типизацией
-   * - Ответ на callback_query для устранения загрузки
-   * - Логирование факта выполнения команды
-   * - Создание fake_message для передачи в обработчик
+   * **Р“РµРЅРµСЂРёСЂСѓРµРјС‹Рµ СЌР»РµРјРµРЅС‚С‹ РєРѕРґР°:**
+   * - Р”РµРєРѕСЂР°С‚РѕСЂ СЃ С„РёР»СЊС‚СЂР°С†РёРµР№ РїРѕ РєРѕРЅРєСЂРµС‚РЅРѕРјСѓ callback_data
+   * - Р¤СѓРЅРєС†РёСЏ handle_[commandCallback] СЃ С‚РёРїРёР·Р°С†РёРµР№
+   * - РћС‚РІРµС‚ РЅР° callback_query РґР»СЏ СѓСЃС‚СЂР°РЅРµРЅРёСЏ Р·Р°РіСЂСѓР·РєРё
+   * - Р›РѕРіРёСЂРѕРІР°РЅРёРµ С„Р°РєС‚Р° РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹
+   * - РЎРѕР·РґР°РЅРёРµ fake_message РґР»СЏ РїРµСЂРµРґР°С‡Рё РІ РѕР±СЂР°Р±РѕС‚С‡РёРє
    * 
-   * @param commandCallback Уникальный идентификатор callback для команды
-   * @returns Имя команды без префикса "cmd_"
+   * @param commandCallback РЈРЅРёРєР°Р»СЊРЅС‹Р№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ callback РґР»СЏ РєРѕРјР°РЅРґС‹
+   * @returns РРјСЏ РєРѕРјР°РЅРґС‹ Р±РµР· РїСЂРµС„РёРєСЃР° "cmd_"
    * 
    * @remarks
-   * Функция подготавливает инфраструктуру для выполнения команды
-   * через callback кнопку, создавая необходимый контекст
+   * Р¤СѓРЅРєС†РёСЏ РїРѕРґРіРѕС‚Р°РІР»РёРІР°РµС‚ РёРЅС„СЂР°СЃС‚СЂСѓРєС‚СѓСЂСѓ РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹
+   * С‡РµСЂРµР· callback РєРЅРѕРїРєСѓ, СЃРѕР·РґР°РІР°СЏ РЅРµРѕР±С…РѕРґРёРјС‹Р№ РєРѕРЅС‚РµРєСЃС‚
    * 
    * @example
-   * // При вызове с commandCallback = "cmd_profile"
-   * // Генерируется:
+   * // РџСЂРё РІС‹Р·РѕРІРµ СЃ commandCallback = "cmd_profile"
+   * // Р“РµРЅРµСЂРёСЂСѓРµС‚СЃСЏ:
    * // @dp.callback_query(lambda c: c.data == "cmd_profile")
    * // async def handle_cmd_profile(callback_query: types.CallbackQuery):
    * //     await callback_query.answer()
-   * //     logging.info("Обработка кнопки команды: cmd_profile -> /profile")
+   * //     logging.info("РћР±СЂР°Р±РѕС‚РєР° РєРЅРѕРїРєРё РєРѕРјР°РЅРґС‹: cmd_profile -> /profile")
    * //     fake_message = SimpleNamespace()
    * //     fake_message.from_user = callback_query.from_user
    */
@@ -1228,10 +1228,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
     code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
     code += '    await callback_query.answer()\n';
-    code += `    logging.info(f"Обработка кнопки команды: ${commandCallback} -> /${command} (пользователь {callback_query.from_user.id})")\n`;
-    code += `    # Симулияуем выполнение команды /${command}\n`;
+    code += `    logging.info(f"РћР±СЂР°Р±РѕС‚РєР° РєРЅРѕРїРєРё РєРѕРјР°РЅРґС‹: ${commandCallback} -> /${command} (РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ {callback_query.from_user.id})")\n`;
+    code += `    # РЎРёРјСѓР»РёСЏСѓРµРј РІС‹РїРѕР»РЅРµРЅРёРµ РєРѕРјР°РЅРґС‹ /${command}\n`;
     code += '    \n';
-    code += '    # Создаем fake message object для команды\n';
+    code += '    # РЎРѕР·РґР°РµРј fake message object РґР»СЏ РєРѕРјР°РЅРґС‹\n';
     code += '    from types import SimpleNamespace\n';
     code += '    fake_message = SimpleNamespace()\n';
     code += '    fake_message.from_user = callback_query.from_user\n';
@@ -1244,65 +1244,65 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   /**
-   * Генерирует код триггера выполнения команды с оберткой
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ С‚СЂРёРіРіРµСЂР° РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹ СЃ РѕР±РµСЂС‚РєРѕР№
    * 
-   * Эта функция создает Python-код для фактического выполнения команды
-   * после получения callback-запроса. Она находит соответствующий узел
-   * команды и генерирует код для его выполнения.
+   * Р­С‚Р° С„СѓРЅРєС†РёСЏ СЃРѕР·РґР°РµС‚ Python-РєРѕРґ РґР»СЏ С„Р°РєС‚РёС‡РµСЃРєРѕРіРѕ РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹
+   * РїРѕСЃР»Рµ РїРѕР»СѓС‡РµРЅРёСЏ callback-Р·Р°РїСЂРѕСЃР°. РћРЅР° РЅР°С…РѕРґРёС‚ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№ СѓР·РµР»
+   * РєРѕРјР°РЅРґС‹ Рё РіРµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ РґР»СЏ РµРіРѕ РІС‹РїРѕР»РЅРµРЅРёСЏ.
    * 
-   * **Функциональность поиска команды:**
-   * - Поиск узла команды в массиве nodes
-   * - Поддержка различных форматов команд (/command, command)
-   * - Определение типа узла (start, command)
-   * - Обработка команд без соответствующих узлов
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РїРѕРёСЃРєР° РєРѕРјР°РЅРґС‹:**
+   * - РџРѕРёСЃРє СѓР·Р»Р° РєРѕРјР°РЅРґС‹ РІ РјР°СЃСЃРёРІРµ nodes
+   * - РџРѕРґРґРµСЂР¶РєР° СЂР°Р·Р»РёС‡РЅС‹С… С„РѕСЂРјР°С‚РѕРІ РєРѕРјР°РЅРґ (/command, command)
+   * - РћРїСЂРµРґРµР»РµРЅРёРµ С‚РёРїР° СѓР·Р»Р° (start, command)
+   * - РћР±СЂР°Р±РѕС‚РєР° РєРѕРјР°РЅРґ Р±РµР· СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёС… СѓР·Р»РѕРІ
    * 
-   * **Функциональность выполнения start команд:**
-   * - Создание специального класса FakeMessageEdit
-   * - Реализация методов answer и edit_text
-   * - Интеграция с существующим start_handler
-   * - Поддержка редактирования сообщений
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РІС‹РїРѕР»РЅРµРЅРёСЏ start РєРѕРјР°РЅРґ:**
+   * - РЎРѕР·РґР°РЅРёРµ СЃРїРµС†РёР°Р»СЊРЅРѕРіРѕ РєР»Р°СЃСЃР° FakeMessageEdit
+   * - Р РµР°Р»РёР·Р°С†РёСЏ РјРµС‚РѕРґРѕРІ answer Рё edit_text
+   * - РРЅС‚РµРіСЂР°С†РёСЏ СЃ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРј start_handler
+   * - РџРѕРґРґРµСЂР¶РєР° СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ СЃРѕРѕР±С‰РµРЅРёР№
    * 
-   * **Функциональность выполнения обычных команд:**
-   * - Поиск соответствующего command handler
-   * - Генерация вызова [command]_handler
-   * - Передача fake_message в обработчик
-   * - Логирование выполнения команды
+   * **Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕСЃС‚СЊ РІС‹РїРѕР»РЅРµРЅРёСЏ РѕР±С‹С‡РЅС‹С… РєРѕРјР°РЅРґ:**
+   * - РџРѕРёСЃРє СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРіРѕ command handler
+   * - Р“РµРЅРµСЂР°С†РёСЏ РІС‹Р·РѕРІР° [command]_handler
+   * - РџРµСЂРµРґР°С‡Р° fake_message РІ РѕР±СЂР°Р±РѕС‚С‡РёРє
+   * - Р›РѕРіРёСЂРѕРІР°РЅРёРµ РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹
    * 
-   * **Генерируемые элементы кода:**
-   * - Условная логика для определения типа команды
-   * - Создание FakeMessageEdit класса для start команд
-   * - Генерация вызовов соответствующих обработчиков
-   * - Fallback обработка для неизвестных команд
-   * - Подробное логирование всех операций
+   * **Р“РµРЅРµСЂРёСЂСѓРµРјС‹Рµ СЌР»РµРјРµРЅС‚С‹ РєРѕРґР°:**
+   * - РЈСЃР»РѕРІРЅР°СЏ Р»РѕРіРёРєР° РґР»СЏ РѕРїСЂРµРґРµР»РµРЅРёСЏ С‚РёРїР° РєРѕРјР°РЅРґС‹
+   * - РЎРѕР·РґР°РЅРёРµ FakeMessageEdit РєР»Р°СЃСЃР° РґР»СЏ start РєРѕРјР°РЅРґ
+   * - Р“РµРЅРµСЂР°С†РёСЏ РІС‹Р·РѕРІРѕРІ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёС… РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРІ
+   * - Fallback РѕР±СЂР°Р±РѕС‚РєР° РґР»СЏ РЅРµРёР·РІРµСЃС‚РЅС‹С… РєРѕРјР°РЅРґ
+   * - РџРѕРґСЂРѕР±РЅРѕРµ Р»РѕРіРёСЂРѕРІР°РЅРёРµ РІСЃРµС… РѕРїРµСЂР°С†РёР№
    * 
-   * **Поддерживаемые типы команд:**
-   * - Start команды - используют start_handler
-   * - Command команды - используют [name]_handler
-   * - Неизвестные команды - базовое уведомление
+   * **РџРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ С‚РёРїС‹ РєРѕРјР°РЅРґ:**
+   * - Start РєРѕРјР°РЅРґС‹ - РёСЃРїРѕР»СЊР·СѓСЋС‚ start_handler
+   * - Command РєРѕРјР°РЅРґС‹ - РёСЃРїРѕР»СЊР·СѓСЋС‚ [name]_handler
+   * - РќРµРёР·РІРµСЃС‚РЅС‹Рµ РєРѕРјР°РЅРґС‹ - Р±Р°Р·РѕРІРѕРµ СѓРІРµРґРѕРјР»РµРЅРёРµ
    * 
-   * **Параметры:**
-   * - command: string - имя команды без префикса "cmd_"
+   * **РџР°СЂР°РјРµС‚СЂС‹:**
+   * - command: string - РёРјСЏ РєРѕРјР°РЅРґС‹ Р±РµР· РїСЂРµС„РёРєСЃР° "cmd_"
    * 
-   * @param command - Имя команды для выполнения
+   * @param command - РРјСЏ РєРѕРјР°РЅРґС‹ РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ
    * 
    * @remarks
-   * Функция обеспечивает мост между callback обработчиком
-   * и фактическими обработчиками команд бота
+   * Р¤СѓРЅРєС†РёСЏ РѕР±РµСЃРїРµС‡РёРІР°РµС‚ РјРѕСЃС‚ РјРµР¶РґСѓ callback РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРј
+   * Рё С„Р°РєС‚РёС‡РµСЃРєРёРјРё РѕР±СЂР°Р±РѕС‚С‡РёРєР°РјРё РєРѕРјР°РЅРґ Р±РѕС‚Р°
    * 
    * @example
-   * // При вызове с command = "profile"
-   * // Найден узел типа 'command' с command = "/profile"
-   * // Генерируется:
-   * // # Вызываем profile handler
+   * // РџСЂРё РІС‹Р·РѕРІРµ СЃ command = "profile"
+   * // РќР°Р№РґРµРЅ СѓР·РµР» С‚РёРїР° 'command' СЃ command = "/profile"
+   * // Р“РµРЅРµСЂРёСЂСѓРµС‚СЃСЏ:
+   * // # Р’С‹Р·С‹РІР°РµРј profile handler
    * // await profile_handler(fake_message)
-   * // logging.info("Команда /profile выполнена через callback кнопку")
+   * // logging.info("РљРѕРјР°РЅРґР° /profile РІС‹РїРѕР»РЅРµРЅР° С‡РµСЂРµР· callback РєРЅРѕРїРєСѓ")
    */
   function generateCommandTriggerFromCallbackWithWrapper(command: string) {
     const commandNode = nodes.find(n => n.data.command === `/${command}` || n.data.command === command);
     if (commandNode) {
       if (commandNode.type === 'start') {
-        code += '    # Вызываем start handler через edit_text\n';
-        code += '    # Создаем специальный объект для редактирования сообщения\n';
+        code += '    # Р’С‹Р·С‹РІР°РµРј start handler С‡РµСЂРµР· edit_text\n';
+        code += '    # РЎРѕР·РґР°РµРј СЃРїРµС†РёР°Р»СЊРЅС‹Р№ РѕР±СЉРµРєС‚ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ СЃРѕРѕР±С‰РµРЅРёСЏ\n';
         code += '    class FakeMessageEdit:\n';
         code += '        def __init__(self, callback_query):\n';
         code += '            self.from_user = callback_query.from_user\n';
@@ -1320,18 +1320,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '    fake_edit_message = FakeMessageEdit(callback_query)\n';
         code += '    await start_handler(fake_edit_message)\n';
       } else if (commandNode.type === 'command') {
-        code += `    # Вызываем ${command} handler\n`;
+        code += `    # Р’С‹Р·С‹РІР°РµРј ${command} handler\n`;
         code += `    await ${command}_handler(fake_message)\n`;
       }
     } else {
-      code += `    await callback_query.message.edit_text("Команда /${command} выполнена")\n`;
+      code += `    await callback_query.message.edit_text("РљРѕРјР°РЅРґР° /${command} РІС‹РїРѕР»РЅРµРЅР°")\n`;
     }
-    code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
+    code += `    logging.info(f"РљРѕРјР°РЅРґР° /${command} РІС‹РїРѕР»РЅРµРЅР° С‡РµСЂРµР· callback РєРЅРѕРїРєСѓ (РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ {callback_query.from_user.id})")\n`;
   }
 
   /**
-   * Генерирует обработчики событий для групп бота
-   * Создает Python код для обработки групповых событий и взаимодействий
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРєРё СЃРѕР±С‹С‚РёР№ РґР»СЏ РіСЂСѓРїРї Р±РѕС‚Р°
+   * РЎРѕР·РґР°РµС‚ Python РєРѕРґ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё РіСЂСѓРїРїРѕРІС‹С… СЃРѕР±С‹С‚РёР№ Рё РІР·Р°РёРјРѕРґРµР№СЃС‚РІРёР№
    */
   function generateGroupBasedEventHandlers() {
     code += '\n';
@@ -1340,71 +1340,71 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   /**
-   * Генерирует fallback обработчики для необработанных сообщений
-   * Создает обработчики для текстовых сообщений и фотографий, которые не были обработаны основными обработчиками
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ fallback РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РЅРµРѕР±СЂР°Р±РѕС‚Р°РЅРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№
+   * РЎРѕР·РґР°РµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ С‚РµРєСЃС‚РѕРІС‹С… СЃРѕРѕР±С‰РµРЅРёР№ Рё С„РѕС‚РѕРіСЂР°С„РёР№, РєРѕС‚РѕСЂС‹Рµ РЅРµ Р±С‹Р»Рё РѕР±СЂР°Р±РѕС‚Р°РЅС‹ РѕСЃРЅРѕРІРЅС‹РјРё РѕР±СЂР°Р±РѕС‚С‡РёРєР°РјРё
    */
   function generateFallbackHandlers() {
     if (userDatabaseEnabled) {
       fallback_text_handler();
 
-      // Добавляем универсальный обработчик для фотографий
+      // Р”РѕР±Р°РІР»СЏРµРј СѓРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ С„РѕС‚РѕРіСЂР°С„РёР№
       handle_unhandled_photo();
     }
   }
 
   /**
-   * Генерирует fallback обработчик для необработанных текстовых сообщений
-   * Создает Python функцию для обработки всех текстовых сообщений, которые не были обработаны основными обработчиками
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ fallback РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ РЅРµРѕР±СЂР°Р±РѕС‚Р°РЅРЅС‹С… С‚РµРєСЃС‚РѕРІС‹С… СЃРѕРѕР±С‰РµРЅРёР№
+   * РЎРѕР·РґР°РµС‚ Python С„СѓРЅРєС†РёСЋ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё РІСЃРµС… С‚РµРєСЃС‚РѕРІС‹С… СЃРѕРѕР±С‰РµРЅРёР№, РєРѕС‚РѕСЂС‹Рµ РЅРµ Р±С‹Р»Рё РѕР±СЂР°Р±РѕС‚Р°РЅС‹ РѕСЃРЅРѕРІРЅС‹РјРё РѕР±СЂР°Р±РѕС‚С‡РёРєР°РјРё
    */
   function fallback_text_handler() {
-    code += '\n# Универсальный fallback-обработчик для всех необработанных текстовых сообщений\n';
+    code += '\n# РЈРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ fallback-РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ РІСЃРµС… РЅРµРѕР±СЂР°Р±РѕС‚Р°РЅРЅС‹С… С‚РµРєСЃС‚РѕРІС‹С… СЃРѕРѕР±С‰РµРЅРёР№\n';
     code += '@dp.message(F.text)\n';
     code += 'async def fallback_text_handler(message: types.Message):\n';
     code += '    """\n';
-    code += '    Fallback обработчик для всех текстовых сообщений без специфичного обработчика.\n';
-    code += '    Благодаря middleware, сообщение уже сохранено в БД.\n';
-    code += '    Этот обработчик просто логирует факт необработанного сообщения.\n';
+    code += '    Fallback РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ РІСЃРµС… С‚РµРєСЃС‚РѕРІС‹С… СЃРѕРѕР±С‰РµРЅРёР№ Р±РµР· СЃРїРµС†РёС„РёС‡РЅРѕРіРѕ РѕР±СЂР°Р±РѕС‚С‡РёРєР°.\n';
+    code += '    Р‘Р»Р°РіРѕРґР°СЂСЏ middleware, СЃРѕРѕР±С‰РµРЅРёРµ СѓР¶Рµ СЃРѕС…СЂР°РЅРµРЅРѕ РІ Р‘Р”.\n';
+    code += '    Р­С‚РѕС‚ РѕР±СЂР°Р±РѕС‚С‡РёРє РїСЂРѕСЃС‚Рѕ Р»РѕРіРёСЂСѓРµС‚ С„Р°РєС‚ РЅРµРѕР±СЂР°Р±РѕС‚Р°РЅРЅРѕРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ.\n';
     code += '    """\n';
-    code += '    logging.info(f"?? Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")\n';
-    code += '    # Можно отправить ответ пользователю (опционально)\n';
-    code += '    # await message.answer("Извините, я не понимаю эту команду. Используйте /start для начала.")\n\n';
+    code += '    logging.info(f"?? РџРѕР»СѓС‡РµРЅРѕ РЅРµРѕР±СЂР°Р±РѕС‚Р°РЅРЅРѕРµ С‚РµРєСЃС‚РѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ РѕС‚ {message.from_user.id}: {message.text}")\n';
+    code += '    # РњРѕР¶РЅРѕ РѕС‚РїСЂР°РІРёС‚СЊ РѕС‚РІРµС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)\n';
+    code += '    # await message.answer("РР·РІРёРЅРёС‚Рµ, СЏ РЅРµ РїРѕРЅРёРјР°СЋ СЌС‚Сѓ РєРѕРјР°РЅРґСѓ. РСЃРїРѕР»СЊР·СѓР№С‚Рµ /start РґР»СЏ РЅР°С‡Р°Р»Р°.")\n\n';
   }
 
   /**
-   * Генерирует fallback обработчик для необработанных фотографий
-   * Создает Python функцию для обработки всех фотографий, которые не были обработаны основными обработчиками
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ fallback РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ РЅРµРѕР±СЂР°Р±РѕС‚Р°РЅРЅС‹С… С„РѕС‚РѕРіСЂР°С„РёР№
+   * РЎРѕР·РґР°РµС‚ Python С„СѓРЅРєС†РёСЋ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё РІСЃРµС… С„РѕС‚РѕРіСЂР°С„РёР№, РєРѕС‚РѕСЂС‹Рµ РЅРµ Р±С‹Р»Рё РѕР±СЂР°Р±РѕС‚Р°РЅС‹ РѕСЃРЅРѕРІРЅС‹РјРё РѕР±СЂР°Р±РѕС‚С‡РёРєР°РјРё
    */
   function handle_unhandled_photo() {
-    code += '\n# Универсальный обработчик для необработанных фото\n';
+    code += '\n# РЈРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ РЅРµРѕР±СЂР°Р±РѕС‚Р°РЅРЅС‹С… С„РѕС‚Рѕ\n';
     code += '@dp.message(F.photo)\n';
     code += 'async def handle_unhandled_photo(message: types.Message):\n';
     code += '    """\n';
-    code += '    Обрабатывает фотографии, которые не были обработаны другими обработчиками.\n';
-    code += '    Благодаря middleware, фото уже будет сохранено в БД.\n';
+    code += '    РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ С„РѕС‚РѕРіСЂР°С„РёРё, РєРѕС‚РѕСЂС‹Рµ РЅРµ Р±С‹Р»Рё РѕР±СЂР°Р±РѕС‚Р°РЅС‹ РґСЂСѓРіРёРјРё РѕР±СЂР°Р±РѕС‚С‡РёРєР°РјРё.\n';
+    code += '    Р‘Р»Р°РіРѕРґР°СЂСЏ middleware, С„РѕС‚Рѕ СѓР¶Рµ Р±СѓРґРµС‚ СЃРѕС…СЂР°РЅРµРЅРѕ РІ Р‘Р”.\n';
     code += '    """\n';
-    code += '    logging.info(f"?? Получено фото от пользователя {message.from_user.id}")\n';
-    code += '    # Middleware автоматически сохранит фото\n';
+    code += '    logging.info(f"?? РџРѕР»СѓС‡РµРЅРѕ С„РѕС‚Рѕ РѕС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ {message.from_user.id}")\n';
+    code += '    # Middleware Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё СЃРѕС…СЂР°РЅРёС‚ С„РѕС‚Рѕ\n';
     code += '\n';
   }
 
   /**
-   * Генерирует каркас основной функции с обработчиками сигналов
-   * Создает Python функцию main() с обработчиками сигналов для корректного завершения работы бота
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РєР°СЂРєР°СЃ РѕСЃРЅРѕРІРЅРѕР№ С„СѓРЅРєС†РёРё СЃ РѕР±СЂР°Р±РѕС‚С‡РёРєР°РјРё СЃРёРіРЅР°Р»РѕРІ
+   * РЎРѕР·РґР°РµС‚ Python С„СѓРЅРєС†РёСЋ main() СЃ РѕР±СЂР°Р±РѕС‚С‡РёРєР°РјРё СЃРёРіРЅР°Р»РѕРІ РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕРіРѕ Р·Р°РІРµСЂС€РµРЅРёСЏ СЂР°Р±РѕС‚С‹ Р±РѕС‚Р°
    */
   function signal_handler() {
-    code += '\n\n# Запуск бота\n';
+    code += '\n\n# Р—Р°РїСѓСЃРє Р±РѕС‚Р°\n';
     code += 'async def main():\n';
     if (userDatabaseEnabled) {
       code += '    global db_pool\n';
     }
     code += '    \n';
-    code += '    # Обработчик сигналов для корректного завершения\n';
+    code += '    # РћР±СЂР°Р±РѕС‚С‡РёРє СЃРёРіРЅР°Р»РѕРІ РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕРіРѕ Р·Р°РІРµСЂС€РµРЅРёСЏ\n';
     code += '    def signal_handler(signum, frame):\n';
-    code += '        print(f"?? Получен сигнал {signum}, начинаем корректное завершение...")\n';
+    code += '        print(f"?? РџРѕР»СѓС‡РµРЅ СЃРёРіРЅР°Р» {signum}, РЅР°С‡РёРЅР°РµРј РєРѕСЂСЂРµРєС‚РЅРѕРµ Р·Р°РІРµСЂС€РµРЅРёРµ...")\n';
     code += '        import sys\n';
     code += '        sys.exit(0)\n';
     code += '    \n';
-    code += '    # Регистрируем обработчики сигналов\n';
+    code += '    # Р РµРіРёСЃС‚СЂРёСЂСѓРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё СЃРёРіРЅР°Р»РѕРІ\n';
     code += '    signal.signal(signal.SIGTERM, signal_handler)\n';
     code += '    signal.signal(signal.SIGINT, signal_handler)\n';
     code += '    \n';
@@ -1412,12 +1412,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   /**
-   * Генерирует код инициализации бота и настройки middleware
-   * Создает Python код для инициализации базы данных, команд меню и middleware для логирования
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ РёРЅРёС†РёР°Р»РёР·Р°С†РёРё Р±РѕС‚Р° Рё РЅР°СЃС‚СЂРѕР№РєРё middleware
+   * РЎРѕР·РґР°РµС‚ Python РєРѕРґ РґР»СЏ РёРЅРёС†РёР°Р»РёР·Р°С†РёРё Р±Р°Р·С‹ РґР°РЅРЅС‹С…, РєРѕРјР°РЅРґ РјРµРЅСЋ Рё middleware РґР»СЏ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ
    */
   function generateBotInitializationAndMiddlewareSetup() {
     if (userDatabaseEnabled) {
-      code += '        # Инициализируем базу данных\n';
+      code += '        # РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј Р±Р°Р·Сѓ РґР°РЅРЅС‹С…\n';
       code += '        await init_database()\n';
     }
     if (menuCommands.length > 0) {
@@ -1425,9 +1425,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
     code += '        \n';
     if (userDatabaseEnabled) {
-      code += '        # Регистрация middleware для сохранения сообщений\n';
+      code += '        # Р РµРіРёСЃС‚СЂР°С†РёСЏ middleware РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ СЃРѕРѕР±С‰РµРЅРёР№\n';
       code += '        dp.message.middleware(message_logging_middleware)\n';
-      // Регистрируем callback_query middleware только если в боте есть inline кнопки
+      // Р РµРіРёСЃС‚СЂРёСЂСѓРµРј callback_query middleware С‚РѕР»СЊРєРѕ РµСЃР»Рё РІ Р±РѕС‚Рµ РµСЃС‚СЊ inline РєРЅРѕРїРєРё
       if (hasInlineButtons(nodes || [])) {
         code += '        dp.callback_query.middleware(callback_query_logging_middleware)\n';
       }
@@ -1436,80 +1436,80 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   /**
-   * Генерирует основной цикл опроса с корректным завершением работы
-   * Создает Python код для запуска polling бота и корректного закрытия всех соединений при завершении
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РѕСЃРЅРѕРІРЅРѕР№ С†РёРєР» РѕРїСЂРѕСЃР° СЃ РєРѕСЂСЂРµРєС‚РЅС‹Рј Р·Р°РІРµСЂС€РµРЅРёРµРј СЂР°Р±РѕС‚С‹
+   * РЎРѕР·РґР°РµС‚ Python РєРѕРґ РґР»СЏ Р·Р°РїСѓСЃРєР° polling Р±РѕС‚Р° Рё РєРѕСЂСЂРµРєС‚РЅРѕРіРѕ Р·Р°РєСЂС‹С‚РёСЏ РІСЃРµС… СЃРѕРµРґРёРЅРµРЅРёР№ РїСЂРё Р·Р°РІРµСЂС€РµРЅРёРё
    */
   function generateMainPollingLoopWithGracefulShutdown() {
-    code += '        print("?? Бот запущен и готов к работе!")\n';
+    code += '        print("СЂСџС™Р‚ Р вЂР С•РЎвЂљ Р В·Р В°Р С—РЎС“РЎвЂ°Р ВµР Р… Р С‘ Р С–Р С•РЎвЂљР С•Р Р† Р С” РЎР‚Р В°Р В±Р С•РЎвЂљР Вµ!")\n';
     code += '        await dp.start_polling(bot)\n';
     code += '    except KeyboardInterrupt:\n';
-    code += '        print("?? Получен сигнал остановки, завершаем работу...")\n';
+    code += '        print("РІС™В Р С‘ Р СџР С•Р В»РЎС“РЎвЂЎР ВµР Р… РЎРѓР С‘Р С–Р Р…Р В°Р В» Р С•РЎРѓРЎвЂљР В°Р Р…Р С•Р Р†Р С”Р С‘, Р В·Р В°Р Р†Р ВµРЎР‚РЎв‚¬Р В°Р ВµР С РЎР‚Р В°Р В±Р С•РЎвЂљРЎС“...")\n';
     code += '    except SystemExit:\n';
-    code += '        print("?? Системное завершение, завершаем работу...")\n';
+    code += '        print("РІС™В Р С‘ Р РЋР С‘РЎРѓРЎвЂљР ВµР СР Р…Р С•Р Вµ Р В·Р В°Р Р†Р ВµРЎР‚РЎв‚¬Р ВµР Р…Р С‘Р Вµ, Р В·Р В°Р Р†Р ВµРЎР‚РЎв‚¬Р В°Р ВµР С РЎР‚Р В°Р В±Р С•РЎвЂљРЎС“...")\n';
     code += '    except Exception as e:\n';
-    code += '        logging.error(f"Критическая ошибка: {e}")\n';
+    code += '        logging.error(f"Р С›РЎв‚¬Р С‘Р В±Р С”Р В°: {e}")\n';
     code += '    finally:\n';
-    code += '        # Правильно закрываем все соединения\n';
+    code += '        # Р вЂ”Р В°Р С”РЎР‚РЎвЂ№РЎвЂљР С‘Р Вµ РЎРѓР С•Р ВµР Т‘Р С‘Р Р…Р ВµР Р…Р С‘Р в„– Р С—РЎР‚Р С‘ Р Р†РЎвЂ№РЎвЂ¦Р С•Р Т‘Р Вµ\n';
     if (userDatabaseEnabled) {
       code += '        if db_pool:\n';
       code += '            await db_pool.close()\n';
     }
     code += '        \n';
-    code += '        # Закрываем сессию бота\n';
+    code += '        # Р—Р°РєСЂС‹РІР°РµРј СЃРµСЃСЃРёСЋ Р±РѕС‚Р°\n';
     code += '        await bot.session.close()\n';
     code += '\n';
   }
 
   /**
-   * Идентифицирует узлы, требующие логику множественного выбора
-   * Находит все узлы в графе с включенной опцией множественного выбора и возвращает их список
-   * @returns {Array<Node>} Массив узлов с множественным выбором
+   * РРґРµРЅС‚РёС„РёС†РёСЂСѓРµС‚ СѓР·Р»С‹, С‚СЂРµР±СѓСЋС‰РёРµ Р»РѕРіРёРєСѓ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР°
+   * РќР°С…РѕРґРёС‚ РІСЃРµ СѓР·Р»С‹ РІ РіСЂР°С„Рµ СЃ РІРєР»СЋС‡РµРЅРЅРѕР№ РѕРїС†РёРµР№ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР° Рё РІРѕР·РІСЂР°С‰Р°РµС‚ РёС… СЃРїРёСЃРѕРє
+   * @returns {Array<Node>} РњР°СЃСЃРёРІ СѓР·Р»РѕРІ СЃ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Рј РІС‹Р±РѕСЂРѕРј
    */
 
   /**
-   * Генерирует обработчик callback-запросов для множественного выбора
-   * Создает Python функцию для обработки inline кнопок множественного выбора, включая кнопки "Готово"
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РѕР±СЂР°Р±РѕС‚С‡РёРє callback-Р·Р°РїСЂРѕСЃРѕРІ РґР»СЏ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР°
+   * РЎРѕР·РґР°РµС‚ Python С„СѓРЅРєС†РёСЋ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё inline РєРЅРѕРїРѕРє РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР°, РІРєР»СЋС‡Р°СЏ РєРЅРѕРїРєРё "Р“РѕС‚РѕРІРѕ"
    */
   function handle_multi_select_callback() {
     if (multiSelectNodes.length > 0) {
-      code += '\n# Обработчики для множественного выбора\n';
+      code += '\n# РћР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР°\n';
 
-      // Обработчик для inline кнопок множественного выбора
+      // РћР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ inline РєРЅРѕРїРѕРє РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР°
       code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
       code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
       code += '    await callback_query.answer()\n';
       code += '    user_id = callback_query.from_user.id\n';
-      code += '    # Инициализируем базовые переменные пользователя\n';
+      code += '    # РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј Р±Р°Р·РѕРІС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ\n';
       code += '    user_name = init_user_variables(user_id, callback_query.from_user)\n';
       code += '    \n';
       code += '    callback_data = callback_query.data\n';
       code += '    \n';
-      code += '    # Обработка кнопки "Готово"\n';
+      code += '    # РћР±СЂР°Р±РѕС‚РєР° РєРЅРѕРїРєРё "Р“РѕС‚РѕРІРѕ"\n';
       code += '    if callback_data.startswith("done_"):\n';
-      code += '        # Завершение множественного выбора (новый формат)\n';
-      code += '        logging.info(f"?? Обработка кнопки Готово: {callback_data}")\n';
+      code += '        # Р—Р°РІРµСЂС€РµРЅРёРµ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР° (РЅРѕРІС‹Р№ С„РѕСЂРјР°С‚)\n';
+      code += '        logging.info(f"?? РћР±СЂР°Р±РѕС‚РєР° РєРЅРѕРїРєРё Р“РѕС‚РѕРІРѕ: {callback_data}")\n';
       code += '        short_node_id = callback_data.replace("done_", "")\n';
-      code += '        # Находим полный node_id по короткому суффиксу\n';
+      code += '        # РќР°С…РѕРґРёРј РїРѕР»РЅС‹Р№ node_id РїРѕ РєРѕСЂРѕС‚РєРѕРјСѓ СЃСѓС„С„РёРєСЃСѓ\n';
       code += '        node_id = None\n';
       multiSelectNodes.forEach((node: Node) => {
         const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
         code += `        if short_node_id == "${shortNodeId}":\n`;
         code += `            node_id = "${node.id}"\n`;
-        code += `            logging.info(f"? Найден узел: ${node.id}")\n`;
+        code += `            logging.info(f"? РќР°Р№РґРµРЅ СѓР·РµР»: ${node.id}")\n`;
       });
       code += '    elif callback_data.startswith("multi_select_done_"):\n';
-      code += '        # Завершение множественного выбора (старый формат)\n';
+      code += '        # Р—Р°РІРµСЂС€РµРЅРёРµ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР° (СЃС‚Р°СЂС‹Р№ С„РѕСЂРјР°С‚)\n';
       code += '        node_id = callback_data.replace("multi_select_done_", "")\n';
       code += '        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n';
       code += '        \n';
-      code += '        # Сохраняем выбранные опции в базу данных\n';
+      code += '        # РЎРѕС…СЂР°РЅСЏРµРј РІС‹Р±СЂР°РЅРЅС‹Рµ РѕРїС†РёРё РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С…\n';
       code += '        if selected_options:\n';
       code += '            selected_text = ", ".join(selected_options)\n';
 
-      // Генерируем сохранение для каждого узла с его переменной
+      // Р“РµРЅРµСЂРёСЂСѓРµРј СЃРѕС…СЂР°РЅРµРЅРёРµ РґР»СЏ РєР°Р¶РґРѕРіРѕ СѓР·Р»Р° СЃ РµРіРѕ РїРµСЂРµРјРµРЅРЅРѕР№
       generateMultiSelectDataPersistenceAndCleanupCode();
 
-      // Добавим переходы для узлов с множественным выбором
+      // Р”РѕР±Р°РІРёРј РїРµСЂРµС…РѕРґС‹ РґР»СЏ СѓР·Р»РѕРІ СЃ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Рј РІС‹Р±РѕСЂРѕРј
       code = generateTransitionLogicForMultiSelectCompletion(
         code,
         multiSelectNodes,
@@ -1524,9 +1524,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   /**
-   * Генерирует код сохранения данных множественного выбора и очистки состояния
-   * Создает Python код для сохранения выбранных опций множественного выбора в базу данных
-   * и очистки временных данных пользователя после завершения операции
+   * Р“РµРЅРµСЂРёСЂСѓРµС‚ РєРѕРґ СЃРѕС…СЂР°РЅРµРЅРёСЏ РґР°РЅРЅС‹С… РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР° Рё РѕС‡РёСЃС‚РєРё СЃРѕСЃС‚РѕСЏРЅРёСЏ
+   * РЎРѕР·РґР°РµС‚ Python РєРѕРґ РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ РІС‹Р±СЂР°РЅРЅС‹С… РѕРїС†РёР№ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР° РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С…
+   * Рё РѕС‡РёСЃС‚РєРё РІСЂРµРјРµРЅРЅС‹С… РґР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ РѕРїРµСЂР°С†РёРё
    */
   function generateMultiSelectDataPersistenceAndCleanupCode() {
     multiSelectNodes.forEach((node: Node) => {
@@ -1535,16 +1535,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += `                await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
     });
 
-    code += '            # Резервное сохранение если узел не найден\n';
+    code += '            # Р РµР·РµСЂРІРЅРѕРµ СЃРѕС…СЂР°РЅРµРЅРёРµ РµСЃР»Рё СѓР·РµР» РЅРµ РЅР°Р№РґРµРЅ\n';
     code += '            if not any(node_id == node for node in [' + multiSelectNodes.map(n => `"${n.id}"`).join(', ') + ']):\n';
     code += '                await save_user_data_to_db(user_id, f"multi_select_{node_id}", selected_text)\n';
     code += '        \n';
-    code += '        # Очищаем состояние множественного выбора\n';
+    code += '        # РћС‡РёС‰Р°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРіРѕ РІС‹Р±РѕСЂР°\n';
     code += '        if user_id in user_data:\n';
     code += '            user_data[user_id].pop(f"multi_select_{node_id}", None)\n';
     code += '            user_data[user_id].pop("multi_select_node", None)\n';
     code += '        \n';
-    code += '        # Переходим к следующему узлу, если указан\n';
+    code += '        # РџРµСЂРµС…РѕРґРёРј Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ, РµСЃР»Рё СѓРєР°Р·Р°РЅ\n';
   }
 
 
@@ -1552,35 +1552,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
 
 // ============================================================================
-// ТИПЫ И ИНТЕРФЕЙСЫ
+// РўРРџР« Р РРќРўР•Р Р¤Р•Р™РЎР«
 // ============================================================================
 
 /**
- * Интерфейс для описания диапазона строк кода, связанного с определенным узлом
+ * РРЅС‚РµСЂС„РµР№СЃ РґР»СЏ РѕРїРёСЃР°РЅРёСЏ РґРёР°РїР°Р·РѕРЅР° СЃС‚СЂРѕРє РєРѕРґР°, СЃРІСЏР·Р°РЅРЅРѕРіРѕ СЃ РѕРїСЂРµРґРµР»РµРЅРЅС‹Рј СѓР·Р»РѕРј
  */
 export interface CodeNodeRange {
-  /** Уникальный идентификатор узла */
+  /** РЈРЅРёРєР°Р»СЊРЅС‹Р№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СѓР·Р»Р° */
   nodeId: string;
-  /** Номер начальной строки кода */
+  /** РќРѕРјРµСЂ РЅР°С‡Р°Р»СЊРЅРѕР№ СЃС‚СЂРѕРєРё РєРѕРґР° */
   startLine: number;
-  /** Номер конечной строки кода */
+  /** РќРѕРјРµСЂ РєРѕРЅРµС‡РЅРѕР№ СЃС‚СЂРѕРєРё РєРѕРґР° */
   endLine: number;
 }
 
 /**
- * Интерфейс для представления кода вместе с картой узлов
+ * РРЅС‚РµСЂС„РµР№СЃ РґР»СЏ РїСЂРµРґСЃС‚Р°РІР»РµРЅРёСЏ РєРѕРґР° РІРјРµСЃС‚Рµ СЃ РєР°СЂС‚РѕР№ СѓР·Р»РѕРІ
  */
 export interface CodeWithMap {
-  /** Строковое представление кода */
+  /** РЎС‚СЂРѕРєРѕРІРѕРµ РїСЂРµРґСЃС‚Р°РІР»РµРЅРёРµ РєРѕРґР° */
   code: string;
-  /** Массив диапазонов строк, связанных с узлами кода */
+  /** РњР°СЃСЃРёРІ РґРёР°РїР°Р·РѕРЅРѕРІ СЃС‚СЂРѕРє, СЃРІСЏР·Р°РЅРЅС‹С… СЃ СѓР·Р»Р°РјРё РєРѕРґР° */
   nodeMap: CodeNodeRange[];
 }
 
-// Повторный экспорт функций каркаса
+// РџРѕРІС‚РѕСЂРЅС‹Р№ СЌРєСЃРїРѕСЂС‚ С„СѓРЅРєС†РёР№ РєР°СЂРєР°СЃР°
 export { generateConfigYaml, generateDockerfile, generateReadme, generateRequirementsTxt };
 // ============================================================================
-// ТИПЫ ДЛЯ УЗЛОВ БОТА
+// РўРРџР« Р”Р›РЇ РЈР—Р›РћР’ Р‘РћРўРђ
 // ============================================================================
 
 export interface BotNode {

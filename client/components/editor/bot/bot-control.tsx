@@ -998,7 +998,7 @@ function renderBotProjectCard(showAddBot: boolean, setShowAddBot: (show: boolean
               onChange={(e) => setProjectForNewBot(Number(e.target.value))}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">��ыберите проект...</option>
+              <option value="">??ыберите проект...</option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -1127,7 +1127,7 @@ function renderBotTokenManagementSection(editingToken: { id: number; name: strin
 
         <div className="space-y-2">
           <Label htmlFor="edit-bot-description" className="text-sm sm:text-base font-semibold">
-            О��исание
+            О??исание
           </Label>
           <Textarea
             id="edit-bot-description"
@@ -1139,7 +1139,7 @@ function renderBotTokenManagementSection(editingToken: { id: number; name: strin
             className="text-xs sm:text-sm resize-none"
             data-testid="textarea-edit-bot-description" />
           <p className="text-xs text-muted-foreground">
-            Добавьте описа��ие для лучшей организации (максимум 500 символов)
+            Добавьте описа??ие для лучшей организации (максимум 500 символов)
           </p>
         </div>
       </div>
@@ -1226,7 +1226,7 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
             <Card className="border-2 border-dashed border-border/50">
               <CardContent className="flex flex-col items-center justify-center py-8 px-4">
                 <Bot className="w-10 h-10 text-muted-foreground mb-2" />
-                <h4 className="font-medium text-foreground mb-1">Нет подк��юченных ботов</h4>
+                <h4 className="font-medium text-foreground mb-1">Нет подк??юченных ботов</h4>
                 <p className="text-sm text-muted-foreground text-center mb-4">
                   Добавьте бота к этому проекту
                 </p>

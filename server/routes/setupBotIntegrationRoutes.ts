@@ -1469,7 +1469,7 @@ export function setupBotIntegrationRoutes(app: Express) {
                 return res.status(400).json({ message: "Bot token not found for this project" });
             }
 
-            // С��ачала проверяем, является ли пользователь участником группы
+            // С??ачала проверяем, является ли пользователь участником группы
             const memberCheckUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatMember`;
             const memberCheckResponse = await fetch(memberCheckUrl, {
                 method: 'POST',
