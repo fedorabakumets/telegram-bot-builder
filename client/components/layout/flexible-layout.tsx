@@ -3,6 +3,7 @@ import { SimpleLayoutConfig } from './simple-layout-customizer';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { CodeResizeHandle } from './code-resize-handle';
 
 /**
  * @interface FlexibleLayoutProps
@@ -286,25 +287,26 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     if ((leftEl || rightElements.length > 0) && centerEl && !topEl && !bottomEl) {
       const leftSize = leftEl?.size || 0;
       const totalRightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
-      
+
       return (
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {leftEl && (
             <>
-              <ResizablePanel 
-                defaultSize={leftSize} 
-                minSize={15} 
+              <ResizablePanel
+                defaultSize={leftSize}
+                minSize={15}
                 maxSize={40}
               >
                 <div className="h-full w-full bg-background overflow-hidden flex flex-col">
                   {getElementContent(leftEl.type)}
                 </div>
               </ResizablePanel>
-              <ResizableHandle withHandle />
+              <CodeResizeHandle direction="vertical" />
             </>
           )}
-          <ResizablePanel 
+          <ResizablePanel
             minSize={30}
+            maxSize={rightElements.length > 0 ? 70 : 85}
           >
             <div className="h-full w-full bg-background overflow-hidden flex flex-col">
               {getElementContent(centerEl.type)}
@@ -312,7 +314,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           </ResizablePanel>
           {rightElements.length > 0 && (
             <>
-              <ResizableHandle withHandle />
+              <CodeResizeHandle direction="vertical" />
               <ResizablePanel 
                 defaultSize={totalRightSize} 
                 minSize={15} 
@@ -370,8 +372,9 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 </ResizableHandle>
               </>
             )}
-            <ResizablePanel 
+            <ResizablePanel
               minSize={30}
+              maxSize={rightElements.length > 0 ? 70 : 85}
             >
               <div className="h-full w-full bg-background overflow-hidden flex flex-col">
                 {centerEl ? getElementContent(centerEl.type) : null}
@@ -379,13 +382,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             </ResizablePanel>
             {rightElements.length > 0 && (
               <>
-                <ResizableHandle 
-                  withHandle 
-                  className="bg-gradient-to-r from-transparent via-slate-300/0 to-transparent hover:from-blue-500/20 hover:via-blue-500/40 hover:to-blue-500/20 dark:hover:from-blue-600/20 dark:hover:via-blue-500/30 dark:hover:to-blue-600/20 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 active:bg-gradient-to-r active:from-blue-500/30 active:via-blue-600/50 active:to-blue-500/30 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md active:shadow-lg"
-                >
-                  <div className="absolute h-16 md:h-20 w-1.5 md:w-2 bg-gradient-to-b from-transparent via-blue-400 dark:via-blue-500 to-transparent opacity-0 group-hover:opacity-100 active:opacity-100 transition-all duration-200 pointer-events-none rounded-full blur-sm"></div>
-                  <div className="absolute h-8 w-0.5 md:w-1 bg-gradient-to-b from-blue-400 via-blue-500 to-blue-400 dark:from-blue-500 dark:via-blue-400 dark:to-blue-500 opacity-0 group-hover:opacity-60 active:opacity-100 transition-all duration-200 pointer-events-none rounded-full"></div>
-                </ResizableHandle>
+                <CodeResizeHandle direction="vertical" />
                 <ResizablePanel 
                   defaultSize={totalRightSize} 
                   minSize={15}

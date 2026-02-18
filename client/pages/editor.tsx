@@ -318,7 +318,16 @@ export default function Editor() {
     setCodeEditorVisible(true);
     // Скрываем панель свойств при открытии панелей кода
     handleToggleProperties();
-  }, []);
+    // На вкладке "Экспорт" скрываем canvas, чтобы codeEditor занял центр
+    if (currentTab === 'export') {
+      setFlexibleLayoutConfig(prev => ({
+        ...prev,
+        elements: prev.elements.map(el =>
+          el.type === 'canvas' ? { ...el, visible: false } : el
+        )
+      }));
+    }
+  }, [currentTab]);
 
   /**
    * Обработчик закрытия панели кода
@@ -994,6 +1003,13 @@ export default function Editor() {
     } else if ((currentTab as string) === 'export') {
       // Закрываем панель кода при переключении с вкладки экспорт
       handleCloseCodePanel();
+      // Восстанавливаем видимость canvas
+      setFlexibleLayoutConfig(prev => ({
+        ...prev,
+        elements: prev.elements.map(el =>
+          el.type === 'canvas' ? { ...el, visible: true } : el
+        )
+      }));
       if (activeProject?.id) {
         updateProjectMutation.mutate({});
       }
@@ -1635,7 +1651,7 @@ export default function Editor() {
 
     const sidebarContent = codePanelVisible ? (
       // Показываем CodePanel поверх sidebar
-      <div className="h-full w-[350px] border-r bg-background">
+      <div className="h-full border-r bg-background">
         <CodePanel
           botDataArray={allProjects.map(project => project.data as BotData)}
           projectIds={allProjects.map(project => project.id)}
