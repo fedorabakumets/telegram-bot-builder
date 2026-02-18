@@ -177,24 +177,89 @@
 ```
 📦 telegram-bot-builder/
 ┣ 📂 client/                     # 🎨 React Frontend
-┃ ┣ 📂 components/editor/        # Визуальный редактор
-┃ ┣ 📂 lib/bot-generator.ts      # 🔴 Генерация Python кода
-┃ ┣ 📂 pages/                    # Страницы интерфейса
+┃ ┣ 📂 components/               # UI компоненты
+┃ ┃ ┣ 📂 editor/                 # Визуальный редактор
+┃ ┃ ┃ ┣ 📂 bot/                  # Компоненты бота
+┃ ┃ ┃ ┣ 📂 canvas/               # Холст редактора
+┃ ┃ ┃ ┣ 📂 code/                 # Редактор кода
+┃ ┃ ┃ ┣ 📂 database/             # Управление БД
+┃ ┃ ┃ ┣ 📂 google-sheets/        # Интеграция с Google Sheets
+┃ ┃ ┃ ┣ 📂 groups/               # Управление группами
+┃ ┃ ┃ ┣ 📂 properties/           # Панель свойств
+┃ ┃ ┃ ┣ 📂 template/             # Шаблоны
+┃ ┃ ┃ ┗ 📄 emoji-picker.tsx      # Выбор эмодзи
+┃ ┃ ┣ 📂 layout/                 # Компоненты макета
+┃ ┃ ┣ 📂 media/                  # Медиа компоненты
+┃ ┃ ┣ 📂 ui/                     # Базовые UI элементы
+┃ ┃ ┗ 📄 theme-provider.tsx      # Провайдер темы
+┃ ┣ 📂 contexts/                 # React контексты
 ┃ ┣ 📂 hooks/                    # React хуки
-┃ ┣ 📂 utils/                    # Утилиты
+┃ ┣ 📂 lib/                      # Библиотеки и утилиты
+┃ ┃ ┣ 📂 generate/               # Генерация кода
+┃ ┃ ┣ 📂 database/               # Работа с БД
+┃ ┃ ┣ 📂 MessageHandlers/        # Обработчики сообщений
+┃ ┃ ┣ 📂 CommandHandler/         # Обработчики команд
+┃ ┃ ┣ 📂 Keyboard/               # Генерация клавиатур
+┃ ┃ ┣ 📂 MediaHandler/           # Обработка медиа
+┃ ┃ ┣ 📂 UserHandler/            # Обработка пользователей
+┃ ┃ ┣ 📂 Conditional/            # Условная логика
+┃ ┃ ┣ 📂 scaffolding/            # Каркас генерации
+┃ ┃ ┗ 📄 bot-generator.ts        # Генератор ботов
+┃ ┣ 📂 pages/                    # Страницы приложения
 ┃ ┣ 📂 types/                    # TypeScript типы
+┃ ┣ 📂 utils/                    # Утилиты
 ┃ ┣ 📄 App.tsx                   # Главный компонент
 ┃ ┗ 📄 main.tsx                  # Точка входа
 ┣ 📂 server/                     # 🖥️ Express Backend
-┃ ┣ 📄 routes.ts                 # API маршруты
-┃ ┣ 📄 telegram-client.ts        # Управление ботами
-┃ ┗ 📄 storage.ts                # Работа с БД
-┣ 📂 shared/                     # 🔗 Общие типы
-┃ ┗ 📄 schema.ts                 # Drizzle ORM схемы
-┣ 📂 bots/                       # 🤖 Готовые боты
-┃ ┗ 📄 *.py                      # Сгенерированные Python боты
-┗ 📂 docs/                       # 📚 Документация
-  ┗ 📄 *.md                      # Руководства и гайды
+┃ ┣ 📂 auth/                     # Аутентификация
+┃ ┣ 📂 bots/                     # Управление ботами
+┃ ┃ ┣ 📄 startBot.ts             # Запуск бота
+┃ ┃ ┣ 📄 stopBot.ts              # Остановка бота
+┃ ┃ ┗ 📄 restartBotIfRunning.ts  # Перезапуск бота
+┃ ┣ 📂 database/                 # Работа с БД
+┃ ┃ ┣ 📄 db.ts                   # Подключение к БД
+┃ ┃ ┣ 📄 db-routes.ts            # Маршруты БД
+┃ ┃ ┣ 📄 db-utils.ts             # Утилиты БД
+┃ ┃ ┗ 📄 init-db.ts              # Инициализация БД
+┃ ┣ 📂 files/                    # Работа с файлами
+┃ ┣ 📂 google-sheets/            # Интеграция с Google Sheets
+┃ ┣ 📂 routes/                   # API маршруты
+┃ ┃ ┣ 📄 routes.ts               # Основные маршруты
+┃ ┃ ┣ 📄 setupProjectRoutes.ts   # Маршруты проектов
+┃ ┃ ┣ 📄 setupBotManagementRoutes.ts  # Управление ботами
+┃ ┃ ┗ 📄 setupGithubPushRoute.ts # GitHub синхронизация
+┃ ┣ 📂 storages/                 # Хранилища
+┃ ┣ 📂 telegram/                 # Telegram API
+┃ ┃ ┣ 📄 telegram-client.ts      # Клиент Telegram
+┃ ┃ ┣ 📄 telegram-media.ts       # Медиа Telegram
+┃ ┃ ┗ 📄 auth-middleware.ts      # Аутентификация Telegram
+┃ ┣ 📂 terminal/                 # Терминал
+┃ ┣ 📂 utils/                    # Утилиты сервера
+┃ ┗ 📄 index.ts                  # Точка входа сервера
+┣ 📂 shared/                     # 🔗 Общие модули
+┃ ┣ 📄 schema.ts                 # Drizzle ORM схемы
+┃ ┗ 📄 scaffolding-wrapper.ts    # Обёртка генерации
+┣ 📂 config/                     # ⚙️ Конфигурация
+┃ ┗ 📂 google-auth/              # Google OAuth
+┣ 📂 bots/                       # 🤖 Сгенерированные боты
+┃ ┗ 📄 *.py                      # Python боты
+┣ 📂 migrations/                 # 🗄️ Миграции БД
+┣ 📂 uploads/                    # 📁 Загруженные файлы
+┣ 📂 assets/                     # 🖼️ Ресурсы
+┃ ┗ 📂 images/                   # Изображения
+┣ 📂 docs/                       # 📚 Документация
+┃ ┣ 📂 deployment/               # Деплой
+┃ ┣ 📂 development/              # Разработка
+┃ ┣ 📂 features/                 # Функции
+┃ ┣ 📂 analysis/                 # Анализ
+┃ ┗ 📄 COMPONENTS.md             # Компоненты
+┣ 📂 scripts/                    # 📜 Скрипты
+┣ 📂 dist/                       # 📦 Сбилденные файлы
+┣ 📄 package.json                # 📦 Зависимости Node.js
+┣ 📄 tsconfig.json               # ⚙️ Настройки TypeScript
+┣ 📄 vite.config.ts              # ⚡ Конфигурация Vite
+┣ 📄 drizzle.config.ts           # 🗄️ Настройки Drizzle ORM
+┗ 📄 .env.example                # 🔐 Пример переменных окружения
 ```
 
 #### 📡 API Endpoints
