@@ -70,7 +70,7 @@
 
 ### 🎬 Как это работает
 <div align="center">
-  <img src="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/new_bot_added.png?v=2" alt="Процесс создания бота" width="600" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);"/>
+  <img src="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=2" alt="Процесс создания бота" width="600" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);"/>
   <p><em>Процесс создания бота: от идеи до готового продукта</em></p>
 </div>
 
