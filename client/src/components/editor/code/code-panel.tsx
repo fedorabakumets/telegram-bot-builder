@@ -1,16 +1,19 @@
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SyncFromFileButton } from './sync-from-file-button';
-import { TokenInfo } from './token-info';
+import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 import { useToast } from '@/hooks/use-toast';
+import { useUpdateProjectName } from '@/hooks/use-update-project-name';
 import { BotData, BotGroup, BotProject } from '@shared/schema';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
-import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
-import { useUpdateProjectName } from '@/hooks/use-update-project-name';
+import { useEffect, useState } from 'react';
+import { SyncFromFileButton } from './sync-from-file-button';
+import { TokenInfo } from './token-info';
+import { BotFatherCommands } from './botfather-commands';
+import { BotValidation } from './bot-validation';
+import { BotStats } from './bot-stats';
 
 /**
  * Свойства компонента панели кода
@@ -47,16 +50,16 @@ interface CodePanelProps {
  */
 export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate }: CodePanelProps) {
   const queryClient = useQueryClient();
-  
+
   // Состояние для управления форматом и отображением кода
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
-  
+
   // Состояние для хранения имен проектов
-  const [projectNames, setProjectNames] = useState<string[]>(() => 
+  const [projectNames, setProjectNames] = useState<string[]>(() =>
     botDataArray.map((_, index) => projectName || `Проект ${index + 1}`)
   );
-  
+
   // Хук для обновления имени проекта
   const updateProjectNameMutation = useUpdateProjectName();
 
@@ -294,20 +297,20 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
 
             {/* Sync Button */}
             <div className="flex justify-end">
-              <SyncFromFileButton onSyncComplete={() => {}} />
+              <SyncFromFileButton onSyncComplete={() => { }} />
             </div>
           </div>
 
           {/* Render each project separately */}
           {botDataArray.map((_botData, index) => {
             const { content, lineCount, codeStats } = getContentAndStats(index);
-            
+
             // Используем локальное состояние для имени проекта
             const currentProjectName = projectNames[index] || projectName || `Проект ${index + 1}`;
-            
+
             // Получаем ID проекта, если доступен
             const projectIdSuffix = projectIds && projectIds[index] ? ` (ID: ${projectIds[index]})` : '';
-            
+
             return (
               <Card key={index} className="border border-border/50 shadow-sm">
                 <CardHeader className="pb-3 xs:pb-4 sm:pb-5">
@@ -317,7 +320,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                         <i className={`${getFormatIcon(selectedFormat)} text-xs xs:text-sm`}></i>
                       </div>
                       <div className="min-w-0">
-                        <CardTitle 
+                        <CardTitle
                           className="text-sm xs:text-base font-semibold truncate cursor-pointer"
                           onDoubleClick={() => {
                             const newName = prompt('Введите новое название файла:', currentProjectName);
@@ -328,7 +331,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                                 updatedNames[index] = newName.trim();
                                 return updatedNames;
                               });
-                              
+
                               // Обновляем имя проекта в базе данных
                               const projectId = projectIds?.[index];
                               if (projectId) {
@@ -337,7 +340,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                                   name: newName.trim()
                                 });
                               }
-                              
+
                               // Передаем обновленное имя проекта через callback
                               if (onBotDataUpdate) {
                                 onBotDataUpdate(botDataArray, index, newName.trim());
@@ -357,7 +360,16 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                   {projectIds && projectIds[index] && (
                     <TokenInfo projectId={projectIds[index]} />
                   )}
-                  
+
+                  {/* Команды BotFather */}
+                  <BotFatherCommands botData={botDataArray[index]} />
+
+                  {/* Валидация структуры бота */}
+                  <BotValidation botData={botDataArray[index]} />
+
+                  {/* Статистика бота */}
+                  <BotStats botData={botDataArray[index]} />
+
                   {/* Format Selection */}
                   <div className="space-y-1.5 xs:space-y-2">
                     <label className="text-xs xs:text-sm font-semibold text-foreground block">Форматы:</label>

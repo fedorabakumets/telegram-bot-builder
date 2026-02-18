@@ -6,13 +6,13 @@
  * @version 1.0.0
  */
 
-import { useState } from 'react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useState } from 'react';
 import { prepareDataForExport } from './prepareDataForExport';
 
 /**
@@ -47,7 +47,7 @@ interface GoogleSheetsExportButtonProps {
  */
 export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheetsExportButtonProps) {
   const queryClient = useQueryClient();
-  
+
   // Проверяем, что обязательные параметры переданы
   if (!projectId || !projectName) {
     console.error('GoogleSheetsExportButton: Missing required props - projectId and projectName are required');
@@ -161,10 +161,10 @@ export function GoogleSheetsExportButton({ projectId, projectName }: GoogleSheet
 
       // Если ошибка аутентификации - запускаем процесс OAuth
       if (errorMessage.includes('OAuth token not found') ||
-          errorMessage.includes('invalid or expired') ||
-          errorMessage.includes('Authentication required') ||
-          errorMessage.includes('Credentials file not found') ||
-          requiresAuth) {
+        errorMessage.includes('invalid or expired') ||
+        errorMessage.includes('Authentication required') ||
+        errorMessage.includes('Credentials file not found') ||
+        requiresAuth) {
 
         try {
           // Запрашиваем URL аутентификации

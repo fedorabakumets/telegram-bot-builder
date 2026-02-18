@@ -7,8 +7,8 @@
  * @module useTerminalWebSocket
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { TerminalHandle } from '../components/editor/Terminal'; // Импортируем тип из компонента Terminal
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { TerminalHandle } from '../components/editor/bot/Terminal'; // Импортируем тип из компонента Terminal
 
 /**
  * Тип для сообщений, получаемых от WebSocket-сервера терминала
