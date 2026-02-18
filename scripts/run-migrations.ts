@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import 'dotenv/config';
 
 async function runMigrations() {
   const databaseUrl = process.env.DATABASE_URL;
