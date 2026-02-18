@@ -22,6 +22,7 @@ import { DialogPanel } from '@/components/editor/database/dialog-panel';
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import { UserDatabasePanel } from '@/components/editor/database/user-database-panel';
 import { UserDetailsPanel } from '@/components/editor/database/user-details-panel';
+import { ProjectNotFound } from '@/components/editor/project-not-found';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { FlexibleLayout } from '@/components/layout/flexible-layout';
@@ -655,7 +656,7 @@ export default function Editor() {
   });
 
   // Load current project directly by ID (much faster than loading all projects)
-  const { data: currentProject } = useQuery<BotProject>({
+  const { data: currentProject, isError: projectNotFound, isFetching } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectId}`],
     enabled: !!projectId, // Всегда загружаем если есть ID в URL
     staleTime: 30000, // Кешируем на 30 секунд
@@ -1495,6 +1496,11 @@ export default function Editor() {
       onShowFullCodeChange={setShowFullCode}
     />
   ) : null;
+
+  // Показываем компонент 404 если проект не найден
+  if (projectNotFound) {
+    return <ProjectNotFound />;
+  }
 
   if (!activeProject) {
     return (
