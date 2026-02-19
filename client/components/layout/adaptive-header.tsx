@@ -179,7 +179,7 @@ export function AdaptiveHeader({
     <nav className={`${isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden md:flex flex-wrap items-center gap-0.5 lg:gap-1'}`}>
       {[
         { key: 'editor', label: 'Редактор' },
-        { key: 'export', label: 'Экспорт' },
+        { key: 'export', label: 'Код' },
         { key: 'bot', label: 'Бот' },
         { key: 'users', label: 'Пользователи' },
         { key: 'groups', label: 'Группы' }
@@ -205,7 +205,7 @@ export function AdaptiveHeader({
       <div className="grid grid-cols-2 gap-2">
         {[
           { key: 'editor', label: 'Редактор' },
-          { key: 'export', label: 'Экспорт' },
+          { key: 'export', label: 'Код' },
           { key: 'bot', label: 'Бот' },
           { key: 'users', label: 'Пользователи' },
           { key: 'groups', label: 'Группы' }
