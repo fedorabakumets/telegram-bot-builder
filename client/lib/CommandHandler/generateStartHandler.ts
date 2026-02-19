@@ -136,36 +136,47 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   codeLines.push(...universalVarCodeLines);
 
   // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
+  // Используем имена переменных из attachedMedia для согласованности
+  const attachedMedia = (node && node.data && node.data.attachedMedia) ? node.data.attachedMedia : [];
+  
   if (node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined') {
-    codeLines.push(`    # Сохраняем imageUrl в переменную image_url_${node.id || 'unknown'}`);
+    // Находим переменную для изображения в attachedMedia или используем формат по умолчанию
+    const imageVar = attachedMedia.find(v => v.includes('image') && v.includes('Url')) || `image_url_${node.id || 'unknown'}`;
+    codeLines.push(`    # Сохраняем imageUrl в переменную ${imageVar}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
-    codeLines.push(`    user_data[user_id]["image_url_${node.id || 'unknown'}"] = "${node.data.imageUrl}"`);
+    codeLines.push(`    user_data[user_id]["${imageVar}"] = "${node.data.imageUrl}"`);
     if (userDatabaseEnabled) {
-      codeLines.push(`    await update_user_data_in_db(user_id, "image_url_${node.id || 'unknown'}", "${node.data.imageUrl}")`);
+      codeLines.push(`    await update_user_data_in_db(user_id, "${imageVar}", "${node.data.imageUrl}")`);
     }
   }
   if (node && node.data && node.data.documentUrl) {
-    codeLines.push(`    # Сохраняем documentUrl в переменную document_url_${node.id || 'unknown'}`);
+    // Находим переменную для документа в attachedMedia или используем формат по умолчанию
+    const documentVar = attachedMedia.find(v => v.includes('document') && v.includes('Url')) || `document_url_${node.id || 'unknown'}`;
+    codeLines.push(`    # Сохраняем documentUrl в переменную ${documentVar}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
-    codeLines.push(`    user_data[user_id]["document_url_${node.id || 'unknown'}"] = "${node.data.documentUrl}"`);
+    codeLines.push(`    user_data[user_id]["${documentVar}"] = "${node.data.documentUrl}"`);
     if (userDatabaseEnabled) {
-      codeLines.push(`    await update_user_data_in_db(user_id, "document_url_${node.id || 'unknown'}", "${node.data.documentUrl}")`);
+      codeLines.push(`    await update_user_data_in_db(user_id, "${documentVar}", "${node.data.documentUrl}")`);
     }
   }
   if (node && node.data && node.data.videoUrl) {
-    codeLines.push(`    # Сохраняем videoUrl в переменную video_url_${node.id || 'unknown'}`);
+    // Находим переменную для видео в attachedMedia или используем формат по умолчанию
+    const videoVar = attachedMedia.find(v => v.includes('video') && v.includes('Url')) || `video_url_${node.id || 'unknown'}`;
+    codeLines.push(`    # Сохраняем videoUrl в переменную ${videoVar}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
-    codeLines.push(`    user_data[user_id]["video_url_${node.id || 'unknown'}"] = "${node.data.videoUrl}"`);
+    codeLines.push(`    user_data[user_id]["${videoVar}"] = "${node.data.videoUrl}"`);
     if (userDatabaseEnabled) {
-      codeLines.push(`    await update_user_data_in_db(user_id, "video_url_${node.id || 'unknown'}", "${node.data.videoUrl}")`);
+      codeLines.push(`    await update_user_data_in_db(user_id, "${videoVar}", "${node.data.videoUrl}")`);
     }
   }
   if (node && node.data && node.data.audioUrl) {
-    codeLines.push(`    # Сохраняем audioUrl в переменную audio_url_${node.id || 'unknown'}`);
+    // Находим переменную для аудио в attachedMedia или используем формат по умолчанию
+    const audioVar = attachedMedia.find(v => v.includes('audio') && v.includes('Url')) || `audio_url_${node.id || 'unknown'}`;
+    codeLines.push(`    # Сохраняем audioUrl в переменную ${audioVar}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
-    codeLines.push(`    user_data[user_id]["audio_url_${node.id || 'unknown'}"] = "${node.data.audioUrl}"`);
+    codeLines.push(`    user_data[user_id]["${audioVar}"] = "${node.data.audioUrl}"`);
     if (userDatabaseEnabled) {
-      codeLines.push(`    await update_user_data_in_db(user_id, "audio_url_${node.id || 'unknown'}", "${node.data.audioUrl}")`);
+      codeLines.push(`    await update_user_data_in_db(user_id, "${audioVar}", "${node.data.audioUrl}")`);
     }
   }
 
@@ -176,8 +187,6 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   const formattedText = generateKeyboardAndProcessAttachedMedia(node, codeLines);
 
   // Проверяем, есть ли прикрепленные медиафайлы
-  const attachedMedia = (node && node.data && node.data.attachedMedia) ? node.data.attachedMedia : [];
-
   if (attachedMedia.length > 0) {
     // Если есть прикрепленные медиа, генерируем только код клавиатуры без отправки сообщения
     generateConditionalMessageLogicAndKeyboard(node, codeLines, mediaVariablesMap, attachedMedia, formattedText);

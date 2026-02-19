@@ -142,8 +142,8 @@ export function generateConditionalMessageLogicAndKeyboard(node: { id: string; t
         }
 
         let collectUserInputValue: any;
-        if (node && node.data) {
-            collectUserInputValue = node.data.collectUserInput !== false;
+        if (node && node.data && node.data.collectUserInput !== undefined) {
+            collectUserInputValue = node.data.collectUserInput;
         } else {
             collectUserInputValue = true;
         }

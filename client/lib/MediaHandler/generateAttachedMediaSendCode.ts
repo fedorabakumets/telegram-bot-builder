@@ -168,17 +168,15 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}    else:`);
     codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, node_id="${nodeId}")`);
 
-    // Автопереход если нужен
-    if (autoTransitionTo) {
-      codeLines.push(`${indentLevel}    `);
-      codeLines.push(`${indentLevel}    # Проверяем, нужно ли выполнять автопереход`);
-      codeLines.push(`${indentLevel}    if ${collectUserInput.toString()}:`);
+    // Автопереход если нужен и collectUserInput=true
+    if (autoTransitionTo && collectUserInput) {
       const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-      codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
-      codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-      codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(${messageSource})`);
-      codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
-      codeLines.push(`${indentLevel}        return`);
+      codeLines.push(`${indentLevel}    `);
+      codeLines.push(`${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}`);
+      codeLines.push(`${indentLevel}    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}    await handle_callback_${safeAutoTargetId}(${messageSource})`);
+      codeLines.push(`${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}    return`);
     }
 
     codeLines.push(`${indentLevel}except Exception as e:`);
@@ -198,31 +196,33 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}    else:`);
     codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}"${autoTransitionFlag}${parseModeFallbackParam})`);
   } else {
-    // Если статическое изображение не определено, просто отправляем текстовое сообщение
-    // Устанавливаем состояние ожидания ввода если нужно
-    if (collectUserInput && nodeData) {
-      codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId} (без изображения)`);
-      if (nodeData && nodeData.data) {
-        const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
-        const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
-        codeLines.push(...waitingStateLines);
+    // Если статическое изображение не определено, проверяем есть ли динамические медиа
+    // Если есть attachedMedia, не отправляем текст здесь - он отправится вместе с медиа ниже
+    if (!attachedMedia || attachedMedia.length === 0) {
+      // Устанавливаем состояние ожидания ввода если нужно
+      if (collectUserInput && nodeData) {
+        codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId} (без изображения)`);
+        if (nodeData && nodeData.data) {
+          const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+          const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
+          codeLines.push(...waitingStateLines);
+        }
+        codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки текста")`);
       }
-      codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки текста")`);
-    }
 
-    codeLines.push(`${indentLevel}# Отправляем текстовое сообщение (без изображения)`);
-    codeLines.push(`${indentLevel}await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard)`);
+      codeLines.push(`${indentLevel}# Отправляем текстовое сообщение (без изображения)`);
+      codeLines.push(`${indentLevel}await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard)`);
 
-    // Автопереход если нужен
-    if (autoTransitionTo) {
-      codeLines.push(`${indentLevel}# Проверяем, нужно ли выполнять автопереход`);
-      codeLines.push(`${indentLevel}if ${collectUserInput.toString()}:`);
-      const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-      codeLines.push(`${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}`);
-      codeLines.push(`${indentLevel}    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-      codeLines.push(`${indentLevel}    await handle_callback_${safeAutoTargetId}(${messageSource})`);
-      codeLines.push(`${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+      // Автопереход если нужен и collectUserInput=true
+      if (autoTransitionTo && collectUserInput) {
+        const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
+        codeLines.push(`${indentLevel}# ⚡ Автопереход к узлу ${autoTransitionTo}`);
+        codeLines.push(`${indentLevel}logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
+        codeLines.push(`${indentLevel}await handle_callback_${safeAutoTargetId}(${messageSource})`);
+        codeLines.push(`${indentLevel}logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+      }
     }
+    // Если есть attachedMedia, код для их отправки будет сгенерирован ниже
   }
 
   // Если у нас дошли до сюда, значит статического изображения не было,
@@ -358,17 +358,14 @@ export function generateAttachedMediaSendCode(
       codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseModeParam})`);
   }
 
-  // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
-  if (autoTransitionTo) {
-    codeLines.push(`${indentLevel}        `);
-    codeLines.push(`${indentLevel}        # Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true`);
-    codeLines.push(`${indentLevel}        if ${collectUserInput.toString()}:`);
+  // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo и collectUserInput=true, добавляем переход после отправки медиа
+  if (autoTransitionTo && collectUserInput) {
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-    codeLines.push(`${indentLevel}            # ⚡ Автопереход к узлу ${autoTransitionTo}`);
-    codeLines.push(`${indentLevel}            logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-    codeLines.push(`${indentLevel}            await handle_callback_${safeAutoTargetId}(${messageSource})`);
-    codeLines.push(`${indentLevel}            logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
-    codeLines.push(`${indentLevel}            return`);
+    codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
+    codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
+    codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(${messageSource})`);
+    codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+    codeLines.push(`${indentLevel}        return`);
   }
 
   codeLines.push(`${indentLevel}    except Exception as e:`);
