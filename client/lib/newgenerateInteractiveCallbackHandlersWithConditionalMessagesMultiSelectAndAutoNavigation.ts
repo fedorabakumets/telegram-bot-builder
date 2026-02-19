@@ -47,17 +47,11 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
 
 
 
-          // ВАЖНО: Не создаем обработчик для "start", если он уже был создан ранее (избегаем дублирования)
-          // Но проверяем только узлы с ID 'start', а не узлы с типом 'start'
-          if (nodeId === 'start') {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`Пропускаем создание дублированной функции для узла ${nodeId} - уже создана ранее`);
-            return; // Пропускаем создание дублированной функции
-          }
-
-          // Для узлов типа 'start' с другими ID все равно создаем обработчики
-          if (targetNode.type === 'start' && nodeId !== 'start') {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`Создаем обработчик для узла типа 'start' с ID: ${nodeId}`);
-          }
+          // ИСПРАВЛЕНИЕ: Создаем handle_callback_* для ВСЕХ узлов включая 'start'
+          // start_handler обрабатывает команду /start (message handler)
+          // handle_callback_start обрабатывает навигацию через callback (callback handler)
+          // Это разные функции, поэтому нужно создавать handle_callback_start для навигации
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`Создаем handle_callback_${nodeId} для узла ${nodeId} (включая start для навигации)`);
 
 
 

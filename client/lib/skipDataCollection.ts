@@ -7,7 +7,7 @@ export function skipDataCollectionnavigate(nodes: any[], code: string) {
             // Проверяем, существует ли целевой узел перед вызовом обработчика
             // Проверяем, что узел существует и генерируем безопасный вызов
             code += `                    # Проверяем и вызываем обработчик, если он существует\n`;
-            code += `                    if hasattr(locals(), 'handle_callback_${safeFnName}') or '${safeFnName}' in globals():\n`;
+            code += `                    if 'handle_callback_${safeFnName}' in globals():\n`;
             code += `                        await handle_callback_${safeFnName}(fake_callback)\n`;
             code += `                    else:\n`;
             code += `                        logging.warning(f"⚠️ Обработчик не найден для узла: ${targetNode.id}, завершаем переход")\n`;
