@@ -665,7 +665,7 @@ export default function Editor() {
   });
 
   // Load current project directly by ID (much faster than loading all projects)
-  const { data: currentProject, isError: projectNotFound, isFetching } = useQuery<BotProject>({
+  const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectId}`],
     enabled: !!projectId, // Всегда загружаем если есть ID в URL
     staleTime: 30000, // Кешируем на 30 секунд
@@ -974,11 +974,16 @@ export default function Editor() {
    * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} tab - Выбранная вкладка
    */
   const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
+    // Если нажали на ту же вкладку "Код" - ничего не делаем (чтобы панель не закрывалась)
+    if (tab === 'export' && currentTab === 'export') {
+      return;
+    }
+
     // Сохраняем предыдущую вкладку (если не переключались на 'export')
     if (currentTab !== 'export' && tab !== 'export') {
       setPreviousTab(currentTab as 'editor' | 'preview' | 'bot' | 'users' | 'groups');
     }
-    
+
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
