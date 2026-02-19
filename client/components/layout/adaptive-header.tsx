@@ -182,14 +182,14 @@ export function AdaptiveHeader({
         { key: 'export', label: 'Код' },
         { key: 'bot', label: 'Бот' },
         { key: 'users', label: 'Пользователи' },
-        { key: 'groups', label: 'Группы' }
+        // { key: 'groups', label: 'Группы' } // Временно скрыто
       ].map((tab) => (
-        <button 
+        <button
           key={tab.key}
           onClick={() => onTabChange(tab.key as any)}
           className={`px-2 md:px-2.5 lg:px-3 py-1 text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
-            currentTab === tab.key 
-              ? 'text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-md shadow-blue-500/20' 
+            currentTab === tab.key
+              ? 'text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-md shadow-blue-500/20'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 dark:hover:bg-slate-800/50'
           } ${isVertical ? 'w-full text-left' : ''}`}
         >
@@ -208,17 +208,17 @@ export function AdaptiveHeader({
           { key: 'export', label: 'Код' },
           { key: 'bot', label: 'Бот' },
           { key: 'users', label: 'Пользователи' },
-          { key: 'groups', label: 'Группы' }
+          // { key: 'groups', label: 'Группы' } // Временно скрыто
         ].map((tab) => (
-          <button 
+          <button
             key={tab.key}
             onClick={() => {
               onTabChange(tab.key as any);
               setIsMobileMenuOpen(false);
             }}
             className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-              currentTab === tab.key 
-                ? 'text-primary bg-primary/10' 
+              currentTab === tab.key
+                ? 'text-primary bg-primary/10'
                 : 'text-muted-foreground hover:bg-muted'
             }`}
           >
@@ -418,7 +418,7 @@ export function AdaptiveHeader({
             data-testid="button-mobile-save-template"
           >
             <Bookmark className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-            <span>Сохранить</span>
+            <span>Сохранить шаблон</span>
           </Button>
         )}
 
@@ -565,7 +565,7 @@ export function AdaptiveHeader({
           className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-amber-500/10 to-amber-400/5 hover:from-amber-600/20 hover:to-amber-500/15 border border-amber-400/30 dark:border-amber-500/30 hover:border-amber-500/50 dark:hover:border-amber-400/50 text-amber-700 dark:text-amber-300 rounded-lg transition-all shadow-sm hover:shadow-md hover:shadow-amber-500/20 max-sm:px-2 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
         >
           <Bookmark className="h-3.5 w-3.5 max-sm:mx-auto" />
-          <span className="max-sm:hidden ml-1">Сохранить</span>
+          <span className="max-sm:hidden ml-1">Сохранить шаблон</span>
         </Button>
       )}
       
@@ -622,7 +622,7 @@ export function AdaptiveHeader({
 
       <div className={`${isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'} text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm`}>
         <span className="hidden sm:inline-block text-slate-700 dark:text-slate-300">
-          Присоединяйтесь к нашему чату в Telegram:
+          Мы в Telegram:
         </span>
         <a
           href="https://t.me/bot_builder_chat"

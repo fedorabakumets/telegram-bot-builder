@@ -1,6 +1,7 @@
 export function generateBaseCallbackHandlerStructure(code: string, safeFunctionName: any) {
     code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
     code += '    # Безопасное получение данных из callback_query\n';
+    code += '    callback_data = None  # Инициализируем переменную\n';
     code += '    try:\n';
     code += '        user_id = callback_query.from_user.id\n';
     code += '        callback_data = callback_query.data\n';

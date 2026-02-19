@@ -17,7 +17,7 @@ export function generateMultiSelectDoneHandler(
         code += '    logging.info(f"🏁 ОБРАБОТЧИК ГОТОВО АКТИВИРОВАН! callback_data: {callback_query.data}")\n';
         code += '    await callback_query.answer()\n';
         code += '    user_id = callback_query.from_user.id\n';
-        code += '    callback_data = callback_query.data\n';
+        code += '    callback_data = callback_query.data  # Получаем данные callback\n';
         code += '    \n';
         code += '    logging.info(f"🏁 Завершение множественного выбора: {callback_data}")\n';
         code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущее сообщение ID: {callback_query.message.message_id}")\n';

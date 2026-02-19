@@ -1,13 +1,18 @@
 import { Node } from '@shared/schema';
 import { Button } from "../bot-generator";
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
-import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 import { generateButtonText } from '../format/generateButtonText';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
 
 
+/**
+ * Генерирует код клавиатуры для узла
+ * Примечание: generateUniversalVariableReplacement должен вызываться в месте вызова generateKeyboard
+ * @param node - Узел для генерации клавиатуры
+ * @returns Сгенерированный код клавиатуры
+ */
 export function generateKeyboard(node: Node): string {
   let code = '';
 
@@ -17,12 +22,9 @@ export function generateKeyboard(node: Node): string {
   // Определяем отступ в зависимости от наличия условных сообщений
   const indent3 = hasConditionalMessages ? '        ' : '    ';
 
-  // ИСПРАВЛЕНИЕ: Добавляем замену переменных для ВСЕХ узлов, не только с условными сообщениями
-  const universalVarCodeLines1: string[] = [];
-  generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
-  code += universalVarCodeLines1.join('\n');
-  code += '    text = replace_variables_in_text(text, user_vars)\n';
-  code += '    \n';
+  // Примечание: generateUniversalVariableReplacement вызывается в месте вызова этой функции
+  // Здесь мы только добавляем пустую строку для разделения кода
+  code += '\n';
 
   // Проверяем наличие изображения в узле
   const hasImage = node.data.imageUrl && node.data.imageUrl.trim() !== '' && node.data.imageUrl !== 'undefined';

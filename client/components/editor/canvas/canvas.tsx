@@ -1544,13 +1544,13 @@ export function Canvas({
                 <button
                   onClick={onSave}
                   disabled={isSaving}
-                  className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-colors duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center`}
+                  className={`flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-600 dark:hover:to-blue-700 border border-blue-500/60 hover:border-blue-400/70 dark:border-blue-600/60 dark:hover:border-blue-500/70 transition-all duration-200 group disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center shadow-md shadow-blue-600/30 hover:shadow-lg hover:shadow-blue-600/40 dark:shadow-blue-700/30 dark:hover:shadow-lg dark:hover:shadow-blue-700/40`}
                   title="Сохранить проект (Ctrl + S)"
                 >
                   {isSaving ? (
-                    <i className="fas fa-spinner fa-spin text-slate-600 dark:text-slate-400 text-sm"></i>
+                    <i className="fas fa-spinner fa-spin text-white text-sm"></i>
                   ) : (
-                    <i className="fas fa-save text-slate-600 dark:text-slate-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
+                    <i className="fas fa-save text-white text-sm transition-colors"></i>
                   )}
                 </button>
               )}

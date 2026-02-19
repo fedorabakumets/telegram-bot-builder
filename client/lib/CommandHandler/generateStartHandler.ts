@@ -189,11 +189,42 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     // Вставляем код клавиатуры в нужное место
     const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
     codeLines.push(...keyboardLines);
+  }
 
-    // Возвращаемся, чтобы избежать дублирования отправки сообщения
-    // Применяем автоматическое добавление комментариев ко всему коду
-    const processedCode = processCodeWithAutoComments(codeLines, 'generateStartHandler.ts');
-    return processedCode.join('\n');
+  // ============================================================================
+  // АВТОПЕРЕХОД: Если у узла есть enableAutoTransition и autoTransitionTo
+  // ============================================================================
+  if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
+    const autoTargetId = node.data.autoTransitionTo;
+    const safeFuncName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
+    codeLines.push('    ');
+    codeLines.push('    # ⚡ АВТОПЕРЕХОД к следующему узлу');
+    codeLines.push(`    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTargetId}")`);
+    codeLines.push('    # Вызываем обработчик следующего узла через fake_message');
+    codeLines.push('    class FakeMessageEdit:');
+    codeLines.push('        def __init__(self, message, target_node_id):');
+    codeLines.push('            self.from_user = message.from_user');
+    codeLines.push('            self.chat = message.chat');
+    codeLines.push('            self.date = message.date');
+    codeLines.push('            self.message_id = message.message_id');
+    codeLines.push('            self.data = target_node_id  # callback_data для навигации');
+    codeLines.push('            self.message = message  # ссылка на оригинальное сообщение');
+    codeLines.push('            self._message = message');
+    codeLines.push('        ');
+    codeLines.push('        async def answer(self, text, parse_mode=None, reply_markup=None):');
+    codeLines.push('            await self._message.answer(text, parse_mode=parse_mode, reply_markup=reply_markup)');
+    codeLines.push('        ');
+    codeLines.push('        async def edit_text(self, text, parse_mode=None, reply_markup=None):');
+    codeLines.push('            await self._message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)');
+    codeLines.push('    ');
+    codeLines.push(`    fake_edit_message = FakeMessageEdit(message, "${autoTargetId}")`);
+    codeLines.push('    try:');
+    codeLines.push(`        await handle_callback_${safeFuncName}(fake_edit_message)`);
+    codeLines.push(`        logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTargetId}")`);
+    codeLines.push('    except Exception as e:');
+    codeLines.push(`        logging.error(f"Ошибка при автопереходе к узлу ${autoTargetId}: {e}")`);
+    codeLines.push('        await message.answer("Переход завершен")');
+    codeLines.push('    return');
   }
 
   // Применяем автоматическое добавление комментариев ко всему коду

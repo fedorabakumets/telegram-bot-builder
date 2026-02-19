@@ -50,7 +50,7 @@ export function generateUniversalVariableReplacement(
   }
 
   universalVarCodeLines.push(``);
-  universalVarCodeLines.push(`${indentLevel}if user_id not in user_data or "user_name" not in user_data.get(user_id, {}):`);
+  universalVarCodeLines.push(`${indentLevel}if user_id not in user_data or 'user_name' not in user_data.get(user_id, {}):`);
   universalVarCodeLines.push(`${indentLevel}    # Проверяем, что user_obj определен и инициализируем переменные пользователя`);
   universalVarCodeLines.push(`${indentLevel}    if user_obj is not None:`);
 
@@ -76,7 +76,6 @@ export function generateUniversalVariableReplacement(
 
   // Добавляем функцию замены переменных (только если она еще не была сгенерирована)
   universalVarCodeLines.push(`${indentLevel}# Заменяем все переменные в тексте`);
-  universalVarCodeLines.push(`${indentLevel}import re`);
 
   // Проверяем, была ли уже сгенерирована функция replace_variables_in_text
   if (!hasComponentBeenGenerated('replace_variables_in_text')) {
@@ -86,10 +85,11 @@ export function generateUniversalVariableReplacement(
     markComponentAsGenerated('replace_variables_in_text');
   }
 
-  // Проверяем, что переменная text определена перед использованием
-  universalVarCodeLines.push(`${indentLevel}if 'text' in locals() or 'text' in globals():`);
+  // Добавляем универсальную замену переменных в тексте
+  universalVarCodeLines.push(`${indentLevel}# Заменяем переменные в тексте, если text определена`);
+  universalVarCodeLines.push(`${indentLevel}try:`);
   universalVarCodeLines.push(`${indentLevel}    text = replace_variables_in_text(text, all_user_vars)`);
-  universalVarCodeLines.push(`${indentLevel}else:`);
+  universalVarCodeLines.push(`${indentLevel}except NameError:`);
   universalVarCodeLines.push(`${indentLevel}    logging.warning("⚠️ Переменная text не определена при попытке замены переменных")`);
   universalVarCodeLines.push(`${indentLevel}    text = ""  # Устанавливаем пустой текст по умолчанию`);
 

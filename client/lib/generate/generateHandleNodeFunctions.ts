@@ -169,6 +169,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
     // Обработка автоперехода
     if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
       const autoTargetId = node.data.autoTransitionTo;
+      const safeFuncName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
       code += '    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла\n';
       code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура\n';
       code += '    user_id = message.from_user.id\n';
@@ -177,23 +178,18 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += `        logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")\n`;
       code += '    elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
       code += `        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${node.id}")\n`;
-      // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)
       code += `    elif user_id in user_data and user_data[user_id].get("collectUserInput_${node.id}", True) == True:\n`;
-      code += `        logging.info(f"ℹ️ Узел ${node.id} ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")\n`;
+      code += `        logging.info(f"ℹ️ Узел ${node.id} ожидает ввод (collectUserInput=true), автопереход пропущен")\n`;
       code += '    else:\n';
       code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
       code += `        logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTargetId}")\n`;
-      code += `        # Для автоперехода используем логику навигации\n`;
-      code += '        next_node_id = "' + autoTargetId + '"\n';
       code += '        try:\n';
-      code += '            logging.info(f"🚀 Переходим к следующему узлу после автоперехода: {next_node_id}")\n';
-      code += '            # Здесь будет логика перехода к следующему узлу, аналогичная той, что в callback обработчиках\n';
-      code += '            # Для простоты, просто вызываем соответствующий handle_node обработчик\n';
-      code += `            # В реальной реализации здесь будет развёрнутая логика обработки каждого узла\n`;
-      code += `            logging.info(f"ℹ️ Реализация автоперехода требует дополнительной логики")\n`;
+      code += `            await handle_node_${safeFuncName}(message)\n`;
+      code += `            logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTargetId}")\n`;
       code += '        except Exception as e:\n';
-      code += '            logging.error(f"Ошибка при автопереходе к узлу {next_node_id}: {e}")\n';
-      code += `        return\n`;
+      code += `            logging.error(f"Ошибка при автопереходе к узлу ${autoTargetId}: {e}")\n`;
+      code += '            await message.answer("Переход завершен")\n';
+      code += '        return\n';
     }
 
     // Устанавливаем waiting_for_input, так как автопереход не выполнен

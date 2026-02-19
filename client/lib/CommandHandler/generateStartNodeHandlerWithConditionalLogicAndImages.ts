@@ -148,6 +148,25 @@ export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode
         codeLines.push(`            await callback_query.message.answer(text${parseMode})`);
     }
 
+    // ============================================================================
+    // АВТОПЕРЕХОД: Если у узла есть enableAutoTransition и autoTransitionTo
+    // ============================================================================
+    if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
+        const autoTargetId = targetNode.data.autoTransitionTo;
+        const safeFuncName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
+        codeLines.push('    ');
+        codeLines.push('    # ⚡ АВТОПЕРЕХОД к следующему узлу');
+        codeLines.push(`    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")`);
+        codeLines.push('    # Проверяем, существует ли целевой узел перед вызовом обработчика');
+        codeLines.push(`    # Для start узла сразу вызываем обработчик следующего узла`);
+        codeLines.push('    try:');
+        codeLines.push(`        await handle_callback_${safeFuncName}(callback_query)`);
+        codeLines.push(`        logging.info(f"✅ Автопереход выполнен: ${targetNode.id} -> ${autoTargetId}")`);
+        codeLines.push('    except Exception as e:');
+        codeLines.push(`        logging.error(f"Ошибка при автопереходе к узлу ${autoTargetId}: {e}")`);
+        codeLines.push('        await callback_query.message.answer("Переход завершен")');
+    }
+
     // Применяем автоматическое добавление комментариев ко всему коду
     const processedCodeLines = processCodeWithAutoComments(codeLines, 'generateStartNodeHandlerWithConditionalLogicAndImages.ts');
 

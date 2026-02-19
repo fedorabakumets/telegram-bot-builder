@@ -293,15 +293,36 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
 
   // Проверяем, есть ли узлы, которые требуют импорт ParseMode
+  // ParseMode нужен для: форматирования текста (html/markdown), отправки медиа с caption, клавиатур с форматированием
   const hasNodesRequiringParseMode = (nodes || []).some(node =>
-    node.data?.formatMode &&
-    (node.data.formatMode.toLowerCase() === 'html' ||
-      node.data.formatMode.toLowerCase() === 'markdown')
+    // Узлы с явным formatMode (html/markdown)
+    (node.data?.formatMode &&
+      (node.data.formatMode.toLowerCase() === 'html' ||
+        node.data.formatMode.toLowerCase() === 'markdown')) ||
+    // Узлы с markdown флагом (старый формат)
+    node.data?.markdown === true ||
+    // Узлы с кнопками и форматированием
+    (node.data?.buttons && node.data.buttons.length > 0 &&
+      (node.data.formatMode === 'html' || node.data.formatMode === 'markdown' || node.data.markdown === true)) ||
+    // Узлы с медиа и caption (требуют parse_mode для форматирования подписи)
+    (node.data?.imageUrl && node.data.mediaCaption) ||
+    (node.data?.videoUrl && node.data.mediaCaption) ||
+    (node.data?.audioUrl && node.data.mediaCaption) ||
+    (node.data?.documentUrl && node.data.mediaCaption) ||
+    // Узлы с включенным сбором ввода и форматированием
+    (node.data?.collectUserInput === true &&
+      (node.data.formatMode === 'html' || node.data.formatMode === 'markdown' || node.data.markdown === true)) ||
+    // Узлы с conditional messages и форматированием
+    (node.data?.enableConditionalMessages === true &&
+      (node.data.formatMode === 'html' || node.data.formatMode === 'markdown' || node.data.markdown === true))
   );
 
   if (hasNodesRequiringParseMode) {
     code += 'from aiogram.enums import ParseMode\n';
   }
+
+  // Модуль re требуется для функции replace_variables_in_text
+  code += 'import re\n';
 
   // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
   // Проверяем, есть ли узлы, которые используют TelegramBadRequest в обработчиках исключений
@@ -972,7 +993,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Обработка ошибок при переходах
    * 
    * **Функциональность рендеринга сообщений:**
-   * - Поддержка inline клавиатур с различными типами кнопок
+   * - Поддержка inline клав����атур с различными типами кнопок
    * - Поддержка reply клавиатур с настройками размера
    * - Обработка условных сообщений на основе ??анных пользователя
    * - Поддержка различных режимов форматирования (Markdown, HTML)
@@ -1482,7 +1503,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += '    # Инициализируем базовые переменные пользователя\n';
       code += '    user_name = init_user_variables(user_id, callback_query.from_user)\n';
       code += '    \n';
-      code += '    callback_data = callback_query.data\n';
+      code += '    callback_data = callback_query.data  # Получаем данные callback\n';
       code += '    \n';
       code += '    # Обработка кнопки "Готово"\n';
       code += '    if callback_data.startswith("done_"):\n';
