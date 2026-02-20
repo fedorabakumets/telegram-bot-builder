@@ -31,21 +31,84 @@ async def handle_video_input(message: types.Message):
     # Получаем file_id видео
     video_file_id = message.video.file_id
     logging.info(f"🎥 Получен file_id видео: {video_file_id}")
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][video_variable] = video_file_id
-    
+
+    # Регистрируем видео через API для получения URL
+    video_url = None
+    try:
+        if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):
+            media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-video"
+        else:
+            media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-video"
+
+        # Сначала сохраняем сообщение чтобы получить message_id
+        saved_msg = await save_message_to_api(
+            user_id=str(user_id),
+            message_type="user",
+            message_text="[Видео ответ]",
+            node_id=node_id,
+            message_data={"video": {"file_id": video_file_id}, "is_video_answer": True}
+        )
+
+        if saved_msg and "id" in saved_msg:
+            media_payload = {
+                "messageId": saved_msg["id"],
+                "fileId": video_file_id,
+                "botToken": BOT_TOKEN,
+                "mediaType": "video"
+            }
+
+            # Определяем, использовать ли SSL для медиа-запросов
+            use_ssl_media = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
+            logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media}")
+            # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER
+            if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url:
+                use_ssl_media = False
+                logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")
+
+            if use_ssl_media:
+                # Для внешних соединений используем SSL-контекст
+                connector = TCPConnector(ssl=True)
+            else:
+                # Для локальных соединений не используем SSL-контекст
+                # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения
+                import ssl
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+                connector = TCPConnector(ssl=ssl_context)
+
+            async with aiohttp.ClientSession(connector=connector) as session:
+                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        video_url = result.get("url")
+                        logging.info(f"Видео зарегистрировано, URL: {video_url}")
+                    else:
+                        error_text = await response.text()
+                        logging.warning(f"Не удалось зарегистрировать видео: {response.status} - {error_text}")
+    except Exception as reg_error:
+        logging.warning(f"Ошибка при регистрации видео: {reg_error}")
+
+    # Сохраняем в пользовательские данные как объект с URL
+    video_data = {
+        "value": video_file_id,
+        "type": "video",
+        "videoUrl": video_url,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    user_data[user_id][video_variable] = video_data
+
     # Сохраняем в базу данных
-    saved_to_db = await update_user_data_in_db(user_id, video_variable, video_file_id)
+    saved_to_db = await update_user_data_in_db(user_id, video_variable, video_data)
     if saved_to_db:
-        logging.info(f"✅ Видео сохранено в БД: {video_variable} = {video_file_id} (пользователь {user_id})")
+        logging.info(f"✅ Видео сохранено в БД: {video_variable} = {video_file_id}, URL = {video_url} (пользователь {user_id})")
     else:
         logging.warning(f"⚠️ Не удалось сохранить видео в БД, данные сохранены локально")
-    
+
     # Очищаем состояние ожидания
     del user_data[user_id]["waiting_for_input"]
-    
-    logging.info(f"🎥 Видео сохранено: {video_variable} = {video_file_id}")
+
+    logging.info(f"🎥 Видео сохранено: {video_variable} = {video_file_id}, URL = {video_url}")
     
     # Переходим к следующему узлу если указан
     if next_node_id:

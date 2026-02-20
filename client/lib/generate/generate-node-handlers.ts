@@ -23,6 +23,8 @@ import {
   generateDemoteUserHandler
 } from '../UserHandler';
 import { generateUnpinMessageHandler, generateDeleteMessageHandler, generatePinMessageHandler } from '../MessageHandler';
+import { generateBroadcastHandler } from './generateBroadcastHandler';
+import { generateBroadcastClientHandler } from './generateBroadcastClientHandler';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { collectMediaVariables } from '../utils/collectMediaVariables';
 
@@ -72,6 +74,12 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     promote_user: generatePromoteUserHandler,
     demote_user: generateDemoteUserHandler,
     admin_rights: generateAdminRightsHandler,
+    broadcast: (node) => {
+      const apiType = node.data?.broadcastApiType || 'bot';
+      return apiType === 'client'
+        ? generateBroadcastClientHandler(node, nodes)
+        : generateBroadcastHandler(node, nodes);
+    },
   };
 
   // Проверяем, есть ли узлы типа 'start' или синонимы для них

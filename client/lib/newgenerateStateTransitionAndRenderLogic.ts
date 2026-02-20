@@ -165,6 +165,16 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
             } else if (mediaVar.startsWith('document_url_')) {
               code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
             }
+            // ИСПРАВЛЕНИЕ: Также поддерживаем переменные типа audioUrlVar_*, videoUrlVar_* и т.д.
+            else if (mediaVar.startsWith('audioUrlVar')) {
+              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
+            } else if (mediaVar.startsWith('videoUrlVar')) {
+              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
+            } else if (mediaVar.startsWith('imageUrlVar')) {
+              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.imageUrl}"\n`;
+            } else if (mediaVar.startsWith('documentUrlVar')) {
+              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+            }
           });
 
           code += `                logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;

@@ -124,10 +124,9 @@ export function generateAttachedMediaSendCode(
       }
     }
 
-    // Убедимся, что переменная keyboard определена
+    // Убедимся, что переменная keyboard определена (не затираем если существует)
     codeLines.push(`${indentLevel}# Убедимся, что переменная keyboard определена`);
-    codeLines.push(`${indentLevel}if 'keyboard' not in locals():`);
-    codeLines.push(`${indentLevel}    keyboard = None`);
+    codeLines.push(`${indentLevel}# ВАЖНО: Не затираем keyboard, если он уже существует (сгенерирован ранее)`);
     codeLines.push(`${indentLevel}`);
 
     codeLines.push(`${indentLevel}# Узел содержит статическое изображение: ${nodeData.imageUrl}`);
@@ -294,9 +293,19 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}if "${mediaVariable}" in all_user_vars:`);
   codeLines.push(`${indentLevel}    media_data = all_user_vars["${mediaVariable}"]`);
   codeLines.push(`${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:`);
-  codeLines.push(`${indentLevel}        # Проверяем, есть ли photoUrl в данных медиа`);
-  codeLines.push(`${indentLevel}        if "photoUrl" in media_data and media_data["photoUrl"]:`);
+  codeLines.push(`${indentLevel}        # ИСПРАВЛЕНИЕ: Проверяем правильные URL поля в зависимости от типа медиа`);
+  codeLines.push(`${indentLevel}        # Для фото проверяем photoUrl`);
+  codeLines.push(`${indentLevel}        if "${mediaType}" == "photo" and "photoUrl" in media_data and media_data["photoUrl"]:`);
   codeLines.push(`${indentLevel}            attached_media = media_data["photoUrl"]  # Используем URL вместо file_id`);
+  codeLines.push(`${indentLevel}        # Для видео проверяем videoUrl`);
+  codeLines.push(`${indentLevel}        elif "${mediaType}" == "video" and "videoUrl" in media_data and media_data["videoUrl"]:`);
+  codeLines.push(`${indentLevel}            attached_media = media_data["videoUrl"]  # Используем URL вместо file_id`);
+  codeLines.push(`${indentLevel}        # Для аудио проверяем audioUrl`);
+  codeLines.push(`${indentLevel}        elif "${mediaType}" == "audio" and "audioUrl" in media_data and media_data["audioUrl"]:`);
+  codeLines.push(`${indentLevel}            attached_media = media_data["audioUrl"]  # Используем URL вместо file_id`);
+  codeLines.push(`${indentLevel}        # Для документов проверяем documentUrl`);
+  codeLines.push(`${indentLevel}        elif "${mediaType}" == "document" and "documentUrl" in media_data and media_data["documentUrl"]:`);
+  codeLines.push(`${indentLevel}            attached_media = media_data["documentUrl"]  # Используем URL вместо file_id`);
   codeLines.push(`${indentLevel}        else:`);
   codeLines.push(`${indentLevel}            attached_media = media_data["value"]  # Используем file_id только если URL недоступен`);
   codeLines.push(`${indentLevel}    elif isinstance(media_data, str):`);
@@ -328,8 +337,7 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}        else:`);
   codeLines.push(`${indentLevel}            attached_media_url = attached_media`);
   codeLines.push(`${indentLevel}        # Убедимся, что переменные keyboard и keyboardHTML определены`);
-  codeLines.push(`${indentLevel}        if 'keyboard' not in locals():`);
-  codeLines.push(`${indentLevel}            keyboard = None`);
+  codeLines.push(`${indentLevel}        # ВАЖНО: Не затираем keyboard, если он уже существует (сгенерирован ранее)`);
   codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
   codeLines.push(`${indentLevel}            keyboardHTML = None`);
   const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
@@ -371,8 +379,11 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}    except Exception as e:`);
   codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")`);
   codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);
-  codeLines.push(`${indentLevel}        # Убедимся, что переменные клавиатуры определены`);
-  codeLines.push(`${indentLevel}        keyboardHTML = locals().get('keyboardHTML', None) or globals().get('keyboardHTML', None) or None`);
+  codeLines.push(`${indentLevel}        # Убедимся, что переменная keyboardHTML определена`);
+  codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
+  codeLines.push(`${indentLevel}            keyboardHTML = None`);
+  codeLines.push(`${indentLevel}        # Используем keyboard если keyboardHTML не определен`);
+  codeLines.push(`${indentLevel}        reply_markup_to_use = keyboard if keyboard is not None else keyboardHTML`);
   const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
   // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
   let parseModeFallbackParam = '';
@@ -381,16 +392,17 @@ export function generateAttachedMediaSendCode(
   } else {
     parseModeFallbackParam = ', parse_mode=None';
   }
-  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboardHTML${autoTransitionFlag}${parseModeFallbackParam})`);
+  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=reply_markup_to_use${autoTransitionFlag}${parseModeFallbackParam})`);
   codeLines.push(`${indentLevel}else:`);
   codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
   codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
   codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
   codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, user_vars)`);
-  // ИСПРАВЛЕНИЕ: Если collectUserInput=true, отправляем сообщение и устанавливаем ожидание ввода, иначе просто отправляем сообщение
-  codeLines.push(`${indentLevel}    # Убедимся, что переменные клавиатуры определены`);
-  codeLines.push(`${indentLevel}    keyboardHTML = locals().get('keyboardHTML', None) or globals().get('keyboardHTML', None) or None`);
-  codeLines.push(`${indentLevel}    # Отправляем сообщение независимо от collectUserInput`);
+  codeLines.push(`${indentLevel}    # Убедимся, что переменная keyboardHTML определена`);
+  codeLines.push(`${indentLevel}    if 'keyboardHTML' not in locals():`);
+  codeLines.push(`${indentLevel}        keyboardHTML = None`);
+  codeLines.push(`${indentLevel}    # Отправляем сообщение с клавиатурой (используем keyboard если keyboardHTML не определен)`);
+  codeLines.push(`${indentLevel}    reply_markup_to_use = keyboard if keyboard is not None else keyboardHTML`);
   // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
   let parseModeElseParam = '';
   if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
@@ -398,7 +410,7 @@ export function generateAttachedMediaSendCode(
   } else {
     parseModeElseParam = ', parse_mode=None';
   }
-  codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=keyboardHTML${autoTransitionFlag}${parseModeElseParam})`);
+  codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=reply_markup_to_use${autoTransitionFlag}${parseModeElseParam})`);
   codeLines.push(`${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:`);
   codeLines.push(`${indentLevel}        # Устанавливаем состояние ожидания ввода`);
   codeLines.push(`${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} настроен на сбор ввода (collectUserInput=true)")`);

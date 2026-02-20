@@ -35,5 +35,7 @@
   "typescript.inlayHints.variableDeclarationTypes.enabled": true,
   "typescript.inlayHints.imports.enabled": true,
   "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-  "typescript.inlayHints.parameterNames.suppressWhenArgumentMatchesName": false
+  "typescript.inlayHints.parameterNames.suppressWhenArgumentMatchesName": false,
+  "python-envs.defaultEnvManager": "ms-python.python:system",
+  "python-envs.pythonProjects": []
 }

@@ -50,7 +50,8 @@ const nodeTypeNames: Record<Node['type'], string> = {
   kick_user: 'Исключить пользователя',
   promote_user: 'Назначить администратором',
   demote_user: 'Снять с администратора',
-  admin_rights: 'Права администратора'
+  admin_rights: 'Права администратора',
+  broadcast: '📢 Рассылка'
 };
 
 /**
@@ -75,7 +76,8 @@ const nodeIcons: Record<Node['type'], string> = {
   kick_user: 'fas fa-door-open',
   promote_user: 'fas fa-user-shield',
   demote_user: 'fas fa-user-minus',
-  admin_rights: 'fas fa-crown'
+  admin_rights: 'fas fa-crown',
+  broadcast: 'fas fa-bullhorn'
 };
 
 /**
@@ -100,7 +102,8 @@ const nodeColors: Record<Node['type'], string> = {
   kick_user: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
   promote_user: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
   demote_user: 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400',
-  admin_rights: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
+  admin_rights: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+  broadcast: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
 };
 
 /**

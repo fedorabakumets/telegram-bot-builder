@@ -9,6 +9,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
+import { generateDatabaseVariablesCode } from './generate/generateDatabaseVariables';
 
 // Функция для проверки наличия кнопок с URL-ссылками
 function hasUrlButtons(nodes: any[]): boolean {
@@ -380,6 +381,12 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '        if not waiting_config:\n';
     code += '            return  # Состояние ожидания пустое, игнорируем\n';
     code += '        \n';
+    
+    // Добавляем получение переменных из БД перед обработкой
+    code += '        \n';
+    code += '        # Получаем переменные из базы данных (user_ids_list, user_ids_count)\n';
+    code += generateDatabaseVariablesCode('        ');
+    code += '        \n';
 
     /**
      * Обработка различных форматов конфигурации
@@ -533,6 +540,30 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '                    logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
     code += '                else:\n';
     code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+    code += '            \n';
+
+    /**
+     * Сохранение ID в таблицу user_ids для рассылки
+     * Если узел имеет saveToUserIds=true, сохраняем ID в отдельную таблицу
+     */
+    code += '            # Сохранение ID в таблицу user_ids для рассылки\n';
+    code += '            if waiting_node_id == "BMsBsZJr-pWxjMB_rl33z":  # Узел добавления ID\n';
+    code += '                try:\n';
+    code += '                    async with db_pool.acquire() as conn:\n';
+    code += '                        await conn.execute(\n';
+    code += '                            """\n';
+    code += '                            INSERT INTO user_ids (project_id, user_id)\n';
+    code += '                            VALUES ($1, $2)\n';
+    code += '                            ON CONFLICT (project_id, user_id) DO NOTHING\n';
+    code += '                            """,\n';
+    code += '                            PROJECT_ID,\n';
+    code += '                            int(user_text)\n';
+    code += '                        )\n';
+    code += '                        logging.info(f"✅ ID {user_text} вставлен в таблицу user_ids (проект {PROJECT_ID})")\n';
+    code += '                except ValueError:\n';
+    code += '                    logging.error(f"❌ Ошибка: введённое значение не является числом: {user_text}")\n';
+    code += '                except Exception as e:\n';
+    code += '                    logging.error(f"❌ Ошибка сохранения ID в базу: {e}")\n';
     code += '            \n';
 
     /**

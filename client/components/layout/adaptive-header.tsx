@@ -29,8 +29,8 @@ interface BotInfo {
  * @property {LayoutConfig} config - Конфигурация макета
  * @property {string} projectName - Название проекта
  * @property {BotInfo | null} [botInfo] - Информация о боте
- * @property {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} currentTab - Текущая вкладка
- * @property {(tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => void} onTabChange - Функция изменения вкладки
+ * @property {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'} currentTab - Текущая вкладка
+ * @property {(tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api') => void} onTabChange - Функция изменения вкладки
  * @property {() => void} onExport - Функция экспорта
  * @property {() => void} [onSaveAsTemplate] - Функция сохранения как шаблон
  * @property {() => void} [onLoadTemplate] - Функция загрузки шаблона
@@ -55,8 +55,8 @@ interface AdaptiveHeaderProps {
   config: LayoutConfig;
   projectName: string;
   botInfo?: BotInfo | null;
-  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups';
-  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => void;
+  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api';
+  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api') => void;
   onExport: () => void;
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
@@ -182,6 +182,8 @@ export function AdaptiveHeader({
         { key: 'export', label: 'Код' },
         { key: 'bot', label: 'Бот' },
         { key: 'users', label: 'Пользователи' },
+        { key: 'user-ids', label: 'База ID' },
+        { key: 'client-api', label: 'Client API' },
         // { key: 'groups', label: 'Группы' } // Временно скрыто
       ].map((tab) => (
         <button
@@ -208,6 +210,8 @@ export function AdaptiveHeader({
           { key: 'export', label: 'Код' },
           { key: 'bot', label: 'Бот' },
           { key: 'users', label: 'Пользователи' },
+          { key: 'user-ids', label: 'База ID' },
+          { key: 'client-api', label: 'Client API' },
           // { key: 'groups', label: 'Группы' } // Временно скрыто
         ].map((tab) => (
           <button

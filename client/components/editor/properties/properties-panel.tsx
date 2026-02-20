@@ -55,6 +55,9 @@ import { CommandTargetSection } from './command-target-section';
 import { OptionButtonInfo } from './option-button-info';
 import { CompleteButtonInfo } from './complete-button-info';
 import { NormalButtonInfo } from './normal-button-info';
+import { BroadcastNodeProperties } from './broadcast-properties';
+import { BroadcastToggle } from './broadcast-toggle';
+import { SaveToUserIdsSwitch } from './save-to-user-ids-switch';
 import { Image, Video, Music, FileText, X } from 'lucide-react';
 
 /**
@@ -563,6 +566,14 @@ export function PropertiesPanel({
               />
             )}
 
+            {/* Broadcast Configuration */}
+            {selectedNode.type === 'broadcast' && (
+              <BroadcastNodeProperties
+                node={selectedNode}
+                onUpdate={onNodeUpdate}
+              />
+            )}
+
             {/* Content Management Configuration */}
             {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message') && (
               <ContentManagementConfiguration
@@ -672,6 +683,17 @@ export function PropertiesPanel({
                         />
                         <MessageInfoBlock variant="blue" />
                       </div>
+                    </div>
+                  )}
+
+                  {/* Переключатель рассылки для message узлов */}
+                  {selectedNode.type === 'message' && (
+                    <div className="space-y-3 sm:space-y-4">
+                      <BroadcastToggle
+                        selectedNode={selectedNode}
+                        onNodeUpdate={onNodeUpdate}
+                        allNodes={allNodes}
+                      />
                     </div>
                   )}
 
@@ -1536,6 +1558,12 @@ export function PropertiesPanel({
                   {/* Input Collection Settings */}
                   {selectedNode.data.collectUserInput && (
                     <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-indigo-50/20 dark:from-blue-950/15 dark:to-indigo-950/5 border border-blue-200/25 dark:border-blue-800/25 rounded-xl p-3 sm:p-4">
+
+                      {/* Save to User IDs Database Switch */}
+                      <SaveToUserIdsSwitch
+                        selectedNode={selectedNode}
+                        onNodeUpdate={onNodeUpdate}
+                      />
 
                       {/* Media Input Toggles Grid */}
                       <MediaInputToggles

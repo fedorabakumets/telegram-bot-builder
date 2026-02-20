@@ -11,9 +11,10 @@ import { BotControl } from '@/components/editor/bot/bot-control';
 import { Canvas } from '@/components/editor/canvas/canvas';
 import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
-import { ComponentsSidebar } from '@/components/editor/properties/components-sidebar';
+import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/properties-panel';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
+import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
@@ -22,6 +23,7 @@ import { DialogPanel } from '@/components/editor/database/dialog-panel';
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import { UserDatabasePanel } from '@/components/editor/database/user-database-panel';
 import { UserDetailsPanel } from '@/components/editor/database/user-details-panel';
+import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
@@ -62,10 +64,10 @@ export default function Editor() {
 
   /**
    * Текущая выбранная вкладка в интерфейсе редактора
-   * @type {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'}
+   * @type {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'}
    */
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
-  const [previousTab, setPreviousTab] = useState<'editor' | 'preview' | 'bot' | 'users' | 'groups'>('editor');
+  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'>('editor');
+  const [previousTab, setPreviousTab] = useState<'editor' | 'preview' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'>('editor');
 
   /**
    * Флаг отображения модального окна сохранения шаблона
@@ -971,9 +973,9 @@ export default function Editor() {
   /**
    * Обработчик изменения вкладки
    *
-   * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'} tab - Выбранная вкладка
+   * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'} tab - Выбранная вкладка
    */
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
+  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api') => {
     // Если нажали на ту же вкладку "Код" - ничего не делаем (чтобы панель не закрывалась)
     if (tab === 'export' && currentTab === 'export') {
       return;
@@ -981,7 +983,7 @@ export default function Editor() {
 
     // Сохраняем предыдущую вкладку (если не переключались на 'export')
     if (currentTab !== 'export' && tab !== 'export') {
-      setPreviousTab(currentTab as 'editor' | 'preview' | 'bot' | 'users' | 'groups');
+      setPreviousTab(currentTab as 'editor' | 'preview' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api');
     }
 
     setCurrentTab(tab);
@@ -1025,6 +1027,11 @@ export default function Editor() {
       }
     } else if (tab === 'users') {
       // Auto-save before showing users panel
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
+    } else if (tab === 'user-ids') {
+      // Auto-save before showing user IDs panel
       if (activeProject?.id) {
         updateProjectMutation.mutate({});
       }
@@ -1649,6 +1656,14 @@ export default function Editor() {
               onOpenDialogPanel={handleOpenDialogPanel}
               onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
             />
+          </div>
+        ) : currentTab === 'user-ids' ? (
+          <UserIdsDatabase projectId={activeProject.id} />
+        ) : currentTab === 'client-api' ? (
+          <div className="h-full p-6 bg-background overflow-auto">
+            <div className="max-w-3xl mx-auto">
+              <TelegramClientConfig projectId={activeProject.id} />
+            </div>
           </div>
         ) : currentTab === 'export' ? null : null}
       </div>

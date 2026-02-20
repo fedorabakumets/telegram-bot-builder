@@ -36,6 +36,13 @@ class TelegramClientManager {
   private authStatus: Map<string, AuthStatus> = new Map();
 
   /**
+   * Геттер для доступа к клиентам из routes
+   */
+  getClients(): Map<string, TelegramClient> {
+    return this.clients;
+  }
+
+  /**
    * Инициализация менеджера с восстановлением всех сессий
    */
   async initialize(): Promise<void> {
@@ -148,6 +155,9 @@ class TelegramClientManager {
 
       await client.connect();
 
+      // Отключаем updateLoop чтобы избежать TIMEOUT ошибок
+      (client as any)._updateLoop = () => {};
+
       // Проверяем, что сессия действительна
       const me = await client.getMe();
       if (me) {
@@ -209,9 +219,9 @@ class TelegramClientManager {
           apiId: parseInt(apiId!),
           apiHash: apiHash,
           settings: new Api.CodeSettings({
-            allowFlashcall: false,
-            currentNumber: false,
-            allowAppHash: false,
+            allowFlashcall: true,
+            currentNumber: true,
+            allowAppHash: true,
           }),
         })
       );
@@ -226,7 +236,18 @@ class TelegramClientManager {
         needsPassword: false
       });
 
-      console.log(`📱 Отправлен код подтверждения на номер ${phoneNumber}`);
+      // Определяем тип отправленного кода
+      const codeType = (result as any).type;
+      let codeDelivery = 'SMS';
+      if (codeType?._ === 'auth.sentCodeTypeApp') {
+        codeDelivery = 'уведомление в Telegram';
+      } else if (codeType?._ === 'auth.sentCodeTypeCall') {
+        codeDelivery = 'голосовой звонок';
+      } else if (codeType?._ === 'auth.sentCodeTypeFlashCall') {
+        codeDelivery = 'flash-звонок';
+      }
+
+      console.log(`📱 Код подтверждения отправлен на номер ${phoneNumber} через ${codeDelivery}`);
 
       return {
         success: true,
@@ -238,6 +259,43 @@ class TelegramClientManager {
       return {
         success: false,
         error: error.message || 'Неизвестная ошибка при отправке кода'
+      };
+    }
+  }
+
+  /**
+   * Повторно отправить код подтверждения через звонок
+   * @param userId - ID пользователя
+   * @param phoneNumber - Номер телефона
+   * @param phoneCodeHash - Хеш кода
+   * @returns Результат операции
+   */
+  async resendCode(userId: string, phoneNumber: string, phoneCodeHash: string): Promise<{ success: boolean; phoneCodeHash?: string; error?: string }> {
+    try {
+      const client = this.clients.get(userId);
+      if (!client) {
+        return { success: false, error: 'Клиент не найден. Сначала отправьте код.' };
+      }
+
+      const result = await client.invoke(
+        new Api.auth.ResendCode({
+          phoneNumber: phoneNumber,
+          phoneCodeHash: phoneCodeHash,
+        })
+      );
+
+      console.log(`📞 Код подтверждения отправлен через звонок на номер ${phoneNumber}`);
+
+      return {
+        success: true,
+        phoneCodeHash: (result as any).phoneCodeHash
+      };
+
+    } catch (error: any) {
+      console.error('Ошибка при повторной отправке кода:', error?.message);
+      return {
+        success: false,
+        error: error.message || 'Не удалось отправить код'
       };
     }
   }
@@ -376,6 +434,40 @@ class TelegramClientManager {
         success: false,
         error: error.message === 'PASSWORD_HASH_INVALID' ? 'Неверный пароль' : (error.message || 'Ошибка авторизации')
       };
+    }
+  }
+
+  /**
+   * Выйти из аккаунта Telegram Client API
+   * @param userId - ID пользователя
+   * @returns Результат выхода
+   */
+  async logout(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const client = this.clients.get(userId);
+      
+      // Закрываем соединение если клиент существует
+      if (client) {
+        try {
+          await client.disconnect();
+        } catch (disconnectError) {
+          console.error('Ошибка при отключении клиента:', disconnectError);
+        }
+        this.clients.delete(userId);
+      }
+
+      // Очищаем сессию
+      this.sessions.delete(userId);
+
+      // Очищаем статус авторизации
+      this.authStatus.delete(userId);
+
+      console.log(`✅ Пользователь ${userId} вышел из Client API`);
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Ошибка при выходе:', error);
+      return { success: false, error: error.message || 'Ошибка при выходе' };
     }
   }
 

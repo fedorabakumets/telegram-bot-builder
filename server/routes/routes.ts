@@ -9,8 +9,10 @@ import multer from "multer";
 import { join } from "path";
 import { Pool } from "pg";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 import { cleanupBotStates } from "../bots/cleanupBotStates";
 import dbRoutes from "../database/db-routes";
+import { db } from "../database/db";
 import { initializeDatabaseTables } from "../database/init-db";
 import { ensureDefaultProject } from "../utils/ensureDefaultProject";
 import { downloadFileFromUrl } from "../files/downloadFileFromUrl";
@@ -19,6 +21,12 @@ import { setupGoogleAuthRoutes } from "../google-sheets/setupGoogleAuthRoutes";
 import { seedDefaultTemplates } from "../utils/seed-templates";
 import { storage } from "../storages/storage";
 import { initializeTelegramManager, telegramClientManager } from "../telegram/telegram-client";
+import { createQRAuth } from "../telegram/telegram-auth-methods";
+import { telegramAuthService } from "../telegram/telegram-auth-service";
+import { isApiCredentialsError, getFormattedQrError } from "../telegram/qr-auth-error-handler";
+import { StringSession } from "telegram/sessions";
+import { TelegramClient } from "telegram";
+import { userTelegramSettings } from "@shared/schema";
 import { authMiddleware, getOwnerIdFromRequest } from "../telegram/auth-middleware";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { setupAuthRoutes } from "./setupAuthRoutes";
@@ -27,6 +35,7 @@ import { setupGithubPushRoute } from './setupGithubPushRoute';
 import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
 import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
+import { createUserIdsRoutes } from "./user-ids-routes";
 
 /**
  * Глобальное хранилище активных процессов ботов
@@ -438,6 +447,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Get all bot projects (lightweight - without data field)
   setupProjectRoutes(app, requireDbReady);
+
+  // User IDs management routes
+  app.use("/api/projects", createUserIdsRoutes(pgPool));
 
   // Get all bot instances
   app.get("/api/bots", async (_req, res) => {
@@ -2146,7 +2158,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Send verification code to phone number
   app.post("/api/telegram-auth/send-code", async (req, res) => {
     try {
-      const { phoneNumber } = req.body;
+      const { phoneNumber, projectId } = req.body;
 
       if (!phoneNumber) {
         return res.status(400).json({
@@ -2155,13 +2167,41 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const result = await telegramClientManager.sendCode('default', phoneNumber);
+      const userId = projectId ? String(projectId) : 'default';
+
+      // Загружаем credentials из БД
+      const credentials = await telegramAuthService.loadCredentials(userId);
+      if (!credentials || !credentials.apiId || !credentials.apiHash) {
+        return res.status(400).json({
+          success: false,
+          error: "API credentials не настроены. Сначала сохраните API ID и API Hash."
+        });
+      }
+
+      // Используем новый сервис для отправки кода
+      const result = await telegramAuthService.sendCode(
+        credentials.apiId,
+        credentials.apiHash,
+        phoneNumber
+      );
 
       if (result.success) {
+        // Сохраняем клиент для последующей проверки кода
+        const client = new TelegramClient(
+          new StringSession(''),
+          parseInt(credentials.apiId),
+          credentials.apiHash,
+          { connectionRetries: 5, timeout: 30000 }
+        );
+        await client.connect();
+        telegramClientManager.getClients().set(userId, client);
+
         res.json({
           success: true,
-          message: "Код отправлен на ваш номер",
-          phoneCodeHash: result.phoneCodeHash
+          message: `Код отправлен через ${result.codeType || 'SMS'}`,
+          phoneCodeHash: result.phoneCodeHash,
+          codeType: result.codeType,
+          nextType: result.nextType
         });
       } else {
         res.status(400).json({
@@ -2181,7 +2221,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Verify phone code
   app.post("/api/telegram-auth/verify-code", async (req, res) => {
     try {
-      const { phoneNumber, phoneCode, phoneCodeHash } = req.body;
+      const { phoneNumber, phoneCode, phoneCodeHash, projectId } = req.body;
 
       if (!phoneNumber || !phoneCode || !phoneCodeHash) {
         return res.status(400).json({
@@ -2190,15 +2230,58 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const result = await telegramClientManager.verifyCode('default', phoneNumber, phoneCode, phoneCodeHash);
+      const userId = projectId ? String(projectId) : 'default';
+      const client = telegramClientManager.getClients().get(userId);
+
+      if (!client) {
+        return res.status(400).json({
+          success: false,
+          error: "Сначала отправьте код подтверждения"
+        });
+      }
+
+      const credentials = await telegramAuthService.loadCredentials(userId);
+      if (!credentials || !credentials.apiId || !credentials.apiHash) {
+        return res.status(400).json({
+          success: false,
+          error: "API credentials не найдены"
+        });
+      }
+
+      // Используем новый сервис для проверки кода
+      const result = await telegramAuthService.verifyCode(
+        client,
+        phoneNumber,
+        phoneCode,
+        phoneCodeHash
+      );
 
       if (result.success) {
-        res.json({
-          success: true,
-          message: "Авторизация успешна"
-        });
+        // Сохраняем сессию
+        const sessionString = client.session.save();
+        await db
+          .insert(userTelegramSettings)
+          .values({
+            userId,
+            apiId: credentials.apiId,
+            apiHash: credentials.apiHash,
+            sessionString: String(sessionString),
+            phoneNumber,
+            isActive: true,
+          })
+          .onConflictDoUpdate({
+            target: userTelegramSettings.userId,
+            set: {
+              sessionString: String(sessionString),
+              phoneNumber,
+              isActive: true,
+              updatedAt: new Date(),
+            },
+          });
+
+        console.log(`✅ Авторизация успешна для ${phoneNumber}`);
+        res.json({ success: true, message: "Авторизация успешна" });
       } else if (result.needsPassword) {
-        // Когда требуется пароль 2FA - это не ошибка, а нормальная часть процесса
         res.json({
           success: false,
           error: result.error,
@@ -2219,10 +2302,382 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Resend verification code via call
+  app.post("/api/telegram-auth/resend-code", async (req, res) => {
+    try {
+      const { phoneNumber, phoneCodeHash, projectId } = req.body;
+
+      if (!phoneNumber || !phoneCodeHash) {
+        return res.status(400).json({
+          success: false,
+          error: "Номер телефона и хеш кода обязательны"
+        });
+      }
+
+      const userId = projectId ? String(projectId) : 'default';
+      const client = telegramClientManager.getClients().get(userId);
+
+      if (!client) {
+        return res.status(400).json({
+          success: false,
+          error: "Сначала отправьте код подтверждения"
+        });
+      }
+
+      // Используем новый сервис для повторной отправки
+      const result = await telegramAuthService.resendCode(client, phoneNumber, phoneCodeHash);
+
+      if (result.success) {
+        // Определяем тип доставки
+        const deliveryType = result.codeType || 'голосовой звонок';
+        const message = result.codeType 
+          ? `Код отправлен через ${deliveryType}`
+          : 'Код отправлен через голосовой звонок';
+        
+        res.json({
+          success: true,
+          message,
+          phoneCodeHash: result.phoneCodeHash,
+          codeType: result.codeType,
+          nextType: result.nextType
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to resend code:", error);
+      res.status(500).json({
+        success: false,
+        error: "Ошибка повторной отправки кода"
+      });
+    }
+  });
+
+  // Resend verification code via SMS
+  app.post("/api/telegram-auth/resend-sms", async (req, res) => {
+    try {
+      const { phoneNumber, phoneCodeHash, projectId } = req.body;
+
+      if (!phoneNumber || !phoneCodeHash) {
+        return res.status(400).json({
+          success: false,
+          error: "Номер телефона и хеш кода обязательны"
+        });
+      }
+
+      const userId = projectId ? String(projectId) : 'default';
+      const client = telegramClientManager.getClients().get(userId);
+
+      if (!client) {
+        return res.status(400).json({
+          success: false,
+          error: "Сначала отправьте код подтверждения"
+        });
+      }
+
+      // Используем новый сервис для повторной отправки
+      const result = await telegramAuthService.resendCode(client, phoneNumber, phoneCodeHash);
+
+      if (result.success) {
+        const deliveryType = result.codeType || 'SMS';
+        const message = result.codeType 
+          ? `Код отправлен через ${deliveryType}`
+          : 'Код отправлен через SMS';
+        
+        res.json({
+          success: true,
+          message,
+          phoneCodeHash: result.phoneCodeHash,
+          codeType: result.codeType,
+          nextType: result.nextType
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to resend SMS:", error);
+      res.status(500).json({
+        success: false,
+        error: "Ошибка отправки SMS"
+      });
+    }
+  });
+
+  // Generate QR code for authentication
+  app.post("/api/telegram-auth/qr-generate", async (req, res) => {
+    try {
+      const { projectId } = req.body;
+      const userId = projectId ? String(projectId) : 'default';
+
+      // Загружаем credentials из БД
+      const credentials = await telegramAuthService.loadCredentials(userId);
+      if (!credentials || !credentials.apiId || !credentials.apiHash) {
+        return res.status(400).json({
+          success: false,
+          error: "API credentials не настроены"
+        });
+      }
+
+      // Получаем или создаём клиент для генерации QR
+      let client = telegramClientManager.getClients().get(`${userId}_qr`);
+      
+      if (!client) {
+        // Создаём новый клиент для QR-авторизации БЕЗ updateLoop (чтобы не было TIMEOUT)
+        client = new TelegramClient(
+          new StringSession(''),
+          parseInt(credentials.apiId),
+          credentials.apiHash,
+          {
+            connectionRetries: 5,
+            timeout: 30000,
+            useWSS: false,
+            autoReconnect: false,
+          }
+        );
+        await client.connect();
+        
+        // Отключаем updateLoop чтобы не было TIMEOUT ошибок
+        client._updateLoop = () => {};
+
+        // Сохраняем клиента для последующего обновления токена
+        telegramClientManager.getClients().set(`${userId}_qr`, client);
+        console.log('💾 QR-клиент сохранён для пользователя', userId);
+      } else {
+        console.log('♻️ QR-клиент найден для пользователя', userId);
+      }
+
+      // Генерируем QR-токен через современный метод
+      const result = await telegramAuthService.generateQRToken(
+        client,
+        credentials.apiId,
+        credentials.apiHash
+      );
+
+      if (result.success && result.token) {
+        res.json({
+          success: true,
+          qrUrl: result.qrUrl,
+          token: result.token,
+          expires: result.expires,
+        });
+      } else {
+        // Проверяем, не требуется ли 2FA
+        if (result.error?.includes('SESSION_PASSWORD_NEEDED')) {
+          console.log('🔐 Требуется 2FA для генерации QR');
+          return res.json({
+            success: true,
+            requiresPassword: true,
+            message: 'Требуется ввод 2FA пароля'
+          });
+        }
+        
+        // НЕ отключаем клиента при ошибке — он может ещё понадобиться
+        console.log('⚠️ Ошибка генерации QR, но клиент сохранён');
+        
+        res.status(400).json({
+          success: false,
+          error: result.error || 'Не удалось создать QR-код'
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to generate QR:", error);
+      res.status(500).json({
+        success: false,
+        error: "Ошибка генерации QR-кода"
+      });
+    }
+  });
+
+  // Refresh QR token (обновление токена каждые 30 сек)
+  app.post("/api/telegram-auth/qr-refresh", async (req, res) => {
+    try {
+      const { projectId } = req.body;
+      const userId = projectId ? String(projectId) : 'default';
+
+      const credentials = await telegramAuthService.loadCredentials(userId);
+      if (!credentials || !credentials.apiId || !credentials.apiHash) {
+        return res.status(400).json({
+          success: false,
+          error: "API credentials не найдены"
+        });
+      }
+
+      // Получаем существующего клиента
+      const client = telegramClientManager.getClients().get(`${userId}_qr`);
+      
+      if (!client) {
+        return res.status(400).json({
+          success: false,
+          error: "QR-сессия не найдена. Сгенерируйте новый QR-код."
+        });
+      }
+
+      // Обновляем токен
+      const result = await telegramAuthService.generateQRToken(
+        client,
+        credentials.apiId,
+        credentials.apiHash
+      );
+
+      if (result.success && result.token) {
+        console.log(`🔄 QR-токен обновлён (expires: ${result.expires}с)`);
+        res.json({
+          success: true,
+          qrUrl: result.qrUrl,
+          token: result.token,
+          expires: result.expires,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error || 'Не удалось обновить QR-токен'
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to refresh QR:", error);
+      res.status(500).json({
+        success: false,
+        error: "Ошибка обновления QR-токена"
+      });
+    }
+  });
+
+  // Check QR code status (polling endpoint)
+  app.post("/api/telegram-auth/qr-check", async (req, res) => {
+    try {
+      const { projectId, token, password } = req.body;
+      const userId = projectId ? String(projectId) : 'default';
+
+      if (!token) {
+        return res.status(400).json({
+          success: false,
+          error: "Токен обязателен"
+        });
+      }
+
+      const credentials = await telegramAuthService.loadCredentials(userId);
+      if (!credentials || !credentials.apiId || !credentials.apiHash) {
+        return res.status(400).json({
+          success: false,
+          error: "API credentials не найдены"
+        });
+      }
+
+      // Получаем существующего клиента
+      let client = telegramClientManager.getClients().get(`${userId}_qr`);
+      const existingClient = client; // Запоминаем был ли клиент
+      
+      // Проверяем статус токена (с паролем 2FA если есть)
+      const result = await telegramAuthService.checkQRStatus(
+        credentials.apiId,
+        credentials.apiHash,
+        token,
+        password, // Передаём пароль если есть
+        client // Передаём существующий клиент для повторного использования
+      );
+
+      // Сохраняем клиент только если он новый
+      if (result.client && !existingClient) {
+        telegramClientManager.getClients().set(`${userId}_qr`, result.client);
+        console.log('💾 QR-клиент сохранён для пользователя', userId);
+      }
+
+      if (result.success) {
+        // Если требуется 2FA пароль
+        if (result.needsPassword) {
+          console.log('🔐 Ожидание ввода 2FA пароля...');
+          return res.json({
+            success: true,
+            isAuthenticated: false,
+            needsPassword: true,
+          });
+        }
+
+        // Если авторизация успешна и есть сессия — сохраняем
+        if (result.isAuthenticated && result.sessionString) {
+          await db
+            .insert(userTelegramSettings)
+            .values({
+              userId,
+              apiId: credentials.apiId,
+              apiHash: credentials.apiHash,
+              sessionString: result.sessionString,
+              isActive: 1, // integer, не boolean!
+            })
+            .onConflictDoUpdate({
+              target: userTelegramSettings.userId,
+              set: {
+                sessionString: result.sessionString,
+                isActive: 1,
+                updatedAt: new Date(),
+              },
+            });
+
+          console.log(`✅ QR-авторизация успешна для пользователя ${userId}`);
+          
+          // Очищаем клиента после успешной авторизации
+          await result.client.disconnect();
+          telegramClientManager.getClients().delete(`${userId}_qr`);
+          console.log('🗑️ QR-клиент удалён после успешной авторизации');
+          
+          // Возвращаем успех
+          return res.json({
+            success: true,
+            isAuthenticated: true,
+            message: 'Авторизация успешна',
+          });
+        }
+
+        // Если сессии нет, но isAuthenticated=true — проверяем, есть ли уже сессия в БД
+        if (result.isAuthenticated && !result.sessionString) {
+          // AUTH_TOKEN_EXPIRED — значит сессия уже должна быть в БД
+          const existingSession = await db
+            .select()
+            .from(userTelegramSettings)
+            .where(eq(userTelegramSettings.userId, userId))
+            .limit(1);
+
+          const hasSession = existingSession.length > 0 && existingSession[0].sessionString;
+          
+          console.log(`ℹ️ QR-токен истёк, сессия в БД: ${hasSession ? 'есть' : 'нет'}`);
+          
+          res.json({
+            success: true,
+            isAuthenticated: hasSession,
+          });
+          return;
+        }
+
+        res.json({
+          success: true,
+          isAuthenticated: result.isAuthenticated || false,
+          needsPassword: result.needsPassword || false,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to check QR status:", error);
+      res.status(500).json({
+        success: false,
+        error: "Ошибка проверки статуса QR"
+      });
+    }
+  });
+
   // Verify 2FA password
   app.post("/api/telegram-auth/verify-password", async (req, res) => {
     try {
-      const { password } = req.body;
+      const { password, projectId } = req.body;
 
       if (!password) {
         return res.status(400).json({
@@ -2231,9 +2686,43 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const result = await telegramClientManager.verifyPassword('default', password);
+      const userId = projectId ? String(projectId) : 'default';
+      const client = telegramClientManager.getClients().get(userId);
+
+      if (!client) {
+        return res.status(400).json({
+          success: false,
+          error: "Сначала отправьте код подтверждения"
+        });
+      }
+
+      // Используем новый сервис для проверки пароля
+      const result = await telegramAuthService.verifyPassword(client, password);
 
       if (result.success) {
+        // Сохраняем сессию после успешной 2FA проверки
+        const credentials = await telegramAuthService.loadCredentials(userId);
+        if (credentials) {
+          const sessionString = client.session.save();
+          await db
+            .insert(userTelegramSettings)
+            .values({
+              userId,
+              apiId: credentials.apiId,
+              apiHash: credentials.apiHash,
+              sessionString: String(sessionString),
+              isActive: true,
+            })
+            .onConflictDoUpdate({
+              target: userTelegramSettings.userId,
+              set: {
+                sessionString: String(sessionString),
+                isActive: true,
+                updatedAt: new Date(),
+              },
+            });
+        }
+
         res.json({
           success: true,
           message: "Авторизация с 2FA успешна"
@@ -2256,7 +2745,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Save API credentials
   app.post("/api/telegram-auth/save-credentials", async (req, res) => {
     try {
-      const { apiId, apiHash } = req.body;
+      const { apiId, apiHash, projectId } = req.body;
 
       if (!apiId || !apiHash) {
         return res.status(400).json({
@@ -2265,7 +2754,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const result = await telegramClientManager.setCredentials('default', apiId, apiHash);
+      const userId = projectId ? String(projectId) : 'default';
+
+      // Используем новый сервис для сохранения credentials
+      const result = await telegramAuthService.saveCredentials(userId, apiId, apiHash);
 
       if (result.success) {
         res.json({
@@ -2288,9 +2780,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get authentication status
-  app.get("/api/telegram-auth/status", async (_req, res) => {
+  app.get("/api/telegram-auth/status", async (req, res) => {
     try {
-      const status = await telegramClientManager.getAuthStatus('default');
+      // Используем projectId из query параметров если есть
+      const projectId = req.query.projectId as string || 'default';
+      const status = await telegramClientManager.getAuthStatus(projectId);
       res.json(status);
     } catch (error: any) {
       console.error("Failed to get auth status:", error);
@@ -2298,6 +2792,45 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         isAuthenticated: false,
         error: "Ошибка получения статуса авторизации"
       });
+    }
+  });
+
+  // Logout from Client API
+  app.post("/api/telegram-auth/logout", async (req, res) => {
+    try {
+      // Преобразуем projectId в строку для использования как userId
+      const userId = req.body.projectId ? String(req.body.projectId) : 'default';
+      const result = await telegramClientManager.logout(userId);
+      if (result.success) {
+        res.json({ success: true, message: "Выполнен выход из аккаунта" });
+      } else {
+        res.status(400).json({ success: false, error: result.error });
+      }
+    } catch (error: any) {
+      console.error("Failed to logout:", error);
+      res.status(500).json({ success: false, error: "Ошибка при выходе из аккаунта" });
+    }
+  });
+
+  // Reset API credentials
+  app.post("/api/telegram-auth/reset-credentials", async (req, res) => {
+    try {
+      const userId = req.body.projectId ? String(req.body.projectId) : 'default';
+      
+      // Удаляем credentials из БД
+      await db.delete(userTelegramSettings).where(eq(userTelegramSettings.userId, userId));
+      
+      // Отключаем и удаляем клиент
+      const client = telegramClientManager.getClients().get(userId);
+      if (client) {
+        await client.disconnect();
+        telegramClientManager.getClients().delete(userId);
+      }
+      
+      res.json({ success: true, message: "API credentials сброшены" });
+    } catch (error: any) {
+      console.error("Failed to reset credentials:", error);
+      res.status(500).json({ success: false, error: "Ошибка при сбросе credentials" });
     }
   });
 

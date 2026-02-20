@@ -45,6 +45,14 @@ export function getNodeDefaults(type: Node['type']): any {
         { id: 'perm_promote_members', text: '👑 Назначение администраторов', action: 'command', target: 'toggle_promote_members', buttonType: 'option', skipDataCollection: false, hideAfterClick: false }
       ],
       can_manage_chat: false, can_post_messages: false, can_edit_messages: false, can_delete_messages: true, can_post_stories: false, can_edit_stories: false, can_delete_stories: false, can_manage_video_chats: false, can_restrict_members: false, can_promote_members: false, can_change_info: false, can_invite_users: true, can_pin_messages: true, can_manage_topics: false, is_anonymous: false
+    },
+    broadcast: {
+      messageText: 'Текст рассылки',
+      idSourceType: 'bot_users',
+      enableConfirmation: true,
+      confirmationText: 'Отправить рассылку всем пользователям?',
+      successMessage: '✅ Рассылка отправлена!',
+      errorMessage: '❌ Ошибка рассылки'
     }
   };
   return defaults[type] || {};

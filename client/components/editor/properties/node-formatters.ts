@@ -27,7 +27,7 @@ function getNodeTypeLabel(type: Node['type']): string {
     pin_message: 'Закрепить', unpin_message: 'Открепить', delete_message: 'Удалить',
     ban_user: 'Заблокировать', unban_user: 'Разблокировать', mute_user: 'Заглушить',
     unmute_user: 'Включить звук', kick_user: 'Исключить', promote_user: 'Повысить',
-    demote_user: 'Понизить', admin_rights: 'Права админа'
+    demote_user: 'Понизить', admin_rights: 'Права админа', broadcast: 'Рассылка'
   };
   return types[type] || type;
 }
@@ -37,5 +37,6 @@ function getNodeContent(node: Node): string {
   if (node.type === 'start') return ((node.data as any).messageText || node.data.command || '').slice(0, 50);
   if (node.type === 'command') return (node.data.command || '').slice(0, 50);
   if (node.type === 'message') return ((node.data as any).messageText || '').slice(0, 50);
+  if (node.type === 'broadcast') return ((node.data as any).messageText || 'Рассылка').slice(0, 50);
   return ((node.data as any).label || '').slice(0, 50);
 }

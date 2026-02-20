@@ -16,6 +16,7 @@ import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { broadcastNode } from './components/broadcast-node';
 
 /**
  * Свойства компонента боковой панели с компонентами
@@ -493,7 +494,8 @@ const components: ComponentDefinition[] = [
       can_manage_topics: false,
       is_anonymous: false
     }
-  }
+  },
+  broadcastNode
 ];
 
 /**
@@ -508,6 +510,10 @@ const componentCategories = [
   {
     title: 'Команды',
     components: components.filter(c => ['start', 'command'].includes(c.type))
+  },
+  {
+    title: 'Рассылка',
+    components: components.filter(c => ['broadcast'].includes(c.type))
   },
   {
     title: 'Управление контентом',

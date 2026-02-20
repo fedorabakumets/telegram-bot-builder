@@ -69,22 +69,22 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
           });
         }
         // ИСПРАВЛЕНИЕ: Также поддерживаем переменные типа audioUrlVar_*, videoUrlVar_* и т.д.
-        else if (mediaVar.includes('audio') && mediaVar.includes('Url')) {
+        else if (mediaVar.startsWith('audioUrlVar')) {
           mediaVars.set(mediaVar, {
             type: 'audio',
             variable: mediaVar
           });
-        } else if (mediaVar.includes('video') && mediaVar.includes('Url')) {
+        } else if (mediaVar.startsWith('videoUrlVar')) {
           mediaVars.set(mediaVar, {
             type: 'video',
             variable: mediaVar
           });
-        } else if (mediaVar.includes('image') && mediaVar.includes('Url')) {
+        } else if (mediaVar.startsWith('imageUrlVar')) {
           mediaVars.set(mediaVar, {
             type: 'photo',
             variable: mediaVar
           });
-        } else if (mediaVar.includes('document') && mediaVar.includes('Url')) {
+        } else if (mediaVar.startsWith('documentUrlVar')) {
           mediaVars.set(mediaVar, {
             type: 'document',
             variable: mediaVar

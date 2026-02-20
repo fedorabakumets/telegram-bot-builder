@@ -32,7 +32,11 @@ export function replace_variables_in_text(codeLines: string[], indentLevel: stri
   replaceCodeLines.push(`${indentLevel}        str: Текст с замененными переменными`);
   replaceCodeLines.push(`${indentLevel}    """`);
   replaceCodeLines.push(`${indentLevel}    if not text_content or not variables_dict:`);
+  replaceCodeLines.push(`${indentLevel}        logging.debug(f"🔍 replace_variables_in_text: text_content={text_content is not None}, variables_dict={variables_dict is not None}")`);
   replaceCodeLines.push(`${indentLevel}        return text_content`);
+  replaceCodeLines.push(`${indentLevel}    `);
+  replaceCodeLines.push(`${indentLevel}    # Логируем доступные переменные для отладки`);
+  replaceCodeLines.push(`${indentLevel}    logging.debug(f"🔍 Доступные переменные для замены: {list(variables_dict.keys())}")`);
   replaceCodeLines.push(`${indentLevel}    `);
   replaceCodeLines.push(`${indentLevel}    # Проходим по всем переменным пользователя`);
   replaceCodeLines.push(`${indentLevel}    for var_name, var_data in variables_dict.items():`);
@@ -48,8 +52,10 @@ export function replace_variables_in_text(codeLines: string[], indentLevel: stri
   replaceCodeLines.push(`${indentLevel}            `);
   replaceCodeLines.push(`${indentLevel}            # Заменяем переменную на значение`);
   replaceCodeLines.push(`${indentLevel}            text_content = text_content.replace(placeholder, var_value)`);
-  replaceCodeLines.push(`${indentLevel}            logging.debug(f"🔄 Заменена переменная {placeholder} на '{var_value}'")`);
+  replaceCodeLines.push(`${indentLevel}            logging.info(f"🔄 Заменена переменная {placeholder} на '{var_value}'")`);
   replaceCodeLines.push(`${indentLevel}    `);
+  replaceCodeLines.push(`${indentLevel}    # Логируем финальный текст`);
+  replaceCodeLines.push(`${indentLevel}    logging.debug(f"📝 Финальный текст после замены: {text_content[:200] if text_content else 'None'}...")`);
   replaceCodeLines.push(`${indentLevel}    return text_content`);
 
   // Применяем автоматическое добавление комментариев ко всему коду

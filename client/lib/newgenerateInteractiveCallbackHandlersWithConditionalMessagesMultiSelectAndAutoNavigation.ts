@@ -8,6 +8,9 @@ import { generateInlineKeyboardCode } from './Keyboard';
 import { generateUniversalVariableReplacement } from './utils';
 import { generateCheckUserVariableFunction } from './database';
 import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
+import { generateDatabaseVariablesCode } from './generate/generateDatabaseVariables';
+import { generateBroadcastInline } from './generate/generateBroadcastHandler';
+import { generateBroadcastClientInline } from './generate/generateBroadcastClientHandler';
 
 export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes: any[], allReferencedNodeIds: Set<string>, allConditionalButtons: Set<string>, code: string, processNodeButtonsAndGenerateHandlers: (processedCallbacks: Set<string>) => void, nodes: any[], allNodeIds: any[], connections: any[], userDatabaseEnabled: boolean, mediaVariablesMap: Map<string, { type: string; variable: string; }>) {
   if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
@@ -164,6 +167,42 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             code += '    \n';
           }
 
+          // ============================================================================
+          // ОБРАБОТКА УЗЛОВ РАССЫЛКИ (broadcast)
+          // ============================================================================
+          if (targetNode.type === 'broadcast') {
+            const enableConfirmation = targetNode.data?.enableConfirmation;
+            const confirmationText = targetNode.data?.confirmationText || 'Отправить рассылку всем пользователям?';
+
+            code += '    # Обработка узла рассылки\n';
+            code += `    logging.info(f"📢 Запуск рассылки из узла ${nodeId}")\n`;
+            code += '    \n';
+
+            if (enableConfirmation) {
+              // С генерацией подтверждения - сохраняем ID текущей рассылки
+              code += '    # Сохраняем ID текущей рассылки для глобального обработчика\n';
+              code += `    user_data[user_id]["current_broadcast_node_id"] = "${nodeId}"\n`;
+              code += '    \n';
+              code += '    # Отправляем сообщение с подтверждением\n';
+              code += `    confirm_text = "${confirmationText}"\n`;
+              code += '    confirm_text = replace_variables_in_text(confirm_text, {**user_data.get(user_id, {}), "user_id": user_id})\n';
+              code += '    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton\n';
+              code += '    keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
+              code += '        [InlineKeyboardButton(text="✅ Подтвердить", callback_data="broadcast_confirm_yes")],\n';
+              code += '        [InlineKeyboardButton(text="❌ Отмена", callback_data="broadcast_confirm_no")]\n';
+              code += '    ])\n';
+              code += '    await callback_query.message.answer(confirm_text, reply_markup=keyboard)\n';
+              code += '    return\n';
+            } else {
+              // Без подтверждения - сразу выполняем рассылку
+              code += '    # Рассылка без подтверждения - вызываем прямой обработчик\n';
+              code += '    await handle_broadcast_direct(callback_query)\n';
+            }
+
+            code += '    return\n';
+            code += '    \n';
+          }
+
           // Обычная обработка узлов без специальной логики
           // Определяем переменную для сохранения на основе родительского узла
           if (targetNode && targetNode.data?.inputVariable) {
@@ -189,7 +228,13 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           const messageText = targetNode.data?.messageText || "Сообщение не задано";
           const formattedText = formatTextForPython(messageText);
           code += `    text = ${formattedText}\n`;
+          
+          // Получаем переменные из базы данных перед заменой
           code += '    \n';
+          code += '    # Получаем переменные из базы данных (user_ids_list, user_ids_count)\n';
+          code += generateDatabaseVariablesCode('    ');
+          code += '    \n';
+          
           const universalVarCodeLines1: string[] = [];
           generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
           code += universalVarCodeLines1.join('\n');
@@ -695,6 +740,28 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                   code += `    await update_user_data_in_db(user_id, "${mediaVar}", "${targetNode.data.documentUrl}")\n`;
                 }
               }
+              // ИСПРАВЛЕНИЕ: Также поддерживаем переменные типа audioUrlVar_*, videoUrlVar_* и т.д.
+              else if (mediaVar.startsWith('audioUrlVar')) {
+                code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
+                if (userDatabaseEnabled) {
+                  code += `    await update_user_data_in_db(user_id, "${mediaVar}", "${targetNode.data.audioUrl}")\n`;
+                }
+              } else if (mediaVar.startsWith('videoUrlVar')) {
+                code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
+                if (userDatabaseEnabled) {
+                  code += `    await update_user_data_in_db(user_id, "${mediaVar}", "${targetNode.data.videoUrl}")\n`;
+                }
+              } else if (mediaVar.startsWith('imageUrlVar')) {
+                code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.imageUrl}"\n`;
+                if (userDatabaseEnabled) {
+                  code += `    await update_user_data_in_db(user_id, "${mediaVar}", "${targetNode.data.imageUrl}")\n`;
+                }
+              } else if (mediaVar.startsWith('documentUrlVar')) {
+                code += `    user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
+                if (userDatabaseEnabled) {
+                  code += `    await update_user_data_in_db(user_id, "${mediaVar}", "${targetNode.data.documentUrl}")\n`;
+                }
+              }
             });
 
             code += `    logging.info(f"✅ Переменные из attachedMedia установлены для узла ${nodeId}")\n`;
@@ -757,7 +824,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
               code += '        else:\n';
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              // КР��ТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
               code += '            # Заменяем все переменные в тексте\n';
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await callback_query.message.answer(text)\n';
@@ -775,7 +842,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
             code += '        else:\n';
             code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязате���ьно вызываем замен�� переменных в тексте
             code += '            # Заменяем все переменные в тексте\n';
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text)\n';
@@ -787,7 +854,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
             code += '        else:\n';
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            // КРИТИЧЕСКОЕ ИСПРА��ЛЕНИЕ: Обязательно вызываем замену переменных в тексте
             code += '            # Заменяем все переменные в тексте\n';
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text)\n';
@@ -1101,11 +1168,21 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
                         code += `            if nav_user_vars and "${attachedMedia[0]}" in nav_user_vars:\n`;
                         code += `                media_data = nav_user_vars["${attachedMedia[0]}"]\n`;
                         code += `                if isinstance(media_data, dict) and "value" in media_data:\n`;
-                        code += `                    nav_attached_media = media_data["value"]\n`;
+                        code += `                    # ИСПРАВЛЕНИЕ: Проверяем правильные URL поля в зависимости от типа медиа\n`;
+                        code += `                    if "photoUrl" in media_data and media_data["photoUrl"]:\n`;
+                        code += `                        nav_attached_media = media_data["photoUrl"]\n`;
+                        code += `                    elif "videoUrl" in media_data and media_data["videoUrl"]:\n`;
+                        code += `                        nav_attached_media = media_data["videoUrl"]\n`;
+                        code += `                    elif "audioUrl" in media_data and media_data["audioUrl"]:\n`;
+                        code += `                        nav_attached_media = media_data["audioUrl"]\n`;
+                        code += `                    elif "documentUrl" in media_data and media_data["documentUrl"]:\n`;
+                        code += `                        nav_attached_media = media_data["documentUrl"]\n`;
+                        code += `                    else:\n`;
+                        code += `                        nav_attached_media = media_data["value"]\n`;
                         code += `                elif isinstance(media_data, str):\n`;
                         code += `                    nav_attached_media = media_data\n`;
                         code += `            if nav_attached_media and str(nav_attached_media).strip():\n`;
-                        code += `                logging.info(f"📎 Отправка фото из переменной ${attachedMedia[0]}: {nav_attached_media}")\n`;
+                        code += `                logging.info(f"📎 Отправка медиа из переменной ${attachedMedia[0]}: {nav_attached_media}")\n`;
                         code += `                # Проверяем, является ли медиа относительным путем к локальному файлу\n`;
                         code += `                if str(nav_attached_media).startswith('/uploads/'):\n`;
                         code += `                    nav_attached_media_path = get_upload_file_path(nav_attached_media)\n`;
@@ -1500,7 +1577,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
             }
 
             code += '    except Exception as e:\n';
-            code += '        logging.error(f"Ошибка при пяяяяреходе к следующему узлу {next_node_id}: {e}")\n';
+            code += '        logging.error(f"��шибка при пяяяяреходе к следующему узлу {next_node_id}: {e}")\n';
             code += '    \n';
             code += '    return  # Завершаем обработку после переадресации\n';
           }
@@ -1575,6 +1652,63 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
         }
       }
     });
+  }
+
+  // ============================================================================
+  // ГЛОБАЛЬНЫЙ ОБРАБОТЧИК ПОДТВЕРЖДЕНИЯ РАССЫЛКИ
+  // ============================================================================
+  // Находим первый broadcast узел для генерации обработчиков
+  const broadcastNode = nodes.find(n => n.type === 'broadcast');
+  
+  if (broadcastNode) {
+    // Создаём словарь всех узлов для автоперехода
+    code += '\n# Словарь всех узлов для автоперехода\n';
+    code += 'all_nodes_dict = {\n';
+    nodes.forEach(node => {
+      const messageText = node.data?.messageText || '';
+      const attachedMedia = node.data?.attachedMedia || [];
+      const imageUrl = node.data?.imageUrl || '';
+      const audioUrl = node.data?.audioUrl || '';
+      const videoUrl = node.data?.videoUrl || '';
+      const documentUrl = node.data?.documentUrl || '';
+      const autoTransitionTo = node.data?.autoTransitionTo || '';
+      const mediaStr = attachedMedia.length > 0 ? JSON.stringify(attachedMedia) : '[]';
+      const imageUrlStr = imageUrl ? `"${imageUrl}"` : '""';
+      const audioUrlStr = audioUrl ? `"${audioUrl}"` : '""';
+      const videoUrlStr = videoUrl ? `"${videoUrl}"` : '""';
+      const documentUrlStr = documentUrl ? `"${documentUrl}"` : '""';
+      const autoTransitionStr = autoTransitionTo ? `"${autoTransitionTo}"` : '""';
+      code += `    "${node.id}": {"id": "${node.id}", "text": ${formatTextForPython(messageText)}, "attachedMedia": ${mediaStr}, "imageUrl": ${imageUrlStr}, "audioUrl": ${audioUrlStr}, "videoUrl": ${videoUrlStr}, "documentUrl": ${documentUrlStr}, "autoTransitionTo": ${autoTransitionStr}},\n`;
+    });
+    code += '}\n';
+    code += '\n';
+    
+    // Генерируем обработчик для кнопок подтверждения
+    code += '# Глобальный обработчик подтверждения рассылки\n';
+    code += '@dp.callback_query(lambda c: c.data == "broadcast_confirm_yes" or c.data == "broadcast_confirm_no")\n';
+    code += 'async def handle_broadcast_confirmation(callback_query: types.CallbackQuery):\n';
+    code += '    user_id = callback_query.from_user.id\n';
+    code += '    logging.info(f"📢 Подтверждение рассылки от пользователя {user_id}: {callback_query.data}")\n';
+    code += '    \n';
+    code += '    if callback_query.data == "broadcast_confirm_yes":\n';
+    const broadcastApiType1 = (broadcastNode.data as any)?.broadcastApiType || 'bot';
+    code += (broadcastApiType1 === 'client' ? generateBroadcastClientInline(broadcastNode, nodes, '        ') : generateBroadcastInline(broadcastNode, nodes, '        ')) + '\n';
+    code += '    else:\n';
+    code += '        await callback_query.message.edit_text("❌ Рассылка отменена")\n';
+    code += '    \n';
+
+    // Генерируем обработчик для прямой рассылки (без подтверждения)
+    code += '# Обработчик для прямой рассылки (без подтверждения)\n';
+    code += 'async def handle_broadcast_direct(callback_query: types.CallbackQuery):\n';
+    code += '    user_id = callback_query.from_user.id\n';
+    code += '    logging.info(f"📢 Прямая рассылка от пользователя {user_id}")\n';
+    code += '    \n';
+    code += '    # Получаем переменные из базы данных\n';
+    code += generateDatabaseVariablesCode('    ');
+    code += '    \n';
+    const broadcastApiType2 = (broadcastNode.data as any)?.broadcastApiType || 'bot';
+    code += (broadcastApiType2 === 'client' ? generateBroadcastClientInline(broadcastNode, nodes, '    ') : generateBroadcastInline(broadcastNode, nodes, '    ')) + '\n';
+    code += '    \n';
   }
 
   // Генерируем функции handle_node_* для узлов с условными сообщениями

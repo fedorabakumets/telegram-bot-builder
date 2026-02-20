@@ -200,7 +200,19 @@ def get_user_media_attachments(user_id: int):
         if media_type in user_vars:
             media_data = user_vars[media_type]
             if isinstance(media_data, dict) and "value" in media_data:
-                attachments[media_type] = media_data["value"]
+                # ИСПРАВЛЕНИЕ: Проверяем правильные URL поля в зависимости от типа медиа
+                media_url = None
+                if media_type == "photo" and "photoUrl" in media_data:
+                    media_url = media_data["photoUrl"]
+                elif media_type == "video" and "videoUrl" in media_data:
+                    media_url = media_data["videoUrl"]
+                elif media_type == "audio" and "audioUrl" in media_data:
+                    media_url = media_data["audioUrl"]
+                elif media_type == "document" and "documentUrl" in media_data:
+                    media_url = media_data["documentUrl"]
+                
+                # Используем URL если доступен, иначе используем value (file_id)
+                attachments[media_type] = media_url if media_url else media_data["value"]
             elif media_data is not None:
                 attachments[media_type] = media_data
 

@@ -25,7 +25,11 @@ export const SYSTEM_VARIABLES: SystemVariable[] = [
   { name: 'user_name', nodeId: 'system', nodeType: 'system', description: 'Имя пользователя Telegram' },
   { name: 'user_id', nodeId: 'system', nodeType: 'system', description: 'ID пользователя в Telegram' },
   { name: 'chat_id', nodeId: 'system', nodeType: 'system', description: 'ID чата' },
-  { name: 'bot_name', nodeId: 'system', nodeType: 'system', description: 'Имя бота' }
+  { name: 'bot_name', nodeId: 'system', nodeType: 'system', description: 'Имя бота' },
+  
+  // Переменные базы данных user_ids (для рассылки)
+  { name: 'user_ids_list', nodeId: 'system', nodeType: 'system', description: 'Список всех ID из базы (через запятую)' },
+  { name: 'user_ids_count', nodeId: 'system', nodeType: 'system', description: 'Количество ID в базе' }
 ];
 
 /**

@@ -58,12 +58,19 @@ export function generateUniversalVariableReplacement(
   universalVarCodeLines.push(`${indentLevel}        user_name = init_user_variables(user_id, user_obj)`);
 
   universalVarCodeLines.push(`${indentLevel}# Подставляем все доступные переменные пользователя в текст`);
-  universalVarCodeLines.push(`${indentLevel}user_vars = await get_user_from_db(user_id)`);
-  universalVarCodeLines.push(`${indentLevel}if not user_vars:`);
-  universalVarCodeLines.push(`${indentLevel}    user_vars = user_data.get(user_id, {})`);
+  universalVarCodeLines.push(`${indentLevel}# Инициализируем user_vars пустым словарём ТОЛЬКО если он ещё не определён`);
+  universalVarCodeLines.push(`${indentLevel}if "user_vars" not in locals():`);
+  universalVarCodeLines.push(`${indentLevel}    user_vars = {}`);
+  universalVarCodeLines.push(`${indentLevel}# Получаем переменные из БД или используем локальные`);
+  universalVarCodeLines.push(`${indentLevel}db_user_vars = await get_user_from_db(user_id)`);
+  universalVarCodeLines.push(`${indentLevel}if not db_user_vars:`);
+  universalVarCodeLines.push(`${indentLevel}    db_user_vars = user_data.get(user_id, {})`);
   universalVarCodeLines.push(`${indentLevel}# get_user_from_db теперь возвращает уже обработанные user_data`);
-  universalVarCodeLines.push(`${indentLevel}if not isinstance(user_vars, dict):`);
-  universalVarCodeLines.push(`${indentLevel}    user_vars = user_data.get(user_id, {})`);
+  universalVarCodeLines.push(`${indentLevel}if not isinstance(db_user_vars, dict):`);
+  universalVarCodeLines.push(`${indentLevel}    db_user_vars = user_data.get(user_id, {})`);
+  universalVarCodeLines.push(`${indentLevel}# Обновляем user_vars данными из БД (не перезаписываем!)`);
+  universalVarCodeLines.push(`${indentLevel}if db_user_vars and isinstance(db_user_vars, dict):`);
+  universalVarCodeLines.push(`${indentLevel}    user_vars.update(db_user_vars)`);
   universalVarCodeLines.push(`${indentLevel}# Создаем объединенный словарь переменных из базы данных и локального хранилища`);
   universalVarCodeLines.push(`${indentLevel}all_user_vars = {}`);
   universalVarCodeLines.push(`${indentLevel}# Добавляем переменные из базы данных`);

@@ -141,7 +141,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   
   if (node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined') {
     // Находим переменную для изображения в attachedMedia или используем формат по умолчанию
-    const imageVar = attachedMedia.find(v => v.includes('image') && v.includes('Url')) || `image_url_${node.id || 'unknown'}`;
+    const imageVar = attachedMedia.find(v => v.includes('image') && v.includes('Url')) || attachedMedia.find(v => v.startsWith('imageUrlVar')) || `image_url_${node.id || 'unknown'}`;
     codeLines.push(`    # Сохраняем imageUrl в переменную ${imageVar}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
     codeLines.push(`    user_data[user_id]["${imageVar}"] = "${node.data.imageUrl}"`);
@@ -151,7 +151,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   }
   if (node && node.data && node.data.documentUrl) {
     // Находим переменную для документа в attachedMedia или используем формат по умолчанию
-    const documentVar = attachedMedia.find(v => v.includes('document') && v.includes('Url')) || `document_url_${node.id || 'unknown'}`;
+    const documentVar = attachedMedia.find(v => v.includes('document') && v.includes('Url')) || attachedMedia.find(v => v.startsWith('documentUrlVar')) || `document_url_${node.id || 'unknown'}`;
     codeLines.push(`    # Сохраняем documentUrl в переменную ${documentVar}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
     codeLines.push(`    user_data[user_id]["${documentVar}"] = "${node.data.documentUrl}"`);
@@ -161,7 +161,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   }
   if (node && node.data && node.data.videoUrl) {
     // Находим переменную для видео в attachedMedia или используем формат по умолчанию
-    const videoVar = attachedMedia.find(v => v.includes('video') && v.includes('Url')) || `video_url_${node.id || 'unknown'}`;
+    const videoVar = attachedMedia.find(v => v.includes('video') && v.includes('Url')) || attachedMedia.find(v => v.startsWith('videoUrlVar')) || `video_url_${node.id || 'unknown'}`;
     codeLines.push(`    # Сохраняем videoUrl в переменную ${videoVar}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
     codeLines.push(`    user_data[user_id]["${videoVar}"] = "${node.data.videoUrl}"`);
@@ -171,7 +171,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   }
   if (node && node.data && node.data.audioUrl) {
     // Находим переменную для аудио в attachedMedia или используем формат по умолчанию
-    const audioVar = attachedMedia.find(v => v.includes('audio') && v.includes('Url')) || `audio_url_${node.id || 'unknown'}`;
+    const audioVar = attachedMedia.find(v => v.includes('audio') && v.includes('Url')) || attachedMedia.find(v => v.startsWith('audioUrlVar')) || `audio_url_${node.id || 'unknown'}`;
     codeLines.push(`    # Сохраняем audioUrl в переменную ${audioVar}`);
     codeLines.push(`    user_data[user_id] = user_data.get(user_id, {})`);
     codeLines.push(`    user_data[user_id]["${audioVar}"] = "${node.data.audioUrl}"`);

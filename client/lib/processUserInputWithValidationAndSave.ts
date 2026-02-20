@@ -1,8 +1,11 @@
 import { processInputTargetNavigation } from './processInputTargetNavigation';
+import { generateSaveToUserIdsCode } from './generate/generateSaveToUserIds';
 
 export function processUserInputWithValidationAndSave(nodes: any[], code: string, allNodeIds: any[]) {
     const inputNodes = (nodes || []).filter(node => node.data.collectUserInput);
     code += `        logging.info(f"DEBUG old format: checking inputNodes: ${inputNodes.map(n => n.id).join(', ')}")\n`;
+    code += `        logging.info(f"DEBUG: waiting_node_id = {waiting_node_id}")\n`;
+    code += `        logging.info(f"DEBUG: waiting_config = {waiting_config}")\n`;
     inputNodes.forEach((node, index) => {
         const condition = index === 0 ? 'if' : 'elif';
         code += `        ${condition} waiting_node_id == "${node.id}":\n`;
@@ -64,6 +67,12 @@ export function processUserInputWithValidationAndSave(nodes: any[], code: string
         code += `            else:\n`;
         code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
         code += `            \n`;
+
+        // Сохранение ID в таблицу user_ids для рассылки
+        if (node.data.saveToUserIds) {
+            const saveCode = generateSaveToUserIdsCode(node, '            ');
+            code += `\n${saveCode}\n`;
+        }
 
         code += `            \n`;
         code += `            logging.info(f"Получен пользовательский ввод: ${variableName} = {user_text}, узел: {waiting_node_id}")\n`;

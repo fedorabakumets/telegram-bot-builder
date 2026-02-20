@@ -491,6 +491,20 @@ export const botMessageMedia = pgTable("bot_message_media", {
 });
 
 /**
+ * Таблица ID пользователей для рассылки
+ */
+export const userIds = pgTable("user_ids", {
+  /** Уникальный идентификатор записи */
+  id: serial("id").primaryKey(),
+  /** Идентификатор проекта (ссылка на bot_projects.id) */
+  projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  /** ID пользователя в Telegram */
+  userId: bigint("user_id", { mode: "number" }).notNull(),
+  /** Дата создания записи */
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+/**
  * Схема для вставки данных проекта бота
  */
 export const insertBotProjectSchema = z.object({
@@ -869,6 +883,14 @@ export const insertBotMessageMediaSchema = createInsertSchema(botMessageMedia).p
 });
 
 /**
+ * Схема для вставки ID пользователя
+ */
+export const insertUserIdSchema = z.object({
+  projectId: z.number(),
+  userId: z.string(),
+});
+
+/**
  * Схема для оценки шаблона
  */
 export const rateTemplateSchema = z.object({
@@ -902,6 +924,8 @@ export type InsertBotMessage = z.infer<typeof insertBotMessageSchema>;
 export type BotMessage = typeof botMessages.$inferSelect;
 export type InsertBotMessageMedia = z.infer<typeof insertBotMessageMediaSchema>;
 export type BotMessageMedia = typeof botMessageMedia.$inferSelect;
+export type UserId = typeof userIds.$inferSelect;
+export type InsertUserId = z.infer<typeof insertUserIdSchema>;
 
 // Bot structure schemas
 export const buttonSchema = z.object({
@@ -919,7 +943,7 @@ export const buttonSchema = z.object({
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights'
+  type: z.enum(['start', 'message', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'broadcast'
     // , 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition' // Закомментированные типы узлов
   ]),
   position: z.object({
@@ -1135,7 +1159,7 @@ export const nodeSchema = z.object({
     // Права администратора согласно Telegram Bot API (promoteChatMember)
     can_manage_chat: z.boolean().default(false), // Может управлять чатом
     can_post_messages: z.boolean().default(false), // Может публиковать сообщения (только каналы)
-    can_edit_messages: z.boolean().default(false), // Может редактировать сообщения (только каналы)
+    can_edit_messages: z.boolean().default(false), // Может редакт��ровать сообщения (только каналы)
     can_delete_messages: z.boolean().default(false), // Может удалять сообщения
     can_post_stories: z.boolean().default(false), // Может публиковать истории
     can_edit_stories: z.boolean().default(false), // Может редактировать истории
@@ -1160,6 +1184,13 @@ export const nodeSchema = z.object({
     text: z.string().optional(), // Альтернативное поле для messageText
     action: z.string().optional(), // Поле для действий (poll, dice, input и т.д.)
     waitForTextInput: z.boolean().optional(), // Устаревшее поле для обратной совместимости
+
+    // Поля для узла broadcast (рассылка)
+    idSourceType: z.enum(['user_ids', 'bot_users', 'both']).default('bot_users').optional(), // Источник ID для рассылки
+    broadcastApiType: z.enum(['bot', 'client']).default('bot').optional(), // Метод отправки: Bot API или Client API
+
+    // Поле для сохранения ID в базу user_ids
+    saveToUserIds: z.boolean().default(false).optional(), // Сохранять ли ID в таблицу user_ids для рассылки
   }),
 });
 

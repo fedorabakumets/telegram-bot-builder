@@ -11,13 +11,14 @@ import { Node } from '@shared/schema';
 
 /**
  * Список типов узлов управления
- * 
+ *
  * Узлы управления не имеют контента сообщения (текста, медиа),
  * так как выполняют служебные функции:
  * - Закрепление/открепление сообщений
  * - Удаление сообщений
  * - Управление пользователями (бан, разбан, мут, кик)
  * - Назначение/снятие прав администратора
+ * - Рассылка (управляет процессом отправки)
  */
 export const MANAGEMENT_NODE_TYPES = [
   'pin_message',
@@ -30,7 +31,8 @@ export const MANAGEMENT_NODE_TYPES = [
   'kick_user',
   'promote_user',
   'demote_user',
-  'admin_rights'
+  'admin_rights',
+  'broadcast'
 ] as const;
 
 /**

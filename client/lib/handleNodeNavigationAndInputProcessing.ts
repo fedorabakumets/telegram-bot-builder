@@ -3,6 +3,7 @@ import { formatTextForPython, generateButtonText, generateWaitingStateCode, stri
 import { calculateOptimalColumns } from './Keyboard';
 import { generateInlineKeyboardCode } from './Keyboard';
 import { generateUniversalVariableReplacement } from './utils';
+import { generateDatabaseVariablesCode } from './generate/generateDatabaseVariables';
 
 export function handleNodeNavigationAndInputProcessing(nodes: any[], code: string, conditionIndent: string, bodyIndent: string, allNodeIds: any[], connections: any[]) {
     if (nodes.length > 0) {
@@ -49,6 +50,12 @@ export function handleNodeNavigationAndInputProcessing(nodes: any[], code: strin
                     const formattedText = formatTextForPython(cleanedMessageText);
                     code += `${bodyIndent}text = ${formattedText}\n`;
 
+                    // Получаем переменные из базы данных перед заменой
+                    code += `${bodyIndent}\n`;
+                    code += `${bodyIndent}# Получаем переменные из базы данных (user_ids_list, user_ids_count)\n`;
+                    code += generateDatabaseVariablesCode(bodyIndent);
+                    code += `${bodyIndent}\n`;
+
                     // Применяем замену переменных
                     code += `${bodyIndent}# Замена переменных в тексте\n`;
                     const universalVarCodeLines2: string[] = [];
@@ -56,8 +63,8 @@ export function handleNodeNavigationAndInputProcessing(nodes: any[], code: strin
                     code += universalVarCodeLines2.join('\n');
 
                     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                    code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
-                    code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
+                    code += `${bodyIndent}# Заменяем все переменные в тексте, используя all_user_vars\n`;
+                    code += `${bodyIndent}text = replace_variables_in_text(text, all_user_vars)\n`;
 
                     // Если узел message собирает ввод, настраиваем ожидание
                     if (targetNode.data.collectUserInput === true) {
@@ -192,8 +199,8 @@ export function handleNodeNavigationAndInputProcessing(nodes: any[], code: strin
                                 const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                                 code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                                code += `${bodyIndent}    # Заменяем все переменные в тексте\n`;
-                                code += `${bodyIndent}    text = replace_variables_in_text(text, user_vars)\n`;
+                                code += `${bodyIndent}    # Заменяем все переменные в тексте, используя all_user_vars\n`;
+                                code += `${bodyIndent}    text = replace_variables_in_text(text, all_user_vars)\n`;
                                 code += `${bodyIndent}    await message.answer(text, reply_markup=keyboard)\n`;
                                 code += `${bodyIndent}    logging.info(f"✅ Показана основная reply клавиатура для узла ${targetNode.id}")\n`;
 
@@ -245,8 +252,8 @@ export function handleNodeNavigationAndInputProcessing(nodes: any[], code: strin
                                 const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                                 code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                                code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
-                                code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
+                                code += `${bodyIndent}# Заменяем все переменные в тексте, используя all_user_vars\n`;
+                                code += `${bodyIndent}text = replace_variables_in_text(text, all_user_vars)\n`;
                                 code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
                                 code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
 
@@ -262,8 +269,8 @@ export function handleNodeNavigationAndInputProcessing(nodes: any[], code: strin
                             }
                         } else {
                             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                            code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
-                            code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
+                            code += `${bodyIndent}# Заменяем все переменные в тексте, используя all_user_vars\n`;
+                            code += `${bodyIndent}text = replace_variables_in_text(text, all_user_vars)\n`;
                             code += `${bodyIndent}await message.answer(text)\n`;
 
                             // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок (используем универсальную функцию)
@@ -317,14 +324,14 @@ export function handleNodeNavigationAndInputProcessing(nodes: any[], code: strin
                             const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                             code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                            code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
-                            code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
+                            code += `${bodyIndent}# Заменяем все переменные в тексте, используя all_user_vars\n`;
+                            code += `${bodyIndent}text = replace_variables_in_text(text, all_user_vars)\n`;
                             code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
                             code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для переходного узла")\n`;
                         } else {
                             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                            code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
-                            code += `${bodyIndent}text = replace_variables_in_text(text, user_vars)\n`;
+                            code += `${bodyIndent}# Заменяем все переменные в тексте, используя all_user_vars\n`;
+                            code += `${bodyIndent}text = replace_variables_in_text(text, all_user_vars)\n`;
                             code += `${bodyIndent}await message.answer(text)\n`;
                         }
 

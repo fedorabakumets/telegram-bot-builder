@@ -3,6 +3,7 @@ import { generateConditionalMessageLogic } from '../Conditional';
 import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 import { formatTextForPython, getParseMode, stripHtmlTags } from '../format';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
+import { generateDatabaseVariablesCode } from './generateDatabaseVariables';
 
 /**
  * Генерирует функции handle_node_* для узлов с условными сообщениями
@@ -91,8 +92,14 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += '    # Используем условное сообщение если есть подходящее условие\n';
       code += '    if "text" not in locals():\n';
       code += `        text = ${formattedText}\n`;
-      code += '        # Заменяем переменные в основном тексте, если условие не сработало\n';
-      code += '        text = replace_variables_in_text(text, user_vars)\n';
+
+      // Добавляем получение переменных из БД перед заменой
+      code += '    \n';
+      code += generateDatabaseVariablesCode('    ');
+      code += '    \n';
+
+      code += '    # Заменяем переменные в тексте, используя all_user_vars\n';
+      code += '    text = replace_variables_in_text(text, all_user_vars)\n';
       code += '    \n';
       code += '    # Используем условную клавиатуру если есть\n';
       code += '    # Инициализируем переменную conditional_keyboard, если она не была определена\n';

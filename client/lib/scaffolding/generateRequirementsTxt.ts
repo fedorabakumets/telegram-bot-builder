@@ -18,6 +18,7 @@ export function generateRequirementsTxt(): string {
     'certifi>=2024.8.30',
     'google-auth>=2.0.0',
     'gspread>=6.0.0',
+    'telethon>=1.34.0  # For Client API (Userbot) broadcast functionality',
     '',
     '# Note: These versions have pre-compiled wheels and do not require Rust',
     '# If you still encounter issues, try:',
