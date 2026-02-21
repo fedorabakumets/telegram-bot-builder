@@ -1,0 +1,7 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "id": "0006_migrate_telegram_settings_to_global",
+  "prevId": "0005_make_user_ids_global",
+  "tables": {}
+}

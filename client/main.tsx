@@ -7,11 +7,15 @@
  * - Подключение главного компонента приложения
  * - Подключение глобальных стилей
  * - Монтирование приложения в DOM-элемент
+ * - Инициализация fetch polyfill для Electron совместимости
  *
  * @author Telegram Bot Builder Team
- * @version 1.0
+ * @version 1.1
  * @date 2026
  */
+
+// Импортируем polyfill для fetch (должен быть первым!)
+import "./lib/fetch-polyfill";
 
 import { createRoot } from "react-dom/client";
 import App from "./App";

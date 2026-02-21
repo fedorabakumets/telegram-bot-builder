@@ -61,14 +61,16 @@ export default defineConfig(async () => {
       },
     },
     root: path.resolve(process.cwd(), "client"),
+    base: './',
     build: {
-      outDir: path.resolve(process.cwd(), "dist"),
+      outDir: path.resolve(process.cwd(), "dist/client"),
       emptyOutDir: true,
       rollupOptions: {
         external: ['crypto'],
       }
     },
     server: {
+      port: 5173,
       fs: {
         strict: true,
         deny: ["**/.*"],

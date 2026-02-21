@@ -14,6 +14,7 @@
  */
 
 import { Switch, Route } from "wouter";
+import { useHashLocation } from "wouter/use-hash-location";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,6 +24,12 @@ import { ServerStatus } from "@/components/server-status";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { BotLogsProvider } from "./contexts/bot-logs-context";
+
+/**
+ * @brief Определяет, запущено ли приложение в Electron
+ * @constant {boolean}
+ */
+const isElectron = window.electronAPI?.isElectron ?? false;
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
@@ -68,15 +75,20 @@ function LoadingSpinner() {
  *
  * Определяет маршруты приложения и сопоставляет их с соответствующими компонентами.
  * Использует Suspense для обработки ленивой загрузки компонентов.
+ * Для Electron использует hash-based роутинг для совместимости с file:// протоколом.
  *
- * @returns JSX.Element Компонент маршрутизации
+ * @returns {JSX.Element} Компонент маршрутизации
  */
 function Router() {
+  // Для Electron используем hash-based роутинг
+  const [location, setLocation] = isElectron ? useHashLocation() : useLocation();
+  
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <Switch>
+      <Switch location={location}>
         <Route path="/projects" component={Home} />
-        <Route path="/templates" component={TemplatesPage} />        <Route path="/editor/:id" component={Editor} />
+        <Route path="/templates" component={TemplatesPage} />
+        <Route path="/editor/:id" component={Editor} />
         <Route path="/projects/:id" component={Editor} />
         <Route path="/" component={Editor} />
         <Route component={NotFound} />

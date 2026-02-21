@@ -1,0 +1,33 @@
+<!-- Заглушка для иконки Electron -->
+<!-- Создай PNG файл 512x512 и сохрани как electron/icon.png -->
+<!-- Или используй этот placeholder -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Icon Placeholder</title>
+</head>
+<body>
+  <canvas id="canvas" width="512" height="512"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Фон
+    ctx.fillStyle = '#2AABEE';
+    ctx.fillRect(0, 0, 512, 512);
+    
+    // Буква T (Telegram style)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 400px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('T', 256, 280);
+    
+    // Бот рамка
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 20;
+    ctx.strokeRect(10, 10, 492, 492);
+  </script>
+</body>
+</html>

@@ -5,36 +5,43 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1708185600000,
+      "when": 1740182400000,
       "tag": "0001_add_google_sheet_export_fields",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1708272000000,
+      "when": 1740182400001,
       "tag": "0002_add_structure_export_fields",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1708358400000,
+      "when": 1740182400002,
       "tag": "0003_add_user_ids_table",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1740096000000,
+      "when": 1740182400003,
       "tag": "0004_add_user_ids_unique_constraint",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
-      "when": 1740182400000,
+      "when": 1740182400004,
       "tag": "0005_make_user_ids_global",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1740182400005,
+      "tag": "0006_migrate_telegram_settings_to_global",
       "breakpoints": true
     }
   ]

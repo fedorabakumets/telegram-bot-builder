@@ -78,4 +78,11 @@ config/google-auth/token.json
 # Python virtual environment
 .venv/
 
+# Electron
+dist/electron/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
 
