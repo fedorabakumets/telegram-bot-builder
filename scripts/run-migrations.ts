@@ -26,8 +26,6 @@ async function runMigrations() {
       '0000_create_tables.sql',
       '0001_add_google_sheet_export_fields.sql',
       '0002_add_structure_export_fields.sql',
-      '0003_add_user_ids_table.sql',
-      '0004_add_user_ids_unique_constraint.sql',
       '0005_make_user_ids_global.sql',
       '0006_migrate_telegram_settings_to_global.sql'
     ];
