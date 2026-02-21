@@ -8,7 +8,7 @@
  */
 
 import { BotControl } from '@/components/editor/bot/bot-control';
-import { Canvas } from '@/components/editor/canvas/canvas';
+import { Canvas } from '@/components/editor/canvas/canvas/canvas';
 import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
@@ -38,7 +38,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SheetsManager } from '@/utils/sheets-manager';
-import { BotData, BotDataWithSheets, BotGroup, BotProject, ComponentDefinition, Connection, Node, UserBotData } from '@shared/schema';
+import { BotData, BotDataWithSheets, BotGroup, BotProject, ComponentDefinition, Node, UserBotData } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
 /**
@@ -133,22 +133,10 @@ export default function Editor() {
   }, [isMobile]);
 
   /**
-   * ID выбранного соединения
-   * @type {string|null}
-   */
-  const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
-
-  /**
    * Флаг автоматического создания кнопок при добавлении соединений
    * @type {boolean}
    */
   const [] = useState(true);
-
-  /**
-   * Выбранное соединение
-   * @type {Connection|null}
-   */
-  const [] = useState<Connection | null>(null);
 
   /**
    * Флаг отображения менеджера макета
@@ -570,7 +558,7 @@ export default function Editor() {
         const activeSheetId = botDataWithSheets.activeSheetId;
         const updatedSheets = botDataWithSheets.sheets.map(sheet =>
           sheet.id === activeSheetId
-            ? { ...sheet, nodes: currentCanvasData.nodes, connections: currentCanvasData.connections, updatedAt: new Date() }
+            ? { ...sheet, nodes: currentCanvasData.nodes, updatedAt: new Date() }
             : sheet
         );
 
@@ -736,7 +724,7 @@ export default function Editor() {
 
   // Использование хука генератора кода
   const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent } = useCodeGenerator(
-    activeProject?.data as BotData || { nodes: [], connections: [] },
+    activeProject?.data as BotData || { nodes: [] },
     activeProject?.name || 'project',
     groups
   );
@@ -797,15 +785,12 @@ export default function Editor() {
 
   const {
     nodes,
-    connections,
     selectedNodeId,
     setSelectedNodeId,
     addNode,
     updateNode,
-    deleteNode,
-    duplicateNode,
-    addConnection,
-    deleteConnection,
+    deleteNode: _deleteNode,
+    duplicateNode: _duplicateNode,
     updateNodeData,
     addButton,
     updateButton,
@@ -843,7 +828,7 @@ export default function Editor() {
     if (activeSheet) {
       // Всегда применяем автоиерархию при обновлении данных листов для правильного отображения
       const shouldSkipLayout = false; // Автоиерархия необходима для корректного расположения узлов
-      setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
+      setBotData({ nodes: activeSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
     }
   }, [setBotData, currentNodeSizes, isMobile, nodes.length]);
 
@@ -915,12 +900,7 @@ export default function Editor() {
             node.id === oldId
               ? { ...node, id: newId }
               : node
-          ),
-          connections: sheet.connections.map(conn => ({
-            ...conn,
-            source: conn.source === oldId ? newId : conn.source,
-            target: conn.target === oldId ? newId : conn.target
-          }))
+          )
         };
       }
       return sheet;
@@ -959,7 +939,7 @@ export default function Editor() {
       // Устанавливаем активный лист в редактор
       const activeSheet = SheetsManager.getActiveSheet(sheetsData);
       if (activeSheet) {
-        setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, undefined, true);
+        setBotData({ nodes: activeSheet.nodes }, undefined, undefined, true);
       }
 
       // Обновляем отслеживание загруженного проекта
@@ -1056,7 +1036,7 @@ export default function Editor() {
       if (newSheet) {
         // При добавлении нового листа всегда применяем автоиерархию
         const shouldSkipLayout = false; // Автоиерархия нужна для правильного расположения новых листов
-        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
+        setBotData({ nodes: newSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
 
       // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
@@ -1092,7 +1072,7 @@ export default function Editor() {
       // Переключаемся на активный лист
       const activeSheet = SheetsManager.getActiveSheet(updatedData);
       if (activeSheet) {
-        setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }); // автоиерархия должна работать при переключении листов
+        setBotData({ nodes: activeSheet.nodes }); // автоиерархия должна работать при переключении листов
       }
 
       // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
@@ -1161,7 +1141,7 @@ export default function Editor() {
       if (newSheet) {
         // При дублировании листа всегда применяем автоиерархию
         const shouldSkipLayout = false; // Автоиерархия нужна для правильного расположения дублированных листов
-        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
+        setBotData({ nodes: newSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
 
       // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
@@ -1206,7 +1186,7 @@ export default function Editor() {
           const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
           if (newActiveSheet) {
             const shouldSkipLayout = false;
-            setBotData({ nodes: newActiveSheet.nodes, connections: newActiveSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
+            setBotData({ nodes: newActiveSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
           }
 
           // Сохраняем и принудительно перезагружаем проект
@@ -1235,7 +1215,7 @@ export default function Editor() {
       const activeSheetId = botDataWithSheets.activeSheetId;
       const updatedSheets = botDataWithSheets.sheets.map(sheet =>
         sheet.id === activeSheetId
-          ? { ...sheet, nodes: currentCanvasData.nodes, connections: currentCanvasData.connections, updatedAt: new Date() }
+          ? { ...sheet, nodes: currentCanvasData.nodes, updatedAt: new Date() }
           : sheet
       );
 
@@ -1251,7 +1231,7 @@ export default function Editor() {
       if (newActiveSheet) {
         // При переключении листов применяем автоиерархию для лучшего отображения
         const shouldSkipLayout = false; // Автоиерархия нужна для правильного отображения
-        setBotData({ nodes: newActiveSheet.nodes, connections: newActiveSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
+        setBotData({ nodes: newActiveSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
 
       // Сохраняем изменения
@@ -1298,20 +1278,10 @@ export default function Editor() {
               return cleanNode;
             }) || [];
 
-            // Очищаем соединения
-            const cleanConnections = sheet.connections?.map((conn: any) => ({
-              id: conn.id,
-              source: conn.source,
-              target: conn.target,
-              sourceHandle: conn.sourceHandle,
-              targetHandle: conn.targetHandle
-            })) || [];
-
             return {
               id: nanoid(), // Новый уникальный ID для листа
               name: sheet.name,
               nodes: cleanNodes,
-              connections: cleanConnections,
               viewState: sheet.viewState || { position: { x: 0, y: 0 }, zoom: 1 },
               createdAt: new Date(),
               updatedAt: new Date()
@@ -1321,8 +1291,7 @@ export default function Editor() {
           const templateDataWithSheets = {
             sheets: updatedSheets,
             activeSheetId: updatedSheets[0]?.id,
-            version: 2,
-            interSheetConnections: template.data.interSheetConnections || []
+            version: 2
           };
 
           // Устанавливаем многолистовые данные
@@ -1333,7 +1302,7 @@ export default function Editor() {
           if (firstSheet) {
             // Всегда применяем автоиерархию при загрузке шаблонов для правильного расположения
             const shouldSkipLayout = false; // Автоиерархия необходима при загрузке многолистовых шаблонов
-            setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, template.name, currentNodeSizes, shouldSkipLayout);
+            setBotData({ nodes: firstSheet.nodes }, template.name, currentNodeSizes, shouldSkipLayout);
           }
 
           // Сохраняем в проект только если activeProject загружен
@@ -1403,14 +1372,14 @@ export default function Editor() {
   const handleNodeDelete = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     handleActionLog('delete', `Удален узел "${node?.type || 'Unknown'}"`);
-    deleteNode(nodeId);
-  }, [deleteNode, nodes, handleActionLog]);
+    _deleteNode(nodeId);
+  }, [_deleteNode, nodes, handleActionLog]);
 
   const handleNodeDuplicate = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     handleActionLog('duplicate', `Дублирован узел "${node?.type || 'Unknown'}"`);
-    duplicateNode(nodeId);
-  }, [duplicateNode, nodes, handleActionLog]);
+    _duplicateNode(nodeId);
+  }, [_duplicateNode, nodes, handleActionLog]);
 
   const handleComponentDrag = useCallback((_component: ComponentDefinition) => {
     // Handle component drag start if needed
@@ -1601,17 +1570,11 @@ export default function Editor() {
             onBotDataUpdate={handleBotDataUpdate}
             // Существующие пропсы для совместимости
             nodes={nodes}
-            connections={connections}
             selectedNodeId={selectedNodeId}
-            selectedConnectionId={selectedConnectionId ?? undefined}
             onNodeSelect={setSelectedNodeId}
             onNodeAdd={addNode}
             onNodeDelete={handleNodeDelete}
-            onNodeDuplicate={handleNodeDuplicate}
             onNodeMove={handleNodeMove}
-            onConnectionSelect={setSelectedConnectionId}
-            onConnectionDelete={deleteConnection}
-            onConnectionAdd={addConnection}
             onNodesUpdate={updateNodes}
             onUndo={undo}
             onRedo={redo}
@@ -1658,11 +1621,11 @@ export default function Editor() {
             />
           </div>
         ) : currentTab === 'user-ids' ? (
-          <UserIdsDatabase projectId={activeProject.id} />
+          <UserIdsDatabase />
         ) : currentTab === 'client-api' ? (
           <div className="h-full p-6 bg-background overflow-auto">
             <div className="max-w-3xl mx-auto">
-              <TelegramClientConfig projectId={activeProject.id} />
+              <TelegramClientConfig />
             </div>
           </div>
         ) : currentTab === 'export' ? null : null}
@@ -1852,17 +1815,12 @@ export default function Editor() {
                   botData={botDataWithSheets || undefined}
                   onBotDataUpdate={handleBotDataUpdate}
                   nodes={nodes}
-                  connections={connections}
                   selectedNodeId={selectedNodeId}
-                  selectedConnectionId={selectedConnectionId || undefined}
                   onNodeSelect={setSelectedNodeId}
                   onNodeAdd={addNode}
-                  onNodeDelete={deleteNode}
-                  onNodeDuplicate={duplicateNode}
+                  onNodeDelete={handleNodeDelete}
+                  onNodeDuplicate={handleNodeDuplicate}
                   onNodeMove={handleNodeMove}
-                  onConnectionSelect={setSelectedConnectionId}
-                  onConnectionDelete={deleteConnection}
-                  onConnectionAdd={addConnection}
                   onNodesUpdate={updateNodes}
                   onUndo={undo}
                   onRedo={redo}
@@ -1995,17 +1953,12 @@ export default function Editor() {
                       onBotDataUpdate={handleBotDataUpdate}
                       // Существующие пропсы для совместимости
                       nodes={nodes}
-                      connections={connections}
                       selectedNodeId={selectedNodeId}
-                      selectedConnectionId={selectedConnectionId || undefined}
                       onNodeSelect={setSelectedNodeId}
                       onNodeAdd={addNode}
-                      onNodeDelete={deleteNode}
-                      onNodeDuplicate={duplicateNode}
+                      onNodeDelete={handleNodeDelete}
+                      onNodeDuplicate={handleNodeDuplicate}
                       onNodeMove={handleNodeMove}
-                      onConnectionSelect={setSelectedConnectionId}
-                      onConnectionDelete={deleteConnection}
-                      onConnectionAdd={addConnection}
                       onNodesUpdate={updateNodes}
                       onUndo={undo}
                       onRedo={redo}
@@ -2059,17 +2012,12 @@ export default function Editor() {
                   botData={botDataWithSheets || undefined}
                   onBotDataUpdate={handleBotDataUpdate}
                   nodes={nodes}
-                  connections={connections}
                   selectedNodeId={selectedNodeId}
-                  selectedConnectionId={selectedConnectionId || undefined}
                   onNodeSelect={setSelectedNodeId}
                   onNodeAdd={addNode}
-                  onNodeDelete={deleteNode}
-                  onNodeDuplicate={duplicateNode}
+                  onNodeDelete={handleNodeDelete}
+                  onNodeDuplicate={handleNodeDuplicate}
                   onNodeMove={handleNodeMove}
-                  onConnectionSelect={setSelectedConnectionId}
-                  onConnectionDelete={deleteConnection}
-                  onConnectionAdd={addConnection}
                   onNodesUpdate={updateNodes}
                   onUndo={undo}
                   onRedo={redo}

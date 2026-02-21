@@ -6,14 +6,35 @@
       "idx": 0,
       "version": "7",
       "when": 1708185600000,
-      "tag": "0000_brainy_wildside",
+      "tag": "0001_add_google_sheet_export_fields",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
       "when": 1708272000000,
-      "tag": "0001_add_google_sheet_export_fields",
+      "tag": "0002_add_structure_export_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1708358400000,
+      "tag": "0003_add_user_ids_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1740096000000,
+      "tag": "0004_add_user_ids_unique_constraint",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1740182400000,
+      "tag": "0005_make_user_ids_global",
       "breakpoints": true
     }
   ]

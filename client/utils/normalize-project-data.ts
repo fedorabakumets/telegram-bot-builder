@@ -171,5 +171,17 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
     };
   });
 
+  // Удаляем поле connections из всех листов (оно больше не используется)
+  normalizedData.sheets = normalizedData.sheets.map((sheet: any) => {
+    const { connections, ...sheetWithoutConnections } = sheet;
+    return sheetWithoutConnections;
+  });
+
+  // Удаляем interSheetConnections если есть
+  if ('interSheetConnections' in normalizedData) {
+    const { interSheetConnections, ...dataWithoutInterSheet } = normalizedData;
+    return dataWithoutInterSheet as BotDataWithSheets;
+  }
+
   return normalizedData;
 }

@@ -411,9 +411,7 @@ export function generateAttachedMediaSendCode(
     parseModeElseParam = ', parse_mode=None';
   }
   codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=reply_markup_to_use${autoTransitionFlag}${parseModeElseParam})`);
-  codeLines.push(`${indentLevel}    if ${collectUserInput ? 'True' : 'False'}:`);
-  codeLines.push(`${indentLevel}        # Устанавливаем состояние ожидания ввода`);
-  codeLines.push(`${indentLevel}        logging.info(f"ℹ️ Узел ${nodeId} настроен на сбор ввода (collectUserInput=true)")`);
+  codeLines.push(''); // Пустая строка для разделения кода
 
   // Применяем автоматическое добавление комментариев ко всему коду
   const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');

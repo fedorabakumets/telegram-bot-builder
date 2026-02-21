@@ -1,28 +1,26 @@
 /**
  * @fileoverview Обработчики запросов для управления базой ID пользователей
- * Telegram Bot Builder - User IDs API Handlers
+ * Telegram Bot Builder - User IDs Handlers (общая база на все проекты)
  */
 
 import { Pool } from 'pg';
 
 /**
- * Получить список ID пользователей проекта
+ * Получить список ID пользователей (общая база)
  * @param pool - Пул подключений к БД
- * @param projectId - ID проекта
  * @returns Список записей ID
  */
-export async function getUserIds(pool: Pool, projectId: number) {
+export async function getUserIds(pool: Pool): Promise<{ id: number; userId: string; createdAt: Date; source: 'manual' | 'import' | 'bot' }[]> {
   const client = await pool.connect();
   try {
     const result = await client.query(
-      'SELECT id, user_id, created_at FROM user_ids WHERE project_id = $1 ORDER BY created_at DESC',
-      [projectId]
+      'SELECT id, user_id, created_at, source FROM user_ids ORDER BY created_at DESC'
     );
     return result.rows.map((row) => ({
       id: row.id,
       userId: row.user_id.toString(),
       createdAt: row.created_at,
-      source: 'manual' as const,
+      source: (row.source as 'manual' | 'import' | 'bot') || 'manual',
     }));
   } finally {
     client.release();
@@ -30,25 +28,25 @@ export async function getUserIds(pool: Pool, projectId: number) {
 }
 
 /**
- * Добавить ID пользователя в проект
+ * Добавить ID пользователя в общую базу
  * @param pool - Пул подключений к БД
- * @param projectId - ID проекта
  * @param userId - ID пользователя Telegram
+ * @param source - Источник добавления
  * @returns Добавленная запись
  */
 export async function addUserId(
   pool: Pool,
-  projectId: number,
-  userId: string
-) {
+  userId: string,
+  source: 'manual' | 'import' | 'bot' = 'manual'
+): Promise<{ id: number; userId: string; createdAt: Date; source: 'manual' | 'import' | 'bot' }> {
   const client = await pool.connect();
   try {
     const result = await client.query(
-      `INSERT INTO user_ids (project_id, user_id)
+      `INSERT INTO user_ids (user_id, source)
        VALUES ($1, $2)
-       ON CONFLICT (project_id, user_id) DO NOTHING
-       RETURNING id, user_id, created_at`,
-      [projectId, userId]
+       ON CONFLICT (user_id) DO NOTHING
+       RETURNING id, user_id, created_at, source`,
+      [userId, source]
     );
     if (result.rows.length === 0) {
       throw new Error('ID уже существует');
@@ -57,7 +55,7 @@ export async function addUserId(
       id: result.rows[0].id,
       userId: result.rows[0].user_id.toString(),
       createdAt: result.rows[0].created_at,
-      source: 'manual' as const,
+      source: result.rows[0].source as 'manual' | 'import' | 'bot',
     };
   } finally {
     client.release();
@@ -65,22 +63,20 @@ export async function addUserId(
 }
 
 /**
- * Удалить ID пользователя из проекта
+ * Удалить ID пользователя из общей базы
  * @param pool - Пул подключений к БД
- * @param projectId - ID проекта
  * @param id - ID записи для удаления
  * @returns true если удалено
  */
 export async function deleteUserId(
   pool: Pool,
-  projectId: number,
   id: number
-) {
+): Promise<boolean> {
   const client = await pool.connect();
   try {
     const result = await client.query(
-      'DELETE FROM user_ids WHERE id = $1 AND project_id = $2 RETURNING id',
-      [id, projectId]
+      'DELETE FROM user_ids WHERE id = $1 RETURNING id',
+      [id]
     );
     return result.rows.length > 0;
   } finally {
@@ -89,12 +85,11 @@ export async function deleteUserId(
 }
 
 /**
- * Получить статистику по ID пользователей
+ * Получить статистику по ID пользователей (общая база)
  * @param pool - Пул подключений к БД
- * @param projectId - ID проекта
  * @returns Объект статистики
  */
-export async function getUserIdsStats(pool: Pool, projectId: number) {
+export async function getUserIdsStats(pool: Pool): Promise<{ total: number; addedToday: number; addedThisWeek: number }> {
   const client = await pool.connect();
   try {
     const today = new Date();
@@ -104,18 +99,9 @@ export async function getUserIdsStats(pool: Pool, projectId: number) {
     weekAgo.setDate(weekAgo.getDate() - 7);
 
     const [total, todayResult, weekResult] = await Promise.all([
-      client.query(
-        'SELECT COUNT(*) FROM user_ids WHERE project_id = $1',
-        [projectId]
-      ),
-      client.query(
-        'SELECT COUNT(*) FROM user_ids WHERE project_id = $1 AND created_at >= $2',
-        [projectId, today]
-      ),
-      client.query(
-        'SELECT COUNT(*) FROM user_ids WHERE project_id = $1 AND created_at >= $2',
-        [projectId, weekAgo]
-      ),
+      client.query('SELECT COUNT(*) FROM user_ids'),
+      client.query('SELECT COUNT(*) FROM user_ids WHERE created_at >= $1', [today]),
+      client.query('SELECT COUNT(*) FROM user_ids WHERE created_at >= $1', [weekAgo]),
     ]);
 
     return {

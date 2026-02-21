@@ -1,0 +1,106 @@
+/**
+ * @fileoverview Компонент инструментов умных соединений
+ * 
+ * Содержит кнопки для управления автосоединениями,
+ * быстрого соединения и рекомендаций.
+ */
+
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Connection } from '@/types/bot';
+
+/**
+ * Свойства компонента инструментов умных соединений
+ */
+interface SmartConnectionToolsProps {
+  /** Видимость панели авто-соединений */
+  showAutoPanel: boolean;
+  /** Колбэк изменения видимости панели авто-соединений */
+  onShowAutoPanelChange: (show: boolean) => void;
+  /** Видимость подсказок соединений */
+  showSuggestions: boolean;
+  /** Колбэк изменения видимости подсказок */
+  onShowSuggestionsChange: (show: boolean) => void;
+  /** Массив соединений */
+  connections: Connection[];
+  /** Колбэк быстрого соединения */
+  onAutoConnect: () => void;
+  /** Колбэк удаления соединения */
+  onConnectionDelete?: (connectionId: string) => void;
+}
+
+/**
+ * Компонент инструментов умных соединений
+ * 
+ * @param props - Свойства компонента
+ * @returns JSX элемент с кнопками управления соединениями
+ */
+export function SmartConnectionTools({
+  showAutoPanel,
+  onShowAutoPanelChange,
+  showSuggestions,
+  onShowSuggestionsChange,
+  connections,
+  onAutoConnect,
+  onConnectionDelete
+}: SmartConnectionToolsProps) {
+  return (
+    <div className="absolute bottom-24 right-4 flex flex-col space-y-2 z-20">
+      {/* Auto Connection Panel */}
+      <Popover open={showAutoPanel} onOpenChange={onShowAutoPanelChange}>
+        <PopoverTrigger asChild>
+          <Button
+            className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+            title="Управление автосоединениями"
+          >
+            <i className="fas fa-magic text-white text-sm" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side="left" className="w-auto p-0">
+          {/* Закомментировано - будет реализовано позже */}
+          {/* <AutoConnectionPanel ... /> */}
+        </PopoverContent>
+      </Popover>
+
+      {/* Auto-connect button */}
+      <Button
+        onClick={onAutoConnect}
+        className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+        title="Быстрое автосоединение"
+      >
+        <i className="fas fa-bolt text-white text-sm" />
+      </Button>
+
+      {/* Connection suggestions */}
+      <Popover open={showSuggestions} onOpenChange={onShowSuggestionsChange}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm"
+            title="Рекомендации соединений"
+          >
+            <i className="fas fa-lightbulb text-yellow-500 text-sm" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side="left" className="w-80 p-0">
+          {/* Закомментировано - будет реализовано позже */}
+          {/* <ConnectionSuggestions ... /> */}
+        </PopoverContent>
+      </Popover>
+
+      {/* Clear connections button */}
+      {connections.length > 0 && (
+        <Button
+          onClick={() => {
+            connections.forEach(conn => onConnectionDelete?.(conn.id));
+          }}
+          variant="outline"
+          className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-900/20"
+          title="Очистить все соединения"
+        >
+          <i className="fas fa-eraser text-red-500 text-sm" />
+        </Button>
+      )}
+    </div>
+  );
+}

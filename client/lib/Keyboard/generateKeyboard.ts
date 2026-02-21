@@ -5,6 +5,7 @@ import { generateButtonText } from '../format/generateButtonText';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
+import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 
 
 /**

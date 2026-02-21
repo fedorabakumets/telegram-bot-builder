@@ -1,6 +1,6 @@
 /**
  * @fileoverview Страница управления базой ID пользователей
- * Основная страница для работы с базой рассылок
+ * Общая база на все проекты
  */
 
 import { useState } from 'react';
@@ -25,53 +25,44 @@ import { Label } from '@/components/ui/label';
 /**
  * Компонент страницы управления базой ID
  */
-export interface UserIdsDatabaseProps {
-  /** ID проекта */
-  projectId: number;
-}
-
-export function UserIdsDatabase({ projectId }: UserIdsDatabaseProps) {
+export function UserIdsDatabase() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newUserId, setNewUserId] = useState('');
 
-  // Загрузка списка ID
+  // Загрузка списка ID (общая база)
   const { data: items = [], isLoading } = useQuery<UserIdRecord[]>({
-    queryKey: ['/api/projects', projectId, 'user-ids'],
-    queryFn: () =>
-      apiRequest('GET', `/api/projects/${projectId}/user-ids`),
+    queryKey: ['/api/user-ids'],
+    queryFn: () => apiRequest('GET', '/api/user-ids'),
   });
 
-  // Загрузка статистики
+  // Загрузка статистики (общая база)
   const { data: stats = { total: 0, addedToday: 0, addedThisWeek: 0 } } =
     useQuery({
-      queryKey: ['/api/projects', projectId, 'user-ids', 'stats'],
-      queryFn: () =>
-        apiRequest('GET', `/api/projects/${projectId}/user-ids/stats`),
+      queryKey: ['/api/user-ids/stats'],
+      queryFn: () => apiRequest('GET', '/api/user-ids/stats'),
     });
 
   // Мутация добавления
   const addMutation = useMutation({
     mutationFn: (userId: string) =>
-      apiRequest('POST', `/api/projects/${projectId}/user-ids`, {
-        userId,
-      }),
+      apiRequest('POST', '/api/user-ids', { userId, source: 'manual' as const }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['/api/projects', projectId, 'user-ids'],
+        queryKey: ['/api/user-ids'],
       });
-      toast({ 
-        title: 'ID добавлен', 
-        description: 'Пользователь добавлен в базу' 
+      toast({
+        title: 'ID добавлен',
+        description: 'Пользователь добавлен в базу'
       });
       setIsAddDialogOpen(false);
       setNewUserId('');
     },
     onError: (error: any) => {
-      const message = error?.response?.status === 409 
-        ? 'Этот ID уже есть в базе' 
+      const message = error?.response?.status === 409
+        ? 'Этот ID уже есть в базе'
         : 'Не удалось добавить ID';
       toast({
         title: 'Ошибка',
@@ -86,12 +77,12 @@ export function UserIdsDatabase({ projectId }: UserIdsDatabaseProps) {
     mutationFn: (ids: number[]) =>
       Promise.all(
         ids.map((id) =>
-          apiRequest('DELETE', `/api/projects/${projectId}/user-ids/${id}`)
+          apiRequest('DELETE', `/api/user-ids/${id}`)
         )
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['/api/projects', projectId, 'user-ids'],
+        queryKey: ['/api/user-ids'],
       });
       toast({ title: 'Удалено', description: 'ID удалены из базы' });
     },
@@ -109,7 +100,7 @@ export function UserIdsDatabase({ projectId }: UserIdsDatabaseProps) {
     }
   };
 
-  const handleExport = (ids: number[]) => {
+  const handleExport = (_ids: number[]) => {
     // TODO: Реализовать экспорт
     toast({ title: 'Экспорт', description: 'Функция в разработке' });
   };

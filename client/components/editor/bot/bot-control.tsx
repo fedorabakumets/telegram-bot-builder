@@ -945,7 +945,7 @@ function renderBotControlPanel(
           </p>
         </CardContent>
       </Card>
-    ) : renderBotManagementInterface(projects, allTokens, allBotInfos, setProjectForNewBot, setShowAddBot, allBotStatuses, editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit, handleStartEdit, getStatusBadge, queryClient, startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation, generatorLogsEnabled, handleToggleGeneratorLogs, commentsGenerationEnabled, handleToggleCommentsGeneration, currentElapsedSeconds)}
+    ) : renderBotManagementInterface(projects, allTokens, allBotInfos, setProjectForNewBot, setShowAddBot, allBotStatuses, editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit, handleStartEdit, getStatusBadge, queryClient, startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation, generatorLogsEnabled, handleToggleGeneratorLogs, commentsGenerationEnabled, handleToggleCommentsGeneration, currentElapsedSeconds, setSelectedProject, setSelectedBotInfo, setIsProfileSheetOpen)}
     {/* Add Bot Dialog */}
     {renderBotProjectCard(showAddBot, setShowAddBot, projectForNewBot, setProjectForNewBot, projects, newBotToken, setNewBotToken, isParsingBot, createBotMutation, handleAddBot)}
     {/* Edit Bot Token Dialog */}
@@ -998,7 +998,7 @@ function renderBotProjectCard(showAddBot: boolean, setShowAddBot: (show: boolean
               onChange={(e) => setProjectForNewBot(Number(e.target.value))}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">??ыберите проект...</option>
+              <option value="">Выберите проект...</option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -1127,7 +1127,7 @@ function renderBotTokenManagementSection(editingToken: { id: number; name: strin
 
         <div className="space-y-2">
           <Label htmlFor="edit-bot-description" className="text-sm sm:text-base font-semibold">
-            О??исание
+            Описание
           </Label>
           <Textarea
             id="edit-bot-description"
@@ -1139,7 +1139,7 @@ function renderBotTokenManagementSection(editingToken: { id: number; name: strin
             className="text-xs sm:text-sm resize-none"
             data-testid="textarea-edit-bot-description" />
           <p className="text-xs text-muted-foreground">
-            Добавьте описа??ие для лучшей организации (максимум 500 символов)
+            Добавьте описание для лучшей организации (максимум 500 символов)
           </p>
         </div>
       </div>
@@ -1203,9 +1203,12 @@ function renderBotTokenManagementSection(editingToken: { id: number; name: strin
  * @param commentsGenerationEnabled - Состояние включения генерации комментариев
  * @param handleToggleCommentsGeneration - Обработчик переключения генерации комментариев
  * @param currentElapsedSeconds - Текущее количество прошедших секунд (по ключу tokenId)
+ * @param setSelectedProject - Функция для установки выбранного проекта
+ * @param setSelectedBotInfo - Функция для установки информации о выбранном боте
+ * @param setIsProfileSheetOpen - Функция для управления состоянием открытия панели профиля
  * @returns JSX элемент основного интерфейса управления ботами
  */
-function renderBotManagementInterface(projects: { data: unknown; id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null; }[], allTokens: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }[][], allBotInfos: BotInfo[], setProjectForNewBot: (projectId: number | null) => void, setShowAddBot: (show: boolean) => void, allBotStatuses: BotStatusResponse[], editingField: { tokenId: number; field: string; } | null, editValue: string, setEditValue: (value: string) => void, handleSaveEdit: () => void, handleCancelEdit: () => void, handleStartEdit: (tokenId: number, field: string, currentValue: string) => void, getStatusBadge: (token: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }) => JSX.Element, queryClient: any, startBotMutation: any, stopBotMutation: any, deleteBotMutation: any, toggleDatabaseMutation: any, generatorLogsEnabled: boolean, handleToggleGeneratorLogs: (enabled: boolean) => void, commentsGenerationEnabled: boolean, handleToggleCommentsGeneration: (enabled: boolean) => void, currentElapsedSeconds: Record<number, number>) {
+function renderBotManagementInterface(projects: { data: unknown; id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null; }[], allTokens: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }[][], allBotInfos: BotInfo[], setProjectForNewBot: (projectId: number | null) => void, setShowAddBot: (show: boolean) => void, allBotStatuses: BotStatusResponse[], editingField: { tokenId: number; field: string; } | null, editValue: string, setEditValue: (value: string) => void, handleSaveEdit: () => void, handleCancelEdit: () => void, handleStartEdit: (tokenId: number, field: string, currentValue: string) => void, getStatusBadge: (token: { id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; projectId: number; token: string; isDefault: number | null; isActive: number | null; botFirstName: string | null; botUsername: string | null; botDescription: string | null; botShortDescription: string | null; botPhotoUrl: string | null; botCanJoinGroups: number | null; botCanReadAllGroupMessages: number | null; botSupportsInlineQueries: number | null; botHasMainWebApp: number | null; lastUsedAt: Date | null; trackExecutionTime: number | null; totalExecutionSeconds: number | null; }) => JSX.Element, queryClient: any, startBotMutation: any, stopBotMutation: any, deleteBotMutation: any, toggleDatabaseMutation: any, generatorLogsEnabled: boolean, handleToggleGeneratorLogs: (enabled: boolean) => void, commentsGenerationEnabled: boolean, handleToggleCommentsGeneration: (enabled: boolean) => void, currentElapsedSeconds: Record<number, number>, setSelectedProject: (project: { data: unknown; id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null; } | null) => void, setSelectedBotInfo: (info: BotInfo | null) => void, setIsProfileSheetOpen: (open: boolean) => void) {
   return <div className="space-y-8">
     {projects.map((project, projectIndex) => {
       const projectTokens = allTokens[projectIndex] || [];
@@ -1226,7 +1229,7 @@ function renderBotManagementInterface(projects: { data: unknown; id: number; nam
             <Card className="border-2 border-dashed border-border/50">
               <CardContent className="flex flex-col items-center justify-center py-8 px-4">
                 <Bot className="w-10 h-10 text-muted-foreground mb-2" />
-                <h4 className="font-medium text-foreground mb-1">Нет подк??юченных ботов</h4>
+                <h4 className="font-medium text-foreground mb-1">Нет подключенных ботов</h4>
                 <p className="text-sm text-muted-foreground text-center mb-4">
                   Добавьте бота к этому проекту
                 </p>

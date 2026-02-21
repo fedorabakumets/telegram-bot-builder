@@ -108,7 +108,7 @@ export function AutoTransitionSection({
                     .map(({ node, sheetId, sheetName }) => (
                       <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
                         <span className="text-xs sm:text-sm font-mono text-sky-700 dark:text-sky-300 truncate">
-                          {formatNodeDisplay(node, sheetName)}
+                          {formatNodeDisplay(node, sheetName || 'Лист 1')}
                         </span>
                       </SelectItem>
                     ))}

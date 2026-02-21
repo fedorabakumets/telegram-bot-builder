@@ -169,35 +169,26 @@ export async function startBot(projectId: number, token: string, tokenId: number
     // Преобразуем многолистовую структуру в простую для генератора
     const convertSheetsToSimpleBotData = (data: any) => {
       // Если уже простая структура - возвращаем как есть
-      if (data.nodes && data.connections) {
+      if (data.nodes) {
         return data;
       }
 
-      // Если многолистовая структура - собираем все узлы и связи
+      // Если многолистовая структура - собираем все узлы
       if (data.sheets && Array.isArray(data.sheets)) {
         let allNodes: any[] = [];
-        let allConnections: any[] = [];
 
         data.sheets.forEach((sheet: any) => {
           if (sheet.nodes) allNodes.push(...sheet.nodes);
-          if (sheet.connections) allConnections.push(...sheet.connections);
         });
 
-        // Добавляем межлистовые связи
-        if (data.interSheetConnections) {
-          allConnections.push(...data.interSheetConnections);
-        }
-
         return {
-          nodes: allNodes,
-          connections: allConnections
+          nodes: allNodes
         };
       }
 
       // Если нет узлов вообще - возвращаем пустую структуру
       return {
-        nodes: [],
-        connections: []
+        nodes: []
       };
     };
 

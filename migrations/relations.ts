@@ -1,0 +1,105 @@
+import { relations } from "drizzle-orm/relations";
+import { botProjects, botInstances, botTokens, telegramUsers, botTemplates, botMessages, mediaFiles, botMessageMedia, botGroups, groupMembers, userBotData } from "./schema";
+
+export const botInstancesRelations = relations(botInstances, ({one}) => ({
+	botProject: one(botProjects, {
+		fields: [botInstances.projectId],
+		references: [botProjects.id]
+	}),
+	botToken: one(botTokens, {
+		fields: [botInstances.tokenId],
+		references: [botTokens.id]
+	}),
+}));
+
+export const botProjectsRelations = relations(botProjects, ({one, many}) => ({
+	botInstances: many(botInstances),
+	botTokens: many(botTokens),
+	botMessages: many(botMessages),
+	userBotData: many(userBotData),
+	botGroups: many(botGroups),
+	mediaFiles: many(mediaFiles),
+	telegramUser: one(telegramUsers, {
+		fields: [botProjects.ownerId],
+		references: [telegramUsers.id]
+	}),
+}));
+
+export const botTokensRelations = relations(botTokens, ({one, many}) => ({
+	botInstances: many(botInstances),
+	botProject: one(botProjects, {
+		fields: [botTokens.projectId],
+		references: [botProjects.id]
+	}),
+	telegramUser: one(telegramUsers, {
+		fields: [botTokens.ownerId],
+		references: [telegramUsers.id]
+	}),
+}));
+
+export const telegramUsersRelations = relations(telegramUsers, ({many}) => ({
+	botTokens: many(botTokens),
+	botTemplates: many(botTemplates),
+	botProjects: many(botProjects),
+}));
+
+export const botTemplatesRelations = relations(botTemplates, ({one}) => ({
+	telegramUser: one(telegramUsers, {
+		fields: [botTemplates.ownerId],
+		references: [telegramUsers.id]
+	}),
+}));
+
+export const botMessagesRelations = relations(botMessages, ({one, many}) => ({
+	botProject: one(botProjects, {
+		fields: [botMessages.projectId],
+		references: [botProjects.id]
+	}),
+	mediaFile: one(mediaFiles, {
+		fields: [botMessages.primaryMediaId],
+		references: [mediaFiles.id]
+	}),
+	botMessageMedias: many(botMessageMedia),
+}));
+
+export const mediaFilesRelations = relations(mediaFiles, ({one, many}) => ({
+	botMessages: many(botMessages),
+	botMessageMedias: many(botMessageMedia),
+	botProject: one(botProjects, {
+		fields: [mediaFiles.projectId],
+		references: [botProjects.id]
+	}),
+}));
+
+export const botMessageMediaRelations = relations(botMessageMedia, ({one}) => ({
+	botMessage: one(botMessages, {
+		fields: [botMessageMedia.messageId],
+		references: [botMessages.id]
+	}),
+	mediaFile: one(mediaFiles, {
+		fields: [botMessageMedia.mediaFileId],
+		references: [mediaFiles.id]
+	}),
+}));
+
+export const groupMembersRelations = relations(groupMembers, ({one}) => ({
+	botGroup: one(botGroups, {
+		fields: [groupMembers.groupId],
+		references: [botGroups.id]
+	}),
+}));
+
+export const botGroupsRelations = relations(botGroups, ({one, many}) => ({
+	groupMembers: many(groupMembers),
+	botProject: one(botProjects, {
+		fields: [botGroups.projectId],
+		references: [botProjects.id]
+	}),
+}));
+
+export const userBotDataRelations = relations(userBotData, ({one}) => ({
+	botProject: one(botProjects, {
+		fields: [userBotData.projectId],
+		references: [botProjects.id]
+	}),
+}));

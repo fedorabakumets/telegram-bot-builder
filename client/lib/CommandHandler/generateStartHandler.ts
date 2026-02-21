@@ -181,15 +181,15 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   }
 
   // Восстанавливаем состояние множественного выбора ТОЛЬКО если он включен
-  initializeAndRestoreMultipleSelectionState(node, codeLines, userDatabaseEnabled);
+  initializeAndRestoreMultipleSelectionState(node as any, codeLines, userDatabaseEnabled);
 
   // Добавляем обработку условных сообщений
-  const formattedText = generateKeyboardAndProcessAttachedMedia(node, codeLines);
+  const formattedText = generateKeyboardAndProcessAttachedMedia(node as any, codeLines);
 
   // Проверяем, есть ли прикрепленные медиафайлы
   if (attachedMedia.length > 0) {
     // Если есть прикрепленные медиа, генерируем только код клавиатуры без отправки сообщения
-    generateConditionalMessageLogicAndKeyboard(node, codeLines, mediaVariablesMap, attachedMedia, formattedText);
+    generateConditionalMessageLogicAndKeyboard(node as any, codeLines, mediaVariablesMap, attachedMedia, formattedText);
   } else {
     // Обычная логика без медиа - используем функцию generateKeyboard
     // Она генерирует полный код, включая отправку сообщения

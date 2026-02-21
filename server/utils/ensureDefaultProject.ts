@@ -48,8 +48,7 @@ export async function ensureDefaultProject() {
                 oneTimeKeyboard: false
               }
             }
-          ],
-          connections: []
+          ]
         }
       };
       await storage.createBotProject(defaultProject);

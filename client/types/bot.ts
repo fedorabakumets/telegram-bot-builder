@@ -3,7 +3,6 @@
 
 import {
   Node as SharedNode,
-  Connection as SharedConnection,
   Button as SharedButton,
   BotProject,
   BotInstance,
@@ -23,7 +22,6 @@ import {
 // Переопределяем типы с алиасами для использования в клиенте
 export type {
   SharedNode as Node,
-  SharedConnection as Connection,
   SharedButton as Button,
   BotProject,
   BotInstance,

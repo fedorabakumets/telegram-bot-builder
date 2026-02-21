@@ -1,4 +1,4 @@
-import { Node, Connection } from '@/types/bot';
+import { Node } from '@/types/bot';
 import { getIsMobile } from '@/hooks/use-mobile';
 
 /**
@@ -77,7 +77,7 @@ function getNodeSize(nodeId: string, options: HierarchicalLayoutOptions): { widt
  */
 export function createHierarchicalLayout(
   nodes: Node[],
-  connections: Connection[],
+  connections: any[],
   options: Partial<HierarchicalLayoutOptions> = {}
 ): Node[] {
   console.log('🔄 Hierarchical layout called with', nodes.length, 'nodes, nodeSizes:', !!options.nodeSizes);
@@ -128,7 +128,7 @@ export function createHierarchicalLayout(
  * @param connections - массив соединений между узлами
  * @returns найденный стартовый узел или null, если не найден
  */
-function findStartNode(nodes: LayoutNode[], connections: Connection[]): LayoutNode | null {
+function findStartNode(nodes: LayoutNode[], connections: any[]): LayoutNode | null {
   // Сначала ищем узел типа 'start'
   const startNode = nodes.find(node => node.type === 'start');
   if (startNode) return startNode;
@@ -160,7 +160,7 @@ function findStartNode(nodes: LayoutNode[], connections: Connection[]): LayoutNo
  * @param connections - массив соединений между узлами
  * @param startNode - начальный узел, с которого начинается построение дерева
  */
-function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], startNode: LayoutNode) {
+function buildDependencyTree(nodes: LayoutNode[], connections: any[], startNode: LayoutNode) {
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
 
   // Создаем граф соединений
@@ -361,7 +361,7 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
  * @param options - опции компоновки
  * @returns массив узлов с рассчитанными позициями
  */
-function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], options: HierarchicalLayoutOptions): Node[] {
+function arrangeNodesByLevel(levels: LayoutNode[][], connections: any[], options: HierarchicalLayoutOptions): Node[] {
   console.log('📋 arrangeNodesByLevel вызван');
 
   const result: Node[] = [];
@@ -473,7 +473,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
   const flatNodes = levels.flat();
   flatNodes.forEach(node => {
     // Обычные соединения
-    const regularConnections = connections.filter((c: Connection) => c.target === node.id).map((c: Connection) => c.source);
+    const regularConnections = connections.filter((c: any) => c.target === node.id).map((c: any) => c.source);
 
     // Соединения через кнопки
     const buttonConnections = flatNodes
@@ -638,7 +638,7 @@ function arrangeNodesLinear(nodes: LayoutNode[], options: HierarchicalLayoutOpti
  * @param _connections - массив соединений между узлами
  * @returns массив узлов с заранее определенными позициями для шаблона VProgulke
  */
-export function createVProgulkeHierarchicalLayout(nodes: Node[], _connections: Connection[]): Node[] {
+export function createVProgulkeHierarchicalLayout(nodes: Node[], _connections: any[]): Node[] {
   // Определяем последовательность узлов для VProgulke бота
 
   // Создаем карту узлов для быстрого доступа
@@ -708,7 +708,7 @@ export function createVProgulkeHierarchicalLayout(nodes: Node[], _connections: C
  */
 export function applyTemplateLayout(
   nodes: Node[],
-  connections: Connection[],
+  connections: any[],
   templateName?: string,
   nodeSizes?: Map<string, { width: number; height: number }>
 ): Node[] {

@@ -42,7 +42,6 @@ import { collectInputTargetNodes } from './utils/collectInputTargetNodes';
 import { extractNodeData } from './utils/extractNodeData';
 import { hasAutoTransitions } from './utils/hasAutoTransitions';
 import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
-import { processConnectionTargets } from './utils/processConnectionTargets';
 import { resetGenerationState } from './utils/generation-state';
 import { setCommentsEnabled } from './utils/generateGeneratedComment';
 
@@ -153,14 +152,13 @@ export const isLoggingEnabled = (): boolean => {
 };
 
 /**
- * Анализирует и логирует структуру узлов и связей для отладки.
+ * Анализирует и логирует структуру узлов для отладки.
  * @param {any[]} nodes - Массив узлов.
- * @param {any[]} connections - Массив связей.
  */
-const logFlowAnalysis = (nodes: any[], connections: any[]) => {
+const logFlowAnalysis = (nodes: any[]) => {
   if (!isLoggingEnabled()) return;
 
-  console.log(`?? ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
+  console.log(`🔍 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}`);
 
   if (nodes && nodes.length > 0) {
     console.log('?? ГЕНЕРАТОР: Анализируем все узла:');
@@ -175,13 +173,6 @@ const logFlowAnalysis = (nodes: any[], connections: any[]) => {
         console.log(`?? ГЕНЕРАТОР: НАЙДЕН interests_result!`);
         console.log(`?? ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
       }
-    });
-  }
-
-  if (connections && connections.length > 0) {
-    console.log('?? ГЕНЕРАТОР: Анализируем связи:');
-    connections.forEach((conn, index) => {
-      console.log(`?? ГЕНЕРАТОР: Связь ${index + 1}: ${conn.source} -> ${conn.target}`);
     });
   }
 };
@@ -207,12 +198,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Устанавливаем флаг генерации комментариев для этого запуска генерации
   setCommentsEnabled(enableComments);
 
-  const { nodes, connections } = extractNodesAndConnections(botData);
+  const { nodes } = extractNodesAndConnections(botData);
 
   const { allNodeIds, mediaVariablesMap } = extractNodeData(nodes || []);
 
   // Анализируем и логируем поток
-  logFlowAnalysis(nodes, connections);
+  logFlowAnalysis(nodes);
 
   let code = '"""\n';
   code += `${botName} - Telegram Bot\n`;
@@ -439,9 +430,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем узла, которые являются целями автопереходов
   addAutoTransitionNodes(nodes || [], allReferencedNodeIds);
 
-  // Добавляем все цели подключения, чтобы обеспечить наличие обработчика у каждого подключенного узла
-  processConnectionTargets(connections, allReferencedNodeIds);
-
   // Добавляем все узлы в allReferencedNodeIds, чтобы для каждого узла создавался обработчик
   // Это необходимо, потому что в разных местах кода генерируются вызовы handle_callback_... для всех узлов
   (nodes || []).forEach(node => {
@@ -552,8 +540,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Интегрируется с системой логирования для отладки
    */
   function generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(): void {
-    const processNodeButtonsAndGenerateHandlers = createProcessNodeButtonsFunction(inlineNodes, nodes, code, allNodeIds, connections, mediaVariablesMap);
-    code = newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes, allReferencedNodeIds, allConditionalButtons, code, processNodeButtonsAndGenerateHandlers, nodes, allNodeIds, connections, userDatabaseEnabled, mediaVariablesMap);
+    const processNodeButtonsAndGenerateHandlers = createProcessNodeButtonsFunction(inlineNodes, nodes, code, allNodeIds, [], mediaVariablesMap);
+    code = newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes, allReferencedNodeIds, allConditionalButtons, code, processNodeButtonsAndGenerateHandlers, nodes, allNodeIds, [], userDatabaseEnabled, mediaVariablesMap);
   }
 
   /**
@@ -625,7 +613,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * @author Bot Generator Team
    */
   function generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation() {
-    code = newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes, code, allNodeIds, connections, generateAdHocInputCollectionHandler, generateContinuationLogicForButtonBasedInput, generateUserInputValidationAndContinuationLogic, generateStateTransitionAndRenderLogic);
+    code = newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes, code, allNodeIds, [], generateAdHocInputCollectionHandler, generateContinuationLogicForButtonBasedInput, generateUserInputValidationAndContinuationLogic, generateStateTransitionAndRenderLogic);
   }
 
   /**
@@ -993,8 +981,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Обработка ошибок при переходах
    * 
    * **Функциональность рендеринга сообщений:**
-   * - Поддержка inline клав����атур с различными типами кнопок
-   * - Поддержка reply клавиатур с настройками размера
+   * - Поддержка inline клав����атур �� различными типами кнопок
+   * - Поддержка reply клавиатур с настройками раз��ера
    * - Обработка условных сообщений на основе ??анных пользователя
    * - Поддержка различных режимов форматирования (Markdown, HTML)
    * - Обработка прикрепленных медиафайлов
@@ -1002,7 +990,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * **Функциональность обработки ввода:**
    * - Настройка состояний ожидания пользовательского ввода
    * - Поддержка различных типов ввода (текст, фото, видео, аудио, документы)
-   * - Валидация входных данных с настраиваемыми параметрами
+   * - В���лидация входных данных с настраиваемыми параметрами
    * - Обработка узлов сбора данных через кнопки
    * 
    * **Поддерживаемые типы узлов:**
@@ -1031,7 +1019,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * // - Условное отображение сообщений
    */
   function generateStateTransitionAndRenderLogic() {
-    code = newgenerateStateTransitionAndRenderLogic(nodes, code, allNodeIds, connections);
+    code = newgenerateStateTransitionAndRenderLogic(nodes, code, allNodeIds, []);
   }
 
   /**
@@ -1535,7 +1523,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code,
         multiSelectNodes,
         nodes,
-        connections,
+        [],
         allNodeIds,
         isLoggingEnabled,
         generateInlineKeyboardCode,

@@ -20,8 +20,6 @@ interface TelegramSmsResendButtonProps {
   phoneNumber: string;
   /** Хеш текущего кода */
   phoneCodeHash: string;
-  /** ID проекта */
-  projectId?: number;
   /** Флаг активности кнопки */
   disabled?: boolean;
 }
@@ -32,11 +30,10 @@ interface TelegramSmsResendButtonProps {
  * @param {TelegramSmsResendButtonProps} props - Пропсы компонента
  * @returns {JSX.Element} Кнопка отправки SMS
  */
-export function TelegramSmsResendButton({ 
-  phoneNumber, 
-  phoneCodeHash, 
-  projectId,
-  disabled = false 
+export function TelegramSmsResendButton({
+  phoneNumber,
+  phoneCodeHash,
+  disabled = false
 }: TelegramSmsResendButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -52,8 +49,7 @@ export function TelegramSmsResendButton({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber,
-          phoneCodeHash,
-          projectId
+          phoneCodeHash
         })
       });
 

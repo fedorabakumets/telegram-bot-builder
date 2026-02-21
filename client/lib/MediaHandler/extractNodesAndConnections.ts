@@ -123,12 +123,11 @@ function transformNodeData(nodes: any[]): any[] {
  * // Возвращает: { nodes: [...объединенные узлы...], connections: [...объединенные связи...] }
  */
 export function extractNodesAndConnections(botData: BotData) {
-  if (!botData) return { nodes: [], connections: [] };
+  if (!botData) return { nodes: [] };
 
   if ((botData as any).sheets && Array.isArray((botData as any).sheets)) {
-    // Многолистовой проект - собираем узлы и связи из всех листов
+    // Многолистовой проект - собираем узлы из всех листов
     let allNodes: any[] = [];
-    let allConnections: any[] = [];
 
     (botData as any).sheets.forEach((sheet: any) => {
       if (sheet.nodes && Array.isArray(sheet.nodes)) {
@@ -136,18 +135,14 @@ export function extractNodesAndConnections(botData: BotData) {
         const transformedNodes = transformNodeData(sheet.nodes);
         allNodes = allNodes.concat(transformedNodes);
       }
-      if (sheet.connections && Array.isArray(sheet.connections)) {
-        allConnections = allConnections.concat(sheet.connections);
-      }
     });
 
-    return { nodes: allNodes, connections: allConnections };
+    return { nodes: allNodes };
   } else {
     // Обычный проект
     const transformedNodes = transformNodeData(botData.nodes || []);
     return {
-      nodes: transformedNodes,
-      connections: botData.connections || []
+      nodes: transformedNodes
     };
   }
 }

@@ -14,7 +14,7 @@
  */
 
 import { nanoid } from 'nanoid';
-import { CanvasSheet, BotDataWithSheets, BotData, Node, Connection } from '@shared/schema';
+import { CanvasSheet, BotDataWithSheets, BotData, Node } from '@shared/schema';
 
 // Полный объект данных узла с типизацией, соответствующей схеме
 const defaultNodeData = {
@@ -217,7 +217,6 @@ export class SheetsManager {
       id: nanoid(),
       name: 'Лист 1',
       nodes: nodes,
-      connections: legacyData.connections || [],
       viewState: {
         pan: { x: 0, y: 0 },
         zoom: 100
@@ -259,15 +258,14 @@ export class SheetsManager {
   /**
    * @brief Создание нового листа
    *
-   * Создает новый лист с заданным именем, узлами и соединениями.
+   * Создает новый лист с заданным именем и узлами.
    * Если узлы не переданы, создается стартовый узел по умолчанию.
    *
    * @param name Имя листа
    * @param nodes Массив узлов для листа (по умолчанию пустой массив)
-   * @param connections Массив соединений для листа (по умолчанию пустой массив)
    * @returns CanvasSheet Новый лист
    */
-  static createSheet(name: string, nodes: Node[] = [], connections: Connection[] = []): CanvasSheet {
+  static createSheet(name: string, nodes: Node[] = []): CanvasSheet {
     // Если узлы не переданы, создаем стартовый узел по умолчанию
     const defaultNodes = nodes.length === 0 ? [{
       id: 'start',
@@ -280,7 +278,6 @@ export class SheetsManager {
       id: nanoid(),
       name,
       nodes: defaultNodes,
-      connections,
       viewState: {
         pan: { x: 0, y: 0 },
         zoom: 100
@@ -420,19 +417,10 @@ export class SheetsManager {
       data: this.updateNodeReferencesInData(node.data, nodeIdMap)
     }));
 
-    // Обновляем ID в соединениях
-    const duplicatedConnections = originalSheet.connections.map(conn => ({
-      ...conn,
-      id: nanoid(),
-      source: nodeIdMap.get(conn.source) || conn.source,
-      target: nodeIdMap.get(conn.target) || conn.target
-    }));
-
     return {
       id: nanoid(),
       name: `${originalSheet.name} (копия)`,
       nodes: updatedNodesWithReferences,
-      connections: duplicatedConnections,
       viewState: { ...originalSheet.viewState },
       createdAt: new Date(),
       updatedAt: new Date()
@@ -558,25 +546,13 @@ export class SheetsManager {
     };
   }
 
-  // Обновление соединений в листе
-  static updateSheetConnections(data: BotDataWithSheets, sheetId: string, connections: Connection[]): BotDataWithSheets {
+  // Обновление узлов в листе
+  static updateSheetData(data: BotDataWithSheets, sheetId: string, nodes: Node[]): BotDataWithSheets {
     return {
       ...data,
-      sheets: data.sheets.map(sheet => 
-        sheet.id === sheetId 
-          ? { ...sheet, connections, updatedAt: new Date() }
-          : sheet
-      )
-    };
-  }
-
-  // Обновление узлов и соединений в листе одновременно
-  static updateSheetData(data: BotDataWithSheets, sheetId: string, nodes: Node[], connections: Connection[]): BotDataWithSheets {
-    return {
-      ...data,
-      sheets: data.sheets.map(sheet => 
-        sheet.id === sheetId 
-          ? { ...sheet, nodes, connections, updatedAt: new Date() }
+      sheets: data.sheets.map(sheet =>
+        sheet.id === sheetId
+          ? { ...sheet, nodes, updatedAt: new Date() }
           : sheet
       )
     };
@@ -586,8 +562,8 @@ export class SheetsManager {
   static updateSheetViewState(data: BotDataWithSheets, sheetId: string, viewState: { pan: { x: number; y: number }; zoom: number }): BotDataWithSheets {
     return {
       ...data,
-      sheets: data.sheets.map(sheet => 
-        sheet.id === sheetId 
+      sheets: data.sheets.map(sheet =>
+        sheet.id === sheetId
           ? { ...sheet, viewState, updatedAt: new Date() }
           : sheet
       )
@@ -633,12 +609,11 @@ export class SheetsManager {
   static toLegacyFormat(data: BotDataWithSheets): BotData {
     const activeSheet = this.getActiveSheet(data);
     if (!activeSheet) {
-      return { nodes: [], connections: [] };
+      return { nodes: [] };
     }
 
     return {
-      nodes: activeSheet.nodes,
-      connections: activeSheet.connections
+      nodes: activeSheet.nodes
     };
   }
 }

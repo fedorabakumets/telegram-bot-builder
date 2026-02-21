@@ -13,13 +13,6 @@ interface ConditionalMediaTogglesProps {
   onNodeUpdate: (nodeId: string, updates: any) => void;
 }
 
-const updateCondition = (condition: any, selectedNode: any, updates: any, onNodeUpdate: any) => {
-  const conditions = selectedNode.data.conditionalMessages || [];
-  onNodeUpdate(selectedNode.id, {
-    conditionalMessages: conditions.map((c: any) => c.id === condition.id ? { ...c, ...updates } : c)
-  });
-};
-
 const handleToggle = (condition: any, selectedNode: any, type: string, checked: boolean, onNodeUpdate: any) => {
   const conditions = selectedNode.data.conditionalMessages || [];
   onNodeUpdate(selectedNode.id, {

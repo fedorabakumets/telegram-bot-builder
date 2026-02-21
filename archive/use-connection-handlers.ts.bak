@@ -1,0 +1,53 @@
+/**
+ * @fileoverview Обработчики событий для слоя соединений холста
+ * 
+ * Содержит хуки для обработки кликов по соединениям и их удаления
+ * в компоненте визуального редактора ботов.
+ */
+
+import { useCallback } from 'react';
+
+/**
+ * Свойства хука для создания обработчиков соединений
+ */
+interface UseConnectionHandlersProps {
+  /** Колбэк при выборе соединения */
+  onConnectionSelect?: (connectionId: string) => void;
+  /** Колбэк при удалении соединения */
+  onConnectionDelete?: (connectionId: string) => void;
+  /** Колбэк для логирования действий в историю */
+  onActionLog?: (type: 'disconnect', description: string) => void;
+}
+
+/**
+ * Хук для создания обработчиков событий соединений
+ * 
+ * @param props - Свойства хука
+ * @returns Объект с обработчиками событий
+ */
+export function useConnectionHandlers({
+  onConnectionSelect,
+  onConnectionDelete,
+  onActionLog
+}: UseConnectionHandlersProps) {
+  /**
+   * Обработчик клика по соединению
+   */
+  const handleConnectionClick = useCallback((connectionId: string) => {
+    onConnectionSelect?.(connectionId);
+  }, [onConnectionSelect]);
+
+  /**
+   * Обработчик удаления соединения
+   * Логирует действие в историю и вызывает колбэк удаления
+   */
+  const handleDeleteConnection = useCallback((connectionId: string) => {
+    onActionLog?.('disconnect', 'Удалено соединение');
+    onConnectionDelete?.(connectionId);
+  }, [onConnectionDelete, onActionLog]);
+
+  return {
+    handleConnectionClick,
+    handleDeleteConnection
+  };
+}

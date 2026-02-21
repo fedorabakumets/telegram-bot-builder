@@ -2192,8 +2192,8 @@ export function setupBotIntegrationRoutes(app: Express) {
         }
     });
 
-    // Get group members using Telegram Client API
-    app.get("/api/projects/:projectId/telegram-client/group-members/:groupId", async (req, res) => {
+    // Get group members using Telegram Client API (общая база)
+    app.get("/api/telegram-client/group-members/:groupId", async (req, res) => {
         try {
             const { groupId } = req.params;
 

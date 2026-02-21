@@ -448,8 +448,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get all bot projects (lightweight - without data field)
   setupProjectRoutes(app, requireDbReady);
 
-  // User IDs management routes
-  app.use("/api/projects", createUserIdsRoutes(pgPool));
+  // User IDs management routes (общая база на все проекты)
+  app.use("/api/user-ids", createUserIdsRoutes(pgPool));
 
   // Get all bot instances
   app.get("/api/bots", async (_req, res) => {
@@ -2155,10 +2155,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get message history for a user with media
   setupBotIntegrationRoutes(app);
 
-  // Send verification code to phone number
+  // Send verification code to phone number (общая база)
   app.post("/api/telegram-auth/send-code", async (req, res) => {
     try {
-      const { phoneNumber, projectId } = req.body;
+      const { phoneNumber } = req.body;
 
       if (!phoneNumber) {
         return res.status(400).json({
@@ -2167,7 +2167,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const userId = projectId ? String(projectId) : 'default';
+      const userId = 'default';
 
       // Загружаем credentials из БД
       const credentials = await telegramAuthService.loadCredentials(userId);
@@ -2218,10 +2218,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Verify phone code
+  // Verify phone code (общая база)
   app.post("/api/telegram-auth/verify-code", async (req, res) => {
     try {
-      const { phoneNumber, phoneCode, phoneCodeHash, projectId } = req.body;
+      const { phoneNumber, phoneCode, phoneCodeHash } = req.body;
 
       if (!phoneNumber || !phoneCode || !phoneCodeHash) {
         return res.status(400).json({
@@ -2230,7 +2230,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const userId = projectId ? String(projectId) : 'default';
+      const userId = 'default';
       const client = telegramClientManager.getClients().get(userId);
 
       if (!client) {
@@ -2302,10 +2302,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Resend verification code via call
+  // Resend verification code via call (общая база)
   app.post("/api/telegram-auth/resend-code", async (req, res) => {
     try {
-      const { phoneNumber, phoneCodeHash, projectId } = req.body;
+      const { phoneNumber, phoneCodeHash } = req.body;
 
       if (!phoneNumber || !phoneCodeHash) {
         return res.status(400).json({
@@ -2314,7 +2314,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const userId = projectId ? String(projectId) : 'default';
+      const userId = 'default';
       const client = telegramClientManager.getClients().get(userId);
 
       if (!client) {
@@ -2356,10 +2356,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Resend verification code via SMS
+  // Resend verification code via SMS (общая база)
   app.post("/api/telegram-auth/resend-sms", async (req, res) => {
     try {
-      const { phoneNumber, phoneCodeHash, projectId } = req.body;
+      const { phoneNumber, phoneCodeHash } = req.body;
 
       if (!phoneNumber || !phoneCodeHash) {
         return res.status(400).json({
@@ -2368,7 +2368,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const userId = projectId ? String(projectId) : 'default';
+      const userId = 'default';
       const client = telegramClientManager.getClients().get(userId);
 
       if (!client) {
@@ -2674,10 +2674,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Verify 2FA password
+  // Verify 2FA password (общая база)
   app.post("/api/telegram-auth/verify-password", async (req, res) => {
     try {
-      const { password, projectId } = req.body;
+      const { password } = req.body;
 
       if (!password) {
         return res.status(400).json({
@@ -2686,7 +2686,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const userId = projectId ? String(projectId) : 'default';
+      const userId = 'default';
       const client = telegramClientManager.getClients().get(userId);
 
       if (!client) {
@@ -2742,10 +2742,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Save API credentials
+  // Save API credentials (общая база)
   app.post("/api/telegram-auth/save-credentials", async (req, res) => {
     try {
-      const { apiId, apiHash, projectId } = req.body;
+      const { apiId, apiHash } = req.body;
 
       if (!apiId || !apiHash) {
         return res.status(400).json({
@@ -2754,7 +2754,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      const userId = projectId ? String(projectId) : 'default';
+      // Используем 'default' как userId для общей базы
+      const userId = 'default';
 
       // Используем новый сервис для сохранения credentials
       const result = await telegramAuthService.saveCredentials(userId, apiId, apiHash);
@@ -2779,12 +2780,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Get authentication status
+  // Get authentication status (общая база)
   app.get("/api/telegram-auth/status", async (req, res) => {
     try {
-      // Используем projectId из query параметров если есть
-      const projectId = req.query.projectId as string || 'default';
-      const status = await telegramClientManager.getAuthStatus(projectId);
+      // Используем 'default' как userId для общей базы
+      const userId = 'default';
+      const status = await telegramClientManager.getAuthStatus(userId);
       res.json(status);
     } catch (error: any) {
       console.error("Failed to get auth status:", error);
@@ -2795,11 +2796,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Logout from Client API
+  // Logout from Client API (общая база)
   app.post("/api/telegram-auth/logout", async (req, res) => {
     try {
-      // Преобразуем projectId в строку для использования как userId
-      const userId = req.body.projectId ? String(req.body.projectId) : 'default';
+      const userId = 'default';
       const result = await telegramClientManager.logout(userId);
       if (result.success) {
         res.json({ success: true, message: "Выполнен выход из аккаунта" });
@@ -2812,21 +2812,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Reset API credentials
+  // Reset API credentials (общая база)
   app.post("/api/telegram-auth/reset-credentials", async (req, res) => {
     try {
-      const userId = req.body.projectId ? String(req.body.projectId) : 'default';
-      
+      const userId = 'default';
+
       // Удаляем credentials из БД
       await db.delete(userTelegramSettings).where(eq(userTelegramSettings.userId, userId));
-      
+
       // Отключаем и удаляем клиент
       const client = telegramClientManager.getClients().get(userId);
       if (client) {
         await client.disconnect();
         telegramClientManager.getClients().delete(userId);
       }
-      
+
       res.json({ success: true, message: "API credentials сброшены" });
     } catch (error: any) {
       console.error("Failed to reset credentials:", error);

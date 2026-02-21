@@ -45,7 +45,7 @@ export function ApiTypeSelector({ node, onUpdate }: ApiTypeSelectorProps) {
       </Label>
       <Select
         value={apiType}
-        onValueChange={(value) => onUpdate(node.id, { broadcastApiType: value })}
+        onValueChange={(value: "bot" | "client") => onUpdate(node.id, { broadcastApiType: value })}
       >
         <SelectTrigger id="apiType" className="w-full">
           <SelectValue placeholder="Выберите метод" />

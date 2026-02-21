@@ -1,5 +1,6 @@
 /**
  * @fileoverview Компонент конфигурации Telegram Client API
+ * Общая настройка для всех проектов
  *
  * Предоставляет интерфейс для настройки и управления Telegram Client API (Userbot):
  * - Настройка режима работы (Bot API / Hybrid / Client API Only)
@@ -16,12 +17,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Phone, CheckCircle2, AlertTriangle, LogOut, Settings, Loader2, Users, FlaskConical } from 'lucide-react';
+import { Shield, Phone, CheckCircle2, AlertTriangle, LogOut, Settings, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { TelegramAuth } from '@/components/telegram-auth';
-import { GroupMembersClientPanel } from './GroupMembersClientPanel';
-import { TEST_CONFIG } from './test-config';
 
 /**
  * Статус авторизации Client API
@@ -30,31 +29,21 @@ interface AuthStatus {
   isAuthenticated: boolean;
   hasCredentials: boolean;
   phoneNumber?: string;
-  userId?: number;
+  userId?: number | string;
   username?: string;
 }
 
 /**
- * Свойства компонента конфигурации Client API
- */
-interface TelegramClientConfigProps {
-  projectId: number;
-}
-
-/**
- * Компонент настройки Telegram Client API
+ * Компонент настройки Telegram Client API (общая база)
  *
- * @param {TelegramClientConfigProps} props - Свойства компонента
  * @returns {JSX.Element} Панель конфигурации Client API
  */
-export function TelegramClientConfig({ projectId }: TelegramClientConfigProps) {
+export function TelegramClientConfig() {
   const [authStatus, setAuthStatus] = useState<AuthStatus>({ isAuthenticated: false, hasCredentials: false });
   const [apiId, setApiId] = useState('');
   const [apiHash, setApiHash] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
-  const [showMembersPanel, setShowMembersPanel] = useState(false);
   const { toast } = useToast();
 
   /**
@@ -62,7 +51,7 @@ export function TelegramClientConfig({ projectId }: TelegramClientConfigProps) {
    */
   const loadStatus = async () => {
     try {
-      const response = await fetch(`/api/telegram-auth/status?projectId=${projectId}`);
+      const response = await fetch('/api/telegram-auth/status');
       const status = await response.json();
       setAuthStatus(status);
     } catch (error) {
@@ -74,16 +63,6 @@ export function TelegramClientConfig({ projectId }: TelegramClientConfigProps) {
     loadStatus();
   }, []);
 
-  /**
-   * Обработка успешной авторизации в диалоге
-   */
-  const handleAuthSuccess = () => {
-    loadStatus(); // Обновляем статус после авторизации
-    toast({
-      title: "Авторизация успешна",
-      description: "Теперь вы можете просматривать всех участников группы",
-    });
-  };
 
   /**
    * Сохранение API credentials
@@ -96,7 +75,7 @@ export function TelegramClientConfig({ projectId }: TelegramClientConfigProps) {
 
     setIsLoading(true);
     try {
-      const result = await apiRequest('POST', '/api/telegram-auth/save-credentials', { apiId, apiHash, projectId });
+      const result = await apiRequest('POST', '/api/telegram-auth/save-credentials', { apiId, apiHash });
       if (result.success) {
         toast({ title: 'Успешно', description: 'API credentials сохранены' });
         loadStatus();
@@ -114,7 +93,7 @@ export function TelegramClientConfig({ projectId }: TelegramClientConfigProps) {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await apiRequest('POST', '/api/telegram-auth/logout', { projectId });
+      await apiRequest('POST', '/api/telegram-auth/logout');
       toast({ title: 'Выполнен выход', description: 'Вы успешно вышли из аккаунта' });
       loadStatus();
     } catch (error) {
@@ -130,7 +109,7 @@ export function TelegramClientConfig({ projectId }: TelegramClientConfigProps) {
   const resetCredentials = async () => {
     setIsLoading(true);
     try {
-      await apiRequest('POST', '/api/telegram-auth/reset-credentials', { projectId });
+      await apiRequest('POST', '/api/telegram-auth/reset-credentials');
       toast({ title: 'Сброшено', description: 'API credentials удалены. Введите новые данные' });
       setApiId('');
       setApiHash('');
@@ -159,22 +138,7 @@ export function TelegramClientConfig({ projectId }: TelegramClientConfigProps) {
           {/* API Credentials */}
           {!authStatus.hasCredentials && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Telegram API Credentials</Label>
-                <Button
-                  onClick={() => {
-                    setApiId(TEST_CONFIG.apiId);
-                    setApiHash(TEST_CONFIG.apiHash);
-                    toast({ title: 'Тестовые данные', description: 'API credentials заполнены' });
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1 text-xs"
-                >
-                  <FlaskConical className="h-3 w-3" />
-                  Тестовые
-                </Button>
-              </div>
+              <Label className="text-sm font-medium">Telegram API Credentials</Label>
               <div className="space-y-2">
                 <div>
                   <Label htmlFor="api-id" className="text-xs">API ID</Label>
@@ -254,7 +218,9 @@ export function TelegramClientConfig({ projectId }: TelegramClientConfigProps) {
             {authStatus.isAuthenticated && (
               <div className="p-3 bg-muted rounded-lg space-y-1 text-sm">
                 <p><strong>Пользователь:</strong> {authStatus.username || authStatus.phoneNumber}</p>
-                <p><strong>ID:</strong> {authStatus.userId}</p>
+                {authStatus.userId && authStatus.userId !== 'default' && (
+                  <p><strong>ID:</strong> {authStatus.userId}</p>
+                )}
               </div>
             )}
 
@@ -284,60 +250,12 @@ export function TelegramClientConfig({ projectId }: TelegramClientConfigProps) {
               </div>
             </div>
           </div>
-
-          {/* Управление участниками группы */}
-          {authStatus.isAuthenticated && (
-            <div className="space-y-3 pt-4 border-t">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-600" />
-                <Label className="text-sm font-medium">Управление участниками группы</Label>
-              </div>
-
-              {!showMembersPanel ? (
-                <Button
-                  onClick={() => setShowMembersPanel(true)}
-                  variant="outline"
-                  className="w-full"
-                  size="sm"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Открыть панель участников
-                </Button>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="ID группы (например, -1001234567890)"
-                      value={selectedGroupId}
-                      onChange={(e) => setSelectedGroupId(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={() => setShowMembersPanel(false)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      Закрыть
-                    </Button>
-                  </div>
-                  {selectedGroupId && (
-                    <GroupMembersClientPanel
-                      projectId={projectId}
-                      groupId={selectedGroupId}
-                      groupName="Группа"
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
 
       <TelegramAuth
         open={showAuthDialog}
         onOpenChange={setShowAuthDialog}
-        projectId={projectId}
         onSuccess={() => {
           loadStatus();
           setShowAuthDialog(false);

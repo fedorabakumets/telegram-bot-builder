@@ -57,8 +57,7 @@ export function generateBroadcastClientInline(node: Node, allNodes: Node[] | nul
   if (idSource === 'user_ids' || idSource === 'both') {
     codeLines.push(`${indent}        # Получаем ID из таблицы user_ids`);
     codeLines.push(`${indent}        rows = await conn.fetch(`);
-    codeLines.push(`${indent}            "SELECT DISTINCT user_id FROM user_ids WHERE project_id = $1",`);
-    codeLines.push(`${indent}            PROJECT_ID`);
+    codeLines.push(`${indent}            "SELECT DISTINCT user_id FROM user_ids"`);
     codeLines.push(`${indent}        )`);
     codeLines.push(`${indent}        recipients.extend([str(row["user_id"]) for row in rows])`);
   }

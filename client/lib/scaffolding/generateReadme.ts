@@ -4,16 +4,14 @@ import { generateBotFatherCommands } from "../commands";
 
 export function generateReadme(botData: BotData, botName: string, projectId?: number, tokenId?: number): string {
   const rawNodes = botData?.nodes || [];
-  const nodes = rawNodes.filter(node => node !== null && node !== undefined); // Фильтруем null/undefined
-  const rawConnections = botData?.connections || [];
-  const connections = rawConnections.filter(conn => conn !== null && conn !== undefined); // Фильтруем null/undefined
+  const nodes = rawNodes.filter(node => node !== null && node !== undefined);
   const commandNodes = nodes.filter(node => (node.type === 'start' || node.type === 'command') && node.data?.command
   );
 
   let readme = '# ' + botName + '\n\n';
   readme += 'Telegram бот, созданный с помощью TelegramBot Builder.\n\n';
   readme += '## Описание\n\n';
-  readme += 'Этот бот содержит ' + nodes.length + ' узлов и ' + connections.length + ' соединений.\n\n';
+  readme += 'Этот бот содержит ' + nodes.length + ' узлов.\n\n';
   readme += '### Команды бота\n\n';
 
   commandNodes.forEach(node => {

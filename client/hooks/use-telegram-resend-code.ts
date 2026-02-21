@@ -18,8 +18,6 @@ interface UseTelegramResendCodeProps {
   phoneNumber: string;
   /** Хеш кода подтверждения */
   phoneCodeHash: string;
-  /** ID проекта */
-  projectId?: number;
   /** Активен ли шаг ввода кода */
   isActive: boolean;
 }
@@ -39,7 +37,6 @@ interface UseTelegramResendCodeProps {
  * const { resendCode, resendTimeout, isLoading } = useTelegramResendCode({
  *   phoneNumber: '+79991234567',
  *   phoneCodeHash: 'abc123',
- *   projectId: 1,
  *   isActive: true
  * });
  * ```
@@ -47,7 +44,6 @@ interface UseTelegramResendCodeProps {
 export function useTelegramResendCode({
   phoneNumber,
   phoneCodeHash,
-  projectId,
   isActive
 }: UseTelegramResendCodeProps) {
   const [resendTimeout, setResendTimeout] = useState(10);
@@ -85,8 +81,7 @@ export function useTelegramResendCode({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber: phoneNumber.trim(),
-          phoneCodeHash: currentPhoneCodeHash,
-          projectId: projectId || 'default'
+          phoneCodeHash: currentPhoneCodeHash
         })
       });
 

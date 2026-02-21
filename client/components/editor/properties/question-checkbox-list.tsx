@@ -3,8 +3,6 @@
  * @description Отображает доступные вопросы для выбора в условиях.
  */
 
-import { Node } from '@shared/schema';
-
 interface Question {
   name: string;
   nodeId: string;

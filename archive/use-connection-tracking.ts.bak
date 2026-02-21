@@ -1,0 +1,68 @@
+/**
+ * @fileoverview Хук для отслеживания движения мыши при создании соединения
+ * 
+ * Содержит логику отслеживания позиции мыши и обработки клавиши Escape
+ * для отмены создания соединения в компоненте холста.
+ */
+
+import { useEffect, useRef } from 'react';
+
+/**
+ * Свойства хука для отслеживания соединения
+ */
+interface UseConnectionTrackingProps {
+  /** Флаг активного соединения (начало создания) */
+  connectionStart: { nodeId: string; handle: 'source' | 'target' } | null;
+  /** Ссылка на canvas элемент для вычисления координат */
+  canvasRef: React.RefObject<HTMLDivElement>;
+  /** Установщик позиции мыши */
+  setMousePosition: (position: { x: number; y: number }) => void;
+  /** Установщик состояния начала соединения */
+  setConnectionStart: (start: { nodeId: string; handle: 'source' | 'target' } | null) => void;
+}
+
+/**
+ * Хук для отслеживания движения мыши при создании соединения
+ * 
+ * @param props - Свойства хука
+ */
+export function useConnectionTracking({
+  connectionStart,
+  canvasRef,
+  setMousePosition,
+  setConnectionStart
+}: UseConnectionTrackingProps) {
+  /**
+   * Сохраняем callback в ref для избежания пересоздания обработчиков
+   */
+  const mousePositionRef = useRef(setMousePosition);
+  mousePositionRef.current = setMousePosition;
+
+  useEffect(() => {
+    if (!connectionStart) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        mousePositionRef.current({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        });
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setConnectionStart(null);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [connectionStart, canvasRef, setConnectionStart]);
+}

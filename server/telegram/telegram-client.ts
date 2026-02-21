@@ -476,23 +476,86 @@ class TelegramClientManager {
    * @param userId - ID пользователя
    * @returns Статус аутентификации
    */
-  async getAuthStatus(userId: string): Promise<AuthStatus & { hasCredentials?: boolean }> {
-    const status = this.authStatus.get(userId) || {
-      isAuthenticated: false,
-      needsCode: false,
-      needsPassword: false
-    };
-
+  async getAuthStatus(userId: string): Promise<AuthStatus & { hasCredentials?: boolean; isAuthenticated?: boolean; username?: string; phoneNumber?: string }> {
     // Проверяем наличие credentials в базе данных
     try {
-
       const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
-      const hasCredentials = !!(result.length > 0 && result[0].apiId && result[0].apiHash);
+      
+      if (result.length === 0) {
+        return { 
+          isAuthenticated: false, 
+          needsCode: false, 
+          needsPassword: false,
+          hasCredentials: false 
+        };
+      }
 
-      return { ...status, hasCredentials };
+      const row = result[0];
+      const hasCredentials = !!(row.apiId && row.apiHash);
+      const hasSession = !!row.sessionString;
+
+      // Если есть сессия — считаем пользователя авторизованным и получаем информацию
+      if (hasSession && row.apiId && row.apiHash) {
+        try {
+          const client = new TelegramClient(
+            new StringSession(row.sessionString),
+            parseInt(row.apiId),
+            row.apiHash,
+            {
+              connectionRetries: 5,
+              useWSS: false,
+            }
+          );
+
+          await client.connect();
+          const me = await client.getMe();
+
+          console.log('📊 getMe() результат:', JSON.stringify({
+            id: me?.id,
+            userId: (me as any).userId,
+            username: me?.username,
+            phone: (me as any).phone,
+            firstName: me?.firstName
+          }, null, 2));
+
+          // Не отключаем клиента — он может использоваться в других местах
+
+          return {
+            isAuthenticated: true,
+            needsCode: false,
+            needsPassword: false,
+            hasCredentials: true,
+            username: me?.username || undefined,
+            phoneNumber: (me as any).phone || undefined,
+            userId: (me as any).userId?.toString() || me?.id?.toString()
+          };
+        } catch (error) {
+          console.error('Ошибка получения информации о пользователе:', error);
+          // Возвращаем статус без username/phoneNumber если не удалось получить
+          return {
+            isAuthenticated: true,
+            needsCode: false,
+            needsPassword: false,
+            hasCredentials: true
+          };
+        }
+      }
+
+      // Если credentials есть, но сессии нет — ждём код
+      return { 
+        isAuthenticated: false, 
+        needsCode: hasCredentials, 
+        needsPassword: false,
+        hasCredentials
+      };
     } catch (error) {
       console.error('Ошибка проверки credentials:', error);
-      return { ...status, hasCredentials: false };
+      return { 
+        isAuthenticated: false, 
+        needsCode: false, 
+        needsPassword: false, 
+        hasCredentials: false 
+      };
     }
   }
 

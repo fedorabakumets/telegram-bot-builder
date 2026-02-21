@@ -12,16 +12,14 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Users, Loader2, Crown, Bot } from 'lucide-react';
+import { Shield, Users, Loader2, Crown, Bot, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import { TelegramAuth } from '@/components/telegram-auth';
 
 /**
  * Свойства компонента управления участниками
  */
 interface GroupMembersClientPanelProps {
-  projectId: number;
   groupId: string;
   groupName: string;
 }
@@ -32,9 +30,9 @@ interface GroupMembersClientPanelProps {
  * @param {GroupMembersClientPanelProps} props - Свойства компонента
  * @returns {JSX.Element} Панель управления участниками
  */
-export function GroupMembersClientPanel({ projectId, groupId, groupName }: GroupMembersClientPanelProps) {
+export function GroupMembersClientPanel({ groupId, groupName }: GroupMembersClientPanelProps) {
   const [clientApiMembers, setClientApiMembers] = useState<any[]>([]);
-  const [savedMembers, setSavedMembers] = useState<any[]>([]);
+  const [savedMembers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [authStatus, setAuthStatus] = useState<{ isAuthenticated: boolean; hasCredentials: boolean }>({
@@ -48,7 +46,7 @@ export function GroupMembersClientPanel({ projectId, groupId, groupName }: Group
    */
   const loadAuthStatus = async () => {
     try {
-      const response = await fetch(`/api/telegram-auth/status?projectId=${projectId}`);
+      const response = await fetch('/api/telegram-auth/status');
       const status = await response.json();
       setAuthStatus({
         isAuthenticated: status.isAuthenticated || false,
@@ -62,7 +60,7 @@ export function GroupMembersClientPanel({ projectId, groupId, groupName }: Group
   // Загружаем статус при монтировании
   React.useEffect(() => {
     loadAuthStatus();
-  }, [projectId]);
+  }, []);
 
   /**
    * Загрузка участников группы через Client API
@@ -79,7 +77,7 @@ export function GroupMembersClientPanel({ projectId, groupId, groupName }: Group
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/projects/${projectId}/telegram-client/group-members/${groupId}`);
+      const response = await fetch(`/api/telegram-client/group-members/${groupId}`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -123,18 +121,18 @@ export function GroupMembersClientPanel({ projectId, groupId, groupName }: Group
 
     // Добавляем сохранённых участников из базы данных
     if (savedMembers.length > 0) {
-      allMembers.push(...savedMembers.map(member => ({ ...member, sourceType: 'database' })));
+      allMembers.push(...savedMembers.map((member: any) => ({ ...member, sourceType: 'database' })));
     }
 
     // Добавляем участников из Client API (если нет дубликатов)
     if (clientApiMembers.length > 0) {
       const uniqueApiMembers = clientApiMembers.filter(apiMember => {
         const apiUserId = apiMember.id?.toString() || apiMember.user?.id?.toString() || apiMember.userId?.toString();
-        return !savedMembers.some(savedMember =>
+        return !savedMembers.some((savedMember: any) =>
           savedMember.user?.id?.toString() === apiUserId
         );
       });
-      allMembers.push(...uniqueApiMembers.map(member => ({ ...member, sourceType: 'api' })));
+      allMembers.push(...uniqueApiMembers.map((member: any) => ({ ...member, sourceType: 'api' })));
     }
 
     return allMembers;
@@ -287,7 +285,6 @@ export function GroupMembersClientPanel({ projectId, groupId, groupName }: Group
       <TelegramAuth
         open={showAuthDialog}
         onOpenChange={setShowAuthDialog}
-        projectId={projectId}
         onSuccess={handleAuthSuccess}
       />
     </>
