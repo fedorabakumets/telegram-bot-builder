@@ -28,7 +28,7 @@ export const SYSTEM_VARIABLES: SystemVariable[] = [
   { name: 'bot_name', nodeId: 'system', nodeType: 'system', description: 'Имя бота' },
   
   // Переменные базы данных user_ids (для рассылки)
-  { name: 'user_ids_list', nodeId: 'system', nodeType: 'system', description: 'Список всех ID из базы (через запятую)' },
+  { name: 'user_ids_list', nodeId: 'system', nodeType: 'system', description: 'Список всех ID из базы (в столбик)' },
   { name: 'user_ids_count', nodeId: 'system', nodeType: 'system', description: 'Количество ID в базе' }
 ];
 
