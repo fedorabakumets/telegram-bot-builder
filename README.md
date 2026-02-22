@@ -35,7 +35,7 @@
   
   <!-- Кнопки призыва к действию -->
   <div style="margin: 20px 0;">
-    <a href="https://railway.com/deploy/AavQTN?referralCode=kA5iGV&utm_medium=integration&utm_source=template&utm_campaign=generic">
+    <a href="https://railway.com/deploy/aware-encouragement">
       <img src="https://railway.com/button.svg" alt="Deploy on Railway"/>
     </a>
     <a href="#-быстрый-старт-5-минут">
