@@ -39,7 +39,11 @@ async function runMigrations() {
         await pool.query(sql);
         console.log(`✅ Applied: ${file}`);
       } catch (error: any) {
-        if (error.message.includes('already exists') || error.message.includes('duplicate column')) {
+        if (
+          error.message.includes('already exists') || 
+          error.message.includes('duplicate column') ||
+          error.message.includes('уже существует')
+        ) {
           console.log(`⏭️  Skipped (already exists): ${file}`);
         } else {
           console.error(`❌ Error applying ${file}:`, error.message);
