@@ -56,7 +56,7 @@ export function SaveToCsvSwitch({ selectedNode, onNodeUpdate }: SaveToCsvSwitchP
           <AlertDescription className="text-xs text-blue-800 dark:text-blue-200">
             Введённый пользователем ID будет сохранён в файл{" "}
             <code className="bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 rounded text-blue-700 dark:text-blue-300">user_ids.csv</code>{" "}
-            в папке проекта. Формат: ID, источник, дата.
+            в папке проекта. Один ID в строке.
           </AlertDescription>
         </Alert>
       )}
