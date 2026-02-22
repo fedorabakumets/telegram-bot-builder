@@ -1,5 +1,6 @@
 import { processInputTargetNavigation } from './processInputTargetNavigation';
 import { generateSaveToUserIdsCode } from './generate/generateSaveToUserIds';
+import { generateSaveToCsvCode } from './generate/generateSaveToCsv';
 
 export function processUserInputWithValidationAndSave(nodes: any[], code: string, allNodeIds: any[]) {
     const inputNodes = (nodes || []).filter(node => node.data.collectUserInput);
@@ -71,6 +72,12 @@ export function processUserInputWithValidationAndSave(nodes: any[], code: string
         // Сохранение ID в таблицу user_ids для рассылки
         if (node.data.saveToUserIds) {
             const saveCode = generateSaveToUserIdsCode(node, '            ');
+            code += `\n${saveCode}\n`;
+        }
+
+        // Сохранение ID в CSV файл
+        if (node.data.saveToCsv) {
+            const saveCode = generateSaveToCsvCode(node, '            ');
             code += `\n${saveCode}\n`;
         }
 

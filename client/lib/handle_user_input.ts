@@ -567,6 +567,35 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '            \n';
 
     /**
+     * Сохранение ID в CSV файл
+     * Если узел имеет saveToCsv=true, записываем ID в CSV файл проекта
+     */
+    code += '            # Сохранение ID в CSV файл для рассылки\n';
+    code += '            try:\n';
+    code += '                import os\n';
+    code += '                from datetime import datetime\n';
+    code += '                # Путь к файлу CSV в папке проекта\n';
+    code += '                csv_dir = os.path.join(os.getcwd(), \'bots\', f\'project_{PROJECT_ID}\')\n';
+    code += '                os.makedirs(csv_dir, exist_ok=True)\n';
+    code += '                csv_file = os.path.join(csv_dir, \'user_ids.csv\')\n';
+    code += '                # Проверяем, есть ли уже такой ID в файле\n';
+    code += '                id_exists = False\n';
+    code += '                if os.path.exists(csv_file):\n';
+    code += '                    with open(csv_file, \'r\', encoding=\'utf-8\') as f:\n';
+    code += '                        existing_ids = [line.strip() for line in f if line.strip()]\n';
+    code += '                        if str(user_text).strip() in existing_ids:\n';
+    code += '                            id_exists = True\n';
+    code += '                            logging.info(f"⚠️ ID {user_text} уже есть в CSV, пропускаем")\n';
+    code += '                # Записываем ID в файл (один ID в строке)\n';
+    code += '                if not id_exists:\n';
+    code += '                    with open(csv_file, \'a\', encoding=\'utf-8\') as f:\n';
+    code += '                        f.write(f"{user_text}\\n")\n';
+    code += '                    logging.info(f"✅ ID {user_text} записан в CSV файл: {csv_file}")\n';
+    code += '            except Exception as e:\n';
+    code += '                logging.error(f"❌ Ошибка записи в CSV: {e}")\n';
+    code += '            \n';
+
+    /**
      * Отправка подтверждающего сообщения
      * Отправляет пользователю сообщение об успешном сохранении данных
      */
