@@ -35,6 +35,9 @@
   
   <!-- Кнопки призыва к действию -->
   <div style="margin: 20px 0;">
+    <a href="https://railway.com/deploy/AavQTN?referralCode=kA5iGV&utm_medium=integration&utm_source=template&utm_campaign=generic">
+      <img src="https://railway.com/button.svg" alt="Deploy on Railway"/>
+    </a>
     <a href="#-быстрый-старт-5-минут">
       <img src="https://img.shields.io/badge/🚀_Попробовать_сейчас-FF6B6B?style=for-the-badge&logoColor=white" alt="Попробовать"/>
     </a>
