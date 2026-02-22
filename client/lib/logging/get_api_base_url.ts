@@ -64,6 +64,8 @@ export function get_api_base_url(codeLines: string[], projectId: number | null) 
     apiUrlCodeLines.push('API_BASE_URL = get_api_base_url()');
     apiUrlCodeLines.push('logging.info(f"📡 API Base URL определён как: {API_BASE_URL}")');
     apiUrlCodeLines.push(`PROJECT_ID = int(os.getenv("PROJECT_ID", ${escapePythonString(projectId || 0)}))  # ID проекта в системе`);
+    apiUrlCodeLines.push('# Путь к папке проекта (например, bots/импортированный_проект_0312_40_35)');
+    apiUrlCodeLines.push('PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))');
     apiUrlCodeLines.push('');
 
     // Применяем автоматическое добавление комментариев ко всему коду

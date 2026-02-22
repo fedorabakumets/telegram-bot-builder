@@ -573,11 +573,9 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '            # Сохранение ID в CSV файл для рассылки\n';
     code += '            try:\n';
     code += '                import os\n';
-    code += '                from datetime import datetime\n';
     code += '                # Путь к файлу CSV в папке проекта\n';
-    code += '                csv_dir = os.path.join(os.getcwd(), \'bots\', f\'project_{PROJECT_ID}\')\n';
-    code += '                os.makedirs(csv_dir, exist_ok=True)\n';
-    code += '                csv_file = os.path.join(csv_dir, \'user_ids.csv\')\n';
+    code += '                # PROJECT_DIR уже определён как папка проекта (например, bots/импортированный_проект_0312_40_35)\n';
+    code += '                csv_file = os.path.join(PROJECT_DIR, \'user_ids.csv\')\n';
     code += '                # Проверяем, есть ли уже такой ID в файле\n';
     code += '                id_exists = False\n';
     code += '                if os.path.exists(csv_file):\n';
