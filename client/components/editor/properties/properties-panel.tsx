@@ -58,6 +58,7 @@ import { NormalButtonInfo } from './normal-button-info';
 import { BroadcastNodeProperties } from './broadcast-properties';
 import { BroadcastToggle } from './broadcast-toggle';
 import { SaveToUserIdsSwitch } from './save-to-user-ids-switch';
+import { SaveToCsvSwitch } from './save-to-csv-switch';
 import { Image, Video, Music, FileText, X } from 'lucide-react';
 
 /**
@@ -1561,6 +1562,12 @@ export function PropertiesPanel({
 
                       {/* Save to User IDs Database Switch */}
                       <SaveToUserIdsSwitch
+                        selectedNode={selectedNode}
+                        onNodeUpdate={onNodeUpdate}
+                      />
+
+                      {/* Save to CSV File Switch */}
+                      <SaveToCsvSwitch
                         selectedNode={selectedNode}
                         onNodeUpdate={onNodeUpdate}
                       />
