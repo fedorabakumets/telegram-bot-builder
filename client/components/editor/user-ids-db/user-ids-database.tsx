@@ -21,6 +21,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { parseCSV } from './import-csv';
+import { parseTextIds } from './import-text';
+import { downloadCSV, copyToClipboard } from './export-csv';
+import { Upload, ClipboardPaste } from 'lucide-react';
 
 /**
  * Компонент страницы управления базой ID
@@ -31,6 +35,10 @@ export function UserIdsDatabase() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newUserId, setNewUserId] = useState('');
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importMode, setImportMode] = useState<'file' | 'text'>('file');
+  const [textIds, setTextIds] = useState('');
 
   // Загрузка списка ID (общая база)
   const { data: items = [], isLoading } = useQuery<UserIdRecord[]>({
@@ -94,20 +102,124 @@ export function UserIdsDatabase() {
     }
   };
 
+  const importMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      const results = await Promise.all(
+        userIds.map((userId) =>
+          apiRequest('POST', '/api/user-ids', { userId, source: 'import' as const }).catch(() => null)
+        )
+      );
+      return results.filter(Boolean).length;
+    },
+    onSuccess: (added) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user-ids'] });
+      toast({
+        title: 'Импорт завершён',
+        description: `Добавлено ${added} ID`
+      });
+      setIsImportDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: 'Ошибка', description: 'Не удалось импортировать данные', variant: 'destructive' });
+    },
+  });
+
+  const handleImport = async (file: File) => {
+    setIsImporting(true);
+    const { validIds, errors } = await parseCSV(file);
+
+    if (validIds.length === 0) {
+      toast({
+        title: 'Ошибка',
+        description: errors.length > 0 ? `Невалидные данные: ${errors.slice(0, 3).join(', ')}` : 'Пустой файл',
+        variant: 'destructive',
+      });
+      setIsImporting(false);
+      return;
+    }
+
+    if (errors.length > 0) {
+      toast({
+        title: 'Предупреждение',
+        description: `Пропущено ${errors.length} строк с ошибками`,
+      });
+    }
+
+    importMutation.mutate(validIds);
+  };
+
   const handleDelete = (ids: number[]) => {
     if (confirm(`Удалить ${ids.length} ID?`)) {
       deleteMutation.mutate(ids);
     }
   };
 
-  const handleExport = (_ids: number[]) => {
-    // TODO: Реализовать экспорт
-    toast({ title: 'Экспорт', description: 'Функция в разработке' });
+  const handleExport = (ids: number[]) => {
+    const idsToExport = items
+      .filter(item => ids.includes(item.id))
+      .map(item => item.userId);
+    
+    downloadCSV(idsToExport, 'user-ids.csv');
+    toast({
+      title: 'Экспорт',
+      description: `Скачано ${idsToExport.length} ID`
+    });
   };
 
-  const handleImport = () => {
-    // TODO: Реализовать импорт
-    toast({ title: 'Импорт', description: 'Функция в разработке' });
+  const handleExportAll = () => {
+    const allIds = items.map(item => item.userId);
+    downloadCSV(allIds, 'user-ids.csv');
+    toast({
+      title: 'Экспорт',
+      description: `Скачано ${allIds.length} ID`
+    });
+  };
+
+  const handleCopyToClipboard = async () => {
+    const allIds = items.map(item => item.userId);
+    const success = await copyToClipboard(allIds);
+    toast({
+      title: success ? 'Скопировано' : 'Ошибка',
+      description: success 
+        ? `${allIds.length} ID скопировано в буфер` 
+        : 'Не удалось скопировать',
+      variant: success ? 'default' : 'destructive'
+    });
+  };
+
+  const handleImportClick = () => {
+    setImportMode('file');
+    setTextIds('');
+    setIsImportDialogOpen(true);
+  };
+
+  const handleTextImport = () => {
+    if (!textIds.trim()) {
+      toast({ title: 'Ошибка', description: 'Введите ID', variant: 'destructive' });
+      return;
+    }
+
+    setIsImporting(true);
+    const { validIds, errors } = parseTextIds(textIds);
+
+    if (validIds.length === 0) {
+      toast({
+        title: 'Ошибка',
+        description: errors.length > 0 ? `Невалидные данные: ${errors.slice(0, 3).join(', ')}` : 'Пустой список',
+        variant: 'destructive',
+      });
+      setIsImporting(false);
+      return;
+    }
+
+    if (errors.length > 0) {
+      toast({
+        title: 'Предупреждение',
+        description: `Пропущено ${errors.length} строк с ошибками`,
+      });
+    }
+
+    importMutation.mutate(validIds);
   };
 
   const handleClearAll = () => {
@@ -133,8 +245,9 @@ export function UserIdsDatabase() {
         </div>
         <UserIdActions
           onAdd={() => setIsAddDialogOpen(true)}
-          onImport={handleImport}
-          onExportAll={() => handleExport(items.map((i) => i.id))}
+          onImport={handleImportClick}
+          onExportAll={handleExportAll}
+          onCopyToClipboard={handleCopyToClipboard}
           onClearAll={handleClearAll}
           totalCount={items.length}
         />
@@ -180,6 +293,105 @@ export function UserIdsDatabase() {
               <Button onClick={handleAdd} disabled={addMutation.isPending}>
                 {addMutation.isPending ? 'Добавление...' : 'Добавить'}
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог импорта */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Импорт ID</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Добавьте Telegram ID из файла или вставьте списком
+          </DialogDescription>
+          <div className="space-y-4">
+            {/* Переключатель вкладок */}
+            <div className="flex gap-2">
+              <Button
+                variant={importMode === 'file' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setImportMode('file')}
+                className="flex-1"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Файл
+              </Button>
+              <Button
+                variant={importMode === 'text' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setImportMode('text')}
+                className="flex-1"
+              >
+                <ClipboardPaste className="h-4 w-4 mr-2" />
+                Текст
+              </Button>
+            </div>
+
+            {importMode === 'file' ? (
+              /* Режим файла */
+              <div className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-muted/50 transition-colors">
+                <input
+                  type="file"
+                  id="csvFile"
+                  accept=".csv,.txt"
+                  disabled={isImporting}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImport(file);
+                  }}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="csvFile"
+                  className="cursor-pointer flex flex-col items-center gap-2"
+                >
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                  <span className="text-sm font-medium">
+                    {isImporting ? 'Обработка...' : 'Выберите файл или перетащите'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    CSV или TXT (один ID в строке)
+                  </span>
+                </label>
+              </div>
+            ) : (
+              /* Режим текста */
+              <div className="space-y-2">
+                <Label htmlFor="textIds">Список ID</Label>
+                <textarea
+                  id="textIds"
+                  value={textIds}
+                  onChange={(e) => setTextIds(e.target.value)}
+                  placeholder="123456789&#10;987654321&#10;555666777"
+                  disabled={isImporting}
+                  rows={8}
+                  className="w-full px-3 py-2 border rounded-md bg-background text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Вставьте список ID, по одному в строке
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsImportDialogOpen(false)}
+                disabled={isImporting}
+              >
+                Отмена
+              </Button>
+              {importMode === 'text' && (
+                <Button
+                  onClick={handleTextImport}
+                  disabled={isImporting || !textIds.trim()}
+                >
+                  {isImporting ? 'Импорт...' : 'Импортировать'}
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>

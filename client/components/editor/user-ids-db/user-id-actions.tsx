@@ -10,15 +10,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, Upload, Download, Trash2 } from 'lucide-react';
+import { Plus, Upload, Download, Trash2, Copy } from 'lucide-react';
 
 interface UserIdActionsProps {
   /** Обработчик добавления ID */
   onAdd: () => void;
   /** Обработчик импорта */
   onImport: () => void;
-  /** Обработчик экспорта всех */
+  /** Обработчик экспорта всех в CSV */
   onExportAll: () => void;
+  /** Обработчик копирования в буфер */
+  onCopyToClipboard: () => void;
   /** Обработчик очистки всей базы */
   onClearAll: () => void;
   /** Количество записей */
@@ -32,6 +34,7 @@ export function UserIdActions({
   onAdd,
   onImport,
   onExportAll,
+  onCopyToClipboard,
   onClearAll,
   totalCount,
 }: UserIdActionsProps) {
@@ -56,7 +59,12 @@ export function UserIdActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={onExportAll}>
-            Экспортировать все ({totalCount})
+            <Download className="h-4 w-4 mr-2" />
+            Скачать CSV ({totalCount})
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onCopyToClipboard}>
+            <Copy className="h-4 w-4 mr-2" />
+            Копировать в буфер
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
