@@ -10,6 +10,7 @@
 
 import { Node } from '@shared/schema';
 import { formatTextForPython } from '../format';
+import { generateFindUploadsPathFunction } from './utils/findUploadsPath';
 
 /**
  * Генерирует код рассылки через Client API для вставки внутрь callback handler
@@ -105,29 +106,8 @@ export function generateBroadcastClientInline(node: Node, allNodes: Node[] | nul
     codeLines.push(`${indent}from telethon.tl.types import Message`);
     codeLines.push(`${indent}import os`);
     codeLines.push(`${indent}`);
-    codeLines.push(`${indent}# Функция для преобразования локального пути в полный путь`);
-    codeLines.push(`${indent}def get_full_media_path(path):`);
-    codeLines.push(`${indent}    """Преобразует локальный путь в полный путь для Windows"""`);
-    codeLines.push(`${indent}    if not path:`);
-    codeLines.push(`${indent}        return path`);
-    codeLines.push(`${indent}    # Если путь уже полный или это URL, возвращаем как есть`);
-    codeLines.push(`${indent}    if path.startswith('http://') or path.startswith('https://'):`);
-    codeLines.push(`${indent}        return path`);
-    codeLines.push(`${indent}    if os.path.isabs(path):`);
-    codeLines.push(`${indent}        return path`);
-    codeLines.push(`${indent}    # Путь к папке uploads (находится в корне проекта)`);
-    codeLines.push(`${indent}    # Бот находится в bots/имя_бота/, проект на 2 уровня выше`);
-    codeLines.push(`${indent}    base_dir = os.path.dirname(os.path.abspath(__file__))  # bots\\имя_бота\\`);
-    codeLines.push(`${indent}    project_dir = os.path.dirname(os.path.dirname(base_dir))  # поднимаемся к корню проекта`);
-    codeLines.push(`${indent}    # Преобразуем путь /uploads/34/... в полный путь`);
-    codeLines.push(`${indent}    if path.startswith('/uploads/'):`);
-    codeLines.push(`${indent}        relative_path = path.lstrip('/')  # uploads/34/...`);
-    codeLines.push(`${indent}        full_path = os.path.join(project_dir, relative_path)`);
-    codeLines.push(`${indent}    else:`);
-    codeLines.push(`${indent}        uploads_dir = os.path.join(project_dir, 'uploads')`);
-    codeLines.push(`${indent}        full_path = os.path.join(uploads_dir, path.lstrip('/'))`);
-    codeLines.push(`${indent}    # Для Windows конвертируем обратные слеши`);
-    codeLines.push(`${indent}    return full_path.replace('/', '\\\\')`);
+    codeLines.push(`${indent}# Универсальная функция для поиска пути к uploads`);
+    codeLines.push(generateFindUploadsPathFunction(indent));
     codeLines.push(`${indent}`);
     codeLines.push(`${indent}# Создание клиента из сессии`);
     codeLines.push(`${indent}api_id = int(client_session["api_id"])`);
