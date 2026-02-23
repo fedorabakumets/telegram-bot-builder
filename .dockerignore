@@ -84,6 +84,11 @@ jest.config.js
 !eslint.config.js
 !eslint.config.ts
 !vite.config.ts
+!railway.json
+!railway.toml
+!.nvmrc
+!.node-version
+!.npmrc
 
 # Python files (needed for dependencies)
 !requirements.txt
