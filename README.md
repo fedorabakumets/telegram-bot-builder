@@ -419,7 +419,78 @@
 </div>
 
 <details>
-<summary>🖥️ <strong>Локальная установка (рекомендуется)</strong> - нажмите для раскрытия</summary>
+<summary>🐳 <strong>Запуск через Docker (рекомендуется)</strong> - нажмите для раскрытия</summary>
+
+### Что нужно:
+- **Docker** и **Docker Compose** (установить с [docker.com](https://www.docker.com/))
+
+### Установка:
+
+```bash
+# Скопируйте проект
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+
+# Запустите через Docker Compose (приложение + PostgreSQL)
+docker compose up -d
+```
+
+**Готово!** Приложение доступно по адресу: http://localhost:5000
+
+### Полезные команды:
+
+```bash
+# Остановить приложение
+docker compose down
+
+# Пересобрать образ
+docker compose build --no-cache
+
+# Посмотреть логи
+docker compose logs -f
+
+# Остановить и очистить данные
+docker compose down -v
+```
+
+### Переменные окружения (опционально):
+
+Создайте файл `.env` в корне проекта:
+
+```env
+# Порт приложения
+PORT=5000
+
+# Секрет сессии (замените на свой!)
+SESSION_SECRET=your-secret-key-here
+
+# PostgreSQL (не меняйте, если используете docker-compose.yml)
+DATABASE_URL=postgresql://postgres:postgres@db:5432/botbuilder
+```
+
+</details>
+
+<details>
+<summary>☁️ Альтернативные способы</summary>
+
+### Docker (одиночный контейнер):
+```bash
+# Сборка образа
+docker build -t telegram-bot-builder .
+
+# Запуск с PostgreSQL
+docker run -d --name bot-builder \
+  -e DATABASE_URL=postgresql://user:pass@host:5432/dbname \
+  -e SESSION_SECRET=your-secret \
+  -p 5000:5000 \
+  telegram-bot-builder
+```
+
+### Локальная установка:
+</details>
+
+<details>
+<summary>🖥️ <strong>Локальная установка</strong> - нажмите для раскрытия</summary>
 
 ### Что нужно:
 - **Node.js** (скачать с [nodejs.org](https://nodejs.org))
@@ -445,18 +516,6 @@ npm run start
 Если возникает ошибка подключения к базе данных, смотрите подробное руководство по устранению неполадок в файле [docs/development/TROUBLESHOOTING_RU.md](docs/development/TROUBLESHOOTING_RU.md).
 
 **Откройте в браузере:** http://localhost:5000
-
-</details>
-
-<details>
-<summary>☁️ Альтернативные способы</summary>
-
-### Docker (для продвинутых):
-```bash
-# Запуск через Docker
-docker build -t telegram-bot-builder .
-docker run -p 5000:5000 telegram-bot-builder
-```
 
 </details>
 
