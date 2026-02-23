@@ -11,6 +11,7 @@
 
 import { Node } from '@shared/schema';
 import { generateBroadcastHandler } from '../Broadcast/generateBroadcastHandler';
+import { generateBroadcastClientHandler } from '../Broadcast/generateBroadcastClientHandler';
 import { generateCommandHandler, generateStartHandler } from '../CommandHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler, generateStickerHandler, generateVoiceHandler } from '../MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../MessageHandler';
@@ -26,7 +27,6 @@ import {
 } from '../UserHandler';
 import { collectMediaVariables } from '../utils/collectMediaVariables';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
-import { generateBroadcastClientHandler } from './generateBroadcastClientHandler';
 
 /**
  * Генерирует обработчики для каждого узла
