@@ -50,6 +50,10 @@ docs/
 !migrations/
 !migrations/**/*
 
+# Except server directory (needed for backend)
+!server/
+!server/**/*
+
 # Tests
 __tests__
 *.test.js
