@@ -51,6 +51,9 @@ __tests__
 tsconfig.json
 jest.config.js
 
+# Except vite.config.ts (needed for build)
+!vite.config.ts
+
 # Logs
 logs
 *.log
