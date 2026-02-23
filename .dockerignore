@@ -75,6 +75,19 @@ jest.config.js
 # Except vite.config.ts (needed for build)
 !vite.config.ts
 
+# Config files (needed for build/runtime)
+!tsconfig.json
+!tsconfig.node.json
+!tsconfig.server.json
+!drizzle.config.ts
+!tailwind.config.ts
+!components.json
+!global.d.ts
+
+# Python files (needed for dependencies)
+!requirements.txt
+!pyproject.toml
+
 # Logs
 logs
 *.log
@@ -116,3 +129,11 @@ venv/
 
 # Railway
 .railway/
+
+# Assets and runtime directories (needed for app)
+!assets/
+!assets/**/*
+!uploads/
+!uploads/**/*
+!bots/
+!bots/**/*
