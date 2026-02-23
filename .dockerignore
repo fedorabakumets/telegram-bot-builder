@@ -1,12 +1,13 @@
-# Dependencies
+/**
+ * @fileoverview Исключения для Docker-сборки
+ * @description Не включать эти файлы и папки в Docker-образ
+ */
+
+# Dependencies (устанавливаются внутри контейнера)
 node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Production build
-dist
-build
 
 # Environment files
 .env

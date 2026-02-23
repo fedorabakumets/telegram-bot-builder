@@ -1,33 +1,28 @@
+/**
+ * @fileoverview Dockerfile для конструктора Telegram-ботов
+ * @description Собирает образ с Node.js приложением и всеми зависимостями
+ */
+
 FROM node:20-alpine
 
-# Устанавливаем Python и pip
-RUN apk add --no-cache python3 py3-pip python3-dev
+# Устанавливаем Python для некоторых npm-пакетов
+RUN apk add --no-cache python3 py3-pip
 
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем package files
+# Копируем зависимости и устанавливаем их
 COPY package*.json ./
+RUN npm ci --only=production
 
-# Устанавливаем зависимости
-RUN npm install
-
-# Копируем Python requirements если есть
+# Устанавливаем Python-зависимости если есть
 COPY requirements.txt* ./
-COPY pyproject.toml* ./
+RUN if [ -f requirements.txt ]; then pip3 install --break-system-packages -r requirements.txt; fi
 
-# Устанавливаем Python зависимости с флагом --break-system-packages
-RUN if [ -f requirements.txt ]; then pip3 install --break-system-packages --no-cache-dir -r requirements.txt; fi
-RUN if [ -f pyproject.toml ]; then pip3 install --break-system-packages --no-cache-dir .; fi
-
-# Копируем исходный код
+# Копируем исходный код и собираем проект
 COPY . .
+RUN npm run build
 
-# Собираем проект (если есть build скрипт)
-RUN npm run build || echo "No build script found"
+EXPOSE 5000
 
-# Открываем порт
-EXPOSE 8080
-
-# Запускаем приложение
-CMD ["npm", "start"]
+# Запускаем миграции и стартуем приложение
+CMD ["sh", "-c", "npm run migrate && npm start"]
