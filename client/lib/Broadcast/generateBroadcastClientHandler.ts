@@ -10,7 +10,7 @@
 
 import { Node } from '@shared/schema';
 import { formatTextForPython } from '../format';
-import { generateFindUploadsPathFunction } from './utils/findUploadsPath';
+import { generateFindUploadsPathFunction } from '../utils/findUploadsPath';
 
 /**
  * Генерирует код рассылки через Client API для вставки внутрь callback handler
