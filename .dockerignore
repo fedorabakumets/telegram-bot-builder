@@ -42,6 +42,10 @@ docs/
 !client/
 !client/**/*
 
+# Except scripts directory (needed for migrations)
+!scripts/
+!scripts/**/*
+
 # Tests
 __tests__
 *.test.js
