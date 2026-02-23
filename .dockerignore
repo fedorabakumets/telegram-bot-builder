@@ -9,6 +9,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Исключаем package-lock.json из исключений (нужен для npm ci)
+!package-lock.json
+!package.json
+
 # Environment files
 .env
 .env.local
