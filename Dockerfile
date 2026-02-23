@@ -1,7 +1,5 @@
-/**
- * @fileoverview Dockerfile для конструктора Telegram-ботов
- * @description Собирает образ с Node.js приложением и всеми зависимостями
- */
+# Dockerfile для конструктора Telegram-ботов
+# Собирает образ с Node.js приложением и всеми зависимостями
 
 FROM node:20-alpine
 
