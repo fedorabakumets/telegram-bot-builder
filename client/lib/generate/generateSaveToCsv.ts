@@ -13,7 +13,7 @@ import { Node } from '@shared/schema';
  * @returns Сгенерированный код
  */
 export function generateSaveToCsvCode(node: Node, indent: string = '        '): string {
-  const { saveToCsv, inputVariable } = node.data || {};
+  const { saveToCsv } = node.data || {};
 
   if (!saveToCsv) {
     return '';
