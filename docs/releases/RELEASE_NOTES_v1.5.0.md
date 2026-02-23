@@ -153,7 +153,7 @@ git clone https://github.com/fedorabakumets/telegram-bot-builder.git
 # Запустите через Docker Compose
 docker-compose up -d
 
-# Приложение доступно на http://localhost:3000
+# Приложение доступно на http://localhost:5000
 ```
 
 ### Локальная установка:
@@ -179,7 +179,7 @@ npm run build && npm run start
 
 ### Docker
 
-- **Порты:** Приложение доступно на порту 3000
+- **Порты:** Приложение доступно на порту 5000
 - **База данных:** PostgreSQL на порту 5432
 - **Тома:** Данные БД сохраняются в volume `postgres_data`
 
