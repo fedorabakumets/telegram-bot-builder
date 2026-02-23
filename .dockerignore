@@ -46,6 +46,10 @@ docs/
 !scripts/
 !scripts/**/*
 
+# Except migrations directory (needed for database setup)
+!migrations/
+!migrations/**/*
+
 # Tests
 __tests__
 *.test.js
