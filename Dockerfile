@@ -23,7 +23,6 @@ COPY server/ ./server/
 COPY shared/ ./shared/
 COPY attached_assets/ ./attached_assets/
 COPY drizzle.config.ts ./
-COPY drizzle/ ./drizzle/
 COPY package.json ./
 
 RUN npm run build
