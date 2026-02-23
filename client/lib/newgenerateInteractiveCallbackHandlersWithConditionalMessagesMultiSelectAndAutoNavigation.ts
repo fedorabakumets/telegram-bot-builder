@@ -1,16 +1,15 @@
-import { isLoggingEnabled, Button } from './bot-generator';
+import { Button, isLoggingEnabled } from './bot-generator';
+import { generateBroadcastInline } from './Broadcast/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from './Conditional';
-import { stripHtmlTags, formatTextForPython, generateButtonText, toPythonBoolean, generateUniqueShortId, generateWaitingStateCode } from './format';
-import { calculateOptimalColumns } from './Keyboard';
-import { generateAttachedMediaSendCode } from './MediaHandler';
-import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
-import { generateInlineKeyboardCode } from './Keyboard';
-import { generateUniversalVariableReplacement } from './utils';
 import { generateCheckUserVariableFunction } from './database';
-import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
-import { generateDatabaseVariablesCode } from './generate/generateDatabaseVariables';
-import { generateBroadcastInline } from './generate/generateBroadcastHandler';
+import { formatTextForPython, generateButtonText, generateUniqueShortId, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './format';
 import { generateBroadcastClientInline } from './generate/generateBroadcastClientHandler';
+import { generateDatabaseVariablesCode } from './generate/generateDatabaseVariables';
+import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
+import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
+import { calculateOptimalColumns, generateInlineKeyboardCode } from './Keyboard';
+import { generateAttachedMediaSendCode } from './MediaHandler';
+import { generateUniversalVariableReplacement } from './utils';
 
 export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes: any[], allReferencedNodeIds: Set<string>, allConditionalButtons: Set<string>, code: string, processNodeButtonsAndGenerateHandlers: (processedCallbacks: Set<string>) => void, nodes: any[], allNodeIds: any[], connections: any[], userDatabaseEnabled: boolean, mediaVariablesMap: Map<string, { type: string; variable: string; }>) {
   if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
@@ -228,13 +227,13 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
           const messageText = targetNode.data?.messageText || "Сообщение не задано";
           const formattedText = formatTextForPython(messageText);
           code += `    text = ${formattedText}\n`;
-          
+
           // Получаем переменные из базы данных перед заменой
           code += '    \n';
           code += '    # Получаем переменные из базы данных (user_ids_list, user_ids_count)\n';
           code += generateDatabaseVariablesCode('    ');
           code += '    \n';
-          
+
           const universalVarCodeLines1: string[] = [];
           generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
           code += universalVarCodeLines1.join('\n');
@@ -1659,7 +1658,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
   // ============================================================================
   // Находим первый broadcast узел для генерации обработчиков
   const broadcastNode = nodes.find(n => n.type === 'broadcast');
-  
+
   if (broadcastNode) {
     // Создаём словарь всех узлов для автоперехода
     code += '\n# Словарь всех узлов для автоперехода\n';
@@ -1682,7 +1681,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
     });
     code += '}\n';
     code += '\n';
-    
+
     // Генерируем обработчик для кнопок подтверждения
     code += '# Глобальный обработчик подтверждения рассылки\n';
     code += '@dp.callback_query(lambda c: c.data == "broadcast_confirm_yes" or c.data == "broadcast_confirm_no")\n';

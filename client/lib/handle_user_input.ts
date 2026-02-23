@@ -1,4 +1,5 @@
 import { answersave } from './answersave';
+import { generateDatabaseVariablesCode } from './Broadcast/generateDatabaseVariables';
 import { handleConditionalNavigationAndInputCollection } from './handleConditionalNavigationAndInputCollection';
 import { handleNodeNavigationAndInputProcessing } from './handleNodeNavigationAndInputProcessing';
 import { generateReplyHideAfterClickHandler } from './Keyboard/generateReplyHideAfterClickHandler';
@@ -9,7 +10,6 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateDatabaseVariablesCode } from './generate/generateDatabaseVariables';
 
 // Функция для проверки наличия кнопок с URL-ссылками
 function hasUrlButtons(nodes: any[]): boolean {
@@ -381,7 +381,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '        if not waiting_config:\n';
     code += '            return  # Состояние ожидания пустое, игнорируем\n';
     code += '        \n';
-    
+
     // Добавляем получение переменных из БД перед обработкой
     code += '        \n';
     code += '        # Получаем переменные из базы данных (user_ids_list, user_ids_count)\n';

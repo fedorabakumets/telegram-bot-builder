@@ -1,9 +1,8 @@
 import { Button } from './bot-generator';
+import { generateDatabaseVariablesCode } from './Broadcast/generateDatabaseVariables';
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './format';
-import { calculateOptimalColumns } from './Keyboard';
-import { generateInlineKeyboardCode } from './Keyboard';
+import { calculateOptimalColumns, generateInlineKeyboardCode } from './Keyboard';
 import { generateUniversalVariableReplacement } from './utils';
-import { generateDatabaseVariablesCode } from './generate/generateDatabaseVariables';
 
 export function handleNodeNavigationAndInputProcessing(nodes: any[], code: string, conditionIndent: string, bodyIndent: string, allNodeIds: any[], connections: any[]) {
     if (nodes.length > 0) {

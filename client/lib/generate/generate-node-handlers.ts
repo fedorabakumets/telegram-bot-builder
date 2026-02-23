@@ -10,23 +10,23 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateStartHandler, generateCommandHandler } from '../CommandHandler';
-import { generateStickerHandler, generateVoiceHandler, generateAnimationHandler, generateLocationHandler, generateContactHandler } from '../MediaHandler';
+import { generateBroadcastHandler } from '../Broadcast/generateBroadcastHandler';
+import { generateCommandHandler, generateStartHandler } from '../CommandHandler';
+import { generateAnimationHandler, generateContactHandler, generateLocationHandler, generateStickerHandler, generateVoiceHandler } from '../MediaHandler';
+import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../MessageHandler';
 import {
-  generateBanUserHandler,
-  generateUnbanUserHandler,
-  generateMuteUserHandler,
-  generateUnmuteUserHandler,
-  generateKickUserHandler,
-  generatePromoteUserHandler,
   generateAdminRightsHandler,
-  generateDemoteUserHandler
+  generateBanUserHandler,
+  generateDemoteUserHandler,
+  generateKickUserHandler,
+  generateMuteUserHandler,
+  generatePromoteUserHandler,
+  generateUnbanUserHandler,
+  generateUnmuteUserHandler
 } from '../UserHandler';
-import { generateUnpinMessageHandler, generateDeleteMessageHandler, generatePinMessageHandler } from '../MessageHandler';
-import { generateBroadcastHandler } from './generateBroadcastHandler';
-import { generateBroadcastClientHandler } from './generateBroadcastClientHandler';
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { collectMediaVariables } from '../utils/collectMediaVariables';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { generateBroadcastClientHandler } from './generateBroadcastClientHandler';
 
 /**
  * Генерирует обработчики для каждого узла
@@ -173,7 +173,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   });
 
   // Применяем автоматическое добавление комментариев ко всему коду, если включена генерация комментариев
-  const processedCode = enableComments 
+  const processedCode = enableComments
     ? processCodeWithAutoComments(codeLines, 'generate-node-handlers.ts')
     : codeLines;
 
