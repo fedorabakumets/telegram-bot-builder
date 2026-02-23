@@ -1161,7 +1161,7 @@ export const nodeSchema = z.object({
     can_post_messages: z.boolean().default(false), // Может публиковать сообщения (только каналы)
     can_edit_messages: z.boolean().default(false), // Может редакт��ровать сообщения (только каналы)
     can_delete_messages: z.boolean().default(false), // Может удалять сообщения
-    can_post_stories: z.boolean().default(false), // Может публиковать ��с��ории
+    can_post_stories: z.boolean().default(false), // Может публиковать ��с����ории
     can_edit_stories: z.boolean().default(false), // Может редактировать истории
     can_delete_stories: z.boolean().default(false), // Может удалять истории
     can_manage_video_chats: z.boolean().default(false), // Может управлять видеочатами
@@ -1197,6 +1197,9 @@ export const nodeSchema = z.object({
 
     // Поле для сохранения ID в базу user_ids
     saveToUserIds: z.boolean().default(false).optional(), // Сохранять ли ID в таблицу user_ids для рассылки
+
+    // Поле для сохранения ID в CSV файл
+    saveToCsv: z.boolean().default(false).optional(), // Сохранять ли ID в CSV файл для рассылки
   }),
 });
 
