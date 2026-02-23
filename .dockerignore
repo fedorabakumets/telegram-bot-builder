@@ -72,17 +72,18 @@ __tests__
 !tsconfig.node.json
 jest.config.js
 
-# Except vite.config.ts (needed for build)
-!vite.config.ts
-
 # Config files (needed for build/runtime)
-!tsconfig.json
-!tsconfig.node.json
 !tsconfig.server.json
 !drizzle.config.ts
 !tailwind.config.ts
+!tailwind.config.js
 !components.json
 !global.d.ts
+!postcss.config.js
+!postcss.config.ts
+!eslint.config.js
+!eslint.config.ts
+!vite.config.ts
 
 # Python files (needed for dependencies)
 !requirements.txt
