@@ -48,7 +48,7 @@ __tests__
 # Development files
 .eslintrc*
 .prettierrc*
-tsconfig.json
+!tsconfig.json
 jest.config.js
 
 # Except vite.config.ts (needed for build)

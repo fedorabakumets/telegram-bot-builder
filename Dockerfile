@@ -16,8 +16,16 @@ RUN npm install --ignore-scripts
 COPY requirements.txt* ./
 RUN if [ -f requirements.txt ]; then pip3 install --break-system-packages -r requirements.txt; fi
 
-# Копируем исходный код и собираем проект
-COPY . .
+# Копируем конфиги и исходный код
+COPY vite.config.ts tsconfig.json ./
+COPY client/ ./client/
+COPY server/ ./server/
+COPY shared/ ./shared/
+COPY attached_assets/ ./attached_assets/
+COPY drizzle.config.ts ./
+COPY drizzle/ ./drizzle/
+COPY package.json ./
+
 RUN npm run build
 
 # Удаляем dev-зависимости после сборки для уменьшения размера образа
