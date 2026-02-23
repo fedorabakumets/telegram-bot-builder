@@ -38,6 +38,10 @@ Thumbs.db
 README.md
 docs/
 
+# Except client directory (needed for build)
+!client/
+!client/**/*
+
 # Tests
 __tests__
 *.test.js
