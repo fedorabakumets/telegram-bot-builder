@@ -54,6 +54,10 @@ docs/
 !server/
 !server/**/*
 
+# Except shared directory (needed for shared modules)
+!shared/
+!shared/**/*
+
 # Tests
 __tests__
 *.test.js
