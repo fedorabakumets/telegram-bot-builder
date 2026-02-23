@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Копируем зависимости и устанавливаем их
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev --ignore-scripts
 
 # Устанавливаем Python-зависимости если есть
 COPY requirements.txt* ./
