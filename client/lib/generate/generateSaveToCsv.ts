@@ -19,8 +19,6 @@ export function generateSaveToCsvCode(node: Node, indent: string = '        '): 
     return '';
   }
 
-  const variableName = inputVariable || 'id';
-
   return [
     `${indent}# Сохранение ID в CSV файл для рассылки`,
     `${indent}try:`,
