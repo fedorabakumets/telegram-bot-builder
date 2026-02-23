@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Копируем зависимости и устанавливаем их
 COPY package*.json ./
-RUN npm install --omit=dev --ignore-scripts
+RUN npm install --ignore-scripts
 
 # Устанавливаем Python-зависимости если есть
 COPY requirements.txt* ./
@@ -19,6 +19,9 @@ RUN if [ -f requirements.txt ]; then pip3 install --break-system-packages -r req
 # Копируем исходный код и собираем проект
 COPY . .
 RUN npm run build
+
+# Удаляем dev-зависимости после сборки для уменьшения размера образа
+RUN npm install --omit=dev --ignore-scripts
 
 EXPOSE 5000
 
