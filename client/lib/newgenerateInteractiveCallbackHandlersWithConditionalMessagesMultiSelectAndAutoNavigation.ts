@@ -1,9 +1,9 @@
 import { Button, isLoggingEnabled } from './bot-generator';
-import { generateBroadcastInline } from './Broadcast/generateBroadcastHandler';
+import { generateBroadcastInline } from './Broadcast/BotApi/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from './Conditional';
 import { generateCheckUserVariableFunction } from './database';
 import { formatTextForPython, generateButtonText, generateUniqueShortId, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './format';
-import { generateBroadcastClientInline } from './Broadcast/generateBroadcastClientHandler';
+import { generateBroadcastClientInline } from './Broadcast/Client/generateBroadcastClientHandler';
 import { generateDatabaseVariablesCode } from './Broadcast/generateDatabaseVariables';
 import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
 import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
@@ -806,7 +806,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               code += '    try:\n';
               code += '        if keyboard:\n';
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-              code += '            # Заменяем все переменные в текс��е\n';
+              code += '            # Заменяем все переменны�� в текс��е\n';
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
               code += '        else:\n';

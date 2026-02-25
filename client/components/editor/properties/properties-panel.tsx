@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button as UIButton } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { MediaSelector } from '@/components/media/media-selector';
+import { MediaSelector } from '@/components/editor/properties/media/media-selector';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
@@ -90,6 +90,10 @@ interface PropertiesPanelProps {
   currentSheetId?: string | undefined;
   /** Функция закрытия панели */
   onClose?: (() => void) | undefined;
+  /** Функция логирования действий */
+  onActionLog?: (type: string, description: string) => void;
+  /** Функция сохранения проекта */
+  onSaveProject?: () => void;
 }
 
 /**
@@ -126,7 +130,9 @@ export function PropertiesPanel({
   onButtonDelete,
   allSheets = [],
   currentSheetId,
-  onClose
+  onClose,
+  onActionLog,
+  onSaveProject
 }: PropertiesPanelProps) {
   const { toast } = useToast();
   const [commandInput, setCommandInput] = useState('');
@@ -1640,7 +1646,7 @@ export function PropertiesPanel({
       </div>
 
       {/* Properties Footer */}
-      <PropertiesFooter selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
+      <PropertiesFooter selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} onActionLog={onActionLog} onSaveProject={onSaveProject} />
     </aside>
   );
 }

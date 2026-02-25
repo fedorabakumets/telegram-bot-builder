@@ -63,6 +63,7 @@ export function CodeEditorArea({
             selectedFormat === 'readme' ? 'markdown' :
             selectedFormat === 'dockerfile' ? 'dockerfile' :
             selectedFormat === 'config' ? 'yaml' :
+            selectedFormat === 'env' ? 'shell' :
             'plaintext'
           }
           theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}

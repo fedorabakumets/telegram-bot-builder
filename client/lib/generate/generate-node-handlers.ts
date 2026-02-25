@@ -10,8 +10,8 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler } from '../Broadcast/generateBroadcastHandler';
-import { generateBroadcastClientHandler } from '../Broadcast/generateBroadcastClientHandler';
+import { generateBroadcastHandler } from '../Broadcast/BotApi/generateBroadcastHandler';
+import { generateBroadcastClientHandler } from '../Broadcast/Client/generateBroadcastClientHandler';
 import { generateCommandHandler, generateStartHandler } from '../CommandHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler, generateStickerHandler, generateVoiceHandler } from '../MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../MessageHandler';

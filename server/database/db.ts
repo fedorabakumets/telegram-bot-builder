@@ -67,6 +67,29 @@ pool.on('error', (err: Error) => {
     errno: (err as any).errno,
     syscall: (err as any).syscall
   });
+  
+  // Помечаем пул как неактивный при ошибке соединения
+  if (err.message.includes('Connection terminated') || 
+      err.message.includes('ECONNRESET') || 
+      err.message.includes('ETIMEDOUT')) {
+    console.log('⚠️ Соединение с БД прервано. Помечаем пул как неактивный.');
+    globalThis.__dbPoolActive = false;
+    
+    // Пытаемся восстановить соединение через 5 секунд
+    setTimeout(async () => {
+      console.log('🔄 Попытка восстановления соединения с БД...');
+      try {
+        const client = await pool.connect();
+        await client.query('SELECT 1');
+        client.release();
+        globalThis.__dbPoolActive = true;
+        console.log('✅ Соединение с БД восстановлено');
+      } catch (error: any) {
+        console.error('❌ Не удалось восстановить соединение:', error.message);
+        globalThis.__dbPoolActive = false;
+      }
+    }, 5000);
+  }
 });
 
 /**

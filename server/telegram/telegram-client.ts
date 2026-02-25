@@ -498,9 +498,9 @@ class TelegramClientManager {
       if (hasSession && row.apiId && row.apiHash) {
         try {
           const client = new TelegramClient(
-            new StringSession(row.sessionString),
+            new StringSession(row.sessionString ?? undefined),
             parseInt(row.apiId),
-            row.apiHash,
+            row.apiHash ?? undefined,
             {
               connectionRetries: 5,
               useWSS: false,

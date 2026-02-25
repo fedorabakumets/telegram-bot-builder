@@ -16,7 +16,7 @@ import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { broadcastNode } from './components/broadcast-node';
+import { broadcastNode } from './canvas/canvas-node/broadcast-node';
 
 /**
  * Свойства компонента боковой панели с компонентами

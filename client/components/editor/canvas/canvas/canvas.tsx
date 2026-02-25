@@ -17,7 +17,7 @@ export interface Action {
   /** Уникальный идентификатор действия */
   id: string;
   /** Тип выполненного действия */
-  type: 'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate';
+  type: 'add' | 'delete' | 'move' | 'move_end' | 'update' | 'connect' | 'disconnect' | 'duplicate' | 'reset' | 'type_change' | 'id_change' | 'button_add' | 'button_update' | 'button_delete' | 'sheet_add' | 'sheet_delete' | 'sheet_rename' | 'sheet_duplicate' | 'sheet_switch';
   /** Описание действия для пользователя */
   description: string;
   /** Временная метка выполнения действия */
@@ -50,6 +50,8 @@ interface CanvasProps {
   onNodeDuplicate?: (nodeId: string) => void;
   /** Колбэк при перемещении узла */
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
+  /** Колбэк в конце перемещения узла (для сохранения в историю) */
+  onNodeMoveEnd?: (nodeId: string) => void;
   /** Колбэк при обновлении узлов */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onNodesUpdate?: (nodes: Node[]) => void;
@@ -68,7 +70,7 @@ interface CanvasProps {
   /** Колбэк для копирования в буфер обмена */
   onCopyToClipboard?: (nodeIds: string[]) => void;
   /** Колбэк для вставки из буфера обмена */
-  onPasteFromClipboard?: () => void;
+  onPasteFromClipboard?: (offsetX?: number, offsetY?: number) => void;
   /** Наличие данных в буфере обмена */
   hasClipboardData?: boolean;
 
@@ -125,6 +127,7 @@ export function Canvas({
   onNodeDelete,
   onNodeDuplicate,
   onNodeMove,
+  onNodeMoveEnd,
   onUndo,
   onRedo,
   canUndo,
@@ -155,6 +158,8 @@ export function Canvas({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
+  const [lastClickPosition, setLastClickPosition] = useState({ x: 100, y: 100 });
+  const [clickTransform, setClickTransform] = useState({ pan: { x: 0, y: 0 }, zoom: 100 });
 
   // Touch состояние для мобильного управления
   const [isTouchPanning, setIsTouchPanning] = useState(false);
@@ -606,7 +611,11 @@ export function Canvas({
 
   // Handle keyboard shortcuts
   useEffect(() => {
+    
+    
     const handleKeyDown = (e: KeyboardEvent) => {
+      
+      
       // Проверяем, что фокус не находится на input или textarea
       const target = e.target as HTMLElement;
       const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true';
@@ -623,6 +632,42 @@ export function Canvas({
       }
 
       if (e.ctrlKey || e.metaKey) {
+        // Обработка Ctrl+Shift+C/V в первую очередь (межпроектное копирование)
+        if (e.shiftKey) {
+          switch (e.key) {
+            case 'c':
+            case 'C':
+            case 'с':
+            case 'С':
+              e.preventDefault();
+              e.stopPropagation();
+              if (selectedNodeId && onCopyToClipboard) {
+                onCopyToClipboard([selectedNodeId]);
+              }
+              return;
+            case 'v':
+            case 'V':
+            case 'м':
+            case 'М':
+              e.preventDefault();
+              e.stopPropagation();
+              if (onPasteFromClipboard) {
+                // pan.x может быть отрицательным (когда холст сдвинут вправо)
+                // Формула: client / zoom - pan (вычитаем отрицательный = добавляем)
+                const targetX = lastClickPosition.x / (clickTransform.zoom / 100) - clickTransform.pan.x;
+                const targetY = lastClickPosition.y / (clickTransform.zoom / 100) - clickTransform.pan.y;
+                console.log('📍 Вставка:', {
+                  targetX, targetY,
+                  click: lastClickPosition,
+                  clickTransform,
+                  formula: `${lastClickPosition.x} / ${clickTransform.zoom / 100} - ${clickTransform.pan.x} = ${targetX}`
+                });
+                onPasteFromClipboard(targetX, targetY);
+              }
+              return;
+          }
+        }
+        
         switch (e.key) {
           case '=':
           case '+':
@@ -642,38 +687,50 @@ export function Canvas({
             fitToContent();
             break;
           case 'z':
+          case 'Z':
+          case 'я':
+          case 'Я':
             e.preventDefault();
-            if (e.shiftKey && onRedo && canRedo) {
-              onRedo();
-            } else if (onUndo && canUndo) {
-              onUndo();
+            if (e.shiftKey) {
+              onRedo?.();
+            } else {
+              onUndo?.();
             }
             break;
           case 'y':
+          case 'Y':
+          case 'н':
+          case 'Н':
             e.preventDefault();
-            if (onRedo && canRedo) {
-              onRedo();
-            }
+            onRedo?.();
             break;
           case 's':
+          case 'S':
+          case 'ы':
+          case 'Ы':
             e.preventDefault();
             if (onSave && !isSaving) {
               onSave();
             }
             break;
           case 'c':
+          case 'C':
+          case 'с':
+          case 'С':
             e.preventDefault();
-            if (e.shiftKey && selectedNodeId && onCopyToClipboard) {
-              // Shift+Ctrl+C - копировать в межпроектный буфер обмена
-              onCopyToClipboard([selectedNodeId]);
-            } else if (selectedNodeId && onNodeDuplicate) {
-              // Ctrl+C - дублировать в текущем проекте
+            e.stopPropagation();
+            // Ctrl+C без Shift - дублирование узла
+            console.log('📋 Ctrl+C pressed:', { selectedNodeId, hasOnNodeDuplicate: !!onNodeDuplicate });
+            if (selectedNodeId && onNodeDuplicate) {
               const node = nodes.find(n => n.id === selectedNodeId);
               addAction('duplicate', `Дублирован узел "${node?.type || 'Unknown'}"`);
               onNodeDuplicate(selectedNodeId);
             }
             break;
           case 'd':
+          case 'D':
+          case 'в':
+          case 'В':
             e.preventDefault();
             if (selectedNodeId && onNodeDuplicate) {
               const node = nodes.find(n => n.id === selectedNodeId);
@@ -682,10 +739,24 @@ export function Canvas({
             }
             break;
           case 'v':
+          case 'V':
+          case 'м':
+          case 'М':
             e.preventDefault();
-            if (e.shiftKey && onPasteFromClipboard) {
-              // Shift+Ctrl+V - вставить из межпроектного буфера обмена
-              onPasteFromClipboard();
+            e.stopPropagation();
+            // Ctrl+V без Shift - вставка из буфера
+            if (onPasteFromClipboard) {
+              // pan.x может быть отрицательным (когда холст сдвинут вправо)
+              // Формула: client / zoom - pan (вычитаем отрицательный = добавляем)
+              const targetX = lastClickPosition.x / (clickTransform.zoom / 100) - clickTransform.pan.x;
+              const targetY = lastClickPosition.y / (clickTransform.zoom / 100) - clickTransform.pan.y;
+              console.log('📍 Вставка:', {
+                targetX, targetY,
+                click: lastClickPosition,
+                clickTransform,
+                formula: `${lastClickPosition.x} / ${clickTransform.zoom / 100} - ${clickTransform.pan.x} = ${targetX}`
+              });
+              onPasteFromClipboard(targetX, targetY);
             }
             break;
         }
@@ -877,10 +948,16 @@ export function Canvas({
   }, []);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    // Сохраняем позицию клика и текущий transform для последующей вставки
+    const clickPos = { x: e.clientX, y: e.clientY };
+    setLastClickPosition(clickPos);
+    setClickTransform({ pan: { x: pan.x, y: pan.y }, zoom });
+    console.log('🖱️ Клик сохранён:', clickPos, 'transform:', { pan: { x: pan.x, y: pan.y }, zoom });
+    
     if (e.target === e.currentTarget) {
       onNodeSelect('');
     }
-  }, [onNodeSelect]);
+  }, [onNodeSelect, pan.x, pan.y, zoom]);
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
@@ -928,6 +1005,7 @@ export function Canvas({
             onNodeDelete={onNodeDelete}
             onNodeDuplicate={onNodeDuplicate}
             onNodeMove={onNodeMove}
+            onNodeMoveEnd={onNodeMoveEnd}
             onActionLog={(type, description) => addAction(type, description)}
             setIsNodeBeingDragged={setIsNodeBeingDragged}
             onSizeChange={handleNodeSizeChange}

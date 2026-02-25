@@ -41,13 +41,9 @@ export function BotValidation({ botData }: BotValidationProps) {
     loadValidation();
   }, [botData]);
 
+  // Не показываем ничего, если структура корректна
   if (validationResult.isValid) {
-    return (
-      <div className="flex items-center gap-2 text-green-600 dark:text-green-400 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800/40">
-        <i className="fas fa-check-circle"></i>
-        <span className="font-medium text-sm">Структура бота корректна</span>
-      </div>
-    );
+    return null;
   }
 
   return (

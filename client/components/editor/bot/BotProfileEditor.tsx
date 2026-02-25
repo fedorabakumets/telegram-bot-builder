@@ -12,7 +12,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -214,6 +214,9 @@ export function BotProfileEditor({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Редактировать профиль бота</DialogTitle>
+          <DialogDescription className="sr-only">
+            Измените имя, описание и аватар бота
+          </DialogDescription>
         </DialogHeader>
 
         {/* Предупреждение о тестовом режиме */}

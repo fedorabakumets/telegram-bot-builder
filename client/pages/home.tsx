@@ -6,14 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Bot, Edit, Trash2, Calendar, User, Download, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { TelegramAuth } from '@/components/telegram-auth';
+import { TelegramAuth } from '@/components/editor/telegram-client/telegram-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import type { BotProject } from '@shared/schema';
@@ -257,6 +257,9 @@ export default function Home() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Создать новый проект</DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Создайте новый проект Telegram бота
+                  </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(handleCreateProject)} className="space-y-4">

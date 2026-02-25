@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DraggableLayout, useDraggableLayout, LayoutElement } from './draggable-layout';
 import {
@@ -122,6 +122,9 @@ export const LayoutCustomizer: React.FC<LayoutCustomizerProps> = ({
             <Layout className="w-5 h-5" />
             Настройка расположения интерфейса
           </DialogTitle>
+          <DialogDescription className="sr-only px-6 pt-2">
+            Настройте расположение панелей интерфейса редактора
+          </DialogDescription>
         </DialogHeader>
         
         <Tabs defaultValue="customize" className="flex-1 flex flex-col">

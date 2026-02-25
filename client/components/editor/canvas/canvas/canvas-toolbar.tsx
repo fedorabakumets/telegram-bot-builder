@@ -11,7 +11,7 @@ import { ActionHistory } from './action-history';
 import { SaveButton } from './save-button';
 import { ClipboardButtons } from './clipboard-buttons';
 import { InterfaceToggles } from './interface-toggles';
-import { ZoomHelp } from './zoom-help';
+import { KeyboardShortcutsHelp } from './keyboard-shortcuts-help';
 import { Action } from './canvas';
 
 /**
@@ -182,8 +182,8 @@ export function CanvasToolbar({
             )}
           </div>
 
-          {/* Zoom Help */}
-          <ZoomHelp />
+          {/* Справка */}
+          <KeyboardShortcutsHelp />
         </div>
       </div>
     </div>

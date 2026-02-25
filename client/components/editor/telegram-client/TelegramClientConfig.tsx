@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, Phone, CheckCircle2, AlertTriangle, LogOut, Settings, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { TelegramAuth } from '@/components/telegram-auth';
+import { TelegramAuth } from '@/components/editor/telegram-client/telegram-auth';
 
 /**
  * Статус авторизации Client API

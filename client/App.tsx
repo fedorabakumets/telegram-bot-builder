@@ -22,7 +22,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ServerStatus } from "@/components/server-status";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { BotLogsProvider } from "./contexts/bot-logs-context";
+import { BotLogsProvider } from "./components/editor/bot/bot-logs-context";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));

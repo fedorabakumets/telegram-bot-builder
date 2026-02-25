@@ -5,6 +5,7 @@ export * from '../database/generateDatabaseCode';
 export * from '../logging/generate-message-logging';
 export * from '../MediaHandler/generateMediaFileFunctionsold';
 export * from './generate-node-handlers';
+export * from './generateApiConfig';
 export * from './generateBasicBotSetupCode';
 export * from './generateGroupsConfiguration';
 export * from './generateNodeNavigation';

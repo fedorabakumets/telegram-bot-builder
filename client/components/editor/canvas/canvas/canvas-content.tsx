@@ -30,6 +30,8 @@ interface CanvasContentProps {
   onNodeDuplicate?: (nodeId: string) => void;
   /** Колбэк при перемещении узла */
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
+  /** Колбэк в конце перемещения узла */
+  onNodeMoveEnd?: (nodeId: string) => void;
   /** Колбэк для логирования действий */
   onActionLog?: (type: 'move', description: string) => void;
   /** Установка флага перетаскивания узла */
@@ -54,6 +56,7 @@ export function CanvasContent({
   onNodeDelete,
   onNodeDuplicate,
   onNodeMove,
+  onNodeMoveEnd,
   onActionLog,
   setIsNodeBeingDragged,
   onSizeChange
@@ -94,6 +97,7 @@ export function CanvasContent({
             onNodeMove(node.id, position);
           }}
           onMoveEnd={() => {
+            onNodeMoveEnd?.(node.id);
             onActionLog?.('move', `Перемещен узел "${node.type}"`);
           }}
           zoom={zoom}

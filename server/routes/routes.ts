@@ -21,14 +21,13 @@ import { setupGoogleAuthRoutes } from "../google-sheets/setupGoogleAuthRoutes";
 import { seedDefaultTemplates } from "../utils/seed-templates";
 import { storage } from "../storages/storage";
 import { initializeTelegramManager, telegramClientManager } from "../telegram/telegram-client";
-import { createQRAuth } from "../telegram/telegram-auth-methods";
 import { telegramAuthService } from "../telegram/telegram-auth-service";
-import { isApiCredentialsError, getFormattedQrError } from "../telegram/qr-auth-error-handler";
 import { StringSession } from "telegram/sessions";
 import { TelegramClient } from "telegram";
 import { userTelegramSettings } from "@shared/schema";
 import { authMiddleware, getOwnerIdFromRequest } from "../telegram/auth-middleware";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
+import { handleTelegramError } from "../utils/telegram-error-handler";
 import { setupAuthRoutes } from "./setupAuthRoutes";
 import { setupBotIntegrationRoutes } from "./setupBotIntegrationRoutes";
 import { setupGithubPushRoute } from './setupGithubPushRoute';
@@ -911,6 +910,37 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Get first token for .env generation (full token value)
+  app.get("/api/projects/:id/tokens/first", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+
+      // Check project ownership if user is authenticated
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const project = await storage.getBotProject(projectId);
+        if (!project) {
+          return res.status(404).json({ message: "Project not found" });
+        }
+        if (project.ownerId !== ownerId) {
+          return res.status(403).json({ message: "You don't have permission to access this project's tokens" });
+        }
+      }
+
+      const tokens = await storage.getBotTokensByProject(projectId);
+
+      if (tokens.length === 0) {
+        return res.json({ hasToken: false, token: null });
+      }
+
+      // Return full token value for .env generation
+      res.json({ hasToken: true, token: tokens[0].token });
+    } catch (error) {
+      console.error("Failed to fetch first token:", error);
+      res.status(500).json({ message: "Failed to fetch token", error: (error as any).message });
+    }
+  });
+
   // === МЕДИАФАЙЛЫ ===
 
   // Загрузка медиафайла (одиночная) с улучшенной обработкой
@@ -1697,7 +1727,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get("/api/projects/:id/users/stats", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
-      console.log(`Fetching user stats for project ${projectId}`);
 
       // Use direct PostgreSQL query on bot_users table
       const { Pool } = await import('pg');
@@ -1706,7 +1735,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
 
       const result = await pool.query(`
-        SELECT 
+        SELECT
           COUNT(DISTINCT bu.user_id) as "totalUsers",
           COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.is_active = 1) as "activeUsers",
           COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.is_active = 0) as "blockedUsers",
@@ -1728,7 +1757,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       });
 
-      console.log(`User stats for project ${projectId}:`, stats);
       res.json(stats);
     } catch (error) {
       console.error("Error fetching user stats:", error);
@@ -2267,14 +2295,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             apiHash: credentials.apiHash,
             sessionString: String(sessionString),
             phoneNumber,
-            isActive: true,
+            isActive: 1,
           })
           .onConflictDoUpdate({
             target: userTelegramSettings.userId,
             set: {
               sessionString: String(sessionString),
               phoneNumber,
-              isActive: true,
+              isActive: 1,
               updatedAt: new Date(),
             },
           });
@@ -2426,7 +2454,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Получаем или создаём клиент для генерации QR
       let client = telegramClientManager.getClients().get(`${userId}_qr`);
-      
+
       if (!client) {
         // Создаём новый клиент для QR-авторизации БЕЗ updateLoop (чтобы не было TIMEOUT)
         client = new TelegramClient(
@@ -2441,9 +2469,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           }
         );
         await client.connect();
-        
+
         // Отключаем updateLoop чтобы не было TIMEOUT ошибок
-        client._updateLoop = () => {};
+        (client as any)._updateLoop = () => {};
 
         // Сохраняем клиента для последующего обновления токена
         telegramClientManager.getClients().set(`${userId}_qr`, client);
@@ -2486,10 +2514,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
     } catch (error: any) {
-      console.error("Failed to generate QR:", error);
+      const errorResult = handleTelegramError(error, 'Генерация QR');
+      
+      if (errorResult.code === 'TIMEOUT') {
+        return res.status(503).json(errorResult);
+      }
+      
       res.status(500).json({
         success: false,
-        error: "Ошибка генерации QR-кода"
+        error: errorResult.error
       });
     }
   });
@@ -2620,9 +2653,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             });
 
           console.log(`✅ QR-авторизация успешна для пользователя ${userId}`);
-          
+
           // Очищаем клиента после успешной авторизации
-          await result.client.disconnect();
+          if (result.client) {
+            await result.client.disconnect();
+          }
           telegramClientManager.getClients().delete(`${userId}_qr`);
           console.log('🗑️ QR-клиент удалён после успешной авторизации');
           
@@ -2711,13 +2746,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               apiId: credentials.apiId,
               apiHash: credentials.apiHash,
               sessionString: String(sessionString),
-              isActive: true,
+              isActive: 1,
             })
             .onConflictDoUpdate({
               target: userTelegramSettings.userId,
               set: {
                 sessionString: String(sessionString),
-                isActive: true,
+                isActive: 1,
                 updatedAt: new Date(),
               },
             });
@@ -2781,7 +2816,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get authentication status (общая база)
-  app.get("/api/telegram-auth/status", async (req, res) => {
+  app.get("/api/telegram-auth/status", async (_req, res) => {
     try {
       // Используем 'default' как userId для общей базы
       const userId = 'default';
@@ -2797,7 +2832,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Logout from Client API (общая база)
-  app.post("/api/telegram-auth/logout", async (req, res) => {
+  app.post("/api/telegram-auth/logout", async (_req, res) => {
     try {
       const userId = 'default';
       const result = await telegramClientManager.logout(userId);
@@ -2813,7 +2848,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Reset API credentials (общая база)
-  app.post("/api/telegram-auth/reset-credentials", async (req, res) => {
+  app.post("/api/telegram-auth/reset-credentials", async (_req, res) => {
     try {
       const userId = 'default';
 
@@ -3303,7 +3338,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
           copiedTemplate
         });
       } else {
-        // Для гостей - просто инкрементируем счетчик
+        // Для гостей - просто ��нкрементируем счетчик
         res.json({ message: "Template use count incremented" });
       }
     } catch (error) {

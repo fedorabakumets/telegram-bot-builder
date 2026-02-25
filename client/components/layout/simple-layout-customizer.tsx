@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -244,6 +244,9 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
                 <LayoutDashboard className="w-5 h-5" />
                 Настройка макета интерфейса
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Настройте расположение панелей интерфейса редактора
+              </DialogDescription>
             </DialogHeader>
             
             <div className="flex h-[700px] gap-6">

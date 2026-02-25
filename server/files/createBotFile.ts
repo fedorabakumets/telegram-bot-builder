@@ -87,7 +87,7 @@ export async function createCompleteBotFiles(
     generateRequirementsTxt,
     generateReadme,
     generateDockerfile,
-    generateConfigYaml
+    generateEnvFile
   } = await import("@shared/scaffolding-wrapper");
 
   // Генерируем и сохраняем дополнительные файлы в папке бота
@@ -100,7 +100,7 @@ export async function createCompleteBotFiles(
   assets.push(requirementsPath);
 
   // 2. README.md
-  const readmeContent = generateReadme(normalizedBotData, botName, projectId, tokenId);
+  const readmeContent = generateReadme(normalizedBotData, botName, projectId, tokenId, customFileName);
   const readmePath = join(botDir, 'README.md');
   writeFileSync(readmePath, readmeContent);
   assets.push(readmePath);
@@ -111,17 +111,23 @@ export async function createCompleteBotFiles(
   writeFileSync(dockerfilePath, dockerfileContent);
   assets.push(dockerfilePath);
 
-  // 4. config.yaml
-  const configContent = generateConfigYaml(botName);
-  const configPath = join(botDir, 'config.yaml');
-  writeFileSync(configPath, configContent);
-  assets.push(configPath);
-
-  // 5. JSON файл с данными проекта
+  // 4. JSON файл с данными проекта
   const jsonData = JSON.stringify(normalizedBotData, null, 2);
   const jsonPath = join(botDir, 'project.json');
   writeFileSync(jsonPath, jsonData);
   assets.push(jsonPath);
+
+  // 6. .env файл с токеном бота и ADMIN_IDS
+  const { storage } = await import("../storages/storage");
+  const tokenRecord = await storage.getBotToken(tokenId);
+  const envContent = generateEnvFile(
+    tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
+    "123456789", // ADMIN_IDS по умолчанию
+    projectId // ID проекта
+  );
+  const envPath = join(botDir, '.env');
+  writeFileSync(envPath, envContent);
+  assets.push(envPath);
 
   return { mainFile, assets };
 }

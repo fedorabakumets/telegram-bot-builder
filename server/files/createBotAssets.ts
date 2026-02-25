@@ -2,7 +2,7 @@
  * @fileoverview Модуль для создания дополнительных файлов бота
  *
  * Этот файл предоставляет функции для создания сопутствующих файлов бота,
- * таких как requirements.txt, README.md, Dockerfile, config.yaml и JSON-файл с данными проекта.
+ * таких как requirements.txt, README.md, Dockerfile и JSON-файл с данными проекта.
  */
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -32,8 +32,7 @@ export async function createBotAssets(
   const {
     generateRequirementsTxt,
     generateReadme,
-    generateDockerfile,
-    generateConfigYaml
+    generateDockerfile
   } = await import("@shared/scaffolding-wrapper");
 
   // TODO: В будущем можно добавить поддержку кастомных имен файлов
@@ -66,13 +65,7 @@ export async function createBotAssets(
   writeFileSync(dockerfilePath, dockerfileContent);
   assetsPaths.push(dockerfilePath);
 
-  // 4. config.yaml
-  const configContent = generateConfigYaml(botName);
-  const configPath = join(botsDir, `config_${projectId}_${tokenId}.yaml`);
-  writeFileSync(configPath, configContent);
-  assetsPaths.push(configPath);
-
-  // 5. JSON файл с данными проекта
+  // 4. JSON файл с данными проекта
   const jsonData = JSON.stringify(botData, null, 2);
   const jsonPath = join(botsDir, `project_${projectId}_${tokenId}.json`);
   writeFileSync(jsonPath, jsonData);

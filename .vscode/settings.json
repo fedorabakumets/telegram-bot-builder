@@ -1,41 +1,8 @@
 {
-  "css.validate": false,
-  "scss.validate": false,
-  "typescript.preferences.includePackageJsonAutoImports": "auto",
-  "javascript.suggestionActions.enabled": true,
-  "typescript.suggestionActions.enabled": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "explicit"
-  },
-  "typescript.preferences.renameShorthandProperties": true,
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "editor.formatOnSave": true,
-  "editor.codeActionOnSave": {
-    "source.fixAll": true
-  },
-  "typescript.tsserver.log": "normal",
-  "typescript.preferences.useAliasesForRenames": true,
-  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-  "typescript.inlayHints.parameterNames.enabled": "all",
-  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-  "typescript.inlayHints.variableTypes.enabled": true,
-  "typescript.inlayHints.enumMemberValues.enabled": true,
-  "typescript.inlayHints.parameterTypes.enabled": true,
-  "typescript.inlayHints.variableDeclarationTypes.enabled": true,
-  "typescript.inlayHints.imports.enabled": true,
-  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-  "typescript.inlayHints.parameterNames.suppressWhenArgumentMatchesName": false,
-  "typescript.inlayHints.implicitVariableTypes.enabled": true,
-  "typescript.inlayHints.implicitParameterTypes.enabled": true,
-  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-  "typescript.inlayHints.variableTypes.enabled": true,
-  "typescript.inlayHints.enumMemberValues.enabled": true,
-  "typescript.inlayHints.parameterTypes.enabled": true,
-  "typescript.inlayHints.variableDeclarationTypes.enabled": true,
-  "typescript.inlayHints.imports.enabled": true,
-  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-  "typescript.inlayHints.parameterNames.suppressWhenArgumentMatchesName": false,
-  "python-envs.defaultEnvManager": "ms-python.python:system",
-  "python-envs.pythonProjects": []
+  "python.analysis.extraPaths": [
+    "C:\\Users\\1\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages"
+  ],
+  "python.autoComplete.extraPaths": [
+    "C:\\Users\\1\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages"
+  ]
 }

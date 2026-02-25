@@ -11,8 +11,10 @@ import { BotControl } from '@/components/editor/bot/bot-control';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
 import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
+import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/properties-panel';
+import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logButtonUpdate, logButtonDelete, logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -32,13 +34,13 @@ import { LayoutCustomizer } from '@/components/layout/layout-customizer';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
 import { SimpleLayoutConfig, SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useBotEditor } from '@/hooks/use-bot-editor';
-import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
+import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
+import { CodeFormat, useCodeGenerator } from '@/components/editor/code/use-code-generator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SheetsManager } from '@/utils/sheets-manager';
-import { BotData, BotDataWithSheets, BotGroup, BotProject, ComponentDefinition, Node, UserBotData } from '@shared/schema';
+import { BotData, BotDataWithSheets, BotProject, Button, ComponentDefinition, Node, UserBotData } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
 /**
@@ -103,36 +105,6 @@ export default function Editor() {
   const isMobile = useIsMobile();
 
   /**
-   * Эффект для корректного восстановления мобильного интерфейса при навигации
-   *
-   * При переключении между мобильной и десктопной версией интерфейса
-   * скрывает или показывает соответствующие элементы интерфейса
-   */
-  useEffect(() => {
-    if (isMobile) {
-      setShowMobileSidebar(false);
-      setShowMobileProperties(false);
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(element => {
-          if (element.type === 'sidebar' || element.type === 'properties') {
-            return { ...element, visible: false };
-          }
-          return element;
-        })
-      }));
-    } else {
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(element => ({
-          ...element,
-          visible: true
-        }))
-      }));
-    }
-  }, [isMobile]);
-
-  /**
    * Флаг автоматического создания кнопок при добавлении соединений
    * @type {boolean}
    */
@@ -189,9 +161,9 @@ export default function Editor() {
 
   /**
    * Тип действия в истории
-   * @typedef {'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate'} ActionType
+   * @typedef {'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate' | 'reset' | 'type_change' | 'id_change' | 'button_add' | 'button_update' | 'button_delete' | 'move_end' | 'sheet_add' | 'sheet_delete' | 'sheet_rename' | 'sheet_duplicate' | 'sheet_switch'} ActionType
    */
-  type ActionType = 'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate';
+  type ActionType = 'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate' | 'reset' | 'type_change' | 'id_change' | 'button_add' | 'button_update' | 'button_delete' | 'move_end' | 'sheet_add' | 'sheet_delete' | 'sheet_rename' | 'sheet_duplicate' | 'sheet_switch';
 
   /**
    * Интерфейс элемента истории действий
@@ -443,6 +415,10 @@ export default function Editor() {
   const getFlexibleLayoutConfig = useCallback((): SimpleLayoutConfig => {
     // Используем компактный заголовок для всех устройств
     const headerSize = isMobile ? 2.5 : 3;
+    // Скрываем боковую панель и свойства на вкладке "Бот" и "Пользователи"
+    const isBotTab = currentTab === 'bot';
+    const isUsersTab = currentTab === 'users';
+    const hidePanels = isBotTab || isUsersTab;
 
     return {
       elements: [
@@ -460,7 +436,7 @@ export default function Editor() {
           name: 'Боковая панель',
           position: 'left',
           size: 20,
-          visible: true
+          visible: !hidePanels
         },
         {
           id: 'canvas',
@@ -476,7 +452,7 @@ export default function Editor() {
           name: 'Свойства',
           position: 'right',
           size: 20,
-          visible: true
+          visible: !hidePanels
         },
         {
           id: 'code',
@@ -500,7 +476,7 @@ export default function Editor() {
           name: 'Диалог',
           position: 'right',
           size: 30,
-          visible: false
+          visible: isUsersTab
         },
         {
           id: 'userDetails',
@@ -508,7 +484,7 @@ export default function Editor() {
           name: 'Детали пользователя',
           position: 'left',
           size: 25,
-          visible: false
+          visible: isUsersTab
         },
         {
           id: 'fileExplorer',
@@ -527,11 +503,12 @@ export default function Editor() {
   const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>(getFlexibleLayoutConfig());
 
   /**
-   * Эффект для обновления конфигурации макета при изменении вкладки или размера экрана
+   * Эффект для обновления конфигурации макета при изменении вкладки
+   * Сбрасывает видимость элементов к значениям по умолчанию для новой вкладки
    */
   useEffect(() => {
     setFlexibleLayoutConfig(getFlexibleLayoutConfig());
-  }, [getFlexibleLayoutConfig]);
+  }, [currentTab, isMobile]);
 
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
@@ -629,10 +606,13 @@ export default function Editor() {
       // Reset local changes flag only after successful save
       setHasLocalChanges(false);
 
-      toast({
-        title: "Проект сохранен",
-        description: "Изменения успешно сохранены",
-      });
+      // Инвалидируем кеш для загрузки актуальных данных с сервера
+      if (activeProject?.id) {
+        await queryClient.invalidateQueries({
+          queryKey: [`/api/projects/${activeProject.id}`],
+          exact: true
+        });
+      }
     },
     onError: (_error, _variables, context) => {
       // Откатываем изменения при ошибке
@@ -682,6 +662,26 @@ export default function Editor() {
   // Use the appropriate project
   const activeProject = projectId ? currentProject : firstProject;
 
+  // Загрузка пользователей для вкладки "Пользователи"
+  const { data: users = [] } = useQuery<UserBotData[]>({
+    queryKey: [`/api/projects/${activeProject?.id}/users`],
+    enabled: !!activeProject?.id && currentTab === 'users',
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  /**
+   * Эффект для автоматического выбора первого пользователя при переключении на вкладку "Пользователи"
+   */
+  useEffect(() => {
+    if (currentTab === 'users' && users.length > 0) {
+      const firstUser = users[0];
+      // Устанавливаем первого пользователя как выбранного для обеих панелей
+      setSelectedUserDetails(firstUser);
+      setSelectedDialogUser(firstUser);
+    }
+  }, [currentTab, users]);
+
   // Состояние для управления форматом кода
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -717,16 +717,12 @@ export default function Editor() {
     }));
   }, [codeEditorVisible]);
 
-  // Загрузка списка групп для генерации кода
-  const { data: groups = [] } = useQuery<BotGroup[]>({
-    queryKey: ['/api/groups'],
-  });
-
   // Использование хука генератора кода
-  const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent } = useCodeGenerator(
+  const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGenerator(
     activeProject?.data as BotData || { nodes: [] },
     activeProject?.name || 'project',
-    groups
+    activeProject?.userDatabaseEnabled === 1,
+    activeProject?.id || null
   );
 
   // Определение и отслеживание темы приложения
@@ -806,7 +802,8 @@ export default function Editor() {
     pasteFromClipboard,
     hasClipboardData,
     isNodeBeingDragged,
-    setIsNodeBeingDragged
+    setIsNodeBeingDragged,
+    saveToHistory
   } = useBotEditor(activeProject?.data as BotData);
 
   // Вычисляем selectedNode из selectedNodeId и nodes
@@ -834,6 +831,22 @@ export default function Editor() {
 
   // Обертка для обновления узлов, которая синхронизирует изменения с системой листов
   const handleNodeUpdateWithSheets = useCallback((nodeId: string, updates: any) => {
+    // Находим узел для логирования
+    const node = nodes.find(n => n.id === nodeId);
+    const updatedFields = Object.keys(updates);
+    
+    // Логируем обновление
+    if (node && handleActionLog) {
+      logNodeUpdate({
+        node,
+        onActionLog: handleActionLog,
+        updatedFields
+      });
+    }
+    
+    // Сохраняем в историю ДО изменений
+    saveToHistory();
+    
     // Обновляем в старой системе
     updateNodeData(nodeId, updates);
 
@@ -858,10 +871,27 @@ export default function Editor() {
         sheets: updatedSheets
       });
     }
-  }, [updateNodeData, botDataWithSheets]);
+  }, [updateNodeData, botDataWithSheets, nodes, handleActionLog, saveToHistory]);
 
   // Обработчик смены типа узла
   const handleNodeTypeChange = useCallback((nodeId: string, newType: any, newData: any) => {
+    // Находим узел для логирования
+    const node = nodes.find(n => n.id === nodeId);
+    const oldType = node?.type;
+    
+    // Логируем изменение типа
+    if (node && oldType && handleActionLog) {
+      logNodeTypeChange({
+        node,
+        oldType,
+        newType,
+        onActionLog: handleActionLog
+      });
+    }
+    
+    // Сохраняем в историю ДО изменений
+    saveToHistory();
+    
     // Обновляем в старой системе
     updateNode(nodeId, { type: newType, data: newData });
 
@@ -886,10 +916,26 @@ export default function Editor() {
         sheets: updatedSheets
       });
     }
-  }, [updateNode, botDataWithSheets]);
+  }, [updateNode, botDataWithSheets, nodes, handleActionLog, saveToHistory]);
 
   // Обработчик смены ID узла
   const handleNodeIdChange = useCallback((oldId: string, newId: string) => {
+    // Находим узел для логирования
+    const node = nodes.find(n => n.id === oldId);
+    
+    // Логируем изменение ID
+    if (node && handleActionLog) {
+      logNodeIdChange({
+        node,
+        oldId,
+        newId,
+        onActionLog: handleActionLog
+      });
+    }
+    
+    // Сохраняем в историю ДО изменений
+    saveToHistory();
+    
     if (!botDataWithSheets || !botDataWithSheets.activeSheetId) return;
 
     const updatedSheets = botDataWithSheets.sheets.map(sheet => {
@@ -914,7 +960,33 @@ export default function Editor() {
     if (selectedNodeId === oldId) {
       setSelectedNodeId(newId);
     }
-  }, [botDataWithSheets, selectedNodeId]);
+  }, [botDataWithSheets, selectedNodeId, nodes, handleActionLog, saveToHistory]);
+
+  // Синхронизация nodes → botDataWithSheets для undo/redo
+  useEffect(() => {
+    if (!botDataWithSheets || !botDataWithSheets.activeSheetId) return;
+    
+    console.log('🔄 Синхронизация nodes → botDataWithSheets:', {
+      nodesCount: nodes.length,
+      activeSheetId: botDataWithSheets.activeSheetId
+    });
+    
+    // Обновляем узлы в активном листе при изменении nodes
+    const updatedSheets = botDataWithSheets.sheets.map(sheet => {
+      if (sheet.id === botDataWithSheets.activeSheetId) {
+        return {
+          ...sheet,
+          nodes: nodes
+        };
+      }
+      return sheet;
+    });
+
+    setBotDataWithSheets({
+      ...botDataWithSheets,
+      sheets: updatedSheets
+    });
+  }, [nodes, botDataWithSheets?.activeSheetId]);
 
   // Обновляем данные бота при смене проекта
   useEffect(() => {
@@ -1028,6 +1100,17 @@ export default function Editor() {
     if (!botDataWithSheets) return;
 
     try {
+      // Логируем ДО изменений
+      if (handleActionLog) {
+        logSheetAdd({
+          sheetName: name,
+          onActionLog: handleActionLog
+        });
+      }
+      
+      // Сохраняем в историю ДО изменений
+      saveToHistory();
+
       const updatedData = SheetsManager.addSheet(botDataWithSheets, name);
       setBotDataWithSheets(updatedData);
 
@@ -1055,7 +1138,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject]);
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject, handleActionLog, saveToHistory]);
 
   /**
    * Обработчик удаления листа
@@ -1066,6 +1149,21 @@ export default function Editor() {
     if (!botDataWithSheets) return;
 
     try {
+      // Находим лист для логирования
+      const sheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
+      
+      // Логируем ДО изменений
+      if (sheet && handleActionLog) {
+        logSheetDelete({
+          sheetName: sheet.name,
+          sheetId,
+          onActionLog: handleActionLog
+        });
+      }
+      
+      // Сохраняем в историю ДО изменений
+      saveToHistory();
+
       const updatedData = SheetsManager.deleteSheet(botDataWithSheets, sheetId);
       setBotDataWithSheets(updatedData);
 
@@ -1091,7 +1189,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, activeProject]);
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, activeProject, handleActionLog, saveToHistory, nodes]);
 
   /**
    * Обработчик переименования листа
@@ -1103,6 +1201,22 @@ export default function Editor() {
     if (!botDataWithSheets) return;
 
     try {
+      // Находим лист для логирования
+      const sheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
+      
+      // Логируем ДО изменений
+      if (sheet && handleActionLog) {
+        logSheetRename({
+          sheetId,
+          oldName: sheet.name,
+          newName,
+          onActionLog: handleActionLog
+        });
+      }
+      
+      // Сохраняем в историю ДО изменений
+      saveToHistory();
+
       const updatedData = SheetsManager.renameSheet(botDataWithSheets, sheetId, newName);
       setBotDataWithSheets(updatedData);
 
@@ -1122,7 +1236,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, updateProjectMutation, toast, activeProject]);
+  }, [botDataWithSheets, updateProjectMutation, toast, activeProject, handleActionLog, saveToHistory, nodes]);
 
   /**
    * Обработчик дублирования листа
@@ -1133,6 +1247,23 @@ export default function Editor() {
     if (!botDataWithSheets) return;
 
     try {
+      // Находим оригинальный лист для логирования
+      const originalSheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
+      
+      // Логируем ДО изменений
+      if (originalSheet && handleActionLog) {
+        // Имя нового листа будет сгенерировано функцией duplicateSheetInProject
+        // Поэтому логируем с placeholder
+        logSheetDuplicate({
+          originalName: originalSheet.name,
+          newName: `${originalSheet.name} (копия)`,
+          onActionLog: handleActionLog
+        });
+      }
+      
+      // Сохраняем в историю ДО изменений
+      saveToHistory();
+
       const updatedData = SheetsManager.duplicateSheetInProject(botDataWithSheets, sheetId);
       setBotDataWithSheets(updatedData);
 
@@ -1160,7 +1291,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, activeProject]);
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, activeProject, handleActionLog, saveToHistory, nodes, currentNodeSizes]);
 
   /**
    * Обработчик выбора листа
@@ -1171,6 +1302,22 @@ export default function Editor() {
     if (!botDataWithSheets) return;
 
     try {
+      // Находим текущий и новый листы для логирования
+      const currentSheet = botDataWithSheets.sheets.find(s => s.id === botDataWithSheets.activeSheetId);
+      const newSheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
+      
+      // Логируем ДО изменений
+      if (newSheet && handleActionLog) {
+        logSheetSwitch({
+          fromSheet: currentSheet?.name,
+          toSheet: newSheet.name,
+          onActionLog: handleActionLog
+        });
+      }
+      
+      // Сохраняем в историю ДО изменений
+      saveToHistory();
+
       // Проверяем, существует ли лист с таким ID
       const sheetExists = botDataWithSheets.sheets.some(sheet => sheet.id === sheetId);
       if (!sheetExists) {
@@ -1245,7 +1392,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject, queryClient]);
+  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject, queryClient, handleActionLog, saveToHistory]);
 
   // Проверяем, есть ли выбранный шаблон при загрузке страницы
   useEffect(() => {
@@ -1366,20 +1513,83 @@ export default function Editor() {
 
   const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
     updateNode(nodeId, { position });
+    // Не сохраняем каждое перемещение - это будет слишком часто
+    // Сохранение происходит только в конце перетаскивания
   }, [updateNode]);
+
+  // Вызываем один раз в конце перетаскивания узла
+  const handleNodeMoveEnd = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (node && handleActionLog) {
+      handleActionLog('move_end', `Перемещён узел "${node.type}" (${node.id})`);
+    }
+    saveToHistory();
+    console.log('🏁 Конец перемещения, сохранено в историю');
+  }, [nodes, handleActionLog, saveToHistory]);
 
   // Обёртки для deleteNode и duplicateNode с логированием в историю
   const handleNodeDelete = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     handleActionLog('delete', `Удален узел "${node?.type || 'Unknown'}"`);
+    // Сохраняем в историю ДО изменений
+    saveToHistory();
     _deleteNode(nodeId);
-  }, [_deleteNode, nodes, handleActionLog]);
+  }, [_deleteNode, nodes, handleActionLog, saveToHistory]);
 
   const handleNodeDuplicate = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     handleActionLog('duplicate', `Дублирован узел "${node?.type || 'Unknown'}"`);
+    // Сохраняем в историю ДО изменений
+    saveToHistory();
     _duplicateNode(nodeId);
-  }, [_duplicateNode, nodes, handleActionLog]);
+  }, [_duplicateNode, nodes, handleActionLog, saveToHistory]);
+
+  // Обёртки для кнопок с логированием
+  const handleButtonAdd = useCallback((nodeId: string, button: Button) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (node && handleActionLog) {
+      logButtonAdd({
+        node,
+        buttonText: button.text,
+        onActionLog: handleActionLog
+      });
+    }
+    // Сохраняем в историю ДО изменений
+    saveToHistory();
+    addButton(nodeId, button);
+  }, [addButton, nodes, handleActionLog, saveToHistory]);
+
+  const handleButtonUpdate = useCallback((nodeId: string, buttonId: string, updates: Partial<Button>) => {
+    const node = nodes.find(n => n.id === nodeId);
+    const updatedFields = Object.keys(updates);
+    if (node && handleActionLog) {
+      logButtonUpdate({
+        node,
+        buttonId,
+        updatedFields,
+        onActionLog: handleActionLog
+      });
+    }
+    // Сохраняем в историю ДО изменений
+    saveToHistory();
+    updateButton(nodeId, buttonId, updates);
+  }, [updateButton, nodes, handleActionLog, saveToHistory]);
+
+  const handleButtonDelete = useCallback((nodeId: string, buttonId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    const button = node?.data.buttons?.find(b => b.id === buttonId);
+    if (node && handleActionLog) {
+      logButtonDelete({
+        node,
+        buttonId,
+        buttonText: button?.text,
+        onActionLog: handleActionLog
+      });
+    }
+    // Сохраняем в историю ДО изменений
+    saveToHistory();
+    deleteButton(nodeId, buttonId);
+  }, [deleteButton, nodes, handleActionLog, saveToHistory]);
 
   const handleComponentDrag = useCallback((_component: ComponentDefinition) => {
     // Handle component drag start if needed
@@ -1394,7 +1604,7 @@ export default function Editor() {
     // Set local changes flag first to prevent useEffect from running
     setHasLocalChanges(true);
 
-    // Создаем новый узел из компонента
+    // Создаем н��вый узел из компонента
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
@@ -1402,9 +1612,12 @@ export default function Editor() {
       data: component.defaultData || {}
     };
 
-    // Логируем добавление в историю действий
+    // Логируем добавление в историю ��ействий
     console.log('📝 Добавление узла:', component.type);
     handleActionLog('add', `Добавлен узел "${component.type}"`);
+
+    // Сохраняем в историю ДО изменений
+    saveToHistory();
 
     // Добавляем узел на холст
     addNode(newNode);
@@ -1415,7 +1628,18 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
     }, 1000);
-  }, [addNode, isLoadingTemplate, updateProjectMutation, activeProject, handleActionLog]);
+  }, [addNode, isLoadingTemplate, updateProjectMutation, activeProject, handleActionLog, saveToHistory, nodes]);
+
+  /**
+   * Обработчик явного сохранения проекта
+   *
+   * Вызывается при нажатии кнопки "Применить" в панели свойств
+   */
+  const handleSaveProject = useCallback(() => {
+    if (activeProject?.id) {
+      updateProjectMutation.mutate({});
+    }
+  }, [activeProject?.id, updateProjectMutation]);
 
   /**
    * Обработчик открытия модального окна сохранения шаблона
@@ -1465,10 +1689,12 @@ export default function Editor() {
       onNodeUpdate={handleNodeUpdateWithSheets}
       onNodeTypeChange={handleNodeTypeChange}
       onNodeIdChange={handleNodeIdChange}
-      onButtonAdd={addButton}
-      onButtonUpdate={updateButton}
-      onButtonDelete={deleteButton}
+      onButtonAdd={handleButtonAdd}
+      onButtonUpdate={handleButtonUpdate}
+      onButtonDelete={handleButtonDelete}
       onClose={handleToggleProperties}
+      onActionLog={handleActionLog}
+      onSaveProject={handleSaveProject}
     />
   ) : null;
 
@@ -1481,8 +1707,18 @@ export default function Editor() {
   // Определяем содержимое панели кода
   const codeContent = activeProject ? (
     <CodePanel
-      botDataArray={allProjects.map(project => project.data as BotData)}
-      projectIds={allProjects.map(project => project.id)}
+      botDataArray={allProjects.length > 0 
+        ? allProjects.map(project => 
+            project.id === activeProject.id 
+              ? activeProject.data as BotData  // Используем актуальные данные активного проекта
+              : project.data as BotData
+          )
+        : [activeProject.data as BotData]
+      }
+      projectIds={allProjects.length > 0 
+        ? allProjects.map(project => project.id)
+        : [activeProject.id]
+      }
       projectName={activeProject.name}
       onClose={handleCloseCodePanel}
       selectedFormat={selectedFormat}
@@ -1544,17 +1780,28 @@ export default function Editor() {
     const canvasContent = codeEditorVisible ? (
       // Показываем редактор кода поверх canvas
       <div className="h-full flex flex-col">
-        <CodeEditorArea
-          isMobile={false}
-          isLoading={isCodeLoading}
-          displayContent={displayContent}
-          selectedFormat={selectedFormat}
-          theme={theme}
-          editorRef={editorRef}
-          codeStats={codeStats}
-          setAreAllCollapsed={setAreAllCollapsed}
-          areAllCollapsed={areAllCollapsed}
-        />
+        {selectedFormat === 'readme' ? (
+          <ReadmePreview
+            markdownContent={displayContent}
+            theme={theme}
+            onContentChange={(content) => {
+              // Обновляем контент README в состоянии генер��тора
+              setCodeContent(prev => ({ ...prev, readme: content }));
+            }}
+          />
+        ) : (
+          <CodeEditorArea
+            isMobile={false}
+            isLoading={isCodeLoading}
+            displayContent={displayContent}
+            selectedFormat={selectedFormat}
+            theme={theme}
+            editorRef={editorRef}
+            codeStats={codeStats}
+            setAreAllCollapsed={setAreAllCollapsed}
+            areAllCollapsed={areAllCollapsed}
+          />
+        )}
       </div>
     ) : (
       <div className="h-full">
@@ -1568,13 +1815,14 @@ export default function Editor() {
             // Новая система листов
             botData={botDataWithSheets || undefined}
             onBotDataUpdate={handleBotDataUpdate}
-            // Существующие пропсы для совместимости
+            // Существующие пр��псы для совместимости
             nodes={nodes}
             selectedNodeId={selectedNodeId}
             onNodeSelect={setSelectedNodeId}
             onNodeAdd={addNode}
             onNodeDelete={handleNodeDelete}
             onNodeMove={handleNodeMove}
+            onNodeMoveEnd={handleNodeMoveEnd}
             onNodesUpdate={updateNodes}
             onUndo={undo}
             onRedo={redo}
@@ -1821,6 +2069,7 @@ export default function Editor() {
                   onNodeDelete={handleNodeDelete}
                   onNodeDuplicate={handleNodeDuplicate}
                   onNodeMove={handleNodeMove}
+                  onNodeMoveEnd={handleNodeMoveEnd}
                   onNodesUpdate={updateNodes}
                   onUndo={undo}
                   onRedo={redo}
@@ -1882,9 +2131,10 @@ export default function Editor() {
               onNodeUpdate={handleNodeUpdateWithSheets}
               onNodeTypeChange={handleNodeTypeChange}
               onNodeIdChange={handleNodeIdChange}
-              onButtonAdd={addButton}
-              onButtonUpdate={updateButton}
-              onButtonDelete={deleteButton}
+              onButtonAdd={handleButtonAdd}
+              onButtonUpdate={handleButtonUpdate}
+              onButtonDelete={handleButtonDelete}
+              onActionLog={handleActionLog}
             />
           }
         />
@@ -1959,6 +2209,7 @@ export default function Editor() {
                       onNodeDelete={handleNodeDelete}
                       onNodeDuplicate={handleNodeDuplicate}
                       onNodeMove={handleNodeMove}
+                      onNodeMoveEnd={handleNodeMoveEnd}
                       onNodesUpdate={updateNodes}
                       onUndo={undo}
                       onRedo={redo}
@@ -1991,9 +2242,10 @@ export default function Editor() {
                   onNodeUpdate={handleNodeUpdateWithSheets}
                   onNodeTypeChange={handleNodeTypeChange}
                   onNodeIdChange={handleNodeIdChange}
-                  onButtonAdd={addButton}
-                  onButtonUpdate={updateButton}
-                  onButtonDelete={deleteButton}
+                  onButtonAdd={handleButtonAdd}
+                  onButtonUpdate={handleButtonUpdate}
+                  onButtonDelete={handleButtonDelete}
+                  onActionLog={handleActionLog}
                 />
               }
               onSheetAdd={handleSheetAdd}
@@ -2018,6 +2270,7 @@ export default function Editor() {
                   onNodeDelete={handleNodeDelete}
                   onNodeDuplicate={handleNodeDuplicate}
                   onNodeMove={handleNodeMove}
+                  onNodeMoveEnd={handleNodeMoveEnd}
                   onNodesUpdate={updateNodes}
                   onUndo={undo}
                   onRedo={redo}
@@ -2059,9 +2312,10 @@ export default function Editor() {
               onNodeUpdate={handleNodeUpdateWithSheets}
               onNodeTypeChange={handleNodeTypeChange}
               onNodeIdChange={handleNodeIdChange}
-              onButtonAdd={addButton}
-              onButtonUpdate={updateButton}
-              onButtonDelete={deleteButton}
+              onButtonAdd={handleButtonAdd}
+              onButtonUpdate={handleButtonUpdate}
+              onButtonDelete={handleButtonDelete}
+              onActionLog={handleActionLog}
             />
           }
           onLayoutChange={(_elements) => {

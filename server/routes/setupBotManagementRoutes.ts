@@ -61,9 +61,6 @@ export function setupBotManagementRoutes(app: Express) {
             // Если есть активный процесс в памяти
             if (activeProcessInfo) {
                 actualStatus = 'running';
-            } else {
-                // Процесса нет в памяти, проверяем PID независимо от статуса в базе
-                console.log(`Бот ${projectId} в базе показан как ${instance.status}, проверяем процесс по PID ${instance.processId}`);
             }
 
             // Проверяем существует ли процесс по PID (независимо от статуса в базе)
@@ -105,7 +102,6 @@ export function setupBotManagementRoutes(app: Express) {
                     }
                     actualStatus = 'running';
                 } catch (error) {
-                    console.log(`Процесс ${instance.processId} для бота ${projectId} не найден в системе`);
                     actualStatus = 'stopped';
                 }
             }
@@ -123,8 +119,6 @@ export function setupBotManagementRoutes(app: Express) {
                     }
 
                     if (psOutput && psOutput.includes('python')) {
-                        console.log(`Процесс ${instance.processId} для бота ${projectId} найден через ps, восстанавливаем отслеживание`);
-
                         // Создаем фиктивный объект процесса для отслеживания
                         const mockProcess = {
                             pid: parseInt(instance.processId),
@@ -146,7 +140,6 @@ export function setupBotManagementRoutes(app: Express) {
                     }
                 } catch (error) {
                     // ps/tasklist команда не сработала, процесс точно не существует
-                    console.log(`Процесс ${instance.processId} для бота ${projectId} не найден через ps`);
                 }
             }
 
@@ -164,16 +157,12 @@ export function setupBotManagementRoutes(app: Express) {
 
                     // Проверяем есть ли процесс с файлом этого бота
                     if (allPythonProcesses.includes(botFileName)) {
-                        console.log(`⚠️ Найден зависший процесс для бота ${projectId} (файл: ${botFileName}). Пометим как running, но НЕ восстанавливаем отслеживание. Используйте кнопку "Остановить" для очистки.`);
-
                         // Извлекаем PID из вывода ps для информации
                         const lines = allPythonProcesses.split('\n');
                         for (const line of lines) {
                             if (line.includes(botFileName)) {
                                 const parts = line.trim().split(/\s+/);
                                 const realPid = parseInt(parts[1]);
-
-                                console.log(`Обнаружен зависший PID ${realPid} для бота ${projectId}`);
 
                                 // Обновляем PID в базе данных для возможности остановки
                                 await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
@@ -187,13 +176,11 @@ export function setupBotManagementRoutes(app: Express) {
                     }
                 } catch (error) {
                     // Команда не сработала, процесс не найден
-                    console.log(`Процесс для бота ${projectId} не найден среди Python процессов`);
                 }
             }
 
             // Если статус в базе не соответствует реальному состоянию - исправляем
             if (instance.status !== actualStatus) {
-                console.log(`Обнаружено несоответствие состояния для бота ${projectId}. База: ${instance.status}, Реальность: ${actualStatus}. Исправляем.`);
                 await storage.updateBotInstance(instance.id, {
                     status: actualStatus,
                     errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null
@@ -203,7 +190,13 @@ export function setupBotManagementRoutes(app: Express) {
             }
 
             return res.json({ status: instance.status, instance });
-        } catch (error) {
+        } catch (error: any) {
+            // Обрабатываем ошибку потери соединения с БД
+            if (error.message && error.message.includes('Connection terminated unexpectedly')) {
+                console.log(`⚠️ Соединение с БД прервано при получении статуса бота. Возвращаем stopped статус.`);
+                return res.json({ status: 'stopped', instance: null });
+            }
+            
             console.error('Ошибка получения статуса бота:', error);
             return res.status(500).json({ message: "Failed to get bot status" });
         }

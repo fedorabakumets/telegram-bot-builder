@@ -11,7 +11,7 @@ import { generateGlobalCheckUserVariableFunction } from "./database/generateGlob
 import { generateUniversalVariableReplacement } from './database/generateUniversalVariableReplacement';
 import { formatTextForPython } from './format';
 import { extractNodesAndConnections } from './MediaHandler';
-import { generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
+import { generateApiConfig, generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateInlineKeyboardCode } from './Keyboard';
@@ -34,7 +34,7 @@ import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelec
 import { newgenerateStateTransitionAndRenderLogic } from './newgenerateStateTransitionAndRenderLogic';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './handle_user_input';
 import { createProcessNodeButtonsFunction } from './newprocessNodeButtonsAndGenerateHandlers';
-import { generateConfigYaml, generateDockerfile, generateReadme, generateRequirementsTxt } from './scaffolding';
+import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
 import { generateSynonymHandlers } from './Synonyms';
 import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './utils/addInputTargetNodes';
@@ -355,6 +355,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += generateSafeEditOrSendCode(hasInlineButtonsResult || hasNodesRequiringSafeEditOrSendResult || userDatabaseEnabled, hasAutoTransitionsResult || userDatabaseEnabled);
 
   code += generateBasicBotSetupCode();
+
+  // Добавляем конфигурацию API
+  code += generateApiConfig();
 
   // Импортируем и добавляем код логирования сообщений, если включена БД
   code += generateMessageLoggingCode(userDatabaseEnabled, projectId, hasInlineButtons(nodes || []));
@@ -1587,7 +1590,7 @@ export interface CodeWithMap {
 }
 
 // Повторный экспорт функций каркаса
-export { generateConfigYaml, generateDockerfile, generateReadme, generateRequirementsTxt };
+export { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile };
 // ============================================================================
 // ТИПЫ ДЛЯ УЗЛОВ БОТА
 // ============================================================================

@@ -294,6 +294,14 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
         console.log(`⚠️ Пропускаем обновление статуса бота в базе данных - пул соединений закрыт`);
         return undefined;
       }
+      
+      // Обрабатываем ошибку потери соединения
+      if (error.message && error.message.includes('Connection terminated unexpectedly')) {
+        console.log(`⚠️ Соединение с БД прервано при получении бота ${projectId}. Помечаем пул как неактивный.`);
+        globalThis.__dbPoolActive = false;
+        return undefined;
+      }
+      
       // Для других ошибок пробрасываем исключение
       throw error;
     }

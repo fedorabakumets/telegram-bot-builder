@@ -200,7 +200,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
     // Получаем настройки генерации комментариев из переменной окружения (по умолчанию включено)
     const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION !== 'false';
-    const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false, false, enableComments).replace('YOUR_BOT_TOKEN_HERE', token);
+    const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false, false, enableComments);
 
     // Нормализуем имя проекта для использования в качестве имени файла
     const customFileName = normalizeProjectNameToFile(project.name);
@@ -214,7 +214,9 @@ export async function startBot(projectId: number, token: string, tokenId: number
     assets.forEach((asset: string) => console.log(`     * ${asset}`));
 
     // Запускаем бота
-    const pythonPath = process.platform === 'win32' ? 'python' : 'python3';
+    const pythonPath = process.platform === 'win32' 
+      ? 'C:\\Users\\1\\AppData\\Local\\Programs\\Python\\Python313\\python.exe' 
+      : 'python3';
     const botProcess = spawn(pythonPath, [mainFile], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,

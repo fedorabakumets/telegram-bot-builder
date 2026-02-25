@@ -1,12 +1,47 @@
 import { BotData } from '@shared/schema';
 import { generateBotFatherCommands } from "../commands";
 
+/**
+ * Извлекает все узлы из структуры бота (поддерживает sheets и nodes)
+ */
+function extractNodes(botData: BotData): any[] {
+  // Если уже простая структура с nodes - возвращаем их
+  if (botData?.nodes && Array.isArray(botData.nodes)) {
+    return botData.nodes.filter(node => node !== null && node !== undefined);
+  }
 
-export function generateReadme(botData: BotData, botName: string, projectId?: number, tokenId?: number): string {
-  const rawNodes = botData?.nodes || [];
-  const nodes = rawNodes.filter(node => node !== null && node !== undefined);
-  const commandNodes = nodes.filter(node => (node.type === 'start' || node.type === 'command') && node.data?.command
-  );
+  // Если многолистовая структура с sheets - собираем все узлы
+  const botDataAny = botData as any;
+  if (botDataAny?.sheets && Array.isArray(botDataAny.sheets)) {
+    const allNodes: any[] = [];
+    botDataAny.sheets.forEach((sheet: any) => {
+      if (sheet?.nodes && Array.isArray(sheet.nodes)) {
+        allNodes.push(...sheet.nodes.filter((node: any) => node !== null && node !== undefined));
+      }
+    });
+    return allNodes;
+  }
+
+  // Если нет узлов вообще - возвращаем пустой массив
+  return [];
+}
+
+export function generateReadme(
+  botData: BotData,
+  botName: string,
+  projectId?: number,
+  tokenId?: number,
+  customFileName?: string
+): string {
+  const nodes = extractNodes(botData);
+  const commandNodes = nodes.filter(node => (node.type === 'start' || node.type === 'command') && node.data?.command);
+
+  // Определяем имя файла бота
+  const fileName = customFileName
+    ? `${customFileName}.py`
+    : projectId !== undefined && tokenId !== undefined
+      ? `bot_${projectId}_${tokenId}.py`
+      : 'bot.py';
 
   let readme = '# ' + botName + '\n\n';
   readme += 'Telegram бот, созданный с помощью TelegramBot Builder.\n\n';
@@ -36,22 +71,9 @@ export function generateReadme(botData: BotData, botName: string, projectId?: nu
   readme += '   ```bash\n';
   readme += '   pip install -r requirements.txt\n';
   readme += '   ```\n\n';
-  readme += '3. Создайте файл `.env` и добавьте настройки:\n';
-  readme += '   ```\n';
-  readme += '   BOT_TOKEN=your_bot_token_here\n';
-  readme += '   DATABASE_URL=postgresql://user:password@localhost:5432/bot_db\n';
-  readme += '   ```\n\n';
-  readme += '4. Настройте базу данных PostgreSQL (опционально):\n';
-  readme += '   - Создайте базу данных PostgreSQL\n';
-  readme += '   - Обновите DATABASE_URL в .env файле\n';
-  readme += '   - Бот автоматически создаст необходимые таблицы при запуске\n';
-  readme += '   - Если БД недоступна, бот будет использовать локальное хранилище\n\n';
-  // Определяем имя файла в зависимости от доступных данных
-  const fileName = projectId !== undefined && tokenId !== undefined 
-    ? `bot_${projectId}_${tokenId}.py` 
-    : 'bot.py';
-    
-  readme += '5. Запустите бота:\n';
+  readme += '3. Настройте переменные окружения в файле `.env`\n\n';
+
+  readme += '4. Запустите бота:\n';
   readme += '   ```bash\n';
   readme += '   python ' + fileName + '\n';
   readme += '   ```\n\n';
@@ -67,36 +89,32 @@ export function generateReadme(botData: BotData, botName: string, projectId?: nu
   readme += '1. Отправьте команду `/setcommands` в @BotFather\n';
   readme += '2. Выберите своего бота\n';
   readme += '3. Скопируйте и отправьте следующие команды:\n\n';
+  readme += '<!-- BOTFATHER_COMMANDS_START -->\n';
   readme += '```\n';
   const botFatherCommands = generateBotFatherCommands(nodes);
-  readme += botFatherCommands || '';
-  readme += '\n```\n\n';
+  readme += botFatherCommands || 'Нет команд для отображения';
+  readme += '\n```\n';
+  readme += '<!-- BOTFATHER_COMMANDS_END -->\n\n';
 
   readme += '## Структура проекта\n\n';
-  readme += '- `' + fileName + '` - Основной файл бота\n';
-  readme += '- `requirements.txt` - Зависимости Python\n';
-  readme += '- `config.yaml` - Конфигурационный файл\n';
-  readme += '- `README.md` - Документация\n';
-  readme += '- `Dockerfile` - Для контейнеризации (опционально)\n\n';
+  readme += '```\n';
+  readme += '📦 ' + botName + '/\n';
+  readme += '┣ 📄 ' + fileName + ' — Основной файл бота (имя может отличаться)\n';
+  readme += '┣ 📄 project.json — Данные проекта (схема бота)\n';
+  readme += '┣ 📄 requirements.txt — Зависимости Python\n';
+  readme += '┣ 📄 .env — Переменные окружения\n';
+  readme += '┣ 📄 README.md — Документация\n';
+  readme += '┗ 📄 Dockerfile — Для контейнеризации (опционально)\n';
+  readme += '```\n\n';
 
   readme += '## Функциональность\n\n';
   readme += '### Статистика\n\n';
   readme += '- **Всего узлов**: ' + nodes.length + '\n';
   readme += '- **Команд**: ' + commandNodes.length + '\n';
   readme += '- **Сообщений**: ' + nodes.filter(n => n && n.type === 'message').length + '\n';
-  readme += '- **Кнопок**: ' + (nodes.reduce((sum: number, node: any) => sum + (node?.data?.buttons?.length || 0), 0) as number) + '\n\n';
-
-  readme += '### Безопасность\n\n';
-  readme += 'Бот включает следующие функции безопасности:\n';
-  readme += '- Проверка администраторских прав\n';
-  readme += '- Ограничения на приватные чаты\n';
-  readme += '- Система авторизации пользователей\n\n';
-
-  readme += '## Разработка\n\n';
-  readme += 'Этот бот создан с использованием:\n';
-  readme += '- [aiogram 3.x](https://docs.aiogram.dev/) - современная библиотека для Telegram Bot API\n';
-  readme += '- Python 3.8+\n';
-  readme += '- Асинхронное программирование\n\n';
+  readme += '- **Кнопок**: ' + (nodes.reduce((sum: number, node: any) => sum + (node?.data?.buttons?.length || 0), 0) as number) + '\n';
+  readme += '- **Клавиатур**: ' + nodes.filter(n => n && n.data?.keyboardType !== 'none').length + '\n';
+  readme += '- **В меню**: ' + nodes.filter(n => (n.type === 'start' || n.type === 'command') && n.data?.showInMenu).length + '\n\n';
 
   readme += '## Лицензия\n\n';
   readme += 'Сгенерировано с помощью TelegramBot Builder\n';

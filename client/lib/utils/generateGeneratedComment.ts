@@ -216,7 +216,9 @@ export function processCodeWithAutoComments(
         // Проверяем, есть ли уже комментарий о генерации в начале блока
         const firstNonEmptyLine = currentBlock.find(line => line.trim());
         if (!firstNonEmptyLine?.includes('Код сгенерирован в')) {
-          result.push(`# Код сгенерирован в ${generatorFile}`);
+          // Определяем отступ первой строки и добавляем комментарий с тем же отступом
+          const indent = firstNonEmptyLine ? firstNonEmptyLine.match(/^(\s*)/)?.[1] || '' : '';
+          result.push(`${indent}# Код сгенерирован в ${generatorFile}`);
         }
       }
 

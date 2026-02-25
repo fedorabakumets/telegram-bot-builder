@@ -49,13 +49,17 @@ export class DatabaseManager {
     this.healthCheckInterval = setInterval(async () => {
       try {
         await this.performHealthCheck();
-      } catch (error) {
-        console.error('Проверка работоспособности базы данных не удалась:', error);
+      } catch (error: any) {
+        const errorMessage = error?.message || 'Неизвестная ошибка';
+        // Тихо игнорируем ошибки соединения - переподключение произойдёт автоматически
+        if (!errorMessage.includes('Connection terminated')) {
+          console.warn('⚠️ Мониторинг БД:', errorMessage);
+        }
         this.connectionStats.errors++;
       }
     }, intervalMs);
 
-    console.log('Мониторинг работоспособности базы данных запущен');
+    console.log('✅ Мониторинг работоспособности базы данных запущен');
   }
 
   /**
@@ -89,8 +93,18 @@ export class DatabaseManager {
       // console.log('Проверка работоспособности базы данных прошла успешно');
       return true;
     } catch (error: any) {
-      console.error('Проверка работоспособности базы данных не удалась:', error?.message);
-      console.error('Подробная ошибка:', error);
+      const errorMessage = error?.message || 'Неизвестная ошибка';
+      
+      // Не логируем как ошибку, если соединение просто закрылось (это нормально при перезапуске БД)
+      if (errorMessage.includes('Connection terminated unexpectedly') || 
+          errorMessage.includes('Connection terminated') ||
+          errorMessage.includes('ECONNRESET') ||
+          errorMessage.includes('ETIMEDOUT')) {
+        console.warn('⚠️ Соединение с БД разорвано (переподключение...):', errorMessage);
+      } else {
+        console.error('❌ Проверка работоспособности БД не удалась:', errorMessage);
+      }
+      
       this.connectionStats.errors++;
       return false;
     }

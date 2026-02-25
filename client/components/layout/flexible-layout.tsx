@@ -2,7 +2,7 @@ import React from 'react';
 import { SimpleLayoutConfig } from './simple-layout-customizer';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useMediaQuery } from '@/components/editor/properties/media/use-media-query';
 import { CodeResizeHandle } from './code-resize-handle';
 
 /**
@@ -265,16 +265,16 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     // Если есть только верхняя/нижняя панель и основной контент
     if (topEl && !leftEl && rightElements.length === 0 && (centerEl || bottomEl)) {
       // Скрываем ResizableHandle на мобильных устройствах для вкладки "Бот"
-      
+
       return (
         <ResizablePanelGroup direction="vertical" className="h-full gap-0">
-          <ResizablePanel defaultSize={isMobile ? 7 : topEl.size} minSize={isMobile ? 7 : 15} maxSize={30} className="p-0 m-0">
+          <ResizablePanel id="top-panel" order={1} defaultSize={isMobile ? 7 : topEl.size} minSize={isMobile ? 7 : 15} maxSize={30} className="p-0 m-0">
             <div className="h-full bg-background overflow-auto">
               {getElementContent(topEl.type)}
             </div>
           </ResizablePanel>
           <ResizableHandle className="!hidden" style={{ height: 0, margin: 0, padding: 0 }} />
-          <ResizablePanel defaultSize={isMobile ? 93 : (100 - topEl.size)} className="p-0 m-0">
+          <ResizablePanel id="main-panel" order={2} defaultSize={isMobile ? 93 : (100 - topEl.size)} className="p-0 m-0">
             <div className="h-full bg-background overflow-auto">
               {centerEl ? getElementContent(centerEl.type) : (bottomEl ? getElementContent(bottomEl.type) : null)}
             </div>
@@ -293,6 +293,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           {leftEl && (
             <>
               <ResizablePanel
+                id="left-panel"
+                order={1}
                 defaultSize={leftSize}
                 minSize={15}
                 maxSize={40}
@@ -305,6 +307,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             </>
           )}
           <ResizablePanel
+            id="center-panel"
+            order={2}
             minSize={30}
             maxSize={rightElements.length > 0 ? 70 : 85}
           >
@@ -315,16 +319,20 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           {rightElements.length > 0 && (
             <>
               <CodeResizeHandle direction="vertical" />
-              <ResizablePanel 
-                defaultSize={totalRightSize} 
-                minSize={15} 
+              <ResizablePanel
+                id="right-panel"
+                order={3}
+                defaultSize={totalRightSize}
+                minSize={15}
                 maxSize={40}
               >
                 <ResizablePanelGroup direction="horizontal" className="h-full w-full">
                   {rightElements.flatMap((rightEl, index) => [
                     ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle />] : []),
-                    <ResizablePanel 
+                    <ResizablePanel
                       key={`panel-${rightEl.id}`}
+                      id={`right-subpanel-${rightEl.id}`}
+                      order={index + 1}
                       defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
                       minSize={10}
                       maxSize={100}
@@ -354,17 +362,19 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           <ResizablePanelGroup direction="horizontal" className="h-full">
             {leftEl && (
               <>
-                <ResizablePanel 
-                  defaultSize={leftEl.size} 
-                  minSize={15} 
+                <ResizablePanel
+                  id="combo-left-panel"
+                  order={1}
+                  defaultSize={leftEl.size}
+                  minSize={15}
                   maxSize={40}
                 >
                   <div className="h-full w-full border-r border-border bg-background overflow-hidden flex flex-col">
                     {getElementContent(leftEl.type)}
                   </div>
                 </ResizablePanel>
-                <ResizableHandle 
-                  withHandle 
+                <ResizableHandle
+                  withHandle
                   className="bg-gradient-to-r from-transparent via-slate-300/0 to-transparent hover:from-blue-500/20 hover:via-blue-500/40 hover:to-blue-500/20 dark:hover:from-blue-600/20 dark:hover:via-blue-500/30 dark:hover:to-blue-600/20 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 active:bg-gradient-to-r active:from-blue-500/30 active:via-blue-600/50 active:to-blue-500/30 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md active:shadow-lg"
                 >
                   <div className="absolute h-16 md:h-20 w-1.5 md:w-2 bg-gradient-to-b from-transparent via-blue-400 dark:via-blue-500 to-transparent opacity-0 group-hover:opacity-100 active:opacity-100 transition-all duration-200 pointer-events-none rounded-full blur-sm"></div>
@@ -373,6 +383,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               </>
             )}
             <ResizablePanel
+              id="combo-center-panel"
+              order={2}
               minSize={30}
               maxSize={rightElements.length > 0 ? 70 : 85}
             >
@@ -383,15 +395,19 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             {rightElements.length > 0 && (
               <>
                 <CodeResizeHandle direction="vertical" />
-                <ResizablePanel 
-                  defaultSize={totalRightSize} 
+                <ResizablePanel
+                  id="combo-right-panel"
+                  order={3}
+                  defaultSize={totalRightSize}
                   minSize={15}
                 >
                   <ResizablePanelGroup direction="horizontal" className="h-full w-full">
                     {rightElements.flatMap((rightEl, index) => [
                       ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle className="bg-gradient-to-r from-transparent via-slate-200/0 to-transparent hover:from-purple-500/15 hover:via-purple-500/30 hover:to-purple-500/15 dark:hover:from-purple-600/15 dark:hover:via-purple-500/25 dark:hover:to-purple-600/15 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md" />] : []),
-                      <ResizablePanel 
+                      <ResizablePanel
                         key={`panel-${rightEl.id}`}
+                        id={`combo-right-subpanel-${rightEl.id}`}
+                        order={index + 1}
                         defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
                         minSize={10}
                         maxSize={100}

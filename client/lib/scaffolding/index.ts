@@ -4,4 +4,4 @@
 export * from './generateRequirementsTxt';
 export * from './generateDockerfile';
 export * from './generateReadme';
-export * from './generateConfigYaml';
+export * from './generateEnvFile';

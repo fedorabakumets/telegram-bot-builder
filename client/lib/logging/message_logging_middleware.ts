@@ -86,7 +86,7 @@ export function message_logging_middleware(codeLines: string[]) {
     middlewareCodeLines.push('                    connector = TCPConnector(ssl=ssl_context)');
     middlewareCodeLines.push('                ');
     middlewareCodeLines.push('                async with aiohttp.ClientSession(connector=connector) as session:');
-    middlewareCodeLines.push('                    async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=10)) as response:');
+    middlewareCodeLines.push('                    async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT)) as response:');
     middlewareCodeLines.push('                        if response.status == 200:');
     middlewareCodeLines.push('                            message_id = saved_message.get("id")');
     middlewareCodeLines.push('                            logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")');

@@ -8,7 +8,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { useTerminalWebSocket } from '@/hooks/use-terminal-websocket';
+import { useTerminalWebSocket } from './use-terminal-websocket';
 import { Code } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';

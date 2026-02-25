@@ -15,6 +15,7 @@
 
 import { nanoid } from 'nanoid';
 import { CanvasSheet, BotDataWithSheets, BotData, Node } from '@shared/schema';
+import { generateNewId } from '@/components/editor/canvas/canvas/utils/extract-base-id';
 
 // Полный объект данных узла с типизацией, соответствующей схеме
 const defaultNodeData = {
@@ -399,7 +400,7 @@ export class SheetsManager {
   static duplicateSheet(originalSheet: CanvasSheet): CanvasSheet {
     const duplicatedNodes = originalSheet.nodes.map(node => ({
       ...node,
-      id: nanoid(),
+      id: generateNewId(node.id, 'dup'),
       position: {
         x: node.position.x + 50, // Смещение для видимости
         y: node.position.y + 50

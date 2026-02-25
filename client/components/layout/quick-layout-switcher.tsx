@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -266,6 +266,9 @@ const QuickLayoutSwitcher: React.FC<QuickLayoutSwitcherProps> = ({
             <Grid className="w-5 h-5" />
             Быстрая настройка макета
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Выберите готовый макет для быстрой настройки интерфейса
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">

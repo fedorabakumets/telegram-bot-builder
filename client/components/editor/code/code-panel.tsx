@@ -2,18 +2,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
+import { CodeFormat, useCodeGenerator } from '@/components/editor/code/use-code-generator';
 import { useToast } from '@/hooks/use-toast';
-import { useUpdateProjectName } from '@/hooks/use-update-project-name';
-import { BotData, BotGroup, BotProject } from '@shared/schema';
+import { useUpdateProjectName } from '@/components/editor/bot/use-update-project-name';
+import { BotData, BotProject } from '@shared/schema';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { SyncFromFileButton } from './sync-from-file-button';
-import { TokenInfo } from './token-info';
-import { BotFatherCommands } from './botfather-commands';
 import { BotValidation } from './bot-validation';
-import { BotStats } from './bot-stats';
+import { EnvFileTab } from './env-file-tab';
+import { normalizeProjectNameToFile } from '@/utils/normalize-file-name';
 
 /**
  * Свойства компонента панели кода
@@ -88,13 +86,6 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
   const { toast } = useToast();
 
   /**
-   * Загрузка списка групп для включения в генерацию кода
-   */
-  const { data: groups = [] } = useQuery<BotGroup[]>({
-    queryKey: ['/api/groups'],
-  });
-
-  /**
    * Загрузка данных проекта для отображения последнего экспорта
    */
   const { data: project } = useQuery<BotProject>({
@@ -103,20 +94,15 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
     staleTime: 1000 * 60 * 5, // 5 минут
   });
 
-  // Логирование для отладки
-  useEffect(() => {
-    if (project) {
-      console.log('📊 Project export data:', {
-        url: project.lastExportedStructureSheetUrl,
-        at: project.lastExportedStructureAt,
-      });
-    }
-  }, [project]);
-
   /**
    * Использование хука генератора кода для всех форматов
    */
-  const codeGenerators = botDataArray.map((botData, index) => useCodeGenerator(botData, `${projectName}_project_${index}`, groups));
+  const codeGenerators = botDataArray.map((botData, index) => useCodeGenerator(
+    botData,
+    `${projectName}_project_${index}`,
+    project?.userDatabaseEnabled === 1,
+    projectIds?.[index] || null
+  ));
 
   /**
    * Загрузка контента при изменении выбранного формата
@@ -162,16 +148,20 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
       requirements: '.txt',
       readme: '.md',
       dockerfile: '',
-      config: '.yaml'
+      env: ''
     };
 
+    // Используем название проекта из projectNames или projectName
+    const baseName = projectNames[projectIndex] || projectName || `project_${projectIndex}`;
+    const safeBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, '_');
+
     const fileNames: Record<CodeFormat, string> = {
-      python: `bot_project_${projectIndex}`,
-      json: `bot_data_project_${projectIndex}`,
-      requirements: `requirements_project_${projectIndex}`,
-      readme: `README_project_${projectIndex}`,
-      dockerfile: `Dockerfile_project_${projectIndex}`,
-      config: `config_project_${projectIndex}`
+      python: `${safeBaseName}`,
+      json: `${safeBaseName}_data`,
+      requirements: `requirements_${safeBaseName}`,
+      readme: `README_${safeBaseName}`,
+      dockerfile: `Dockerfile_${safeBaseName}`,
+      env: `.env_${safeBaseName}`
     };
 
     const blob = new Blob([content], { type: 'text/plain' });
@@ -226,7 +216,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
       requirements: 'fas fa-list text-orange-500',
       readme: 'fas fa-file-alt text-purple-500',
       dockerfile: 'fab fa-docker text-cyan-500',
-      config: 'fas fa-cog text-yellow-500'
+      env: 'fas fa-lock text-red-500'
     };
     return icons[format];
   };
@@ -243,15 +233,15 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
       requirements: 'Requirements.txt',
       readme: 'README.md',
       dockerfile: 'Dockerfile',
-      config: 'Config YAML'
+      env: '.env'
     };
     return labels[format];
   };
 
   return (
     <div className="h-full bg-background overflow-auto">
-      <div className="p-2.5 xs:p-3 sm:p-4 md:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-3 xs:space-y-4 sm:space-y-5 md:space-y-6">
+      <div className="p-1.5 xs:p-2 sm:p-3">
+        <div className="space-y-3 xs:space-y-4 sm:space-y-5 md:space-y-6">
 
           {/* [COMPONENT] CodePanelHeader - Верхняя часть с вкладками и действиями */}
           {/* Header Section */}
@@ -288,16 +278,10 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                 <div><strong>Ctrl+Alt+F / Cmd+Alt+F:</strong> Переключить сворачивание</div>
                 <div><strong>Ctrl+Shift+[</strong>: Сворачивание блока</div>
                 <div><strong>Ctrl+Shift+]</strong>: Разворачивание блока</div>
-                <div><strong>Ctrl + K, затем Ctrl + 0</strong>: Свернуть всё</div>
                 <div><strong>Ctrl + K, затем Ctrl + J</strong>: Развернуть всё</div>
                 <div><strong>Ctrl + F</strong>: Поиск</div>
                 <div><strong>Ctrl + G</strong>: Перейти к строке</div>
               </div>
-            </div>
-
-            {/* Sync Button */}
-            <div className="flex justify-end">
-              <SyncFromFileButton onSyncComplete={() => { }} />
             </div>
           </div>
 
@@ -356,19 +340,8 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 xs:space-y-3.5 sm:space-y-4">
-                  {/* Информация о токенах проекта */}
-                  {projectIds && projectIds[index] && (
-                    <TokenInfo projectId={projectIds[index]} />
-                  )}
-
-                  {/* Команды BotFather */}
-                  <BotFatherCommands botData={botDataArray[index]} />
-
                   {/* Валидация структуры бота */}
                   <BotValidation botData={botDataArray[index]} />
-
-                  {/* Статистика бота */}
-                  <BotStats botData={botDataArray[index]} />
 
                   {/* Format Selection */}
                   <div className="space-y-1.5 xs:space-y-2">
@@ -377,46 +350,40 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                       <TabsList className="flex flex-col h-auto p-0 bg-transparent border-none justify-start">
                         <TabsTrigger
                           value="python"
-                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start min-w-0"
                         >
-                          <i className="fas fa-file-code text-blue-500 text-xs"></i>
-                          <span className="text-xs">bot.py</span>
+                          <i className="fas fa-file-code text-blue-500 text-xs flex-shrink-0"></i>
+                          <span className="text-xs truncate min-w-0">{normalizeProjectNameToFile(projectName)}.py</span>
                         </TabsTrigger>
                         <TabsTrigger
                           value="json"
-                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start min-w-0"
                         >
-                          <i className="fas fa-file-code text-green-500 text-xs"></i>
-                          <span className="text-xs">bot_data.json</span>
+                          <i className="fas fa-file-code text-green-500 text-xs flex-shrink-0"></i>
+                          <span className="text-xs truncate min-w-0">project.json</span>
                         </TabsTrigger>
                         <TabsTrigger
                           value="requirements"
-                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start min-w-0"
                         >
-                          <i className="fas fa-file-alt text-orange-500 text-xs"></i>
-                          <span className="text-xs">requirements.txt</span>
+                          <i className="fas fa-file-alt text-orange-500 text-xs flex-shrink-0"></i>
+                          <span className="text-xs truncate min-w-0">requirements.txt</span>
                         </TabsTrigger>
                         <TabsTrigger
                           value="readme"
-                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start min-w-0"
                         >
                           <i className="fas fa-file-alt text-purple-500 text-xs"></i>
-                          <span className="text-xs">README.md</span>
+                          <span className="text-xs truncate min-w-0">README.md</span>
                         </TabsTrigger>
                         <TabsTrigger
                           value="dockerfile"
-                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
+                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start min-w-0"
                         >
-                          <i className="fab fa-docker text-cyan-500 text-xs"></i>
-                          <span className="text-xs">Dockerfile</span>
+                          <i className="fab fa-docker text-cyan-500 text-xs flex-shrink-0"></i>
+                          <span className="text-xs truncate min-w-0">Dockerfile</span>
                         </TabsTrigger>
-                        <TabsTrigger
-                          value="config"
-                          className="w-full data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-muted flex items-center gap-2 px-3 py-2 text-sm font-normal rounded-none border-b border-border/50 data-[state=inactive]:hover:bg-accent/20 justify-start"
-                        >
-                          <i className="fas fa-file-code text-yellow-500 text-xs"></i>
-                          <span className="text-xs">config.yaml</span>
-                        </TabsTrigger>
+                        <EnvFileTab />
                       </TabsList>
                     </Tabs>
                   </div>
@@ -544,27 +511,27 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
 
                   {/* Code Statistics */}
                   {lineCount > 0 && (
-                    <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 gap-2 xs:gap-2.5">
-                      <div className="bg-blue-50/50 dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/50 rounded-md p-2 xs:p-2.5 text-center">
-                        <div className="text-sm xs:text-base font-bold text-blue-600 dark:text-blue-400">{codeStats.totalLines}</div>
-                        <div className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">Строк</div>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      <div className="bg-blue-50/50 dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/50 rounded-md p-3 sm:p-4 text-center">
+                        <div className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">{codeStats.totalLines}</div>
+                        <div className="text-sm text-blue-700 dark:text-blue-300 mt-1">Строк</div>
                       </div>
                       {selectedFormat === 'python' && codeStats.functions > 0 && (
-                        <div className="bg-green-50/50 dark:bg-green-900/25 border border-green-200/50 dark:border-green-800/50 rounded-md p-2 xs:p-2.5 text-center">
-                          <div className="text-sm xs:text-base font-bold text-green-600 dark:text-green-400">{codeStats.functions}</div>
-                          <div className="text-xs text-green-700 dark:text-green-300 mt-0.5">Функции</div>
+                        <div className="bg-green-50/50 dark:bg-green-900/25 border border-green-200/50 dark:border-green-800/50 rounded-md p-3 sm:p-4 text-center">
+                          <div className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">{codeStats.functions}</div>
+                          <div className="text-sm text-green-700 dark:text-green-300 mt-1">Функции</div>
                         </div>
                       )}
                       {selectedFormat === 'python' && codeStats.classes > 0 && (
-                        <div className="bg-purple-50/50 dark:bg-purple-900/25 border border-purple-200/50 dark:border-purple-800/50 rounded-md p-2 xs:p-2.5 text-center">
-                          <div className="text-sm xs:text-base font-bold text-purple-600 dark:text-purple-400">{codeStats.classes}</div>
-                          <div className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">Классы</div>
+                        <div className="bg-purple-50/50 dark:bg-purple-900/25 border border-purple-200/50 dark:border-purple-800/50 rounded-md p-3 sm:p-4 text-center">
+                          <div className="text-lg sm:text-xl font-bold text-purple-600 dark:text-purple-400">{codeStats.classes}</div>
+                          <div className="text-sm text-purple-700 dark:text-purple-300 mt-1">Классы</div>
                         </div>
                       )}
                       {selectedFormat === 'json' && (
-                        <div className="bg-cyan-50/50 dark:bg-cyan-900/25 border border-cyan-200/50 dark:border-cyan-800/50 rounded-md p-2 xs:p-2.5 text-center">
-                          <div className="text-sm xs:text-base font-bold text-cyan-600 dark:text-cyan-400">{(content.match(/"/g) || []).length / 2}</div>
-                          <div className="text-xs text-cyan-700 dark:text-cyan-300 mt-0.5">Ключей</div>
+                        <div className="bg-cyan-50/50 dark:bg-cyan-900/25 border border-cyan-200/50 dark:border-cyan-800/50 rounded-md p-3 sm:p-4 text-center">
+                          <div className="text-lg sm:text-xl font-bold text-cyan-600 dark:text-cyan-400">{(content.match(/"/g) || []).length / 2}</div>
+                          <div className="text-sm text-cyan-700 dark:text-cyan-300 mt-1">Ключей</div>
                         </div>
                       )}
                     </div>

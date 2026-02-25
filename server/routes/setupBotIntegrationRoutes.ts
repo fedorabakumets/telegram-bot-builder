@@ -15,7 +15,6 @@ import { telegramClientManager } from "../telegram/telegram-client";
 import { downloadTelegramAudio, downloadTelegramDocument, downloadTelegramPhoto, downloadTelegramVideo } from "../telegram/telegram-media";
 import {
   analyzeTelegramError,
-  fetchWithTelegramErrorHandling,
   getErrorStatusCode
 } from "../utils/telegram-error-handler";
 

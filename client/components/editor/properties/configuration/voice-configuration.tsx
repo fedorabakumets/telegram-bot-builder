@@ -9,7 +9,7 @@
 import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MediaSelector } from '@/components/media/media-selector';
+import { MediaSelector } from '@/components/editor/properties/media/media-selector';
 
 /**
  * Пропсы компонента настройки голосового сообщения

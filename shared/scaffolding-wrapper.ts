@@ -1,6 +1,6 @@
 /**
  * @fileoverview Обертка для экспорта функций из клиентской части
- * 
+ *
  * Этот файл позволяет серверной части импортировать функции из клиентской части
  * через shared директорию, обходя ограничения конфигурации TypeScript.
  */
@@ -10,7 +10,7 @@ export {
   generateRequirementsTxt,
   generateReadme,
   generateDockerfile,
-  generateConfigYaml
+  generateEnvFile
 } from '../client/lib/scaffolding';
 
 export {

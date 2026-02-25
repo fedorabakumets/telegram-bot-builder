@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -701,6 +701,9 @@ const DragLayoutManager: React.FC<DragLayoutManagerProps> = ({
           <DialogContent className="max-w-7xl h-[80vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Настройка макета интерфейса</DialogTitle>
+              <DialogDescription className="sr-only">
+                Настройте расположение панелей интерфейса редактора
+              </DialogDescription>
             </DialogHeader>
             
             {renderCustomizer()}
