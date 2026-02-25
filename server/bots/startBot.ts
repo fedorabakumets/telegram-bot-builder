@@ -14,7 +14,7 @@ import { URL } from "node:url";
  * Модуль для работы с путями к файлам
  * @external path
  */
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 
 /**
  * Глобальная коллекция активных процессов ботов
@@ -212,6 +212,26 @@ export async function startBot(projectId: number, token: string, tokenId: number
     console.log(`   - Основной файл: ${mainFile}`);
     console.log(`   - Дополнительные файлы: ${assets.length} шт.`);
     assets.forEach((asset: string) => console.log(`     * ${asset}`));
+
+    // Устанавливаем зависимости из requirements.txt перед запуском бота
+    try {
+      const { execSync } = await import('child_process');
+      const botsDir = dirname(mainFile);
+      const requirementsFile = join(botsDir, 'requirements.txt');
+      
+      // Проверяем существование requirements.txt
+      const { existsSync } = await import('fs');
+      if (existsSync(requirementsFile)) {
+        console.log('📦 Установка зависимостей из requirements.txt...');
+        const pipCommand = process.platform === 'win32'
+          ? `pip install -r "${requirementsFile}" --quiet`
+          : `pip3 install -r "${requirementsFile}" --quiet`;
+        execSync(pipCommand, { stdio: 'ignore' });
+        console.log('✅ Зависимости установлены');
+      }
+    } catch (pipError) {
+      console.log('⚠️ Не удалось установить зависимости (продолжаем запуск):', pipError instanceof Error ? pipError.message : pipError);
+    }
 
     // Запускаем бота
     const pythonPath = process.platform === 'win32' 

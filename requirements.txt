@@ -6,3 +6,4 @@ requests>=2.32.4
 google-auth>=2.0.0
 gspread>=6.0.0
 telethon>=1.34.0
+python-dotenv>=1.0.0
