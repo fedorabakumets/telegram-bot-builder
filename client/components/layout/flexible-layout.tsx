@@ -312,7 +312,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           <ResizablePanel
             id="center-panel"
             order={2}
-            minSize={30}
+            minSize={50}
             maxSize={rightElements.length > 0 ? 70 : 85}
             className="overflow-hidden"
           >
@@ -391,7 +391,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               id="combo-center-panel"
               order={2}
               defaultSize={rightElements.length > 0 ? 60 : 80}
-              minSize={30}
+              minSize={50}
               maxSize={rightElements.length > 0 ? 70 : 85}
               className="overflow-hidden"
             >
