@@ -31,7 +31,7 @@ export function ItemsPerPageSelector({
       value={value.toString()}
       onValueChange={(val) => onChange(Number(val) as ItemsPerPageValue)}
     >
-      <SelectTrigger className="w-[100px]">
+      <SelectTrigger className="w-[80px] xs:w-[90px] sm:w-[100px]">
         <SelectValue placeholder="12" />
       </SelectTrigger>
       <SelectContent>

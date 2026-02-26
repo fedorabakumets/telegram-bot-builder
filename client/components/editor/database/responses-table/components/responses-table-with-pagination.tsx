@@ -80,9 +80,9 @@ export function ResponsesTableWithPagination({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Показывать:</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">
+          <span className="whitespace-nowrap">Показывать:</span>
           <ItemsPerPageSelector value={itemsPerPage} onChange={(val) => { setItemsPerPage(val); setCurrentPage(1); }} />
         </div>
         <ResponseCount
