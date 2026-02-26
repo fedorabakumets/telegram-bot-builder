@@ -46,9 +46,9 @@ export function ResponseRow({
     responseData = { value: String(value), type: 'text' };
   }
 
-  const answerValue = String(responseData?.value !== undefined
+  const answerValue = responseData?.value !== undefined
     ? responseData.value
-    : (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)));
+    : (typeof value === 'object' && value !== null ? JSON.stringify(value) : (value ?? '-'));
 
   // Формирование имени пользователя
   const formatUserName = (u: UserBotData): string => {
@@ -73,7 +73,7 @@ export function ResponseRow({
         </div>
       </TableCell>
       <TableCell className="py-2 max-w-sm">
-        <ResponsePhoto responseData={responseData} answerValue={answerValue} getPhotoUrlFromMessages={() => null} />
+        <ResponsePhoto responseData={responseData} answerValue={String(answerValue)} getPhotoUrlFromMessages={() => null} />
         {(() => {
           const valueStr = String(answerValue);
           const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
@@ -97,7 +97,7 @@ export function ResponseRow({
             );
           }
           return (
-            <p className="text-sm text-green-800 dark:text-green-200 font-medium">{valueStr}</p>
+            <p className="text-sm text-green-800 dark:text-green-200 font-medium">{valueStr === 'undefined' || valueStr === 'null' ? '-' : valueStr}</p>
           );
         })()}
       </TableCell>
