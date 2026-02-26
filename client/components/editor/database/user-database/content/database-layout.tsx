@@ -26,7 +26,7 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
 
   return (
     <ScrollArea className="h-full w-full">
-      <div className="flex flex-col bg-background min-h-full pb-4">
+      <div className="flex flex-col bg-background min-h-full pb-32 sm:pb-4">
         <DatabaseHeaderSection
           {...restProps}
           isDatabaseEnabled={isDatabaseEnabled}
