@@ -180,6 +180,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     if ((leftEl || rightElements.length > 0) && centerEl && !topEl && !bottomEl) {
       const leftSize = leftEl?.size || 0;
       const isUsersTab = isUsersTabLayout(leftEl, rightElements);
+      const hasDialog = rightElements.some(el => el.type === 'dialog');
       const centerMinSize = isUsersTab ? 20 : 50;
       const centerMaxSize = isUsersTab ? 80 : (rightElements.length > 0 ? 70 : 85);
       const sideMinSize = isUsersTab ? 10 : 15;
