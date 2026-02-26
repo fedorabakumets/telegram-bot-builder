@@ -23,16 +23,6 @@ interface MobileUserListProps {
   onOpenDialogPanel?: (user: UserBotData) => void;
   /** Функция переключения статуса */
   handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
-  /** Установка выбранного пользователя */
-  setSelectedUser: (user: UserBotData) => void;
-  /** Установка флага показа деталей */
-  setShowUserDetails: (show: boolean) => void;
-  /** Установка выбранного пользователя для диалога */
-  setSelectedUserForDialog: (user: UserBotData) => void;
-  /** Установка флага показа диалога */
-  setShowDialog: (show: boolean) => void;
-  /** Прокрутка вниз */
-  scrollToBottom: () => void;
 }
 
 /**

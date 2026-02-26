@@ -1,10 +1,10 @@
 import React from 'react';
-import { SimpleLayoutConfig } from './simple-layout-customizer';
+import { SimpleLayoutConfig } from '../simple-layout-customizer';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
 import { useMediaQuery } from '@/components/editor/properties/media/use-media-query';
-import { CodeResizeHandle } from './code-resize-handle';
-import { DialogResizeHandle } from './dialog-resize-handle';
+import { CodeResizeHandle } from '../code-resize-handle';
+import { DialogResizeHandle } from '../dialog-resize-handle';
 
 /**
  * @interface FlexibleLayoutProps
@@ -289,6 +289,13 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
       const leftSize = leftEl?.size || 0;
       const totalRightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
       const hasDialog = rightElements.some(el => el.type === 'dialog');
+      const hasUserDetails = leftEl?.type === 'userDetails';
+      // Если есть диалог или детали пользователя, уменьшаем minSize для центра
+      const isUsersTab = hasDialog || hasUserDetails;
+      const centerMinSize = isUsersTab ? 20 : 50;
+      const centerMaxSize = isUsersTab ? 80 : (rightElements.length > 0 ? 70 : 85);
+      const sideMinSize = isUsersTab ? 10 : 15;
+      const sideMaxSize = isUsersTab ? 45 : 40;
 
       return (
         <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -298,8 +305,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 id="left-panel"
                 order={1}
                 defaultSize={leftSize}
-                minSize={15}
-                maxSize={40}
+                minSize={sideMinSize}
+                maxSize={sideMaxSize}
                 className="overflow-hidden"
               >
                 <div className="h-full w-full bg-background overflow-hidden flex flex-col">
@@ -317,8 +324,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             id="center-panel"
             order={2}
             defaultSize={centerEl.size || 50}
-            minSize={50}
-            maxSize={rightElements.length > 0 ? 70 : 85}
+            minSize={centerMinSize}
+            maxSize={centerMaxSize}
             className="overflow-hidden"
           >
             <div className="h-full w-full bg-background overflow-hidden flex flex-col">
@@ -336,8 +343,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 id="right-panel"
                 order={3}
                 defaultSize={totalRightSize}
-                minSize={15}
-                maxSize={40}
+                minSize={sideMinSize}
+                maxSize={sideMaxSize}
                 className="overflow-hidden"
               >
                 <ResizablePanelGroup direction="horizontal" className="h-full w-full">
@@ -348,7 +355,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                       id={`right-subpanel-${rightEl.id}`}
                       order={index + 1}
                       defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
-                      minSize={10}
+                      minSize={sideMinSize}
                       maxSize={100}
                       className="overflow-hidden"
                     >
@@ -381,8 +388,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   id="combo-left-panel"
                   order={1}
                   defaultSize={leftEl.size}
-                  minSize={15}
-                  maxSize={40}
+                  minSize={leftEl.type === 'userDetails' ? 10 : 15}
+                  maxSize={leftEl.type === 'userDetails' ? 45 : 40}
                   className="w-full overflow-hidden"
                 >
                   <div className="h-full w-full border-r border-border bg-background overflow-hidden">
@@ -400,8 +407,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               id="combo-center-panel"
               order={2}
               defaultSize={rightElements.length > 0 ? 60 : 80}
-              minSize={50}
-              maxSize={rightElements.length > 0 ? 70 : 85}
+              minSize={rightElements.some(el => el.type === 'dialog') || leftEl?.type === 'userDetails' ? 20 : 50}
+              maxSize={rightElements.length > 0 ? 80 : 85}
               className="overflow-hidden"
             >
               <div className="h-full w-full bg-background overflow-hidden flex flex-col">
@@ -419,8 +426,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   id="combo-right-panel"
                   order={3}
                   defaultSize={totalRightSize}
-                  minSize={15}
-                  maxSize={40}
+                  minSize={rightElements.some(el => el.type === 'dialog') ? 10 : 15}
+                  maxSize={rightElements.some(el => el.type === 'dialog') ? 45 : 40}
                   className="w-full overflow-hidden"
                 >
                   <ResizablePanelGroup direction="horizontal" className="h-full w-full">
@@ -431,7 +438,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                         id={`combo-right-subpanel-${rightEl.id}`}
                         order={index + 1}
                         defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
-                        minSize={10}
+                        minSize={rightEl.type === 'dialog' ? 10 : 10}
                         maxSize={100}
                         className="overflow-hidden"
                       >

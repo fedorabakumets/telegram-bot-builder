@@ -28,16 +28,6 @@ interface DesktopTableRowProps {
   onOpenDialogPanel?: (user: UserBotData) => void;
   /** Функция переключения статуса */
   handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
-  /** Установка выбранного пользователя */
-  setSelectedUser: (user: UserBotData) => void;
-  /** Установка флага показа деталей */
-  setShowUserDetails: (show: boolean) => void;
-  /** Установка выбранного пользователя для диалога */
-  setSelectedUserForDialog: (user: UserBotData) => void;
-  /** Установка флага показа диалога */
-  setShowDialog: (show: boolean) => void;
-  /** Прокрутка вниз */
-  scrollToBottom: () => void;
   /** Мутация удаления пользователя */
   deleteUserMutation: any;
 }
@@ -55,10 +45,7 @@ export function DesktopTableRow(props: DesktopTableRowProps): React.JSX.Element 
       key={user.id || props.index}
       className="border-b border-border/30 hover:bg-muted/30 transition-colors h-14 cursor-pointer"
       onClick={() => {
-        if (onOpenUserDetailsPanel && onOpenDialogPanel) {
-          onOpenUserDetailsPanel(user);
-          onOpenDialogPanel(user);
-        }
+        onOpenUserDetailsPanel?.(user);
       }}
     >
       <DesktopUserCell user={user} formatUserName={props.formatUserName} />

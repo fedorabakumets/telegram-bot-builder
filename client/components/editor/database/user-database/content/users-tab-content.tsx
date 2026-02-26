@@ -18,12 +18,7 @@ type UsersTabContentProps = Pick<
   | 'searchQuery'
   | 'formatUserName'
   | 'onOpenUserDetailsPanel'
-  | 'setSelectedUser'
-  | 'setShowUserDetails'
   | 'onOpenDialogPanel'
-  | 'setSelectedUserForDialog'
-  | 'setShowDialog'
-  | 'scrollToBottom'
   | 'handleUserStatusToggle'
   | 'deleteUserMutation'
 >;
@@ -40,12 +35,7 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
     searchQuery,
     formatUserName,
     onOpenUserDetailsPanel,
-    setSelectedUser,
-    setShowUserDetails,
     onOpenDialogPanel,
-    setSelectedUserForDialog,
-    setShowDialog,
-    scrollToBottom,
     handleUserStatusToggle,
     deleteUserMutation,
   } = props;
@@ -61,11 +51,6 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
             onOpenUserDetailsPanel={onOpenUserDetailsPanel}
             onOpenDialogPanel={onOpenDialogPanel}
             handleUserStatusToggle={handleUserStatusToggle}
-            setSelectedUser={setSelectedUser}
-            setShowUserDetails={setShowUserDetails}
-            setSelectedUserForDialog={setSelectedUserForDialog}
-            setShowDialog={setShowDialog}
-            scrollToBottom={scrollToBottom}
           />
         ) : (
           <DesktopTable
@@ -75,11 +60,6 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
             onOpenUserDetailsPanel={onOpenUserDetailsPanel}
             onOpenDialogPanel={onOpenDialogPanel}
             handleUserStatusToggle={handleUserStatusToggle}
-            setSelectedUser={setSelectedUser}
-            setShowUserDetails={setShowUserDetails}
-            setSelectedUserForDialog={setSelectedUserForDialog}
-            setShowDialog={setShowDialog}
-            scrollToBottom={scrollToBottom}
             deleteUserMutation={deleteUserMutation}
           />
         )}

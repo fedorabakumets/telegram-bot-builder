@@ -12,14 +12,6 @@ import { UseUserDatabaseParams, UseUserMutationsParams } from './panel-types';
 interface UseUserDatabasePanelDataParams extends UseUserDatabaseParams {
   /** Поисковый запрос */
   searchQuery: string;
-  /** Флаг открытия диалога */
-  showDialog: boolean;
-  /** Флаг открытия деталей */
-  showUserDetails: boolean;
-  /** ID пользователя для диалога */
-  selectedUserForDialogUserId?: string;
-  /** ID пользователя для деталей */
-  selectedUserId?: string;
 }
 
 /**
@@ -44,20 +36,12 @@ interface UseUserDatabasePanelDataReturn {
   stats: any;
   /** Результаты поиска */
   searchResults: any[];
-  /** Сообщения */
-  messages: any[];
-  /** Сообщения деталей */
-  userDetailsMessages: any[];
   /** Флаг загрузки */
   isLoading: boolean;
-  /** Флаг загрузки сообщений */
-  isMessagesLoading: boolean;
   /** Функция обновления пользователей */
   refetchUsers: () => void;
   /** Функция обновления статистики */
   refetchStats: () => void;
-  /** Функция обновления сообщений */
-  refetchMessages: () => void;
 }
 
 /**
@@ -72,8 +56,6 @@ interface UseUserDatabasePanelMutationsReturn {
   deleteAllUsersMutation: any;
   /** Мутация переключения БД */
   toggleDatabaseMutation: any;
-  /** Мутация отправки сообщения */
-  sendMessageMutation: any;
 }
 
 /**
@@ -87,19 +69,11 @@ export function useUserDatabasePanelData(
   const {
     projectId,
     searchQuery,
-    showDialog,
-    showUserDetails,
-    selectedUserForDialogUserId,
-    selectedUserId,
   } = params;
 
   const data = useUserDatabase({
     projectId,
     searchQuery,
-    showDialog,
-    showUserDetails,
-    selectedUserForDialogUserId,
-    selectedUserId,
   });
 
   return {
@@ -107,13 +81,9 @@ export function useUserDatabasePanelData(
     users: data.users,
     stats: data.stats,
     searchResults: data.searchResults,
-    messages: data.messages,
-    userDetailsMessages: data.userDetailsMessages,
     isLoading: data.isLoading,
-    isMessagesLoading: data.isMessagesLoading,
     refetchUsers: data.refetchUsers,
     refetchStats: data.refetchStats,
-    refetchMessages: data.refetchMessages,
   };
 }
 

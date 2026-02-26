@@ -21,16 +21,6 @@ interface MobileUserHeaderProps {
   onOpenDialogPanel?: (user: UserBotData) => void;
   /** Функция переключения статуса */
   handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
-  /** Установка выбранного пользователя */
-  setSelectedUser: (user: UserBotData) => void;
-  /** Установка флага показа деталей */
-  setShowUserDetails: (show: boolean) => void;
-  /** Установка выбранного пользователя для диалога */
-  setSelectedUserForDialog: (user: UserBotData) => void;
-  /** Установка флага показа диалога */
-  setShowDialog: (show: boolean) => void;
-  /** Прокрутка вниз */
-  scrollToBottom: () => void;
   /** Индекс пользователя в списке */
   index: number;
 }
@@ -47,11 +37,6 @@ export function MobileUserHeader(props: MobileUserHeaderProps): React.JSX.Elemen
     onOpenUserDetailsPanel,
     onOpenDialogPanel,
     handleUserStatusToggle,
-    setSelectedUser,
-    setShowUserDetails,
-    setSelectedUserForDialog,
-    setShowDialog,
-    scrollToBottom,
     index,
   } = props;
 
@@ -66,14 +51,7 @@ export function MobileUserHeader(props: MobileUserHeaderProps): React.JSX.Elemen
           variant="outline"
           size="sm"
           data-testid={`button-view-user-${index}`}
-          onClick={() => {
-            if (onOpenUserDetailsPanel) {
-              onOpenUserDetailsPanel(user);
-            } else {
-              setSelectedUser(user);
-              setShowUserDetails(true);
-            }
-          }}
+          onClick={() => onOpenUserDetailsPanel?.(user)}
         >
           <Eye className="w-3 h-3" />
         </Button>
@@ -81,15 +59,7 @@ export function MobileUserHeader(props: MobileUserHeaderProps): React.JSX.Elemen
           variant="outline"
           size="sm"
           data-testid={`button-show-dialog-${index}`}
-          onClick={() => {
-            if (onOpenDialogPanel) {
-              onOpenDialogPanel(user);
-            } else {
-              setSelectedUserForDialog(user);
-              setShowDialog(true);
-              setTimeout(() => scrollToBottom(), 200);
-            }
-          }}
+          onClick={() => onOpenDialogPanel?.(user)}
         >
           <MessageSquare className="w-3 h-3" />
         </Button>

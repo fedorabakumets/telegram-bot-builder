@@ -29,7 +29,7 @@ import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
-import { FlexibleLayout } from '@/components/layout/flexible-layout';
+import { FlexibleLayout } from '@/components/layout/flexible/flexible-layout';
 import { LayoutCustomizer } from '@/components/layout/layout-customizer';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
 import { SimpleLayoutConfig, SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';

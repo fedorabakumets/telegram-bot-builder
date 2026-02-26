@@ -27,6 +27,4 @@ export interface UseUserMutationsReturn {
   deleteAllUsersMutation: any;
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: any;
-  /** Мутация отправки сообщения пользователю */
-  sendMessageMutation: any;
 }

@@ -5,6 +5,7 @@
 
 import { BotProject, UserBotData } from '@shared/schema';
 import { SortField, SortDirection } from '../types';
+import { VariableToQuestionMap } from '../types';
 
 /**
  * Пропсы компонента DatabaseContent
@@ -59,19 +60,9 @@ export interface DatabaseContentProps {
   /** Функция форматирования имени */
   formatUserName: (user: UserBotData) => string;
   /** Открытие панели деталей */
-  onOpenUserDetailsPanel: ((user: UserBotData) => void) | undefined;
-  /** Установка выбранного пользователя */
-  setSelectedUser: React.Dispatch<React.SetStateAction<UserBotData | null>>;
-  /** Установка флага показа деталей */
-  setShowUserDetails: React.Dispatch<React.SetStateAction<boolean>>;
+  onOpenUserDetailsPanel?: (user: UserBotData) => void;
   /** Открытие диалога */
-  onOpenDialogPanel: ((user: UserBotData) => void) | undefined;
-  /** Установка пользователя для диалога */
-  setSelectedUserForDialog: React.Dispatch<React.SetStateAction<UserBotData | null>>;
-  /** Установка флага показа диалога */
-  setShowDialog: React.Dispatch<React.SetStateAction<boolean>>;
-  /** Прокрутка вниз */
-  scrollToBottom: () => void;
+  onOpenDialogPanel?: (user: UserBotData) => void;
   /** Переключение статуса */
   handleUserStatusToggle: (
     user: UserBotData,
@@ -81,4 +72,6 @@ export interface DatabaseContentProps {
   deleteUserMutation: any;
   /** Данные проекта */
   project?: BotProject;
+  /** Карта вопросов для ответов */
+  variableToQuestionMap?: VariableToQuestionMap;
 }

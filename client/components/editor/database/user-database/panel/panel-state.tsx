@@ -3,8 +3,7 @@
  * @description Хуки useState для управления состоянием
  */
 
-import { useState, useRef } from 'react';
-import { UserBotData } from '@shared/schema';
+import { useState } from 'react';
 import { SortField, SortDirection } from '../types';
 import { UserDatabasePanelState, UserDatabasePanelSetters } from './panel-types';
 
@@ -16,8 +15,6 @@ interface UseUserDatabasePanelStateReturn {
   state: UserDatabasePanelState;
   /** Сеттеры стейта */
   setters: UserDatabasePanelSetters;
-  /** Ref для прокрутки сообщений */
-  messagesScrollRef: React.RefObject<HTMLDivElement>;
 }
 
 /**
@@ -26,45 +23,25 @@ interface UseUserDatabasePanelStateReturn {
  */
 export function useUserDatabasePanelState(): UseUserDatabasePanelStateReturn {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
-  const [showUserDetails, setShowUserDetails] = useState(false);
   const [sortField, setSortField] = useState<SortField>('lastInteraction');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [filterActive, setFilterActive] = useState<boolean | null>(null);
   const [filterPremium, setFilterPremium] = useState<boolean | null>(null);
-  const [filterBlocked] = useState<boolean | null>(null);
-  const [showDialog, setShowDialog] = useState(false);
-  const [selectedUserForDialog, setSelectedUserForDialog] = useState<UserBotData | null>(null);
-  const [messageText, setMessageText] = useState('');
-
-  const messagesScrollRef = useRef<HTMLDivElement>(null);
 
   return {
     state: {
       searchQuery,
-      selectedUser,
-      showUserDetails,
       sortField,
       sortDirection,
       filterActive,
       filterPremium,
-      filterBlocked,
-      showDialog,
-      selectedUserForDialog,
-      messageText,
     },
     setters: {
       setSearchQuery,
-      setSelectedUser,
-      setShowUserDetails,
       setSortField,
       setSortDirection,
       setFilterActive,
       setFilterPremium,
-      setShowDialog,
-      setSelectedUserForDialog,
-      setMessageText,
     },
-    messagesScrollRef,
   };
 }

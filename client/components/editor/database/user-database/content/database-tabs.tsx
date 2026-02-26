@@ -18,12 +18,7 @@ type DatabaseTabsProps = Pick<
   | 'searchQuery'
   | 'formatUserName'
   | 'onOpenUserDetailsPanel'
-  | 'setSelectedUser'
-  | 'setShowUserDetails'
   | 'onOpenDialogPanel'
-  | 'setSelectedUserForDialog'
-  | 'setShowDialog'
-  | 'scrollToBottom'
   | 'handleUserStatusToggle'
   | 'deleteUserMutation'
 >;

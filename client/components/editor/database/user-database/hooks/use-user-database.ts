@@ -8,8 +8,6 @@ import { useProject } from './queries/use-project';
 import { useUsers } from './queries/use-users';
 import { useStats } from './queries/use-stats';
 import { useSearchUsers } from './queries/use-search-users';
-import { useDialogMessages } from './queries/use-dialog-messages';
-import { useUserDetailsMessages } from './queries/use-user-details-messages';
 
 /**
  * Хук для загрузки всех данных базы данных пользователей
@@ -20,10 +18,6 @@ export function useUserDatabase(params: UseUserDatabaseParams): UseUserDatabaseR
   const {
     projectId,
     searchQuery,
-    showDialog,
-    showUserDetails,
-    selectedUserForDialogUserId,
-    selectedUserId,
   } = params;
 
   const { project } = useProject({ projectId });
@@ -34,22 +28,6 @@ export function useUserDatabase(params: UseUserDatabaseParams): UseUserDatabaseR
 
   const { searchResults } = useSearchUsers({ projectId, searchQuery });
 
-  const {
-    messages,
-    isMessagesLoading,
-    refetchMessages,
-  } = useDialogMessages({
-    projectId,
-    userId: selectedUserForDialogUserId,
-    enabled: showDialog,
-  });
-
-  const { userDetailsMessages } = useUserDetailsMessages({
-    projectId,
-    userId: selectedUserId,
-    enabled: showUserDetails,
-  });
-
   const isLoading = isUsersLoading || isStatsLoading;
 
   return {
@@ -57,14 +35,10 @@ export function useUserDatabase(params: UseUserDatabaseParams): UseUserDatabaseR
     users,
     stats,
     searchResults,
-    messages,
-    userDetailsMessages,
     isLoading,
     isUsersLoading,
     isStatsLoading,
-    isMessagesLoading,
     refetchUsers,
     refetchStats,
-    refetchMessages,
   };
 }

@@ -8,7 +8,6 @@ import { useDeleteUser } from './mutations/use-delete-user';
 import { useUpdateUser } from './mutations/use-update-user';
 import { useDeleteAllUsers } from './mutations/use-delete-all-users';
 import { useToggleDatabase } from './mutations/use-toggle-database';
-import { useSendMessage } from './mutations/use-send-message';
 
 /**
  * Хук для мутаций управления пользователями
@@ -22,13 +21,11 @@ export function useUserMutations(params: UseUserMutationsParams): UseUserMutatio
   const updateUserMutation = useUpdateUser({ projectId, refetchUsers, refetchStats });
   const deleteAllUsersMutation = useDeleteAllUsers({ projectId, refetchUsers, refetchStats });
   const toggleDatabaseMutation = useToggleDatabase({ projectId });
-  const sendMessageMutation = useSendMessage({ projectId });
 
   return {
     deleteUserMutation,
     updateUserMutation,
     deleteAllUsersMutation,
     toggleDatabaseMutation,
-    sendMessageMutation,
   };
 }

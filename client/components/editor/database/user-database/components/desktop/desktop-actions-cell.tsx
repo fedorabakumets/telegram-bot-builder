@@ -25,16 +25,6 @@ interface DesktopActionsCellProps {
   onOpenDialogPanel?: (user: UserBotData) => void;
   /** Функция переключения статуса */
   handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
-  /** Установка выбранного пользователя */
-  setSelectedUser: (user: UserBotData) => void;
-  /** Установка флага показа деталей */
-  setShowUserDetails: (show: boolean) => void;
-  /** Установка выбранного пользователя для диалога */
-  setSelectedUserForDialog: (user: UserBotData) => void;
-  /** Установка флага показа диалога */
-  setShowDialog: (show: boolean) => void;
-  /** Прокрутка вниз */
-  scrollToBottom: () => void;
   /** Мутация удаления пользователя */
   deleteUserMutation: any;
 }
@@ -45,7 +35,7 @@ interface DesktopActionsCellProps {
  * @returns JSX компонент ячейки
  */
 export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.Element {
-  const { user, index, formatUserName, deleteUserMutation } = props;
+  const { user, index, formatUserName, onOpenUserDetailsPanel, onOpenDialogPanel, handleUserStatusToggle, deleteUserMutation } = props;
 
   return (
     <TableCell className="py-2 text-right">
@@ -57,12 +47,7 @@ export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.El
           data-testid={`button-view-user-${index}`}
           onClick={(e) => {
             e.stopPropagation();
-            if (props.onOpenUserDetailsPanel) {
-              props.onOpenUserDetailsPanel(user);
-            } else {
-              props.setSelectedUser(user);
-              props.setShowUserDetails(true);
-            }
+            onOpenUserDetailsPanel?.(user);
           }}
           title="Подробно"
         >
@@ -75,13 +60,7 @@ export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.El
           data-testid={`button-show-dialog-${index}`}
           onClick={(e) => {
             e.stopPropagation();
-            if (props.onOpenDialogPanel) {
-              props.onOpenDialogPanel(user);
-            } else {
-              props.setSelectedUserForDialog(user);
-              props.setShowDialog(true);
-              setTimeout(() => props.scrollToBottom(), 200);
-            }
+            onOpenDialogPanel?.(user);
           }}
           title="Чат"
         >
@@ -94,7 +73,7 @@ export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.El
           data-testid={`button-toggle-active-${index}`}
           onClick={(e) => {
             e.stopPropagation();
-            props.handleUserStatusToggle(user, 'isActive');
+            handleUserStatusToggle(user, 'isActive');
           }}
           title={user.isActive === 1 ? 'Деактивировать' : 'Активировать'}
         >
