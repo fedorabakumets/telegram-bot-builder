@@ -77,10 +77,11 @@ export function useUserDatabasePanelHandlers(
    * Прокрутка вниз
    */
   const scrollToBottom = () => {
-    if (!messagesScrollRef.current) return;
+    const scrollArea = messagesScrollRef.current;
+    if (!scrollArea) return;
     
     setTimeout(() => {
-      const scrollElement = messagesScrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      const scrollElement = scrollArea.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollElement) {
         scrollElement.scrollTop = scrollElement.scrollHeight;
       }
