@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { FileText } from 'lucide-react';
 import { TableRow, TableCell } from '@/components/ui/table';
 import { UserBotData } from '@shared/schema';
 import { ResponsePhoto } from './response-photo';
@@ -82,6 +83,30 @@ export function ResponseRow({
           const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
           const isAudioFile = valueStr.includes('.mp3') || valueStr.includes('.ogg') || valueStr.includes('.wav') || responseData?.type === 'audio';
           const isVideoFile = valueStr.includes('.mp4') || valueStr.includes('.webm') || valueStr.includes('.mov') || responseData?.type === 'video';
+          const isDocumentFile = valueStr.includes('.pdf') || valueStr.includes('.doc') || valueStr.includes('.docx') || valueStr.includes('.xls') || valueStr.includes('.xlsx') || valueStr.includes('.ppt') || valueStr.includes('.pptx') || responseData?.type === 'document';
+
+          // Документ
+          if (isDocumentFile && isImageUrl) {
+            if (imageError) {
+              return <FileNotFound />;
+            }
+            const fileName = valueStr.split('/').pop() || 'Файл';
+            const extension = fileName.split('.').pop()?.toUpperCase() || 'FILE';
+            return (
+              <a
+                href={valueStr}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-xs"
+              >
+                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{fileName}</div>
+                  <div className="text-muted-foreground">{extension}</div>
+                </div>
+              </a>
+            );
+          }
 
           // Аудио файл
           if (isAudioFile && isImageUrl) {

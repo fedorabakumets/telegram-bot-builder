@@ -1,11 +1,12 @@
 /**
  * @fileoverview Компонент отображения фото в ответе пользователя
- * @description Рендерит изображение, аудио, видео из различных источников
+ * @description Рендерит изображение, аудио, видео, документы из различных источников
  */
 
 import { ResponseData } from '../../types';
 import { useState } from 'react';
 import { FileNotFound } from '../file-not-found';
+import { FileText } from 'lucide-react';
 
 /**
  * Пропсы компонента ResponsePhoto
@@ -17,6 +18,37 @@ interface ResponsePhotoProps {
   answerValue: string;
   /** Функция поиска URL фото по file_id в сообщениях */
   getPhotoUrlFromMessages: (fileId: string) => string | null;
+}
+
+/**
+ * Компонент документа
+ */
+function DocumentFile({ url, onError }: { url: string; onError: () => void }): React.JSX.Element {
+  const fileName = url.split('/').pop() || 'Файл';
+  const extension = fileName.split('.').pop()?.toUpperCase() || 'FILE';
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+      onError={onError}
+    >
+      <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-blue-900 dark:text-blue-100 truncate">
+          {fileName}
+        </div>
+        <div className="text-xs text-blue-700 dark:text-blue-300">
+          {extension} документ
+        </div>
+      </div>
+      <div className="text-blue-600 dark:text-blue-400 text-xs">
+        Открыть →
+      </div>
+    </a>
+  );
 }
 
 /**
@@ -39,6 +71,7 @@ export function ResponsePhoto({
           const url = typeof m === 'string' ? m : m.url;
           const isAudio = url?.includes('.mp3') || url?.includes('.ogg') || url?.includes('.wav');
           const isVideo = url?.includes('.mp4') || url?.includes('.webm') || url?.includes('.mov');
+          const isDocument = url?.includes('.pdf') || url?.includes('.doc') || url?.includes('.docx') || url?.includes('.xls') || url?.includes('.xlsx') || url?.includes('.ppt') || url?.includes('.pptx');
 
           if (mediaError) {
             return <FileNotFound key={idx} />;
@@ -66,6 +99,10 @@ export function ResponsePhoto({
                 onError={() => setMediaError(true)}
               />
             );
+          }
+
+          if (isDocument) {
+            return <DocumentFile key={idx} url={url} onError={() => setMediaError(true)} />;
           }
 
           return (
@@ -141,6 +178,20 @@ export function ResponsePhoto({
         <span className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Фото (загрузка...)</span>
       </div>
     );
+  }
+
+  // Тип document
+  if (responseData?.type === 'document' || answerValue.includes('.pdf') || answerValue.includes('.doc') || answerValue.includes('.docx') || answerValue.includes('.xls') || answerValue.includes('.xlsx')) {
+    const isUrl = answerValue.startsWith('http://') || answerValue.startsWith('https://') || answerValue.startsWith('/uploads/');
+    
+    if (mediaError) {
+      return <FileNotFound />;
+    }
+    
+    if (isUrl) {
+      return <DocumentFile url={answerValue} onError={() => setMediaError(true)} />;
+    }
+    return <FileNotFound />;
   }
 
   // Тип audio
