@@ -58,12 +58,12 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="h-full flex flex-col bg-background overflow-hidden">
       <DialogHeader userName={formatUserName(user)} onClose={onClose} />
 
       <DialogWarning />
 
-      <ScrollArea ref={messagesScrollRef} className="flex-1 p-3" data-testid="dialog-messages-scroll-area">
+      <ScrollArea ref={messagesScrollRef} className="flex-1 p-3 min-h-0" data-testid="dialog-messages-scroll-area">
         {messagesLoading ? (
           <LoadingMessages />
         ) : messages.length === 0 ? (

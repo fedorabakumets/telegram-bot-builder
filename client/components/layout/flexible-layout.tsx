@@ -298,6 +298,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 defaultSize={leftSize}
                 minSize={15}
                 maxSize={40}
+                className="overflow-hidden"
               >
                 <div className="h-full w-full bg-background overflow-hidden flex flex-col">
                   {getElementContent(leftEl.type)}
@@ -311,6 +312,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             order={2}
             minSize={30}
             maxSize={rightElements.length > 0 ? 70 : 85}
+            className="overflow-hidden"
           >
             <div className="h-full w-full bg-background overflow-hidden flex flex-col">
               {getElementContent(centerEl.type)}
@@ -325,6 +327,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 defaultSize={totalRightSize}
                 minSize={15}
                 maxSize={40}
+                className="overflow-hidden"
               >
                 <ResizablePanelGroup direction="horizontal" className="h-full w-full">
                   {rightElements.flatMap((rightEl, index) => [
@@ -336,6 +339,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                       defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
                       minSize={10}
                       maxSize={100}
+                      className="overflow-hidden"
                     >
                       <div className="h-full w-full overflow-hidden flex flex-col">
                         {getElementContent(rightEl.type)}
@@ -368,7 +372,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   defaultSize={leftEl.size}
                   minSize={15}
                   maxSize={40}
-                  className="w-full"
+                  className="w-full overflow-hidden"
                 >
                   <div className="h-full w-full border-r border-border bg-background overflow-hidden">
                     {getElementContent(leftEl.type)}
@@ -386,8 +390,10 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             <ResizablePanel
               id="combo-center-panel"
               order={2}
+              defaultSize={rightElements.length > 0 ? 60 : 80}
               minSize={30}
               maxSize={rightElements.length > 0 ? 70 : 85}
+              className="overflow-hidden"
             >
               <div className="h-full w-full bg-background overflow-hidden flex flex-col">
                 {centerEl ? getElementContent(centerEl.type) : null}
@@ -401,7 +407,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   order={3}
                   defaultSize={totalRightSize}
                   minSize={15}
-                  className="w-full"
+                  maxSize={40}
+                  className="w-full overflow-hidden"
                 >
                   <ResizablePanelGroup direction="horizontal" className="h-full w-full">
                     {rightElements.flatMap((rightEl, index) => [
@@ -413,7 +420,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                         defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
                         minSize={10}
                         maxSize={100}
-                        className="w-full"
+                        className="overflow-hidden"
                       >
                         <div className="h-full w-full overflow-hidden flex flex-col">
                           {getElementContent(rightEl.type)}

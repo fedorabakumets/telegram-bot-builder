@@ -475,7 +475,7 @@ export default function Editor() {
           type: 'dialog',
           name: 'Диалог',
           position: 'right',
-          size: 30,
+          size: 25,
           visible: isUsersTab
         },
         {
