@@ -7,6 +7,7 @@ import React from 'react';
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow
@@ -77,10 +78,6 @@ export function ResponsesTableWithPagination({
   const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
-  if (allEntries.length === 0) {
-    return null;
-  }
-
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -106,26 +103,36 @@ export function ResponsesTableWithPagination({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {visibleEntries.map((entry) => (
-                <ResponseRow
-                  key={`${entry.user.id}-${entry.key}-${entry.index}`}
-                  user={entry.user}
-                  keyName={entry.key}
-                  responseIndex={entry.index}
-                  value={entry.value}
-                />
-              ))}
+              {visibleEntries.length > 0 ? (
+                visibleEntries.map((entry) => (
+                  <ResponseRow
+                    key={`${entry.user.id}-${entry.key}-${entry.index}`}
+                    user={entry.user}
+                    keyName={entry.key}
+                    responseIndex={entry.index}
+                    value={entry.value}
+                  />
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
+                    Нет ответов
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
       </div>
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        goToPage={goToPage}
-        nextPage={nextPage}
-        prevPage={prevPage}
-      />
+      {totalPages > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          goToPage={goToPage}
+          nextPage={nextPage}
+          prevPage={prevPage}
+        />
+      )}
     </div>
   );
 }
