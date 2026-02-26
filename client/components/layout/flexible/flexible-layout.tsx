@@ -6,7 +6,7 @@ import { DialogResizeHandle } from '../dialog-resize-handle';
 import { FlexibleLayoutProps } from './types';
 import { useElementContent } from './hooks';
 import { getVisibleElements, getElementsByPosition, calculateTotalRightSize, isUsersTabLayout } from './utils';
-import { EmptyState, SingleElementLayout, TopBottomLayout, SidePanelsLayout } from './components';
+import { EmptyState, SingleElementLayout, TopBottomLayout, SidePanelsLayout, CombinedLayout } from './components';
 
 /**
  * @fileoverview Гибкий компонент макета интерфейса
@@ -112,91 +112,21 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 
     // Комбинированный макет (верх + боковые панели)
     return (
-      <div className="h-full flex flex-col">
-        {topEl && (
-          <div className="bg-background" style={{ minHeight: `${topEl.size}rem` }}>
-            {getElementContent(topEl.type)}
-          </div>
-        )}
-        <div className="flex-1 min-h-0">
-          <ResizablePanelGroup direction="horizontal" className="h-full">
-            {leftEl && (
-              <>
-                <ResizablePanel
-                  id="combo-left-panel"
-                  order={1}
-                  defaultSize={leftEl.size}
-                  minSize={leftEl.type === 'userDetails' ? 10 : 15}
-                  maxSize={leftEl.type === 'userDetails' ? 45 : 40}
-                  className="w-full overflow-hidden"
-                >
-                  <div className="h-full w-full border-r border-border bg-background overflow-hidden">
-                    {getElementContent(leftEl.type)}
-                  </div>
-                </ResizablePanel>
-                {leftEl.type === 'userDetails' ? (
-                  <DialogResizeHandle direction="vertical" />
-                ) : (
-                  <CodeResizeHandle direction="vertical" />
-                )}
-              </>
-            )}
-            <ResizablePanel
-              id="combo-center-panel"
-              order={2}
-              defaultSize={rightElements.length > 0 ? 60 : 80}
-              minSize={rightElements.some(el => el.type === 'dialog') || leftEl?.type === 'userDetails' ? 20 : 50}
-              maxSize={rightElements.length > 0 ? 80 : 85}
-              className="overflow-hidden"
-            >
-              <div className="h-full w-full bg-background overflow-hidden flex flex-col">
-                {centerEl ? getElementContent(centerEl.type) : null}
-              </div>
-            </ResizablePanel>
-            {rightElements.length > 0 && (
-              <>
-                {rightElements.some(el => el.type === 'dialog') ? (
-                  <DialogResizeHandle direction="vertical" />
-                ) : (
-                  <CodeResizeHandle direction="vertical" />
-                )}
-                <ResizablePanel
-                  id="combo-right-panel"
-                  order={3}
-                  defaultSize={totalRightSize}
-                  minSize={rightElements.some(el => el.type === 'dialog') ? 10 : 15}
-                  maxSize={rightElements.some(el => el.type === 'dialog') ? 45 : 40}
-                  className="w-full overflow-hidden"
-                >
-                  <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-                    {rightElements.flatMap((rightEl, index) => [
-                      ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle className="bg-gradient-to-r from-transparent via-slate-200/0 to-transparent hover:from-purple-500/15 hover:via-purple-500/30 hover:to-purple-500/15 dark:hover:from-purple-600/15 dark:hover:via-purple-500/25 dark:hover:to-purple-600/15 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md" />] : []),
-                      <ResizablePanel
-                        key={`panel-${rightEl.id}`}
-                        id={`combo-right-subpanel-${rightEl.id}`}
-                        order={index + 1}
-                        defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
-                        minSize={rightEl.type === 'dialog' ? 10 : 10}
-                        maxSize={100}
-                        className="overflow-hidden"
-                      >
-                        <div className="h-full w-full overflow-hidden flex flex-col">
-                          {getElementContent(rightEl.type)}
-                        </div>
-                      </ResizablePanel>
-                    ])}
-                  </ResizablePanelGroup>
-                </ResizablePanel>
-              </>
-            )}
-          </ResizablePanelGroup>
-        </div>
-        {bottomEl && (
-          <div className="border-t border-border bg-background" style={{ minHeight: `${bottomEl.size}px` }}>
-            {getElementContent(bottomEl.type)}
-          </div>
-        )}
-      </div>
+      <CombinedLayout
+        topContent={topEl ? getElementContent(topEl.type) : null}
+        topSize={topEl?.size}
+        leftContent={leftEl ? getElementContent(leftEl.type) : null}
+        leftType={leftEl?.type}
+        centerContent={centerEl ? getElementContent(centerEl.type) : null}
+        rightElements={rightElements.map(el => ({
+          id: el.id,
+          type: el.type,
+          content: getElementContent(el.type),
+          size: el.size,
+        }))}
+        bottomContent={bottomEl ? getElementContent(bottomEl.type) : null}
+        bottomSize={bottomEl?.size}
+      />
     );
   };
 
