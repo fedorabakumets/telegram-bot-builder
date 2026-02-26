@@ -103,22 +103,22 @@ export function StatsCards({ stats }: StatsCardsProps) {
   return (
     <div className="w-full overflow-x-auto">
       {/* Карточки в одну строку с уменьшением при сужении */}
-      <div className="flex gap-1.5 sm:gap-2 min-w-max w-full p-3">
+      <div className="flex gap-2 min-w-fit p-3">
         {STATS_DATA.map((stat, idx) => (
           <div
             key={idx}
-            className={`${stat.bg} group flex-shrink-0 snap-start w-full max-w-[140px] sm:max-w-[120px] md:max-w-[110px] lg:max-w-[100px] xl:max-w-[120px] rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 md:p-3 flex flex-col items-center gap-1 sm:gap-1.5 md:gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50 cursor-default`}
+            className={`${stat.bg} group flex-shrink-0 snap-start w-[clamp(80px,12vw,140px)] rounded-xl p-3 flex flex-col items-center gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50 cursor-default`}
             data-testid={`stat-card-${idx}`}
             title={stat.fullLabel}
           >
-            <div className={`w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
-              <stat.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
+            <div className={`w-[clamp(32px,8vw,48px)] h-[clamp(32px,8vw,48px)] rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
+              <stat.icon className="w-[clamp(16px,4vw,24px)] h-[clamp(16px,4vw,24px)] text-white" />
             </div>
             <div className="text-center">
-              <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground tabular-nums leading-none">
+              <p className="text-[clamp(14px,3.5vw,20px)] font-bold text-foreground tabular-nums leading-none">
                 {statValues[idx]}
               </p>
-              <p className="text-[8px] sm:text-[9px] md:text-[10px] font-medium text-muted-foreground mt-0.5 sm:mt-1 uppercase tracking-wide">
+              <p className="text-[clamp(8px,2vw,10px)] font-medium text-muted-foreground mt-1 uppercase tracking-wide">
                 {stat.label}
               </p>
             </div>
