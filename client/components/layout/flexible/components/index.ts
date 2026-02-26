@@ -11,5 +11,3 @@ export * from './left-panel';
 export * from './right-panels';
 export * from './top-bar';
 export * from './bottom-bar';
-export * from './combo-left-panel';
-export * from './combo-right-panels';

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Левая панель макета
+ * @fileoverview Универсальный компонент левой панели
  * @description Компонент левой панели с resize-ручкой
  */
 
@@ -17,9 +17,15 @@ interface LeftPanelProps {
   /** Тип элемента */
   type?: string;
   /** Минимальный размер */
-  minSize: number;
+  minSize?: number;
   /** Максимальный размер */
-  maxSize: number;
+  maxSize?: number;
+  /** ID панели */
+  id?: string;
+  /** Порядок панели */
+  order?: number;
+  /** Класс контейнера */
+  containerClassName?: string;
 }
 
 /**
@@ -28,23 +34,35 @@ interface LeftPanelProps {
  * @returns JSX элемент
  */
 export function LeftPanel(props: LeftPanelProps): React.JSX.Element {
-  const { children, type, minSize, maxSize } = props;
+  const {
+    children,
+    type,
+    minSize = 15,
+    maxSize = 40,
+    id = 'left-panel',
+    order = 1,
+    containerClassName = 'h-full w-full bg-background overflow-hidden flex flex-col',
+  } = props;
+
+  const isUserDetails = type === 'userDetails';
+  const finalMinSize = props.minSize ?? (isUserDetails ? 10 : 15);
+  const finalMaxSize = props.maxSize ?? (isUserDetails ? 45 : 40);
 
   return (
     <>
       <ResizablePanel
-        id="left-panel"
-        order={1}
-        defaultSize={type === 'userDetails' ? 20 : 25}
-        minSize={minSize}
-        maxSize={maxSize}
+        id={id}
+        order={order}
+        defaultSize={isUserDetails ? 20 : 25}
+        minSize={finalMinSize}
+        maxSize={finalMaxSize}
         className="overflow-hidden"
       >
-        <div className="h-full w-full bg-background overflow-hidden flex flex-col">
+        <div className={containerClassName}>
           {children}
         </div>
       </ResizablePanel>
-      {type === 'userDetails' ? (
+      {isUserDetails ? (
         <DialogResizeHandle direction="vertical" />
       ) : (
         <CodeResizeHandle direction="vertical" />

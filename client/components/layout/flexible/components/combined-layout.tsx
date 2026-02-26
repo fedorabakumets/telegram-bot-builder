@@ -7,8 +7,8 @@ import React, { ReactNode } from 'react';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { TopBar } from './top-bar';
 import { BottomBar } from './bottom-bar';
-import { ComboLeftPanel } from './combo-left-panel';
-import { ComboRightPanels } from './combo-right-panels';
+import { LeftPanel } from './left-panel';
+import { RightPanels } from './right-panels';
 
 /**
  * Пропсы компонента CombinedLayout
@@ -68,9 +68,14 @@ export function CombinedLayout(props: CombinedLayoutProps): React.JSX.Element {
       <div className="flex-1 min-h-0">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {leftContent && (
-            <ComboLeftPanel type={leftType}>
+            <LeftPanel
+              type={leftType}
+              id="combo-left-panel"
+              order={1}
+              containerClassName="h-full w-full border-r border-border bg-background overflow-hidden"
+            >
               {leftContent}
-            </ComboLeftPanel>
+            </LeftPanel>
           )}
           <ResizablePanel
             id="combo-center-panel"
@@ -85,7 +90,12 @@ export function CombinedLayout(props: CombinedLayoutProps): React.JSX.Element {
             </div>
           </ResizablePanel>
           {rightElements.length > 0 && (
-            <ComboRightPanels elements={rightElements} order={rightOrder} />
+            <RightPanels
+              elements={rightElements}
+              order={rightOrder}
+              panelId="combo-right-panel"
+              subPanelIdPrefix="combo-right-subpanel"
+            />
           )}
         </ResizablePanelGroup>
       </div>
