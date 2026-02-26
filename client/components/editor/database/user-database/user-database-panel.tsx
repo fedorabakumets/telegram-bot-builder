@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { BotMessage, BotProject, UserBotData } from '@shared/schema';
+import { BotProject, UserBotData } from '@shared/schema';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity,
@@ -40,34 +40,9 @@ import {
   UserX
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { GoogleSheetsExportButton } from '../google-sheets/GoogleSheetsExportButton';
-
-type BotMessageWithMedia = BotMessage & {
-  media?: Array<{
-    id: number;
-    url: string;
-    type: string;
-    width?: number;
-    height?: number;
-  }>;
-};
-
-interface UserDatabasePanelProps {
-  projectId: number;
-  projectName: string;
-  onOpenDialogPanel?: (user: UserBotData) => void;
-  onOpenUserDetailsPanel?: (user: UserBotData) => void;
-}
-
-/**
- * Возможные поля для сортировки пользователей
- */
-type SortField = 'lastInteraction' | 'interactionCount' | 'createdAt' | 'firstName' | 'userName';
-
-/**
- * Направления сортировки
- */
-type SortDirection = 'asc' | 'desc';
+import { GoogleSheetsExportButton } from '../../google-sheets/GoogleSheetsExportButton';
+import { BotMessageWithMedia, SortField, SortDirection, UserStats, ResponseData, VariableToQuestionMap, UserMessageCounts } from './types';
+import { formatDate } from './utils/format-date';
 
 /**
  * @function UserDatabasePanel
@@ -640,29 +615,6 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
         description: `Изменение статуса "${field}" пока не поддерживается`,
         variant: "destructive",
       });
-    }
-  };
-
-  const formatDate = (date: unknown) => {
-    if (!date) return 'Никогда';
-    try {
-      const dateObj = typeof date === 'string' ? new Date(date) :
-        date instanceof Date ? date :
-          typeof date === 'number' ? new Date(date) :
-            null;
-
-      if (!dateObj) return 'Никогда';
-
-      return dateObj.toLocaleString('ru-RU', {
-        timeZone: 'Europe/Moscow',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return 'Никогда';
     }
   };
 
